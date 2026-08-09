@@ -68,29 +68,60 @@ port bindings:
 PostgreSQL and every internal service is bound to `127.0.0.1` only — nothing here is
 reachable from outside the host without going through Nginx/TLS (not yet configured).
 
-### Known gap: email delivery is not configured (autoconfirm enabled as an interim fix)
+### Known gap: email delivery is not configured (autoconfirm persisted as an interim fix)
 
-`fadeup-supabase-auth` originally had `GOTRUE_MAILER_AUTOCONFIRM=false` and
-`GOTRUE_SMTP_HOST=supabase-mail`, but no `supabase-mail` (or any SMTP) container exists
-in `docker-compose.yml` — confirmed directly: `POST /auth/v1/signup` 500'd with
+`fadeup-supabase-auth`'s `GOTRUE_MAILER_AUTOCONFIRM` is driven by
+`${ENABLE_EMAIL_AUTOCONFIRM}` in `infra/supabase/.env`, and no `supabase-mail` (or any
+SMTP) container exists in `docker-compose.yml` — confirmed directly: without this fix,
+`POST /auth/v1/signup` 500s with
 `{ "error_code": "unexpected_failure", "msg": "Error sending confirmation email" }` for
-every signup, and the same would apply to password-reset emails.
+every signup, and the same applies to password-reset emails.
 
-Per an explicit decision, this was unblocked by recreating the `auth` container with
-`ENABLE_EMAIL_AUTOCONFIRM=true` (`docker compose`'s shell-environment override takes
-precedence over the `.env` file's stored value, so this did not require editing
-`infra/supabase/.env`, which is permission-blocked from direct reads/edits in this
-environment). **This override is not persisted** — `ENABLE_EMAIL_AUTOCONFIRM` in
-`infra/supabase/.env` itself is still `false` (or unset), so any future full stack
-recreation (`docker compose up -d` after a reboot, `run.sh recreate` without the
-override, etc.) reverts to requiring email confirmation, at which point signups will
-500 again until either the `.env` value is updated directly or real SMTP is configured.
-Verified: a real, unauthenticated `POST /auth/v1/signup` now returns a session
-immediately with no email step, exactly as the `/signup` page expects.
+**Fix, made reproducible without touching secrets:** `infra/supabase/docker-compose.fadeup-auth.yml`
+is a small, version-controlled, secret-free override file:
+
+```yaml
+services:
+  auth:
+    environment:
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+```
+
+Docker Compose merges the `environment:` map of every file in `COMPOSE_FILE` (or every
+`-f` flag), later files winning per key — so this file forces
+`GOTRUE_MAILER_AUTOCONFIRM: "true"` regardless of what `infra/supabase/.env`'s
+`ENABLE_EMAIL_AUTOCONFIRM` resolves to, without ever reading, editing, or exposing that
+file (which holds real secrets and is correctly permission-blocked from direct access in
+this environment). It's layered in via Compose's own supported mechanism —
+`infra/supabase/run.sh`'s `config add`/`config remove` subcommands, which only rewrite
+the `COMPOSE_FILE=` line in `.env`, never a secret:
+
+```bash
+sh run.sh config add fadeup-auth      # already applied on this host
+sh run.sh config remove fadeup-auth   # to revert, once real SMTP is configured
+```
+
+**One-time step on a fresh clone/environment:** `COMPOSE_FILE` lives in
+`infra/supabase/.env`, which is git-ignored (contains secrets) — so a new environment
+must run `sh run.sh config add fadeup-auth` once after `setup.sh`/first `.env`
+generation, or signups will 500 there until it's run. This is the one part of the fix
+that isn't automatically reproduced by cloning the repo; everything else (the override
+file itself) is.
+
+**Verified, not assumed:** `GOTRUE_MAILER_AUTOCONFIRM=true` was confirmed directly on the
+container after `sh run.sh recreate` (single-service) — and then again after a **full**
+`sh run.sh recreate` (stops and removes all 11 containers, recreates the network, brings
+everything back up), which is the actual scenario this needed to survive. All containers
+returned to `healthy` (storage/realtime took ~15s longer than the rest — normal, not
+caused by this change), the LOT 2/3 schema and all 19 RLS policies were confirmed intact
+(Postgres data lives in a named volume, untouched by `down` without `-v`), and a real,
+unauthenticated `POST /auth/v1/signup` after the full recreation still returned a session
+immediately with no email step.
 
 Real email delivery (password-reset, invite notifications) is still not configured —
 that needs actual SMTP provider credentials (an external value, per `CLAUDE.md` §62) and
-is unrelated to this autoconfirm fix.
+is unrelated to this fix. Revisit `docker-compose.fadeup-auth.yml` (remove or restrict to
+non-production environments) once SMTP is real.
 
 ## Database (`db/migrations`)
 

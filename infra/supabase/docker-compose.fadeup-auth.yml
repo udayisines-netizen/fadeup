@@ -1,0 +1,36 @@
+# FadeUp-specific override. Version-controlled, contains no secrets.
+#
+# Why this exists: this self-hosted Supabase stack has no SMTP relay
+# configured (no `supabase-mail`/inbucket container in docker-compose.yml,
+# and no real SMTP provider credentials yet — see docs/architecture.md).
+# Without this override, the base docker-compose.yml's
+# `GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}` resolves to
+# whatever infra/supabase/.env has (false/unset), and every real
+# `POST /auth/v1/signup` 500s trying to send a confirmation email it can
+# never deliver.
+#
+# How it works: Docker Compose merges the `environment:` maps of every
+# `-f`/COMPOSE_FILE-listed file, later files winning per key. This file
+# only needs to be layered on top of docker-compose.yml — it does not
+# touch, read, or require `infra/supabase/.env` at all, so it works
+# regardless of that file's permission settings and never needs to change
+# alongside secret rotation.
+#
+# How to apply/remove: `sh run.sh config add fadeup-auth` /
+# `sh run.sh config remove fadeup-auth` (see run.sh's own `config` command
+# and its top-of-file comment) — this only rewrites the `COMPOSE_FILE=`
+# line in `.env`, never a secret value. Already applied on this host; a
+# fresh clone/environment needs that command run once. Survives
+# `sh run.sh recreate` / `sh run.sh recreate auth` / a full
+# `docker compose down && up` as long as COMPOSE_FILE still lists this
+# file, which is itself tracked in `infra/supabase/.env`'s COMPOSE_FILE=
+# line, not in this repo — see docs/architecture.md for the one-time setup
+# step this implies for a new environment.
+#
+# Revisit when real SMTP is configured (docs/architecture.md) — remove
+# this override (or leave it for local/dev environments only) once email
+# confirmation should actually be enforced.
+services:
+  auth:
+    environment:
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
