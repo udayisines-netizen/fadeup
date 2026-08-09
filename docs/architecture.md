@@ -143,9 +143,8 @@ choice in `localStorage`. Routes: `/login`, `/signup`, `/forgot-password`,
 `/reset-password`, `/invite/:token` (public — previews an invitation via the anon-callable
 `get_invitation_by_token` RPC before requiring a session), `/onboarding` and `/app`,
 `/app/team` (protected via `RequireAuth`, redirecting to `/login?redirect=...`).
-`/app/team` is a minimal invite/roster page, not the full staff directory (that's LOT 6);
-it can only show the signed-in user's own display name for now because `profiles` has no
-org-scoped read policy yet (documented gap from LOT 2). Verified: `npm run typecheck`,
+`/app/team` was a minimal invite/roster page at LOT 3 — since LOT 6 it's the full staff
+directory backed by `staff_profiles`, see below. Verified: `npm run typecheck`,
 `lint`, `test` (10 tests, Supabase mocked — no live network in unit tests), and `build`
 all pass; the dev server was also driven end-to-end over real HTTP against the live
 Kong/PostgREST/Postgres stack (sign-in, profile read, `complete_organization_onboarding`,
@@ -229,9 +228,47 @@ Correct per-page Open Graph previews for social unfurling, and guaranteed indexi
 non-JS-executing crawlers, would require real SSR or prerendering — not implemented, and
 not silently claimed to be.
 
+## Organization admin: locations, team, chairs (`apps/web`, LOT 6)
+
+Frontend on top of the LOT 6 database layer (`staff_profiles`, `barbers`, `chairs` — see
+`docs/database.md`). All three pages read `organizationId`/`role` from `useCurrentOrg()`
+(the caller's real membership, never a client-supplied value) and rely on RLS to enforce
+write access server-side regardless of what the client sends — the frontend's
+owner/manager gating is a UX convenience, not the security boundary.
+
+- **`/app/locations`** (`pages/app-locations-page.tsx`, `lib/queries/locations.ts`): list +
+  create/edit dialog (name, address, IANA timezone, active toggle). Any org member can
+  read; create/edit requires owner/manager (matches `locations` RLS).
+- **`/app/team`** (`pages/app-team-page.tsx`) now shows each member's real
+  `staff_profiles.display_name` instead of the LOT 3 `Member <8 chars>` placeholder —
+  `profiles` stays account-identity-only and is intentionally not org-readable (LOT 2
+  design), so `staff_profiles` (org-scoped, auto-provisioned by a DB trigger on membership
+  creation) is what makes rosters actually readable across a team. Owner/manager can edit a
+  teammate's display name, title, bio, and primary location, and toggle "bookable barber"
+  status per row. Toggling barber status is a **soft state change** (`barbers.is_bookable`
+  flips, the row is never deleted) rather than a hard delete — documented in
+  `lib/queries/barbers.ts`: later lots (service eligibility in LOT 7, commissions in LOT
+  17) attach data to a barber row's `id`, so deleting it the moment someone comes off the
+  schedule would orphan that state and lose history; this also matches the `is_active`-style
+  soft-state convention already used by `locations`, `chairs`, and `staff_profiles`.
+- **`/app/chairs`** (`pages/app-chairs-page.tsx`, `lib/queries/chairs.ts`): chair inventory
+  grouped by location via tabs, create/edit dialog (name, active toggle). Structural
+  inventory only — no occupancy/session state, that's a later lot.
+
+New shared UI primitives: `components/ui/switch.tsx` (native checkbox styled as a track/
+thumb, `role="switch"`, real keyboard/AT semantics), `components/ui/textarea.tsx` (same
+label/hint/error contract as `TextField`). `lib/timezone.ts` centralizes the
+`Intl.DateTimeFormat().resolvedOptions().timeZone` best-effort guess shared by onboarding
+and the location form (previously duplicated).
+
+Verified: `npm run typecheck`, `lint`, `test` (14 tests, including a new
+`app-locations-page.test.tsx` covering loaded/error/empty states and role-based action
+visibility), and `build` all pass.
+
 ## Not yet built
 
-Beyond the design system, marketing site, and auth/onboarding, every product module
-described in `CLAUDE.md` is still pending (`staff_profiles` beyond the minimal roster in
-`/app/team`, `services`, `appointments`, public booking pages, etc.). See the project task
-list / roadmap (LOT 6 onward) for what's next.
+Beyond the design system, marketing site, auth/onboarding, and organization admin
+(locations/team/chairs), every remaining product module described in `CLAUDE.md` is still
+pending (`services` and availability — LOT 7 database is done, frontend is not —
+appointments, public booking pages, etc.). See the project task list / roadmap (LOT 7
+onward) for what's next.

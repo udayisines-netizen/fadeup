@@ -104,6 +104,20 @@ export const router = createBrowserRouter([
               return { Component: AppTeamPage }
             },
           },
+          {
+            path: 'locations',
+            lazy: async () => {
+              const { AppLocationsPage } = await import('@/pages/app-locations-page')
+              return { Component: AppLocationsPage }
+            },
+          },
+          {
+            path: 'chairs',
+            lazy: async () => {
+              const { AppChairsPage } = await import('@/pages/app-chairs-page')
+              return { Component: AppChairsPage }
+            },
+          },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

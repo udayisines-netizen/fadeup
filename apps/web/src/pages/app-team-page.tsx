@@ -5,8 +5,11 @@ import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import { useCurrentOrg } from '@/lib/current-org-context'
-import { useOrgMembers } from '@/lib/queries/memberships'
+import { useOrgMembers, type OrgMember } from '@/lib/queries/memberships'
 import { useOwnProfile } from '@/lib/queries/profile'
+import { useOrgStaffProfiles, useUpdateStaffProfile, type StaffProfile } from '@/lib/queries/staff-profiles'
+import { useOrgBarbers, useSetBarberBookable, type Barber } from '@/lib/queries/barbers'
+import { useOrgLocations } from '@/lib/queries/locations'
 import {
   useCreateInvitation,
   useOrgInvitations,
@@ -14,7 +17,9 @@ import {
   type OrgInvitation,
 } from '@/lib/queries/invitations'
 import { TextField } from '@/components/ui/text-field'
+import { Textarea } from '@/components/ui/textarea'
 import { SelectField } from '@/components/ui/select-field'
+import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +29,15 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableStateRow } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { MEMBERSHIP_ROLES, type MembershipRole } from '@/lib/types'
 
@@ -42,6 +56,23 @@ const inviteSchema = z.object({
 })
 
 type InviteFormValues = z.infer<typeof inviteSchema>
+
+const NO_LOCATION_VALUE = ''
+
+const profileSchema = z.object({
+  displayName: z.string().min(1, 'Display name is required'),
+  title: z.string(),
+  bio: z.string(),
+  locationId: z.string(),
+})
+
+type ProfileFormValues = z.infer<typeof profileSchema>
+
+interface TeamRow {
+  member: OrgMember
+  staffProfile: StaffProfile | undefined
+  barber: Barber | undefined
+}
 
 export function AppTeamPage() {
   const { currentMembership } = useCurrentOrg()
@@ -72,17 +103,48 @@ function TeamManagement({
   const { user } = useAuth()
   const { toast } = useToast()
   const membersQuery = useOrgMembers(organizationId)
+  const staffProfilesQuery = useOrgStaffProfiles(organizationId)
+  const barbersQuery = useOrgBarbers(organizationId)
+  const locationsQuery = useOrgLocations(organizationId)
   const invitationsQuery = useOrgInvitations(organizationId)
   const ownProfileQuery = useOwnProfile(user?.id)
   const createInvitation = useCreateInvitation()
   const revokeInvitation = useRevokeInvitation(organizationId)
+  const setBarberBookable = useSetBarberBookable()
   const [createError, setCreateError] = useState<string | null>(null)
   const [createdLink, setCreatedLink] = useState<string | null>(null)
+  const [editingRow, setEditingRow] = useState<TeamRow | null>(null)
 
   const assignableRoles = useMemo(
     () => (role === 'owner' ? MEMBERSHIP_ROLES : MEMBERSHIP_ROLES.filter((r) => r !== 'owner')),
     [role],
   )
+
+  const staffProfileByUserId = useMemo(() => {
+    const map = new Map<string, StaffProfile>()
+    for (const profile of staffProfilesQuery.data ?? []) {
+      map.set(profile.userId, profile)
+    }
+    return map
+  }, [staffProfilesQuery.data])
+
+  const barberByStaffProfileId = useMemo(() => {
+    const map = new Map<string, Barber>()
+    for (const barber of barbersQuery.data ?? []) {
+      map.set(barber.staffProfileId, barber)
+    }
+    return map
+  }, [barbersQuery.data])
+
+  const isLoading = membersQuery.isPending || staffProfilesQuery.isPending || barbersQuery.isPending
+  const loadError = membersQuery.error ?? staffProfilesQuery.error ?? barbersQuery.error
+  const isError = membersQuery.isError || staffProfilesQuery.isError || barbersQuery.isError
+
+  const teamRows: TeamRow[] = (membersQuery.data ?? []).map((member) => ({
+    member,
+    staffProfile: staffProfileByUserId.get(member.userId),
+    barber: barberByStaffProfileId.get(staffProfileByUserId.get(member.userId)?.id ?? ''),
+  }))
 
   const {
     register,
@@ -134,6 +196,34 @@ function TeamManagement({
     })
   }
 
+  function handleToggleBarber(row: TeamRow, isBookable: boolean) {
+    if (!row.staffProfile) return
+    setBarberBookable.mutate(
+      {
+        organizationId,
+        staffProfileId: row.staffProfile.id,
+        barberId: row.barber?.id ?? null,
+        isBookable,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: isBookable ? 'Marked as a barber' : 'Removed barber status',
+            description: row.staffProfile?.displayName,
+            variant: 'success',
+          })
+        },
+        onError: (error) => {
+          toast({
+            title: "Couldn't update barber status",
+            description: error instanceof Error ? error.message : undefined,
+            variant: 'error',
+          })
+        },
+      },
+    )
+  }
+
   return (
     <Container size="md" className="py-8">
       <h1 className="text-xl font-semibold text-ink-950">Team</h1>
@@ -142,36 +232,64 @@ function TeamManagement({
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-ink-950">Members</h2>
         <div className="mt-3">
-          {membersQuery.isPending ? (
+          {isLoading ? (
             <MembersSkeleton />
-          ) : membersQuery.isError ? (
-            <ErrorState title="Couldn't load members" description={membersQuery.error.message} />
+          ) : isError ? (
+            <ErrorState title="Couldn't load members" description={loadError?.message} />
           ) : (
             <Table label="Members">
               <TableHeader>
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Barber</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {membersQuery.data.length === 0 ? (
-                  <TableStateRow colSpan={2}>
+                {teamRows.length === 0 ? (
+                  <TableStateRow colSpan={5}>
                     <EmptyState title="No members yet" className="border-none" />
                   </TableStateRow>
                 ) : (
-                  membersQuery.data.map((member) => {
-                    const isSelf = member.userId === user?.id
+                  teamRows.map((row) => {
+                    const isSelf = row.member.userId === user?.id
+                    const displayName =
+                      row.staffProfile?.displayName ??
+                      (isSelf ? (ownProfileQuery.data ?? 'You') : `Member ${row.member.userId.slice(0, 8)}`)
+                    const isBookable = row.barber?.isBookable ?? false
+
                     return (
-                      <TableRow key={member.membershipId}>
+                      <TableRow key={row.member.membershipId}>
                         <TableCell>
-                          <span className="min-w-0 truncate">
-                            {isSelf ? (ownProfileQuery.data ?? 'You') : `Member ${member.userId.slice(0, 8)}`}
-                          </span>
+                          <span className="min-w-0 truncate">{displayName}</span>
                           {isSelf ? <span className="ml-2 text-xs text-ink-300">(you)</span> : null}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="neutral">{ROLE_LABELS[member.role]}</Badge>
+                          <Badge variant="neutral">{ROLE_LABELS[row.member.role]}</Badge>
+                        </TableCell>
+                        <TableCell className="text-ink-500">{row.staffProfile?.title || '—'}</TableCell>
+                        <TableCell>
+                          <Switch
+                            label={`${displayName} is a bookable barber`}
+                            hideLabel
+                            checked={isBookable}
+                            disabled={!row.staffProfile || setBarberBookable.isPending}
+                            onChange={(event) => handleToggleBarber(row, event.target.checked)}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={!row.staffProfile}
+                            onClick={() => setEditingRow(row)}
+                          >
+                            Edit
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )
@@ -181,12 +299,6 @@ function TeamManagement({
             </Table>
           )}
         </div>
-        {!membersQuery.isPending && !membersQuery.isError && membersQuery.data.length > 0 ? (
-          <p className="mt-2 text-xs text-ink-300">
-            Teammate display names aren&apos;t visible across the organization yet — a later lot adds
-            org-scoped staff profiles.
-          </p>
-        ) : null}
       </section>
 
       <section className="mt-8">
@@ -273,7 +385,109 @@ function TeamManagement({
           </CardContent>
         </Card>
       </section>
+
+      {editingRow?.staffProfile ? (
+        <StaffProfileFormDialog
+          key={editingRow.staffProfile.id}
+          organizationId={organizationId}
+          staffProfile={editingRow.staffProfile}
+          locations={locationsQuery.data ?? []}
+          onClose={() => setEditingRow(null)}
+          onSaved={() => {
+            toast({ title: 'Profile updated', variant: 'success' })
+            setEditingRow(null)
+          }}
+        />
+      ) : null}
     </Container>
+  )
+}
+
+function StaffProfileFormDialog({
+  organizationId,
+  staffProfile,
+  locations,
+  onClose,
+  onSaved,
+}: {
+  organizationId: string
+  staffProfile: StaffProfile
+  locations: { id: string; name: string }[]
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const updateStaffProfile = useUpdateStaffProfile()
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      displayName: staffProfile.displayName,
+      title: staffProfile.title ?? '',
+      bio: staffProfile.bio ?? '',
+      locationId: staffProfile.locationId ?? NO_LOCATION_VALUE,
+    },
+  })
+
+  async function onSubmit(values: ProfileFormValues) {
+    setFormError(null)
+    try {
+      await updateStaffProfile.mutateAsync({
+        id: staffProfile.id,
+        organizationId,
+        displayName: values.displayName,
+        title: values.title || null,
+        bio: values.bio || null,
+        locationId: values.locationId || null,
+      })
+      onSaved()
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+    }
+  }
+
+  const locationOptions = [
+    { value: NO_LOCATION_VALUE, label: 'No primary location' },
+    ...locations.map((location) => ({ value: location.id, label: location.name })),
+  ]
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit team member</DialogTitle>
+          <DialogDescription>Update {staffProfile.displayName}&apos;s profile.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          {formError ? <Alert variant="error">{formError}</Alert> : null}
+
+          <TextField label="Display name" error={errors.displayName?.message} {...register('displayName')} />
+          <TextField label="Title" hint='e.g. "Master Barber"' {...register('title')} />
+          <Textarea label="Bio" rows={3} {...register('bio')} />
+          <SelectField label="Primary location" options={locationOptions} {...register('locationId')} />
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" isLoading={isSubmitting}>
+              Save changes
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

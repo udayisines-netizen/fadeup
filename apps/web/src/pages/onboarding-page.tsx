@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
 import { SLUG_PATTERN, slugify } from '@/lib/slug'
 import { setStoredOrganizationId } from '@/lib/current-organization'
+import { guessTimezone } from '@/lib/timezone'
 
 const onboardingSchema = z.object({
   shopName: z.string().min(1, 'Shop name is required'),
@@ -34,14 +35,6 @@ interface OnboardingResult {
   location_name: string
 }
 
-function defaultTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-  } catch {
-    return 'UTC'
-  }
-}
-
 export function OnboardingPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -58,7 +51,7 @@ export function OnboardingPage() {
     formState: { errors, isSubmitting },
   } = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { timezone: defaultTimezone() },
+    defaultValues: { timezone: guessTimezone() },
   })
 
   const mutation = useMutation({
