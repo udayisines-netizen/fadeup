@@ -4,6 +4,7 @@ import { RequireAuth } from '@/routes/require-auth'
 import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { MarketingLayout } from '@/routes/marketing-layout'
+import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 
 export const router = createBrowserRouter([
@@ -83,6 +84,23 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        // Public, anonymous booking flow — deliberately its own layout, not
+        // nested inside MarketingLayout or the authenticated /app tree. A
+        // customer lands here directly from a shared link to complete one
+        // focused task, not to browse the marketing site or a dashboard.
+        path: 's/:slug',
+        element: <PublicBookingLayout />,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { PublicBookingPage } = await import('@/pages/public-booking-page')
+              return { Component: PublicBookingPage }
+            },
+          },
+        ],
+      },
+      {
         path: 'app',
         element: (
           <RequireAuth>
@@ -130,6 +148,13 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { AppAvailabilityPage } = await import('@/pages/app-availability-page')
               return { Component: AppAvailabilityPage }
+            },
+          },
+          {
+            path: 'appointments',
+            lazy: async () => {
+              const { AppAppointmentsPage } = await import('@/pages/app-appointments-page')
+              return { Component: AppAppointmentsPage }
             },
           },
         ],

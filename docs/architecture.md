@@ -301,11 +301,66 @@ frontend's owner/manager gating is UX only.
 
 Verified: `npm run typecheck`, `lint`, `test` (18 tests), and `build` all pass.
 
+## Staff scheduling (`apps/web`, LOT 8)
+
+`/app/appointments` (`pages/app-appointments-page.tsx`, `lib/queries/appointments.ts`) —
+a per-location, per-date schedule list on top of the LOT 8 database layer (`appointments`,
+`get_available_slots`). Uses its own `MANAGING_ROLES = ['owner', 'manager', 'receptionist']`
+— distinct from the `['owner', 'manager']` set used everywhere else in this app, because
+`appointments` RLS also allows `receptionist` to write (front-of-house books the schedule).
+Barbers get read-only access to the schedule here; self-service status updates from the
+chair are LOT 11.
+
+Booking a new appointment steps through service (filtered to what's actually offered at the
+selected location via `service_locations`) → barber (filtered to who's actually eligible
+via `barber_services`) → date → an open-slot grid from `get_available_slots` → customer
+details, and is a plain `insert` (not an RPC — staff already pass through RLS as an
+authenticated org member, unlike LOT 9's anon-facing `book_public_appointment`), created as
+`status: 'confirmed'` since it's staff-initiated, not a public request. `bufferBeforeMinutes`/
+`bufferAfterMinutes` are snapshotted from the selected service at submit time, matching the
+DB's own snapshot design. A concurrent double-booking (the LOT 8 GiST exclusion constraint
+firing) is caught and shown as "That time was just booked by someone else — pick another
+slot," not a raw Postgres error string. Status changes (confirm/complete/cancel/no-show) use
+a `DropdownMenu`, hidden entirely for non-managing viewers (including barbers, in this lot).
+
+Verified: `npm run typecheck`, `lint`, `test`, and `build` all pass.
+
+## Public booking (`apps/web`, LOT 9)
+
+A fully anonymous, unauthenticated flow at `/s/:slug` (`routes/public-booking-layout.tsx`,
+`pages/public-booking-page.tsx`, `lib/queries/public-booking.ts`) on top of the LOT 9
+anon-callable RPCs — deliberately its own minimal layout, not `MarketingLayout` or
+`AppLayout`/`RequireAuth`: a customer lands here from a shared link to complete one focused
+task. Every read/write goes through `supabase.rpc(...)`, never `.from(...)` — there is no
+anon RLS access to `organizations`/`locations`/`services`/`barbers`/`appointments` at all,
+so these RPCs are the *only* client-side surface for this page.
+
+A step wizard (location → service → barber → date/time → details → confirm) biases toward
+fewer taps: a single-location shop skips the location step entirely, and a service with
+exactly one eligible barber skips the barber step — both verified directly. Since a public
+booking creates a `status = 'pending'` request (not an instant confirmation — see the LOT 9
+database docs), the copy says so explicitly throughout ("Request appointment," "Your
+appointment request has been sent — they'll confirm it shortly") rather than implying an
+instant "Booking confirmed." `friendlyBookingError()` pattern-matches the RPC's raw Postgres
+error messages (including the GiST exclusion-constraint race message) into user-facing copy,
+falling back to the raw message for anything unrecognized rather than silently swallowing an
+error. A barber's `avatar_url` fails gracefully to an initials circle, never a broken-image
+icon. Zero fabricated content anywhere — every screen renders real data from the RPCs or an
+honest loading/empty/error state, per `CLAUDE.md`.
+
+Verified: `npm run typecheck`, `lint`, `test`, and `build` all pass, **and** independently
+over real HTTP against the live Kong/PostgREST gateway using the actual anon key (not just
+through the Postgres test scripts, which exercise a different code path than PostgREST's own
+JSON serialization and RPC grant-checking layer) — `get_public_organization`,
+`list_public_locations`, and `list_public_services` all returned correctly shaped JSON for a
+real seeded shop, while a direct `GET /rest/v1/organizations?slug=eq....` for the same shop
+returned `[]` (RLS blocking anon table access exactly as designed). Fixture cleaned up
+afterward.
+
 ## Not yet built
 
 Beyond the design system, marketing site, auth/onboarding, organization admin, and the
-service/availability catalog, every remaining product module described in `CLAUDE.md` is
-still pending: the appointment engine's booking UI (LOT 8 database — `appointments`,
-`get_available_slots` — is done, frontend is not), public booking pages (LOT 9 database is
-done, frontend is not), live queue, chair mode, customer CRM, and beyond. See the project
-task list / roadmap for what's next.
+service/availability catalog, staff scheduling and public booking are now built (LOT 8, LOT
+9). Still pending: live queue and chair mode/kiosk/TV mode UI (LOT 10 and LOT 11 phase 1
+database are done, frontend is not), customer CRM, and beyond. See the project task list /
+roadmap for what's next.

@@ -67,6 +67,7 @@ function AppShell() {
             <AppNavLink to="/app" end>
               Home
             </AppNavLink>
+            <AppNavLink to="/app/appointments">Schedule</AppNavLink>
             <AppNavLink to="/app/locations">Locations</AppNavLink>
             <AppNavLink to="/app/chairs">Chairs</AppNavLink>
             <AppNavLink to="/app/services">Services</AppNavLink>
