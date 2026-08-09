@@ -732,16 +732,113 @@ visible); `anon` has zero access; `queue_entries` is confirmed present in the
 `supabase_realtime` publication via `pg_publication_tables`. Migration re-applied to confirm
 idempotency. Fixtures fully cleaned up (verified: 0 remaining).
 
+## LOT 11 additions, phase 1 (chair mode + kiosk + TV mode: self-service + anon queue surface)
+
+| File | Adds |
+|---|---|
+| `20260809170000_appointment_queue_self_service.sql` | `private.is_own_barber`, `appointments_update_self`/`queue_entries_update_self` RLS policies, `restrict_appointment_self_update`/`restrict_queue_entry_self_update` triggers |
+| `20260809170100_public_queue_rpcs.sql` | `join_public_queue`, `get_public_queue_status` |
+
+This lot is split into phases. Phase 1 (this one) pays off the two narrowly-scoped,
+well-specified gaps explicitly flagged as deferred in LOT 8 and LOT 10: barber self-service
+status updates, and a kiosk/TV anon queue surface. A full chair-occupancy state machine
+("which chair has who, since when") is deliberately **not** attempted here — it is a
+genuinely separate, larger design question (visual chair-status board, a real "in progress"
+appointment state, etc.) that deserves its own dedicated pass rather than a guessed shape
+bolted onto this one; see "Not yet built" below.
+
+### Self-service is two layers, not one broad policy
+
+RLS `USING`/`WITH CHECK` can decide **whether** a row may be touched, but not **which
+columns** an `UPDATE` may change. A permissive `appointments_update_self`/
+`queue_entries_update_self` policy scoped to "it's my own assigned appointment/queue
+entry" would, on its own, let a barber rename the customer, move the appointment to a
+different time, or reassign it to a different barber — none of which "update my own status
+from the chair" should allow. So this is deliberately two layers together:
+
+1. An **additional permissive RLS policy** (`appointments_update_self`/
+   `queue_entries_update_self`, via the new `private.is_own_barber(p_barber_id)` helper)
+   deciding **who** may reach the row at all — the assigned barber, in addition to the
+   existing owner/manager/receptionist policy from LOT 8/10 (Postgres OR's multiple
+   permissive policies for the same command together, so this only *adds* capability, it
+   doesn't narrow the existing one).
+2. A **`BEFORE UPDATE` trigger** (`restrict_appointment_self_update`/
+   `restrict_queue_entry_self_update`) deciding **which columns** a *non-managing* caller
+   may actually change — status, notes, and (for queue entries) the status-transition
+   timestamps only. The trigger explicitly returns early (no restriction at all) when the
+   caller already has owner/manager/receptionist role, so their existing full-edit
+   capability is completely unaffected — verified directly: an owner reassigning
+   `barber_id` and renaming the customer on someone else's appointment still works exactly
+   as before.
+
+**A real test-authoring bug was caught while verifying this** (not a bug in the migration
+itself): the first draft of the "assigned barber cannot rename the customer" test used
+Jack — who is both the org owner AND a barber — as the assigned barber. Since the
+restriction trigger explicitly exempts managing roles, Jack's owner role made the trigger
+return early every time, so the "expect ERROR" case silently *succeeded* instead of
+failing — a false-positive pass that verified nothing, worse than an honest failure because
+it looked like the test had covered the restriction when it hadn't. Fixed by giving Bob (a
+barber-role member with no managing role) his own separate appointment for that specific
+assertion — only then did the trigger's rejection actually fire, proving the restriction
+genuinely works rather than merely existing in the SQL.
+
+**Known scope boundary, written down rather than silently dropped**: a barber cannot
+*claim* an unassigned ("any available barber," `barber_id is null`) queue entry through the
+self-service policy — the restriction trigger blocks `barber_id` from changing at all for
+non-managing callers, and the self-service `USING` clause requires a *pre-existing* match
+anyway. Assigning a barber to a queue entry remains an owner/manager/receptionist action in
+this phase. Atomic "claim" semantics (handling two barbers racing to claim the same
+unassigned entry) is its own small design problem, deferred rather than rushed.
+
+### Kiosk + TV mode: two more anon-callable RPCs, same LOT 9 pattern
+
+`join_public_queue` (self-check-in) and `get_public_queue_status` (a TV/kiosk display) are
+`SECURITY DEFINER`, narrowly-scoped, and follow the exact LOT 9 pattern — `queue_entries`
+itself still has **zero** anon `SELECT`/`INSERT` policy; every id is re-derived from the
+organization slug and re-validated against it. `get_public_queue_status` deliberately
+returns **minimal, privacy-conscious** customer identification — first name plus
+last-initial (e.g. "Alice W.", computed from `customer_name`, not stored separately) —
+never the full name, phone, or email, since this is meant to be shown on a screen anyone in
+the shop (or walking past) can see. `queue_position` is computed the same way the
+authenticated app derives it (LOT 10: `row_number()` over `waiting` rows ordered by
+`created_at`), not a stored column, and is `null` for `called`/`in_service` entries (the
+concept of "position in line" doesn't apply once you're no longer waiting).
+
+A genuine Postgres syntax pitfall was hit and fixed while writing `get_public_queue_status`:
+`position` is not a reserved keyword, but using it as a bare column name in a `RETURNS
+TABLE (...)` list *and* separately calling the built-in `position(substring in string)`
+function in the same statement produced `ERROR: syntax error at or near "position"` — the
+parser needs the two uses disambiguated more than an unquoted identifier alone provides in
+that specific context. Fixed by naming the column `queue_position` instead.
+
+### LOT 11 phase 1 verification
+
+`db/tests/verify_chair_mode_phase1.sql` seeds three `auth.users` fixtures (Jack the
+owner/barber, Bob a second, barber-only member with his own `barbers` row, Kim unused in
+this particular file's assertions) and proves, with real query output: Bob (assigned,
+non-managing) can mark his own appointment `completed`; Bob attempting to rename the
+customer on that same appointment is rejected by the trigger, and the customer name is
+confirmed untouched afterward; Bob touching an appointment assigned to Jack instead affects
+0 rows (RLS silently filters, not a raised error — the correct, documented Postgres
+behavior for `UPDATE` rows a policy doesn't match); Jack (owner) can still fully rename and
+reassign Bob's appointment, proving the trigger's managing-role exemption actually works;
+`join_public_queue` succeeds as `anon` and the resulting entry is visible via
+`get_public_queue_status` as "Alice P." (never the full name/phone), while staff querying
+`queue_entries` directly still see the full `customer_name`/`customer_phone` on the exact
+same row; `join_public_queue` rejects an inactive location; `anon` retains zero direct
+`queue_entries` table access throughout. Both migrations re-applied to confirm idempotency.
+Fixtures fully cleaned up (verified: 0 remaining).
+
 ## Not yet built
 
 - `customers` as a real entity (`appointments.customer_name`/`customer_phone`/
   `customer_email` are a placeholder pending LOT 12, Customer CRM).
-- Public/kiosk-facing read access to `queue_entries` (a TV display, a customer-facing "you
-  are #3 in line" view) — deferred to LOT 11, Chair Mode + Kiosk + TV Mode.
-- Self-service queue actions ("call my next customer") by the assigned barber — same LOT 11
-  deferral as `appointments`.
-- Rate-limiting/abuse-prevention on `book_public_appointment` — see LOT 9 section above;
-  deferred to LOT 23 (Security Hardening).
+- A real chair-occupancy state machine ("which chair has who, since when," a visual
+  chair-status board) — explicitly deferred past LOT 11 phase 1, see above.
+- Barber "claiming" an unassigned (`barber_id is null`) queue entry — deferred, see above;
+  assigning a barber to a queue entry remains an owner/manager/receptionist action for now.
+- Rate-limiting/abuse-prevention on `book_public_appointment`/`join_public_queue` — see LOT
+  9 section above; deferred to LOT 23 (Security Hardening).
 - Self-service `staff_profiles`/`barber_working_hours` editing by the staff member
   themselves (currently owner/manager-only writes throughout).
 - An "an org always has ≥1 owner" invariant (see `memberships` above) — still deferred,
