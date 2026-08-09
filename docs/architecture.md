@@ -265,10 +265,47 @@ Verified: `npm run typecheck`, `lint`, `test` (14 tests, including a new
 `app-locations-page.test.tsx` covering loaded/error/empty states and role-based action
 visibility), and `build` all pass.
 
+## Service catalog + availability (`apps/web`, LOT 7)
+
+Frontend on top of the LOT 7 database layer (`service_categories`, `services`,
+`service_locations`, `barber_services`, `location_hours`, `barber_working_hours`,
+`barber_availability_exceptions` — see `docs/database.md`). Same conventions as LOT 6:
+`organizationId`/`role` from `useCurrentOrg()`, RLS is the actual write boundary, the
+frontend's owner/manager gating is UX only.
+
+- **`/app/services`** (`pages/app-services-page.tsx`): categories (name, display order,
+  active toggle, create/edit/delete) and the service catalog (name, description, category,
+  duration, buffer before/after, price, active toggle) in one page. Price is entered as a
+  dollar amount (`priceDollars`, `z.coerce.number()`) and converted to/from
+  `services.price_cents` right at the form boundary (`dollarsToCents`/
+  `centsToDollarsInput` in `app-services-page.tsx`) — nothing below that boundary (query
+  hooks, DB) ever handles a float dollar amount. Editing a service exposes Locations/
+  Barbers tabs backed by `service_locations`/`barber_services` — explicit-join checklists
+  (a `Switch` per row) that mutate immediately on toggle, matching the LOT 7 explicit-join
+  philosophy (each assignment is its own real, auditable row, not a batched "save"). The
+  services table shows a "N locations · N barbers eligible" subtitle per row so assignment
+  state is visible without opening the dialog.
+- **`/app/availability`** (`pages/app-availability-page.tsx`): a shared `WeeklyHoursTable`/
+  `WeeklyHoursRow` (structurally identical for location hours and barber hours — only the
+  closed/off label differs) renders one editable week (Sunday..Saturday, matching the DB's
+  `day_of_week` convention) per selected location (tabs) or barber (a dropdown, since
+  barber rosters scale higher than location counts). Each day upserts independently against
+  the DB's own `(location_id, day_of_week)`/`(barber_id, day_of_week)` unique constraints
+  (`useUpsertLocationHours`/`useUpsertBarberWorkingHours`), so there's no create-vs-update
+  branching in the UI, and client-side `start < end` validation runs before the DB
+  constraint would reject it. Below a selected barber's weekly table,
+  `barber_availability_exceptions` (one-off time off or adjusted hours) is a simple
+  upcoming list with add/remove — no `AlertDialog` component exists yet in the design
+  system, so removal uses `window.confirm` rather than building new UI infrastructure for
+  one delete action.
+
+Verified: `npm run typecheck`, `lint`, `test` (18 tests), and `build` all pass.
+
 ## Not yet built
 
-Beyond the design system, marketing site, auth/onboarding, and organization admin
-(locations/team/chairs), every remaining product module described in `CLAUDE.md` is still
-pending (`services` and availability — LOT 7 database is done, frontend is not —
-appointments, public booking pages, etc.). See the project task list / roadmap (LOT 7
-onward) for what's next.
+Beyond the design system, marketing site, auth/onboarding, organization admin, and the
+service/availability catalog, every remaining product module described in `CLAUDE.md` is
+still pending: the appointment engine's booking UI (LOT 8 database — `appointments`,
+`get_available_slots` — is done, frontend is not), public booking pages (LOT 9 database is
+done, frontend is not), live queue, chair mode, customer CRM, and beyond. See the project
+task list / roadmap for what's next.

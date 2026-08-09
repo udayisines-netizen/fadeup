@@ -69,6 +69,8 @@ function AppShell() {
             </AppNavLink>
             <AppNavLink to="/app/locations">Locations</AppNavLink>
             <AppNavLink to="/app/chairs">Chairs</AppNavLink>
+            <AppNavLink to="/app/services">Services</AppNavLink>
+            <AppNavLink to="/app/availability">Availability</AppNavLink>
             {canManageTeam ? <AppNavLink to="/app/team">Team</AppNavLink> : null}
           </>
         }
