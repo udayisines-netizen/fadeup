@@ -68,17 +68,60 @@ port bindings:
 PostgreSQL and every internal service is bound to `127.0.0.1` only — nothing here is
 reachable from outside the host without going through Nginx/TLS (not yet configured).
 
+### Known gap: email delivery is not configured
+
+`fadeup-supabase-auth` has `GOTRUE_MAILER_AUTOCONFIRM=false` and
+`GOTRUE_SMTP_HOST=supabase-mail`, but no `supabase-mail` (or any SMTP) container exists
+in `docker-compose.yml` — confirmed directly: `POST /auth/v1/signup` currently returns
+`500 { "error_code": "unexpected_failure", "msg": "Error sending confirmation email" }`
+for every real signup attempt, and the same applies to password-reset emails. This is an
+infrastructure decision, not a code bug, and deliberately **not fixed silently** here
+because it's a security tradeoff, not a mechanical one:
+
+- Set `GOTRUE_MAILER_AUTOCONFIRM=true` — fast to test locally, but every account is
+  usable immediately with an unverified email.
+- Configure real SMTP credentials — correct for anything beyond local development, but
+  needs an actual provider (an external value, per `CLAUDE.md` §62).
+
+The LOT 3 auth/onboarding frontend (see below) is implemented and was verified against
+this exact live stack via the admin API (bypassing only the mailer, not RLS/auth/RPC
+logic) — the code path is correct; only email delivery is pending a decision above.
+
 ## Database (`db/migrations`)
 
-LOT 2 (multi-tenant foundation) is applied: `profiles`, `organizations`, `memberships`,
-`locations`, `audit_logs`, `platform_admins`, RLS enabled and forced on all six with
-default-deny policies, and a `create_organization()` bootstrap RPC. See
+LOT 2 (multi-tenant foundation) and LOT 3 (auth + onboarding) are applied: `profiles`,
+`organizations`, `memberships`, `locations`, `audit_logs`, `platform_admins`,
+`invitations`, RLS enabled and forced on all seven tables with default-deny policies,
+and bootstrap/invitation RPCs (`create_organization`, `complete_organization_onboarding`,
+`get_invitation_by_token`, `accept_invitation`, `revoke_invitation`). See
 `docs/database.md` for the full schema, migration convention, and RLS model, and
-`db/tests/verify_rls.sql` for the tenant-isolation verification script.
+`db/tests/verify_rls.sql` / `db/tests/verify_onboarding_and_invitations.sql` for the
+verification scripts.
+
+## Frontend auth + onboarding (`apps/web`, LOT 3)
+
+`lib/auth-context.tsx` (`AuthProvider`/`useAuth`) wraps Supabase session state;
+`lib/current-org-context.tsx` resolves "the organization the user is currently working
+in" from their memberships (never from anything client-trusted) and remembers the
+choice in `localStorage`. Routes: `/login`, `/signup`, `/forgot-password`,
+`/reset-password`, `/invite/:token` (public — previews an invitation via the anon-callable
+`get_invitation_by_token` RPC before requiring a session), `/onboarding` and `/app`,
+`/app/team` (protected via `RequireAuth`, redirecting to `/login?redirect=...`).
+`/app/team` is a minimal invite/roster page, not the full staff directory (that's LOT 6);
+it can only show the signed-in user's own display name for now because `profiles` has no
+org-scoped read policy yet (documented gap from LOT 2). Verified: `npm run typecheck`,
+`lint`, `test` (10 tests, Supabase mocked — no live network in unit tests), and `build`
+all pass; the dev server was also driven end-to-end over real HTTP against the live
+Kong/PostgREST/Postgres stack (sign-in, profile read, `complete_organization_onboarding`,
+membership read, anon-safe invite lookup, RLS-denied anon org read) — all behaved
+correctly and fixtures were cleaned up. Pixel-level browser rendering could not be
+verified in this environment: Playwright's Chromium needs `libatk-1.0.so.0` and other
+system libraries this sandbox user cannot install (no root) — a genuine environment
+limitation, not a skipped step.
 
 ## Not yet built
 
-Design system, landing page, auth/onboarding UI, and every product module beyond the
-LOT 2 database foundation described in `CLAUDE.md` are not implemented yet
-(`staff_profiles`, `services`, `appointments`, `invitations`, public booking pages).
-See the project task list / roadmap (LOT 3 onward) for what's next.
+Design system and landing page (LOT 4/5) are not implemented yet. Beyond auth/onboarding,
+every product module described in `CLAUDE.md` is still pending (`staff_profiles` beyond
+the minimal roster above, `services`, `appointments`, public booking pages, etc.). See the
+project task list / roadmap (LOT 4 onward) for what's next.
