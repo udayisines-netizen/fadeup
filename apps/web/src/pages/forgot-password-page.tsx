@@ -53,7 +53,7 @@ export function ForgotPasswordPage() {
           your password.
         </Alert>
         <div className="mt-6">
-          <Link to="/login" className="text-sm font-medium text-neutral-900 underline">
+          <Link to="/login" className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
             Back to log in
           </Link>
         </div>
@@ -66,7 +66,7 @@ export function ForgotPasswordPage() {
       title="Reset your password"
       subtitle="We'll email you a link to set a new password."
       footer={
-        <Link to="/login" className="font-medium text-neutral-900 underline">
+        <Link to="/login" className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
           Back to log in
         </Link>
       }
@@ -77,7 +77,9 @@ export function ForgotPasswordPage() {
         <TextField
           label="Email"
           type="email"
+          inputMode="email"
           autoComplete="email"
+          spellCheck={false}
           error={errors.email?.message}
           {...register('email')}
         />

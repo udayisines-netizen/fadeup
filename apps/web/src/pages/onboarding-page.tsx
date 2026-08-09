@@ -7,6 +7,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { TextField } from '@/components/ui/text-field'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
+import { Card } from '@/components/ui/card'
+import { Container } from '@/components/ui/container'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
 import { SLUG_PATTERN, slugify } from '@/lib/slug'
@@ -104,45 +106,50 @@ export function OnboardingPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-neutral-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-lg border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-xl font-semibold text-neutral-900">Set up your shop</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Create your organization and its first location to get started.
-        </p>
+    <main className="flex min-h-svh items-center justify-center bg-paper-50 py-12">
+      <Container size="sm">
+        <Card elevated className="p-6 sm:p-8">
+          <h1 className="text-xl font-semibold text-ink-950">Set up your shop</h1>
+          <p className="mt-1 text-sm text-ink-500">
+            Create your organization and its first location to get started.
+          </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 flex flex-col gap-4">
-          {formError ? <Alert variant="error">{formError}</Alert> : null}
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 flex flex-col gap-4">
+            {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField
-            label="Shop name"
-            error={errors.shopName?.message}
-            {...register('shopName', { onBlur: handleShopNameBlur })}
-          />
+            <TextField
+              label="Shop name"
+              autoComplete="organization"
+              error={errors.shopName?.message}
+              {...register('shopName', { onBlur: handleShopNameBlur })}
+            />
 
-          <TextField
-            label="URL slug"
-            hint="Used in your booking link. Lowercase letters, numbers and hyphens only."
-            error={errors.slug?.message}
-            {...register('slug', {
-              onChange: () => setSlugTouched(true),
-            })}
-          />
+            <TextField
+              label="URL slug"
+              hint="Used in your booking link. Lowercase letters, numbers and hyphens only."
+              autoComplete="off"
+              spellCheck={false}
+              error={errors.slug?.message}
+              {...register('slug', {
+                onChange: () => setSlugTouched(true),
+              })}
+            />
 
-          <TextField
-            label="First location name"
-            hint='e.g. "Downtown" or your shop name if you only have one location.'
-            error={errors.locationName?.message}
-            {...register('locationName')}
-          />
+            <TextField
+              label="First location name"
+              hint='e.g. "Downtown" or your shop name if you only have one location.'
+              error={errors.locationName?.message}
+              {...register('locationName')}
+            />
 
-          <TextField label="Timezone" error={errors.timezone?.message} {...register('timezone')} />
+            <TextField label="Timezone" error={errors.timezone?.message} {...register('timezone')} />
 
-          <Button type="submit" isLoading={isSubmitting || mutation.isPending} className="w-full">
-            Create shop
-          </Button>
-        </form>
-      </div>
+            <Button type="submit" isLoading={isSubmitting || mutation.isPending} className="w-full">
+              Create shop
+            </Button>
+          </form>
+        </Card>
+      </Container>
     </main>
   )
 }

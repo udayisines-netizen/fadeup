@@ -6,7 +6,7 @@ interface SpinnerProps {
 }
 
 /** Small inline loading indicator. Always exposes an accessible label. */
-export function Spinner({ className, label = 'Loading' }: SpinnerProps) {
+export function Spinner({ className, label = 'Loading…' }: SpinnerProps) {
   return (
     <span role="status" className="inline-flex items-center gap-2">
       <svg
@@ -28,10 +28,10 @@ export function Spinner({ className, label = 'Loading' }: SpinnerProps) {
 }
 
 /** Full-height centered loading state, used while a page's primary data is not yet ready. */
-export function PageSpinner({ label = 'Loading' }: { label?: string }) {
+export function PageSpinner({ label = 'Loading…' }: { label?: string }) {
   return (
     <div className="flex min-h-svh items-center justify-center">
-      <Spinner className="h-6 w-6 text-neutral-400" label={label} />
+      <Spinner className="h-6 w-6 text-ink-300" label={label} />
     </div>
   )
 }

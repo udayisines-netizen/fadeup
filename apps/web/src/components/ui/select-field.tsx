@@ -1,4 +1,5 @@
 import { forwardRef, useId, type SelectHTMLAttributes } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface SelectFieldOption {
@@ -22,30 +23,36 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={selectId} className="text-sm font-medium text-neutral-900">
+      <label htmlFor={selectId} className="text-sm font-medium text-ink-950">
         {label}
       </label>
-      <select
-        ref={ref}
-        id={selectId}
-        aria-invalid={Boolean(error)}
-        aria-describedby={errorId}
-        className={cn(
-          'min-h-11 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900',
-          'focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-neutral-900',
-          error && 'border-red-500 focus:outline-red-600',
-          className,
-        )}
-        {...props}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          ref={ref}
+          id={selectId}
+          aria-invalid={Boolean(error)}
+          aria-describedby={errorId}
+          className={cn(
+            'min-h-11 w-full appearance-none rounded-md border border-border-strong bg-paper-0 px-3 py-2 pr-9 text-sm text-ink-950',
+            'disabled:cursor-not-allowed disabled:border-border disabled:bg-paper-100 disabled:text-ink-300',
+            error && 'border-danger-600',
+            className,
+          )}
+          {...props}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500"
+          aria-hidden="true"
+        />
+      </div>
       {error ? (
-        <p id={errorId} role="alert" className="text-xs text-red-600">
+        <p id={errorId} role="alert" className="text-xs text-danger-600">
           {error}
         </p>
       ) : null}

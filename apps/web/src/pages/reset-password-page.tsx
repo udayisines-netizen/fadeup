@@ -93,7 +93,10 @@ export function ResetPasswordPage() {
           This password reset link is invalid or has expired. Request a new one to continue.
         </Alert>
         <div className="mt-6">
-          <Link to="/forgot-password" className="text-sm font-medium text-neutral-900 underline">
+          <Link
+            to="/forgot-password"
+            className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
+          >
             Request a new link
           </Link>
         </div>

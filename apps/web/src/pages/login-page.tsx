@@ -60,7 +60,7 @@ export function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link
               to={`/signup${redirectTo !== '/app' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-              className="font-medium text-neutral-900 underline"
+              className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
             >
               Sign up
             </Link>
@@ -74,7 +74,9 @@ export function LoginPage() {
         <TextField
           label="Email"
           type="email"
+          inputMode="email"
           autoComplete="email"
+          spellCheck={false}
           error={errors.email?.message}
           {...register('email')}
         />
@@ -87,7 +89,10 @@ export function LoginPage() {
         />
 
         <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-sm font-medium text-neutral-600 underline">
+          <Link
+            to="/forgot-password"
+            className="text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
+          >
             Forgot password?
           </Link>
         </div>

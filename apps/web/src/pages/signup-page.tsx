@@ -69,7 +69,7 @@ export function SignupPage() {
           creating your account, then log in.
         </Alert>
         <div className="mt-6">
-          <Link to="/login" className="text-sm font-medium text-neutral-900 underline">
+          <Link to="/login" className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
             Back to log in
           </Link>
         </div>
@@ -86,7 +86,7 @@ export function SignupPage() {
           Already have an account?{' '}
           <Link
             to={`/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-            className="font-medium text-neutral-900 underline"
+            className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
           >
             Log in
           </Link>
@@ -105,7 +105,9 @@ export function SignupPage() {
         <TextField
           label="Email"
           type="email"
+          inputMode="email"
           autoComplete="email"
+          spellCheck={false}
           error={errors.email?.message}
           {...register('email')}
         />

@@ -1,9 +1,233 @@
 @import 'tailwindcss';
 
+/*
+ * FadeUp design tokens (LOT 4).
+ *
+ * Brand direction: the operating system for modern barbershops — premium,
+ * precise, tactile. Warm near-black ink on warm paper (not pure
+ * black/white — avoids the cold, generic "AI SaaS" look), one confident
+ * copper accent used sparingly for primary actions and focus, restrained
+ * radii/shadows. Reference quality: Linear/Stripe/Square-tier restraint,
+ * not their palettes.
+ *
+ * Every component must draw from these tokens — no ad hoc hex values or
+ * one-off spacing/radius/shadow in component code. Tailwind's default
+ * spacing scale (the `--spacing` multiplier) is used as-is for spacing;
+ * only color/type/radius/shadow are FadeUp-specific and defined here.
+ */
+@theme {
+  /* Ink (text) — warm dark neutral, not pure black */
+  --color-ink-950: #1a1613;
+  --color-ink-800: #2c2621;
+  --color-ink-700: #453d36;
+  --color-ink-500: #756a61;
+  --color-ink-300: #a89d92;
+
+  /* Paper (surfaces) — warm off-white, not pure white */
+  --color-paper-0: #ffffff;
+  --color-paper-50: #faf8f5;
+  --color-paper-100: #f3efe8;
+  --color-paper-200: #e9e3d9;
+
+  /* Borders */
+  --color-border: #e6e0d5;
+  --color-border-strong: #d6cdbe;
+
+  /* Brand accent — copper. Sparingly: primary actions, focus, links. */
+  --color-accent-100: #f7e6d8;
+  --color-accent-200: #edc9a8;
+  --color-accent-600: #b5541f;
+  --color-accent-700: #96431a;
+  --color-accent-800: #7a3615;
+
+  /* Semantic (status), deliberately distinct from the brand accent so
+     "in progress"/"warning" never gets confused with a primary action. */
+  --color-success-100: #dff3e7;
+  --color-success-600: #1f7a4d;
+  --color-success-700: #166139;
+
+  --color-warning-100: #fbeed2;
+  --color-warning-600: #b4790a;
+  --color-warning-700: #8f6008;
+
+  --color-danger-100: #fbe3e0;
+  --color-danger-600: #c23b2e;
+  --color-danger-700: #9c2f24;
+
+  --color-info-100: #e3edf9;
+  --color-info-600: #2f6fb5;
+  --color-info-700: #255a92;
+
+  /* Typography */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+
+  /* Radii — restrained, not the generic 4px-everywhere or bubbly-rounded look */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Shadows — used only for genuinely elevated surfaces (dialogs, popovers,
+     dropdowns), never as decoration on static cards */
+  --shadow-xs: 0 1px 2px rgba(26, 22, 19, 0.06);
+  --shadow-sm: 0 2px 6px rgba(26, 22, 19, 0.07);
+  --shadow-md: 0 8px 24px rgba(26, 22, 19, 0.1);
+  --shadow-lg: 0 16px 48px rgba(26, 22, 19, 0.16);
+
+  /* Marketing/content max-widths */
+  --breakpoint-3xl: 100rem;
+}
+
 :root {
-  color-scheme: light dark;
+  /* Explicitly light: the app's surfaces are hand-tuned for light paper
+     tones. Letting native form controls follow OS dark preference while
+     everything else stays light reads as broken, not "supports dark mode" —
+     a real dark theme is a deliberate future pass, not a side effect of
+     `color-scheme: light dark`. */
+  color-scheme: light;
 }
 
 body {
   margin: 0;
+  background-color: var(--color-paper-50);
+  color: var(--color-ink-950);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-600);
+  outline-offset: 2px;
+}
+
+/*
+ * Motion — overlay/popover entrance animation for Radix-based components
+ * (Dialog/Drawer/Dropdown/Toast). Compositor-friendly (opacity/transform
+ * only) and fully disabled under prefers-reduced-motion, per the Web
+ * Interface Guidelines. Skeleton's pulse is disabled the same way — a
+ * page-wide pulsing loading state is a bigger motion surface than a small
+ * spinner, so it's the one we gate rather than fighting Tailwind's
+ * built-in `animate-spin`/`animate-pulse` utilities directly.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-fu-overlay][data-state='open'] {
+    animation: fu-fade-in 150ms ease-out both;
+  }
+
+  [data-fu-content][data-state='open'] {
+    animation: fu-content-in 150ms ease-out both;
+  }
+
+  [data-fu-drawer-content][data-side='right'][data-state='open'] {
+    animation: fu-drawer-in-right 200ms ease-out both;
+  }
+
+  [data-fu-drawer-content][data-side='left'][data-state='open'] {
+    animation: fu-drawer-in-left 200ms ease-out both;
+  }
+
+  [data-fu-popover][data-state='open'] {
+    animation: fu-popover-in 120ms ease-out both;
+  }
+
+  [data-fu-toast][data-state='open'] {
+    animation: fu-toast-in 180ms ease-out both;
+  }
+}
+
+@keyframes fu-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fu-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes fu-drawer-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fu-drawer-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fu-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fu-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+ * CSS-only "scroll shadow" affordance for horizontally-scrollable
+ * containers (the Table wrapper) — no JS scroll listeners needed. Classic
+ * dual-background technique: two solid fades that scroll with the content
+ * (masking it near the edges) plus two shadows pinned to the container that
+ * only become visible once there's more content to reveal in that
+ * direction.
+ */
+.fu-scroll-shadow-x {
+  background:
+    linear-gradient(to right, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,
+    linear-gradient(to left, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,
+    linear-gradient(to right, rgba(26, 22, 19, 0.12), rgba(255, 255, 255, 0) 8px) scroll,
+    linear-gradient(to left, rgba(26, 22, 19, 0.12), rgba(255, 255, 255, 0) 8px) scroll;
+  background-repeat: no-repeat;
+  background-color: var(--color-paper-0);
+  background-position:
+    left top,
+    right top,
+    left top,
+    right top;
+  background-size:
+    40px 100%,
+    40px 100%,
+    16px 100%,
+    16px 100%;
 }

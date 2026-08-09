@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AuthCard } from '@/components/auth/auth-card'
 import { Alert } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth-context'
 import { useAcceptInvitation, useInvitationByToken } from '@/lib/queries/invitations'
@@ -106,28 +107,30 @@ export function InvitePage() {
       <div className="flex flex-col gap-4">
         {acceptError ? <Alert variant="error">{acceptError}</Alert> : null}
 
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt className="text-neutral-500">Organization</dt>
-          <dd className="text-neutral-900">{invitation.organizationName}</dd>
-          <dt className="text-neutral-500">Role</dt>
-          <dd className="text-neutral-900">{ROLE_LABELS[invitation.role] ?? invitation.role}</dd>
-          <dt className="text-neutral-500">Invited email</dt>
-          <dd className="text-neutral-900">{invitation.email}</dd>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+          <dt className="text-ink-500">Organization</dt>
+          <dd className="text-ink-950">{invitation.organizationName}</dd>
+          <dt className="text-ink-500">Role</dt>
+          <dd className="text-ink-950">
+            <Badge variant="accent">{ROLE_LABELS[invitation.role] ?? invitation.role}</Badge>
+          </dd>
+          <dt className="text-ink-500">Invited email</dt>
+          <dd className="truncate text-ink-950">{invitation.email}</dd>
         </dl>
 
         {!user ? (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-neutral-500">Log in or create an account to accept.</p>
+            <p className="text-sm text-ink-500">Log in or create an account to accept.</p>
             <div className="flex gap-2">
               <Link
                 to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-50"
+                className={buttonVariants({ variant: 'secondary' }, 'flex-1')}
               >
                 Log in
               </Link>
               <Link
                 to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+                className={buttonVariants({ variant: 'primary' }, 'flex-1')}
               >
                 Sign up
               </Link>
