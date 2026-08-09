@@ -68,24 +68,29 @@ port bindings:
 PostgreSQL and every internal service is bound to `127.0.0.1` only — nothing here is
 reachable from outside the host without going through Nginx/TLS (not yet configured).
 
-### Known gap: email delivery is not configured
+### Known gap: email delivery is not configured (autoconfirm enabled as an interim fix)
 
-`fadeup-supabase-auth` has `GOTRUE_MAILER_AUTOCONFIRM=false` and
+`fadeup-supabase-auth` originally had `GOTRUE_MAILER_AUTOCONFIRM=false` and
 `GOTRUE_SMTP_HOST=supabase-mail`, but no `supabase-mail` (or any SMTP) container exists
-in `docker-compose.yml` — confirmed directly: `POST /auth/v1/signup` currently returns
-`500 { "error_code": "unexpected_failure", "msg": "Error sending confirmation email" }`
-for every real signup attempt, and the same applies to password-reset emails. This is an
-infrastructure decision, not a code bug, and deliberately **not fixed silently** here
-because it's a security tradeoff, not a mechanical one:
+in `docker-compose.yml` — confirmed directly: `POST /auth/v1/signup` 500'd with
+`{ "error_code": "unexpected_failure", "msg": "Error sending confirmation email" }` for
+every signup, and the same would apply to password-reset emails.
 
-- Set `GOTRUE_MAILER_AUTOCONFIRM=true` — fast to test locally, but every account is
-  usable immediately with an unverified email.
-- Configure real SMTP credentials — correct for anything beyond local development, but
-  needs an actual provider (an external value, per `CLAUDE.md` §62).
+Per an explicit decision, this was unblocked by recreating the `auth` container with
+`ENABLE_EMAIL_AUTOCONFIRM=true` (`docker compose`'s shell-environment override takes
+precedence over the `.env` file's stored value, so this did not require editing
+`infra/supabase/.env`, which is permission-blocked from direct reads/edits in this
+environment). **This override is not persisted** — `ENABLE_EMAIL_AUTOCONFIRM` in
+`infra/supabase/.env` itself is still `false` (or unset), so any future full stack
+recreation (`docker compose up -d` after a reboot, `run.sh recreate` without the
+override, etc.) reverts to requiring email confirmation, at which point signups will
+500 again until either the `.env` value is updated directly or real SMTP is configured.
+Verified: a real, unauthenticated `POST /auth/v1/signup` now returns a session
+immediately with no email step, exactly as the `/signup` page expects.
 
-The LOT 3 auth/onboarding frontend (see below) is implemented and was verified against
-this exact live stack via the admin API (bypassing only the mailer, not RLS/auth/RPC
-logic) — the code path is correct; only email delivery is pending a decision above.
+Real email delivery (password-reset, invite notifications) is still not configured —
+that needs actual SMTP provider credentials (an external value, per `CLAUDE.md` §62) and
+is unrelated to this autoconfirm fix.
 
 ## Database (`db/migrations`)
 
