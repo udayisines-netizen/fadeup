@@ -487,15 +487,99 @@ also re-applied to confirm idempotency, and RLS state (`relrowsecurity`/
 `relforcerowsecurity`, 26 policies across the 7 tables) was independently re-confirmed.
 Fixtures fully cleaned up (verified: 0 remaining).
 
+## LOT 8 additions (appointment engine)
+
+| File | Adds |
+|---|---|
+| `20260809140000_appointments.sql` | `btree_gist` extension, `appointment_status` enum, `appointments` table, `blocked_range` trigger, tenant-consistency trigger, RLS |
+| `20260809140100_appointment_slots_rpc.sql` | `get_available_slots(...)` RPC |
+
+### `appointments` — no `customers` table yet
+
+There is no `customers` entity yet (that's LOT 12, Customer CRM) — `appointments` captures
+guest-style `customer_name`/`customer_phone`/`customer_email` directly. This is a
+deliberate, documented placeholder: LOT 12 will add a real `customers` table and a
+`customer_id` FK to `appointments`, not silently work around the gap now.
+
+### Double-booking prevention: a GiST exclusion constraint, not a trigger
+
+`appointments_barber_no_overlap` and `appointments_chair_no_overlap` are `EXCLUDE USING
+gist` constraints (requiring the `btree_gist` extension, so a plain equality column can sit
+alongside a range column in the same GiST index) over `(barber_id, blocked_range)` and
+`(chair_id, blocked_range)`, both scoped `where (status not in ('cancelled', 'no_show'))`.
+An exclusion constraint was chosen over a "check for overlap, then insert" trigger
+specifically because the trigger approach has a race condition between the check and the
+insert under concurrent writes — two simultaneous booking requests could both pass the
+check before either commits. A database-level exclusion constraint has no such window: it
+is enforced atomically by the index itself. `chair_id` is nullable; Postgres exclusion
+constraints treat `NULL` as distinct from `NULL` (same rule as a unique constraint), so
+appointments with no chair assigned never spuriously conflict with each other.
+
+`blocked_range` (a `tstzrange` column) is the barber's/chair's fully-occupied window
+**including buffers** — `buffer_before_minutes`/`buffer_after_minutes` are snapshotted onto
+the appointment row from `services` at booking time, so a later edit to a service's buffer
+configuration never silently changes the blocked window of appointments already booked.
+`blocked_range` is populated by a `BEFORE INSERT OR UPDATE` trigger
+(`set_appointment_blocked_range`), **not a generated column** — Postgres's
+`timestamptz +/- interval` operator is `STABLE`, not `IMMUTABLE` (interval arithmetic on a
+timestamptz is timezone-rule-dependent), so Postgres rejects it inside a generated-column
+expression with `ERROR: generation expression is not immutable`. This was hit and fixed
+directly while building this migration, not assumed to work from documentation.
+
+### RLS: barbers are read-only in LOT 8
+
+`appointments` SELECT is open to any org member (staff need shared visibility of the
+schedule). INSERT/UPDATE/DELETE are restricted to `owner`/`manager`/`receptionist` — the
+staff roles that actually run front-of-house booking. A `barber`-role member can read the
+full schedule but cannot write to it at all in this lot; self-service status updates
+("mark this appointment complete/no-show from the chair") are deferred to Chair Mode
+(LOT 11), which will need its own narrowly-scoped policy rather than blanket appointment
+write access for barbers.
+
+### `get_available_slots(organization_id, location_id, barber_id, service_id, date, step_minutes default 15)`
+
+Computes bookable `(slot_start, slot_end)` pairs by: looking up the service's
+duration/buffers; intersecting `location_hours` and `barber_working_hours` for that
+`day_of_week`; applying a same-date `barber_availability_exceptions` override if one exists
+(replacing the regular weekly window entirely for that date, not merged with it); then
+excluding any candidate whose buffered window would overlap an existing non-cancelled,
+non-no-show appointment's `blocked_range`. `SECURITY INVOKER` (the default) — it reads
+`public.appointments`/`public.services`/etc. under the caller's own RLS, so it can only ever
+return slot data for an organization the caller already has access to; `EXECUTE` is granted
+to `authenticated` only, revoked from `anon`/`PUBLIC` — it is **not** anon-callable. LOT 9
+(public booking) will need its own anon-safe wrapper that validates the
+organization/service/barber differently, not a grant on this function.
+
+**Documented simplification**: `barber_working_hours` is not location-scoped (a barber has
+one weekly schedule, not one per location), so this function evaluates that schedule's
+times in the *location's* timezone. Exactly correct for a barber who only ever works at one
+location; an approximation for a barber shared across locations in different timezones.
+Revisit if/when multi-location barber scheduling (LOT 21) needs per-location working hours.
+
+### LOT 8 verification
+
+`db/tests/verify_appointments.sql` seeds three `auth.users` fixtures (Jack the owner/
+barber, Kim an outsider, Bob a barber-role member) and proves, with real query output: a
+10:00-10:30 booking with 5/10-minute buffers produces `blocked_range =
+["09:55","10:40")` exactly; a genuinely overlapping booking for the same barber is rejected
+by the exclusion constraint (`conflicting key value violates exclusion constraint
+"appointments_barber_no_overlap"`), and the earlier legitimate booking survives that
+rejected transaction untouched; a non-overlapping later booking for the same barber
+succeeds; the tenant-consistency trigger rejects a cross-org `location_id`; a barber-role
+member is rejected by RLS on INSERT but can still read the full schedule (2 appointments
+visible); a non-member sees 0 appointments; `anon` sees 0 rows on the table and gets
+`permission denied` calling `get_available_slots` directly (not merely undocumented —
+actually denied); the RPC correctly excludes the booked 10:00 and 14:00 slots, includes a
+clear 09:15 slot, and returns 0 slots for a Sunday with no `location_hours` row. Both
+migrations were re-applied to confirm idempotency. Fixtures fully cleaned up (verified: 0
+remaining).
+
 ## Not yet built
 
-- Public (anon) access path for booking-page org lookup by `slug` — later, public-
-  booking lot.
-- The appointment engine's actual slot-computation logic (intersecting `location_hours`,
-  `barber_working_hours`, `barber_availability_exceptions`, existing bookings, and a
-  service's duration/buffers into real bookable times) — LOT 8. This lot only stores the
-  inputs correctly.
-- `appointments` — LOT 8.
+- Public (anon) access path for booking-page org lookup by `slug`, and an anon-safe
+  wrapper around `get_available_slots` — LOT 9, public booking.
+- `customers` as a real entity (`appointments.customer_name`/`customer_phone`/
+  `customer_email` are a placeholder pending LOT 12, Customer CRM).
 - Self-service `staff_profiles`/`barber_working_hours` editing by the staff member
   themselves (currently owner/manager-only writes throughout).
 - An "an org always has ≥1 owner" invariant (see `memberships` above) — still deferred,
