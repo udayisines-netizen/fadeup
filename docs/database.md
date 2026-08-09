@@ -332,15 +332,97 @@ a revoked invitation can no longer be accepted. RLS state and `SECURITY DEFINER`
 all four functions were also independently confirmed via `pg_class`/`pg_policies`/
 `pg_proc`. Fixtures are fully cleaned up at the end of the run (verified: 0 remaining).
 
+## LOT 6 additions (organization / locations / staff / chairs)
+
+| File | Adds |
+|---|---|
+| `20260809120000_staff_profiles.sql` | `staff_profiles`, `handle_new_membership()` auto-provisioning trigger on `memberships`, location-consistency trigger, RLS |
+| `20260809120100_barbers.sql` | `barbers`, staff-profile-consistency trigger, RLS |
+| `20260809120200_chairs.sql` | `chairs`, location-consistency trigger, RLS |
+
+### `staff_profiles`
+
+The operational/public-facing staff record, deliberately distinct from two other tables
+that look similar at a glance: `memberships` (pure authorization — user + org → role, no
+name/bio/anything human-facing) and `profiles` (bare account identity, **not** org-scoped
+and **not** visible to teammates — `profiles_select_own` only lets a user read their own
+row, a deliberate LOT 2 gap). `staff_profiles` is org-scoped and readable by any member of
+that org, which is what finally lets `/app/team` show real display names instead of the
+`Member <8 chars>` placeholder from LOT 3.
+
+Applies to any membership role (owner/manager/receptionist/barber), not barbers
+specifically — `display_name`, `title`, `bio`, and a primary `location_id` are meaningful
+for any staff member. `barbers` (below) is the further specialization for staff who
+actually take appointments.
+
+**Auto-provisioned, not manually created:** `handle_new_membership()`, an `AFTER INSERT`
+trigger on `memberships`, creates the matching `staff_profiles` row automatically —
+`display_name` defaults from `profiles.full_name` when available, falling back to
+`'Team member'`. This fires for every path that creates a membership (org creation's
+owner trigger, `accept_invitation`, or a direct owner/manager insert), so there is no
+state where an organization has members without a usable roster. Owner/manager can edit
+the auto-generated `display_name`/`title`/`bio` afterward via the normal update policy.
+**Deliberately deferred:** the staff member editing their own `staff_profiles` row
+(self-service bio/photo) is not built — only owner/manager can write, for now.
+
+**Tenant-consistency guard:** a `BEFORE INSERT OR UPDATE` trigger
+(`check_staff_profile_location_consistency`) rejects a `location_id` that doesn't belong
+to the same `organization_id`, enforced at the trigger level (not only RLS `with check`)
+so it holds even for `service_role`/direct-SQL writes.
+
+RLS: `SELECT` open to any org member (the entire point of this table) or platform admin;
+`INSERT`/`UPDATE`/`DELETE` restricted to owner/manager, and `INSERT` additionally requires
+the target `user_id` to already hold a membership in that organization — a staff profile
+can never be created for a non-member.
+
+### `barbers`
+
+Marks a `staff_profiles` row as a bookable barber. Kept as its own table rather than a
+boolean column on `staff_profiles` because barber-specific concerns land in later lots
+(service eligibility in LOT 7, commission rules in LOT 17) and will attach to this row
+specifically. For LOT 6, deliberately minimal: just `is_bookable` and the tenant-
+consistency guarantee that `staff_profile_id` belongs to the same `organization_id`
+(same trigger-level enforcement pattern as above). Working hours, time off, and service
+eligibility are explicitly out of scope — LOT 7's working-time engine. RLS: any org member
+can `SELECT`; owner/manager only for writes.
+
+### `chairs`
+
+Structural inventory of physical chairs per location — **not** a live occupancy/session
+state machine. `is_active` means "this chair currently exists in the shop's inventory,"
+not "currently occupied." A real operational status (available/reserved/occupied) needs
+concurrency-safe claiming logic (two barbers must never claim the same chair) that belongs
+to Chair Mode (LOT 11) — adding a half-built status column now, with nothing behind it,
+would be worse than not having one. Same `location_id`-consistency trigger pattern as
+`staff_profiles`. RLS: any org member can `SELECT`; owner/manager only for writes.
+
+### LOT 6 verification
+
+`db/tests/verify_staff_locations_chairs.sql` seeds two `auth.users` fixtures (Henry the
+founder, Ivy the invited barber) and proves, with real query output: `staff_profiles` is
+auto-created for the owner on org creation *and* for an invitee via `accept_invitation`
+(both paths through `handle_new_membership()`, not just one); an owner can add a second
+location, a chair, and mark a teammate a barber — looking up that teammate via
+`staff_profiles.display_name`, not `auth.users`/`profiles` (which correctly denies
+cross-user access, confirmed as a real RLS error when the test script first tried the
+wrong approach); a chair referencing another organization's location is rejected by the
+consistency trigger; a barber (non-owner/manager) is rejected by RLS when attempting to
+create a chair; `anon` has zero access to all three tables. RLS state
+(`relrowsecurity`/`relforcerowsecurity`/`pg_policies`) was independently re-confirmed
+against the live database, and the migration set was re-applied to confirm idempotency.
+Fixtures fully cleaned up (verified: 0 remaining).
+
 ## Not yet built
 
 - Public (anon) access path for booking-page org lookup by `slug` — later, public-
   booking lot.
-- `staff_profiles`, `services`, `appointments` — later lots, per `CLAUDE.md`'s LOT
-  sequencing. Nothing built so far reaches beyond the `organizations`/`memberships`/
-  `locations`/`invitations` foundation they'll attach to.
+- `services`, `appointments` — later lots, per `CLAUDE.md`'s LOT sequencing.
+- Self-service `staff_profiles` editing by the staff member themselves (currently
+  owner/manager-only writes).
 - An "an org always has ≥1 owner" invariant (see `memberships` above) — still deferred,
   now also relevant to `revoke_invitation`/membership removal UI once built.
+- A real occupancy/session state machine for `chairs` — LOT 11 (Chair Mode).
+- Working hours, time off, and service eligibility for `barbers` — LOT 7.
 - Any writer for `audit_logs` — no feature yet produces audit events; the table and its
   RLS exist so the first feature that needs to record one has a safe place to write to.
 - Invitation delivery (email sending) — this lot creates and stores the invitation and
