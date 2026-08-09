@@ -70,11 +70,15 @@ reachable from outside the host without going through Nginx/TLS (not yet configu
 
 ## Database (`db/migrations`)
 
-No migrations exist yet. Schema work begins in LOT 2 (multi-tenant foundation:
-`profiles`, `organizations`, `memberships`, `locations`, RLS).
+LOT 2 (multi-tenant foundation) is applied: `profiles`, `organizations`, `memberships`,
+`locations`, `audit_logs`, `platform_admins`, RLS enabled and forced on all six with
+default-deny policies, and a `create_organization()` bootstrap RPC. See
+`docs/database.md` for the full schema, migration convention, and RLS model, and
+`db/tests/verify_rls.sql` for the tenant-isolation verification script.
 
 ## Not yet built
 
-Design system, landing page, auth/onboarding, and every product module described in
-`CLAUDE.md` are not implemented yet. See the project task list / roadmap (LOT 2 onward)
-for what's next.
+Design system, landing page, auth/onboarding UI, and every product module beyond the
+LOT 2 database foundation described in `CLAUDE.md` are not implemented yet
+(`staff_profiles`, `services`, `appointments`, `invitations`, public booking pages).
+See the project task list / roadmap (LOT 3 onward) for what's next.
