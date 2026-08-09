@@ -669,10 +669,77 @@ was. Fixed by capturing every fixture id via `\gset` while still running as `pos
 those captured ids as literals in every later `anon`-role call. Both migrations were
 re-applied to confirm idempotency. Fixtures fully cleaned up (verified: 0 remaining).
 
+## LOT 10 additions (live queue)
+
+| File | Adds |
+|---|---|
+| `20260809160000_queue_entries.sql` | `queue_status` enum, `queue_entries` table, tenant-consistency trigger, RLS, `supabase_realtime` publication membership |
+
+### `queue_entries` is a separate concept from `appointments`, not a variant of it
+
+An appointment has a fixed scheduled `starts_at`/`ends_at`; a queue entry has no scheduled
+time at all — it represents "this customer is physically waiting, next available."
+Reusing `appointments` with nullable time columns would blur two genuinely different
+business concepts and complicate every appointment query with "is this a real booking or a
+walk-in" branching, so this is its own table. `barber_id` is nullable — a walk-in can
+request "any available barber" (`null`) or a specific one; this was verified directly (two
+`null`-barber entries and one requesting a specific barber, all stored and read back
+correctly).
+
+### Position in line is derived, never stored
+
+There is no `position` column. A stored position would need renumbering every time an
+entry leaves the queue out of order (a no-show pulled from the middle, a customer who
+leaves) — exactly the kind of stateful bookkeeping that invites bugs. Position is instead
+computed at query time by ordering `status = 'waiting'` rows by `created_at`
+(`row_number() over (order by created_at)`, as the frontend will do) — always correct,
+needs no maintenance, verified directly against three seeded walk-ins.
+
+### RLS matches `appointments` exactly, on purpose
+
+SELECT is open to any org member (barbers included — everyone on shift needs to see the
+line). INSERT/UPDATE/DELETE are restricted to `owner`/`manager`/`receptionist` — barbers are
+read-only in this lot, the same documented simplification made for `appointments` (LOT 8):
+self-service "call my next customer" is deferred to Chair Mode (LOT 11).
+
+### Scope: internal-only in this lot, public/kiosk read deferred to LOT 11
+
+This lot is the internal, authenticated-only queue data model and staff management surface.
+A public/anon-facing read (a TV/kiosk display, or a customer-facing "you are #3 in line"
+view) is explicitly deferred to LOT 11 (Chair Mode + Kiosk + TV Mode) — the same way LOT 8
+(internal appointments) was separated from LOT 9 (public booking). Building the anon-facing
+surface before the kiosk/TV feature that actually needs it would mean guessing its shape.
+
+### Realtime
+
+`queue_entries` is added to the `supabase_realtime` publication (selective, not `ALL
+TABLES`, in this stack — confirmed via `pg_publication_tables`) so a "live" queue display
+can subscribe to Postgres Changes instead of polling. Supabase Realtime's Postgres Changes
+feature is RLS-aware for authenticated subscribers — a connected client only receives
+change events for rows its own RLS policies would let it `SELECT` — so `queue_entries_select`
+(above) is what actually makes this tenant-safe, not anything realtime-specific.
+
+### LOT 10 verification
+
+`db/tests/verify_queue.sql` seeds two `auth.users` fixtures (Jack the owner/barber, Bob a
+barber-role member) and proves, with real query output: three walk-ins are added (two with
+`barber_id = null`, one requesting a specific barber) and read back in the correct
+derived-position order; a full status lifecycle (`waiting` → `called` → `in_service` →
+`completed`) updates the right timestamp columns and the entry correctly drops out of the
+`waiting` count; the tenant-consistency trigger rejects a cross-org `location_id`; a
+barber-role member is rejected by RLS on INSERT but can read the full queue (3 entries
+visible); `anon` has zero access; `queue_entries` is confirmed present in the
+`supabase_realtime` publication via `pg_publication_tables`. Migration re-applied to confirm
+idempotency. Fixtures fully cleaned up (verified: 0 remaining).
+
 ## Not yet built
 
 - `customers` as a real entity (`appointments.customer_name`/`customer_phone`/
   `customer_email` are a placeholder pending LOT 12, Customer CRM).
+- Public/kiosk-facing read access to `queue_entries` (a TV display, a customer-facing "you
+  are #3 in line" view) — deferred to LOT 11, Chair Mode + Kiosk + TV Mode.
+- Self-service queue actions ("call my next customer") by the assigned barber — same LOT 11
+  deferral as `appointments`.
 - Rate-limiting/abuse-prevention on `book_public_appointment` — see LOT 9 section above;
   deferred to LOT 23 (Security Hardening).
 - Self-service `staff_profiles`/`barber_working_hours` editing by the staff member
