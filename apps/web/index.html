@@ -4,8 +4,38 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FadeUp</title>
-    <meta name="description" content="FadeUp — the operating system for modern barbershops." />
+    <title>FadeUp — the operating system for modern barbershops</title>
+    <meta
+      name="description"
+      content="FadeUp connects booking, live queue, walk-ins, Chair Mode, Barber Passport, customer relationships, memberships and multi-location reporting for barbershops in one system."
+    />
+
+    <!--
+      These are static base tags — the only thing a non-JS-executing crawler
+      or social-media link unfurler (Slack, iMessage, X/Twitter, etc.) will
+      ever see, since this is a client-rendered SPA with no SSR/prerendering.
+      `src/lib/use-document-meta.ts` updates `document.title` and the
+      description per route at runtime for JS-executing crawlers and the
+      browser tab/history — but it can never change what an unfurler reads
+      here, because unfurlers don't execute JavaScript. See
+      docs/architecture.md ("SEO" section) for what this does and doesn't
+      achieve. Domain below is a placeholder (RFC 2606 `.example`) until
+      FadeUp has a real production domain wired through Nginx/TLS.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FadeUp" />
+    <meta property="og:title" content="FadeUp — the operating system for modern barbershops" />
+    <meta
+      property="og:description"
+      content="Booking, live queue, walk-ins, Chair Mode, Barber Passport, customer relationships, memberships and multi-location reporting — in one connected system."
+    />
+    <meta property="og:url" content="https://www.fadeup.example/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FadeUp — the operating system for modern barbershops" />
+    <meta
+      name="twitter:description"
+      content="Booking, live queue, walk-ins, Chair Mode, Barber Passport, customer relationships, memberships and multi-location reporting — in one connected system."
+    />
   </head>
   <body>
     <div id="root"></div>

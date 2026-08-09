@@ -155,9 +155,83 @@ verified in this environment: Playwright's Chromium needs `libatk-1.0.so.0` and 
 system libraries this sandbox user cannot install (no root) — a genuine environment
 limitation, not a skipped step.
 
+## Design system (`apps/web`, LOT 4)
+
+`src/index.css` has the full token contract, defined once as the single source of truth
+(Tailwind v4 `@theme` block) — every component draws from it, no ad hoc hex/shadow/radius
+values in component code:
+
+- **Color**: warm `ink-{950,800,700,500,300}` text neutrals and `paper-{0,50,100,200}`
+  surface neutrals (deliberately not pure black/white), `border`/`border-strong`, a copper
+  `accent-{100,200,600,700,800}` brand color used sparingly (primary actions, links,
+  focus), and `success/warning/danger/info-{100,600,700}` kept visually distinct from the
+  brand accent so status never gets confused with "this is the primary action."
+- **Radii**: `--radius-sm/md/lg/xl` (0.375/0.625/1/1.5rem) — restrained, not
+  generic-4px-everywhere or bubbly-rounded.
+- **Shadows**: `--shadow-xs/sm/md/lg`, reserved for genuinely elevated surfaces (dialogs,
+  dropdowns, toasts) — never decorative on a static card.
+- **Spacing**: Tailwind's own default scale, used as-is — no parallel spacing system.
+- **Light-only, deliberately**: `color-scheme: light` is explicit. A real dark theme is
+  future work, not something half-implemented via `light dark` and OS preference.
+- Motion (`index.css`, bottom section) is compositor-friendly (`opacity`/`transform` only)
+  and fully gated behind `prefers-reduced-motion: no-preference`.
+
+Component library (`src/components/ui/`): `Button` (+`buttonVariants` for real `<Link>`
+anchors — never an anchor nested in a button or vice versa), `TextField`, `SelectField`,
+`Alert`, `Spinner`, `EmptyState`, `ErrorState`, `Skeleton`, `Container`, `Badge`, `Card`,
+`Table` (semantic markup, CSS-only scroll-shadow affordance, loading/empty/error row
+states), `Navbar`/`AppNavLink`. `Tabs`, `Dialog`, `Drawer` (a `Dialog` styled to slide from
+an edge), `DropdownMenu`, `Tooltip`, and `Toast` (+`useToast()`) are built on Radix
+primitives (`@radix-ui/react-*`) rather than hand-rolled, for correct focus-trapping,
+portal rendering, and ARIA — they're unstyled/"headless," so the visual language is still
+entirely FadeUp's own tokens. Every LOT 3 page was retrofitted onto this system so the app
+reads as one product rather than two visual languages. Verified: `typecheck`/`lint`/
+`test`/`build` all pass, all pre-existing tests pass unmodified.
+
+## Marketing site (`apps/web`, LOT 5)
+
+Public routes `/`, `/features`, `/pricing` share `MarketingLayout`
+(`src/routes/marketing-layout.tsx`: `MarketingHeader` + `Outlet` + `MarketingFooter`),
+kept as a separate layout route from auth/`/app` so this nav/footer never leaks into
+`/login`, `/signup`, `/invite/:token`, or anything authenticated. `MarketingHeader` has a
+responsive mobile menu built from the design system's `Drawer`. `src/components/
+marketing/product-previews.tsx` has illustrative UI mockups (booking, live queue,
+walk-ins, Chair Mode, Barber Passport, customer timeline, memberships, multi-location,
+analytics) built from real design-system components (`Card`/`Badge`/etc.) — not stock
+imagery, and not screenshots of features that don't exist yet, since none of those are
+built past auth/onboarding. Pricing describes an illustrative tier *structure* (Starter/
+Growth/Multi-Location, grouped by location count and feature set) with explicit "early
+access, not final pricing" framing — no invented dollar amounts presented as real,
+committed pricing, and per `CLAUDE.md` §14: no fabricated testimonials, customer logos,
+customer counts, or awards anywhere on the site.
+
+### SEO — what's actually achieved, stated plainly
+
+This is a client-rendered Vite SPA with **no SSR/prerendering**. That genuinely limits
+what "SEO" can mean here:
+
+- `src/lib/use-document-meta.ts` (`useDocumentMeta`) sets `document.title` and the meta
+  description per route at runtime. This helps the visible browser tab/history entry and
+  any crawler that executes JavaScript before indexing (Google generally does) — it does
+  **not** help non-JS-executing crawlers or social-media link unfurlers (Slack, iMessage,
+  X/Twitter, etc.), which fetch raw HTML and never run this code.
+- `index.html` has static base `<title>`/description/Open Graph/Twitter-card tags — this
+  is the only thing an unfurler or non-JS crawler will ever see, for every route, since
+  there's no per-route server-rendered HTML. Domain in the OG `url` tag is a placeholder
+  (RFC 2606 `.example`) pending a real production domain.
+- `public/robots.txt` allows everything (nothing here needs blocking — `/app` is
+  auth-gated regardless). `public/sitemap.xml` is **hand-written**, listing the five known
+  public routes — it must become generated once dynamic public routes exist
+  (per-organization public booking pages at `/s/{slug}`, a later lot), since a static file
+  can't enumerate those.
+
+Correct per-page Open Graph previews for social unfurling, and guaranteed indexing by
+non-JS-executing crawlers, would require real SSR or prerendering — not implemented, and
+not silently claimed to be.
+
 ## Not yet built
 
-Design system and landing page (LOT 4/5) are not implemented yet. Beyond auth/onboarding,
-every product module described in `CLAUDE.md` is still pending (`staff_profiles` beyond
-the minimal roster above, `services`, `appointments`, public booking pages, etc.). See the
-project task list / roadmap (LOT 4 onward) for what's next.
+Beyond the design system, marketing site, and auth/onboarding, every product module
+described in `CLAUDE.md` is still pending (`staff_profiles` beyond the minimal roster in
+`/app/team`, `services`, `appointments`, public booking pages, etc.). See the project task
+list / roadmap (LOT 6 onward) for what's next.

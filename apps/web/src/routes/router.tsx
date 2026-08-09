@@ -3,7 +3,7 @@ import { RootLayout } from '@/routes/root-layout'
 import { RequireAuth } from '@/routes/require-auth'
 import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
-import { HomePage } from '@/pages/home-page'
+import { MarketingLayout } from '@/routes/marketing-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 
 export const router = createBrowserRouter([
@@ -11,7 +11,34 @@ export const router = createBrowserRouter([
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <HomePage /> },
+      {
+        // Shared nav/footer chrome for the public marketing site — kept
+        // separate from the auth and /app routes below.
+        element: <MarketingLayout />,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { HomePage } = await import('@/pages/home-page')
+              return { Component: HomePage }
+            },
+          },
+          {
+            path: 'features',
+            lazy: async () => {
+              const { FeaturesPage } = await import('@/pages/features-page')
+              return { Component: FeaturesPage }
+            },
+          },
+          {
+            path: 'pricing',
+            lazy: async () => {
+              const { PricingPage } = await import('@/pages/pricing-page')
+              return { Component: PricingPage }
+            },
+          },
+        ],
+      },
       {
         path: 'login',
         lazy: async () => {
