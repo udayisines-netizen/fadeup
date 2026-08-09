@@ -412,17 +412,95 @@ create a chair; `anon` has zero access to all three tables. RLS state
 against the live database, and the migration set was re-applied to confirm idempotency.
 Fixtures fully cleaned up (verified: 0 remaining).
 
+## LOT 7 additions (services + availability)
+
+| File | Adds |
+|---|---|
+| `20260809130000_service_categories.sql` | `service_categories` |
+| `20260809130100_services.sql` | `services` (duration/buffers in minutes, `price_cents` integer), category-consistency trigger |
+| `20260809130200_service_locations.sql` | `service_locations` (explicit join), consistency trigger |
+| `20260809130300_barber_services.sql` | `barber_services` (explicit join, eligibility), consistency trigger |
+| `20260809130400_location_hours.sql` | `location_hours` (weekly regular hours), consistency trigger |
+| `20260809130500_barber_working_hours.sql` | `barber_working_hours` (weekly regular schedule), consistency trigger |
+| `20260809130600_barber_availability_exceptions.sql` | `barber_availability_exceptions` (date-specific overrides), consistency trigger |
+
+This lot builds the **data model** for the catalog and working-time engine — not the
+slot-computation algorithm itself (checking a service's duration against a barber's
+actual open windows, existing bookings, and buffers to produce bookable times). That's
+LOT 8, the appointment engine; this lot only needs to store the inputs correctly.
+
+### `services`
+
+`price_cents` is integer cents, not a float or decimal-dollars column — avoids
+floating-point rounding entirely and matches how every payment provider integration
+(LOT 16) represents money. `duration_minutes` (`> 0`, enforced), `buffer_before_minutes`/
+`buffer_after_minutes` (`>= 0`, enforced, default `0`) are what LOT 8's slot math will
+consume. `category_id` is nullable — a service doesn't require a category — but if set,
+a trigger rejects one from a different organization.
+
+### `service_locations` / `barber_services` — explicit joins, no implicit "everywhere"
+
+Both are deliberately explicit: zero rows for a service in `service_locations` means "not
+yet offered at any location," not "offered everywhere" — same for `barber_services` and
+"not yet eligible for anything." An implicit "empty means everywhere/everyone" convention
+is a classic footgun (a new service silently becomes bookable at a location nobody meant
+to enable it at, or a new barber silently becomes eligible for every service). Client code
+that wants "assign to all current locations by default" when creating a service should
+insert one row per location explicitly, not rely on absence-of-rows semantics. Both have
+a `SECURITY DEFINER`-free trigger (runs as the inserting role, just validates) confirming
+every referenced row belongs to the same `organization_id` as the join row itself.
+
+### `location_hours` / `barber_working_hours` / `barber_availability_exceptions`
+
+`day_of_week` uses Postgres's own `extract(dow from ...)` convention (`0`=Sunday..
+`6`=Saturday) in both weekly-schedule tables, specifically so LOT 8's slot-computation
+code can join against it without a separate mapping table. `location_hours` and
+`barber_working_hours` both have a `CHECK` enforcing that an open/closed (or on/off) row
+has consistent open-before-close (or start-before-end) times — verified directly: an
+open-after-close row is rejected, not silently stored. `barber_availability_exceptions`
+is one row per `(barber, date)` — a single override per day (full unavailability, or one
+adjusted window); no support for multiple disjoint windows on the same day in this lot.
+
+All three intentionally do **not** cross-validate against each other here (e.g. a
+barber's working hours are not checked against their location's opening hours) — that
+intersection is LOT 8's job when it actually computes bookable slots, not something to
+half-enforce at the storage layer now.
+
+### LOT 7 verification
+
+`db/tests/verify_services_availability.sql` seeds two `auth.users` fixtures (Jack the
+owner, Kim an outsider) and proves, with real query output: a service with buffers/price
+is created correctly and an invalid (zero) duration is rejected by its own `CHECK`; the
+explicit `service_locations`/`barber_services` joins genuinely start empty and only
+reflect real assignments; `location_hours`' open/close `CHECK` rejects an inverted
+window; the tenant-consistency trigger rejects a `barber_services` row pointing at another
+organization's service; a non-member has zero visibility into the catalog; `anon` has
+zero access to all seven tables. **A real test-authoring bug was found and fixed while
+writing this**: the first draft put a deliberate-failure case in the same transaction as
+preceding legitimate setup — Postgres aborts the *entire* enclosing transaction on any
+error inside it, so the "expected" failure silently rolled back real data created earlier
+in that same `begin`/`commit` block, and every downstream check after it then failed for
+the wrong reason (looked like the whole feature was broken; it was the test's transaction
+boundaries). Fixed by isolating every "expect ERROR" case in its own `begin`/`rollback`,
+with an explicit follow-up query proving prior legitimate data survived. Migrations were
+also re-applied to confirm idempotency, and RLS state (`relrowsecurity`/
+`relforcerowsecurity`, 26 policies across the 7 tables) was independently re-confirmed.
+Fixtures fully cleaned up (verified: 0 remaining).
+
 ## Not yet built
 
 - Public (anon) access path for booking-page org lookup by `slug` — later, public-
   booking lot.
-- `services`, `appointments` — later lots, per `CLAUDE.md`'s LOT sequencing.
-- Self-service `staff_profiles` editing by the staff member themselves (currently
-  owner/manager-only writes).
+- The appointment engine's actual slot-computation logic (intersecting `location_hours`,
+  `barber_working_hours`, `barber_availability_exceptions`, existing bookings, and a
+  service's duration/buffers into real bookable times) — LOT 8. This lot only stores the
+  inputs correctly.
+- `appointments` — LOT 8.
+- Self-service `staff_profiles`/`barber_working_hours` editing by the staff member
+  themselves (currently owner/manager-only writes throughout).
 - An "an org always has ≥1 owner" invariant (see `memberships` above) — still deferred,
   now also relevant to `revoke_invitation`/membership removal UI once built.
 - A real occupancy/session state machine for `chairs` — LOT 11 (Chair Mode).
-- Working hours, time off, and service eligibility for `barbers` — LOT 7.
 - Any writer for `audit_logs` — no feature yet produces audit events; the table and its
   RLS exist so the first feature that needs to record one has a safe place to write to.
 - Invitation delivery (email sending) — this lot creates and stores the invitation and
