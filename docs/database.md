@@ -574,12 +574,107 @@ clear 09:15 slot, and returns 0 slots for a Sunday with no `location_hours` row.
 migrations were re-applied to confirm idempotency. Fixtures fully cleaned up (verified: 0
 remaining).
 
+## LOT 9 additions (public booking)
+
+| File | Adds |
+|---|---|
+| `20260809150000_public_booking_reads.sql` | `get_public_organization`, `list_public_locations`, `list_public_services`, `list_public_barbers`, `get_public_available_slots` |
+| `20260809150100_book_public_appointment_rpc.sql` | `book_public_appointment` |
+
+The anon-facing surface for a public booking page at `/s/{slug}` (the gap explicitly
+flagged in `20260809100300_organizations.sql`'s comment). This is the highest-risk surface
+in the schema so far — the first place an unauthenticated caller can both read tenant data
+and write a row — so it is built entirely as narrowly-scoped `SECURITY DEFINER` RPCs
+returning only curated columns, **not** broad anon `SELECT`/`INSERT` policies on
+`organizations`/`locations`/`services`/`staff_profiles`/`appointments`, following the same
+pattern as `get_invitation_by_token` (LOT 3). A broad anon policy would expose every column
+of those tables to anyone with the org's slug; these RPCs expose exactly what a booking
+page needs. `appointments` itself still has **no** anon `INSERT` policy — every public
+write funnels through `book_public_appointment` alone.
+
+### Every id is re-derived and re-validated, never trusted
+
+Every read RPC and `book_public_appointment` re-resolve `organization_id` from the slug
+and re-check every other id (`location_id`, `service_id`, `barber_id`) against that
+`organization_id` and against each other (service actually offered at that location via
+`service_locations`, barber actually eligible via `barber_services`, barber's primary
+location matches) — a client-supplied id is never assumed correct just because it was
+passed. `list_public_services` excludes services not linked via `service_locations`
+(the LOT 7 explicit-join philosophy holding here too — "not yet offered here" must not
+leak as "bookable everywhere"), and `list_public_locations` excludes inactive locations.
+
+### `get_public_available_slots` is a deliberately separate function from `get_available_slots`
+
+Not a shared implementation. `get_available_slots` (LOT 8) is `SECURITY INVOKER` and leans
+entirely on the *caller's own RLS* for its tenant-isolation guarantee. Anon has no RLS
+access at all, so the public equivalent must be `SECURITY DEFINER` with its own complete,
+independent validation before it may bypass RLS to read `public.appointments` for conflict
+checking. Merging the two into one function would mean one code path serving two different
+trust boundaries — exactly the kind of thing that causes authorization bugs. The
+slot-computation math itself is intentionally identical between the two; keep both in sync
+if that math ever changes.
+
+### `book_public_appointment`: requests, not instant confirmation
+
+Creates the appointment with `status = 'pending'` (the `appointment_status` enum value
+documented back in LOT 8 specifically for this), not `'confirmed'` — a booking *request*
+that immediately holds the slot (the LOT 8 GiST exclusion constraints apply to `pending`
+exactly the same as `confirmed`) and appears on the shop's schedule for
+owner/manager/receptionist to confirm or decline via the existing `appointments` `UPDATE`
+policy — no new policy needed for that. Instant auto-confirmation is a deliberate future
+product decision, not an oversight.
+
+The requested time is **independently re-validated** against `location_hours`/
+`barber_working_hours`/`barber_availability_exceptions` inside the function itself — a
+client is never trusted to have only ever requested a time `get_public_available_slots`
+actually offered. The LOT 8 exclusion constraints remain the final, race-free backstop
+against concurrent double-booking regardless of what this validation catches.
+
+**Known gap, deliberately deferred**: there is no rate-limiting or abuse prevention on
+`book_public_appointment` at the database layer (e.g. one visitor spamming booking
+requests). Real rate-limiting belongs at the API gateway (Kong) or behind a CAPTCHA/edge
+function, not in a Postgres function — out of scope for this lot, worth picking up
+explicitly in LOT 23 (Security Hardening).
+
+### LOT 9 verification
+
+`db/tests/verify_public_booking.sql` seeds one `auth.users` fixture (Jack) plus a fully
+configured, bookable org (service, Monday hours, barber, explicit joins), an inactive
+"Closed Branch" location, and an unlisted "Beard Trim" service never linked via
+`service_locations`. Calling as the `anon` role throughout — the actual point of the lot —
+it proves with real query output: `get_public_organization` returns real data for a known
+slug and zero rows for an unknown one; `list_public_locations` returns only the active
+location; `list_public_services` correctly excludes the unlisted service; `list_public_barbers`
+returns Jack for Classic Fade at Main Shop; `get_public_available_slots` returns 31 open
+slots before anything is booked; `book_public_appointment` succeeds for a genuinely valid
+10:00 request and the resulting row has `status = 'pending'` and is visible to Jack as
+staff; a second visitor requesting the same slot is rejected by the *exact same* GiST
+exclusion constraint from LOT 8, firing correctly even from inside a `SECURITY DEFINER`
+function; a 07:00 request is rejected by the function's own hours re-validation (not merely
+by the exclusion constraint); a request for the unlisted service and a request with no
+`customer_phone`/`customer_email` at all are both rejected; `anon` still has zero *direct*
+table access to `appointments`/`organizations`/`locations`/`services`/`barbers`/
+`staff_profiles` throughout — only the RPCs mediate anything; the same RPCs also work for
+an authenticated org member (not anon-exclusive). **A real test-authoring bug was found and
+fixed while writing this** (a third occurrence of the same class of mistake as LOT 7's and
+implicitly LOT 8's transaction-isolation lesson, this time RLS-shaped rather than
+transaction-shaped): the first draft computed `p_location_id`/`p_service_id`/`p_barber_id`
+via raw subqueries against `public.locations`/`services`/`barbers` executed *while already
+running as the `anon` role* — but `anon` has zero RLS access to those tables, so every one
+of those subqueries silently evaluated to `NULL`, and every anon RPC call in the test was
+silently invoked with `NULL` ids. This produced misleading "empty result"/"not available"
+failures that looked exactly like the RPCs themselves were broken; they were not — the test
+was. Fixed by capturing every fixture id via `\gset` while still running as `postgres`
+(bypassing RLS, appropriate for test scaffolding) immediately after setup, then reusing
+those captured ids as literals in every later `anon`-role call. Both migrations were
+re-applied to confirm idempotency. Fixtures fully cleaned up (verified: 0 remaining).
+
 ## Not yet built
 
-- Public (anon) access path for booking-page org lookup by `slug`, and an anon-safe
-  wrapper around `get_available_slots` — LOT 9, public booking.
 - `customers` as a real entity (`appointments.customer_name`/`customer_phone`/
   `customer_email` are a placeholder pending LOT 12, Customer CRM).
+- Rate-limiting/abuse-prevention on `book_public_appointment` — see LOT 9 section above;
+  deferred to LOT 23 (Security Hardening).
 - Self-service `staff_profiles`/`barber_working_hours` editing by the staff member
   themselves (currently owner/manager-only writes throughout).
 - An "an org always has ≥1 owner" invariant (see `memberships` above) — still deferred,
