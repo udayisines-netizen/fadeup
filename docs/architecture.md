@@ -448,11 +448,33 @@ Verified: `npm run typecheck`, `lint`, `test` (42 tests total, including a barbe
 read-only detail-view case for customers, and both a public and a private/unknown barber
 case for the Passport page), and `build` all pass.
 
+## Waitlist + no-show rules (`apps/web`, LOT 13)
+
+`/app/waitlist` (`pages/app-waitlist-page.tsx`, `lib/queries/waitlist.ts`) — a per-location
+list of customers waiting for a future opening, on the LOT 13 `waitlist_entries` table.
+Deliberately the same shape as `/app/queue`/`/app/appointments` (location `Tabs`, a status
+`DropdownMenu`, an "Add" dialog) since it's the same staff mental model — but it is its own
+page and its own table, not a filtered view of either: a waitlist entry has no assigned
+barber (only an optional *preferred* barber, `desiredBarberId`) and isn't physically present.
+No barber self-service loosening here (unlike queue/appointments) — there's no "my own"
+concept to scope to since nothing is assigned. Staff-managed only; no public "join the
+waitlist" flow yet (see `docs/database.md`'s "Not yet built").
+
+The no-show rule is wired into `/app/appointments` rather than getting its own UI: a
+`useApplyNoShowRule` mutation fires once whenever the page mounts with a known
+`organizationId`, sweeping overdue `confirmed` appointments to `no_show` before the day's
+schedule is even read. Silent and automatic by design — staff shouldn't have to remember a
+"run no-show check" button — see `docs/database.md` for why this is an opportunistic RPC
+call rather than a real `pg_cron` job in this stack.
+
+Verified: `npm run typecheck`, `lint`, `test` (46 tests total), and `build` all pass.
+
 ## Not yet built
 
 Beyond the design system, marketing site, auth/onboarding, organization admin, and the
 service/availability catalog, staff scheduling, public booking, live queue, chair mode phase
-1 (kiosk check-in + TV display), customer CRM, and Barber Passport are now built (LOT 8–12).
-Still pending: a real chair-occupancy state machine, barber "claiming" an unassigned queue
-entry, deep-linking a pre-selected barber into the public booking wizard, and LOT 13 onward.
-See the project task list / roadmap for what's next.
+1 (kiosk check-in + TV display), customer CRM, Barber Passport, waitlist, and no-show
+automation are now built (LOT 8–13). Still pending: a real chair-occupancy state machine,
+barber "claiming" an unassigned queue entry, deep-linking a pre-selected barber into the
+public booking wizard, a public "join the waitlist" flow, real `pg_cron` scheduling, and
+LOT 14 onward. See the project task list / roadmap for what's next.

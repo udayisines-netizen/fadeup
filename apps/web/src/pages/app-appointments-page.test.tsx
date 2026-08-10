@@ -54,7 +54,10 @@ function mockTables(overrides: Partial<Record<string, QueryResult>>) {
   }
 
   const from = vi.fn((table: string) => makeBuilder(tables[table] ?? EMPTY))
-  mockGetSupabaseClient.mockReturnValue({ from } as unknown as SupabaseClient)
+  // useApplyNoShowRule (LOT 13) fires once on mount via a plain RPC call —
+  // stub it to a no-op success so it doesn't throw in every test here.
+  const rpc = vi.fn(() => Promise.resolve({ data: 0, error: null }))
+  mockGetSupabaseClient.mockReturnValue({ from, rpc } as unknown as SupabaseClient)
   return { from }
 }
 

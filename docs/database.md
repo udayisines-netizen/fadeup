@@ -927,8 +927,53 @@ returns zero rows even when a same-named public barber exists in the target org 
 leakage); `anon` retains zero direct access to `staff_profiles`/`barbers`/`barber_services`;
 both RPCs also work for an authenticated caller. Migration re-applied to confirm idempotency.
 
+## LOT 13 additions — waitlist + no-show rules (`waitlist_entries`, `apply_appointment_no_show_rule`)
+
+`waitlist_entries` (`id, organization_id, location_id, customer_id, customer_name,
+customer_phone, customer_email, desired_service_id, desired_barber_id, notes, status,
+created_by, created_at, updated_at`) — a customer waiting for a future opening, a distinct
+concept from `queue_entries` (physically present right now, LOT 10) and `appointments` (an
+already-confirmed slot, LOT 8). Reuses the LOT 12 `link_customer_from_contact_info` trigger
+unmodified (it already tolerates any table with `organization_id`/`customer_name`/
+`customer_phone`/optional `customer_email`, via `to_jsonb`) — a waitlist entry auto-links to
+a real customer exactly like an appointment or queue entry does. `check_waitlist_entry_
+consistency()` enforces the same tenant-consistency guard shape as every other booking
+table: `location_id`/`desired_service_id`/`desired_barber_id` must all belong to the row's
+own `organization_id`. RLS matches `appointments`/`queue_entries`/`customers` exactly (any
+member reads, `owner`/`manager`/`receptionist` write). Staff-managed only in this pass — no
+anon-facing "join the waitlist" RPC yet (see "Not yet built" below).
+
+`apply_appointment_no_show_rule(p_organization_id)` — flips any `confirmed` appointment more
+than 30 minutes past its `ends_at` to `no_show`. Deliberately `SECURITY INVOKER`, not
+`DEFINER`: it only ever needs to touch rows the calling role's own `appointments` `UPDATE`
+RLS already lets it touch (so a barber calling this only sweeps their own overdue
+appointments via the LOT 11 self-service policy; owner/manager/receptionist sweep
+everything), so there's no privilege to elevate. Implemented as a plain callable function
+rather than a `pg_cron` job: this self-hosted stack does not have `pg_cron` enabled — unlike
+`create extension pgcrypto`, enabling `pg_cron` also requires
+`shared_preload_libraries`/`cron.database_name` at the Postgres cluster config level, which
+needs a config change and restart, not just a migration (`pg_available_extensions` confirms
+`pg_cron` 1.6.4 is available in the image, just not installed). The application calls this
+opportunistically instead — once per mount whenever staff load `/app/appointments` — and the
+function is already written to be trivially callable from a real scheduled job the moment
+`pg_cron` is wired up (revisit alongside LOT 25, Production Infrastructure).
+
+Verified: a waitlist entry with phone+email auto-links to a customer; a cross-org
+`desired_service_id` is rejected by the consistency trigger; RLS correct for a non-member (0
+rows) and `anon` (0 rows); an overdue (35 min past end) `confirmed` appointment is flipped to
+`no_show`, a recently-ended (10 min past end, within the 30-minute grace window) `confirmed`
+appointment is left alone, and an overdue-but-already-`cancelled` appointment is untouched
+(the rule only ever matches `confirmed` rows); calling the rule a second time is a genuine
+no-op (0 rows — proving it doesn't re-match its own prior output). Migration re-applied to
+confirm idempotency.
+
 ## Not yet built
 
+- A public-facing "join the waitlist" flow (currently staff-managed only) — a documented
+  scope boundary for LOT 13; would follow the exact LOT 9/11 anon RPC pattern if added.
+- Real `pg_cron`-scheduled background jobs (the no-show rule above, and any future scheduled
+  work) — this self-hosted stack doesn't have `pg_cron` enabled yet; see LOT 13 section
+  above and revisit alongside LOT 25 (Production Infrastructure).
 - A real chair-occupancy state machine ("which chair has who, since when," a visual
   chair-status board) — explicitly deferred past LOT 11 phase 1, see above.
 - Barber "claiming" an unassigned (`barber_id is null`) queue entry — deferred, see above;

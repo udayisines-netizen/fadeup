@@ -13,6 +13,7 @@ import { useOrgBarberServices, type BarberService } from '@/lib/queries/barber-s
 import { useOrgBarbers, type Barber } from '@/lib/queries/barbers'
 import { useOrgStaffProfiles, type StaffProfile } from '@/lib/queries/staff-profiles'
 import {
+  useApplyNoShowRule,
   useAvailableSlots,
   useCreateAppointment,
   useOrgAppointmentsForDate,
@@ -119,6 +120,16 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
   const barbersQuery = useOrgBarbers(organizationId)
   const staffProfilesQuery = useOrgStaffProfiles(organizationId)
   const appointmentsQuery = useOrgAppointmentsForDate(organizationId, selectedDate)
+
+  // No pg_cron in this stack yet (see 20260810100000_waitlist_and_no_show_rules.sql) —
+  // opportunistically sweep overdue confirmed appointments to no_show once
+  // whenever staff load the schedule. Safe to call from any role: RLS
+  // scopes which rows it can actually touch.
+  const applyNoShowRule = useApplyNoShowRule()
+  useEffect(() => {
+    if (organizationId) applyNoShowRule.mutate(organizationId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId])
 
   const locations = locationsQuery.data ?? []
   const activeLocationId = selectedLocationId ?? locations[0]?.id ?? null

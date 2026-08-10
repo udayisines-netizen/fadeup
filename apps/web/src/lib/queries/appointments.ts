@@ -239,6 +239,35 @@ export function useUpdateAppointmentStatus() {
   })
 }
 
+/**
+ * Wraps `apply_appointment_no_show_rule` (LOT 13) — flips any `confirmed`
+ * appointment more than 30 minutes past its end time to `no_show`. There is
+ * no pg_cron in this self-hosted stack yet, so this is fired opportunistically
+ * (see app-appointments-page.tsx, once per mount for the currently-viewed
+ * org) rather than on a real schedule — see the migration comment for why.
+ * SECURITY INVOKER server-side, so this only ever affects rows the caller's
+ * own RLS already lets them update; safe to call from any role.
+ */
+export function useApplyNoShowRule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (organizationId: string): Promise<number> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('apply_appointment_no_show_rule', {
+        p_organization_id: organizationId,
+      })
+      if (error) throw error
+      return (data as number | null) ?? 0
+    },
+    onSuccess: (updatedCount, organizationId) => {
+      if (updatedCount > 0) {
+        void queryClient.invalidateQueries({ queryKey: ['appointments', organizationId] })
+      }
+    },
+  })
+}
+
 export interface AvailableSlot {
   slotStart: string
   slotEnd: string
