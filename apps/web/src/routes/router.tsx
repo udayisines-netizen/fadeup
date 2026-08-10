@@ -269,6 +269,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'team/:staffProfileId/workspace',
+            lazy: async () => {
+              const { AppBarberWorkspacePage } = await import('@/pages/app-barber-workspace-page')
+              return { Component: AppBarberWorkspacePage }
+            },
+          },
+          {
             path: 'locations',
             lazy: async () => {
               const { AppLocationsPage } = await import('@/pages/app-locations-page')

@@ -7,6 +7,7 @@ export interface InvitationPreview {
   organizationName: string
   role: MembershipRole
   email: string
+  locationName: string | null
   expiresAt: string
   isExpired: boolean
   isAccepted: boolean
@@ -17,6 +18,7 @@ interface InvitationPreviewRow {
   organization_name: string
   role: MembershipRole
   email: string
+  location_name: string | null
   expires_at: string
   is_expired: boolean
   is_accepted: boolean
@@ -41,6 +43,7 @@ export function useInvitationByToken(token: string | undefined) {
         organizationName: row.organization_name,
         role: row.role,
         email: row.email,
+        locationName: row.location_name,
         expiresAt: row.expires_at,
         isExpired: row.is_expired,
         isAccepted: row.is_accepted,
@@ -79,6 +82,7 @@ export interface OrgInvitation {
   id: string
   email: string
   role: MembershipRole
+  locationId: string | null
   expiresAt: string
   createdAt: string
 }
@@ -87,6 +91,7 @@ interface OrgInvitationRow {
   id: string
   email: string
   role: MembershipRole
+  location_id: string | null
   expires_at: string
   created_at: string
 }
@@ -98,7 +103,7 @@ export function useOrgInvitations(organizationId: string | undefined) {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('invitations')
-        .select('id, email, role, expires_at, created_at')
+        .select('id, email, role, location_id, expires_at, created_at')
         .eq('organization_id', organizationId)
         .is('accepted_at', null)
         .is('revoked_at', null)
@@ -110,6 +115,7 @@ export function useOrgInvitations(organizationId: string | undefined) {
         id: row.id,
         email: row.email,
         role: row.role,
+        locationId: row.location_id,
         expiresAt: row.expires_at,
         createdAt: row.created_at,
       }))
@@ -123,13 +129,14 @@ interface CreateInvitationInput {
   email: string
   role: MembershipRole
   invitedBy: string
+  locationId: string | null
 }
 
 export function useCreateInvitation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ organizationId, email, role, invitedBy }: CreateInvitationInput) => {
+    mutationFn: async ({ organizationId, email, role, invitedBy, locationId }: CreateInvitationInput) => {
       const supabase = getSupabaseClient()
       const token = generateInvitationToken()
 
@@ -139,6 +146,7 @@ export function useCreateInvitation() {
         role,
         token,
         invited_by: invitedBy,
+        location_id: locationId,
       })
 
       if (error) throw error

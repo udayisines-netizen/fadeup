@@ -20,7 +20,7 @@ import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
 import { SelectField } from '@/components/ui/select-field'
 import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/ui/container'
@@ -54,6 +54,7 @@ const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 const inviteSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
   role: z.enum(['owner', 'manager', 'receptionist', 'barber']),
+  locationId: z.string(),
 })
 
 type InviteFormValues = z.infer<typeof inviteSchema>
@@ -123,6 +124,12 @@ function TeamManagement({
     [role],
   )
 
+  const locationNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const location of locationsQuery.data ?? []) map.set(location.id, location.name)
+    return map
+  }, [locationsQuery.data])
+
   const staffProfileByUserId = useMemo(() => {
     const map = new Map<string, StaffProfile>()
     for (const profile of staffProfilesQuery.data ?? []) {
@@ -156,7 +163,7 @@ function TeamManagement({
     formState: { errors, isSubmitting },
   } = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
-    defaultValues: { role: 'barber' },
+    defaultValues: { role: 'barber', locationId: NO_LOCATION_VALUE },
   })
 
   async function onSubmit(values: InviteFormValues) {
@@ -171,10 +178,11 @@ function TeamManagement({
         email: values.email,
         role: values.role,
         invitedBy: user.id,
+        locationId: values.locationId || null,
       })
       setCreatedLink(`${window.location.origin}/invite/${token}`)
       toast({ title: 'Invitation created', description: `Sent to ${values.email}.`, variant: 'success' })
-      reset({ email: '', role: values.role })
+      reset({ email: '', role: values.role, locationId: values.locationId })
     } catch (error) {
       if (getErrorMessage(error)?.toLowerCase().includes('duplicate')) {
         setCreateError('There is already a pending invitation for that email.')
@@ -285,14 +293,24 @@ function TeamManagement({
                           />
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={!row.staffProfile}
-                            onClick={() => setEditingRow(row)}
-                          >
-                            Edit
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            {isBookable && row.staffProfile ? (
+                              <Link
+                                to={`/app/team/${row.staffProfile.id}/workspace`}
+                                className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+                              >
+                                Workspace
+                              </Link>
+                            ) : null}
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              disabled={!row.staffProfile}
+                              onClick={() => setEditingRow(row)}
+                            >
+                              Edit
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -317,6 +335,7 @@ function TeamManagement({
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead>Expires</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -325,7 +344,7 @@ function TeamManagement({
               </TableHeader>
               <TableBody>
                 {invitationsQuery.data.length === 0 ? (
-                  <TableStateRow colSpan={4}>
+                  <TableStateRow colSpan={5}>
                     <EmptyState title="No pending invitations" className="border-none" />
                   </TableStateRow>
                 ) : (
@@ -333,6 +352,7 @@ function TeamManagement({
                     <PendingInvitationRow
                       key={invitation.id}
                       invitation={invitation}
+                      locationName={invitation.locationId ? locationNameById.get(invitation.locationId) : undefined}
                       onRevoke={() => handleRevoke(invitation)}
                       isRevoking={revokeInvitation.isPending && revokeInvitation.variables === invitation.id}
                     />
@@ -377,6 +397,16 @@ function TeamManagement({
                     error={errors.role?.message}
                     options={assignableRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
                     {...register('role')}
+                  />
+                </div>
+                <div className="sm:w-56">
+                  <SelectField
+                    label="Location (optional)"
+                    options={[
+                      { value: NO_LOCATION_VALUE, label: 'No specific location' },
+                      ...(locationsQuery.data ?? []).map((location) => ({ value: location.id, label: location.name })),
+                    ]}
+                    {...register('locationId')}
                   />
                 </div>
               </div>
@@ -511,10 +541,12 @@ function StaffProfileFormDialog({
 
 function PendingInvitationRow({
   invitation,
+  locationName,
   onRevoke,
   isRevoking,
 }: {
   invitation: OrgInvitation
+  locationName: string | undefined
   onRevoke: () => void
   isRevoking: boolean
 }) {
@@ -524,6 +556,7 @@ function PendingInvitationRow({
       <TableCell>
         <Badge variant="neutral">{ROLE_LABELS[invitation.role]}</Badge>
       </TableCell>
+      <TableCell className="text-ink-500">{locationName ?? '—'}</TableCell>
       <TableCell className="whitespace-nowrap text-ink-500">
         {new Date(invitation.expiresAt).toLocaleDateString()}
       </TableCell>

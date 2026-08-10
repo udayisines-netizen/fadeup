@@ -117,6 +117,12 @@ export function InvitePage() {
           </dd>
           <dt className="text-ink-500">Invited email</dt>
           <dd className="truncate text-ink-950">{invitation.email}</dd>
+          {invitation.locationName ? (
+            <>
+              <dt className="text-ink-500">Location</dt>
+              <dd className="text-ink-950">{invitation.locationName}</dd>
+            </>
+          ) : null}
         </dl>
 
         {!user ? (
