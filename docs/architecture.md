@@ -357,10 +357,70 @@ real seeded shop, while a direct `GET /rest/v1/organizations?slug=eq....` for th
 returned `[]` (RLS blocking anon table access exactly as designed). Fixture cleaned up
 afterward.
 
+## Live queue (`apps/web`, LOT 10)
+
+`/app/queue` (`pages/app-queue-page.tsx`, `lib/queries/queue.ts`) — a per-location live
+walk-in board on top of the LOT 10 database layer (`queue_entries`). `useOrgQueue` is the
+first use of Supabase Realtime Postgres Changes in this codebase: it subscribes to a
+`postgres_changes` channel filtered to `organization_id=eq.<org>` on `queue_entries` and
+invalidates the TanStack Query cache on any insert/update/delete, so the board updates live
+with no polling or manual refresh — cleaned up via `removeChannel` on unmount. The
+`organization_id` filter is purely to avoid re-fetching on every other org's events; RLS
+(not this filter) is what actually makes the subscription tenant-safe, since Realtime is
+RLS-aware for authenticated subscribers.
+
+Position in line is never trusted from the server as a stored value — it's derived
+client-side the same way `get_public_queue_status` derives it in the database: arrival
+order (`created_at`) among `status: 'waiting'` entries only. Since LOT 11 phase 1's
+self-service DB layer, a barber-role viewer sees status-update controls on entries where
+they are the assigned `barber_id` (`isOwnBarber`, resolved via their own `staff_profiles`
+row → `barbers` row), in addition to the existing full control for
+owner/manager/receptionist — the server-side trigger is what actually restricts which
+columns a barber's update can touch, this UI only decides whether to show the control at
+all.
+
+As part of this same self-service change, `/app/appointments` (LOT 8) was loosened to
+match: a barber-role viewer now sees status-update controls on their own assigned
+appointments too (previously read-only for any barber), via the identical `isOwnBarber`
+pattern threaded down to `AppointmentRow`.
+
+Verified: `npm run typecheck`, `lint`, `test` (including a barber-role fixture that owns
+one entry and not another, asserting status controls show only on the owned row), and
+`build` all pass.
+
+## Chair Mode phase 1: kiosk check-in + TV display (`apps/web`, LOT 11 phase 1)
+
+Two more anon-facing surfaces nested under the existing `/s/:slug` route, on top of the LOT
+11 `join_public_queue`/`get_public_queue_status` RPCs (`lib/queries/public-queue.ts`):
+
+- **`/s/:slug/walk-in`** (`pages/public-walkin-page.tsx`) — a shared physical kiosk's
+  check-in form: name (required) + phone (optional), auto-skipping the location step for a
+  single-location shop exactly like public booking (LOT 9). Deliberately a single short
+  form, not a wizard — a walk-in should be fast. The success screen offers "Check in
+  another customer," not just a static confirmation, because the device stays mounted and
+  serves a stream of different customers, not one person finishing a personal flow.
+- **`/s/:slug/display`** (`pages/public-queue-display-page.tsx`) — an unattended TV/kiosk
+  board: full-bleed dark surface, oversized type, zero interactive controls (nothing here
+  assumes anyone is holding the device). "Now serving" (`called`/`in_service`) and "Up
+  next" (`waiting`, ordered by the RPC's derived `queue_position`) sections. Polls via
+  `refetchInterval` (6s) rather than subscribing to Realtime — Realtime is RLS-aware and
+  does **not** deliver events to `anon` subscribers, so a polling fallback is required for
+  any anon-facing display, unlike the authenticated `/app/queue` board above. The location
+  is resolved from a `?location=` query param (falling back to the shop's first location),
+  since a mounted TV/kiosk is permanently associated with one location rather than letting
+  a customer pick.
+
+Both routes render inside the existing minimal `PublicBookingLayout` rather than a new
+chromeless layout — its header is small enough not to compete with the TV display, and a
+second public layout for one route wasn't worth the added routing surface for this first
+pass.
+
+Verified: `npm run typecheck`, `lint`, `test`, and `build` all pass.
+
 ## Not yet built
 
 Beyond the design system, marketing site, auth/onboarding, organization admin, and the
-service/availability catalog, staff scheduling and public booking are now built (LOT 8, LOT
-9). Still pending: live queue and chair mode/kiosk/TV mode UI (LOT 10 and LOT 11 phase 1
-database are done, frontend is not), customer CRM, and beyond. See the project task list /
-roadmap for what's next.
+service/availability catalog, staff scheduling, public booking, live queue, and chair mode
+phase 1 (kiosk check-in + TV display) are now built (LOT 8–11). Still pending: a real
+chair-occupancy state machine, barber "claiming" an unassigned queue entry, customer CRM UI,
+and beyond. See the project task list / roadmap for what's next.

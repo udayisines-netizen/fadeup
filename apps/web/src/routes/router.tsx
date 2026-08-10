@@ -98,6 +98,20 @@ export const router = createBrowserRouter([
               return { Component: PublicBookingPage }
             },
           },
+          {
+            path: 'walk-in',
+            lazy: async () => {
+              const { PublicWalkinPage } = await import('@/pages/public-walkin-page')
+              return { Component: PublicWalkinPage }
+            },
+          },
+          {
+            path: 'display',
+            lazy: async () => {
+              const { PublicQueueDisplayPage } = await import('@/pages/public-queue-display-page')
+              return { Component: PublicQueueDisplayPage }
+            },
+          },
         ],
       },
       {
@@ -155,6 +169,13 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { AppAppointmentsPage } = await import('@/pages/app-appointments-page')
               return { Component: AppAppointmentsPage }
+            },
+          },
+          {
+            path: 'queue',
+            lazy: async () => {
+              const { AppQueuePage } = await import('@/pages/app-queue-page')
+              return { Component: AppQueuePage }
             },
           },
         ],

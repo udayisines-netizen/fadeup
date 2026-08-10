@@ -48,9 +48,10 @@ import type { MembershipRole } from '@/lib/types'
 
 // Distinct from the owner/manager MANAGING_ROLES used everywhere else in this
 // app — appointments RLS also allows receptionist to write (see
-// db/migrations/20260809140000_appointments.sql). Barbers get read-only
-// access to the schedule in this lot; self-service updates from the chair
-// are deferred to Chair Mode.
+// db/migrations/20260809140000_appointments.sql). Since LOT 11 phase 1, a
+// barber can ALSO change status (not other fields) on an appointment
+// assigned specifically to them — restricted server-side by trigger, see
+// `isOwnBarber` below and the same pattern in app-queue-page.tsx.
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
@@ -104,6 +105,7 @@ export function AppAppointmentsPage() {
 
 function AppointmentsSchedule({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
   const { toast } = useToast()
+  const { user } = useAuth()
   const canManage = MANAGING_ROLES.has(role)
   const [selectedDate, setSelectedDate] = useState(todayIsoDate())
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
@@ -187,6 +189,21 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
     return map
   }, [chairsQuery.data])
 
+  // "Is this appointment's barber_id me?" — same join-in-reverse pattern as
+  // app-queue-page.tsx's isOwnBarber: my own staff_profiles row (matched on
+  // auth user id), then my own barbers row (matched on that profile).
+  const ownBarberId = useMemo(() => {
+    if (!user) return null
+    const ownProfile = (staffProfilesQuery.data ?? []).find((profile) => profile.userId === user.id)
+    if (!ownProfile) return null
+    const ownBarber = (barbersQuery.data ?? []).find((barber) => barber.staffProfileId === ownProfile.id)
+    return ownBarber?.id ?? null
+  }, [user, staffProfilesQuery.data, barbersQuery.data])
+
+  function isOwnBarber(barberId: string): boolean {
+    return barberId === ownBarberId
+  }
+
   const appointmentsByLocation = useMemo(() => {
     const map = new Map<string, Appointment[]>()
     for (const appointment of appointmentsQuery.data ?? []) {
@@ -252,6 +269,7 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
                   location={location}
                   appointments={appointmentsByLocation.get(location.id) ?? []}
                   canManage={canManage}
+                  isOwnBarber={isOwnBarber}
                   staffProfileById={staffProfileById}
                   barberById={barberById}
                   serviceById={serviceById}
@@ -291,6 +309,7 @@ function LocationSchedule({
   location,
   appointments,
   canManage,
+  isOwnBarber,
   staffProfileById,
   barberById,
   serviceById,
@@ -300,13 +319,15 @@ function LocationSchedule({
   location: Location
   appointments: Appointment[]
   canManage: boolean
+  isOwnBarber: (barberId: string) => boolean
   staffProfileById: Map<string, StaffProfile>
   barberById: Map<string, Barber>
   serviceById: Map<string, Service>
   chairById: Map<string, Chair>
   onNewAppointment: () => void
 }) {
-  const columnCount = canManage ? 6 : 5
+  const showActionsColumn = canManage || appointments.some((appointment) => isOwnBarber(appointment.barberId))
+  const columnCount = showActionsColumn ? 6 : 5
 
   function barberName(barberId: string): string {
     const staffProfileId = barberById.get(barberId)?.staffProfileId
@@ -332,7 +353,7 @@ function LocationSchedule({
             <TableHead>Barber</TableHead>
             <TableHead>Chair</TableHead>
             <TableHead>Status</TableHead>
-            {canManage ? (
+            {showActionsColumn ? (
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -365,7 +386,8 @@ function LocationSchedule({
                 key={appointment.id}
                 appointment={appointment}
                 location={location}
-                canManage={canManage}
+                canAct={canManage || isOwnBarber(appointment.barberId)}
+                showActionsColumn={showActionsColumn}
                 barberName={barberName(appointment.barberId)}
                 serviceName={serviceById.get(appointment.serviceId)?.name ?? 'Unknown service'}
                 chairName={appointment.chairId ? (chairById.get(appointment.chairId)?.name ?? '—') : '—'}
@@ -381,14 +403,16 @@ function LocationSchedule({
 function AppointmentRow({
   appointment,
   location,
-  canManage,
+  canAct,
+  showActionsColumn,
   barberName,
   serviceName,
   chairName,
 }: {
   appointment: Appointment
   location: Location
-  canManage: boolean
+  canAct: boolean
+  showActionsColumn: boolean
   barberName: string
   serviceName: string
   chairName: string
@@ -430,9 +454,9 @@ function AppointmentRow({
       <TableCell>
         <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{STATUS_LABELS[appointment.status]}</Badge>
       </TableCell>
-      {canManage ? (
+      {showActionsColumn ? (
         <TableCell className="text-right">
-          {isTerminal ? null : (
+          {canAct && !isTerminal ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>
@@ -451,7 +475,7 @@ function AppointmentRow({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
+          ) : null}
         </TableCell>
       ) : null}
     </TableRow>
