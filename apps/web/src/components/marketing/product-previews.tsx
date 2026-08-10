@@ -38,7 +38,7 @@ export function BookingPreview() {
             <span
               className={cn(
                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                index === 0 ? 'bg-accent-600 text-paper-0' : 'border border-border-strong text-ink-500',
+                index === 0 ? 'bg-accent-600 text-on-accent' : 'border border-border-strong text-ink-500',
               )}
             >
               {index + 1}
@@ -86,7 +86,7 @@ export function WalkInPreview() {
     <PreviewFrame label="Walk-ins">
       <div className="flex items-center justify-between rounded-md border border-dashed border-border-strong px-3 py-2">
         <p className="text-sm text-ink-700">Add walk-in</p>
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-paper-0">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-on-accent">
           +
         </span>
       </div>
@@ -106,7 +106,7 @@ export function ChairModePreview() {
           <p className="text-xs text-ink-500">Buzz cut &middot; Chair 2</p>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <span className="flex min-h-11 items-center justify-center rounded-md bg-ink-950 px-3 text-center text-sm font-medium text-paper-0">
+          <span className="flex min-h-11 items-center justify-center rounded-md bg-ink-950 px-3 text-center text-sm font-medium text-on-accent">
             Finish service
           </span>
           <span className="flex min-h-11 items-center justify-center rounded-md border border-border-strong px-3 text-center text-sm font-medium text-ink-800">

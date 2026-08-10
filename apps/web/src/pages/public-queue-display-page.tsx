@@ -51,7 +51,7 @@ export function PublicQueueDisplayPage() {
   if (organizationQuery.isPending || locationsQuery.isPending) {
     return (
       <div className="flex flex-1 items-center justify-center bg-ink-950 py-24">
-        <Spinner className="h-8 w-8 text-paper-0" label="Loading queue…" />
+        <Spinner className="h-8 w-8 text-on-accent" label="Loading queue…" />
       </div>
     )
   }
@@ -100,12 +100,12 @@ export function PublicQueueDisplayPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-ink-950 text-paper-0">
+    <div className="flex flex-1 flex-col bg-ink-950 text-on-accent">
       <Container size="xl" className="flex flex-1 flex-col py-8 sm:py-12">
         <div className="mb-8 text-center sm:mb-12">
           <p className="text-sm font-medium uppercase tracking-widest text-accent-200">Live queue</p>
           <h1 className="mt-2 text-4xl font-semibold text-balance sm:text-5xl">{organizationQuery.data.name}</h1>
-          {resolvedLocation ? <p className="mt-2 text-lg text-paper-0/60">{resolvedLocation.name}</p> : null}
+          {resolvedLocation ? <p className="mt-2 text-lg text-on-accent/60">{resolvedLocation.name}</p> : null}
         </div>
 
         {queueQuery.isPending ? (
@@ -115,7 +115,7 @@ export function PublicQueueDisplayPage() {
           </div>
         ) : queueQuery.isError ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-lg text-paper-0/70">Couldn&apos;t refresh the queue — trying again shortly…</p>
+            <p className="text-lg text-on-accent/70">Couldn&apos;t refresh the queue — trying again shortly…</p>
           </div>
         ) : (
           <QueueBoard entries={queueQuery.data} />
@@ -136,7 +136,7 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         <CircleCheckBig className="h-16 w-16 text-accent-200" aria-hidden="true" />
         <p className="text-3xl font-semibold text-balance sm:text-4xl">No one is currently waiting</p>
-        <p className="text-lg text-paper-0/60">Walk right up — a barber will be with you shortly.</p>
+        <p className="text-lg text-on-accent/60">Walk right up — a barber will be with you shortly.</p>
       </div>
     )
   }
@@ -148,7 +148,7 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
           Now serving
         </h2>
         {nowServing.length === 0 ? (
-          <p className="text-lg text-paper-0/50">No one is being served right now.</p>
+          <p className="text-lg text-on-accent/50">No one is being served right now.</p>
         ) : (
           <ul className="flex flex-col gap-4">
             {nowServing.map((entry) => (
@@ -159,7 +159,7 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
                 <div className="min-w-0">
                   <p className="truncate text-3xl font-semibold sm:text-4xl">{entry.displayName}</p>
                   {entry.barberDisplayName ? (
-                    <p className="mt-1 flex items-center gap-1.5 text-base text-paper-0/60">
+                    <p className="mt-1 flex items-center gap-1.5 text-base text-on-accent/60">
                       <Scissors className="h-4 w-4 shrink-0" aria-hidden="true" />
                       {entry.barberDisplayName}
                     </p>
@@ -175,11 +175,11 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
       </section>
 
       <section aria-labelledby="up-next-heading">
-        <h2 id="up-next-heading" className="mb-4 text-xl font-semibold uppercase tracking-wide text-paper-0/60">
+        <h2 id="up-next-heading" className="mb-4 text-xl font-semibold uppercase tracking-wide text-on-accent/60">
           Up next
         </h2>
         {waiting.length === 0 ? (
-          <p className="text-lg text-paper-0/50">No one is waiting.</p>
+          <p className="text-lg text-on-accent/50">No one is waiting.</p>
         ) : (
           <ol className="flex flex-col gap-3">
             {waiting.map((entry) => (

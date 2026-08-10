@@ -1,0 +1,12 @@
+{
+  "nav": { "home": "Inicio", "features": "Funciones", "pricing": "Precios" },
+  "auth": { "logIn": "Iniciar sesión", "startFree": "Empezar gratis" },
+  "footer": {
+    "tagline": "El sistema operativo para barberías modernas: reservas, cola en vivo, gestión de sillones y relación con el cliente en un solo sistema conectado.",
+    "product": "Producto",
+    "account": "Cuenta",
+    "copyright": "© {{year}} FadeUp. Todos los derechos reservados."
+  },
+  "theme": { "light": "Claro", "dark": "Oscuro", "system": "Sistema", "toggleLabel": "Tema" },
+  "language": { "label": "Idioma", "select": "Seleccionar idioma" }
+}

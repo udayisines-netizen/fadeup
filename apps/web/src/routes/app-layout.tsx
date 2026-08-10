@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
 import { Navbar } from '@/components/ui/navbar'
 import { AppNavLink } from '@/components/ui/nav-link'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 const MANAGING_ROLES = new Set(['owner', 'manager'])
 
@@ -86,6 +88,8 @@ function AppShell() {
                 {currentMembership.organizationName}
               </span>
             ) : null}
+            <LanguageSwitcher />
+            <ThemeToggle />
             <Button variant="secondary" onClick={() => void handleSignOut()}>
               Sign out
             </Button>

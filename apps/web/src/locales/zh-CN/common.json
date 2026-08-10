@@ -1,0 +1,12 @@
+{
+  "nav": { "home": "首页", "features": "功能", "pricing": "定价" },
+  "auth": { "logIn": "登录", "startFree": "免费开始" },
+  "footer": {
+    "tagline": "现代理发店的操作系统——预约、实时排队、椅位管理和客户关系,全部整合在一个系统中。",
+    "product": "产品",
+    "account": "账户",
+    "copyright": "© {{year}} FadeUp。保留所有权利。"
+  },
+  "theme": { "light": "浅色", "dark": "深色", "system": "跟随系统", "toggleLabel": "主题" },
+  "language": { "label": "语言", "select": "选择语言" }
+}

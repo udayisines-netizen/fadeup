@@ -733,7 +733,7 @@ function NewAppointmentDialog({
                             className={cn(
                               'min-h-9 rounded-md border px-2 py-1.5 text-sm font-medium transition-colors',
                               isSelected
-                                ? 'border-accent-600 bg-accent-600 text-paper-0'
+                                ? 'border-accent-600 bg-accent-600 text-on-accent'
                                 : 'border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100',
                             )}
                           >

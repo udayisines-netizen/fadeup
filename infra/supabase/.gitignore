@@ -5,6 +5,9 @@ volumes/functions/**
 !volumes/functions/main/
 volumes/functions/main/**
 !volumes/functions/main/index.ts
+!volumes/functions/locale-detect/
+volumes/functions/locale-detect/**
+!volumes/functions/locale-detect/index.ts
 .env
 test.http
 docker-compose.override.yml

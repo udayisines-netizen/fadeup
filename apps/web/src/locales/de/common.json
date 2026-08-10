@@ -1,0 +1,12 @@
+{
+  "nav": { "home": "Start", "features": "Funktionen", "pricing": "Preise" },
+  "auth": { "logIn": "Anmelden", "startFree": "Kostenlos starten" },
+  "footer": {
+    "tagline": "Das Betriebssystem für moderne Barbershops — Buchungen, Live-Warteschlange, Stuhlverwaltung und Kundenbeziehungen in einem verbundenen System.",
+    "product": "Produkt",
+    "account": "Konto",
+    "copyright": "© {{year}} FadeUp. Alle Rechte vorbehalten."
+  },
+  "theme": { "light": "Hell", "dark": "Dunkel", "system": "System", "toggleLabel": "Design" },
+  "language": { "label": "Sprache", "select": "Sprache auswählen" }
+}

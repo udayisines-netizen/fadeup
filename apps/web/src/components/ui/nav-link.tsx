@@ -8,7 +8,7 @@ export function AppNavLink({ className, ...props }: NavLinkProps) {
       className={(renderProps) =>
         cn(
           'inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors',
-          renderProps.isActive ? 'bg-ink-950 text-paper-0' : 'text-ink-700 hover:bg-paper-100',
+          renderProps.isActive ? 'bg-ink-950 text-on-accent' : 'text-ink-700 hover:bg-paper-100',
           typeof className === 'function' ? className(renderProps) : className,
         )
       }

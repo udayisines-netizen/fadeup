@@ -15,7 +15,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipPrimitive.Toolti
           data-fu-popover
           sideOffset={sideOffset}
           className={cn(
-            'z-50 max-w-xs rounded-md bg-ink-950 px-2 py-1 text-xs text-paper-0 shadow-sm',
+            'z-50 max-w-xs rounded-md bg-ink-950 px-2 py-1 text-xs text-on-accent shadow-sm',
             className,
           )}
           {...props}

@@ -1,50 +1,74 @@
 @import 'tailwindcss';
 
 /*
- * FadeUp design tokens (LOT 4).
+ * FadeUp design tokens — Premium Emerald identity.
  *
  * Brand direction: the operating system for modern barbershops — premium,
- * precise, tactile. Warm near-black ink on warm paper (not pure
- * black/white — avoids the cold, generic "AI SaaS" look), one confident
- * copper accent used sparingly for primary actions and focus, restrained
- * radii/shadows. Reference quality: Linear/Stripe/Square-tier restraint,
- * not their palettes.
+ * precise, technological, tactile. Near-black graphite ink on clean paper
+ * (not pure black/white — avoids the flat, generic "AI SaaS" look), one
+ * confident emerald accent used sparingly for primary actions and focus,
+ * restrained radii/shadows. Reference quality: Linear/Stripe/Square-tier
+ * restraint, not their palettes.
  *
  * Every component must draw from these tokens — no ad hoc hex values or
  * one-off spacing/radius/shadow in component code. Tailwind's default
  * spacing scale (the `--spacing` multiplier) is used as-is for spacing;
  * only color/type/radius/shadow are FadeUp-specific and defined here.
+ *
+ * Theming: `@theme` below both REGISTERS each token as a Tailwind utility
+ * (bg-ink-950, text-accent-600, ...) AND sets its light-mode value — a
+ * Tailwind v4 requirement: giving a token `initial` here (intending to set
+ * the "real" value separately on `:root`) silently stops Tailwind from
+ * generating that utility class at all, since it decides which utilities
+ * to emit from the values inside `@theme` itself. The dark-mode values
+ * below, in a plain `:root[data-theme='dark']` rule OUTSIDE `@theme`, are
+ * fine — Tailwind only needs one real value per token to know a utility
+ * exists; reassigning the underlying custom property afterward is exactly
+ * how the retheme works, since generated utilities reference `var(--color-*)`
+ * at paint time, not a static value. `data-theme` is applied to `<html>` by
+ * `src/lib/theme.tsx` before first paint (see the inline script in
+ * index.html) so there is no flash of the wrong theme.
+ *
+ * `on-accent` is a DELIBERATELY separate token from `paper-0`: it means
+ * "text readable on a colored/dark surface" (button labels, active nav,
+ * the public queue TV display) and must stay near-white in both light AND
+ * dark mode. `paper-0` means "the lightest app surface" and DOES invert in
+ * dark mode. Conflating the two would make dark-mode buttons render
+ * dark-on-dark — keep them separate when adding new usage.
  */
 @theme {
-  /* Ink (text) — warm dark neutral, not pure black */
-  --color-ink-950: #1a1613;
-  --color-ink-800: #2c2621;
-  --color-ink-700: #453d36;
-  --color-ink-500: #756a61;
-  --color-ink-300: #a89d92;
+  /* Graphite ink — near-black with a faint cool-green undertone, not pure black */
+  --color-ink-950: #0e1613;
+  --color-ink-800: #22302b;
+  --color-ink-700: #3d4c45;
+  --color-ink-500: #66766e;
+  --color-ink-300: #9caaa2;
 
-  /* Paper (surfaces) — warm off-white, not pure white */
+  /* Paper (surfaces) — clean, faintly cool off-white, not pure white */
   --color-paper-0: #ffffff;
-  --color-paper-50: #faf8f5;
-  --color-paper-100: #f3efe8;
-  --color-paper-200: #e9e3d9;
+  --color-paper-50: #f5f8f6;
+  --color-paper-100: #e9f0ec;
+  --color-paper-200: #d8e5de;
 
   /* Borders */
-  --color-border: #e6e0d5;
-  --color-border-strong: #d6cdbe;
+  --color-border: #dde8e2;
+  --color-border-strong: #c3d5cc;
 
-  /* Brand accent — copper. Sparingly: primary actions, focus, links. */
-  --color-accent-100: #f7e6d8;
-  --color-accent-200: #edc9a8;
-  --color-accent-600: #b5541f;
-  --color-accent-700: #96431a;
-  --color-accent-800: #7a3615;
+  /* Brand accent — emerald. Sparingly: primary actions, focus, links. */
+  --color-accent-100: #d8f2e5;
+  --color-accent-200: #a7e0c2;
+  --color-accent-600: #0d9b5f;
+  --color-accent-700: #0a7c4c;
+  --color-accent-800: #08633c;
 
-  /* Semantic (status), deliberately distinct from the brand accent so
-     "in progress"/"warning" never gets confused with a primary action. */
-  --color-success-100: #dff3e7;
-  --color-success-600: #1f7a4d;
-  --color-success-700: #166139;
+  --color-on-accent: #ffffff;
+
+  /* Semantic (status) — deliberately a different hue family from the
+     emerald brand accent, so "success" never reads as "this is the
+     primary action" and vice versa. */
+  --color-success-100: #dbeefe;
+  --color-success-600: #0f7d94;
+  --color-success-700: #0c6478;
 
   --color-warning-100: #fbeed2;
   --color-warning-600: #b4790a;
@@ -71,22 +95,67 @@
 
   /* Shadows — used only for genuinely elevated surfaces (dialogs, popovers,
      dropdowns), never as decoration on static cards */
-  --shadow-xs: 0 1px 2px rgba(26, 22, 19, 0.06);
-  --shadow-sm: 0 2px 6px rgba(26, 22, 19, 0.07);
-  --shadow-md: 0 8px 24px rgba(26, 22, 19, 0.1);
-  --shadow-lg: 0 16px 48px rgba(26, 22, 19, 0.16);
+  --shadow-xs: 0 1px 2px rgba(8, 14, 12, 0.06);
+  --shadow-sm: 0 2px 6px rgba(8, 14, 12, 0.07);
+  --shadow-md: 0 8px 24px rgba(8, 14, 12, 0.1);
+  --shadow-lg: 0 16px 48px rgba(8, 14, 12, 0.18);
 
   /* Marketing/content max-widths */
   --breakpoint-3xl: 100rem;
 }
 
 :root {
-  /* Explicitly light: the app's surfaces are hand-tuned for light paper
-     tones. Letting native form controls follow OS dark preference while
-     everything else stays light reads as broken, not "supports dark mode" —
-     a real dark theme is a deliberate future pass, not a side effect of
-     `color-scheme: light dark`. */
+  /* All light-mode color values live in @theme above (Tailwind v4
+     requirement — see the comment there). This block only carries the
+     non-color, non-utility-generating property. */
   color-scheme: light;
+}
+
+/*
+ * Dark mode overrides. Applied via [data-theme='dark'] on <html> — see
+ * src/lib/theme.tsx. Surface hierarchy is preserved (paper-50 is still the
+ * deepest/body surface, paper-0 still the most-raised/card surface) but
+ * the actual lightness direction inverts; ink follows the same pattern in
+ * reverse (ink-950 stays the HIGHEST-contrast text token, now near-white).
+ */
+:root[data-theme='dark'] {
+  --color-ink-950: #eef5f1;
+  --color-ink-800: #cddbd3;
+  --color-ink-700: #a3b6ac;
+  --color-ink-500: #7c8f86;
+  --color-ink-300: #4c5f56;
+
+  --color-paper-0: #16231e;
+  --color-paper-50: #0b1512;
+  --color-paper-100: #1c2b25;
+  --color-paper-200: #26382f;
+
+  --color-border: #24352d;
+  --color-border-strong: #35493e;
+
+  --color-accent-100: #103826;
+  --color-accent-200: #1a5a3b;
+  --color-accent-600: #22c98a;
+  --color-accent-700: #3fdb9e;
+  --color-accent-800: #6fe8b8;
+
+  --color-success-100: #0c2a36;
+  --color-success-600: #34b6d4;
+  --color-success-700: #5cc8e0;
+
+  --color-warning-100: #362708;
+  --color-warning-600: #e0a02f;
+  --color-warning-700: #edb654;
+
+  --color-danger-100: #331410;
+  --color-danger-600: #e0685a;
+  --color-danger-700: #ea8c80;
+
+  --color-info-100: #10233a;
+  --color-info-600: #5b9ce0;
+  --color-info-700: #7fb3e8;
+
+  color-scheme: dark;
 }
 
 body {
@@ -216,8 +285,8 @@ body {
   background:
     linear-gradient(to right, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,
     linear-gradient(to left, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,
-    linear-gradient(to right, rgba(26, 22, 19, 0.12), rgba(255, 255, 255, 0) 8px) scroll,
-    linear-gradient(to left, rgba(26, 22, 19, 0.12), rgba(255, 255, 255, 0) 8px) scroll;
+    linear-gradient(to right, color-mix(in srgb, var(--color-ink-950) 12%, transparent), rgba(255, 255, 255, 0) 8px) scroll,
+    linear-gradient(to left, color-mix(in srgb, var(--color-ink-950) 12%, transparent), rgba(255, 255, 255, 0) 8px) scroll;
   background-repeat: no-repeat;
   background-color: var(--color-paper-0);
   background-position:

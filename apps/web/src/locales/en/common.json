@@ -1,0 +1,12 @@
+{
+  "nav": { "home": "Home", "features": "Features", "pricing": "Pricing" },
+  "auth": { "logIn": "Log in", "startFree": "Start free" },
+  "footer": {
+    "tagline": "The operating system for modern barbershops — booking, live queue, chair operations and customer relationships in one connected system.",
+    "product": "Product",
+    "account": "Account",
+    "copyright": "© {{year}} FadeUp. All rights reserved."
+  },
+  "theme": { "light": "Light", "dark": "Dark", "system": "System", "toggleLabel": "Theme" },
+  "language": { "label": "Language", "select": "Select language" }
+}

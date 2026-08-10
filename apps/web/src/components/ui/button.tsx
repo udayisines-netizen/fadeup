@@ -15,11 +15,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-accent-600 text-paper-0 hover:bg-accent-700 active:bg-accent-800 disabled:bg-accent-200',
+  primary: 'bg-accent-600 text-on-accent hover:bg-accent-700 active:bg-accent-800 disabled:bg-accent-200',
   secondary:
     'border border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100 active:bg-paper-200 disabled:border-border disabled:text-ink-300',
   ghost: 'bg-transparent text-ink-700 hover:bg-paper-100 active:bg-paper-200 disabled:text-ink-300',
-  danger: 'bg-danger-600 text-paper-0 hover:bg-danger-700 active:bg-danger-700 disabled:bg-danger-100 disabled:text-danger-600',
+  danger: 'bg-danger-600 text-on-accent hover:bg-danger-700 active:bg-danger-700 disabled:bg-danger-100 disabled:text-danger-600',
 }
 
 // `sm` is intentionally below the 44px touch target guideline — it exists

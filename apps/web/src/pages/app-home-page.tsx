@@ -52,7 +52,7 @@ export function AppHomePage() {
                       className={cn(
                         'flex min-h-11 w-full items-center justify-between rounded-md border px-4 py-2 text-left text-sm transition-colors',
                         isCurrent
-                          ? 'border-ink-950 bg-ink-950 text-paper-0'
+                          ? 'border-ink-950 bg-ink-950 text-on-accent'
                           : 'border-border text-ink-700 hover:bg-paper-50',
                       )}
                     >

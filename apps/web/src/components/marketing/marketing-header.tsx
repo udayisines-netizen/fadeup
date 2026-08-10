@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Container } from '@/components/ui/container'
 import { buttonVariants } from '@/components/ui/button'
 import { AppNavLink } from '@/components/ui/nav-link'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
-
-const MARKETING_LINKS: { to: string; label: string; end: boolean }[] = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/features', label: 'Features', end: false },
-  { to: '/pricing', label: 'Pricing', end: false },
-]
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 /** Shared top nav for the public marketing site (/, /features, /pricing) — mobile menu uses the Drawer primitive. */
 export function MarketingHeader() {
+  const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+
+  const marketingLinks: { to: string; label: string; end: boolean }[] = [
+    { to: '/', label: t('nav.home'), end: true },
+    { to: '/features', label: t('nav.features'), end: false },
+    { to: '/pricing', label: t('nav.pricing'), end: false },
+  ]
 
   // Close the mobile drawer automatically on navigation (route change).
   useEffect(() => {
@@ -30,50 +34,53 @@ export function MarketingHeader() {
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
-          {MARKETING_LINKS.map((link) => (
+          {marketingLinks.map((link) => (
             <AppNavLink key={link.to} to={link.to} end={link.end}>
               {link.label}
             </AppNavLink>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-1 md:flex">
+          <LanguageSwitcher />
+          <ThemeToggle />
           <Link to="/login" className={buttonVariants({ variant: 'ghost' })}>
-            Log in
+            {t('auth.logIn')}
           </Link>
           <Link to="/signup" className={buttonVariants({ variant: 'primary' })}>
-            Start free
+            {t('auth.startFree')}
           </Link>
         </div>
 
-        <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
-          <DrawerTrigger
-            className={buttonVariants({ variant: 'ghost' }, 'md:hidden')}
-            aria-label="Open menu"
-          >
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          </DrawerTrigger>
-          <DrawerContent side="right" aria-label="Mobile navigation">
-            <DrawerHeader>
-              <DrawerTitle>Menu</DrawerTitle>
-            </DrawerHeader>
-            <nav aria-label="Mobile" className="flex flex-col gap-1">
-              {MARKETING_LINKS.map((link) => (
-                <AppNavLink key={link.to} to={link.to} end={link.end} className="w-full">
-                  {link.label}
-                </AppNavLink>
-              ))}
-            </nav>
-            <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
-              <Link to="/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
-                Log in
-              </Link>
-              <Link to="/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
-                Start free
-              </Link>
-            </div>
-          </DrawerContent>
-        </Drawer>
+        <div className="flex items-center gap-1 md:hidden">
+          <LanguageSwitcher />
+          <ThemeToggle />
+          <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
+            <DrawerTrigger className={buttonVariants({ variant: 'ghost' })} aria-label="Open menu">
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </DrawerTrigger>
+            <DrawerContent side="right" aria-label="Mobile navigation">
+              <DrawerHeader>
+                <DrawerTitle>Menu</DrawerTitle>
+              </DrawerHeader>
+              <nav aria-label="Mobile" className="flex flex-col gap-1">
+                {marketingLinks.map((link) => (
+                  <AppNavLink key={link.to} to={link.to} end={link.end} className="w-full">
+                    {link.label}
+                  </AppNavLink>
+                ))}
+              </nav>
+              <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
+                <Link to="/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                  {t('auth.logIn')}
+                </Link>
+                <Link to="/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                  {t('auth.startFree')}
+                </Link>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </div>
       </Container>
     </header>
   )

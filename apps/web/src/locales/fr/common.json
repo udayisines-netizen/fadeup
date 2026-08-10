@@ -1,0 +1,12 @@
+{
+  "nav": { "home": "Accueil", "features": "Fonctionnalités", "pricing": "Tarifs" },
+  "auth": { "logIn": "Connexion", "startFree": "Essai gratuit" },
+  "footer": {
+    "tagline": "Le système d'exploitation des salons de coiffure modernes — réservations, file d'attente en direct, gestion des postes et relation client dans un seul système connecté.",
+    "product": "Produit",
+    "account": "Compte",
+    "copyright": "© {{year}} FadeUp. Tous droits réservés."
+  },
+  "theme": { "light": "Clair", "dark": "Sombre", "system": "Système", "toggleLabel": "Thème" },
+  "language": { "label": "Langue", "select": "Choisir la langue" }
+}

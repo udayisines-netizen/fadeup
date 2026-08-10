@@ -2,6 +2,58 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Theme + locale bootstrap — runs synchronously, before first paint, so
+      there is no flash of the wrong theme/language while React and i18next
+      load. Mirrors src/lib/theme.ts (getStoredTheme/resolveTheme) and
+      src/lib/locale.ts (resolveInitialLocale) — keep both in sync with any
+      change here, since this copy cannot import those modules directly.
+    -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('fadeup-theme')
+          var resolved =
+            theme === 'light' || theme === 'dark'
+              ? theme
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.setAttribute('data-theme', resolved)
+        } catch (e) {}
+        try {
+          var SUPPORTED = ['en', 'fr', 'es', 'de', 'it', 'pt', 'ar', 'zh-CN', 'ja', 'ru']
+          var RTL = ['ar']
+          function normalize(value) {
+            if (!value) return null
+            for (var i = 0; i < SUPPORTED.length; i++) {
+              if (SUPPORTED[i].toLowerCase() === String(value).toLowerCase()) return SUPPORTED[i]
+            }
+            return null
+          }
+          var locale = normalize(localStorage.getItem('fadeup-locale-explicit')) || normalize(localStorage.getItem('fadeup-locale-detected'))
+          if (!locale) {
+            var langs = navigator.languages || [navigator.language]
+            for (var j = 0; j < langs.length; j++) {
+              var lang = langs[j]
+              if (!lang) continue
+              if (lang.toLowerCase().indexOf('zh') === 0) {
+                locale = 'zh-CN'
+                break
+              }
+              var match = normalize(lang.split('-')[0])
+              if (match) {
+                locale = match
+                break
+              }
+            }
+          }
+          locale = locale || 'en'
+          document.documentElement.setAttribute('lang', locale)
+          document.documentElement.setAttribute('dir', RTL.indexOf(locale) !== -1 ? 'rtl' : 'ltr')
+        } catch (e) {}
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FadeUp — the operating system for modern barbershops</title>
