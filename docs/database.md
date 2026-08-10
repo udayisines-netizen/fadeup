@@ -829,10 +829,74 @@ same row; `join_public_queue` rejects an inactive location; `anon` retains zero 
 `queue_entries` table access throughout. Both migrations re-applied to confirm idempotency.
 Fixtures fully cleaned up (verified: 0 remaining).
 
+## LOT 12 additions — customer CRM (`customers`)
+
+`customers` (`id, organization_id, name, phone, email, notes, created_at, updated_at`) is
+the real entity `appointments.customer_name`/`customer_phone`/`customer_email` and
+`queue_entries.customer_name`/`customer_phone` were always a placeholder for (documented as
+such since LOT 8/10). RLS matches `appointments`/`queue_entries` exactly: any org member can
+`select`; `insert`/`update`/`delete` require `owner`/`manager`/`receptionist`.
+
+Two partial unique indexes — `customers_org_phone_unique` on `(organization_id, phone)
+where phone is not null` and `customers_org_email_unique` on `(organization_id,
+lower(email)) where email is not null` — back a find-or-create match. Partial (not
+full-table) because phone/email are both nullable and two customers who both lack a phone
+are not duplicates of each other; `NULL` never conflicts with `NULL` in a unique index,
+which is exactly the semantics wanted here.
+
+`customer_id` (nullable, `on delete set null`) was added to both `appointments` and
+`queue_entries`, populated by a shared `BEFORE INSERT` trigger,
+`link_customer_from_contact_info()`: matches an existing customer by phone, then by email,
+within the row's `organization_id`; creates one if no match; leaves `customer_id` null if
+the booking has neither phone nor email (no junk records). If the row already carries an
+explicit `customer_id` (a future CRM UI attaching a booking to a known customer directly),
+the trigger validates it belongs to the same `organization_id` instead of overwriting it —
+this is INSERT-only, not a resync, so a later contact-info edit does not retroactively
+relink. `SECURITY DEFINER` so auto-linking doesn't depend on the inserting role also having
+direct `customers` `INSERT` rights (today identical role sets for both, decoupled now to
+avoid a landmine if that ever changes). Concurrency: the trigger's own `SELECT`-then-`INSERT`
+has a narrow race window under simultaneous bookings for the same phone/email; `INSERT ...
+ON CONFLICT DO NOTHING` against the partial unique indexes plus a re-select on conflict
+converts a lost race into "reuse the row the other transaction created," not a duplicate or
+an error.
+
+Deliberately non-invasive: no existing insert path (LOT 8's staff booking dialog, LOT 9's
+`book_public_appointment`, LOT 10's queue insert, LOT 11's `join_public_queue`) required any
+code change — `customer_id` is simply populated automatically by the trigger on every one of
+them.
+
+A real bug was caught by `db/tests/verify_customers.sql` before this shipped: the trigger
+function is attached to *both* `appointments` and `queue_entries`, but only `appointments`
+has a `customer_email` column. A bare `new.customer_email` reference compiles fine (PL/pgSQL
+trigger functions aren't type-checked until first invocation per relation) but throws
+`record "new" has no field "customer_email"` the moment the trigger actually fires on a
+`queue_entries` insert. Fixed by reading both optional fields through `to_jsonb(new) ->>
+'field_name'` instead of direct dot-access — a missing key yields SQL `NULL` rather than an
+error, which is exactly the right behavior for a column that legitimately doesn't exist on
+one of the two tables this trigger serves.
+
+`verify_customers.sql` also had its own bug, independent of the product code: a
+cross-table-linking assertion used `select distinct customer_id from appointments` to
+compare against the queue entry's `customer_id`, but by that point in the script three
+appointments existed for the org — two sharing one customer, one deliberately left
+unlinked (`customer_id is null`) — so `distinct` returned two rows (the id and `NULL`) and
+the comparison itself failed with "more than one row returned by a subquery used as an
+expression." This was a test-script defect, not a product one; fixed by filtering
+`where customer_id is not null` in the test's own query.
+
+Verified end to end: first appointment with phone+email auto-creates and links a customer;
+a second appointment with the same phone but a different display name (a nickname/typo
+case) reuses that same customer rather than creating a duplicate, and both appointments
+share one `customer_id`; a booking with neither phone nor email stays unlinked; a
+`queue_entries` walk-in with the same phone as an existing appointment-derived customer
+reuses that customer (cross-table linking, not per-table silos); a raw duplicate-phone
+`customers` insert is rejected by the partial unique index; an explicitly-supplied
+cross-org `customer_id` is rejected by the trigger's tenant-consistency check; RLS confirmed
+correct for a non-member (0 rows) and `anon` (0 rows); both migrations re-applied to confirm
+idempotency.
+
 ## Not yet built
 
-- `customers` as a real entity (`appointments.customer_name`/`customer_phone`/
-  `customer_email` are a placeholder pending LOT 12, Customer CRM).
 - A real chair-occupancy state machine ("which chair has who, since when," a visual
   chair-status board) — explicitly deferred past LOT 11 phase 1, see above.
 - Barber "claiming" an unassigned (`barber_id is null`) queue entry — deferred, see above;
