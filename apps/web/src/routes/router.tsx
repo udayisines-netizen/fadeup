@@ -199,6 +199,13 @@ export const router = createBrowserRouter([
               return { Component: AppWaitlistPage }
             },
           },
+          {
+            path: 'memberships',
+            lazy: async () => {
+              const { AppMembershipsPage } = await import('@/pages/app-memberships-page')
+              return { Component: AppMembershipsPage }
+            },
+          },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
