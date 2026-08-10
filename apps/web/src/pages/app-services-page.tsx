@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -202,7 +203,7 @@ function CategoriesSection({
         onError: (error) =>
           toast({
             title: "Couldn't delete category",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -311,7 +312,7 @@ function CategoryFormDialog({
         onSaved('Category created')
       }
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 
@@ -627,7 +628,7 @@ function ServiceFormDialog({
         onSaved('Service created')
       }
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 
@@ -804,7 +805,7 @@ function ServiceLocationsTab({
         onError: (error) =>
           toast({
             title: "Couldn't update location assignment",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -882,7 +883,7 @@ function ServiceBarbersTab({
         onError: (error) =>
           toast({
             title: "Couldn't update barber eligibility",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },

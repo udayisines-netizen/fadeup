@@ -5,6 +5,7 @@ import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { MarketingLayout } from '@/routes/marketing-layout'
 import { PublicBookingLayout } from '@/routes/public-booking-layout'
+import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 
 export const router = createBrowserRouter([
@@ -74,6 +75,37 @@ export const router = createBrowserRouter([
           const { InvitePage } = await import('@/pages/invite-page')
           return { Component: InvitePage }
         },
+      },
+      {
+        // Not part of public marketing navigation/sitemap — see
+        // src/pages/platform-login-page.tsx.
+        path: 'platform/login',
+        lazy: async () => {
+          const { PlatformLoginPage } = await import('@/pages/platform-login-page')
+          return { Component: PlatformLoginPage }
+        },
+      },
+      {
+        // Deliberately unguessable, single-use — see
+        // src/pages/platform-claim-page.tsx.
+        path: 'platform/claim/:token',
+        lazy: async () => {
+          const { PlatformClaimPage } = await import('@/pages/platform-claim-page')
+          return { Component: PlatformClaimPage }
+        },
+      },
+      {
+        path: 'platform',
+        element: <PlatformLayout />,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { PlatformOverviewPage } = await import('@/pages/platform-overview-page')
+              return { Component: PlatformOverviewPage }
+            },
+          },
+        ],
       },
       {
         path: 'onboarding',

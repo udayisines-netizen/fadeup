@@ -35,6 +35,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 // Plan management (pricing) is owner/manager only, matching membership_plans
 // RLS — narrower than enrollment, which is owner/manager/receptionist,
@@ -300,7 +301,7 @@ function EnrollmentRow({
         onError: (error) =>
           toast({
             title: "Couldn't update status",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -412,7 +413,7 @@ function PlanFormDialog({
       }
       onSaved()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 
@@ -529,7 +530,7 @@ function EnrollDialog({
       })
       onEnrolled()
     } catch (error) {
-      const rawMessage = error instanceof Error ? error.message : 'Something went wrong.'
+      const rawMessage = getErrorMessage(error) ?? 'Something went wrong.'
       setFormError(friendlyMembershipError(rawMessage))
     }
   }

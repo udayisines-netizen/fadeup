@@ -19,6 +19,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { useToast } from '@/components/ui/toast'
 import type { AppointmentStatus } from '@/lib/queries/appointments'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 // Same broader role set as appointments/queue_entries — customers RLS
 // grants owner/manager/receptionist write access, any member read.
@@ -337,7 +338,7 @@ function CustomerFormFields({
       }
       onDone()
     } catch (error) {
-      const rawMessage = error instanceof Error ? error.message : 'Something went wrong.'
+      const rawMessage = getErrorMessage(error) ?? 'Something went wrong.'
       setFormError(friendlyCustomerError(rawMessage))
     }
   }

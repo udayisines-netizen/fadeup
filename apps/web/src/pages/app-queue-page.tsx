@@ -39,6 +39,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 // Same broader role set as appointments (LOT 8) — owner/manager/receptionist
 // run the front of house and can add/manage any walk-in. Distinct from a
@@ -360,7 +361,7 @@ function QueueRow({
         onError: (error) =>
           toast({
             title: "Couldn't update status",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -477,7 +478,7 @@ function AddWalkInDialog({
       })
       onAdded()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

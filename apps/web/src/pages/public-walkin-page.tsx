@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 /**
  * Turns `join_public_queue`'s raw Postgres error message into user-facing
@@ -151,7 +152,7 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
       })
       setLastEntry(entry)
     } catch (error) {
-      const rawMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+      const rawMessage = getErrorMessage(error) ?? 'Something went wrong. Please try again.'
       setSubmitError(friendlyWalkinError(rawMessage))
     }
   }

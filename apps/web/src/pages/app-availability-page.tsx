@@ -44,6 +44,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/cn'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -422,7 +423,7 @@ function WeeklyHoursRow({
     } catch (error) {
       toast({
         title: "Couldn't save hours",
-        description: error instanceof Error ? error.message : undefined,
+        description: getErrorMessage(error),
         variant: 'error',
       })
     } finally {
@@ -518,7 +519,7 @@ function ExceptionsSection({
         onError: (error) =>
           toast({
             title: "Couldn't remove time off",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -641,11 +642,11 @@ function ExceptionFormDialog({
       toast({ title: 'Override added', variant: 'success' })
       onClose()
     } catch (error) {
-      if (error instanceof Error && error.message.toLowerCase().includes('duplicate')) {
+      if (getErrorMessage(error)?.toLowerCase().includes('duplicate')) {
         setFormError('This barber already has an override for that date.')
         return
       }
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

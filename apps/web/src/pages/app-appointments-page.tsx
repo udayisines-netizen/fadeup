@@ -46,6 +46,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/cn'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 // Distinct from the owner/manager MANAGING_ROLES used everywhere else in this
 // app — appointments RLS also allows receptionist to write (see
@@ -79,7 +80,7 @@ const STATUS_TRANSITIONS: AppointmentStatus[] = ['confirmed', 'completed', 'canc
 const CONFLICT_CONSTRAINT_MARKERS = ['appointments_barber_no_overlap', 'appointments_chair_no_overlap']
 
 function isBookingConflictError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error)
+  const message = getErrorMessage(error) ?? ''
   return CONFLICT_CONSTRAINT_MARKERS.some((marker) => message.includes(marker))
 }
 
@@ -440,7 +441,7 @@ function AppointmentRow({
         onError: (error) =>
           toast({
             title: "Couldn't update status",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -641,7 +642,7 @@ function NewAppointmentDialog({
         void slotsQuery.refetch()
         return
       }
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

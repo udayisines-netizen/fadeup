@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -271,7 +272,7 @@ function ChairFormDialog({
         onSaved('Chair added')
       }
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

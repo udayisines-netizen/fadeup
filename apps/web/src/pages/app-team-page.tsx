@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { MEMBERSHIP_ROLES, type MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 const ROLE_LABELS: Record<MembershipRole, string> = {
   owner: 'Owner',
@@ -175,11 +176,11 @@ function TeamManagement({
       toast({ title: 'Invitation created', description: `Sent to ${values.email}.`, variant: 'success' })
       reset({ email: '', role: values.role })
     } catch (error) {
-      if (error instanceof Error && error.message.toLowerCase().includes('duplicate')) {
+      if (getErrorMessage(error)?.toLowerCase().includes('duplicate')) {
         setCreateError('There is already a pending invitation for that email.')
         return
       }
-      setCreateError(error instanceof Error ? error.message : 'Failed to create invitation.')
+      setCreateError(getErrorMessage(error) ?? 'Failed to create invitation.')
     }
   }
 
@@ -191,7 +192,7 @@ function TeamManagement({
       onError: (error) => {
         toast({
           title: 'Couldn’t revoke invitation',
-          description: error instanceof Error ? error.message : undefined,
+          description: getErrorMessage(error),
           variant: 'error',
         })
       },
@@ -218,7 +219,7 @@ function TeamManagement({
         onError: (error) => {
           toast({
             title: "Couldn't update barber status",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           })
         },
@@ -452,7 +453,7 @@ function StaffProfileFormDialog({
       })
       onSaved()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

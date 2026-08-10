@@ -40,6 +40,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 // Same broader role set as appointments/queue_entries/customers — waitlist
 // RLS grants owner/manager/receptionist write access, any member read.
@@ -318,7 +319,7 @@ function WaitlistRow({
         onError: (error) =>
           toast({
             title: "Couldn't update status",
-            description: error instanceof Error ? error.message : undefined,
+            description: getErrorMessage(error),
             variant: 'error',
           }),
       },
@@ -441,7 +442,7 @@ function AddToWaitlistDialog({
       })
       onAdded()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
     }
   }
 

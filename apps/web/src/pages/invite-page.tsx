@@ -8,6 +8,7 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth-context'
 import { useAcceptInvitation, useInvitationByToken } from '@/lib/queries/invitations'
 import { setStoredOrganizationId } from '@/lib/current-organization'
+import { getErrorMessage } from '@/lib/get-error-message'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
@@ -95,7 +96,7 @@ export function InvitePage() {
       setStoredOrganizationId(result.organizationId)
       navigate('/app', { replace: true })
     } catch (error) {
-      setAcceptError(error instanceof Error ? error.message : 'Failed to accept invitation.')
+      setAcceptError(getErrorMessage(error) ?? 'Failed to accept invitation.')
     }
   }
 
