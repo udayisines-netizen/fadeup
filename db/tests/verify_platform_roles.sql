@@ -18,6 +18,17 @@
 --
 -- Every "expect ERROR" case runs in its OWN begin/rollback block.
 --
+-- PRECONDITION: run this against a database with no real outstanding
+-- platform_owner bootstrap token (i.e. public.platform_members is empty, or
+-- at least platform_owner_bootstrap_tokens has no unclaimed/unrevoked row
+-- besides this test's own fixtures). This test exercises bootstrap-token
+-- expiry/revocation/replay, which needs full control over the table's "one
+-- active token" slot (platform_owner_bootstrap_tokens_one_active is a
+-- system-wide constraint, not scoped to this test) — it will NOT revoke a
+-- real pending token to make room (that was a real bug, since fixed: see
+-- git history), so it fails cleanly at its own setup step instead if one
+-- exists, rather than risk touching it.
+--
 -- Run with:
 --   docker cp db/tests/verify_platform_roles.sql fadeup-supabase-db:/tmp/
 --   docker exec -i fadeup-supabase-db psql -U postgres -d postgres -f /tmp/verify_platform_roles.sql
@@ -87,7 +98,18 @@ rollback;
 \echo '=========================================================='
 begin;
 reset role;
-update public.platform_owner_bootstrap_tokens set revoked_at = now() where revoked_at is null;
+-- Scoped to THIS test's own fixture tokens only — never touch an
+-- unrelated, real outstanding token that might exist in the database
+-- (a blanket `where revoked_at is null` here would revoke it as a side
+-- effect of running this test, which is exactly the kind of destructive
+-- action a verification script must never risk against a shared/dev DB).
+update public.platform_owner_bootstrap_tokens
+set revoked_at = now()
+where revoked_at is null
+  and token_hash in (
+    encode(digest('lot15-expired-raw-token', 'sha256'), 'hex'),
+    encode(digest('lot15-bootstrap-raw-token', 'sha256'), 'hex')
+  );
 insert into public.platform_owner_bootstrap_tokens (token_hash, expires_at)
 values (encode(digest('lot15-bootstrap-raw-token', 'sha256'), 'hex'), now() + interval '1 day');
 commit;
@@ -113,7 +135,18 @@ rollback;
 \echo '=========================================================='
 begin;
 reset role;
-update public.platform_owner_bootstrap_tokens set revoked_at = now() where revoked_at is null;
+-- Scoped to THIS test's own fixture tokens only — never touch an
+-- unrelated, real outstanding token that might exist in the database
+-- (a blanket `where revoked_at is null` here would revoke it as a side
+-- effect of running this test, which is exactly the kind of destructive
+-- action a verification script must never risk against a shared/dev DB).
+update public.platform_owner_bootstrap_tokens
+set revoked_at = now()
+where revoked_at is null
+  and token_hash in (
+    encode(digest('lot15-expired-raw-token', 'sha256'), 'hex'),
+    encode(digest('lot15-bootstrap-raw-token', 'sha256'), 'hex')
+  );
 insert into public.platform_owner_bootstrap_tokens (token_hash, expires_at)
 values (encode(digest('lot15-second-owner-raw-token', 'sha256'), 'hex'), now() + interval '1 day');
 commit;

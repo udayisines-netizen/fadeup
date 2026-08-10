@@ -95,6 +95,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'platform/invite/:token',
+        lazy: async () => {
+          const { PlatformInvitePage } = await import('@/pages/platform-invite-page')
+          return { Component: PlatformInvitePage }
+        },
+      },
+      {
         path: 'platform',
         element: <PlatformLayout />,
         children: [
@@ -103,6 +110,41 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { PlatformOverviewPage } = await import('@/pages/platform-overview-page')
               return { Component: PlatformOverviewPage }
+            },
+          },
+          {
+            path: 'organizations',
+            lazy: async () => {
+              const { PlatformOrganizationsPage } = await import('@/pages/platform-organizations-page')
+              return { Component: PlatformOrganizationsPage }
+            },
+          },
+          {
+            path: 'organizations/:organizationId',
+            lazy: async () => {
+              const { PlatformOrganizationDetailPage } = await import('@/pages/platform-organization-detail-page')
+              return { Component: PlatformOrganizationDetailPage }
+            },
+          },
+          {
+            path: 'organizations/:organizationId/barbers/:barberId',
+            lazy: async () => {
+              const { PlatformBarberWorkspacePage } = await import('@/pages/platform-barber-workspace-page')
+              return { Component: PlatformBarberWorkspacePage }
+            },
+          },
+          {
+            path: 'team',
+            lazy: async () => {
+              const { PlatformTeamPage } = await import('@/pages/platform-team-page')
+              return { Component: PlatformTeamPage }
+            },
+          },
+          {
+            path: 'audit',
+            lazy: async () => {
+              const { PlatformAuditLogPage } = await import('@/pages/platform-audit-log-page')
+              return { Component: PlatformAuditLogPage }
             },
           },
         ],
