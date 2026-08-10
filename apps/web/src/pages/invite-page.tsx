@@ -66,7 +66,7 @@ export function InvitePage() {
       <AuthCard title="Already accepted">
         <Alert variant="info">
           This invitation has already been accepted.{' '}
-          <Link to="/login" className="font-medium underline">
+          <Link to="/pro/login" className="font-medium underline">
             Log in
           </Link>{' '}
           to continue.
@@ -124,13 +124,13 @@ export function InvitePage() {
             <p className="text-sm text-ink-500">Log in or create an account to accept.</p>
             <div className="flex gap-2">
               <Link
-                to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
+                to={`/pro/login?redirect=${encodeURIComponent(redirectPath)}`}
                 className={buttonVariants({ variant: 'secondary' }, 'flex-1')}
               >
                 Log in
               </Link>
               <Link
-                to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
+                to={`/pro/signup?redirect=${encodeURIComponent(redirectPath)}`}
                 className={buttonVariants({ variant: 'primary' }, 'flex-1')}
               >
                 Sign up

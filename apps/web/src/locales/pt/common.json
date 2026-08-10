@@ -1,12 +1,28 @@
 {
-  "nav": { "home": "Início", "features": "Funcionalidades", "pricing": "Preços" },
-  "auth": { "logIn": "Entrar", "startFree": "Começar grátis" },
+  "nav": {
+    "home": "Início",
+    "features": "Funcionalidades",
+    "pricing": "Preços"
+  },
+  "auth": {
+    "logIn": "Entrar",
+    "startFree": "Começar grátis",
+    "customerLogIn": "Acesso de clientes"
+  },
   "footer": {
     "tagline": "O sistema operativo para barbearias modernas — marcações, fila em tempo real, gestão de cadeiras e relacionamento com clientes num único sistema conectado.",
     "product": "Produto",
     "account": "Conta",
     "copyright": "© {{year}} FadeUp. Todos os direitos reservados."
   },
-  "theme": { "light": "Claro", "dark": "Escuro", "system": "Sistema", "toggleLabel": "Tema" },
-  "language": { "label": "Idioma", "select": "Selecionar idioma" }
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema",
+    "toggleLabel": "Tema"
+  },
+  "language": {
+    "label": "Idioma",
+    "select": "Selecionar idioma"
+  }
 }

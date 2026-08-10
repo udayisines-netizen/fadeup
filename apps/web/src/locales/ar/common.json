@@ -1,12 +1,28 @@
 {
-  "nav": { "home": "الرئيسية", "features": "المزايا", "pricing": "الأسعار" },
-  "auth": { "logIn": "تسجيل الدخول", "startFree": "ابدأ مجانًا" },
+  "nav": {
+    "home": "الرئيسية",
+    "features": "المزايا",
+    "pricing": "الأسعار"
+  },
+  "auth": {
+    "logIn": "تسجيل الدخول",
+    "startFree": "ابدأ مجانًا",
+    "customerLogIn": "دخول العملاء"
+  },
   "footer": {
     "tagline": "نظام التشغيل لصالونات الحلاقة الحديثة — الحجوزات، قائمة الانتظار المباشرة، إدارة الكراسي وعلاقات العملاء في نظام واحد متكامل.",
     "product": "المنتج",
     "account": "الحساب",
     "copyright": "© {{year}} FadeUp. جميع الحقوق محفوظة."
   },
-  "theme": { "light": "فاتح", "dark": "داكن", "system": "النظام", "toggleLabel": "المظهر" },
-  "language": { "label": "اللغة", "select": "اختر اللغة" }
+  "theme": {
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام",
+    "toggleLabel": "المظهر"
+  },
+  "language": {
+    "label": "اللغة",
+    "select": "اختر اللغة"
+  }
 }

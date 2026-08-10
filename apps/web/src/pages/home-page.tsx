@@ -94,7 +94,7 @@ export function HomePage() {
               place — built for how a real shop actually runs, on a real Saturday.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+              <Link to="/pro/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
                 Start free
               </Link>
               <Link to="/features" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
@@ -200,7 +200,7 @@ export function HomePage() {
             Set up your organization and start taking bookings today.
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <Link to="/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+            <Link to="/pro/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
               Start free
             </Link>
             <Link to="/pricing" className={buttonVariants({ variant: 'ghost', size: 'lg' })}>

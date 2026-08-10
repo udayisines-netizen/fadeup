@@ -5,10 +5,12 @@ import { PageSpinner } from '@/components/ui/spinner'
 
 interface RequireAuthProps {
   children: ReactNode
+  /** Where to send an unauthenticated visitor. Defaults to /login (which itself redirects to /pro/login) — pass /customer/login for customer-facing routes so the sign-in form matches the context. */
+  loginPath?: string
 }
 
-/** Redirects to /login?redirect=<here> when there is no authenticated session. */
-export function RequireAuth({ children }: RequireAuthProps) {
+/** Redirects to loginPath?redirect=<here> when there is no authenticated session. */
+export function RequireAuth({ children, loginPath = '/login' }: RequireAuthProps) {
   const { session, loading } = useAuth()
   const location = useLocation()
 
@@ -18,7 +20,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
 
   if (!session) {
     const redirectTarget = `${location.pathname}${location.search}`
-    return <Navigate to={`/login?redirect=${encodeURIComponent(redirectTarget)}`} replace />
+    return <Navigate to={`${loginPath}?redirect=${encodeURIComponent(redirectTarget)}`} replace />
   }
 
   return <>{children}</>

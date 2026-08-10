@@ -45,7 +45,10 @@ function AppShell() {
   }
 
   if (memberships.length === 0) {
-    return <Navigate to="/onboarding" replace />
+    // /workspace re-resolves from scratch (platform role, signup intent for
+    // a customer account, ...) instead of assuming "zero memberships" only
+    // ever means "go create a shop" — see workspace-selector-page.tsx.
+    return <Navigate to="/workspace" replace />
   }
 
   async function handleSignOut() {

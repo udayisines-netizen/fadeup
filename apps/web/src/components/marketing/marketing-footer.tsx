@@ -13,8 +13,9 @@ export function MarketingFooter() {
   ]
 
   const accountLinks = [
-    { to: '/login', label: t('auth.logIn') },
-    { to: '/signup', label: t('auth.startFree') },
+    { to: '/pro/login', label: t('auth.logIn') },
+    { to: '/pro/signup', label: t('auth.startFree') },
+    { to: '/customer/login', label: t('auth.customerLogIn') },
   ]
 
   return (

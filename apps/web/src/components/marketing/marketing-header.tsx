@@ -44,10 +44,16 @@ export function MarketingHeader() {
         <div className="hidden items-center gap-1 md:flex">
           <LanguageSwitcher />
           <ThemeToggle />
-          <Link to="/login" className={buttonVariants({ variant: 'ghost' })}>
+          <Link
+            to="/customer/login"
+            className={buttonVariants({ variant: 'ghost' }, 'hidden lg:inline-flex')}
+          >
+            {t('auth.customerLogIn')}
+          </Link>
+          <Link to="/pro/login" className={buttonVariants({ variant: 'ghost' })}>
             {t('auth.logIn')}
           </Link>
-          <Link to="/signup" className={buttonVariants({ variant: 'primary' })}>
+          <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' })}>
             {t('auth.startFree')}
           </Link>
         </div>
@@ -71,11 +77,14 @@ export function MarketingHeader() {
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
-                <Link to="/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                <Link to="/pro/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
                   {t('auth.logIn')}
                 </Link>
-                <Link to="/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
                   {t('auth.startFree')}
+                </Link>
+                <Link to="/customer/login" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
+                  {t('auth.customerLogIn')}
                 </Link>
               </div>
             </DrawerContent>

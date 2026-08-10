@@ -23,13 +23,23 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.fadeup.example/login</loc>
+    <loc>https://www.fadeup.example/pro/login</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.fadeup.example/signup</loc>
+    <loc>https://www.fadeup.example/pro/signup</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fadeup.example/customer/login</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.fadeup.example/customer/signup</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>

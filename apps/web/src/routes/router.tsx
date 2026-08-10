@@ -3,6 +3,8 @@ import { RootLayout } from '@/routes/root-layout'
 import { RequireAuth } from '@/routes/require-auth'
 import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
+import { WorkspaceSelectorRoute } from '@/routes/workspace-selector-route'
+import { AppCustomerRoute } from '@/routes/app-customer-route'
 import { MarketingLayout } from '@/routes/marketing-layout'
 import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
@@ -42,6 +44,7 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        // Compatibility redirect to /pro/login — see src/pages/login-page.tsx.
         path: 'login',
         lazy: async () => {
           const { LoginPage } = await import('@/pages/login-page')
@@ -49,11 +52,59 @@ export const router = createBrowserRouter([
         },
       },
       {
+        // Compatibility redirect to /pro/signup — see src/pages/signup-page.tsx.
         path: 'signup',
         lazy: async () => {
           const { SignupPage } = await import('@/pages/signup-page')
           return { Component: SignupPage }
         },
+      },
+      {
+        path: 'pro/login',
+        lazy: async () => {
+          const { ProLoginPage } = await import('@/pages/pro-login-page')
+          return { Component: ProLoginPage }
+        },
+      },
+      {
+        path: 'pro/signup',
+        lazy: async () => {
+          const { ProSignupPage } = await import('@/pages/pro-signup-page')
+          return { Component: ProSignupPage }
+        },
+      },
+      {
+        path: 'customer/login',
+        lazy: async () => {
+          const { CustomerLoginPage } = await import('@/pages/customer-login-page')
+          return { Component: CustomerLoginPage }
+        },
+      },
+      {
+        path: 'customer/signup',
+        lazy: async () => {
+          const { CustomerSignupPage } = await import('@/pages/customer-signup-page')
+          return { Component: CustomerSignupPage }
+        },
+      },
+      {
+        // Central post-login landing every login/signup form (except
+        // /platform/login) redirects to by default — see
+        // workspace-selector-page.tsx.
+        path: 'workspace',
+        element: (
+          <RequireAuth>
+            <WorkspaceSelectorRoute />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'app/customer',
+        element: (
+          <RequireAuth loginPath="/customer/login">
+            <AppCustomerRoute />
+          </RequireAuth>
+        ),
       },
       {
         path: 'forgot-password',

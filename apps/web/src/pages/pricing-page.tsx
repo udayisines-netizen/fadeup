@@ -125,7 +125,7 @@ export function PricingPage() {
                     ))}
                   </ul>
                   <Link
-                    to="/signup"
+                    to="/pro/signup"
                     className={buttonVariants({ variant: tier.featured ? 'primary' : 'secondary' }, 'mt-6 w-full')}
                   >
                     Start free
@@ -202,7 +202,7 @@ export function PricingPage() {
           <h2 className="text-3xl font-semibold text-balance text-ink-950">
             Set up your shop on FadeUp today
           </h2>
-          <Link to="/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+          <Link to="/pro/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
             Start free
           </Link>
         </Container>
