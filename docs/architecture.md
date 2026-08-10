@@ -417,10 +417,42 @@ pass.
 
 Verified: `npm run typecheck`, `lint`, `test`, and `build` all pass.
 
+## Customer CRM + Barber Passport (`apps/web`, LOT 12)
+
+`/app/customers` (`pages/app-customers-page.tsx`, `lib/queries/customers.ts`) — a searchable
+directory over the LOT 12 `customers` table. Search is a client-side filter over the full
+org list (name/phone/email substring match), not a server query — a deliberate trade-off
+given shops run in the hundreds to low thousands of customers, not a scale where that
+matters. Any org member can view; `owner`/`manager`/`receptionist` can add/edit, matching
+`customers` RLS exactly. A customer's detail dialog shows their recent appointment history
+(`useCustomerAppointments`, capped at 25 rows, most recent first) — proof that the LOT 12
+auto-link trigger is actually wiring bookings back to a real customer record, not just
+storing one. A raw duplicate phone/email save is caught (the `customers_org_*_unique`
+partial indexes) and shown as friendly copy ("Another customer already has this phone
+number"), same pattern as `isBookingConflictError` in `app-appointments-page.tsx`.
+
+**Barber Passport**: a shareable public profile at `/s/:slug/barbers/:barberId`
+(`pages/public-barber-page.tsx`, `lib/queries/public-barber.ts`), on top of the new
+`get_public_barber`/`list_public_barber_services` RPCs. This surfaced two `staff_profiles`
+fields that existed since LOT 6 but had no UI: `avatar_url` and `is_public` are now editable
+on `/app/team`'s existing edit-profile dialog (`isPublic` defaults to `true` — a shop opts a
+barber *out* of public visibility, not in). The profile page shows only real data: name,
+title, bio, photo (falling back to an initials circle, same graceful-degradation pattern as
+`BarberAvatar` in public booking), and the barber's actual active services — never a
+fabricated "specialties" list, rating, or review count, per `CLAUDE.md`. "Book with
+[name]" links to the shop's general `/s/:slug` booking flow rather than deep-linking a
+pre-selected barber (documented simplification — the booking wizard has no pre-selection
+param yet).
+
+Verified: `npm run typecheck`, `lint`, `test` (42 tests total, including a barber-role
+read-only detail-view case for customers, and both a public and a private/unknown barber
+case for the Passport page), and `build` all pass.
+
 ## Not yet built
 
 Beyond the design system, marketing site, auth/onboarding, organization admin, and the
-service/availability catalog, staff scheduling, public booking, live queue, and chair mode
-phase 1 (kiosk check-in + TV display) are now built (LOT 8–11). Still pending: a real
-chair-occupancy state machine, barber "claiming" an unassigned queue entry, customer CRM UI,
-and beyond. See the project task list / roadmap for what's next.
+service/availability catalog, staff scheduling, public booking, live queue, chair mode phase
+1 (kiosk check-in + TV display), customer CRM, and Barber Passport are now built (LOT 8–12).
+Still pending: a real chair-occupancy state machine, barber "claiming" an unassigned queue
+entry, deep-linking a pre-selected barber into the public booking wizard, and LOT 13 onward.
+See the project task list / roadmap for what's next.

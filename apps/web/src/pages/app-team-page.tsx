@@ -64,6 +64,8 @@ const profileSchema = z.object({
   title: z.string(),
   bio: z.string(),
   locationId: z.string(),
+  avatarUrl: z.string(),
+  isPublic: z.boolean(),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
@@ -430,6 +432,8 @@ function StaffProfileFormDialog({
       title: staffProfile.title ?? '',
       bio: staffProfile.bio ?? '',
       locationId: staffProfile.locationId ?? NO_LOCATION_VALUE,
+      avatarUrl: staffProfile.avatarUrl ?? '',
+      isPublic: staffProfile.isPublic,
     },
   })
 
@@ -443,6 +447,8 @@ function StaffProfileFormDialog({
         title: values.title || null,
         bio: values.bio || null,
         locationId: values.locationId || null,
+        avatarUrl: values.avatarUrl.trim() || null,
+        isPublic: values.isPublic,
       })
       onSaved()
     } catch (error) {
@@ -473,7 +479,18 @@ function StaffProfileFormDialog({
           <TextField label="Display name" error={errors.displayName?.message} {...register('displayName')} />
           <TextField label="Title" hint='e.g. "Master Barber"' {...register('title')} />
           <Textarea label="Bio" rows={3} {...register('bio')} />
+          <TextField
+            label="Photo URL"
+            type="url"
+            hint="A link to a square photo — shown on their public profile."
+            {...register('avatarUrl')}
+          />
           <SelectField label="Primary location" options={locationOptions} {...register('locationId')} />
+          <Switch
+            label="Public profile"
+            description="Visible in public booking and has a shareable Barber Passport page. Off by default."
+            {...register('isPublic')}
+          />
 
           <DialogFooter>
             <DialogClose asChild>

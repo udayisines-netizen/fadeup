@@ -5,11 +5,14 @@ import { getSupabaseClient } from '@/lib/supabase'
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
 
 /**
- * Core booking record. No `customers` table yet (LOT 12) — `customerName`/
- * `customerPhone`/`customerEmail` are a deliberate placeholder, not a design
- * mistake. `bufferBeforeMinutes`/`bufferAfterMinutes` are snapshotted from
- * the service at booking time, so a later edit to the service's buffers
- * never silently changes the blocked window of appointments already booked.
+ * Core booking record. `customerName`/`customerPhone`/`customerEmail` stay
+ * the record of what was actually typed at booking time (never silently
+ * overwritten by a later customer-record edit); `customerId` is the LOT 12
+ * auto-linked `customers` row (nullable — a contact-less booking stays
+ * unlinked, see `link_customer_from_contact_info`). `bufferBeforeMinutes`/
+ * `bufferAfterMinutes` are snapshotted from the service at booking time, so
+ * a later edit to the service's buffers never silently changes the blocked
+ * window of appointments already booked.
  */
 export interface Appointment {
   id: string
@@ -18,6 +21,7 @@ export interface Appointment {
   barberId: string
   chairId: string | null
   serviceId: string
+  customerId: string | null
   customerName: string
   customerPhone: string | null
   customerEmail: string | null
@@ -39,6 +43,7 @@ interface AppointmentRow {
   barber_id: string
   chair_id: string | null
   service_id: string
+  customer_id: string | null
   customer_name: string
   customer_phone: string | null
   customer_email: string | null
@@ -54,7 +59,7 @@ interface AppointmentRow {
 }
 
 const APPOINTMENT_COLUMNS =
-  'id, organization_id, location_id, barber_id, chair_id, service_id, customer_name, customer_phone, customer_email, starts_at, ends_at, buffer_before_minutes, buffer_after_minutes, status, notes, created_by, created_at, updated_at'
+  'id, organization_id, location_id, barber_id, chair_id, service_id, customer_id, customer_name, customer_phone, customer_email, starts_at, ends_at, buffer_before_minutes, buffer_after_minutes, status, notes, created_by, created_at, updated_at'
 
 function mapAppointment(row: AppointmentRow): Appointment {
   return {
@@ -64,6 +69,7 @@ function mapAppointment(row: AppointmentRow): Appointment {
     barberId: row.barber_id,
     chairId: row.chair_id,
     serviceId: row.service_id,
+    customerId: row.customer_id,
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     customerEmail: row.customer_email,
@@ -116,6 +122,32 @@ export function useOrgAppointmentsForDate(organizationId: string | undefined, da
       return ((data ?? []) as unknown as AppointmentRow[]).map(mapAppointment)
     },
     enabled: Boolean(organizationId) && Boolean(date),
+  })
+}
+
+/**
+ * A single customer's appointment history, most recent first — powers the
+ * customer detail view in the LOT 12 CRM (`/app/customers`). Unlike
+ * `useOrgAppointmentsForDate`, this isn't scoped to one calendar day; capped
+ * at 25 rows since a detail panel's "recent visits" list, not a full ledger.
+ */
+export function useCustomerAppointments(customerId: string | undefined) {
+  return useQuery({
+    queryKey: ['appointments', 'by-customer', customerId],
+    queryFn: async (): Promise<Appointment[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(APPOINTMENT_COLUMNS)
+        .eq('customer_id', customerId)
+        .order('starts_at', { ascending: false })
+        .limit(25)
+
+      if (error) throw error
+
+      return ((data ?? []) as unknown as AppointmentRow[]).map(mapAppointment)
+    },
+    enabled: Boolean(customerId),
   })
 }
 

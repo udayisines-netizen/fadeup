@@ -112,6 +112,13 @@ export const router = createBrowserRouter([
               return { Component: PublicQueueDisplayPage }
             },
           },
+          {
+            path: 'barbers/:barberId',
+            lazy: async () => {
+              const { PublicBarberPage } = await import('@/pages/public-barber-page')
+              return { Component: PublicBarberPage }
+            },
+          },
         ],
       },
       {
@@ -176,6 +183,13 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { AppQueuePage } = await import('@/pages/app-queue-page')
               return { Component: AppQueuePage }
+            },
+          },
+          {
+            path: 'customers',
+            lazy: async () => {
+              const { AppCustomersPage } = await import('@/pages/app-customers-page')
+              return { Component: AppCustomersPage }
             },
           },
         ],

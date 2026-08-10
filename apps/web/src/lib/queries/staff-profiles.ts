@@ -84,9 +84,17 @@ export interface UpdateStaffProfileInput {
   title: string | null
   bio: string | null
   locationId: string | null
+  avatarUrl: string | null
+  isPublic: boolean
 }
 
-/** Update a teammate's profile fields. RLS restricts this to owner/manager. */
+/**
+ * Update a teammate's profile fields, including `avatarUrl`/`isPublic` —
+ * `isPublic` is what controls whether this barber appears in public booking
+ * (`list_public_barbers`) and gets a Barber Passport page (LOT 12); see
+ * db/migrations/20260809190000_public_barber_profile.sql. RLS restricts
+ * this to owner/manager.
+ */
 export function useUpdateStaffProfile() {
   const queryClient = useQueryClient()
 
@@ -100,6 +108,8 @@ export function useUpdateStaffProfile() {
           title: input.title,
           bio: input.bio,
           location_id: input.locationId,
+          avatar_url: input.avatarUrl,
+          is_public: input.isPublic,
         })
         .eq('id', input.id)
 

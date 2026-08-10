@@ -895,6 +895,38 @@ cross-org `customer_id` is rejected by the trigger's tenant-consistency check; R
 correct for a non-member (0 rows) and `anon` (0 rows); both migrations re-applied to confirm
 idempotency.
 
+## LOT 12 additions — Barber Passport (`get_public_barber`, `list_public_barber_services`)
+
+A shareable public profile page for one barber, built entirely on `staff_profiles` fields
+that already existed since LOT 6 but had no public surface: `avatar_url`, `is_public`.
+`get_public_barber(p_organization_slug, p_barber_id)` returns one barber's
+`display_name`/`title`/`bio`/`avatar_url`; `list_public_barber_services(p_organization_slug,
+p_barber_id)` returns the real, active services they perform (via `barber_services`) — never
+a fabricated "specialties" list. Both are anon-callable `SECURITY DEFINER` RPCs following
+the exact LOT 9/11 pattern (narrowly-scoped, re-deriving `organization_id` from the slug,
+zero anon RLS access to the underlying tables).
+
+Both return **zero rows**, not an error, for a barber who is private (`is_public = false`),
+not bookable, not active, or belongs to a different organization — indistinguishable from an
+unknown id, the same privacy posture as every other public lookup in this codebase (an
+unpublished profile link should look identical to a wrong one, not confirm "this barber
+exists but chose to be private").
+
+A real bug was caught while writing `db/tests/verify_public_barber_profile.sql`: the test
+(and this section's own first draft) assumed `staff_profiles.is_public` defaults to `false`
+and never explicitly set it for the "private" fixture — the actual default, set back in
+`20260809120000_staff_profiles.sql`, is `true`. A fresh profile is public until a shop opts
+it out, not the other way around. The test's "private barber" fixture was silently public,
+so the "zero rows for a private barber" assertion passed for the wrong reason. Fixed by
+explicitly setting `is_public = false` on that fixture rather than relying on any assumed
+default.
+
+Verified: a public barber's full profile and active-only service list are visible to `anon`;
+a private barber returns zero rows from both RPCs; a barber id from a different organization
+returns zero rows even when a same-named public barber exists in the target org (no cross-org
+leakage); `anon` retains zero direct access to `staff_profiles`/`barbers`/`barber_services`;
+both RPCs also work for an authenticated caller. Migration re-applied to confirm idempotency.
+
 ## Not yet built
 
 - A real chair-occupancy state machine ("which chair has who, since when," a visual
