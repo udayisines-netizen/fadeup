@@ -1,5 +1,6 @@
 node_modules/
 dist/
+*.tsbuildinfo
 
 **/.env
 **/.env.local
@@ -17,3 +18,4 @@ infra/supabase/volumes/storage/
 playwright-report/
 test-results/
 coverage/
+infra/worker/.env.worker

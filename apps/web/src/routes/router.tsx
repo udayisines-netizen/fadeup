@@ -171,6 +171,106 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'acquisition',
+            lazy: async () => {
+              const { PlatformAcquisitionLayout } = await import('@/routes/platform-acquisition-layout')
+              return { Component: PlatformAcquisitionLayout }
+            },
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { PlatformAcquisitionOverviewPage } = await import('@/pages/platform-acquisition-overview-page')
+                  return { Component: PlatformAcquisitionOverviewPage }
+                },
+              },
+              {
+                path: 'search',
+                lazy: async () => {
+                  const { PlatformAcquisitionSearchPage } = await import('@/pages/platform-acquisition-search-page')
+                  return { Component: PlatformAcquisitionSearchPage }
+                },
+              },
+              {
+                path: 'map',
+                lazy: async () => {
+                  const { PlatformAcquisitionMapPage } = await import('@/pages/platform-acquisition-map-page')
+                  return { Component: PlatformAcquisitionMapPage }
+                },
+              },
+              {
+                path: 'prospects',
+                lazy: async () => {
+                  const { PlatformAcquisitionProspectsPage } = await import('@/pages/platform-acquisition-prospects-page')
+                  return { Component: PlatformAcquisitionProspectsPage }
+                },
+              },
+              {
+                path: 'prospects/:prospectId',
+                lazy: async () => {
+                  const { PlatformAcquisitionProspectDetailPage } = await import('@/pages/platform-acquisition-prospect-detail-page')
+                  return { Component: PlatformAcquisitionProspectDetailPage }
+                },
+              },
+              {
+                path: 'barbershops',
+                lazy: async () => {
+                  const { PlatformAcquisitionBarbershopsPage } = await import('@/pages/platform-acquisition-barbershops-page')
+                  return { Component: PlatformAcquisitionBarbershopsPage }
+                },
+              },
+              {
+                path: 'independent-barbers',
+                lazy: async () => {
+                  const { PlatformAcquisitionIndependentBarbersPage } = await import('@/pages/platform-acquisition-independent-barbers-page')
+                  return { Component: PlatformAcquisitionIndependentBarbersPage }
+                },
+              },
+              {
+                path: 'jobs',
+                lazy: async () => {
+                  const { PlatformAcquisitionJobsPage } = await import('@/pages/platform-acquisition-jobs-page')
+                  return { Component: PlatformAcquisitionJobsPage }
+                },
+              },
+              {
+                path: 'sources',
+                lazy: async () => {
+                  const { PlatformAcquisitionSourcesPage } = await import('@/pages/platform-acquisition-sources-page')
+                  return { Component: PlatformAcquisitionSourcesPage }
+                },
+              },
+              {
+                path: 'api-usage',
+                lazy: async () => {
+                  const { PlatformAcquisitionApiUsagePage } = await import('@/pages/platform-acquisition-api-usage-page')
+                  return { Component: PlatformAcquisitionApiUsagePage }
+                },
+              },
+              {
+                path: 'duplicates',
+                lazy: async () => {
+                  const { PlatformAcquisitionDuplicatesPage } = await import('@/pages/platform-acquisition-duplicates-page')
+                  return { Component: PlatformAcquisitionDuplicatesPage }
+                },
+              },
+              {
+                path: 'pipeline',
+                lazy: async () => {
+                  const { PlatformAcquisitionPipelinePage } = await import('@/pages/platform-acquisition-pipeline-page')
+                  return { Component: PlatformAcquisitionPipelinePage }
+                },
+              },
+              {
+                path: 'suppressions',
+                lazy: async () => {
+                  const { PlatformAcquisitionSuppressionsPage } = await import('@/pages/platform-acquisition-suppressions-page')
+                  return { Component: PlatformAcquisitionSuppressionsPage }
+                },
+              },
+            ],
+          },
+          {
             path: 'organizations/:organizationId',
             lazy: async () => {
               const { PlatformOrganizationDetailPage } = await import('@/pages/platform-organization-detail-page')

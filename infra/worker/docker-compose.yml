@@ -1,0 +1,54 @@
+# FadeUp Prospect Worker V2 — worker container.
+#
+# Usage:
+#   Start:   docker compose -f infra/worker/docker-compose.yml up -d --build
+#   Logs:    docker compose -f infra/worker/docker-compose.yml logs -f
+#   Stop:    docker compose -f infra/worker/docker-compose.yml down
+#
+# Joins the EXISTING fadeup-supabase_default network (created by
+# infra/supabase/docker-compose.yml, project name "fadeup-supabase") as an
+# external network — this compose file does not own or manage that
+# network, and never touches Jasmean OS networks/containers.
+#
+# Requires infra/worker/.env.worker (gitignored — see .env.worker.example)
+# and the prospect_worker DB role's password already set via
+# infra/worker/bootstrap-worker-db.sh.
+
+name: fadeup-prospect-worker
+
+services:
+  prospect-worker-v2:
+    container_name: fadeup-prospect-worker-v2
+    build:
+      context: ../../apps/prospect-worker-v2
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.worker
+    networks:
+      - fadeup-supabase_default
+    # No public port — the Worker only makes outbound requests (Postgres,
+    # discovery/enrichment provider APIs) and is never itself a server.
+    healthcheck:
+      test: ["CMD", "node", "dist/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+    stop_grace_period: 35s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  fadeup-supabase_default:
+    external: true
