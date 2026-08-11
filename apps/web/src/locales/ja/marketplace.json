@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "FadeUp — 次の理容師を見つける",
+    "description": "近くの理髪店や独立系理容師を検索し、実際の空き状況を確認して、数分で予約または順番待ちに参加できます。",
+    "searchTitle": "理容師を検索 — FadeUp",
+    "searchTitleWithLocation": "{{location}}周辺の理容師 — FadeUp",
+    "searchDescription": "実際の FadeUp 理容師・理髪店を、場所と空き状況で絞り込んで検索できます。"
+  },
+  "hero": {
+    "eyebrow": "理容師マーケットプレイス",
+    "title": "次の理容師を見つけましょう。",
+    "subtitle": "近くの理髪店や独立系理容師を検索し、実際の空き状況を確認して、数分で予約または順番待ちに参加できます。"
+  },
+  "steps": {
+    "discover": { "title": "探す", "description": "都市名、サービス、理容師名で検索して、本当に近くにいる人を見つけましょう。" },
+    "book": { "title": "予約または順番待ちに参加", "description": "時間を予約するか、お店が飛び込み客を受け付けている場合はリアルタイムの順番待ちに参加します。" },
+    "queue": { "title": "カットを受ける", "description": "リアルタイムで順番を確認し、次回も手間なく戻ってこられます。" }
+  },
+  "searchForm": {
+    "whatLabel": "何をお探しですか?",
+    "whatPlaceholder": "理容師、店舗、サービス",
+    "whereLabel": "場所は?",
+    "wherePlaceholder": "都市または郵便番号",
+    "currentLocation": "現在地",
+    "useLocation": "現在地を使用",
+    "locating": "位置情報を取得中…",
+    "locationUnavailable": "位置情報を取得できませんでした——代わりに都市名を入力してください。",
+    "submit": "理容師を探す",
+    "popularLabel": "人気",
+    "popularFade": "フェード",
+    "popularHaircut": "ヘアカット",
+    "popularBeard": "ひげ",
+    "popularHaircutBeard": "ヘアカット+ひげ"
+  },
+  "results": {
+    "headingWithLocation": "{{location}}周辺の理容師",
+    "headingGeneric": "すべての理容師",
+    "resultCount_one": "{{count}} 件の結果",
+    "resultCount_other": "{{count}} 件の結果",
+    "filters": { "openNowLabel": "現在営業中" },
+    "emptyTitle": "フィルターに一致する理容師がありません",
+    "emptyDescription": "フィルターをクリアして、より多くの結果を表示してみてください。",
+    "emptyNoneAtAllTitle": "この地域にはまだ FadeUp 理容師がいません",
+    "emptyNoneAtAllDescription": "現在、この地域に公開されている FadeUp 理容師はいません。近くの都市を試してみてください。",
+    "clearFilters": "フィルターをクリア",
+    "errorTitle": "結果を読み込めませんでした"
+  },
+  "card": {
+    "openNow": "現在営業中",
+    "closedNow": "営業時間外",
+    "waiting_one": "{{count}} 人待ち",
+    "waiting_other": "{{count}} 人待ち",
+    "startingFrom": "{{price}}〜",
+    "viewProfile": "プロフィールを見る",
+    "distance": "{{distance}} km先"
+  }
+}

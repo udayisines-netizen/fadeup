@@ -71,9 +71,10 @@ const PILLARS = [
   },
 ]
 
-export function HomePage() {
+/** /for-business — the professional SaaS pitch. Kept separate from "/", which is now the consumer marketplace — see spec section 51. */
+export function ForBusinessPage() {
   useDocumentMeta({
-    title: 'FadeUp — the operating system for modern barbershops',
+    title: 'FadeUp for business — the operating system for modern barbershops',
     description:
       'FadeUp connects booking, live queue, walk-ins, Chair Mode, Barber Passport, customer relationships, memberships and multi-location reporting for barbershops in one system.',
   })

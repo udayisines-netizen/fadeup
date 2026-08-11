@@ -17,8 +17,7 @@ export function MarketingHeader() {
 
   const marketingLinks: { to: string; label: string; end: boolean }[] = [
     { to: '/', label: t('nav.home'), end: true },
-    { to: '/features', label: t('nav.features'), end: false },
-    { to: '/pricing', label: t('nav.pricing'), end: false },
+    { to: '/for-business', label: t('nav.forBusiness'), end: false },
   ]
 
   // Close the mobile drawer automatically on navigation (route change).

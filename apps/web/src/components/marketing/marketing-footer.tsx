@@ -8,6 +8,7 @@ export function MarketingFooter() {
 
   const productLinks = [
     { to: '/', label: t('nav.home') },
+    { to: '/for-business', label: t('nav.forBusiness') },
     { to: '/features', label: t('nav.features') },
     { to: '/pricing', label: t('nav.pricing') },
   ]

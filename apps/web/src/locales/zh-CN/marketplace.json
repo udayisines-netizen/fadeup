@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "FadeUp — 寻找您的下一位理发师",
+    "description": "搜索附近的理发店和独立理发师,查看真实的可预约时间,几分钟内即可预约或加入排队。",
+    "searchTitle": "搜索理发师 — FadeUp",
+    "searchTitleWithLocation": "{{location}}附近的理发师 — FadeUp",
+    "searchDescription": "浏览真实的 FadeUp 理发师和理发店,按位置和可用时间筛选。"
+  },
+  "hero": {
+    "eyebrow": "理发师市场",
+    "title": "寻找您的下一位理发师。",
+    "subtitle": "搜索附近的理发店和独立理发师,查看真实的可预约时间,几分钟内即可预约或加入排队。"
+  },
+  "steps": {
+    "discover": { "title": "发现", "description": "按城市、服务或理发师姓名搜索,查看真正在附近的人。" },
+    "book": { "title": "预约或加入排队", "description": "预订时间,或者如果店铺接受临时顾客,加入实时排队。" },
+    "queue": { "title": "完成理发", "description": "实时跟踪您的排队位置,下次轻松回访。" }
+  },
+  "searchForm": {
+    "whatLabel": "您需要什么?",
+    "whatPlaceholder": "理发师、店铺或服务",
+    "whereLabel": "在哪里?",
+    "wherePlaceholder": "城市或邮政编码",
+    "currentLocation": "当前位置",
+    "useLocation": "使用我的位置",
+    "locating": "定位中…",
+    "locationUnavailable": "无法获取您的位置——请尝试输入城市。",
+    "submit": "查找理发师",
+    "popularLabel": "热门",
+    "popularFade": "渐变剪",
+    "popularHaircut": "理发",
+    "popularBeard": "修胡须",
+    "popularHaircutBeard": "理发 + 修胡须"
+  },
+  "results": {
+    "headingWithLocation": "{{location}}附近的理发师",
+    "headingGeneric": "所有理发师",
+    "resultCount_one": "{{count}} 条结果",
+    "resultCount_other": "{{count}} 条结果",
+    "filters": { "openNowLabel": "目前营业" },
+    "emptyTitle": "没有符合筛选条件的理发师",
+    "emptyDescription": "请尝试清除筛选条件以查看更多结果。",
+    "emptyNoneAtAllTitle": "此处暂无 FadeUp 理发师",
+    "emptyNoneAtAllDescription": "该地区目前没有公开的 FadeUp 理发师。请尝试附近的城市。",
+    "clearFilters": "清除筛选条件",
+    "errorTitle": "无法加载结果"
+  },
+  "card": {
+    "openNow": "目前营业",
+    "closedNow": "已打烊",
+    "waiting_one": "{{count}} 人等候中",
+    "waiting_other": "{{count}} 人等候中",
+    "startingFrom": "起价 {{price}}",
+    "viewProfile": "查看主页",
+    "distance": "距离 {{distance}} 公里"
+  }
+}

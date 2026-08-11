@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "FadeUp — ابحث عن حلاقك القادم",
+    "description": "ابحث عن صالونات الحلاقة والحلاقين المستقلين بالقرب منك، وشاهد الأوقات المتاحة الحقيقية، واحجز أو انضم إلى قائمة الانتظار خلال دقائق.",
+    "searchTitle": "البحث عن حلاق — FadeUp",
+    "searchTitleWithLocation": "حلاقون بالقرب من {{location}} — FadeUp",
+    "searchDescription": "تصفح حلاقين وصالونات FadeUp حقيقية، مُصنّفة حسب الموقع والتوفر."
+  },
+  "hero": {
+    "eyebrow": "سوق الحلاقين",
+    "title": "ابحث عن حلاقك القادم.",
+    "subtitle": "ابحث عن صالونات الحلاقة والحلاقين المستقلين بالقرب منك، وشاهد الأوقات المتاحة الحقيقية، واحجز أو انضم إلى قائمة الانتظار خلال دقائق."
+  },
+  "steps": {
+    "discover": { "title": "اكتشف", "description": "ابحث حسب المدينة أو الخدمة أو اسم الحلاق لمعرفة من هو قريب منك فعلاً." },
+    "book": { "title": "احجز أو انضم لقائمة الانتظار", "description": "احجز موعدًا، أو انضم إلى قائمة انتظار مباشرة إذا كان الصالون يقبل الزبائن دون موعد." },
+    "queue": { "title": "احصل على قصتك", "description": "تابع مكانك في الوقت الفعلي، وعُد بسهولة في المرة القادمة." }
+  },
+  "searchForm": {
+    "whatLabel": "ما الذي تحتاجه؟",
+    "whatPlaceholder": "حلاق أو صالون أو خدمة",
+    "whereLabel": "أين؟",
+    "wherePlaceholder": "المدينة أو الرمز البريدي",
+    "currentLocation": "الموقع الحالي",
+    "useLocation": "استخدم موقعي",
+    "locating": "جارٍ تحديد الموقع…",
+    "locationUnavailable": "تعذّر تحديد موقعك — جرّب إدخال المدينة بدلاً من ذلك.",
+    "submit": "ابحث عن حلاق",
+    "popularLabel": "شائع",
+    "popularFade": "فيد",
+    "popularHaircut": "قصة شعر",
+    "popularBeard": "لحية",
+    "popularHaircutBeard": "قصة + لحية"
+  },
+  "results": {
+    "headingWithLocation": "حلاقون بالقرب من {{location}}",
+    "headingGeneric": "جميع الحلاقين",
+    "resultCount_one": "نتيجة واحدة",
+    "resultCount_other": "{{count}} نتيجة",
+    "filters": { "openNowLabel": "مفتوح الآن" },
+    "emptyTitle": "لا يوجد حلاقون مطابقون لعوامل التصفية",
+    "emptyDescription": "جرّب مسح عوامل التصفية لرؤية المزيد من النتائج.",
+    "emptyNoneAtAllTitle": "لا يوجد حلاقو FadeUp هنا بعد",
+    "emptyNoneAtAllDescription": "لا يوجد حاليًا حلاقو FadeUp عامون في هذه المنطقة. جرّب مدينة قريبة.",
+    "clearFilters": "مسح عوامل التصفية",
+    "errorTitle": "تعذّر تحميل النتائج"
+  },
+  "card": {
+    "openNow": "مفتوح الآن",
+    "closedNow": "مغلق",
+    "waiting_one": "شخص واحد ينتظر",
+    "waiting_other": "{{count}} أشخاص ينتظرون",
+    "startingFrom": "ابتداءً من {{price}}",
+    "viewProfile": "عرض الملف الشخصي",
+    "distance": "على بعد {{distance}} كم"
+  }
+}

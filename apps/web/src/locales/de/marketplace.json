@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "FadeUp — Finde deinen nächsten Barbier",
+    "description": "Durchsuche Barbershops und unabhängige Barbiere in deiner Nähe, sieh echte Verfügbarkeit und buche oder reihe dich in wenigen Minuten in die Warteschlange ein.",
+    "searchTitle": "Barbiere suchen — FadeUp",
+    "searchTitleWithLocation": "Barbiere in der Nähe von {{location}} — FadeUp",
+    "searchDescription": "Durchsuche echte FadeUp-Barbiere und -Barbershops, gefiltert nach Standort und Verfügbarkeit."
+  },
+  "hero": {
+    "eyebrow": "Barbier-Marktplatz",
+    "title": "Finde deinen nächsten Barbier.",
+    "subtitle": "Durchsuche Barbershops und unabhängige Barbiere in deiner Nähe, sieh echte Verfügbarkeit und buche oder reihe dich in wenigen Minuten in die Warteschlange ein."
+  },
+  "steps": {
+    "discover": { "title": "Entdecken", "description": "Suche nach Stadt, Service oder Barbier-Name, um zu sehen, wer wirklich in der Nähe ist." },
+    "book": { "title": "Buchen oder anstellen", "description": "Reserviere einen Termin oder reihe dich in eine Live-Warteschlange ein, falls der Laden Laufkundschaft annimmt." },
+    "queue": { "title": "Deinen Schnitt bekommen", "description": "Verfolge deine Position in Echtzeit und komm beim nächsten Mal mühelos wieder." }
+  },
+  "searchForm": {
+    "whatLabel": "Was brauchst du?",
+    "whatPlaceholder": "Barbier, Laden oder Service",
+    "whereLabel": "Wo?",
+    "wherePlaceholder": "Stadt oder Postleitzahl",
+    "currentLocation": "Aktueller Standort",
+    "useLocation": "Meinen Standort verwenden",
+    "locating": "Standort wird ermittelt…",
+    "locationUnavailable": "Standort konnte nicht ermittelt werden — gib stattdessen eine Stadt ein.",
+    "submit": "Barbier finden",
+    "popularLabel": "Beliebt",
+    "popularFade": "Fade",
+    "popularHaircut": "Haarschnitt",
+    "popularBeard": "Bart",
+    "popularHaircutBeard": "Haarschnitt + Bart"
+  },
+  "results": {
+    "headingWithLocation": "Barbiere in der Nähe von {{location}}",
+    "headingGeneric": "Alle Barbiere",
+    "resultCount_one": "{{count}} Ergebnis",
+    "resultCount_other": "{{count}} Ergebnisse",
+    "filters": { "openNowLabel": "Jetzt geöffnet" },
+    "emptyTitle": "Keine Barbiere entsprechen deinen Filtern",
+    "emptyDescription": "Setze die Filter zurück, um mehr Ergebnisse zu sehen.",
+    "emptyNoneAtAllTitle": "Noch keine FadeUp-Barbiere hier",
+    "emptyNoneAtAllDescription": "Derzeit gibt es keine öffentlichen FadeUp-Barbiere in dieser Gegend. Versuche es mit einer Stadt in der Nähe.",
+    "clearFilters": "Filter zurücksetzen",
+    "errorTitle": "Ergebnisse konnten nicht geladen werden"
+  },
+  "card": {
+    "openNow": "Jetzt geöffnet",
+    "closedNow": "Geschlossen",
+    "waiting_one": "{{count}} Person wartet",
+    "waiting_other": "{{count}} Personen warten",
+    "startingFrom": "Ab {{price}}",
+    "viewProfile": "Profil ansehen",
+    "distance": "{{distance}} km entfernt"
+  }
+}

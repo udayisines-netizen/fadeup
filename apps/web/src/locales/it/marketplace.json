@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "FadeUp — Trova il tuo prossimo barbiere",
+    "description": "Cerca barbershop e barbieri indipendenti vicino a te, controlla la disponibilità reale e prenota o unisciti alla coda in pochi minuti.",
+    "searchTitle": "Cerca barbieri — FadeUp",
+    "searchTitleWithLocation": "Barbieri vicino a {{location}} — FadeUp",
+    "searchDescription": "Sfoglia barbieri e barbershop FadeUp reali, filtrati per posizione e disponibilità."
+  },
+  "hero": {
+    "eyebrow": "Marketplace dei barbieri",
+    "title": "Trova il tuo prossimo barbiere.",
+    "subtitle": "Cerca barbershop e barbieri indipendenti vicino a te, controlla la disponibilità reale e prenota o unisciti alla coda in pochi minuti."
+  },
+  "steps": {
+    "discover": { "title": "Scopri", "description": "Cerca per città, servizio o nome del barbiere per vedere chi è davvero nelle vicinanze." },
+    "book": { "title": "Prenota o unisciti alla coda", "description": "Prenota un orario, oppure unisciti a una coda live se il negozio accetta clienti senza appuntamento." },
+    "queue": { "title": "Ottieni il tuo taglio", "description": "Segui la tua posizione in tempo reale, e torna senza sforzo la prossima volta." }
+  },
+  "searchForm": {
+    "whatLabel": "Di cosa hai bisogno?",
+    "whatPlaceholder": "Barbiere, negozio o servizio",
+    "whereLabel": "Dove?",
+    "wherePlaceholder": "Città o CAP",
+    "currentLocation": "Posizione attuale",
+    "useLocation": "Usa la mia posizione",
+    "locating": "Localizzazione…",
+    "locationUnavailable": "Impossibile ottenere la tua posizione — prova a inserire una città.",
+    "submit": "Trova un barbiere",
+    "popularLabel": "Popolare",
+    "popularFade": "Fade",
+    "popularHaircut": "Taglio",
+    "popularBeard": "Barba",
+    "popularHaircutBeard": "Taglio + Barba"
+  },
+  "results": {
+    "headingWithLocation": "Barbieri vicino a {{location}}",
+    "headingGeneric": "Tutti i barbieri",
+    "resultCount_one": "{{count}} risultato",
+    "resultCount_other": "{{count}} risultati",
+    "filters": { "openNowLabel": "Aperto ora" },
+    "emptyTitle": "Nessun barbiere corrisponde ai filtri",
+    "emptyDescription": "Prova a cancellare i filtri per vedere più risultati.",
+    "emptyNoneAtAllTitle": "Ancora nessun barbiere FadeUp qui",
+    "emptyNoneAtAllDescription": "Al momento non ci sono barbieri FadeUp pubblici in questa zona. Prova una città vicina.",
+    "clearFilters": "Cancella filtri",
+    "errorTitle": "Impossibile caricare i risultati"
+  },
+  "card": {
+    "openNow": "Aperto ora",
+    "closedNow": "Chiuso",
+    "waiting_one": "{{count}} persona in attesa",
+    "waiting_other": "{{count}} persone in attesa",
+    "startingFrom": "Da {{price}}",
+    "viewProfile": "Vedi profilo",
+    "distance": "a {{distance}} km"
+  }
+}

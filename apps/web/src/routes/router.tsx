@@ -23,8 +23,22 @@ export const router = createBrowserRouter([
           {
             index: true,
             lazy: async () => {
-              const { HomePage } = await import('@/pages/home-page')
-              return { Component: HomePage }
+              const { MarketplaceHomePage } = await import('@/pages/marketplace-home-page')
+              return { Component: MarketplaceHomePage }
+            },
+          },
+          {
+            path: 'search',
+            lazy: async () => {
+              const { MarketplaceSearchPage } = await import('@/pages/marketplace-search-page')
+              return { Component: MarketplaceSearchPage }
+            },
+          },
+          {
+            path: 'for-business',
+            lazy: async () => {
+              const { ForBusinessPage } = await import('@/pages/for-business-page')
+              return { Component: ForBusinessPage }
             },
           },
           {
