@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import * as ToastPrimitive from '@radix-ui/react-toast'
 import { CheckCircle2, CircleAlert, Info, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { createUuid } from '@/lib/uuid'
 
 type ToastVariant = 'default' | 'success' | 'error'
 
@@ -43,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const toast = useCallback((input: ToastInput) => {
-    const id = crypto.randomUUID()
+    const id = createUuid()
     setToasts((current) => [...current, { id, ...input }])
   }, [])
 
