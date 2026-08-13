@@ -39,11 +39,9 @@ function initialsOf(name: string): string {
  * unknown barber — indistinguishable from a wrong link, same privacy
  * posture as the rest of the public surface.
  *
- * Documented simplification: "Book with [name]" links to the shop's
- * general booking flow at `/s/:slug` rather than deep-linking a
- * pre-selected barber — the wizard there has no pre-selection param yet.
- * Worth adding if Barber Passport links turn out to be a primary booking
- * entry point in practice.
+ * "Book with [name]" deep-links `/s/:slug?barber=<id>&location=<id>` — the
+ * booking wizard (public-booking-page.tsx) preselects that barber and skips
+ * the location step once the customer reaches a service that barber offers.
  */
 export function PublicBarberPage() {
   const { slug, barberId } = useParams<{ slug: string; barberId: string }>()
@@ -121,9 +119,15 @@ function BarberProfile({
   servicesQuery,
 }: {
   organization: { slug: string; name: string }
-  barber: { displayName: string; title: string | null; bio: string | null; avatarUrl: string | null }
+  barber: { barberId: string; displayName: string; title: string | null; bio: string | null; avatarUrl: string | null; locationId: string | null }
   servicesQuery: ReturnType<typeof usePublicBarberServices>
 }) {
+  const bookHref = `/s/${organization.slug}${
+    barber.locationId
+      ? `?barber=${barber.barberId}&location=${barber.locationId}`
+      : `?barber=${barber.barberId}`
+  }`
+
   return (
     <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
       <Card elevated className="p-6 text-center">
@@ -133,7 +137,7 @@ function BarberProfile({
         <p className="mt-1 text-sm text-ink-500">at {organization.name}</p>
         {barber.bio ? <p className="mt-4 text-sm text-ink-700">{barber.bio}</p> : null}
 
-        <Link to={`/s/${organization.slug}`} className={buttonVariants({ size: 'lg' }, 'mt-6 w-full')}>
+        <Link to={bookHref} className={buttonVariants({ size: 'lg' }, 'mt-6 w-full')}>
           Book with {barber.displayName.split(' ')[0]}
         </Link>
       </Card>

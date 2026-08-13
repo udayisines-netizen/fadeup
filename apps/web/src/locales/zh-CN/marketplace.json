@@ -71,6 +71,7 @@
     "viewProfile": "查看主页",
     "distance": "距离 {{distance}} 公里",
     "entityShop": "理发店",
-    "entityBarber": "理发师"
+    "entityBarber": "理发师",
+    "book": "预约"
   }
 }

@@ -23,7 +23,8 @@ export function ProfessionalResultCard({ result }: { result: MarketplaceProfessi
   const isBarber = result.entityType === 'barber'
   const title = isBarber ? (result.barberDisplayName ?? result.organizationName) : result.organizationName
   const initial = title.charAt(0).toUpperCase()
-  const profileHref = isBarber ? `/s/${result.organizationSlug}/barbers/${result.barberId}` : `/s/${result.organizationSlug}`
+  const profileHref = isBarber ? `/s/${result.organizationSlug}/barbers/${result.barberId}` : `/s/${result.organizationSlug}/profile`
+  const bookHref = isBarber ? `/s/${result.organizationSlug}?barber=${result.barberId}` : `/s/${result.organizationSlug}`
 
   const subtitleParts = isBarber
     ? [result.organizationName, result.barberTitle, result.city].filter(Boolean)
@@ -93,9 +94,14 @@ export function ProfessionalResultCard({ result }: { result: MarketplaceProfessi
           ) : null}
         </div>
 
-        <Link to={profileHref} className={buttonVariants({ variant: 'secondary', size: 'sm' }, 'mt-2 self-start')}>
-          {t('card.viewProfile')}
-        </Link>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Link to={profileHref} className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
+            {t('card.viewProfile')}
+          </Link>
+          <Link to={bookHref} className={buttonVariants({ variant: 'primary', size: 'sm' })}>
+            {t('card.book')}
+          </Link>
+        </div>
       </div>
     </Card>
   )

@@ -71,6 +71,7 @@
     "viewProfile": "Смотреть профиль",
     "distance": "в {{distance}} км",
     "entityShop": "Салон",
-    "entityBarber": "Барбер"
+    "entityBarber": "Барбер",
+    "book": "Забронировать"
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -171,6 +171,27 @@ export function PublicBookingPage() {
   return <BookingWizard organization={organizationQuery.data} />
 }
 
+/**
+ * Reads `?barber=<id>` (optionally `&location=<id>`) — set by marketplace
+ * result cards and the Barber Passport page's "Book with <name>" link — so
+ * arriving with a specific barber already in mind preserves that choice
+ * instead of making the customer re-pick from scratch (spec: "entering
+ * booking from a barber preserves barber selection"). Best-effort by
+ * design: the wizard's step order is location -> service -> barber (barber
+ * eligibility depends on the chosen service), so a barber can only be
+ * pre-applied once the customer reaches the barber step for a service that
+ * barber actually offers — see BookingWizard's effects below. This
+ * preserves the existing, working step machine rather than restructuring
+ * it around a barber-first flow.
+ */
+function usePreselection() {
+  const [searchParams] = useSearchParams()
+  return {
+    preselectedBarberId: searchParams.get('barber'),
+    preselectedLocationId: searchParams.get('location'),
+  }
+}
+
 // --- step model ------------------------------------------------------------------------
 
 type Phase = 'location' | 'service' | 'barber' | 'datetime' | 'details' | 'success'
@@ -182,6 +203,7 @@ interface SlotSelection {
 
 function BookingWizard({ organization }: { organization: PublicOrganization }) {
   const locationsQuery = usePublicLocations(organization.slug)
+  const { preselectedBarberId, preselectedLocationId } = usePreselection()
 
   const [phase, setPhase] = useState<Phase>('location')
   const [history, setHistory] = useState<Phase[]>([])
@@ -196,24 +218,36 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
   const barbersQuery = usePublicBarbers(organization.slug, locationId ?? undefined, serviceId ?? undefined)
   const slotsQuery = usePublicAvailableSlots(organization.slug, locationId ?? undefined, barberId ?? undefined, serviceId ?? undefined, date)
 
-  // Skip the location step entirely for the (very common) single-location shop —
-  // don't make a customer tap through a step with only one possible answer.
+  // Skip the location step when a specific location was preselected (from a
+  // barber's own profile) or the shop has just one — don't make a customer
+  // tap through a step with only one possible/already-decided answer.
   useEffect(() => {
     if (locationId || !locationsQuery.data) return
-    if (locationsQuery.data.length === 1) {
+    if (preselectedLocationId && locationsQuery.data.some((location) => location.id === preselectedLocationId)) {
+      setLocationId(preselectedLocationId)
+      setPhase('service')
+      return
+    }
+    if (!preselectedLocationId && locationsQuery.data.length === 1) {
       setLocationId(locationsQuery.data[0]!.id)
       setPhase('service')
     }
-  }, [locationsQuery.data, locationId])
+  }, [locationsQuery.data, locationId, preselectedLocationId])
 
-  // Same idea for a service with exactly one eligible barber.
+  // Same idea for a service with exactly one eligible barber, OR the
+  // preselected barber turns out to be eligible for the chosen service.
   useEffect(() => {
     if (!serviceId || barberId || phase !== 'barber' || !barbersQuery.data) return
+    if (preselectedBarberId && barbersQuery.data.some((barber) => barber.barberId === preselectedBarberId)) {
+      setBarberId(preselectedBarberId)
+      setPhase('datetime')
+      return
+    }
     if (barbersQuery.data.length === 1) {
       setBarberId(barbersQuery.data[0]!.barberId)
       setPhase('datetime')
     }
-  }, [barbersQuery.data, serviceId, barberId, phase])
+  }, [barbersQuery.data, serviceId, barberId, phase, preselectedBarberId])
 
   function goTo(next: Phase) {
     setHistory((prev) => [...prev, phase])

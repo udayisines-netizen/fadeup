@@ -71,6 +71,7 @@
     "viewProfile": "View profile",
     "distance": "{{distance}} km away",
     "entityShop": "Shop",
-    "entityBarber": "Barber"
+    "entityBarber": "Barber",
+    "book": "Book"
   }
 }

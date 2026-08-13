@@ -71,6 +71,7 @@
     "viewProfile": "プロフィールを見る",
     "distance": "{{distance}} km先",
     "entityShop": "店舗",
-    "entityBarber": "理容師"
+    "entityBarber": "理容師",
+    "book": "予約する"
   }
 }

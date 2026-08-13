@@ -71,6 +71,7 @@
     "viewProfile": "Voir le profil",
     "distance": "à {{distance}} km",
     "entityShop": "Salon",
-    "entityBarber": "Barber"
+    "entityBarber": "Barber",
+    "book": "Réserver"
   }
 }

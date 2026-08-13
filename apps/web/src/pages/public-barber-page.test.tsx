@@ -50,7 +50,14 @@ describe('PublicBarberPage', () => {
   it('renders the barber\'s profile and their real active services, with a "Book with" CTA', async () => {
     mockUsePublicOrganization.mockReturnValue(successQuery({ id: 'org-1', name: "Jack's Barbers", slug: 'jacks-barbers' }))
     mockUsePublicBarber.mockReturnValue(
-      successQuery({ barberId: 'barber-1', displayName: 'Sam Barber', title: 'Master Barber', bio: 'Fades and tapers.', avatarUrl: null }),
+      successQuery({
+        barberId: 'barber-1',
+        displayName: 'Sam Barber',
+        title: 'Master Barber',
+        bio: 'Fades and tapers.',
+        avatarUrl: null,
+        locationId: 'loc-1',
+      }),
     )
     mockUsePublicBarberServices.mockReturnValue(
       successQuery([{ id: 'svc-1', name: 'Classic Fade', durationMinutes: 30, priceCents: 3500 }]),
@@ -64,6 +71,6 @@ describe('PublicBarberPage', () => {
     expect(screen.getByText('Classic Fade')).toBeInTheDocument()
     expect(screen.getByText('$35.00')).toBeInTheDocument()
     const bookLink = screen.getByRole('link', { name: 'Book with Sam' })
-    expect(bookLink).toHaveAttribute('href', '/s/jacks-barbers')
+    expect(bookLink).toHaveAttribute('href', '/s/jacks-barbers?barber=barber-1&location=loc-1')
   })
 })

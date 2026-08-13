@@ -18,6 +18,7 @@ export interface PublicBarberProfile {
   title: string | null
   bio: string | null
   avatarUrl: string | null
+  locationId: string | null
 }
 
 interface PublicBarberProfileRow {
@@ -26,6 +27,7 @@ interface PublicBarberProfileRow {
   title: string | null
   bio: string | null
   avatar_url: string | null
+  location_id: string | null
 }
 
 function mapPublicBarberProfile(row: PublicBarberProfileRow): PublicBarberProfile {
@@ -35,6 +37,7 @@ function mapPublicBarberProfile(row: PublicBarberProfileRow): PublicBarberProfil
     title: row.title,
     bio: row.bio,
     avatarUrl: row.avatar_url,
+    locationId: row.location_id,
   }
 }
 
@@ -93,5 +96,51 @@ export function usePublicBarberServices(organizationSlug: string | undefined, ba
       return ((data ?? []) as PublicBarberServiceRow[]).map(mapPublicBarberService)
     },
     enabled: Boolean(organizationSlug) && Boolean(barberId),
+  })
+}
+
+/** One entry in a shop's public team roster — see list_public_organization_barbers. */
+export interface PublicOrganizationBarber {
+  barberId: string
+  displayName: string
+  title: string | null
+  avatarUrl: string | null
+  locationId: string | null
+  locationName: string | null
+}
+
+interface PublicOrganizationBarberRow {
+  barber_id: string
+  display_name: string
+  title: string | null
+  avatar_url: string | null
+  location_id: string | null
+  location_name: string | null
+}
+
+function mapPublicOrganizationBarber(row: PublicOrganizationBarberRow): PublicOrganizationBarber {
+  return {
+    barberId: row.barber_id,
+    displayName: row.display_name,
+    title: row.title,
+    avatarUrl: row.avatar_url,
+    locationId: row.location_id,
+    locationName: row.location_name,
+  }
+}
+
+/** Every public, bookable barber on this shop's team — powers the shop profile's "browse team" screen. */
+export function usePublicOrganizationBarbers(organizationSlug: string | undefined) {
+  return useQuery({
+    queryKey: ['public-organization-barbers', organizationSlug],
+    queryFn: async (): Promise<PublicOrganizationBarber[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('list_public_organization_barbers', {
+        p_organization_slug: organizationSlug,
+      })
+      if (error) throw error
+      return ((data ?? []) as PublicOrganizationBarberRow[]).map(mapPublicOrganizationBarber)
+    },
+    enabled: Boolean(organizationSlug),
   })
 }

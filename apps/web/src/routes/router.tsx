@@ -338,6 +338,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'profile',
+            lazy: async () => {
+              const { ShopProfilePage } = await import('@/pages/shop-profile-page')
+              return { Component: ShopProfilePage }
+            },
+          },
+          {
             path: 'walk-in',
             lazy: async () => {
               const { PublicWalkinPage } = await import('@/pages/public-walkin-page')

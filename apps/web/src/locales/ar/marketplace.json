@@ -71,6 +71,7 @@
     "viewProfile": "عرض الملف الشخصي",
     "distance": "على بعد {{distance}} كم",
     "entityShop": "صالون",
-    "entityBarber": "حلاق"
+    "entityBarber": "حلاق",
+    "book": "احجز"
   }
 }
