@@ -12,9 +12,18 @@
     "subtitle": "Procure barbearias e barbeiros independentes perto de si, veja a disponibilidade real, e marque ou entre na fila em minutos."
   },
   "steps": {
-    "discover": { "title": "Descubra", "description": "Procure por cidade, serviço ou nome do barbeiro para ver quem está realmente por perto." },
-    "book": { "title": "Marque ou entre na fila", "description": "Reserve um horário, ou entre numa fila em tempo real se a barbearia aceitar clientes sem marcação." },
-    "queue": { "title": "Aproveite o seu corte", "description": "Acompanhe a sua posição em tempo real, e volte sem esforço da próxima vez." }
+    "discover": {
+      "title": "Descubra",
+      "description": "Procure por cidade, serviço ou nome do barbeiro para ver quem está realmente por perto."
+    },
+    "book": {
+      "title": "Marque ou entre na fila",
+      "description": "Reserve um horário, ou entre numa fila em tempo real se a barbearia aceitar clientes sem marcação."
+    },
+    "queue": {
+      "title": "Aproveite o seu corte",
+      "description": "Acompanhe a sua posição em tempo real, e volte sem esforço da próxima vez."
+    }
   },
   "searchForm": {
     "whatLabel": "Do que precisa?",
@@ -37,7 +46,15 @@
     "headingGeneric": "Todos os barbeiros",
     "resultCount_one": "{{count}} resultado",
     "resultCount_other": "{{count}} resultados",
-    "filters": { "openNowLabel": "Aberto agora" },
+    "filters": {
+      "openNowLabel": "Aberto agora",
+      "serviceLabel": "Serviço",
+      "servicePlaceholder": "ex. Fade, Aparar barba",
+      "typeGroupLabel": "Tipo de resultado",
+      "typeAll": "Todos",
+      "typeShops": "Barbearias",
+      "typeBarbers": "Barbeiros"
+    },
     "emptyTitle": "Nenhum barbeiro corresponde aos filtros",
     "emptyDescription": "Tente limpar os filtros para ver mais resultados.",
     "emptyNoneAtAllTitle": "Ainda não há barbeiros FadeUp aqui",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} pessoas à espera",
     "startingFrom": "A partir de {{price}}",
     "viewProfile": "Ver perfil",
-    "distance": "a {{distance}} km"
+    "distance": "a {{distance}} km",
+    "entityShop": "Barbearia",
+    "entityBarber": "Barbeiro"
   }
 }

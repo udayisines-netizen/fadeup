@@ -12,9 +12,18 @@
     "subtitle": "Search barbershops and independent barbers near you, see real availability, and book or join the queue in minutes."
   },
   "steps": {
-    "discover": { "title": "Discover", "description": "Search by city, service or barber name to see who's really nearby." },
-    "book": { "title": "Book or join the queue", "description": "Reserve a time, or join a live queue if the shop takes walk-ins." },
-    "queue": { "title": "Get your cut", "description": "Track your position in real time, and come back effortlessly next time." }
+    "discover": {
+      "title": "Discover",
+      "description": "Search by city, service or barber name to see who's really nearby."
+    },
+    "book": {
+      "title": "Book or join the queue",
+      "description": "Reserve a time, or join a live queue if the shop takes walk-ins."
+    },
+    "queue": {
+      "title": "Get your cut",
+      "description": "Track your position in real time, and come back effortlessly next time."
+    }
   },
   "searchForm": {
     "whatLabel": "What do you need?",
@@ -37,7 +46,15 @@
     "headingGeneric": "All barbers",
     "resultCount_one": "{{count}} result",
     "resultCount_other": "{{count}} results",
-    "filters": { "openNowLabel": "Open now" },
+    "filters": {
+      "openNowLabel": "Open now",
+      "serviceLabel": "Service",
+      "servicePlaceholder": "e.g. Fade, Beard trim",
+      "typeGroupLabel": "Result type",
+      "typeAll": "All",
+      "typeShops": "Shops",
+      "typeBarbers": "Barbers"
+    },
     "emptyTitle": "No barbers match your filters",
     "emptyDescription": "Try clearing filters to see more results.",
     "emptyNoneAtAllTitle": "No FadeUp barbers here yet",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} people waiting",
     "startingFrom": "From {{price}}",
     "viewProfile": "View profile",
-    "distance": "{{distance}} km away"
+    "distance": "{{distance}} km away",
+    "entityShop": "Shop",
+    "entityBarber": "Barber"
   }
 }

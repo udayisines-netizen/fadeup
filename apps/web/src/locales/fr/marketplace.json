@@ -12,9 +12,18 @@
     "subtitle": "Recherchez des salons et des barbiers indépendants près de chez vous, consultez les disponibilités réelles, et réservez ou rejoignez la file d'attente en quelques minutes."
   },
   "steps": {
-    "discover": { "title": "Découvrez", "description": "Recherchez par ville, service ou nom de barbier pour voir qui est vraiment à proximité." },
-    "book": { "title": "Réservez ou rejoignez la file", "description": "Réservez un créneau, ou rejoignez une file d'attente en direct si le salon accepte les sans rendez-vous." },
-    "queue": { "title": "Profitez de votre coupe", "description": "Suivez votre position en temps réel, et revenez sans effort la prochaine fois." }
+    "discover": {
+      "title": "Découvrez",
+      "description": "Recherchez par ville, service ou nom de barbier pour voir qui est vraiment à proximité."
+    },
+    "book": {
+      "title": "Réservez ou rejoignez la file",
+      "description": "Réservez un créneau, ou rejoignez une file d'attente en direct si le salon accepte les sans rendez-vous."
+    },
+    "queue": {
+      "title": "Profitez de votre coupe",
+      "description": "Suivez votre position en temps réel, et revenez sans effort la prochaine fois."
+    }
   },
   "searchForm": {
     "whatLabel": "De quoi avez-vous besoin ?",
@@ -37,7 +46,15 @@
     "headingGeneric": "Tous les barbiers",
     "resultCount_one": "{{count}} résultat",
     "resultCount_other": "{{count}} résultats",
-    "filters": { "openNowLabel": "Ouvert maintenant" },
+    "filters": {
+      "openNowLabel": "Ouvert maintenant",
+      "serviceLabel": "Service",
+      "servicePlaceholder": "ex. Dégradé, Taille de barbe",
+      "typeGroupLabel": "Type de résultat",
+      "typeAll": "Tous",
+      "typeShops": "Salons",
+      "typeBarbers": "Barbers"
+    },
     "emptyTitle": "Aucun barbier ne correspond à vos filtres",
     "emptyDescription": "Essayez de réinitialiser les filtres pour voir plus de résultats.",
     "emptyNoneAtAllTitle": "Aucun barbier FadeUp ici pour le moment",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} personnes en attente",
     "startingFrom": "À partir de {{price}}",
     "viewProfile": "Voir le profil",
-    "distance": "à {{distance}} km"
+    "distance": "à {{distance}} km",
+    "entityShop": "Salon",
+    "entityBarber": "Barber"
   }
 }

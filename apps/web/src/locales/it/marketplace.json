@@ -12,9 +12,18 @@
     "subtitle": "Cerca barbershop e barbieri indipendenti vicino a te, controlla la disponibilità reale e prenota o unisciti alla coda in pochi minuti."
   },
   "steps": {
-    "discover": { "title": "Scopri", "description": "Cerca per città, servizio o nome del barbiere per vedere chi è davvero nelle vicinanze." },
-    "book": { "title": "Prenota o unisciti alla coda", "description": "Prenota un orario, oppure unisciti a una coda live se il negozio accetta clienti senza appuntamento." },
-    "queue": { "title": "Ottieni il tuo taglio", "description": "Segui la tua posizione in tempo reale, e torna senza sforzo la prossima volta." }
+    "discover": {
+      "title": "Scopri",
+      "description": "Cerca per città, servizio o nome del barbiere per vedere chi è davvero nelle vicinanze."
+    },
+    "book": {
+      "title": "Prenota o unisciti alla coda",
+      "description": "Prenota un orario, oppure unisciti a una coda live se il negozio accetta clienti senza appuntamento."
+    },
+    "queue": {
+      "title": "Ottieni il tuo taglio",
+      "description": "Segui la tua posizione in tempo reale, e torna senza sforzo la prossima volta."
+    }
   },
   "searchForm": {
     "whatLabel": "Di cosa hai bisogno?",
@@ -37,7 +46,15 @@
     "headingGeneric": "Tutti i barbieri",
     "resultCount_one": "{{count}} risultato",
     "resultCount_other": "{{count}} risultati",
-    "filters": { "openNowLabel": "Aperto ora" },
+    "filters": {
+      "openNowLabel": "Aperto ora",
+      "serviceLabel": "Servizio",
+      "servicePlaceholder": "es. Fade, Rifinitura barba",
+      "typeGroupLabel": "Tipo di risultato",
+      "typeAll": "Tutti",
+      "typeShops": "Saloni",
+      "typeBarbers": "Barbieri"
+    },
     "emptyTitle": "Nessun barbiere corrisponde ai filtri",
     "emptyDescription": "Prova a cancellare i filtri per vedere più risultati.",
     "emptyNoneAtAllTitle": "Ancora nessun barbiere FadeUp qui",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} persone in attesa",
     "startingFrom": "Da {{price}}",
     "viewProfile": "Vedi profilo",
-    "distance": "a {{distance}} km"
+    "distance": "a {{distance}} km",
+    "entityShop": "Salone",
+    "entityBarber": "Barbiere"
   }
 }

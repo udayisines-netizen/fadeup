@@ -12,9 +12,18 @@
     "subtitle": "Busca barberías y barberos independientes cerca de ti, consulta la disponibilidad real, y reserva o únete a la cola en minutos."
   },
   "steps": {
-    "discover": { "title": "Descubre", "description": "Busca por ciudad, servicio o nombre del barbero para ver quién está realmente cerca." },
-    "book": { "title": "Reserva o únete a la cola", "description": "Reserva un horario, o únete a una cola en vivo si el local acepta clientes sin cita." },
-    "queue": { "title": "Disfruta tu corte", "description": "Sigue tu posición en tiempo real, y vuelve sin esfuerzo la próxima vez." }
+    "discover": {
+      "title": "Descubre",
+      "description": "Busca por ciudad, servicio o nombre del barbero para ver quién está realmente cerca."
+    },
+    "book": {
+      "title": "Reserva o únete a la cola",
+      "description": "Reserva un horario, o únete a una cola en vivo si el local acepta clientes sin cita."
+    },
+    "queue": {
+      "title": "Disfruta tu corte",
+      "description": "Sigue tu posición en tiempo real, y vuelve sin esfuerzo la próxima vez."
+    }
   },
   "searchForm": {
     "whatLabel": "¿Qué necesitas?",
@@ -37,7 +46,15 @@
     "headingGeneric": "Todos los barberos",
     "resultCount_one": "{{count}} resultado",
     "resultCount_other": "{{count}} resultados",
-    "filters": { "openNowLabel": "Abierto ahora" },
+    "filters": {
+      "openNowLabel": "Abierto ahora",
+      "serviceLabel": "Servicio",
+      "servicePlaceholder": "ej. Fade, Arreglo de barba",
+      "typeGroupLabel": "Tipo de resultado",
+      "typeAll": "Todos",
+      "typeShops": "Barberías",
+      "typeBarbers": "Barberos"
+    },
     "emptyTitle": "Ningún barbero coincide con tus filtros",
     "emptyDescription": "Intenta borrar los filtros para ver más resultados.",
     "emptyNoneAtAllTitle": "Aún no hay barberos FadeUp aquí",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} personas esperando",
     "startingFrom": "Desde {{price}}",
     "viewProfile": "Ver perfil",
-    "distance": "a {{distance}} km"
+    "distance": "a {{distance}} km",
+    "entityShop": "Barbería",
+    "entityBarber": "Barbero"
   }
 }

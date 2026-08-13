@@ -12,9 +12,18 @@
     "subtitle": "近くの理髪店や独立系理容師を検索し、実際の空き状況を確認して、数分で予約または順番待ちに参加できます。"
   },
   "steps": {
-    "discover": { "title": "探す", "description": "都市名、サービス、理容師名で検索して、本当に近くにいる人を見つけましょう。" },
-    "book": { "title": "予約または順番待ちに参加", "description": "時間を予約するか、お店が飛び込み客を受け付けている場合はリアルタイムの順番待ちに参加します。" },
-    "queue": { "title": "カットを受ける", "description": "リアルタイムで順番を確認し、次回も手間なく戻ってこられます。" }
+    "discover": {
+      "title": "探す",
+      "description": "都市名、サービス、理容師名で検索して、本当に近くにいる人を見つけましょう。"
+    },
+    "book": {
+      "title": "予約または順番待ちに参加",
+      "description": "時間を予約するか、お店が飛び込み客を受け付けている場合はリアルタイムの順番待ちに参加します。"
+    },
+    "queue": {
+      "title": "カットを受ける",
+      "description": "リアルタイムで順番を確認し、次回も手間なく戻ってこられます。"
+    }
   },
   "searchForm": {
     "whatLabel": "何をお探しですか?",
@@ -37,7 +46,15 @@
     "headingGeneric": "すべての理容師",
     "resultCount_one": "{{count}} 件の結果",
     "resultCount_other": "{{count}} 件の結果",
-    "filters": { "openNowLabel": "現在営業中" },
+    "filters": {
+      "openNowLabel": "現在営業中",
+      "serviceLabel": "サービス",
+      "servicePlaceholder": "例：フェード、ひげ剃り",
+      "typeGroupLabel": "結果の種類",
+      "typeAll": "すべて",
+      "typeShops": "店舗",
+      "typeBarbers": "理容師"
+    },
     "emptyTitle": "フィルターに一致する理容師がありません",
     "emptyDescription": "フィルターをクリアして、より多くの結果を表示してみてください。",
     "emptyNoneAtAllTitle": "この地域にはまだ FadeUp 理容師がいません",
@@ -52,6 +69,8 @@
     "waiting_other": "{{count}} 人待ち",
     "startingFrom": "{{price}}〜",
     "viewProfile": "プロフィールを見る",
-    "distance": "{{distance}} km先"
+    "distance": "{{distance}} km先",
+    "entityShop": "店舗",
+    "entityBarber": "理容師"
   }
 }
