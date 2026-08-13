@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Bem-vindo de volta",
+    "onboardingPromptTitle": "Conta-nos os teus hábitos",
+    "onboardingPromptDescription": "Duas perguntas rápidas para o FadeUp te ser mais útil.",
+    "onboardingPromptCta": "Começar",
+    "discoverTitle": "Encontra o teu próximo barbeiro",
+    "discoverDescription": "Procura barbearias e barbeiros independentes perto de ti.",
+    "discoverCta": "Descobrir barbeiros"
+  },
+  "onboarding": {
+    "title": "Algumas perguntas rápidas",
+    "subtitle": "Isto ajuda o FadeUp a ser mais útil mais tarde — salta quando quiseres.",
+    "frequencyQuestion": "De quanto em quanto tempo costumas cortar o cabelo?",
+    "frequency": {
+      "weekly": "Todas as semanas",
+      "every_2_weeks": "A cada 2 semanas",
+      "every_3_weeks": "A cada 3 semanas",
+      "monthly": "Uma vez por mês",
+      "less_often": "Com menos frequência",
+      "depends": "Depende"
+    },
+    "styleQuestion": "Qual é o teu corte habitual?",
+    "style": {
+      "fade": "Fade",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Rapado",
+      "afro": "Afro",
+      "curly": "Encaracolado",
+      "long": "Longo",
+      "beard_focus": "Foco na barba",
+      "other": "Outro"
+    },
+    "styleNotesLabel": "Mais alguma coisa importante? (opcional)",
+    "styleNotesPlaceholder": "ex. fade nas laterais, deixa o topo mais comprido",
+    "appointmentQuestion": "Com marcação ou sem marcação — o que preferes?",
+    "appointmentPreference": {
+      "appointment": "Prefiro marcar com antecedência",
+      "walk_in": "Costumo ir sem marcação",
+      "either": "Tanto faz"
+    },
+    "skip": "Saltar por agora",
+    "save": "Guardar",
+    "saved": "Guardado — obrigado!"
+  },
+  "profile": {
+    "title": "Perfil",
+    "nameLabel": "Nome",
+    "phoneLabel": "Telefone",
+    "emailLabel": "E-mail",
+    "save": "Guardar alterações",
+    "saved": "Guardado",
+    "habitsTitle": "Os teus hábitos",
+    "editHabits": "Editar os teus hábitos",
+    "noHabitsYet": "Ainda não nos contaste os teus hábitos.",
+    "signOut": "Terminar sessão"
+  }
+}

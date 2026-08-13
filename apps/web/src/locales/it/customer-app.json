@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Bentornato",
+    "onboardingPromptTitle": "Raccontaci le tue abitudini",
+    "onboardingPromptDescription": "Due domande veloci per rendere FadeUp più utile per te.",
+    "onboardingPromptCta": "Inizia",
+    "discoverTitle": "Trova il tuo prossimo barbiere",
+    "discoverDescription": "Cerca barbershop e barbieri indipendenti vicino a te.",
+    "discoverCta": "Scopri i barbieri"
+  },
+  "onboarding": {
+    "title": "Un paio di domande veloci",
+    "subtitle": "Questo aiuta FadeUp a essere più utile in seguito — salta quando vuoi.",
+    "frequencyQuestion": "Ogni quanto vai di solito dal barbiere?",
+    "frequency": {
+      "weekly": "Ogni settimana",
+      "every_2_weeks": "Ogni 2 settimane",
+      "every_3_weeks": "Ogni 3 settimane",
+      "monthly": "Una volta al mese",
+      "less_often": "Meno spesso",
+      "depends": "Dipende"
+    },
+    "styleQuestion": "Qual è il tuo taglio abituale?",
+    "style": {
+      "fade": "Fade",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Rasato",
+      "afro": "Afro",
+      "curly": "Riccio",
+      "long": "Lungo",
+      "beard_focus": "Focus barba",
+      "other": "Altro"
+    },
+    "styleNotesLabel": "Altro da sapere? (opzionale)",
+    "styleNotesPlaceholder": "es. fade sui lati, lascia più lunga la parte superiore",
+    "appointmentQuestion": "Appuntamento o senza appuntamento — cosa preferisci?",
+    "appointmentPreference": {
+      "appointment": "Preferisco prenotare in anticipo",
+      "walk_in": "Di solito vado senza appuntamento",
+      "either": "Vanno bene entrambi"
+    },
+    "skip": "Salta per ora",
+    "save": "Salva",
+    "saved": "Salvato — grazie!"
+  },
+  "profile": {
+    "title": "Profilo",
+    "nameLabel": "Nome",
+    "phoneLabel": "Telefono",
+    "emailLabel": "Email",
+    "save": "Salva modifiche",
+    "saved": "Salvato",
+    "habitsTitle": "Le tue abitudini",
+    "editHabits": "Modifica le tue abitudini",
+    "noHabitsYet": "Non ci hai ancora parlato delle tue abitudini.",
+    "signOut": "Esci"
+  }
+}

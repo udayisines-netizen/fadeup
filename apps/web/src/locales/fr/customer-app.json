@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Content de te revoir",
+    "onboardingPromptTitle": "Parle-nous de tes habitudes",
+    "onboardingPromptDescription": "Deux questions rapides pour que FadeUp te soit plus utile.",
+    "onboardingPromptCta": "Commencer",
+    "discoverTitle": "Trouve ton prochain barber",
+    "discoverDescription": "Recherche des salons et des barbers indépendants près de toi.",
+    "discoverCta": "Découvrir des barbers"
+  },
+  "onboarding": {
+    "title": "Quelques questions rapides",
+    "subtitle": "Ça aide FadeUp à être plus utile plus tard — passe quand tu veux.",
+    "frequencyQuestion": "En général, tu retournes chez le barber tous les combien ?",
+    "frequency": {
+      "weekly": "Toutes les semaines",
+      "every_2_weeks": "Toutes les 2 semaines",
+      "every_3_weeks": "Toutes les 3 semaines",
+      "monthly": "Une fois par mois",
+      "less_often": "Moins souvent",
+      "depends": "Ça dépend"
+    },
+    "styleQuestion": "Quelle est ta coupe habituelle ?",
+    "style": {
+      "fade": "Dégradé",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Coupe courte",
+      "afro": "Afro",
+      "curly": "Bouclé",
+      "long": "Long",
+      "beard_focus": "Focus barbe",
+      "other": "Autre"
+    },
+    "styleNotesLabel": "Autre chose à savoir ? (optionnel)",
+    "styleNotesPlaceholder": "ex. dégradé sur les côtés, garde le dessus plus long",
+    "appointmentQuestion": "Rendez-vous ou sans rendez-vous — tu préfères quoi ?",
+    "appointmentPreference": {
+      "appointment": "Je préfère réserver à l'avance",
+      "walk_in": "Je viens en général sans rendez-vous",
+      "either": "Les deux me vont"
+    },
+    "skip": "Passer pour l'instant",
+    "save": "Enregistrer",
+    "saved": "Enregistré — merci !"
+  },
+  "profile": {
+    "title": "Profil",
+    "nameLabel": "Nom",
+    "phoneLabel": "Téléphone",
+    "emailLabel": "E-mail",
+    "save": "Enregistrer les modifications",
+    "saved": "Enregistré",
+    "habitsTitle": "Tes habitudes",
+    "editHabits": "Modifier tes habitudes",
+    "noHabitsYet": "Tu ne nous as pas encore parlé de tes habitudes.",
+    "signOut": "Se déconnecter"
+  }
+}

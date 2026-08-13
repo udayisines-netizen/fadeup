@@ -17,6 +17,8 @@ import {
   type PublicOrganization,
   type PublicService,
 } from '@/lib/queries/public-booking'
+import { useClaimCustomerRecords } from '@/lib/queries/customer-profile'
+import { useAuth } from '@/lib/auth-context'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -655,6 +657,8 @@ function DetailsStep({
   onSuccess: (appointment: BookedAppointment) => void
 }) {
   const bookAppointment = useBookPublicAppointment()
+  const claimRecords = useClaimCustomerRecords()
+  const { user } = useAuth()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
@@ -680,6 +684,12 @@ function DetailsStep({
         customerEmail: values.customerEmail || null,
         notes: values.notes || null,
       })
+      // Best-effort: if the customer is signed in, link this (and any past)
+      // booking made with this contact info to their account — see
+      // claim_customer_records. Never blocks the booking success screen.
+      if (user && (values.customerPhone || values.customerEmail)) {
+        claimRecords.mutate({ phone: values.customerPhone || null, email: values.customerEmail || null })
+      }
       onSuccess(appointment)
     } catch (error) {
       const rawMessage = getErrorMessage(error) ?? 'Something went wrong. Please try again.'

@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Welcome back",
+    "onboardingPromptTitle": "Tell us your habits",
+    "onboardingPromptDescription": "Two quick questions so FadeUp can be more useful to you.",
+    "onboardingPromptCta": "Get started",
+    "discoverTitle": "Find your next barber",
+    "discoverDescription": "Search barbershops and independent barbers near you.",
+    "discoverCta": "Discover barbers"
+  },
+  "onboarding": {
+    "title": "A couple of quick questions",
+    "subtitle": "This helps FadeUp be more useful later — skip anytime.",
+    "frequencyQuestion": "How often do you usually get a cut?",
+    "frequency": {
+      "weekly": "Every week",
+      "every_2_weeks": "Every 2 weeks",
+      "every_3_weeks": "Every 3 weeks",
+      "monthly": "Once a month",
+      "less_often": "Less often",
+      "depends": "It depends"
+    },
+    "styleQuestion": "What's your usual style?",
+    "style": {
+      "fade": "Fade",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Buzz cut",
+      "afro": "Afro",
+      "curly": "Curly",
+      "long": "Long",
+      "beard_focus": "Beard-focused",
+      "other": "Other"
+    },
+    "styleNotesLabel": "Anything else worth knowing? (optional)",
+    "styleNotesPlaceholder": "e.g. skin fade on the sides, keep the top longer",
+    "appointmentQuestion": "Appointment or walk-in — what do you prefer?",
+    "appointmentPreference": {
+      "appointment": "I like to book ahead",
+      "walk_in": "I usually walk in",
+      "either": "Either works"
+    },
+    "skip": "Skip for now",
+    "save": "Save",
+    "saved": "Saved — thanks!"
+  },
+  "profile": {
+    "title": "Profile",
+    "nameLabel": "Name",
+    "phoneLabel": "Phone",
+    "emailLabel": "Email",
+    "save": "Save changes",
+    "saved": "Saved",
+    "habitsTitle": "Your habits",
+    "editHabits": "Edit your habits",
+    "noHabitsYet": "You haven't told us your habits yet.",
+    "signOut": "Sign out"
+  }
+}

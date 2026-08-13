@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "مرحبًا بعودتك",
+    "onboardingPromptTitle": "أخبرنا بعاداتك",
+    "onboardingPromptDescription": "سؤالان سريعان ليكون FadeUp أكثر فائدة لك.",
+    "onboardingPromptCta": "ابدأ",
+    "discoverTitle": "ابحث عن حلاقك القادم",
+    "discoverDescription": "ابحث عن صالونات الحلاقة والحلاقين المستقلين بالقرب منك.",
+    "discoverCta": "اكتشف الحلاقين"
+  },
+  "onboarding": {
+    "title": "بضعة أسئلة سريعة",
+    "subtitle": "هذا يساعد FadeUp ليكون أكثر فائدة لاحقًا — يمكنك التخطي في أي وقت.",
+    "frequencyQuestion": "عادةً، كل كم مدة تعود إلى الحلاق؟",
+    "frequency": {
+      "weekly": "كل أسبوع",
+      "every_2_weeks": "كل أسبوعين",
+      "every_3_weeks": "كل 3 أسابيع",
+      "monthly": "مرة في الشهر",
+      "less_often": "أقل من ذلك",
+      "depends": "يعتمد على الحالة"
+    },
+    "styleQuestion": "ما هي قصتك المعتادة؟",
+    "style": {
+      "fade": "فيد",
+      "taper": "تيبر",
+      "crop": "كروب",
+      "buzz": "قصة قصيرة جدًا",
+      "afro": "أفرو",
+      "curly": "مموج",
+      "long": "طويل",
+      "beard_focus": "التركيز على اللحية",
+      "other": "أخرى"
+    },
+    "styleNotesLabel": "أي شيء آخر يستحق المعرفة؟ (اختياري)",
+    "styleNotesPlaceholder": "مثال: فيد على الجانبين، اترك الأعلى أطول",
+    "appointmentQuestion": "بموعد أم بدون موعد — ماذا تفضل؟",
+    "appointmentPreference": {
+      "appointment": "أفضّل الحجز مسبقًا",
+      "walk_in": "عادةً أذهب بدون موعد",
+      "either": "كلاهما مناسب"
+    },
+    "skip": "تخطَّ الآن",
+    "save": "حفظ",
+    "saved": "تم الحفظ — شكرًا!"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "nameLabel": "الاسم",
+    "phoneLabel": "الهاتف",
+    "emailLabel": "البريد الإلكتروني",
+    "save": "حفظ التغييرات",
+    "saved": "تم الحفظ",
+    "habitsTitle": "عاداتك",
+    "editHabits": "تعديل عاداتك",
+    "noHabitsYet": "لم تخبرنا بعاداتك بعد.",
+    "signOut": "تسجيل الخروج"
+  }
+}

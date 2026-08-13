@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "С возвращением",
+    "onboardingPromptTitle": "Расскажите о своих привычках",
+    "onboardingPromptDescription": "Два быстрых вопроса, чтобы FadeUp был для вас полезнее.",
+    "onboardingPromptCta": "Начать",
+    "discoverTitle": "Найдите своего барбера",
+    "discoverDescription": "Ищите барбершопы и независимых барберов рядом с вами.",
+    "discoverCta": "Найти барберов"
+  },
+  "onboarding": {
+    "title": "Пара быстрых вопросов",
+    "subtitle": "Это поможет FadeUp быть полезнее позже — можно пропустить в любой момент.",
+    "frequencyQuestion": "Как часто вы обычно стрижётесь?",
+    "frequency": {
+      "weekly": "Каждую неделю",
+      "every_2_weeks": "Каждые 2 недели",
+      "every_3_weeks": "Каждые 3 недели",
+      "monthly": "Раз в месяц",
+      "less_often": "Реже",
+      "depends": "Зависит от ситуации"
+    },
+    "styleQuestion": "Какая у вас обычно стрижка?",
+    "style": {
+      "fade": "Фейд",
+      "taper": "Тейпер",
+      "crop": "Кроп",
+      "buzz": "Очень короткая",
+      "afro": "Афро",
+      "curly": "Кудрявая",
+      "long": "Длинная",
+      "beard_focus": "Акцент на бороду",
+      "other": "Другое"
+    },
+    "styleNotesLabel": "Что-то ещё важное? (необязательно)",
+    "styleNotesPlaceholder": "напр. фейд по бокам, верх оставить длиннее",
+    "appointmentQuestion": "По записи или без — что вам удобнее?",
+    "appointmentPreference": {
+      "appointment": "Предпочитаю записываться заранее",
+      "walk_in": "Обычно прихожу без записи",
+      "either": "Мне подходит и то, и другое"
+    },
+    "skip": "Пропустить пока",
+    "save": "Сохранить",
+    "saved": "Сохранено — спасибо!"
+  },
+  "profile": {
+    "title": "Профиль",
+    "nameLabel": "Имя",
+    "phoneLabel": "Телефон",
+    "emailLabel": "Эл. почта",
+    "save": "Сохранить изменения",
+    "saved": "Сохранено",
+    "habitsTitle": "Ваши привычки",
+    "editHabits": "Изменить привычки",
+    "noHabitsYet": "Вы ещё не рассказали нам о своих привычках.",
+    "signOut": "Выйти"
+  }
+}

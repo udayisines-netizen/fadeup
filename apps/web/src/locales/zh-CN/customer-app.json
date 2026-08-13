@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "欢迎回来",
+    "onboardingPromptTitle": "告诉我们你的习惯",
+    "onboardingPromptDescription": "两个简单问题，让 FadeUp 为你提供更有用的信息。",
+    "onboardingPromptCta": "开始",
+    "discoverTitle": "寻找你的下一位理发师",
+    "discoverDescription": "搜索你附近的理发店和独立理发师。",
+    "discoverCta": "发现理发师"
+  },
+  "onboarding": {
+    "title": "几个简单问题",
+    "subtitle": "这有助于 FadeUp 以后为你提供更多帮助——随时可以跳过。",
+    "frequencyQuestion": "你通常多久理一次发？",
+    "frequency": {
+      "weekly": "每周",
+      "every_2_weeks": "每2周",
+      "every_3_weeks": "每3周",
+      "monthly": "每月一次",
+      "less_often": "更少",
+      "depends": "视情况而定"
+    },
+    "styleQuestion": "你通常的发型是什么？",
+    "style": {
+      "fade": "渐变（Fade）",
+      "taper": "锥形（Taper）",
+      "crop": "寸头（Crop）",
+      "buzz": "极短寸头",
+      "afro": "爆炸头",
+      "curly": "卷发",
+      "long": "长发",
+      "beard_focus": "注重胡须",
+      "other": "其他"
+    },
+    "styleNotesLabel": "还有其他需要说明的吗？（可选）",
+    "styleNotesPlaceholder": "例如：两侧渐变，顶部留长一些",
+    "appointmentQuestion": "预约还是随到随剪——你更喜欢哪种？",
+    "appointmentPreference": {
+      "appointment": "我喜欢提前预约",
+      "walk_in": "我通常随到随剪",
+      "either": "都可以"
+    },
+    "skip": "暂时跳过",
+    "save": "保存",
+    "saved": "已保存，谢谢！"
+  },
+  "profile": {
+    "title": "个人资料",
+    "nameLabel": "姓名",
+    "phoneLabel": "电话",
+    "emailLabel": "电子邮箱",
+    "save": "保存更改",
+    "saved": "已保存",
+    "habitsTitle": "你的习惯",
+    "editHabits": "编辑你的习惯",
+    "noHabitsYet": "你还没有告诉我们你的习惯。",
+    "signOut": "退出登录"
+  }
+}

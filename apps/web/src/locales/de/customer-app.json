@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Willkommen zurück",
+    "onboardingPromptTitle": "Erzähl uns von deinen Gewohnheiten",
+    "onboardingPromptDescription": "Zwei kurze Fragen, damit FadeUp dir nützlicher sein kann.",
+    "onboardingPromptCta": "Loslegen",
+    "discoverTitle": "Finde deinen nächsten Barber",
+    "discoverDescription": "Suche Barbershops und unabhängige Barbers in deiner Nähe.",
+    "discoverCta": "Barbers entdecken"
+  },
+  "onboarding": {
+    "title": "Ein paar kurze Fragen",
+    "subtitle": "Das hilft FadeUp, später nützlicher zu sein — jederzeit überspringbar.",
+    "frequencyQuestion": "Wie oft lässt du dir normalerweise die Haare schneiden?",
+    "frequency": {
+      "weekly": "Jede Woche",
+      "every_2_weeks": "Alle 2 Wochen",
+      "every_3_weeks": "Alle 3 Wochen",
+      "monthly": "Einmal im Monat",
+      "less_often": "Seltener",
+      "depends": "Kommt drauf an"
+    },
+    "styleQuestion": "Was ist dein üblicher Stil?",
+    "style": {
+      "fade": "Fade",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Buzz Cut",
+      "afro": "Afro",
+      "curly": "Lockig",
+      "long": "Lang",
+      "beard_focus": "Bart-Fokus",
+      "other": "Andere"
+    },
+    "styleNotesLabel": "Sonst noch etwas Wichtiges? (optional)",
+    "styleNotesPlaceholder": "z. B. Skin Fade an den Seiten, oben länger lassen",
+    "appointmentQuestion": "Termin oder ohne Termin — was bevorzugst du?",
+    "appointmentPreference": {
+      "appointment": "Ich buche lieber im Voraus",
+      "walk_in": "Ich komme meist ohne Termin",
+      "either": "Beides passt"
+    },
+    "skip": "Später",
+    "save": "Speichern",
+    "saved": "Gespeichert — danke!"
+  },
+  "profile": {
+    "title": "Profil",
+    "nameLabel": "Name",
+    "phoneLabel": "Telefon",
+    "emailLabel": "E-Mail",
+    "save": "Änderungen speichern",
+    "saved": "Gespeichert",
+    "habitsTitle": "Deine Gewohnheiten",
+    "editHabits": "Gewohnheiten bearbeiten",
+    "noHabitsYet": "Du hast uns deine Gewohnheiten noch nicht mitgeteilt.",
+    "signOut": "Abmelden"
+  }
+}

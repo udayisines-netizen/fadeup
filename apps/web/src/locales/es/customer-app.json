@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "Bienvenido de nuevo",
+    "onboardingPromptTitle": "Cuéntanos tus hábitos",
+    "onboardingPromptDescription": "Dos preguntas rápidas para que FadeUp te sea más útil.",
+    "onboardingPromptCta": "Empezar",
+    "discoverTitle": "Encuentra tu próximo barbero",
+    "discoverDescription": "Busca barberías y barberos independientes cerca de ti.",
+    "discoverCta": "Descubrir barberos"
+  },
+  "onboarding": {
+    "title": "Un par de preguntas rápidas",
+    "subtitle": "Esto ayuda a que FadeUp sea más útil más adelante — omite cuando quieras.",
+    "frequencyQuestion": "¿Cada cuánto sueles cortarte el pelo?",
+    "frequency": {
+      "weekly": "Cada semana",
+      "every_2_weeks": "Cada 2 semanas",
+      "every_3_weeks": "Cada 3 semanas",
+      "monthly": "Una vez al mes",
+      "less_often": "Con menos frecuencia",
+      "depends": "Depende"
+    },
+    "styleQuestion": "¿Cuál es tu estilo habitual?",
+    "style": {
+      "fade": "Fade",
+      "taper": "Taper",
+      "crop": "Crop",
+      "buzz": "Rapado",
+      "afro": "Afro",
+      "curly": "Rizado",
+      "long": "Largo",
+      "beard_focus": "Enfocado en la barba",
+      "other": "Otro"
+    },
+    "styleNotesLabel": "¿Algo más que debamos saber? (opcional)",
+    "styleNotesPlaceholder": "ej. fade en los lados, deja la parte de arriba más larga",
+    "appointmentQuestion": "¿Cita previa o sin cita — qué prefieres?",
+    "appointmentPreference": {
+      "appointment": "Prefiero reservar con antelación",
+      "walk_in": "Normalmente voy sin cita",
+      "either": "Cualquiera me sirve"
+    },
+    "skip": "Omitir por ahora",
+    "save": "Guardar",
+    "saved": "Guardado — ¡gracias!"
+  },
+  "profile": {
+    "title": "Perfil",
+    "nameLabel": "Nombre",
+    "phoneLabel": "Teléfono",
+    "emailLabel": "Correo electrónico",
+    "save": "Guardar cambios",
+    "saved": "Guardado",
+    "habitsTitle": "Tus hábitos",
+    "editHabits": "Editar tus hábitos",
+    "noHabitsYet": "Aún no nos has contado tus hábitos.",
+    "signOut": "Cerrar sesión"
+  }
+}

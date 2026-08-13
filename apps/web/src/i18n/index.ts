@@ -5,29 +5,69 @@ import { SUPPORTED_LOCALES, resolveInitialLocale, isRtl } from '@/lib/locale'
 /**
  * Namespaces are organized by product domain (common, marketing, auth,
  * platform, owner, barber, customer, booking, queue, legal, ...) per the
- * FADEUP master prompt — never one giant translation file. `common`
- * (shared nav/footer/theme/language chrome) and `marketplace` (public
- * discovery — see pages/marketplace-*) exist so far; further namespaces
- * are added alongside the UI they translate as each area is localized, not
- * created empty ahead of time.
+ * FADEUP master prompt — never one giant translation file. Add a new
+ * namespace by (1) creating `src/locales/<locale>/<name>.json` for every
+ * locale in NAMESPACES below is auto-wired, (2) adding its name to
+ * NAMESPACES here.
  */
-const resources = {
-  en: { common: () => import('@/locales/en/common.json'), marketplace: () => import('@/locales/en/marketplace.json') },
-  fr: { common: () => import('@/locales/fr/common.json'), marketplace: () => import('@/locales/fr/marketplace.json') },
-  es: { common: () => import('@/locales/es/common.json'), marketplace: () => import('@/locales/es/marketplace.json') },
-  de: { common: () => import('@/locales/de/common.json'), marketplace: () => import('@/locales/de/marketplace.json') },
-  it: { common: () => import('@/locales/it/common.json'), marketplace: () => import('@/locales/it/marketplace.json') },
-  pt: { common: () => import('@/locales/pt/common.json'), marketplace: () => import('@/locales/pt/marketplace.json') },
-  ar: { common: () => import('@/locales/ar/common.json'), marketplace: () => import('@/locales/ar/marketplace.json') },
-  'zh-CN': { common: () => import('@/locales/zh-CN/common.json'), marketplace: () => import('@/locales/zh-CN/marketplace.json') },
-  ja: { common: () => import('@/locales/ja/common.json'), marketplace: () => import('@/locales/ja/marketplace.json') },
-  ru: { common: () => import('@/locales/ru/common.json'), marketplace: () => import('@/locales/ru/marketplace.json') },
-} as const
+const NAMESPACES = ['common', 'marketplace', 'customer-app'] as const
+type Namespace = (typeof NAMESPACES)[number]
 
-async function loadNamespace(locale: string, namespace: string) {
-  const loader = (resources as Record<string, Record<string, () => Promise<{ default: object }>>>)[locale]?.[
-    namespace
-  ]
+const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object }>>> = {
+  en: {
+    common: () => import('@/locales/en/common.json'),
+    marketplace: () => import('@/locales/en/marketplace.json'),
+    'customer-app': () => import('@/locales/en/customer-app.json'),
+  },
+  fr: {
+    common: () => import('@/locales/fr/common.json'),
+    marketplace: () => import('@/locales/fr/marketplace.json'),
+    'customer-app': () => import('@/locales/fr/customer-app.json'),
+  },
+  es: {
+    common: () => import('@/locales/es/common.json'),
+    marketplace: () => import('@/locales/es/marketplace.json'),
+    'customer-app': () => import('@/locales/es/customer-app.json'),
+  },
+  de: {
+    common: () => import('@/locales/de/common.json'),
+    marketplace: () => import('@/locales/de/marketplace.json'),
+    'customer-app': () => import('@/locales/de/customer-app.json'),
+  },
+  it: {
+    common: () => import('@/locales/it/common.json'),
+    marketplace: () => import('@/locales/it/marketplace.json'),
+    'customer-app': () => import('@/locales/it/customer-app.json'),
+  },
+  pt: {
+    common: () => import('@/locales/pt/common.json'),
+    marketplace: () => import('@/locales/pt/marketplace.json'),
+    'customer-app': () => import('@/locales/pt/customer-app.json'),
+  },
+  ar: {
+    common: () => import('@/locales/ar/common.json'),
+    marketplace: () => import('@/locales/ar/marketplace.json'),
+    'customer-app': () => import('@/locales/ar/customer-app.json'),
+  },
+  'zh-CN': {
+    common: () => import('@/locales/zh-CN/common.json'),
+    marketplace: () => import('@/locales/zh-CN/marketplace.json'),
+    'customer-app': () => import('@/locales/zh-CN/customer-app.json'),
+  },
+  ja: {
+    common: () => import('@/locales/ja/common.json'),
+    marketplace: () => import('@/locales/ja/marketplace.json'),
+    'customer-app': () => import('@/locales/ja/customer-app.json'),
+  },
+  ru: {
+    common: () => import('@/locales/ru/common.json'),
+    marketplace: () => import('@/locales/ru/marketplace.json'),
+    'customer-app': () => import('@/locales/ru/customer-app.json'),
+  },
+}
+
+async function loadNamespace(locale: string, namespace: Namespace) {
+  const loader = LOADERS[locale]?.[namespace]
   if (!loader) return {}
   const mod = await loader()
   return mod.default
@@ -46,17 +86,17 @@ export function initI18n(): Promise<typeof i18n> {
 
   const initialLocale = resolveInitialLocale()
 
-  initPromise = Promise.all([loadNamespace(initialLocale, 'common'), loadNamespace(initialLocale, 'marketplace')]).then(
-    ([common, marketplace]) =>
-    i18n
+  initPromise = Promise.all(NAMESPACES.map((namespace) => loadNamespace(initialLocale, namespace))).then((bundles) => {
+    const initialResources = Object.fromEntries(NAMESPACES.map((namespace, i) => [namespace, bundles[i]]))
+    return i18n
       .use(initReactI18next)
       .init({
         lng: initialLocale,
         fallbackLng: 'en',
         supportedLngs: [...SUPPORTED_LOCALES],
-        ns: ['common', 'marketplace'],
+        ns: [...NAMESPACES],
         defaultNS: 'common',
-        resources: { [initialLocale]: { common, marketplace } },
+        resources: { [initialLocale]: initialResources },
         interpolation: { escapeValue: false },
         returnEmptyString: false,
       })
@@ -69,15 +109,15 @@ export function initI18n(): Promise<typeof i18n> {
           document.documentElement.setAttribute('dir', isRtl(lng) ? 'rtl' : 'ltr')
         })
         return i18n
-      }),
-  )
+      })
+  })
 
   return initPromise
 }
 
 /** Loads (if needed) and switches to a locale, for the language switcher. */
 export async function changeLocale(locale: string): Promise<void> {
-  for (const namespace of ['common', 'marketplace']) {
+  for (const namespace of NAMESPACES) {
     if (!i18n.hasResourceBundle(locale, namespace)) {
       const bundle = await loadNamespace(locale, namespace)
       i18n.addResourceBundle(locale, namespace, bundle)

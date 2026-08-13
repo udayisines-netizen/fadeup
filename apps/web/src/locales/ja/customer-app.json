@@ -1,0 +1,59 @@
+{
+  "home": {
+    "welcomeBack": "おかえりなさい",
+    "onboardingPromptTitle": "あなたの習慣を教えてください",
+    "onboardingPromptDescription": "FadeUpをより役立てるための簡単な質問です。",
+    "onboardingPromptCta": "はじめる",
+    "discoverTitle": "次の理容師を見つける",
+    "discoverDescription": "近くの理容室や独立系理容師を検索しましょう。",
+    "discoverCta": "理容師を探す"
+  },
+  "onboarding": {
+    "title": "簡単な質問です",
+    "subtitle": "これはFadeUpが後で役立つようにするためのものです — いつでもスキップできます。",
+    "frequencyQuestion": "普段、どのくらいの頻度でカットしますか？",
+    "frequency": {
+      "weekly": "毎週",
+      "every_2_weeks": "2週間ごと",
+      "every_3_weeks": "3週間ごと",
+      "monthly": "月に1回",
+      "less_often": "それより少ない頻度",
+      "depends": "場合による"
+    },
+    "styleQuestion": "いつものスタイルは？",
+    "style": {
+      "fade": "フェード",
+      "taper": "テーパー",
+      "crop": "クロップ",
+      "buzz": "バズカット",
+      "afro": "アフロ",
+      "curly": "カーリー",
+      "long": "ロング",
+      "beard_focus": "ひげ重視",
+      "other": "その他"
+    },
+    "styleNotesLabel": "他に伝えておきたいことは？（任意）",
+    "styleNotesPlaceholder": "例：サイドはスキンフェード、トップは長めに",
+    "appointmentQuestion": "予約と飛び込み、どちらが好みですか？",
+    "appointmentPreference": {
+      "appointment": "事前に予約したい",
+      "walk_in": "だいたい飛び込みで行く",
+      "either": "どちらでも良い"
+    },
+    "skip": "あとで",
+    "save": "保存",
+    "saved": "保存しました。ありがとうございます！"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "nameLabel": "名前",
+    "phoneLabel": "電話番号",
+    "emailLabel": "メールアドレス",
+    "save": "変更を保存",
+    "saved": "保存しました",
+    "habitsTitle": "あなたの習慣",
+    "editHabits": "習慣を編集",
+    "noHabitsYet": "まだ習慣を教えていただいていません。",
+    "signOut": "サインアウト"
+  }
+}

@@ -4,7 +4,7 @@ import { RequireAuth } from '@/routes/require-auth'
 import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { WorkspaceSelectorRoute } from '@/routes/workspace-selector-route'
-import { AppCustomerRoute } from '@/routes/app-customer-route'
+import { CustomerAppLayout } from '@/routes/customer-app-layout'
 import { MarketingLayout } from '@/routes/marketing-layout'
 import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
@@ -116,9 +116,32 @@ export const router = createBrowserRouter([
         path: 'app/customer',
         element: (
           <RequireAuth loginPath="/customer/login">
-            <AppCustomerRoute />
+            <CustomerAppLayout />
           </RequireAuth>
         ),
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { CustomerHomePage } = await import('@/pages/customer-home-page')
+              return { Component: CustomerHomePage }
+            },
+          },
+          {
+            path: 'onboarding',
+            lazy: async () => {
+              const { CustomerOnboardingPage } = await import('@/pages/customer-onboarding-page')
+              return { Component: CustomerOnboardingPage }
+            },
+          },
+          {
+            path: 'profile',
+            lazy: async () => {
+              const { CustomerProfilePage } = await import('@/pages/customer-profile-page')
+              return { Component: CustomerProfilePage }
+            },
+          },
+        ],
       },
       {
         path: 'forgot-password',
