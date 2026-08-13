@@ -42,8 +42,26 @@ Read this + CLAUDE.md + docs/wave-1/PLAN.md + `git status` + `git log` first if 
 
   Verified live over HTTP against the running stack (12-step journey: discover → shop profile → real slot → anonymous booking → account creation → redeem → appointment visible → replay rejected → favorite → passport → anonymous share read). i18n parity checked programmatically: 201 keys × 10 locales, zero drift.
 
+- Phase 7 — Adversarial review + fixes. Commit `f021d78`.
+
+  A fresh reviewer found that **the takeover vector Phase 6 fixed was still reachable one step further along**, through the LOT 12 `appointments_link_customer` trigger. That trigger find-or-creates a booking's `customers` row by matching the caller-*typed* phone, then email. So an attacker could book anonymously using a victim's phone number, receive a claim token for their own booking, redeem it, and — because redemption adopted "the row this appointment points at" — walk off with the victim's CRM row and their whole appointment history. Knowing a phone number was enough. Redemption now moves only the claimed appointment onto a row the caller owns, and never mutates `customers.user_id` on a row it did not create.
+
+  I had explicitly noted this risk in the Phase 6 commit and talked myself out of it ("same phone at the same shop is practically the same person"). That reasoning is wrong whenever the attacker chooses the phone. **The general rule for this codebase: any value the caller types is an assertion, never a credential — including one laundered through a trigger.**
+
+  Also fixed: signed-in bookings were silently orphaned whenever the caller's phone already sat on another unlinked row (`resolve_customer_for_user` returned null and no token was issued, so there was no recovery path); `get_my_appointments` was returning `appointments.notes`, which staff write to from the internal dialog; `search_public_professionals` advertised unbounded, misattributed queue counts as live wait times (two-day-old rows made a shop *and* both its barbers each claim "2 people waiting"); `join_public_queue` never stamped `customer_id`, leaving the customer-home queue card dead; `/search` renders under `MarketingLayout`, whose header had no session awareness, so the Discover tab was a one-way exit out of the customer app.
+
+  The exploit is now an executable regression test — confirmed reproducing against the vulnerable function before the fix, and failing to reproduce after. Watch out when writing these: the first draft was vacuous because it reused a customer who already owned a CRM row at the test shop, so the vulnerable branch was never entered.
+
 ## Current phase
-Phase 7 — Adversarial review + fixes.
+Wave 1 complete. All 8 areas delivered; see PLAN.md §9 and the Wave 2 handoff below.
+
+## Wave 2 handoff (carried forward from PLAN.md §9, plus what Wave 1 added)
+- **Contact-detail verification (phone/email OTP).** The single biggest unlock. Without it, a past anonymous booking whose claim token was lost cannot be attached to an account at all, because linking on unverified contact info is account takeover. Note `GOTRUE_MAILER_AUTOCONFIRM` is deployment-configurable, so `email_confirmed_at` alone is not evidence of ownership on this deployment.
+- **Split `appointments.notes`** into customer-supplied booking notes and staff-internal notes. Right now the two are indistinguishable once written, which is why the column had to be withdrawn from the customer RPC wholesale.
+- Passport photo delivery to unauthenticated share viewers (needs edge-function infra to issue anon-scoped signed Storage URLs; a broad anon storage policy was rejected as unsafe).
+- Queue entry expiry. Nothing in the schema ever ages out a `waiting` row; Wave 1 works around it with a same-day bound in the marketplace count, which is a filter, not a fix.
+- i18n for the `/s/:slug/*` subtree (booking wizard, Barber Passport, Shop Profile), which stays deliberately plain-English per the pre-existing LOT 9/12 convention.
+- A signed-in "Join queue" CTA on shop/barber profiles, now that `join_public_queue` finally stamps `customer_id`.
 
 ## Important architectural decisions (see PLAN.md for full rationale)
 - Customer identity: new `customer_profiles` (1:1 auth.users, portable) is the canonical customer identity; per-org `customers` CRM rows get an optional `user_id` bridge. Do NOT merge these into one table — org-owned CRM contacts (walk-ins, no login) must keep existing.
@@ -54,16 +72,25 @@ Phase 7 — Adversarial review + fixes.
 - New dependency: `qrcode` (small, justified — no QR capability exists, feature explicitly required).
 
 ## Migrations created
-(none yet — planned list in PLAN.md section 4)
+1. `20260813100000_marketplace_professionals.sql` — `search_public_professionals` (barbers as first-class results)
+2. `20260813110000_public_shop_profile.sql` — `list_public_organization_barbers`, `get_public_barber` + `location_id`
+3. `20260813120000_customer_identity.sql` — `customer_profiles`, `customers.user_id` bridge
+4. `20260813130000_customer_app.sql` — `customer_favorites`, `get_my_appointments`/`get_my_queue_status`/`get_my_favorites`/`cancel_my_appointment`
+5. `20260813140000_fade_passport.sql` — 3 passport tables + share RPCs + the first Storage bucket
+6. `20260813150000_appointment_ownership_hardening.sql` — drops `claim_customer_records`, adds `appointment_claim_tokens` + `redeem_appointment_claim`
+7. `20260813160000_claim_scope_fix.sql` — narrows redemption, fixes orphaned bookings, withdraws `notes`, bounds queue counts, links signed-in queue joins
+
+**After applying 6 or 7 in any environment, run `notify pgrst, 'reload schema';`** — both change function return shapes.
 
 ## Files substantially modified
-(none yet)
+See `git log --stat 2505af4..f021d78`. The load-bearing ones: `public-booking-page.tsx` (preselection, prefill, claim token, account loop), `router.tsx`, `i18n/index.ts` (namespace list), `customer-app-layout.tsx`, `marketing-header.tsx` (session awareness), `lib/queries/{customer-profile,customer-app,passport,marketplace,public-booking}.ts`.
 
 ## Tests run and results
-(none yet)
+- SQL, live against `fadeup-supabase-db`: 57 Wave 1 assertions across `verify_wave1_{marketplace_boundary,customer_identity,customer_app,passport,appointment_ownership}.sql` — all PASS, fixtures self-cleaned. Pre-existing `verify_public_booking`/`verify_queue`/`verify_customers`/`verify_appointments` unchanged (their expected-ERROR banners all still match).
+- Frontend: 115/115 across 31 files. `typecheck`/`lint`/`build` clean (only the 9 pre-existing `react(only-export-components)` warnings and the pre-existing maplibre-gl chunk-size note).
+- Live HTTP journey against the running stack: 12 steps, discover → anonymous booking → account → claim → visible appointment → replay rejected → favorite → passport → anonymous share read. All pass.
+- i18n parity: 202 keys × 10 locales, zero drift.
+- NOT done: browser-based visual verification. Chromium cannot start here (missing `libatk-1.0.so.0`) and installing system libraries needs root.
 
 ## Remaining blockers
-None — all decisions resolvable from spec + existing code. No credentials required for Phase 1-2 (marketplace/profiles use existing anon RPCs pattern). Passport photo Storage (Phase 5) needs no new external credential either (self-hosted Supabase Storage already running per docker-compose).
-
-## Next exact action
-Start Phase 1: write migration `20260813100300_marketplace_professionals.sql` (barber-first-class search), then extend frontend search UI, then write `db/tests/verify_wave1_marketplace_boundary.sql` proving prospect non-leakage.
+None. Nothing in Wave 1 is waiting on a credential or an external decision.
