@@ -222,6 +222,13 @@ function PhotosSection({ userId }: { userId: string }) {
         <p className="mb-3 text-sm text-ink-500">{t('photosEmpty')}</p>
       )}
 
+      {/*
+        sr-only hides this visually but leaves it focusable and exposed to
+        assistive tech, so without a name a keyboard user hit an anonymous
+        "file upload" control just before the labelled button that drives it.
+        The visible Button below is the real affordance — take the input out
+        of the tab order and name it for anyone who reaches it anyway.
+      */}
       <input
         ref={fileInputRef}
         type="file"
@@ -229,6 +236,8 @@ function PhotosSection({ userId }: { userId: string }) {
         onChange={(event) => void handleFileChange(event)}
         className="sr-only"
         id="passport-photo-input"
+        tabIndex={-1}
+        aria-label={t('addPhoto')}
       />
       <Button
         variant="secondary"

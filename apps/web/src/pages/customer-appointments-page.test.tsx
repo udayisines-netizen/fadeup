@@ -34,7 +34,6 @@ function appointment(overrides: Partial<MyAppointment> = {}): MyAppointment {
     startsAt: '2099-01-01T10:00:00Z',
     endsAt: '2099-01-01T10:30:00Z',
     status: 'confirmed',
-    notes: null,
     priceCents: 2000,
     ...overrides,
   }
@@ -118,5 +117,33 @@ describe('CustomerAppointmentsPage', () => {
     renderPage()
 
     expect(screen.getByText("Couldn't load your appointments")).toBeInTheDocument()
+  })
+
+  it('a stale pending request is not shown as upcoming, and cannot be cancelled from there', () => {
+    // Public bookings are created `pending`, and only `confirmed` rows are
+    // ever aged out server-side. Splitting on status alone left a request a
+    // shop never confirmed sitting under Upcoming forever with a live
+    // Cancel button, while Home (which checks the date) showed nothing.
+    mockUseMyAppointments.mockReturnValue({
+      data: [appointment({ id: 'stale', status: 'pending', startsAt: '2020-01-01T10:00:00Z', endsAt: '2020-01-01T10:30:00Z' })],
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as never)
+
+    renderPage()
+
+    expect(screen.getByText(/no upcoming/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+  })
+
+  it('never exposes appointment notes — that column is shared with staff-authored internal notes', () => {
+    // Regression guard for 20260813160000_claim_scope_fix.sql: get_my_appointments
+    // stopped returning appointments.notes because staff write to the same
+    // column from the internal appointments dialog. Nothing customer-facing
+    // may reintroduce a dependency on it.
+    const appt = appointment()
+    expect(Object.keys(appt)).not.toContain('notes')
   })
 })

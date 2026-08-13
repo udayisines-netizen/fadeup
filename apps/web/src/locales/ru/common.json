@@ -3,7 +3,8 @@
     "home": "Главная",
     "forBusiness": "Для бизнеса",
     "features": "Возможности",
-    "pricing": "Тарифы"
+    "pricing": "Тарифы",
+    "myFadeUp": "Мой FadeUp"
   },
   "auth": {
     "logIn": "Войти",

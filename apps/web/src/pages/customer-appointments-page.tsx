@@ -45,9 +45,17 @@ export function CustomerAppointmentsPage() {
 
   const { upcoming, past } = useMemo(() => {
     const all = appointmentsQuery.data ?? []
+    // Status alone is not enough to mean "upcoming". Public bookings are
+    // created `pending` and only apply_appointment_no_show_rule moves
+    // `confirmed` rows on, so a request a shop never got round to
+    // confirming would otherwise sit here forever with a live Cancel
+    // button — while Home, which does check the date, showed nothing
+    // upcoming at all. Same predicate as customer-home-page.tsx.
+    const isUpcoming = (a: MyAppointment) =>
+      CANCELLABLE_STATUSES.has(a.status) && new Date(a.startsAt).getTime() > Date.now()
     return {
-      upcoming: all.filter((a) => CANCELLABLE_STATUSES.has(a.status)).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
-      past: all.filter((a) => !CANCELLABLE_STATUSES.has(a.status)).sort((a, b) => b.startsAt.localeCompare(a.startsAt)),
+      upcoming: all.filter(isUpcoming).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+      past: all.filter((a) => !isUpcoming(a)).sort((a, b) => b.startsAt.localeCompare(a.startsAt)),
     }
   }, [appointmentsQuery.data])
 

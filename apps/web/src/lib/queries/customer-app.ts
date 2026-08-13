@@ -26,7 +26,6 @@ export interface MyAppointment {
   startsAt: string
   endsAt: string
   status: AppointmentStatus
-  notes: string | null
   priceCents: number | null
 }
 
@@ -44,7 +43,6 @@ interface MyAppointmentRow {
   starts_at: string
   ends_at: string
   status: AppointmentStatus
-  notes: string | null
   price_cents: number | null
 }
 
@@ -63,7 +61,6 @@ function mapAppointment(row: MyAppointmentRow): MyAppointment {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     status: row.status,
-    notes: row.notes,
     priceCents: row.price_cents,
   }
 }

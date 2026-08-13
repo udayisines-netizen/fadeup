@@ -59,10 +59,10 @@ export function MarketplaceSearchPage() {
 
   const results = useMemo(() => resultsQuery.data ?? [], [resultsQuery.data])
 
-  function updateParams(mutate: (params: URLSearchParams) => void) {
+  function updateParams(mutate: (params: URLSearchParams) => void, options?: { replace?: boolean }) {
     const params = new URLSearchParams(searchParams)
     mutate(params)
-    setSearchParams(params)
+    setSearchParams(params, { replace: options?.replace ?? false })
   }
 
   function handleRefine(values: MarketplaceSearchValues) {
@@ -130,7 +130,15 @@ export function MarketplaceSearchPage() {
               label={t('results.filters.serviceLabel')}
               placeholder={t('results.filters.servicePlaceholder')}
               value={serviceQuery}
-              onChange={(event) => updateParams((params) => (event.target.value ? params.set('service', event.target.value) : params.delete('service')))}
+              // replace, not push: this fires on every keystroke, so pushing
+              // would make Back walk the query string backwards one character
+              // at a time instead of leaving the marketplace.
+              onChange={(event) =>
+                updateParams(
+                  (params) => (event.target.value ? params.set('service', event.target.value) : params.delete('service')),
+                  { replace: true },
+                )
+              }
               className="flex-1"
             />
             <Switch

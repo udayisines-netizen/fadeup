@@ -3,7 +3,8 @@
     "home": "Accueil",
     "forBusiness": "Pour les pros",
     "features": "Fonctionnalités",
-    "pricing": "Tarifs"
+    "pricing": "Tarifs",
+    "myFadeUp": "Mon FadeUp"
   },
   "auth": {
     "logIn": "Connexion",

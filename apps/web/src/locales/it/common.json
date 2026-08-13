@@ -3,7 +3,8 @@
     "home": "Home",
     "forBusiness": "Per il tuo salone",
     "features": "Funzionalità",
-    "pricing": "Prezzi"
+    "pricing": "Prezzi",
+    "myFadeUp": "Il mio FadeUp"
   },
   "auth": {
     "logIn": "Accedi",

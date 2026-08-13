@@ -33,7 +33,10 @@ insert into auth.users (id, instance_id, email, encrypted_password, email_confir
 values
   ('d2000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'shopowner+w1own@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{"full_name":"Shop Owner"}', 'authenticated', 'authenticated'),
   ('d2000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'customer-a+w1own@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{"full_name":"Customer A"}', 'authenticated', 'authenticated'),
-  ('d2000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'customer-b+w1own@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{"full_name":"Customer B"}', 'authenticated', 'authenticated');
+  ('d2000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'customer-b+w1own@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{"full_name":"Customer B"}', 'authenticated', 'authenticated'),
+  -- Deliberately has NO customers row at the test shop: the takeover branch
+  -- in section 9b is only reachable for a caller who does not already own one.
+  ('d2000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'attacker+w1own@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{"full_name":"Attacker Alice"}', 'authenticated', 'authenticated');
 commit;
 
 \echo '=========================================================='
@@ -329,6 +332,75 @@ end $$;
 commit;
 
 \echo '=========================================================='
+\echo '8b. A signed-in booking is still owned when the phone already exists on another row'
+\echo '=========================================================='
+-- Regression test for the second defect fixed in 20260813160000: when the
+-- caller's phone/email already sat on a DIFFERENT unlinked customers row
+-- (the ordinary case — the shop had already typed them into its CRM), the
+-- insert in resolve_customer_for_user hit customers_org_phone_unique,
+-- returned null, and the booking was silently orphaned with no claim token
+-- to recover it. The customer saw a success screen for an appointment that
+-- never showed up in their app.
+begin;
+reset role;
+insert into public.customers (organization_id, name, phone)
+  values (:'org_id'::uuid, 'Marc (added by staff)', '+15558880001');
+commit;
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', 'd2000000-0000-0000-0000-000000000002', 'role', 'authenticated')::text, true);
+select id as collide_appt_id
+  from public.book_public_appointment(
+    'wave1-ownership-shop', :'loc_id'::uuid, :'brb_id'::uuid, :'svc_id'::uuid,
+    now() + interval '5 days', 'Marc', '+15558880001', null, null
+  ) \gset
+commit;
+
+begin;
+reset role;
+select set_config('test.collide_appt_id', :'collide_appt_id', false);
+do $$
+declare
+  v_customer_id uuid;
+  v_owner uuid;
+begin
+  select a.customer_id into v_customer_id from public.appointments a
+    where a.id = current_setting('test.collide_appt_id')::uuid;
+  if v_customer_id is null then
+    raise exception 'FAIL: signed-in booking was orphaned (customer_id is null)';
+  end if;
+  select c.user_id into v_owner from public.customers c where c.id = v_customer_id;
+  if v_owner is distinct from 'd2000000-0000-0000-0000-000000000002'::uuid then
+    raise exception 'FAIL: signed-in booking attached to a row owned by % instead of the booker', v_owner;
+  end if;
+  raise notice 'PASS: signed-in booking is owned even when the phone collides with an existing row';
+
+  -- and the staff-entered row must NOT have been taken over
+  if exists (select 1 from public.customers c where c.phone = '+15558880001' and c.user_id is not null) then
+    raise exception 'FAIL: the pre-existing staff-entered CRM row was claimed';
+  end if;
+  raise notice 'PASS: the pre-existing staff-entered row was left alone';
+end $$;
+commit;
+
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', 'd2000000-0000-0000-0000-000000000002', 'role', 'authenticated')::text, true);
+do $$
+declare
+  v_count integer;
+begin
+  select count(*) into v_count from public.get_my_appointments()
+    where id = current_setting('test.collide_appt_id')::uuid;
+  if v_count <> 1 then
+    raise exception 'FAIL: the booking the customer just made is not in their appointments (got %)', v_count;
+  end if;
+  raise notice 'PASS: the colliding signed-in booking appears in My Appointments';
+end $$;
+commit;
+
+\echo '=========================================================='
 \echo '9. appointment_claim_tokens is opaque to anon AND to authenticated'
 \echo '=========================================================='
 begin;
@@ -386,12 +458,101 @@ end $$;
 commit;
 
 \echo '=========================================================='
+\echo '9b. TAKEOVER: booking with someone ELSE''s phone must not hand over their record'
+\echo '=========================================================='
+-- Regression test for the defect found in adversarial review and fixed in
+-- 20260813160000_claim_scope_fix.sql.
+--
+-- The appointments_link_customer trigger (LOT 12) attaches a booking to an
+-- EXISTING customers row whenever the typed phone/email matches one. So an
+-- attacker can book anonymously using a victim's phone, receive a claim
+-- token for their own booking, and — if redemption adopted that row — walk
+-- off with every appointment the victim ever had at that shop.
+begin;
+reset role;
+-- Victim: an unlinked CRM row plus a past appointment, exactly what a
+-- pre-Wave-1 customer or a staff-entered contact looks like.
+insert into public.customers (organization_id, name, phone, notes)
+  values (:'org_id'::uuid, 'Victim Vera', '+15559990001', 'INTERNAL: always tips well')
+  returning id as victim_customer_id \gset
+insert into public.appointments (organization_id, location_id, barber_id, service_id, customer_id, customer_name, customer_phone, starts_at, ends_at, status)
+  values (:'org_id'::uuid, :'loc_id'::uuid, :'brb_id'::uuid, :'svc_id'::uuid, :'victim_customer_id'::uuid, 'Victim Vera', '+15559990001', now() + interval '6 days', now() + interval '6 days' + interval '30 minutes', 'confirmed')
+  returning id as victim_appt_id \gset
+select set_config('test.victim_customer_id', :'victim_customer_id', false);
+select set_config('test.victim_appt_id', :'victim_appt_id', false);
+commit;
+
+-- Attacker books anonymously, typing the victim's phone number.
+begin;
+set local role anon;
+select set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+select claim_token as attack_token
+  from public.book_public_appointment(
+    'wave1-ownership-shop', :'loc_id'::uuid, :'brb_id'::uuid, :'svc_id'::uuid,
+    now() + interval '7 days', 'Attacker Alice', '+15559990001', null, null
+  ) \gset
+commit;
+
+begin;
+reset role;
+select set_config('test.attack_token', :'attack_token', false);
+do $$
+declare
+  v_linked uuid;
+begin
+  -- Sanity: confirm the trigger really did attach the attacker's booking to
+  -- the victim's row. If this stops being true the test below is vacuous.
+  select a.customer_id into v_linked from public.appointments a
+    where a.customer_name = 'Attacker Alice';
+  if v_linked is distinct from current_setting('test.victim_customer_id')::uuid then
+    raise exception 'SETUP: expected the trigger to attach the attacker booking to the victim CRM row';
+  end if;
+  raise notice 'SETUP: attacker booking landed on the victim''s CRM row (as the trigger intends)';
+end $$;
+commit;
+
+-- Attacker redeems their own token.
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', json_build_object('sub', 'd2000000-0000-0000-0000-000000000004', 'role', 'authenticated')::text, true);
+select claimed as attack_claimed from public.redeem_appointment_claim(current_setting('test.attack_token')) \gset
+do $$
+declare
+  v_count integer;
+begin
+  select count(*) into v_count from public.get_my_appointments()
+    where id = current_setting('test.victim_appt_id')::uuid;
+  if v_count <> 0 then
+    raise exception 'FAIL: TAKEOVER — attacker reads the victim''s appointment after redeeming a token for their own booking';
+  end if;
+  raise notice 'PASS: attacker cannot read the victim''s appointments';
+end $$;
+commit;
+
+begin;
+reset role;
+do $$
+declare
+  v_owner uuid;
+begin
+  select c.user_id into v_owner from public.customers c
+    where c.id = current_setting('test.victim_customer_id')::uuid;
+  if v_owner is not null then
+    raise exception 'FAIL: TAKEOVER — the victim''s CRM row was handed to account %', v_owner;
+  end if;
+  raise notice 'PASS: the victim''s CRM row is still owned by nobody';
+end $$;
+commit;
+
+\echo '=========================================================='
 \echo '10. Cleanup'
 \echo '=========================================================='
 begin;
 reset role;
+delete from public.appointments where customer_name in ('Victim Vera', 'Attacker Alice');
+delete from public.customers where phone in ('+15559990001', '+15558880001');
 delete from public.organizations where slug = 'wave1-ownership-shop';
-delete from auth.users where id in ('d2000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000002', 'd2000000-0000-0000-0000-000000000003');
+delete from auth.users where id in ('d2000000-0000-0000-0000-000000000001', 'd2000000-0000-0000-0000-000000000002', 'd2000000-0000-0000-0000-000000000003', 'd2000000-0000-0000-0000-000000000004');
 commit;
 
 begin;

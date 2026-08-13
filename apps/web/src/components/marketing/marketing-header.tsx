@@ -8,12 +8,23 @@ import { AppNavLink } from '@/components/ui/nav-link'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { useAuth } from '@/lib/auth-context'
 
-/** Shared top nav for the public marketing site (/, /features, /pricing) — mobile menu uses the Drawer primitive. */
+/**
+ * Shared top nav for the public marketing site (/, /features, /pricing) and,
+ * importantly, /search — mobile menu uses the Drawer primitive.
+ *
+ * Session-aware on purpose: Discover in the customer app's bottom tab bar
+ * points at /search, which renders out here rather than inside the app
+ * shell. Without a way back, the first tap on Discover stranded a signed-in
+ * customer on a page offering them "Log in" and "Start free", with only the
+ * browser Back button to reach their appointments again.
+ */
 export function MarketingHeader() {
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const { session } = useAuth()
 
   const marketingLinks: { to: string; label: string; end: boolean }[] = [
     { to: '/', label: t('nav.home'), end: true },
@@ -43,18 +54,26 @@ export function MarketingHeader() {
         <div className="hidden items-center gap-1 md:flex">
           <LanguageSwitcher />
           <ThemeToggle />
-          <Link
-            to="/customer/login"
-            className={buttonVariants({ variant: 'ghost' }, 'hidden lg:inline-flex')}
-          >
-            {t('auth.customerLogIn')}
-          </Link>
-          <Link to="/pro/login" className={buttonVariants({ variant: 'ghost' })}>
-            {t('auth.logIn')}
-          </Link>
-          <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' })}>
-            {t('auth.startFree')}
-          </Link>
+          {session ? (
+            <Link to="/app/customer" className={buttonVariants({ variant: 'primary' })}>
+              {t('nav.myFadeUp')}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/customer/login"
+                className={buttonVariants({ variant: 'ghost' }, 'hidden lg:inline-flex')}
+              >
+                {t('auth.customerLogIn')}
+              </Link>
+              <Link to="/pro/login" className={buttonVariants({ variant: 'ghost' })}>
+                {t('auth.logIn')}
+              </Link>
+              <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' })}>
+                {t('auth.startFree')}
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
@@ -76,15 +95,23 @@ export function MarketingHeader() {
                 ))}
               </nav>
               <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
-                <Link to="/pro/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
-                  {t('auth.logIn')}
-                </Link>
-                <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
-                  {t('auth.startFree')}
-                </Link>
-                <Link to="/customer/login" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-                  {t('auth.customerLogIn')}
-                </Link>
+                {session ? (
+                  <Link to="/app/customer" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                    {t('nav.myFadeUp')}
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/pro/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                      {t('auth.logIn')}
+                    </Link>
+                    <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                      {t('auth.startFree')}
+                    </Link>
+                    <Link to="/customer/login" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
+                      {t('auth.customerLogIn')}
+                    </Link>
+                  </>
+                )}
               </div>
             </DrawerContent>
           </Drawer>
