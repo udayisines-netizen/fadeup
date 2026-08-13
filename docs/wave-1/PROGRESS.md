@@ -26,8 +26,24 @@ Read this + CLAUDE.md + docs/wave-1/PLAN.md + `git status` + `git log` first if 
 
   `npm run typecheck`/`lint`/`test`/`build` all clean (103/103 tests, 10 new).
 
+- Phase 6 — Full wave integration + polish. Commits `610d417` (security fix) + this one.
+
+  **A real account-takeover vulnerability was found and fixed while running the journeys.** `claim_customer_records(p_phone, p_email)` — added by this wave in Phase 3 — accepted caller-supplied contact details as proof of ownership. Any authenticated user could call `claim_customer_records(null, 'victim@example.com')`; if the victim had ever booked anonymously with that address and had not yet made an account, the attacker's `user_id` was written onto the victim's `customers` row, after which `get_my_appointments()` (which resolves purely through `customers.user_id`) exposed the victim's whole appointment history and `cancel_my_appointment()` let the attacker cancel it. The integer return value was also an existence oracle for enumerating phones/emails.
+
+  The function is **dropped, not patched**. Narrowing it to the caller's own `auth.users.email` would not be a real control here: `GOTRUE_MAILER_AUTOCONFIRM` is deployment-configurable, so `email_confirmed_at` is not evidence the caller owns the address. Replaced with two unforgeable ownership facts: (1) booking while signed in stamps `appointments.customer_id` from the caller's own `(organization_id, user_id)` CRM row — an existing unlinked row is *never* adopted on the strength of a typed-in phone/email, which is the vector itself; (2) booking anonymously returns a single-use 72h sha256-hashed claim token (`appointment_claim_tokens`, no RLS policies at all — SECURITY DEFINER access only), redeemed by `redeem_appointment_claim` after the customer creates an account.
+
+  Worth knowing for future work here: the pre-existing `appointments_link_customer` trigger (LOT 12) already points every booking at a `customers` row built from its own contact info, so the row is never missing — what is missing is an *account* attached to it (`user_id`). `redeem_appointment_claim` therefore attaches an account to the existing row rather than creating one, and refuses when that row already belongs to someone else. My first draft of both the migration and its test got this wrong and fought the trigger.
+
+  `verify_wave1_appointment_ownership.sql` — 17 assertions, live, all PASS, fixtures cleaned. `verify_wave1_customer_identity.sql` rewritten: its claim sections are replaced by assertions that saving a profile does NOT retroactively claim shop records and that a customer has no read path to the shop CRM table at all.
+
+  **Deployment note (matters in production):** the booking RPC's return shape changed, so PostgREST must be told to reload (`notify pgrst, 'reload schema'`) after applying the migration, or the live app keeps calling a signature that no longer exists.
+
+  Other integration work: the booking success screen finally closes the account loop (anonymous → "Create an account", signed-in → "View my appointments"); a signed-in customer's saved profile now prefills the details step instead of making them retype it; `usePendingClaimRedemption` in the customer app shell redeems on arrival and is deliberately silent on failure. `FavoriteButton` grew from 36px to a 44px touch target.
+
+  Verified live over HTTP against the running stack (12-step journey: discover → shop profile → real slot → anonymous booking → account creation → redeem → appointment visible → replay rejected → favorite → passport → anonymous share read). i18n parity checked programmatically: 201 keys × 10 locales, zero drift.
+
 ## Current phase
-Phase 6 — Full wave integration + polish. Starting now: end-to-end journey checks, responsive/i18n/accessibility passes, and a browser-based visual verification of the key screens.
+Phase 7 — Adversarial review + fixes.
 
 ## Important architectural decisions (see PLAN.md for full rationale)
 - Customer identity: new `customer_profiles` (1:1 auth.users, portable) is the canonical customer identity; per-org `customers` CRM rows get an optional `user_id` bridge. Do NOT merge these into one table — org-owned CRM contacts (walk-ins, no login) must keep existing.

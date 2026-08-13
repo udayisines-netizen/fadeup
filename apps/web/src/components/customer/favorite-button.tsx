@@ -20,6 +20,10 @@ interface FavoriteButtonProps {
  * Reused across contexts with different i18n needs (translated marketplace
  * cards vs. the deliberately non-i18n /s/:slug/* profile pages — see
  * PROGRESS.md) via plain-English default labels, overridable by the caller.
+ *
+ * Sized 44x44 (h-11/w-11) rather than the denser h-9 used elsewhere: this is
+ * an icon-only primary affordance on a mobile-first consumer surface, so it
+ * needs a real touch target even though the glyph inside stays small.
  */
 export function FavoriteButton({
   organizationId,
@@ -42,7 +46,7 @@ export function FavoriteButton({
       <Link
         to={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
         aria-label={favoriteLabel}
-        className={cn('inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-400 hover:bg-paper-100 hover:text-ink-600', className)}
+        className={cn('inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-400 hover:bg-paper-100 hover:text-ink-600', className)}
       >
         <Heart className="h-5 w-5" aria-hidden="true" />
       </Link>
@@ -67,7 +71,7 @@ export function FavoriteButton({
       aria-pressed={Boolean(existing)}
       aria-label={existing ? unfavoriteLabel : favoriteLabel}
       className={cn(
-        'inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-paper-100 disabled:opacity-50',
+        'inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-paper-100 disabled:opacity-50',
         existing ? 'text-danger-600' : 'text-ink-400 hover:text-ink-600',
         className,
       )}
