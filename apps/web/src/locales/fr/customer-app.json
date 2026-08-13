@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Commencer",
     "discoverTitle": "Trouve ton prochain barber",
     "discoverDescription": "Recherche des salons et des barbers indépendants près de toi.",
-    "discoverCta": "Découvrir des barbers"
+    "discoverCta": "Découvrir des barbers",
+    "queueTitle": "Tu es dans la file",
+    "queuePosition_one": "{{count}} personne devant toi",
+    "queuePosition_other": "{{count}} personnes devant toi",
+    "queueCalled": "C'est bientôt ton tour !",
+    "queueInService": "Tu es en train d'être servi",
+    "viewQueue": "Voir la file",
+    "upcomingTitle": "Rendez-vous à venir",
+    "upcomingWith": "avec {{barber}}",
+    "viewAppointments": "Voir mes rendez-vous",
+    "lastCutDays_one": "Ça fait {{count}} jour depuis ta dernière coupe.",
+    "lastCutDays_other": "Ça fait {{count}} jours depuis ta dernière coupe.",
+    "rebookOverdueTitle": "L'heure d'une nouvelle coupe ?",
+    "rebookTitle": "Même coupe que la dernière fois ?",
+    "rebookCta": "Reprendre rendez-vous avec {{barber}}"
   },
   "onboarding": {
     "title": "Quelques questions rapides",
@@ -55,5 +69,36 @@
     "editHabits": "Modifier tes habitudes",
     "noHabitsYet": "Tu ne nous as pas encore parlé de tes habitudes.",
     "signOut": "Se déconnecter"
+  },
+  "appointments": {
+    "title": "Rendez-vous",
+    "upcomingTab": "À venir",
+    "pastTab": "Passés",
+    "emptyUpcomingTitle": "Aucun rendez-vous à venir",
+    "emptyUpcomingDescription": "Quand tu réserves chez un barber FadeUp, ça apparaît ici.",
+    "emptyPastTitle": "Pas encore de rendez-vous passé",
+    "emptyPastDescription": "Ton historique de rendez-vous apparaîtra ici après ta première coupe.",
+    "cancel": "Annuler",
+    "cancelConfirmTitle": "Annuler ce rendez-vous ?",
+    "cancelConfirmDescription": "Cette action est définitive. Le salon sera informé.",
+    "cancelConfirmAction": "Oui, annuler",
+    "cancelConfirmDismiss": "Garder",
+    "rebook": "Reprendre rendez-vous",
+    "statusPending": "En attente de confirmation",
+    "statusConfirmed": "Confirmé",
+    "statusCompleted": "Terminé",
+    "statusCancelled": "Annulé",
+    "statusNoShow": "Absence",
+    "errorTitle": "Impossible de charger tes rendez-vous",
+    "cancelError": "Impossible d'annuler ce rendez-vous"
+  },
+  "favorites": {
+    "title": "Favoris",
+    "emptyTitle": "Aucun favori pour l'instant",
+    "emptyDescription": "Appuie sur le cœur d'un barber ou d'un salon pour l'enregistrer ici.",
+    "discoverCta": "Découvrir des barbers",
+    "remove": "Retirer",
+    "viewProfile": "Voir le profil",
+    "book": "Réserver"
   }
 }

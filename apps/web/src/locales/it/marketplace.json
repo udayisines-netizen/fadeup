@@ -72,6 +72,8 @@
     "distance": "a {{distance}} km",
     "entityShop": "Salone",
     "entityBarber": "Barbiere",
-    "book": "Prenota"
+    "book": "Prenota",
+    "addFavorite": "Aggiungi ai preferiti",
+    "removeFavorite": "Rimuovi dai preferiti"
   }
 }

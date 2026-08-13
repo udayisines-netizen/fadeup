@@ -141,6 +141,20 @@ export const router = createBrowserRouter([
               return { Component: CustomerProfilePage }
             },
           },
+          {
+            path: 'appointments',
+            lazy: async () => {
+              const { CustomerAppointmentsPage } = await import('@/pages/customer-appointments-page')
+              return { Component: CustomerAppointmentsPage }
+            },
+          },
+          {
+            path: 'favorites',
+            lazy: async () => {
+              const { CustomerFavoritesPage } = await import('@/pages/customer-favorites-page')
+              return { Component: CustomerFavoritesPage }
+            },
+          },
         ],
       },
       {

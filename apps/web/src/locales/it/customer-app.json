@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Inizia",
     "discoverTitle": "Trova il tuo prossimo barbiere",
     "discoverDescription": "Cerca barbershop e barbieri indipendenti vicino a te.",
-    "discoverCta": "Scopri i barbieri"
+    "discoverCta": "Scopri i barbieri",
+    "queueTitle": "Sei in fila",
+    "queuePosition_one": "{{count}} persona davanti a te",
+    "queuePosition_other": "{{count}} persone davanti a te",
+    "queueCalled": "Tocca quasi a te!",
+    "queueInService": "Ti stanno servendo",
+    "viewQueue": "Vedi la fila",
+    "upcomingTitle": "Prossimo appuntamento",
+    "upcomingWith": "con {{barber}}",
+    "viewAppointments": "Vedi appuntamenti",
+    "lastCutDays_one": "È passato {{count}} giorno dal tuo ultimo taglio.",
+    "lastCutDays_other": "Sono passati {{count}} giorni dal tuo ultimo taglio.",
+    "rebookOverdueTitle": "È ora di un nuovo taglio?",
+    "rebookTitle": "Stesso taglio dell'ultima volta?",
+    "rebookCta": "Riprenota con {{barber}}"
   },
   "onboarding": {
     "title": "Un paio di domande veloci",
@@ -55,5 +69,36 @@
     "editHabits": "Modifica le tue abitudini",
     "noHabitsYet": "Non ci hai ancora parlato delle tue abitudini.",
     "signOut": "Esci"
+  },
+  "appointments": {
+    "title": "Appuntamenti",
+    "upcomingTab": "Prossimi",
+    "pastTab": "Passati",
+    "emptyUpcomingTitle": "Nessun appuntamento in programma",
+    "emptyUpcomingDescription": "Quando prenoti con un barbiere FadeUp, apparirà qui.",
+    "emptyPastTitle": "Ancora nessun appuntamento passato",
+    "emptyPastDescription": "La cronologia degli appuntamenti apparirà qui dopo il tuo primo taglio.",
+    "cancel": "Annulla",
+    "cancelConfirmTitle": "Annullare questo appuntamento?",
+    "cancelConfirmDescription": "Questa azione non può essere annullata. Il salone verrà avvisato.",
+    "cancelConfirmAction": "Sì, annulla",
+    "cancelConfirmDismiss": "Mantieni",
+    "rebook": "Riprenota",
+    "statusPending": "In attesa di conferma",
+    "statusConfirmed": "Confermato",
+    "statusCompleted": "Completato",
+    "statusCancelled": "Annullato",
+    "statusNoShow": "Assente",
+    "errorTitle": "Impossibile caricare i tuoi appuntamenti",
+    "cancelError": "Impossibile annullare questo appuntamento"
+  },
+  "favorites": {
+    "title": "Preferiti",
+    "emptyTitle": "Ancora nessun preferito",
+    "emptyDescription": "Tocca il cuore su un barbiere o salone per salvarlo qui.",
+    "discoverCta": "Scopri i barbieri",
+    "remove": "Rimuovi",
+    "viewProfile": "Vedi profilo",
+    "book": "Prenota"
   }
 }

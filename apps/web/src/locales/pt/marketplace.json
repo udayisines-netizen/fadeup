@@ -72,6 +72,8 @@
     "distance": "a {{distance}} km",
     "entityShop": "Barbearia",
     "entityBarber": "Barbeiro",
-    "book": "Reservar"
+    "book": "Reservar",
+    "addFavorite": "Adicionar aos favoritos",
+    "removeFavorite": "Remover dos favoritos"
   }
 }

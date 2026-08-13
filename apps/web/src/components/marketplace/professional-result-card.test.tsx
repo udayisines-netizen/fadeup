@@ -1,8 +1,24 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
 import { ProfessionalResultCard } from '@/components/marketplace/professional-result-card'
 import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
+
+vi.mock('@/lib/auth-context', () => ({
+  useAuth: vi.fn(() => ({ session: null, user: null, loading: false })),
+}))
+
+function renderCard(result: MarketplaceProfessionalResult) {
+  const queryClient = new QueryClient()
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <ProfessionalResultCard result={result} />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
 
 function shopResult(overrides: Partial<MarketplaceProfessionalResult> = {}): MarketplaceProfessionalResult {
   return {
@@ -32,24 +48,14 @@ function shopResult(overrides: Partial<MarketplaceProfessionalResult> = {}): Mar
 
 describe('ProfessionalResultCard', () => {
   it('a shop result links "View profile" to the shop profile page and "Book" straight into the wizard', () => {
-    render(
-      <MemoryRouter>
-        <ProfessionalResultCard result={shopResult()} />
-      </MemoryRouter>,
-    )
+    renderCard(shopResult())
 
     expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute('href', '/s/demo-le-fade-parisien/profile')
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute('href', '/s/demo-le-fade-parisien')
   })
 
   it('a barber result links "View profile" to the barber page and "Book" with the barber preselected', () => {
-    render(
-      <MemoryRouter>
-        <ProfessionalResultCard
-          result={shopResult({ entityType: 'barber', barberId: 'barber-1', barberDisplayName: 'Karim Belhadj', barberTitle: 'Owner' })}
-        />
-      </MemoryRouter>,
-    )
+    renderCard(shopResult({ entityType: 'barber', barberId: 'barber-1', barberDisplayName: 'Karim Belhadj', barberTitle: 'Owner' }))
 
     expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute(
       'href',

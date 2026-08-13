@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Scissors } from 'lucide-react'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
 import { usePublicBarber, usePublicBarberServices } from '@/lib/queries/public-barber'
+import { FavoriteButton } from '@/components/customer/favorite-button'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -118,7 +119,7 @@ function BarberProfile({
   barber,
   servicesQuery,
 }: {
-  organization: { slug: string; name: string }
+  organization: { id: string; slug: string; name: string }
   barber: { barberId: string; displayName: string; title: string | null; bio: string | null; avatarUrl: string | null; locationId: string | null }
   servicesQuery: ReturnType<typeof usePublicBarberServices>
 }) {
@@ -130,7 +131,8 @@ function BarberProfile({
 
   return (
     <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
-      <Card elevated className="p-6 text-center">
+      <Card elevated className="relative p-6 text-center">
+        <FavoriteButton organizationId={organization.id} barberId={barber.barberId} className="absolute right-4 top-4" />
         <BarberPhoto name={barber.displayName} avatarUrl={barber.avatarUrl} />
         <h1 className="mt-4 text-2xl font-semibold text-balance text-ink-950">{barber.displayName}</h1>
         {barber.title ? <p className="mt-1 text-sm font-medium text-accent-600">{barber.title}</p> : null}

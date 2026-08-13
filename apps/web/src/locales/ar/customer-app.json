@@ -6,7 +6,21 @@
     "onboardingPromptCta": "ابدأ",
     "discoverTitle": "ابحث عن حلاقك القادم",
     "discoverDescription": "ابحث عن صالونات الحلاقة والحلاقين المستقلين بالقرب منك.",
-    "discoverCta": "اكتشف الحلاقين"
+    "discoverCta": "اكتشف الحلاقين",
+    "queueTitle": "أنت في الطابور",
+    "queuePosition_one": "شخص واحد أمامك",
+    "queuePosition_other": "{{count}} أشخاص أمامك",
+    "queueCalled": "دورك قادم!",
+    "queueInService": "يتم خدمتك الآن",
+    "viewQueue": "عرض الطابور",
+    "upcomingTitle": "موعد قادم",
+    "upcomingWith": "مع {{barber}}",
+    "viewAppointments": "عرض المواعيد",
+    "lastCutDays_one": "مر يوم واحد منذ آخر قصة لك.",
+    "lastCutDays_other": "مرت {{count}} أيام منذ آخر قصة لك.",
+    "rebookOverdueTitle": "حان وقت قصة جديدة؟",
+    "rebookTitle": "نفس القصة كالمرة الماضية؟",
+    "rebookCta": "احجز مرة أخرى مع {{barber}}"
   },
   "onboarding": {
     "title": "بضعة أسئلة سريعة",
@@ -55,5 +69,36 @@
     "editHabits": "تعديل عاداتك",
     "noHabitsYet": "لم تخبرنا بعاداتك بعد.",
     "signOut": "تسجيل الخروج"
+  },
+  "appointments": {
+    "title": "المواعيد",
+    "upcomingTab": "القادمة",
+    "pastTab": "السابقة",
+    "emptyUpcomingTitle": "لا توجد مواعيد قادمة",
+    "emptyUpcomingDescription": "عندما تحجز مع حلاق على FadeUp، سيظهر هنا.",
+    "emptyPastTitle": "لا توجد مواعيد سابقة بعد",
+    "emptyPastDescription": "سيظهر سجل مواعيدك هنا بعد أول قصة لك.",
+    "cancel": "إلغاء",
+    "cancelConfirmTitle": "إلغاء هذا الموعد؟",
+    "cancelConfirmDescription": "لا يمكن التراجع عن هذا. سيتم إشعار الصالون.",
+    "cancelConfirmAction": "نعم، إلغاء",
+    "cancelConfirmDismiss": "الاحتفاظ به",
+    "rebook": "إعادة الحجز",
+    "statusPending": "بانتظار التأكيد",
+    "statusConfirmed": "مؤكد",
+    "statusCompleted": "مكتمل",
+    "statusCancelled": "ملغى",
+    "statusNoShow": "لم يحضر",
+    "errorTitle": "تعذّر تحميل مواعيدك",
+    "cancelError": "تعذّر إلغاء هذا الموعد"
+  },
+  "favorites": {
+    "title": "المفضلة",
+    "emptyTitle": "لا توجد مفضلات بعد",
+    "emptyDescription": "اضغط على القلب بجانب حلاق أو صالون لحفظه هنا.",
+    "discoverCta": "اكتشف الحلاقين",
+    "remove": "إزالة",
+    "viewProfile": "عرض الملف الشخصي",
+    "book": "احجز"
   }
 }

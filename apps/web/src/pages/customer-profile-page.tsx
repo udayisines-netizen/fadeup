@@ -137,6 +137,14 @@ export function CustomerProfilePage() {
         )}
       </Card>
 
+      <Link
+        to="/app/customer/favorites"
+        className="flex items-center justify-between rounded-xl border border-border bg-paper-0 p-4 text-sm font-medium text-ink-950 hover:bg-paper-100"
+      >
+        {t('favorites.title')}
+        <span aria-hidden="true">→</span>
+      </Link>
+
       <button
         type="button"
         onClick={() => void handleSignOut()}

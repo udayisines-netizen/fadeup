@@ -72,6 +72,8 @@
     "distance": "على بعد {{distance}} كم",
     "entityShop": "صالون",
     "entityBarber": "حلاق",
-    "book": "احجز"
+    "book": "احجز",
+    "addFavorite": "أضف إلى المفضلة",
+    "removeFavorite": "إزالة من المفضلة"
   }
 }

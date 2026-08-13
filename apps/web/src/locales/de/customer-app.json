@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Loslegen",
     "discoverTitle": "Finde deinen nächsten Barber",
     "discoverDescription": "Suche Barbershops und unabhängige Barbers in deiner Nähe.",
-    "discoverCta": "Barbers entdecken"
+    "discoverCta": "Barbers entdecken",
+    "queueTitle": "Du stehst in der Schlange",
+    "queuePosition_one": "{{count}} Person vor dir",
+    "queuePosition_other": "{{count}} Personen vor dir",
+    "queueCalled": "Du bist gleich dran!",
+    "queueInService": "Du wirst gerade bedient",
+    "viewQueue": "Warteschlange ansehen",
+    "upcomingTitle": "Bevorstehender Termin",
+    "upcomingWith": "mit {{barber}}",
+    "viewAppointments": "Termine ansehen",
+    "lastCutDays_one": "Es ist {{count}} Tag seit deinem letzten Schnitt her.",
+    "lastCutDays_other": "Es sind {{count}} Tage seit deinem letzten Schnitt her.",
+    "rebookOverdueTitle": "Zeit für einen neuen Schnitt?",
+    "rebookTitle": "Gleicher Schnitt wie letztes Mal?",
+    "rebookCta": "Erneut buchen mit {{barber}}"
   },
   "onboarding": {
     "title": "Ein paar kurze Fragen",
@@ -55,5 +69,36 @@
     "editHabits": "Gewohnheiten bearbeiten",
     "noHabitsYet": "Du hast uns deine Gewohnheiten noch nicht mitgeteilt.",
     "signOut": "Abmelden"
+  },
+  "appointments": {
+    "title": "Termine",
+    "upcomingTab": "Bevorstehend",
+    "pastTab": "Vergangen",
+    "emptyUpcomingTitle": "Keine bevorstehenden Termine",
+    "emptyUpcomingDescription": "Wenn du bei einem FadeUp-Barbier buchst, erscheint es hier.",
+    "emptyPastTitle": "Noch keine vergangenen Termine",
+    "emptyPastDescription": "Dein Terminverlauf erscheint hier nach deinem ersten Schnitt.",
+    "cancel": "Stornieren",
+    "cancelConfirmTitle": "Diesen Termin stornieren?",
+    "cancelConfirmDescription": "Das kann nicht rückgängig gemacht werden. Der Salon wird informiert.",
+    "cancelConfirmAction": "Ja, stornieren",
+    "cancelConfirmDismiss": "Behalten",
+    "rebook": "Erneut buchen",
+    "statusPending": "Bestätigung ausstehend",
+    "statusConfirmed": "Bestätigt",
+    "statusCompleted": "Abgeschlossen",
+    "statusCancelled": "Storniert",
+    "statusNoShow": "Nicht erschienen",
+    "errorTitle": "Termine konnten nicht geladen werden",
+    "cancelError": "Termin konnte nicht storniert werden"
+  },
+  "favorites": {
+    "title": "Favoriten",
+    "emptyTitle": "Noch keine Favoriten",
+    "emptyDescription": "Tippe auf das Herz bei einem Barbier oder Salon, um ihn hier zu speichern.",
+    "discoverCta": "Barbiere entdecken",
+    "remove": "Entfernen",
+    "viewProfile": "Profil ansehen",
+    "book": "Buchen"
   }
 }

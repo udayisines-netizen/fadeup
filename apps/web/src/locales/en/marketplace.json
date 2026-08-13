@@ -72,6 +72,8 @@
     "distance": "{{distance}} km away",
     "entityShop": "Shop",
     "entityBarber": "Barber",
-    "book": "Book"
+    "book": "Book",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites"
   }
 }

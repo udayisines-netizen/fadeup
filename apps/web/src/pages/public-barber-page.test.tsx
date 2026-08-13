@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { PublicBarberPage } from '@/pages/public-barber-page'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
@@ -12,6 +13,12 @@ vi.mock('@/lib/queries/public-booking', () => ({
 vi.mock('@/lib/queries/public-barber', () => ({
   usePublicBarber: vi.fn(),
   usePublicBarberServices: vi.fn(),
+}))
+
+// The header renders a FavoriteButton, which needs an auth context
+// (logged-out here) and a QueryClient ancestor.
+vi.mock('@/lib/auth-context', () => ({
+  useAuth: vi.fn(() => ({ session: null, user: null, loading: false })),
 }))
 
 const mockUsePublicOrganization = vi.mocked(usePublicOrganization)
@@ -27,12 +34,15 @@ function successQuery(data: unknown) {
 }
 
 function renderAtPath(path: string) {
+  const queryClient = new QueryClient()
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/s/:slug/barbers/:barberId" element={<PublicBarberPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/s/:slug/barbers/:barberId" element={<PublicBarberPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

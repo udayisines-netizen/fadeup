@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { MapPin, Users } from 'lucide-react'
 import { usePublicOrganization, usePublicLocations, type PublicLocation } from '@/lib/queries/public-booking'
 import { usePublicOrganizationBarbers } from '@/lib/queries/public-barber'
+import { FavoriteButton } from '@/components/customer/favorite-button'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -87,8 +88,11 @@ export function ShopProfilePage() {
   return (
     <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
       <Card elevated className="p-6">
-        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-accent-100 text-lg font-semibold text-accent-800">
-          {organization.name.charAt(0).toUpperCase()}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-accent-100 text-lg font-semibold text-accent-800">
+            {organization.name.charAt(0).toUpperCase()}
+          </div>
+          <FavoriteButton organizationId={organization.id} />
         </div>
         <h1 className="mt-4 text-2xl font-semibold text-balance text-ink-950">{organization.name}</h1>
 

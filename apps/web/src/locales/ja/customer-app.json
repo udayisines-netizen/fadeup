@@ -6,7 +6,21 @@
     "onboardingPromptCta": "はじめる",
     "discoverTitle": "次の理容師を見つける",
     "discoverDescription": "近くの理容室や独立系理容師を検索しましょう。",
-    "discoverCta": "理容師を探す"
+    "discoverCta": "理容師を探す",
+    "queueTitle": "順番待ち中です",
+    "queuePosition_one": "あなたの前に{{count}}人います",
+    "queuePosition_other": "あなたの前に{{count}}人います",
+    "queueCalled": "もうすぐあなたの番です！",
+    "queueInService": "施術中です",
+    "viewQueue": "順番を確認",
+    "upcomingTitle": "次回の予約",
+    "upcomingWith": "{{barber}}さんと",
+    "viewAppointments": "予約を見る",
+    "lastCutDays_one": "前回のカットから{{count}}日経ちました。",
+    "lastCutDays_other": "前回のカットから{{count}}日経ちました。",
+    "rebookOverdueTitle": "そろそろカットの時期？",
+    "rebookTitle": "前回と同じスタイルにする？",
+    "rebookCta": "{{barber}}さんに再予約"
   },
   "onboarding": {
     "title": "簡単な質問です",
@@ -55,5 +69,36 @@
     "editHabits": "習慣を編集",
     "noHabitsYet": "まだ習慣を教えていただいていません。",
     "signOut": "サインアウト"
+  },
+  "appointments": {
+    "title": "予約",
+    "upcomingTab": "今後の予約",
+    "pastTab": "過去の予約",
+    "emptyUpcomingTitle": "予定されている予約はありません",
+    "emptyUpcomingDescription": "FadeUpの理容師に予約すると、ここに表示されます。",
+    "emptyPastTitle": "過去の予約はまだありません",
+    "emptyPastDescription": "最初のカットの後、予約履歴がここに表示されます。",
+    "cancel": "キャンセル",
+    "cancelConfirmTitle": "この予約をキャンセルしますか？",
+    "cancelConfirmDescription": "この操作は元に戻せません。店舗に通知されます。",
+    "cancelConfirmAction": "はい、キャンセルします",
+    "cancelConfirmDismiss": "やめておく",
+    "rebook": "再予約",
+    "statusPending": "確認待ち",
+    "statusConfirmed": "確定",
+    "statusCompleted": "完了",
+    "statusCancelled": "キャンセル済み",
+    "statusNoShow": "無断キャンセル",
+    "errorTitle": "予約を読み込めませんでした",
+    "cancelError": "この予約をキャンセルできませんでした"
+  },
+  "favorites": {
+    "title": "お気に入り",
+    "emptyTitle": "お気に入りはまだありません",
+    "emptyDescription": "理容師や店舗のハートをタップすると、ここに保存されます。",
+    "discoverCta": "理容師を探す",
+    "remove": "削除",
+    "viewProfile": "プロフィールを見る",
+    "book": "予約する"
   }
 }

@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Começar",
     "discoverTitle": "Encontra o teu próximo barbeiro",
     "discoverDescription": "Procura barbearias e barbeiros independentes perto de ti.",
-    "discoverCta": "Descobrir barbeiros"
+    "discoverCta": "Descobrir barbeiros",
+    "queueTitle": "Estás na fila",
+    "queuePosition_one": "{{count}} pessoa à tua frente",
+    "queuePosition_other": "{{count}} pessoas à tua frente",
+    "queueCalled": "Está quase a ser a tua vez!",
+    "queueInService": "Estás a ser atendido",
+    "viewQueue": "Ver fila",
+    "upcomingTitle": "Próxima marcação",
+    "upcomingWith": "com {{barber}}",
+    "viewAppointments": "Ver marcações",
+    "lastCutDays_one": "Já passou {{count}} dia desde o teu último corte.",
+    "lastCutDays_other": "Já passaram {{count}} dias desde o teu último corte.",
+    "rebookOverdueTitle": "Hora de um novo corte?",
+    "rebookTitle": "O mesmo corte de sempre?",
+    "rebookCta": "Marcar de novo com {{barber}}"
   },
   "onboarding": {
     "title": "Algumas perguntas rápidas",
@@ -55,5 +69,36 @@
     "editHabits": "Editar os teus hábitos",
     "noHabitsYet": "Ainda não nos contaste os teus hábitos.",
     "signOut": "Terminar sessão"
+  },
+  "appointments": {
+    "title": "Marcações",
+    "upcomingTab": "Próximas",
+    "pastTab": "Passadas",
+    "emptyUpcomingTitle": "Sem marcações próximas",
+    "emptyUpcomingDescription": "Quando marcares com um barbeiro FadeUp, aparece aqui.",
+    "emptyPastTitle": "Ainda sem marcações passadas",
+    "emptyPastDescription": "O teu histórico de marcações vai aparecer aqui após o teu primeiro corte.",
+    "cancel": "Cancelar",
+    "cancelConfirmTitle": "Cancelar esta marcação?",
+    "cancelConfirmDescription": "Isto não pode ser desfeito. A barbearia será notificada.",
+    "cancelConfirmAction": "Sim, cancelar",
+    "cancelConfirmDismiss": "Manter",
+    "rebook": "Marcar de novo",
+    "statusPending": "Aguarda confirmação",
+    "statusConfirmed": "Confirmada",
+    "statusCompleted": "Concluída",
+    "statusCancelled": "Cancelada",
+    "statusNoShow": "Não compareceu",
+    "errorTitle": "Não foi possível carregar as tuas marcações",
+    "cancelError": "Não foi possível cancelar esta marcação"
+  },
+  "favorites": {
+    "title": "Favoritos",
+    "emptyTitle": "Ainda sem favoritos",
+    "emptyDescription": "Toca no coração de um barbeiro ou barbearia para guardar aqui.",
+    "discoverCta": "Descobrir barbeiros",
+    "remove": "Remover",
+    "viewProfile": "Ver perfil",
+    "book": "Marcar"
   }
 }

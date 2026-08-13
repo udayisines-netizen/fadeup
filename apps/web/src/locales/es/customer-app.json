@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Empezar",
     "discoverTitle": "Encuentra tu próximo barbero",
     "discoverDescription": "Busca barberías y barberos independientes cerca de ti.",
-    "discoverCta": "Descubrir barberos"
+    "discoverCta": "Descubrir barberos",
+    "queueTitle": "Estás en la fila",
+    "queuePosition_one": "{{count}} persona por delante",
+    "queuePosition_other": "{{count}} personas por delante",
+    "queueCalled": "¡Ya casi es tu turno!",
+    "queueInService": "Te están atendiendo",
+    "viewQueue": "Ver la fila",
+    "upcomingTitle": "Próxima cita",
+    "upcomingWith": "con {{barber}}",
+    "viewAppointments": "Ver mis citas",
+    "lastCutDays_one": "Ha pasado {{count}} día desde tu último corte.",
+    "lastCutDays_other": "Han pasado {{count}} días desde tu último corte.",
+    "rebookOverdueTitle": "¿Hora de un nuevo corte?",
+    "rebookTitle": "¿El mismo corte que la última vez?",
+    "rebookCta": "Reservar de nuevo con {{barber}}"
   },
   "onboarding": {
     "title": "Un par de preguntas rápidas",
@@ -55,5 +69,36 @@
     "editHabits": "Editar tus hábitos",
     "noHabitsYet": "Aún no nos has contado tus hábitos.",
     "signOut": "Cerrar sesión"
+  },
+  "appointments": {
+    "title": "Citas",
+    "upcomingTab": "Próximas",
+    "pastTab": "Pasadas",
+    "emptyUpcomingTitle": "No tienes citas próximas",
+    "emptyUpcomingDescription": "Cuando reserves con un barbero de FadeUp, aparecerá aquí.",
+    "emptyPastTitle": "Aún no hay citas pasadas",
+    "emptyPastDescription": "Tu historial de citas aparecerá aquí después de tu primer corte.",
+    "cancel": "Cancelar",
+    "cancelConfirmTitle": "¿Cancelar esta cita?",
+    "cancelConfirmDescription": "Esto no se puede deshacer. Se notificará a la barbería.",
+    "cancelConfirmAction": "Sí, cancelar",
+    "cancelConfirmDismiss": "Mantener",
+    "rebook": "Reservar de nuevo",
+    "statusPending": "Pendiente de confirmación",
+    "statusConfirmed": "Confirmada",
+    "statusCompleted": "Completada",
+    "statusCancelled": "Cancelada",
+    "statusNoShow": "No asistió",
+    "errorTitle": "No se pudieron cargar tus citas",
+    "cancelError": "No se pudo cancelar esta cita"
+  },
+  "favorites": {
+    "title": "Favoritos",
+    "emptyTitle": "Aún no tienes favoritos",
+    "emptyDescription": "Toca el corazón de un barbero o barbería para guardarlo aquí.",
+    "discoverCta": "Descubrir barberos",
+    "remove": "Quitar",
+    "viewProfile": "Ver perfil",
+    "book": "Reservar"
   }
 }

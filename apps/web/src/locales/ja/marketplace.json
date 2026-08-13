@@ -72,6 +72,8 @@
     "distance": "{{distance}} km先",
     "entityShop": "店舗",
     "entityBarber": "理容師",
-    "book": "予約する"
+    "book": "予約する",
+    "addFavorite": "お気に入りに追加",
+    "removeFavorite": "お気に入りから削除"
   }
 }

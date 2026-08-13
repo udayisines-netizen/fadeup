@@ -72,6 +72,8 @@
     "distance": "距离 {{distance}} 公里",
     "entityShop": "理发店",
     "entityBarber": "理发师",
-    "book": "预约"
+    "book": "预约",
+    "addFavorite": "添加到收藏",
+    "removeFavorite": "从收藏中移除"
   }
 }

@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Get started",
     "discoverTitle": "Find your next barber",
     "discoverDescription": "Search barbershops and independent barbers near you.",
-    "discoverCta": "Discover barbers"
+    "discoverCta": "Discover barbers",
+    "queueTitle": "You're in line",
+    "queuePosition_one": "{{count}} person ahead of you",
+    "queuePosition_other": "{{count}} people ahead of you",
+    "queueCalled": "You're up next!",
+    "queueInService": "You're being served",
+    "viewQueue": "View queue",
+    "upcomingTitle": "Upcoming appointment",
+    "upcomingWith": "with {{barber}}",
+    "viewAppointments": "View appointments",
+    "lastCutDays_one": "It's been {{count}} day since your last cut.",
+    "lastCutDays_other": "It's been {{count}} days since your last cut.",
+    "rebookOverdueTitle": "Time for a fresh cut?",
+    "rebookTitle": "Same cut as last time?",
+    "rebookCta": "Rebook with {{barber}}"
   },
   "onboarding": {
     "title": "A couple of quick questions",
@@ -55,5 +69,36 @@
     "editHabits": "Edit your habits",
     "noHabitsYet": "You haven't told us your habits yet.",
     "signOut": "Sign out"
+  },
+  "appointments": {
+    "title": "Appointments",
+    "upcomingTab": "Upcoming",
+    "pastTab": "Past",
+    "emptyUpcomingTitle": "No upcoming appointments",
+    "emptyUpcomingDescription": "When you book with a FadeUp barber, it'll show up here.",
+    "emptyPastTitle": "No past appointments yet",
+    "emptyPastDescription": "Your appointment history will show up here once you've had a cut.",
+    "cancel": "Cancel",
+    "cancelConfirmTitle": "Cancel this appointment?",
+    "cancelConfirmDescription": "This can't be undone. The shop will be notified.",
+    "cancelConfirmAction": "Yes, cancel",
+    "cancelConfirmDismiss": "Keep it",
+    "rebook": "Rebook",
+    "statusPending": "Pending confirmation",
+    "statusConfirmed": "Confirmed",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "statusNoShow": "No-show",
+    "errorTitle": "Couldn't load your appointments",
+    "cancelError": "Couldn't cancel this appointment"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "emptyTitle": "No favorites yet",
+    "emptyDescription": "Tap the heart on a barber or shop to save it here.",
+    "discoverCta": "Discover barbers",
+    "remove": "Remove",
+    "viewProfile": "View profile",
+    "book": "Book"
   }
 }

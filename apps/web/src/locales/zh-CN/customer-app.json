@@ -6,7 +6,21 @@
     "onboardingPromptCta": "开始",
     "discoverTitle": "寻找你的下一位理发师",
     "discoverDescription": "搜索你附近的理发店和独立理发师。",
-    "discoverCta": "发现理发师"
+    "discoverCta": "发现理发师",
+    "queueTitle": "你正在排队",
+    "queuePosition_one": "你前面还有 {{count}} 人",
+    "queuePosition_other": "你前面还有 {{count}} 人",
+    "queueCalled": "马上就轮到你了！",
+    "queueInService": "正在为你服务",
+    "viewQueue": "查看队列",
+    "upcomingTitle": "即将到来的预约",
+    "upcomingWith": "与 {{barber}}",
+    "viewAppointments": "查看预约",
+    "lastCutDays_one": "距离你上次理发已经 {{count}} 天了。",
+    "lastCutDays_other": "距离你上次理发已经 {{count}} 天了。",
+    "rebookOverdueTitle": "是时候剪个新发型了吗？",
+    "rebookTitle": "和上次一样的发型？",
+    "rebookCta": "与 {{barber}} 再次预约"
   },
   "onboarding": {
     "title": "几个简单问题",
@@ -55,5 +69,36 @@
     "editHabits": "编辑你的习惯",
     "noHabitsYet": "你还没有告诉我们你的习惯。",
     "signOut": "退出登录"
+  },
+  "appointments": {
+    "title": "预约",
+    "upcomingTab": "即将到来",
+    "pastTab": "历史",
+    "emptyUpcomingTitle": "暂无即将到来的预约",
+    "emptyUpcomingDescription": "当你与 FadeUp 理发师预约后，会显示在这里。",
+    "emptyPastTitle": "暂无历史预约",
+    "emptyPastDescription": "完成第一次理发后，你的预约记录会显示在这里。",
+    "cancel": "取消",
+    "cancelConfirmTitle": "取消此预约？",
+    "cancelConfirmDescription": "此操作无法撤销，店铺将收到通知。",
+    "cancelConfirmAction": "是的，取消",
+    "cancelConfirmDismiss": "保留",
+    "rebook": "重新预约",
+    "statusPending": "待确认",
+    "statusConfirmed": "已确认",
+    "statusCompleted": "已完成",
+    "statusCancelled": "已取消",
+    "statusNoShow": "未到店",
+    "errorTitle": "无法加载你的预约",
+    "cancelError": "无法取消此预约"
+  },
+  "favorites": {
+    "title": "收藏",
+    "emptyTitle": "暂无收藏",
+    "emptyDescription": "点击理发师或店铺上的心形图标即可保存到这里。",
+    "discoverCta": "发现理发师",
+    "remove": "移除",
+    "viewProfile": "查看资料",
+    "book": "预约"
   }
 }

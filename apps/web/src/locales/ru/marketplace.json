@@ -72,6 +72,8 @@
     "distance": "в {{distance}} км",
     "entityShop": "Салон",
     "entityBarber": "Барбер",
-    "book": "Забронировать"
+    "book": "Забронировать",
+    "addFavorite": "Добавить в избранное",
+    "removeFavorite": "Убрать из избранного"
   }
 }

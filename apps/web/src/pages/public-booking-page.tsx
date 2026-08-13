@@ -191,6 +191,7 @@ function usePreselection() {
   return {
     preselectedBarberId: searchParams.get('barber'),
     preselectedLocationId: searchParams.get('location'),
+    preselectedServiceId: searchParams.get('service'),
   }
 }
 
@@ -205,7 +206,7 @@ interface SlotSelection {
 
 function BookingWizard({ organization }: { organization: PublicOrganization }) {
   const locationsQuery = usePublicLocations(organization.slug)
-  const { preselectedBarberId, preselectedLocationId } = usePreselection()
+  const { preselectedBarberId, preselectedLocationId, preselectedServiceId } = usePreselection()
 
   const [phase, setPhase] = useState<Phase>('location')
   const [history, setHistory] = useState<Phase[]>([])
@@ -235,6 +236,17 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
       setPhase('service')
     }
   }, [locationsQuery.data, locationId, preselectedLocationId])
+
+  // Same idea for a preselected service (from a "Rebook" link) — skip
+  // straight to the barber step once it's confirmed to actually be offered
+  // at the (now-known) location.
+  useEffect(() => {
+    if (!locationId || serviceId || phase !== 'service' || !preselectedServiceId || !servicesQuery.data) return
+    if (servicesQuery.data.some((service) => service.id === preselectedServiceId)) {
+      setServiceId(preselectedServiceId)
+      setPhase('barber')
+    }
+  }, [servicesQuery.data, locationId, serviceId, phase, preselectedServiceId])
 
   // Same idea for a service with exactly one eligible barber, OR the
   // preselected barber turns out to be eligible for the chosen service.

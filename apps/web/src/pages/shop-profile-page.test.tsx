@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { ShopProfilePage } from '@/pages/shop-profile-page'
 import { usePublicOrganization, usePublicLocations } from '@/lib/queries/public-booking'
@@ -14,6 +15,12 @@ vi.mock('@/lib/queries/public-barber', () => ({
   usePublicOrganizationBarbers: vi.fn(),
 }))
 
+// The header renders a FavoriteButton, which needs an auth context
+// (logged-out here) and a QueryClient ancestor.
+vi.mock('@/lib/auth-context', () => ({
+  useAuth: vi.fn(() => ({ session: null, user: null, loading: false })),
+}))
+
 const mockUsePublicOrganization = vi.mocked(usePublicOrganization)
 const mockUsePublicLocations = vi.mocked(usePublicLocations)
 const mockUsePublicOrganizationBarbers = vi.mocked(usePublicOrganizationBarbers)
@@ -23,12 +30,15 @@ function successQuery(data: unknown) {
 }
 
 function renderAtPath(path: string) {
+  const queryClient = new QueryClient()
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/s/:slug/profile" element={<ShopProfilePage />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/s/:slug/profile" element={<ShopProfilePage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { MarketplaceSearchPage } from '@/pages/marketplace-search-page'
 import { useSearchPublicProfessionals } from '@/lib/queries/marketplace'
@@ -8,13 +9,22 @@ vi.mock('@/lib/queries/marketplace', () => ({
   useSearchPublicProfessionals: vi.fn(),
 }))
 
+// ProfessionalResultCard renders a FavoriteButton, which needs both an
+// auth context (logged-out here) and a QueryClient ancestor.
+vi.mock('@/lib/auth-context', () => ({
+  useAuth: vi.fn(() => ({ session: null, user: null, loading: false })),
+}))
+
 const mockUseSearchPublicProfessionals = vi.mocked(useSearchPublicProfessionals)
 
 function renderPage(initialEntry = '/search?city=Paris') {
+  const queryClient = new QueryClient()
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <MarketplaceSearchPage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <MarketplaceSearchPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

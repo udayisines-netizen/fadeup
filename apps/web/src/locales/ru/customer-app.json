@@ -6,7 +6,21 @@
     "onboardingPromptCta": "Начать",
     "discoverTitle": "Найдите своего барбера",
     "discoverDescription": "Ищите барбершопы и независимых барберов рядом с вами.",
-    "discoverCta": "Найти барберов"
+    "discoverCta": "Найти барберов",
+    "queueTitle": "Вы в очереди",
+    "queuePosition_one": "{{count}} человек перед вами",
+    "queuePosition_other": "{{count}} человек перед вами",
+    "queueCalled": "Скоро ваша очередь!",
+    "queueInService": "Вас обслуживают",
+    "viewQueue": "Смотреть очередь",
+    "upcomingTitle": "Предстоящая запись",
+    "upcomingWith": "с {{barber}}",
+    "viewAppointments": "Мои записи",
+    "lastCutDays_one": "Прошёл {{count}} день с вашей последней стрижки.",
+    "lastCutDays_other": "Прошло {{count}} дней с вашей последней стрижки.",
+    "rebookOverdueTitle": "Пора на новую стрижку?",
+    "rebookTitle": "Та же стрижка, что и в прошлый раз?",
+    "rebookCta": "Записаться снова к {{barber}}"
   },
   "onboarding": {
     "title": "Пара быстрых вопросов",
@@ -55,5 +69,36 @@
     "editHabits": "Изменить привычки",
     "noHabitsYet": "Вы ещё не рассказали нам о своих привычках.",
     "signOut": "Выйти"
+  },
+  "appointments": {
+    "title": "Записи",
+    "upcomingTab": "Предстоящие",
+    "pastTab": "Прошедшие",
+    "emptyUpcomingTitle": "Нет предстоящих записей",
+    "emptyUpcomingDescription": "Когда вы запишетесь к барберу FadeUp, это появится здесь.",
+    "emptyPastTitle": "Пока нет прошедших записей",
+    "emptyPastDescription": "История записей появится здесь после вашей первой стрижки.",
+    "cancel": "Отменить",
+    "cancelConfirmTitle": "Отменить эту запись?",
+    "cancelConfirmDescription": "Это действие необратимо. Салон будет уведомлён.",
+    "cancelConfirmAction": "Да, отменить",
+    "cancelConfirmDismiss": "Оставить",
+    "rebook": "Записаться снова",
+    "statusPending": "Ожидает подтверждения",
+    "statusConfirmed": "Подтверждена",
+    "statusCompleted": "Завершена",
+    "statusCancelled": "Отменена",
+    "statusNoShow": "Неявка",
+    "errorTitle": "Не удалось загрузить ваши записи",
+    "cancelError": "Не удалось отменить эту запись"
+  },
+  "favorites": {
+    "title": "Избранное",
+    "emptyTitle": "Пока нет избранного",
+    "emptyDescription": "Нажмите на сердечко у барбера или салона, чтобы сохранить здесь.",
+    "discoverCta": "Найти барберов",
+    "remove": "Убрать",
+    "viewProfile": "Посмотреть профиль",
+    "book": "Забронировать"
   }
 }

@@ -4,6 +4,7 @@ import { MapPin, Scissors, Store, Users } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
+import { FavoriteButton } from '@/components/customer/favorite-button'
 import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
 
 function formatPrice(cents: number): string {
@@ -64,11 +65,20 @@ export function ProfessionalResultCard({ result }: { result: MarketplaceProfessi
               <span>{isBarber ? t('card.entityBarber') : t('card.entityShop')}</span>
             </Badge>
           </div>
-          {result.isOpenNow !== null ? (
-            <Badge variant={result.isOpenNow ? 'success' : 'neutral'}>
-              {result.isOpenNow ? t('card.openNow') : t('card.closedNow')}
-            </Badge>
-          ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {result.isOpenNow !== null ? (
+              <Badge variant={result.isOpenNow ? 'success' : 'neutral'}>
+                {result.isOpenNow ? t('card.openNow') : t('card.closedNow')}
+              </Badge>
+            ) : null}
+            <FavoriteButton
+              organizationId={result.organizationId}
+              barberId={isBarber ? result.barberId : null}
+              favoriteLabel={t('card.addFavorite')}
+              unfavoriteLabel={t('card.removeFavorite')}
+              className="-my-1.5 -mr-1.5"
+            />
+          </div>
         </div>
 
         <p className="flex items-center gap-1 text-sm text-ink-500">
