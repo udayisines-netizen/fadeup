@@ -18,8 +18,16 @@ Read this + CLAUDE.md + docs/wave-1/PLAN.md + `git status` + `git log` first if 
 
   `npm run typecheck`/`lint`/`test`/`build` all clean (93/93 tests, 28 new).
 
+- Phase 5 — Fade Passport. `customer_passports`, `customer_passport_photos`, `customer_passport_shares` (all owner-only RLS), plus the codebase's **first Supabase Storage bucket** (`passport-photos`: private, 5 MB limit, jpeg/png/webp only, three per-user-folder `storage.objects` policies keyed on `(storage.foldername(name))[1] = auth.uid()::text`). Share tokens reuse the `platform_invitations` sha256 pattern exactly — raw token returned once by `create_passport_share`, only the hash persisted, no insert/update RLS policy at all on the shares table (a client-chosen `token_hash` would defeat the design). `get_shared_passport` returns an explicit `status` (active/expired/revoked/not_found) so the viewer gets a genuinely useful expired-link state. **Internal-notes separation is structural**: no column anywhere in these tables can hold shop/staff-internal data, so there is nothing to filter out — and a test asserts `get_shared_passport`'s own signature can never return phone/email/photo fields.
+
+  `verify_wave1_passport.sql` live-verified (12 assertions, all PASS, fixtures cleaned): cross-customer read/write isolation, raw token never persisted, valid share returns curated data, share surface structurally cannot leak contact/photo data, anon share viewer cannot mutate, revoked → `revoked`, expired → `expired`, bogus token → `not_found`, B cannot revoke A's share, anon zero access to all three tables, bucket is private with exactly 3 policies. One genuine design decision surfaced here: the `expires_at > created_at` check constraint correctly applies to UPDATEs too, so the expiry test ages the fixture realistically (backdates both timestamps) rather than weakening the constraint.
+
+  Frontend: `CustomerPassportPage` (CRUD, partial data stays useful, private photo upload/delete with signed URLs, share creation with QR + copy-once warning, revoke), public `PassportShareViewPage` at `/passport/shared/:token` (read-only, noindex). `useDocumentMeta` gained a `noIndex` option so a live share never becomes indexable. New `passport` i18n namespace × 10 locales; Passport tab added to the customer nav. New dependency: `qrcode` (+ types).
+
+  `npm run typecheck`/`lint`/`test`/`build` all clean (103/103 tests, 10 new).
+
 ## Current phase
-Phase 5 — Fade Passport. Starting now. New tables (`customer_passports`, `customer_passport_photos`, `customer_passport_shares`), first real Supabase Storage bucket in this codebase (`passport-photos`, private, per-user-folder RLS), sha256-hashed share tokens (same pattern as `platform_invitations`), QR code generation (new minimal dependency: `qrcode`). Passport photo delivery through an unauthenticated share link is deliberately out of V1 scope — see PLAN.md section 9.
+Phase 6 — Full wave integration + polish. Starting now: end-to-end journey checks, responsive/i18n/accessibility passes, and a browser-based visual verification of the key screens.
 
 ## Important architectural decisions (see PLAN.md for full rationale)
 - Customer identity: new `customer_profiles` (1:1 auth.users, portable) is the canonical customer identity; per-org `customers` CRM rows get an optional `user_id` bridge. Do NOT merge these into one table — org-owned CRM contacts (walk-ins, no login) must keep existing.

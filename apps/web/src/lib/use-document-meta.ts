@@ -3,6 +3,13 @@ import { useEffect } from 'react'
 interface DocumentMetaOptions {
   title: string
   description: string
+  /**
+   * Emits `<meta name="robots" content="noindex, nofollow">` for this route.
+   * Use on any page that must never become indexable public content — e.g.
+   * a shared Fade Passport, whose token-bearing URL is authorization in
+   * itself and must not end up in a search index.
+   */
+  noIndex?: boolean
 }
 
 /**
@@ -20,7 +27,7 @@ interface DocumentMetaOptions {
  * Correct per-page Open Graph previews for unfurling would require real SSR
  * or prerendering, which isn't part of this stack.
  */
-export function useDocumentMeta({ title, description }: DocumentMetaOptions): void {
+export function useDocumentMeta({ title, description, noIndex = false }: DocumentMetaOptions): void {
   useEffect(() => {
     const previousTitle = document.title
     document.title = title
@@ -35,6 +42,14 @@ export function useDocumentMeta({ title, description }: DocumentMetaOptions): vo
     const previousDescription = meta.getAttribute('content')
     meta.setAttribute('content', description)
 
+    let robotsMeta: HTMLMetaElement | null = null
+    if (noIndex) {
+      robotsMeta = document.createElement('meta')
+      robotsMeta.setAttribute('name', 'robots')
+      robotsMeta.setAttribute('content', 'noindex, nofollow')
+      document.head.appendChild(robotsMeta)
+    }
+
     return () => {
       document.title = previousTitle
       if (createdMeta) {
@@ -42,6 +57,7 @@ export function useDocumentMeta({ title, description }: DocumentMetaOptions): vo
       } else if (previousDescription !== null) {
         meta.setAttribute('content', previousDescription)
       }
+      robotsMeta?.remove()
     }
-  }, [title, description])
+  }, [title, description, noIndex])
 }

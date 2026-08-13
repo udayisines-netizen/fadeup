@@ -155,7 +155,25 @@ export const router = createBrowserRouter([
               return { Component: CustomerFavoritesPage }
             },
           },
+          {
+            path: 'passport',
+            lazy: async () => {
+              const { CustomerPassportPage } = await import('@/pages/customer-passport-page')
+              return { Component: CustomerPassportPage }
+            },
+          },
         ],
+      },
+      {
+        // Public, unauthenticated read-only view of a shared Fade Passport.
+        // The token in the URL is itself the authorization (verified
+        // server-side by hash — see get_shared_passport); the page sets
+        // noindex so a live share never becomes indexable content.
+        path: 'passport/shared/:token',
+        lazy: async () => {
+          const { PassportShareViewPage } = await import('@/pages/passport-share-view-page')
+          return { Component: PassportShareViewPage }
+        },
       },
       {
         path: 'forgot-password',

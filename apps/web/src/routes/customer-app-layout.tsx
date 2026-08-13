@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { House, CalendarDays, Compass, CircleUserRound } from 'lucide-react'
+import { House, CalendarDays, Compass, IdCard, CircleUserRound } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
@@ -13,9 +13,7 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher'
  * primary navigation instead, the standard consumer-app pattern, with only
  * a slim identity/settings strip up top.
  *
- * Tabs shown here are only ones with a real destination today — the
- * Passport tab is added in Phase 5, not stubbed in ahead of time as a dead
- * link. Queue has no tab of its own: active queue state is contextual (Home
+ * Queue has no tab of its own: active queue state is contextual (Home
  * surfaces it prominently when real), a persistent tab would usually be
  * empty. Favorites lives inside Profile (spec: "whether as a dedicated view
  * or within Discover/Profile... do not create unnecessary navigation
@@ -59,6 +57,7 @@ function BottomTabs() {
         <TabLink to="/app/customer" end icon={<House className="h-5 w-5" aria-hidden="true" />} label="Home" />
         <TabLink to="/app/customer/appointments" icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />} label="Appointments" />
         <TabLink to="/search" icon={<Compass className="h-5 w-5" aria-hidden="true" />} label="Discover" />
+        <TabLink to="/app/customer/passport" icon={<IdCard className="h-5 w-5" aria-hidden="true" />} label="Passport" />
         <TabLink to="/app/customer/profile" icon={<CircleUserRound className="h-5 w-5" aria-hidden="true" />} label="Profile" />
       </div>
     </nav>
