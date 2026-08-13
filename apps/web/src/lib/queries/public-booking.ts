@@ -274,6 +274,16 @@ export interface BookedAppointment {
   startsAt: string
   endsAt: string
   status: string
+  /**
+   * Single-use, 72h token returned ONLY for an anonymous booking — it is
+   * what later proves to `redeem_appointment_claim` that the holder is the
+   * person who made this booking, letting them attach it to an account they
+   * create afterwards. Null when the booker was already signed in, because
+   * the appointment is then owned server-side from the moment it exists and
+   * there is nothing to claim. Returned exactly once; only its hash is ever
+   * stored (20260813150000_appointment_ownership_hardening.sql).
+   */
+  claimToken: string | null
 }
 
 interface BookedAppointmentRow {
@@ -281,10 +291,17 @@ interface BookedAppointmentRow {
   starts_at: string
   ends_at: string
   status: string
+  claim_token: string | null
 }
 
 function mapBookedAppointment(row: BookedAppointmentRow): BookedAppointment {
-  return { id: row.id, startsAt: row.starts_at, endsAt: row.ends_at, status: row.status }
+  return {
+    id: row.id,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    status: row.status,
+    claimToken: row.claim_token ?? null,
+  }
 }
 
 /**

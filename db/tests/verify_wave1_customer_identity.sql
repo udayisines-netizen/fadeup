@@ -1,13 +1,18 @@
 -- FadeUp — Wave 1 verification: customer identity bridge
 --
--- Proves the core Wave 1 fix: a real customer auth.users account can link
--- itself to the shop-owned customers CRM row created when they booked
--- (anonymously, before they had an account) with matching contact info —
--- via claim_customer_records — without ever gaining broad access to the
--- customers table itself (notes stay staff-internal). Also proves
--- customer_profiles is strictly owner-only (Customer A cannot read/write
--- Customer B's profile), anon has zero access to either table, and
--- claiming is idempotent/cannot steal an already-linked row.
+-- Proves customer_profiles — the customer-owned, portable identity — is
+-- strictly owner-only (Customer A cannot read or write Customer B's
+-- profile) and that anon has zero access to it or to the shop-owned
+-- customers CRM table (whose notes stay staff-internal).
+--
+-- NOTE: this file originally also covered claim_customer_records(phone,
+-- email), which linked a customer account to shop records matching
+-- caller-supplied contact details. That function was a takeover vector
+-- (anyone could assert a stranger's email) and was removed in
+-- 20260813150000_appointment_ownership_hardening.sql. The account/booking
+-- bridge and its security properties are now covered end to end by
+-- db/tests/verify_wave1_appointment_ownership.sql, which also asserts that
+-- claim_customer_records no longer exists in any form.
 --
 -- Run with:
 --   docker cp db/tests/verify_wave1_customer_identity.sql fadeup-supabase-db:/tmp/
@@ -61,6 +66,9 @@ select id as org_id from public.organizations where slug = 'wave1-identity-shop'
 select id as loc_id from public.locations where organization_id = :'org_id' \gset
 select id as svc_id from public.services where organization_id = :'org_id' \gset
 select id as brb_id from public.barbers where organization_id = :'org_id' \gset
+-- Bridged through a session setting because psql's :'var' substitution
+-- never penetrates a dollar-quoted do $$ ... $$ body.
+select set_config('test.identity_org', :'org_id', false);
 commit;
 
 begin;
@@ -72,7 +80,7 @@ select public.book_public_appointment(
 commit;
 
 \echo '=========================================================='
-\echo '2. Customer A signs up and claims the record by phone'
+\echo '2. Customer A signs up and saves their own portable profile'
 \echo '=========================================================='
 begin;
 reset role;
@@ -88,46 +96,51 @@ set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', 'c1000000-0000-0000-0000-000000000002', 'role', 'authenticated')::text, true);
 insert into public.customer_profiles (user_id, display_name, phone, email)
   values ((select auth.uid()), 'Customer A', '+15550001111', 'a-before-account@example.com');
-select public.claim_customer_records('+15550001111', 'a-before-account@example.com') as claimed_count;
 commit;
 
 begin;
 reset role;
-select user_id from public.customers where id = :'customers_row_id' \gset
-commit;
-select case when :'user_id' = 'c1000000-0000-0000-0000-000000000002' then 'PASS: claim linked the record to Customer A' else 'FAIL: not linked' end as result;
-
-\echo '=========================================================='
-\echo '3. Idempotency: claiming again finds nothing new, and Customer B cannot steal it'
-\echo '=========================================================='
-begin;
-set local role authenticated;
-select set_config('request.jwt.claims', json_build_object('sub', 'c1000000-0000-0000-0000-000000000002', 'role', 'authenticated')::text, true);
 do $$
 declare
-  v_count integer;
+  v_owner uuid;
 begin
-  select public.claim_customer_records('+15550001111', 'a-before-account@example.com') into v_count;
-  if v_count <> 0 then
-    raise exception 'FAIL: re-claiming an already-linked record should link 0 new rows, got %', v_count;
+  -- Saving contact details into a profile must NOT, on its own, attach the
+  -- shop's pre-existing CRM row to that account. Typed-in contact info is
+  -- not proof of ownership; only a booking claim token is (see
+  -- verify_wave1_appointment_ownership.sql).
+  select c.user_id into v_owner from public.customers c
+    where c.organization_id = current_setting('test.identity_org')::uuid and c.phone = '+15550001111';
+  if v_owner is not null then
+    raise exception 'FAIL: saving a profile silently claimed a shop record (owner %)', v_owner;
   end if;
-  raise notice 'PASS: re-claiming is a no-op (0 new links)';
+  raise notice 'PASS: saving contact info does not retroactively claim shop records';
 end $$;
 commit;
 
+\echo '=========================================================='
+\echo '3. Customer B cannot reach Customer A''s shop record through any customer-facing surface'
+\echo '=========================================================='
 begin;
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', 'c1000000-0000-0000-0000-000000000003', 'role', 'authenticated')::text, true);
 do $$
 declare
   v_count integer;
-  v_owner uuid;
 begin
-  select public.claim_customer_records('+15550001111', 'a-before-account@example.com') into v_count;
+  -- customers is shop-internal: a customer has no RLS read path to it at
+  -- all, which is what keeps customers.notes away from the person it
+  -- describes.
+  select count(*) into v_count from public.customers;
   if v_count <> 0 then
-    raise exception 'FAIL: Customer B claimed a record already linked to Customer A (% rows)', v_count;
+    raise exception 'FAIL: a plain customer read % row(s) of the shop CRM table', v_count;
   end if;
-  raise notice 'PASS: Customer B cannot steal Customer A''s already-linked record';
+  raise notice 'PASS: a customer account has no read access to the shop CRM table';
+
+  select count(*) into v_count from public.get_my_appointments();
+  if v_count <> 0 then
+    raise exception 'FAIL: Customer B sees % appointment(s) that are not theirs', v_count;
+  end if;
+  raise notice 'PASS: Customer B sees no appointments they do not own';
 end $$;
 commit;
 
@@ -193,10 +206,17 @@ begin
   end;
 
   begin
-    perform public.claim_customer_records('+15550001111', null);
-    raise exception 'FAIL: anon was able to call claim_customer_records';
-  exception when insufficient_privilege then
-    raise notice 'PASS: anon has no privilege to execute claim_customer_records';
+    perform public.redeem_appointment_claim('made-up-token');
+    raise exception 'FAIL: anon was able to call redeem_appointment_claim';
+  exception
+    when insufficient_privilege then
+      raise notice 'PASS: anon has no privilege to execute redeem_appointment_claim';
+    when others then
+      if sqlerrm like '%requires an authenticated session%' then
+        raise notice 'PASS: redeem_appointment_claim refuses an anonymous caller';
+      else
+        raise;
+      end if;
   end;
 end $$;
 commit;

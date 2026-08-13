@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,7 +17,7 @@ import {
   type PublicOrganization,
   type PublicService,
 } from '@/lib/queries/public-booking'
-import { useClaimCustomerRecords } from '@/lib/queries/customer-profile'
+import { useMyCustomerProfile, storePendingClaimToken } from '@/lib/queries/customer-profile'
 import { useAuth } from '@/lib/auth-context'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
@@ -669,18 +669,36 @@ function DetailsStep({
   onSuccess: (appointment: BookedAppointment) => void
 }) {
   const bookAppointment = useBookPublicAppointment()
-  const claimRecords = useClaimCustomerRecords()
   const { user } = useAuth()
+  const myProfile = useMyCustomerProfile(user?.id)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<DetailsFormValues>({
     resolver: zodResolver(detailsSchema),
     defaultValues: { customerName: '', customerPhone: '', customerEmail: '', notes: '' },
   })
+
+  // A signed-in customer should not retype what they already told us. Fills
+  // in once, from their own saved profile, and only fields that profile
+  // actually has — never invents a value, and never clobbers typing (the
+  // ref makes this strictly first-arrival).
+  const prefilledRef = useRef(false)
+  const profile = myProfile.data
+  useEffect(() => {
+    if (prefilledRef.current || !user || !profile) return
+    prefilledRef.current = true
+    reset({
+      customerName: profile.displayName ?? '',
+      customerPhone: profile.phone ?? '',
+      customerEmail: profile.email ?? user.email ?? '',
+      notes: '',
+    })
+  }, [user, profile, reset])
 
   async function onSubmit(values: DetailsFormValues) {
     setSubmitError(null)
@@ -696,11 +714,12 @@ function DetailsStep({
         customerEmail: values.customerEmail || null,
         notes: values.notes || null,
       })
-      // Best-effort: if the customer is signed in, link this (and any past)
-      // booking made with this contact info to their account — see
-      // claim_customer_records. Never blocks the booking success screen.
-      if (user && (values.customerPhone || values.customerEmail)) {
-        claimRecords.mutate({ phone: values.customerPhone || null, email: values.customerEmail || null })
+      // Anonymous booking: hold on to the one-time claim token so that, if
+      // the customer creates an account from the success screen, this
+      // booking follows them into it. A signed-in booking returns no token
+      // — the server already linked it (see the migration).
+      if (!user && appointment.claimToken) {
+        storePendingClaimToken(appointment.claimToken)
       }
       onSuccess(appointment)
     } catch (error) {
@@ -793,10 +812,59 @@ function SuccessScreen({
         {location ? <SummaryRow label="Location" value={location.name} /> : null}
       </dl>
 
-      <Link to="/" className={buttonVariants({ variant: 'secondary' }, 'mt-6 w-full')}>
+      <SuccessNextStep hasClaimToken={Boolean(appointment.claimToken)} />
+    </Card>
+  )
+}
+
+/**
+ * The booking -> account seam. A signed-in customer's appointment is
+ * already linked server-side, so they just go look at it. An anonymous
+ * booker is offered an account, and the claim token stashed at booking
+ * time is what makes THIS appointment show up inside it — without that
+ * step, creating an account here would be an empty promise.
+ */
+function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
+  const { user } = useAuth()
+
+  if (user) {
+    return (
+      <div className="mt-6 flex flex-col gap-2">
+        <Link to="/app/customer/appointments" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+          View my appointments
+        </Link>
+        <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
+          Done
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-6 flex flex-col gap-2">
+      {hasClaimToken ? (
+        <>
+          <p className="text-sm text-ink-500">
+            Create an account to track this appointment, rebook in one tap, and keep your Fade Passport.
+          </p>
+          <Link
+            to="/customer/signup?redirect=%2Fapp%2Fcustomer"
+            className={buttonVariants({ variant: 'primary' }, 'w-full')}
+          >
+            Create an account
+          </Link>
+          <Link
+            to="/customer/login?redirect=%2Fapp%2Fcustomer"
+            className={buttonVariants({ variant: 'secondary' }, 'w-full')}
+          >
+            I already have an account
+          </Link>
+        </>
+      ) : null}
+      <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
         Done
       </Link>
-    </Card>
+    </div>
   )
 }
 

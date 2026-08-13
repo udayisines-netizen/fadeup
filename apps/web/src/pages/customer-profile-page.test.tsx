@@ -5,7 +5,7 @@ import { CustomerProfilePage } from '@/pages/customer-profile-page'
 import { ToastProvider } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
-import { useMyCustomerProfile, useUpsertMyCustomerProfile, useClaimCustomerRecords } from '@/lib/queries/customer-profile'
+import { useMyCustomerProfile, useUpsertMyCustomerProfile } from '@/lib/queries/customer-profile'
 
 const mockNavigate = vi.fn()
 
@@ -25,14 +25,12 @@ vi.mock('@/lib/supabase', () => ({
 vi.mock('@/lib/queries/customer-profile', () => ({
   useMyCustomerProfile: vi.fn(),
   useUpsertMyCustomerProfile: vi.fn(),
-  useClaimCustomerRecords: vi.fn(),
 }))
 
 const mockUseAuth = vi.mocked(useAuth)
 const mockGetSupabaseClient = vi.mocked(getSupabaseClient)
 const mockUseMyCustomerProfile = vi.mocked(useMyCustomerProfile)
 const mockUseUpsert = vi.mocked(useUpsertMyCustomerProfile)
-const mockUseClaimRecords = vi.mocked(useClaimCustomerRecords)
 
 function renderPage() {
   return render(
@@ -46,16 +44,16 @@ function renderPage() {
 
 describe('CustomerProfilePage', () => {
   const mutateAsync = vi.fn().mockResolvedValue({})
-  const claimMutate = vi.fn()
   const signOut = vi.fn().mockResolvedValue({})
+  const supabaseRpc = vi.fn().mockResolvedValue({ data: null, error: null })
 
   beforeEach(() => {
     mockNavigate.mockClear()
     mutateAsync.mockClear()
-    claimMutate.mockClear()
     signOut.mockClear()
+    supabaseRpc.mockClear()
     mockUseAuth.mockReturnValue({ session: {} as never, user: { id: 'user-1' } as never, loading: false })
-    mockGetSupabaseClient.mockReturnValue({ auth: { signOut } } as never)
+    mockGetSupabaseClient.mockReturnValue({ auth: { signOut }, rpc: supabaseRpc } as never)
     mockUseMyCustomerProfile.mockReturnValue({
       data: {
         id: 'profile-1',
@@ -75,7 +73,6 @@ describe('CustomerProfilePage', () => {
       refetch: vi.fn(),
     } as never)
     mockUseUpsert.mockReturnValue({ mutateAsync, isPending: false } as never)
-    mockUseClaimRecords.mockReturnValue({ mutate: claimMutate } as never)
   })
 
   it('shows the "no habits yet" empty state — never a fabricated habit summary', () => {
@@ -111,14 +108,21 @@ describe('CustomerProfilePage', () => {
     expect(screen.getByText('Either works')).toBeInTheDocument()
   })
 
-  it('saving contact info claims past bookings made with that info — the account/booking bridge', async () => {
+  it('saves contact info WITHOUT retroactively claiming records that merely match it', async () => {
+    // Security regression guard. An earlier version of this screen called
+    // claim_customer_records(phone, email) on save, which treated typed-in
+    // contact details as proof of ownership and let anyone take over a
+    // stranger's unlinked shop record by entering their email. That RPC is
+    // gone (20260813150000_appointment_ownership_hardening.sql); saving a
+    // profile must now do nothing beyond saving the profile.
     renderPage()
 
     fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '+15559876' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalled())
-    expect(claimMutate).toHaveBeenCalledWith({ phone: '+15559876', email: null })
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ phone: '+15559876' }))
+    expect(supabaseRpc).not.toHaveBeenCalled()
   })
 
   it('sign out ends the session and returns to customer login', async () => {

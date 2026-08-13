@@ -117,20 +117,70 @@ export function useUpsertMyCustomerProfile() {
   })
 }
 
+export interface RedeemedClaim {
+  claimed: boolean
+  organizationName: string | null
+  startsAt: string | null
+}
+
 /**
- * Links every existing shop-owned customers row (across every organization)
- * matching the caller's own phone/email to their account — see
- * public.claim_customer_records. Best-effort: call after a booking or after
- * saving contact info in onboarding/profile; failures are non-fatal to
- * whatever the customer was actually trying to do.
+ * Attaches an appointment booked anonymously to the account the customer
+ * just created, using the single-use token issued at booking time — see
+ * public.redeem_appointment_claim.
+ *
+ * This deliberately replaced an earlier `claim_customer_records(phone,
+ * email)` RPC, which treated CALLER-SUPPLIED contact details as proof of
+ * ownership and therefore let anyone take over a stranger's unlinked shop
+ * record by guessing their email (see
+ * db/migrations/20260813150000_appointment_ownership_hardening.sql).
+ * Possession of the booking token is the only ownership claim accepted
+ * now; it is never derived from anything the customer types.
  */
-export function useClaimCustomerRecords() {
+export function useRedeemAppointmentClaim() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ phone, email }: { phone: string | null; email: string | null }): Promise<number> => {
+    mutationFn: async (token: string): Promise<RedeemedClaim> => {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase.rpc('claim_customer_records', { p_phone: phone, p_email: email })
+      const { data, error } = await supabase.rpc('redeem_appointment_claim', { p_token: token })
       if (error) throw error
-      return (data as number) ?? 0
+      const row = (Array.isArray(data) ? data[0] : data) as
+        | { claimed: boolean; organization_name: string | null; starts_at: string | null }
+        | undefined
+      return {
+        claimed: row?.claimed ?? false,
+        organizationName: row?.organization_name ?? null,
+        startsAt: row?.starts_at ?? null,
+      }
+    },
+    onSuccess: (result) => {
+      if (result.claimed) void queryClient.invalidateQueries({ queryKey: ['my-appointments'] })
     },
   })
+}
+
+/**
+ * Where a claim token waits between "booked anonymously" and "finished
+ * creating an account". sessionStorage, not localStorage: it is a
+ * short-lived, single-use credential for the tab that made the booking, and
+ * should not outlive the browsing session on a shared device.
+ */
+export const PENDING_CLAIM_STORAGE_KEY = 'fadeup.pendingAppointmentClaim'
+
+export function storePendingClaimToken(token: string) {
+  try {
+    window.sessionStorage.setItem(PENDING_CLAIM_STORAGE_KEY, token)
+  } catch {
+    // Private-browsing modes can refuse sessionStorage. The booking itself
+    // already succeeded, so this must never surface as an error.
+  }
+}
+
+export function takePendingClaimToken(): string | null {
+  try {
+    const token = window.sessionStorage.getItem(PENDING_CLAIM_STORAGE_KEY)
+    if (token) window.sessionStorage.removeItem(PENDING_CLAIM_STORAGE_KEY)
+    return token
+  } catch {
+    return null
+  }
 }

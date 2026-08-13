@@ -4,6 +4,7 @@ import { House, CalendarDays, Compass, IdCard, CircleUserRound } from 'lucide-re
 import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { usePendingClaimRedemption } from '@/lib/use-pending-claim'
 
 /**
  * Shell for the logged-in Customer App (/app/customer/*). Deliberately NOT
@@ -20,6 +21,12 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher'
  * items").
  */
 export function CustomerAppLayout() {
+  // Runs here rather than on any one page: a customer arriving from the
+  // booking success screen may land on Home, Onboarding, or Appointments
+  // depending on their redirect, and the appointment they just booked must
+  // attach to their new account in all of those cases.
+  usePendingClaimRedemption()
+
   return (
     <div className="flex min-h-svh flex-col bg-paper-50">
       <TopStrip />

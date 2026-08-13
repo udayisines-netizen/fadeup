@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
-import { useMyCustomerProfile, useUpsertMyCustomerProfile, useClaimCustomerRecords } from '@/lib/queries/customer-profile'
+import { useMyCustomerProfile, useUpsertMyCustomerProfile } from '@/lib/queries/customer-profile'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -32,7 +32,6 @@ export function CustomerProfilePage() {
   const toast = useToast()
   const profileQuery = useMyCustomerProfile(user?.id)
   const upsert = useUpsertMyCustomerProfile()
-  const claimRecords = useClaimCustomerRecords()
 
   const {
     register,
@@ -83,12 +82,11 @@ export function CustomerProfilePage() {
       phone: values.phone || null,
       email: values.email || null,
     })
-    // Best-effort: retroactively link any past bookings made with this
-    // contact info before the customer had an account. Never blocks the
-    // profile save itself on failure.
-    if (values.phone || values.email) {
-      claimRecords.mutate({ phone: values.phone || null, email: values.email || null })
-    }
+    // Note: saving contact details here deliberately does NOT retroactively
+    // attach past shop records to this account. Typing an address into a
+    // form is not proof of owning it — that assumption was the takeover
+    // vector removed in 20260813150000_appointment_ownership_hardening.sql.
+    // Past anonymous bookings attach via their one-time claim token instead.
     toast.toast({ variant: 'success', title: t('profile.saved') })
     reset(values)
   }
