@@ -27,7 +27,7 @@ const TIERS: Tier[] = [
     name: 'Growth',
     tagline: 'An established shop that wants more control.',
     scope: 'Up to 1 location, unlimited chairs',
-    highlights: ['Everything in Starter', 'Barber Passport', 'Memberships & loyalty', 'Team roles & permissions'],
+    highlights: ['Everything in Starter', 'Barber Passport', 'Memberships', 'Team roles & permissions'],
     featured: true,
   },
   {
@@ -50,7 +50,7 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   { feature: 'Chair Mode', tiers: [true, true, true] },
   { feature: 'Customer CRM & timeline', tiers: [true, true, true] },
   { feature: 'Barber Passport', tiers: [false, true, true] },
-  { feature: 'Memberships & loyalty', tiers: [false, true, true] },
+  { feature: 'Memberships', tiers: [false, true, true] },
   { feature: 'Team roles & permissions', tiers: [false, true, true] },
   { feature: 'Multi-location support', tiers: [false, false, true] },
   { feature: 'Cross-location analytics', tiers: [false, false, true] },

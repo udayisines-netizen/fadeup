@@ -100,13 +100,13 @@ const FEATURES: FeatureSectionData[] = [
     preview: <CustomerTimelinePreview />,
   },
   {
-    eyebrow: 'Memberships & loyalty',
+    eyebrow: 'Memberships',
     title: 'Give customers a reason to come back on your schedule',
     description:
-      'Recurring membership plans and loyalty balances, tracked alongside the rest of the customer relationship — not a separate punch card.',
+      'Recurring membership plans, tracked alongside the rest of the customer relationship — not a separate punch card.',
     bullets: [
       'Recurring membership plans tied to the customer record',
-      'Loyalty balances that update automatically as visits happen',
+      'Plan status visible wherever the customer appears',
       'Designed to encourage repeat visits, not just track them after the fact',
     ],
     preview: <MembershipPreview />,
