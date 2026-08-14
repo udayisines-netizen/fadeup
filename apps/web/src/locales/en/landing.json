@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — Find the barber who gets your cut",
+      "description": "Search real barbershops and independent barbers near you. See who is open, book a time, or join the live queue from your phone."
+    },
+    "hero": {
+      "eyebrow": "Barbershops and independent barbers",
+      "titleLead": "Find the barber",
+      "titleEmphasis": "who gets your cut.",
+      "subtitle": "Search the barbers actually on FadeUp. See who is open, book a time, or take a place in the queue from your phone."
+    },
+    "discover": {
+      "eyebrow": "Discover",
+      "title": "Real chairs. Real people.",
+      "body": "Every barber here runs their day on FadeUp, so what you see is what is genuinely open.",
+      "independent": "Independent barber",
+      "viewProfile": "View profile",
+      "seeAll": "Browse all barbers",
+      "emptyTitle": "FadeUp is opening city by city.",
+      "emptyBody": "Search yours to see which barbers are already here."
+    },
+    "book": {
+      "eyebrow": "Two ways in",
+      "title": "Book a time. Or just walk in.",
+      "appointment": {
+        "label": "Appointment",
+        "title": "Pick your slot",
+        "body": "Choose your barber and a time that suits you. The chair is held."
+      },
+      "queue": {
+        "label": "Live queue",
+        "title": "Join from your phone",
+        "body": "Walk-in shops run a live queue. Take a place, watch it move, and arrive when you are close."
+      },
+      "queuePosition": "You are #{{position}}",
+      "queueEta": "about {{minutes}} min",
+      "queueNext": "You are next."
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp remembers your cut.",
+      "body": "The number, the length, the beard line, the barber who got it right. It is yours, and it travels with you — even to a shop you have never sat in.",
+      "fade": "Fade",
+      "top": "Top",
+      "beard": "Beard",
+      "lastCut": "Last cut",
+      "barber": "Usual barber",
+      "demoFade": "Skin fade, low",
+      "demoTop": "4 on top, textured",
+      "demoBeard": "Lined up, short",
+      "demoLastCut": "18 days ago",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "Coming back",
+      "title": "It gets better the second time.",
+      "daysSince": "18 days since your last cut",
+      "sameBarber": "Same barber",
+      "sameCut": "Same cut",
+      "cta": "Rebook",
+      "body": "No explaining it again. No starting over. Your barber already knows."
+    },
+    "final": {
+      "title": "Find your barber.",
+      "subtitle": "Search by city, shop, barber or service."
+    },
+    "demoLabel": "Product illustration"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — 找到懂你发型的理发师",
+      "description": "搜索你附近真实的理发店和独立理发师。看谁在营业，预约时间，或用手机加入现场排队。"
+    },
+    "hero": {
+      "eyebrow": "理发店与独立理发师",
+      "titleLead": "找到那位",
+      "titleEmphasis": "懂你发型的理发师。",
+      "subtitle": "搜索真正在 FadeUp 上的理发师。看谁在营业，预约时间，或用手机排队。"
+    },
+    "discover": {
+      "eyebrow": "发现",
+      "title": "真实的椅子。真实的人。",
+      "body": "这里每位理发师都用 FadeUp 安排一天，所以你看到的确实在营业。",
+      "independent": "独立理发师",
+      "viewProfile": "查看主页",
+      "seeAll": "浏览全部理发师",
+      "emptyTitle": "FadeUp 正在逐城开放。",
+      "emptyBody": "搜索你的城市，看看谁已经在这里。"
+    },
+    "book": {
+      "eyebrow": "两种方式",
+      "title": "预约时间。或者直接进店。",
+      "appointment": {
+        "label": "预约",
+        "title": "选择时段",
+        "body": "选择理发师和合适的时间，位子为你保留。"
+      },
+      "queue": {
+        "label": "现场排队",
+        "title": "用手机加入排队",
+        "body": "接待到店客人的店铺有现场队列。取号、看着队伍前进、快到时再过去。"
+      },
+      "queuePosition": "你排第 {{position}} 位",
+      "queueEta": "约 {{minutes}} 分钟",
+      "queueNext": "马上轮到你。"
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp 记得你的发型。",
+      "body": "推子号数、长度、胡须轮廓，还有那位剪对了的理发师。它属于你，随你去任何一家新店。",
+      "fade": "渐变",
+      "top": "顶部",
+      "beard": "胡须",
+      "lastCut": "上次理发",
+      "barber": "常用理发师",
+      "demoFade": "贴皮渐变，低位",
+      "demoTop": "顶部 4 号，打薄",
+      "demoBeard": "修边，短",
+      "demoLastCut": "18 天前",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "再来一次",
+      "title": "第二次会更好。",
+      "daysSince": "距上次理发 18 天",
+      "sameBarber": "同一位理发师",
+      "sameCut": "同样的发型",
+      "cta": "再次预约",
+      "body": "不用重新解释，不用从头开始。你的理发师已经知道了。"
+    },
+    "final": {
+      "title": "找到你的理发师。",
+      "subtitle": "按城市、店铺、理发师或服务搜索。"
+    },
+    "demoLabel": "产品示意"
+  }
+}

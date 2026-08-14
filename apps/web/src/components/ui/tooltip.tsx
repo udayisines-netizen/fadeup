@@ -15,7 +15,10 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipPrimitive.Toolti
           data-fu-popover
           sideOffset={sideOffset}
           className={cn(
-            'z-50 max-w-xs rounded-md bg-ink-950 px-2 py-1 text-xs text-on-accent shadow-sm',
+            // `paper-0` rather than `on-accent`: both invert with the theme,
+            // so the tooltip stays readable. `on-accent` stays near-white by
+            // design, which on an inverted `ink-950` surface is white-on-white.
+            'z-50 max-w-xs rounded-md bg-ink-950 px-2 py-1 text-xs text-paper-0 shadow-sm',
             className,
           )}
           {...props}

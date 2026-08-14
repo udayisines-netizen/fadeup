@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — 自分の髪をわかってくれる理容師を見つける",
+      "description": "近くのバーバーショップや独立理容師を検索。営業中の店を確認し、予約するか、スマホからライブ待ち列に並べます。"
+    },
+    "hero": {
+      "eyebrow": "バーバーショップと独立理容師",
+      "titleLead": "自分の髪をわかってくれる",
+      "titleEmphasis": "理容師を見つける。",
+      "subtitle": "実際に FadeUp にいる理容師を検索。営業中の店を確認し、予約するか、スマホから待ち列に並べます。"
+    },
+    "discover": {
+      "eyebrow": "見つける",
+      "title": "本物の椅子。本物の人。",
+      "body": "ここの理容師は全員 FadeUp で一日を動かしています。表示されている店は本当に開いています。",
+      "independent": "独立理容師",
+      "viewProfile": "プロフィールを見る",
+      "seeAll": "すべての理容師を見る",
+      "emptyTitle": "FadeUp は都市ごとに広がっています。",
+      "emptyBody": "あなたの街を検索して、誰がもういるか確かめてください。"
+    },
+    "book": {
+      "eyebrow": "二つの入り方",
+      "title": "予約する。または、そのまま入る。",
+      "appointment": {
+        "label": "予約",
+        "title": "時間を選ぶ",
+        "body": "理容師と都合のよい時間を選ぶだけ。席は確保されます。"
+      },
+      "queue": {
+        "label": "ライブ待ち列",
+        "title": "スマホから列に並ぶ",
+        "body": "予約不要の店はライブの待ち列を出しています。席を取り、進み具合を見て、頃合いに着く。"
+      },
+      "queuePosition": "あなたは {{position}} 番目",
+      "queueEta": "約 {{minutes}} 分",
+      "queueNext": "次はあなたです。"
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp はあなたの髪を覚えています。",
+      "body": "ミリ数、長さ、髭のライン、うまく切ってくれた理容師。あなたのものとして、初めての店にもついてきます。",
+      "fade": "フェード",
+      "top": "トップ",
+      "beard": "髭",
+      "lastCut": "前回のカット",
+      "barber": "いつもの理容師",
+      "demoFade": "スキンフェード（低め）",
+      "demoTop": "トップ 4mm・毛流れ",
+      "demoBeard": "ライン入れ・短め",
+      "demoLastCut": "18日前",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "また来る",
+      "title": "二回目からが本番です。",
+      "daysSince": "前回のカットから18日",
+      "sameBarber": "同じ理容師",
+      "sameCut": "同じカット",
+      "cta": "再予約",
+      "body": "説明し直す必要も、やり直す必要もありません。理容師はもう知っています。"
+    },
+    "final": {
+      "title": "あなたの理容師を見つける。",
+      "subtitle": "街・店・理容師・メニューで検索。"
+    },
+    "demoLabel": "製品イメージ"
+  }
+}

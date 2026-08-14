@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — Finde den Barbier, der deinen Schnitt versteht",
+      "description": "Finde Barbershops und selbstständige Barbiere in deiner Nähe. Sieh, wer offen hat, buche einen Termin oder stell dich per Handy in die Live-Schlange."
+    },
+    "hero": {
+      "eyebrow": "Barbershops und selbstständige Barbiere",
+      "titleLead": "Finde den Barbier,",
+      "titleEmphasis": "der deinen Schnitt versteht.",
+      "subtitle": "Such die Barbiere, die wirklich auf FadeUp sind. Sieh, wer offen hat, buche einen Termin oder nimm dir per Handy einen Platz in der Schlange."
+    },
+    "discover": {
+      "eyebrow": "Entdecken",
+      "title": "Echte Stühle. Echte Menschen.",
+      "body": "Jeder Barbier hier steuert seinen Tag über FadeUp — was du siehst, hat wirklich offen.",
+      "independent": "Selbstständiger Barbier",
+      "viewProfile": "Profil ansehen",
+      "seeAll": "Alle Barbiere ansehen",
+      "emptyTitle": "FadeUp startet Stadt für Stadt.",
+      "emptyBody": "Such deine, um zu sehen, wer schon da ist."
+    },
+    "book": {
+      "eyebrow": "Zwei Wege hinein",
+      "title": "Termin buchen. Oder einfach reinkommen.",
+      "appointment": {
+        "label": "Termin",
+        "title": "Wähl deine Zeit",
+        "body": "Wähl deinen Barbier und eine Zeit, die passt. Der Stuhl bleibt frei."
+      },
+      "queue": {
+        "label": "Live-Schlange",
+        "title": "Per Handy anstellen",
+        "body": "Shops ohne Termin führen eine Live-Schlange. Platz nehmen, mitverfolgen, rechtzeitig da sein."
+      },
+      "queuePosition": "Du bist Nr. {{position}}",
+      "queueEta": "etwa {{minutes}} Min.",
+      "queueNext": "Du bist dran."
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp merkt sich deinen Schnitt.",
+      "body": "Die Nummer, die Länge, die Bartlinie, der Barbier, der es getroffen hat. Er gehört dir und kommt mit — auch in einen Shop, in dem du nie warst.",
+      "fade": "Fade",
+      "top": "Oben",
+      "beard": "Bart",
+      "lastCut": "Letzter Schnitt",
+      "barber": "Stammbarbier",
+      "demoFade": "Skin Fade, tief",
+      "demoTop": "4 oben, texturiert",
+      "demoBeard": "Konturiert, kurz",
+      "demoLastCut": "vor 18 Tagen",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "Wiederkommen",
+      "title": "Beim zweiten Mal wird es besser.",
+      "daysSince": "18 Tage seit deinem letzten Schnitt",
+      "sameBarber": "Gleicher Barbier",
+      "sameCut": "Gleicher Schnitt",
+      "cta": "Erneut buchen",
+      "body": "Nichts noch mal erklären. Nichts von vorn. Dein Barbier weiß es schon."
+    },
+    "final": {
+      "title": "Finde deinen Barbier.",
+      "subtitle": "Such nach Stadt, Shop, Barbier oder Leistung."
+    },
+    "demoLabel": "Produktdarstellung"
+  }
+}

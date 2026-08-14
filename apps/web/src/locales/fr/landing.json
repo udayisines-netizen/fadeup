@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — Trouvez le barbier qui comprend votre coupe",
+      "description": "Cherchez des barbershops et des barbiers indépendants près de chez vous. Voyez qui est ouvert, réservez un créneau ou prenez votre place dans la file depuis votre téléphone."
+    },
+    "hero": {
+      "eyebrow": "Barbershops et barbiers indépendants",
+      "titleLead": "Trouvez le barbier",
+      "titleEmphasis": "qui comprend votre coupe.",
+      "subtitle": "Cherchez les barbiers réellement sur FadeUp. Voyez qui est ouvert, réservez un créneau, ou prenez votre place dans la file depuis votre téléphone."
+    },
+    "discover": {
+      "eyebrow": "Découvrir",
+      "title": "De vrais fauteuils. De vraies personnes.",
+      "body": "Chaque barbier ici gère sa journée sur FadeUp : ce que vous voyez est réellement ouvert.",
+      "independent": "Barbier indépendant",
+      "viewProfile": "Voir le profil",
+      "seeAll": "Voir tous les barbiers",
+      "emptyTitle": "FadeUp ouvre ville par ville.",
+      "emptyBody": "Cherchez la vôtre pour voir quels barbiers sont déjà là."
+    },
+    "book": {
+      "eyebrow": "Deux façons d’entrer",
+      "title": "Réservez un créneau. Ou passez, simplement.",
+      "appointment": {
+        "label": "Rendez-vous",
+        "title": "Choisissez votre créneau",
+        "body": "Choisissez votre barbier et l’heure qui vous arrange. Le fauteuil est gardé."
+      },
+      "queue": {
+        "label": "File en direct",
+        "title": "Prenez la file depuis votre téléphone",
+        "body": "Les salons sans rendez-vous tiennent une file en direct. Prenez votre place, suivez-la avancer, arrivez au bon moment."
+      },
+      "queuePosition": "Vous êtes n°{{position}}",
+      "queueEta": "environ {{minutes}} min",
+      "queueNext": "C’est à vous."
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp se souvient de votre coupe.",
+      "body": "Le numéro, la longueur, la ligne de barbe, le barbier qui a réussi. C’est le vôtre, et il vous suit — même dans un salon où vous n’êtes jamais allé.",
+      "fade": "Dégradé",
+      "top": "Dessus",
+      "beard": "Barbe",
+      "lastCut": "Dernière coupe",
+      "barber": "Barbier habituel",
+      "demoFade": "Dégradé à blanc, bas",
+      "demoTop": "4 sur le dessus, texturé",
+      "demoBeard": "Contours nets, courte",
+      "demoLastCut": "il y a 18 jours",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "Revenir",
+      "title": "C’est encore mieux la deuxième fois.",
+      "daysSince": "18 jours depuis votre dernière coupe",
+      "sameBarber": "Même barbier",
+      "sameCut": "Même coupe",
+      "cta": "Reprendre rendez-vous",
+      "body": "Rien à réexpliquer. Rien à recommencer. Votre barbier sait déjà."
+    },
+    "final": {
+      "title": "Trouvez votre barbier.",
+      "subtitle": "Cherchez par ville, salon, barbier ou prestation."
+    },
+    "demoLabel": "Illustration du produit"
+  }
+}

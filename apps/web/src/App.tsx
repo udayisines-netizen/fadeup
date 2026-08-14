@@ -5,6 +5,7 @@ import { ToastProvider } from '@/components/ui/toast'
 import { PreferencesSync } from '@/components/preferences-sync'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme'
+import { PricingProvider } from '@/lib/commerce/pricing-context'
 import { queryClient } from '@/lib/query-client'
 import { router } from '@/routes/router'
 
@@ -14,10 +15,16 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>
-              <PreferencesSync />
-              <RouterProvider router={router} />
-            </ToastProvider>
+            {/*
+              Commercial region is resolved once, app-wide, and deliberately
+              separately from language — see lib/commerce/pricing-context.
+            */}
+            <PricingProvider>
+              <ToastProvider>
+                <PreferencesSync />
+                <RouterProvider router={router} />
+              </ToastProvider>
+            </PricingProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

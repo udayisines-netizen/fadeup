@@ -1,0 +1,70 @@
+{
+  "consumer": {
+    "meta": {
+      "title": "FadeUp — Encuentra al barbero que entiende tu corte",
+      "description": "Busca barberías y barberos independientes cerca de ti. Mira quién está abierto, reserva una hora o entra en la fila en directo desde el móvil."
+    },
+    "hero": {
+      "eyebrow": "Barberías y barberos independientes",
+      "titleLead": "Encuentra al barbero",
+      "titleEmphasis": "que entiende tu corte.",
+      "subtitle": "Busca los barberos que están realmente en FadeUp. Mira quién está abierto, reserva una hora o coge sitio en la fila desde el móvil."
+    },
+    "discover": {
+      "eyebrow": "Descubre",
+      "title": "Sillones reales. Personas reales.",
+      "body": "Cada barbero de aquí gestiona su día en FadeUp, así que lo que ves está realmente abierto.",
+      "independent": "Barbero independiente",
+      "viewProfile": "Ver perfil",
+      "seeAll": "Ver todos los barberos",
+      "emptyTitle": "FadeUp abre ciudad a ciudad.",
+      "emptyBody": "Busca la tuya para ver qué barberos ya están aquí."
+    },
+    "book": {
+      "eyebrow": "Dos formas de entrar",
+      "title": "Reserva una hora. O entra sin más.",
+      "appointment": {
+        "label": "Cita",
+        "title": "Elige tu hora",
+        "body": "Elige barbero y la hora que te venga bien. El sillón queda reservado."
+      },
+      "queue": {
+        "label": "Fila en directo",
+        "title": "Entra en la fila desde el móvil",
+        "body": "Las barberías sin cita llevan una fila en directo. Coge sitio, mírala avanzar y llega cuando toque."
+      },
+      "queuePosition": "Eres el n.º {{position}}",
+      "queueEta": "unos {{minutes}} min",
+      "queueNext": "Te toca."
+    },
+    "passport": {
+      "eyebrow": "Fade Passport",
+      "title": "FadeUp recuerda tu corte.",
+      "body": "El número, el largo, la línea de la barba, el barbero que acertó. Es tuyo y te acompaña, incluso a una barbería nueva.",
+      "fade": "Degradado",
+      "top": "Arriba",
+      "beard": "Barba",
+      "lastCut": "Último corte",
+      "barber": "Barbero habitual",
+      "demoFade": "Degradado a piel, bajo",
+      "demoTop": "4 arriba, texturizado",
+      "demoBeard": "Perfilada, corta",
+      "demoLastCut": "hace 18 días",
+      "demoBarber": "Yanis · Fade City"
+    },
+    "rebook": {
+      "eyebrow": "Volver",
+      "title": "La segunda vez es mejor.",
+      "daysSince": "18 días desde tu último corte",
+      "sameBarber": "Mismo barbero",
+      "sameCut": "Mismo corte",
+      "cta": "Reservar otra vez",
+      "body": "Sin explicarlo otra vez. Sin empezar de cero. Tu barbero ya lo sabe."
+    },
+    "final": {
+      "title": "Encuentra a tu barbero.",
+      "subtitle": "Busca por ciudad, barbería, barbero o servicio."
+    },
+    "demoLabel": "Ilustración del producto"
+  }
+}

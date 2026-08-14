@@ -25,8 +25,8 @@ export const router = createBrowserRouter([
           {
             index: true,
             lazy: async () => {
-              const { MarketplaceHomePage } = await import('@/pages/marketplace-home-page')
-              return { Component: MarketplaceHomePage }
+              const { ConsumerLandingPage } = await import('@/pages/consumer-landing-page')
+              return { Component: ConsumerLandingPage }
             },
           },
           {
