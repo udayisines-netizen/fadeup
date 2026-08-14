@@ -9,7 +9,9 @@
   "auth": {
     "logIn": "Log in",
     "startFree": "Start free",
-    "customerLogIn": "Customer login"
+    "signUp": "Sign up",
+    "proLogIn": "Pro login",
+    "proApply": "Join FadeUp"
   },
   "footer": {
     "tagline": "The operating system for modern barbershops — booking, live queue, chair operations and customer relationships in one connected system.",

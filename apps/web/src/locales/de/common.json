@@ -9,7 +9,9 @@
   "auth": {
     "logIn": "Anmelden",
     "startFree": "Kostenlos starten",
-    "customerLogIn": "Kunden-Login"
+    "signUp": "Registrieren",
+    "proLogIn": "Pro-Anmeldung",
+    "proApply": "FadeUp beitreten"
   },
   "footer": {
     "tagline": "Das Betriebssystem für moderne Barbershops — Buchungen, Live-Warteschlange, Stuhlverwaltung und Kundenbeziehungen in einem verbundenen System.",

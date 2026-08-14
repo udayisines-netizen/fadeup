@@ -13,10 +13,14 @@ export function MarketingFooter() {
     { to: '/pricing', label: t('nav.pricing') },
   ]
 
+  // Generic "Log in" / "Sign up" on a consumer surface mean the CUSTOMER ones,
+  // and there is no third. Professional auth is reached through For business
+  // (in the product column above), which is the whole point of separating the
+  // two journeys — repeating it here would put a competing sign-in back in
+  // front of consumers by another door.
   const accountLinks = [
-    { to: '/pro/login', label: t('auth.logIn') },
-    { to: '/pro/signup', label: t('auth.startFree') },
-    { to: '/customer/login', label: t('auth.customerLogIn') },
+    { to: '/login', label: t('auth.logIn') },
+    { to: '/register', label: t('auth.signUp') },
   ]
 
   return (

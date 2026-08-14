@@ -71,17 +71,23 @@ describe('Customer auth routes stay clear of the professional workflow', () => {
     expect(screen.queryByText(/reviewed within 24 hours/i)).not.toBeInTheDocument()
   })
 
-  it('/register points a professional who took the wrong door at /pro/register', () => {
+  it('/register presents ONE identity — no professional cross-link', () => {
+    // Someone signing up as a customer should not be asked to consider
+    // whether they are really a business. That question belongs on the
+    // professional journey, where it can actually be answered.
     render(
       <MemoryRouter>
         <CustomerRegisterPage />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('link', { name: 'Pro area' })).toHaveAttribute('href', '/pro/register')
+    expect(screen.queryByRole('link', { name: 'Pro area' })).not.toBeInTheDocument()
+    for (const link of screen.getAllByRole('link')) {
+      expect(link.getAttribute('href') ?? '').not.toMatch(/^\/pro\//)
+    }
   })
 
-  it('/login is the customer entrance and links across to the pro one', () => {
+  it('/login is the customer entrance and offers only the customer sign-up', () => {
     render(
       <MemoryRouter>
         <CustomerLoginPage />
@@ -90,6 +96,10 @@ describe('Customer auth routes stay clear of the professional workflow', () => {
 
     expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/register')
-    expect(screen.getByRole('link', { name: 'Pro area' })).toHaveAttribute('href', '/pro/login')
+
+    expect(screen.queryByRole('link', { name: 'Pro area' })).not.toBeInTheDocument()
+    for (const link of screen.getAllByRole('link')) {
+      expect(link.getAttribute('href') ?? '').not.toMatch(/^\/pro\//)
+    }
   })
 })

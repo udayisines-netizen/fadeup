@@ -9,7 +9,9 @@
   "auth": {
     "logIn": "Entrar",
     "startFree": "Começar grátis",
-    "customerLogIn": "Acesso de clientes"
+    "signUp": "Criar conta",
+    "proLogIn": "Entrar como Pro",
+    "proApply": "Junte-se ao FadeUp"
   },
   "footer": {
     "tagline": "O sistema operativo para barbearias modernas — marcações, fila em tempo real, gestão de cadeiras e relacionamento com clientes num único sistema conectado.",

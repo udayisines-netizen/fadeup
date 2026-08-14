@@ -14,10 +14,18 @@ import { useAuth } from '@/lib/auth-context'
  * Shared top nav for the public marketing site (/, /features, /pricing) and,
  * importantly, /search — mobile menu uses the Drawer primitive.
  *
+ * The auth area offers exactly TWO actions, both CUSTOMER: Log in (/login)
+ * and Sign up (/register). It previously offered three — a generic "Log in"
+ * that went to /pro/login, a generic "Start free" that went to /pro/signup,
+ * and a separate "Customer login" — which asked an ordinary visitor to pick
+ * between three identity concepts before they knew FadeUp had more than one.
+ * Professional auth is reached deliberately, through "For business", not by
+ * a consumer guessing which of three buttons belongs to them.
+ *
  * Session-aware on purpose: Discover in the customer app's bottom tab bar
  * points at /search, which renders out here rather than inside the app
  * shell. Without a way back, the first tap on Discover stranded a signed-in
- * customer on a page offering them "Log in" and "Start free", with only the
+ * customer on a page offering them "Log in" and "Sign up", with only the
  * browser Back button to reach their appointments again.
  */
 export function MarketingHeader() {
@@ -60,17 +68,11 @@ export function MarketingHeader() {
             </Link>
           ) : (
             <>
-              <Link
-                to="/customer/login"
-                className={buttonVariants({ variant: 'ghost' }, 'hidden lg:inline-flex')}
-              >
-                {t('auth.customerLogIn')}
-              </Link>
-              <Link to="/pro/login" className={buttonVariants({ variant: 'ghost' })}>
+              <Link to="/login" className={buttonVariants({ variant: 'ghost' })}>
                 {t('auth.logIn')}
               </Link>
-              <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' })}>
-                {t('auth.startFree')}
+              <Link to="/register" className={buttonVariants({ variant: 'primary' })}>
+                {t('auth.signUp')}
               </Link>
             </>
           )}
@@ -101,14 +103,11 @@ export function MarketingHeader() {
                   </Link>
                 ) : (
                   <>
-                    <Link to="/pro/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                    <Link to="/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
                       {t('auth.logIn')}
                     </Link>
-                    <Link to="/pro/signup" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
-                      {t('auth.startFree')}
-                    </Link>
-                    <Link to="/customer/login" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-                      {t('auth.customerLogIn')}
+                    <Link to="/register" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                      {t('auth.signUp')}
                     </Link>
                   </>
                 )}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Armchair,
   BarChart3,
@@ -73,6 +74,8 @@ const PILLARS = [
 
 /** /for-business — the professional SaaS pitch. Kept separate from "/", which is now the consumer marketplace — see spec section 51. */
 export function ForBusinessPage() {
+  const { t } = useTranslation()
+
   useDocumentMeta({
     title: 'FadeUp for business — the operating system for modern barbershops',
     description:
@@ -94,12 +97,17 @@ export function ForBusinessPage() {
               chair operations, customer relationships and multi-location reporting in one
               place — built for how a real shop actually runs, on a real Saturday.
             </p>
+            {/*
+              This page IS the professional entrance. The consumer header
+              deliberately offers only customer auth, so pro sign-in and the
+              application to join both have to be reachable from here.
+            */}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/pro/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-                Start free
+              <Link to="/pro/register" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                {t('auth.proApply')}
               </Link>
-              <Link to="/features" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
-                See how it works
+              <Link to="/pro/login" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+                {t('auth.proLogIn')}
               </Link>
             </div>
           </div>
@@ -201,8 +209,11 @@ export function ForBusinessPage() {
             Set up your organization and start taking bookings today.
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <Link to="/pro/signup" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-              Start free
+            <Link to="/pro/register" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+              {t('auth.proApply')}
+            </Link>
+            <Link to="/pro/login" className={buttonVariants({ variant: 'secondary', size: 'lg' })}>
+              {t('auth.proLogIn')}
             </Link>
             <Link to="/pricing" className={buttonVariants({ variant: 'ghost', size: 'lg' })}>
               View pricing

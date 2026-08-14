@@ -31,11 +31,38 @@ describe('MarketingHeader', () => {
     mockUseAuth.mockReturnValue({ session: null, user: null, loading: false })
   })
 
-  it('offers the usual sign-in CTAs to a visitor with no session', () => {
+  it('offers a visitor exactly two auth actions, both of them CUSTOMER', () => {
+    // The consumer nav used to show three — a generic "Log in" that went to
+    // /pro/login, a generic "Start free" that went to /pro/signup, and a
+    // separate "Customer login" — so an ordinary visitor had to pick between
+    // three identity concepts before knowing FadeUp had more than one.
     renderHeader()
 
-    expect(screen.getByRole('link', { name: 'Start free' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/register')
     expect(screen.queryByRole('link', { name: 'My FadeUp' })).not.toBeInTheDocument()
+  })
+
+  it('never points a consumer auth action at the professional entrances', () => {
+    renderHeader()
+
+    const authHrefs = screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href') ?? '')
+      .filter((href) => /login|register|signup/.test(href))
+
+    expect(authHrefs.length).toBeGreaterThan(0)
+    for (const href of authHrefs) {
+      expect(href).not.toMatch(/^\/pro\//)
+      expect(href).not.toBe('/customer/login')
+    }
+  })
+
+  it('shows no third "Espace client" style account action', () => {
+    renderHeader()
+
+    expect(screen.queryByRole('link', { name: 'Customer login' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Start free' })).not.toBeInTheDocument()
   })
 
   it('gives a signed-in customer a way back into the app instead of asking them to log in', () => {
@@ -49,7 +76,7 @@ describe('MarketingHeader', () => {
 
     const back = screen.getAllByRole('link', { name: 'My FadeUp' })[0]
     expect(back).toHaveAttribute('href', '/app/customer')
-    expect(screen.queryByRole('link', { name: 'Start free' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Customer login' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Sign up' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Log in' })).not.toBeInTheDocument()
   })
 })

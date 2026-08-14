@@ -8,9 +8,11 @@ import { SignupForm } from '@/components/auth/signup-form'
  *
  * Creating an account here never touches the professional approval
  * workflow: no application row, no review, straight into the customer app.
- * Professionals have their own entrance at /pro/register, linked below so
- * someone who took the wrong door can cross over in one tap rather than
- * being silently redirected.
+ *
+ * No professional cross-link: this page presents ONE identity. Someone
+ * signing up as a customer should not be asked to consider whether they are
+ * really a business — professionals arrive through "For business", which is
+ * where that question belongs and where it can be answered properly.
  */
 export function CustomerRegisterPage() {
   const { t } = useTranslation('auth')
@@ -23,20 +25,12 @@ export function CustomerRegisterPage() {
       title={t('customer.registerTitle')}
       subtitle={t('customer.registerSubtitle')}
       footer={
-        <div className="flex flex-col gap-1">
-          <p>
-            {t('customer.haveAccount')}{' '}
-            <Link to={loginHref} className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
-              {t('customer.logIn')}
-            </Link>
-          </p>
-          <p className="text-ink-500">
-            {t('customer.switchToPro')}{' '}
-            <Link to="/pro/register" className="font-medium text-ink-700 underline underline-offset-2 hover:text-ink-950">
-              {t('customer.switchToProCta')}
-            </Link>
-          </p>
-        </div>
+        <p>
+          {t('customer.haveAccount')}{' '}
+          <Link to={loginHref} className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
+            {t('customer.logIn')}
+          </Link>
+        </p>
       }
     >
       <SignupForm signupIntent="customer" defaultRedirect="/app/customer" loginPath="/login" />

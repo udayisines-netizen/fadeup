@@ -9,7 +9,9 @@
   "auth": {
     "logIn": "登录",
     "startFree": "免费开始",
-    "customerLogIn": "客户登录"
+    "signUp": "注册",
+    "proLogIn": "商家登录",
+    "proApply": "加入 FadeUp"
   },
   "footer": {
     "tagline": "现代理发店的操作系统——预约、实时排队、椅位管理和客户关系,全部整合在一个系统中。",

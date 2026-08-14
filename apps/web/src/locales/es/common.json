@@ -9,7 +9,9 @@
   "auth": {
     "logIn": "Iniciar sesión",
     "startFree": "Empezar gratis",
-    "customerLogIn": "Acceso clientes"
+    "signUp": "Registrarse",
+    "proLogIn": "Acceso Pro",
+    "proApply": "Únete a FadeUp"
   },
   "footer": {
     "tagline": "El sistema operativo para barberías modernas: reservas, cola en vivo, gestión de sillones y relación con el cliente en un solo sistema conectado.",

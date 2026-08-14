@@ -21,23 +21,15 @@ export function CustomerLoginPage() {
       title={t('customer.loginTitle')}
       subtitle={t('customer.loginSubtitle')}
       footer={
-        <div className="flex flex-col gap-1">
-          <p>
-            {t('customer.noAccount')}{' '}
-            <Link
-              to={`/register${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
-              className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
-            >
-              {t('customer.signUp')}
-            </Link>
-          </p>
-          <p className="text-ink-500">
-            {t('customer.switchToPro')}{' '}
-            <Link to="/pro/login" className="font-medium text-ink-700 underline underline-offset-2 hover:text-ink-950">
-              {t('customer.switchToProCta')}
-            </Link>
-          </p>
-        </div>
+        <p>
+          {t('customer.noAccount')}{' '}
+          <Link
+            to={`/register${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
+            className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
+          >
+            {t('customer.signUp')}
+          </Link>
+        </p>
       }
     >
       <LoginForm defaultRedirect="/workspace" />
