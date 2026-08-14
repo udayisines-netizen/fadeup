@@ -222,14 +222,31 @@ body {
   }
 }
 
+/*
+ * Scale only — deliberately NOT `transform`.
+ *
+ * DialogContent centres itself with Tailwind's `-translate-x-1/2
+ * -translate-y-1/2`, which in Tailwind v4 compile to the standalone
+ * `translate` property. A keyframe that also set `transform: translate(-50%,
+ * -50%)` did not replace that centring, it COMPOSED with it — and because
+ * these animations run with `fill-mode: both`, the final frame stuck. Every
+ * dialog was therefore offset by a full -100%/-100% instead of -50%/-50%:
+ * shifted left and up by its own width and height. On a short dialog that
+ * reads as "a bit high"; on a tall form it pushed the top off-screen and left
+ * the bottom sitting at the middle of the window, which is what made Add
+ * Location unreachable.
+ *
+ * `scale` is likewise an individual transform property, so it composes with
+ * `translate` instead of overwriting it.
+ */
 @keyframes fu-content-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    scale: 0.96;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
 }
 

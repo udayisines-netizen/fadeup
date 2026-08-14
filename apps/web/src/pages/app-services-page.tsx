@@ -710,7 +710,12 @@ function ServiceFormDialog({
                 <TabsTrigger value="locations">Locations</TabsTrigger>
                 <TabsTrigger value="barbers">Barbers</TabsTrigger>
               </TabsList>
-              <div className="max-h-[55vh] overflow-y-auto pr-1">
+              {/*
+                No inner viewport-height scroller: DialogContent is capped to
+                the viewport and scrolls itself, so a second nested scroll area
+                only produced a scrollbar inside a scrollbar on short screens.
+              */}
+              <div>
                 <TabsContent value="details">{detailsFields}</TabsContent>
                 <TabsContent value="locations">
                   <ServiceLocationsTab

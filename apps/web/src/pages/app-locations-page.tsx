@@ -1,8 +1,14 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Store } from 'lucide-react'
 import { useCurrentOrg } from '@/lib/current-org-context'
+import {
+  useOrganizationMarketplaceVisibility,
+  useSetMarketplaceVisibility,
+} from '@/lib/queries/organization-marketplace'
 import { guessTimezone } from '@/lib/timezone'
 import {
   useCreateLocation,
@@ -16,6 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
 import { Container } from '@/components/ui/container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
@@ -23,6 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableStateRow } from '@/components/ui/table'
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -65,6 +73,75 @@ export function AppLocationsPage() {
   return <LocationsManagement organizationId={currentMembership.organizationId} role={currentMembership.role} />
 }
 
+/**
+ * The shop's own decision about whether customers can find it in public
+ * search.
+ *
+ * `organizations.marketplace_visible` has always defaulted to false — being
+ * on FadeUp and being publicly listed are separate choices, deliberately. But
+ * nothing in the product could flip it, so no genuine shop could ever appear
+ * in the marketplace and search returned only seeded development rows. This
+ * card is that missing decision, and it lives here because Locations is
+ * already where a shop manages its physical, customer-facing presence.
+ */
+function MarketplaceVisibilityCard({ organizationId }: { organizationId: string }) {
+  const { toast } = useToast()
+  const visibilityQuery = useOrganizationMarketplaceVisibility(organizationId)
+  const setVisibility = useSetMarketplaceVisibility(organizationId)
+
+  if (visibilityQuery.isPending || !visibilityQuery.data) return null
+
+  const { marketplaceVisible, slug } = visibilityQuery.data
+
+  async function handleToggle(next: boolean) {
+    try {
+      await setVisibility.mutateAsync(next)
+      toast({
+        variant: 'success',
+        title: next ? 'Your shop is now listed on FadeUp' : 'Your shop is no longer listed',
+      })
+    } catch (error) {
+      toast({
+        variant: 'error',
+        title: "Couldn't update marketplace visibility",
+        description: error instanceof Error ? error.message : undefined,
+      })
+    }
+  }
+
+  return (
+    <Card className="mt-6 p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-xl">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-950">
+            <Store className="h-4 w-4 text-ink-500" aria-hidden="true" />
+            Your shop on FadeUp
+          </h2>
+          <p className="mt-1 text-sm text-ink-500">
+            {marketplaceVisible
+              ? 'Customers can find you in FadeUp search and book with your team.'
+              : 'Your shop is private. Turn this on to appear in FadeUp search for customers nearby.'}
+          </p>
+          {marketplaceVisible ? (
+            <Link
+              to={`/s/${slug}/profile`}
+              className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-accent-700 underline underline-offset-2"
+            >
+              View your public profile
+            </Link>
+          ) : null}
+        </div>
+        <Switch
+          label="Listed publicly"
+          checked={marketplaceVisible}
+          disabled={setVisibility.isPending}
+          onChange={(event) => void handleToggle(event.target.checked)}
+        />
+      </div>
+    </Card>
+  )
+}
+
 function LocationsManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
@@ -87,6 +164,8 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
         </div>
         {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>Add location</Button> : null}
       </div>
+
+      {canManage ? <MarketplaceVisibilityCard organizationId={organizationId} /> : null}
 
       <div className="mt-6">
         {locationsQuery.isPending ? (
@@ -257,27 +336,36 @@ function LocationFormDialog({
             {isEdit ? "Update this location's details." : 'Add a new shop location for your organization.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
-          {formError ? <Alert variant="error">{formError}</Alert> : null}
+        {/*
+          The footer sits OUTSIDE the scroll area so Cancel/Save stay reachable
+          however many fields there are; only the fields scroll. Previously the
+          footer lived inside a `max-h-[70vh]` scroller and the dialog itself
+          had no height cap, so on a 768px-tall screen the buttons were pushed
+          off the bottom of the window entirely.
+        */}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex min-h-0 flex-1 flex-col">
+          <DialogBody className="flex flex-col gap-4">
+            {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Name" error={errors.name?.message} {...register('name')} />
-          <TextField label="Address line 1" {...register('addressLine1')} />
-          <TextField label="Address line 2" {...register('addressLine2')} />
-          <div className="grid grid-cols-2 gap-4">
-            <TextField label="City" {...register('city')} />
-            <TextField label="Region / state" {...register('region')} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <TextField label="Postal code" {...register('postalCode')} />
-            <TextField label="Country" {...register('country')} />
-          </div>
-          <TextField
-            label="Timezone"
-            hint="IANA name, e.g. America/New_York"
-            error={errors.timezone?.message}
-            {...register('timezone')}
-          />
-          <Switch label="Active" description="Inactive locations are hidden from booking." {...register('isActive')} />
+            <TextField label="Name" error={errors.name?.message} {...register('name')} />
+            <TextField label="Address line 1" {...register('addressLine1')} />
+            <TextField label="Address line 2" {...register('addressLine2')} />
+            <div className="grid grid-cols-2 gap-4">
+              <TextField label="City" {...register('city')} />
+              <TextField label="Region / state" {...register('region')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextField label="Postal code" {...register('postalCode')} />
+              <TextField label="Country" {...register('country')} />
+            </div>
+            <TextField
+              label="Timezone"
+              hint="IANA name, e.g. America/New_York"
+              error={errors.timezone?.message}
+              {...register('timezone')}
+            />
+            <Switch label="Active" description="Inactive locations are hidden from booking." {...register('isActive')} />
+          </DialogBody>
 
           <DialogFooter>
             <DialogClose asChild>

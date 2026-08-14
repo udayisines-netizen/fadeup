@@ -35,6 +35,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableSta
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
+  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -683,83 +684,87 @@ function NewAppointmentDialog({
             Book a walk-in or phone request at {location.name}. It&apos;s created as confirmed.
           </DialogDescription>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="flex max-h-[65vh] flex-col gap-4 overflow-y-auto pr-1"
-        >
-          {formError ? <Alert variant="error">{formError}</Alert> : null}
+        {/*
+          Fields scroll, footer does not — see DialogBody. The old
+          `max-h-[65vh]` scroller wrapped the footer too, so Cancel/Book were
+          pushed below the window on short screens.
+        */}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex min-h-0 flex-1 flex-col">
+          <DialogBody className="flex flex-col gap-4">
+            {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          {offeredServices.length === 0 ? (
-            <Alert variant="info">
-              No services are offered at {location.name} yet.{' '}
-              <Link to="/app/services" className="underline">
-                Manage services
-              </Link>
-              .
-            </Alert>
-          ) : (
-            <>
-              <SelectField label="Service" options={serviceOptions} error={errors.serviceId?.message} {...register('serviceId')} />
-              <SelectField
-                label="Barber"
-                options={barberOptions}
-                disabled={!serviceId}
-                error={errors.barberId?.message}
-                {...register('barberId')}
-              />
-              <TextField label="Date" type="date" error={errors.date?.message} {...register('date')} />
-
-              {serviceId && barberId && date ? (
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-ink-950">Time</span>
-                  {slotsQuery.isPending ? (
-                    <Skeleton className="h-20 w-full" />
-                  ) : slotsQuery.isError ? (
-                    <Alert variant="error">{slotsQuery.error.message}</Alert>
-                  ) : (slotsQuery.data ?? []).length === 0 ? (
-                    <p className="rounded-md border border-dashed border-border-strong px-3 py-4 text-center text-sm text-ink-500">
-                      No open slots this day.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                      {(slotsQuery.data ?? []).map((slot) => {
-                        const isSelected = selectedSlot?.slotStart === slot.slotStart
-                        return (
-                          <button
-                            key={slot.slotStart}
-                            type="button"
-                            aria-pressed={isSelected}
-                            onClick={() => setSelectedSlot(slot)}
-                            className={cn(
-                              'min-h-9 rounded-md border px-2 py-1.5 text-sm font-medium transition-colors',
-                              isSelected
-                                ? 'border-accent-600 bg-accent-600 text-on-accent'
-                                : 'border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100',
-                            )}
-                          >
-                            {formatTime(slot.slotStart, location.timezone)}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              <TextField label="Customer name" error={errors.customerName?.message} {...register('customerName')} />
-              <div className="grid grid-cols-2 gap-4">
-                <TextField
-                  label="Phone (optional)"
-                  type="tel"
-                  hint="At least a phone or email is recommended."
-                  {...register('customerPhone')}
+            {offeredServices.length === 0 ? (
+              <Alert variant="info">
+                No services are offered at {location.name} yet.{' '}
+                <Link to="/app/services" className="underline">
+                  Manage services
+                </Link>
+                .
+              </Alert>
+            ) : (
+              <>
+                <SelectField label="Service" options={serviceOptions} error={errors.serviceId?.message} {...register('serviceId')} />
+                <SelectField
+                  label="Barber"
+                  options={barberOptions}
+                  disabled={!serviceId}
+                  error={errors.barberId?.message}
+                  {...register('barberId')}
                 />
-                <TextField label="Email (optional)" type="email" {...register('customerEmail')} />
-              </div>
-              <Textarea label="Notes (optional)" rows={2} {...register('notes')} />
-            </>
-          )}
+                <TextField label="Date" type="date" error={errors.date?.message} {...register('date')} />
+
+                {serviceId && barberId && date ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-ink-950">Time</span>
+                    {slotsQuery.isPending ? (
+                      <Skeleton className="h-20 w-full" />
+                    ) : slotsQuery.isError ? (
+                      <Alert variant="error">{slotsQuery.error.message}</Alert>
+                    ) : (slotsQuery.data ?? []).length === 0 ? (
+                      <p className="rounded-md border border-dashed border-border-strong px-3 py-4 text-center text-sm text-ink-500">
+                        No open slots this day.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {(slotsQuery.data ?? []).map((slot) => {
+                          const isSelected = selectedSlot?.slotStart === slot.slotStart
+                          return (
+                            <button
+                              key={slot.slotStart}
+                              type="button"
+                              aria-pressed={isSelected}
+                              onClick={() => setSelectedSlot(slot)}
+                              className={cn(
+                                'min-h-9 rounded-md border px-2 py-1.5 text-sm font-medium transition-colors',
+                                isSelected
+                                  ? 'border-accent-600 bg-accent-600 text-on-accent'
+                                  : 'border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100',
+                              )}
+                            >
+                              {formatTime(slot.slotStart, location.timezone)}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                <TextField label="Customer name" error={errors.customerName?.message} {...register('customerName')} />
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="Phone (optional)"
+                    type="tel"
+                    hint="At least a phone or email is recommended."
+                    {...register('customerPhone')}
+                  />
+                  <TextField label="Email (optional)" type="email" {...register('customerEmail')} />
+                </div>
+                <Textarea label="Notes (optional)" rows={2} {...register('notes')} />
+              </>
+            )}
+
+          </DialogBody>
 
           <DialogFooter>
             <DialogClose asChild>
