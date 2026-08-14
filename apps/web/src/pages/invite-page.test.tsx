@@ -100,14 +100,48 @@ describe('InvitePage', () => {
     expect(await screen.findByText('Invitation revoked')).toBeInTheDocument()
   })
 
-  it('renders a valid pending invite with a login/signup prompt for signed-out visitors', async () => {
+  it('renders a valid pending invite with a sign-in/create-account prompt for signed-out visitors', async () => {
     mockInvitationRpc([baseInvitation({})])
 
     renderInvitePage()
 
     expect(await screen.findByText("You've been invited")).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Sign up' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Create account' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Accept invitation' })).not.toBeInTheDocument()
+  })
+
+  it('sends an invited barber to ORDINARY auth, never to the new-business application', async () => {
+    // The regression this guards: /invite/:token used to offer /pro/login and
+    // /pro/signup, so accepting a job at an existing shop walked the barber
+    // into a professional application — platform review, and potentially a
+    // second organization of their own.
+    mockInvitationRpc([baseInvitation({})])
+
+    renderInvitePage()
+
+    const signIn = await screen.findByRole('link', { name: 'Sign in' })
+    const createAccount = screen.getByRole('link', { name: 'Create account' })
+
+    expect(signIn).toHaveAttribute('href', expect.stringContaining('/login?redirect='))
+    expect(createAccount).toHaveAttribute('href', expect.stringContaining('/register?redirect='))
+
+    for (const link of [signIn, createAccount]) {
+      expect(link.getAttribute('href')).not.toMatch(/^\/pro\//)
+    }
+
+    // Both carry the invitation back so the person returns here to accept.
+    expect(signIn.getAttribute('href')).toContain(encodeURIComponent('/invite/'))
+    expect(createAccount.getAttribute('href')).toContain(encodeURIComponent('/invite/'))
+  })
+
+  it('tells the invitee plainly that no new business is being created', async () => {
+    mockInvitationRpc([baseInvitation({})])
+
+    renderInvitePage()
+
+    expect(
+      await screen.findByText(/does not create a new business and needs no approval/i),
+    ).toBeInTheDocument()
   })
 })
