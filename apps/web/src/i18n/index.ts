@@ -10,7 +10,7 @@ import { SUPPORTED_LOCALES, resolveInitialLocale, isRtl } from '@/lib/locale'
  * locale in NAMESPACES below is auto-wired, (2) adding its name to
  * NAMESPACES here.
  */
-const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport'] as const
+const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport', 'auth'] as const
 type Namespace = (typeof NAMESPACES)[number]
 
 const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object }>>> = {
@@ -19,60 +19,70 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     marketplace: () => import('@/locales/en/marketplace.json'),
     'customer-app': () => import('@/locales/en/customer-app.json'),
     passport: () => import('@/locales/en/passport.json'),
+    auth: () => import('@/locales/en/auth.json'),
   },
   fr: {
     common: () => import('@/locales/fr/common.json'),
     marketplace: () => import('@/locales/fr/marketplace.json'),
     'customer-app': () => import('@/locales/fr/customer-app.json'),
     passport: () => import('@/locales/fr/passport.json'),
+    auth: () => import('@/locales/fr/auth.json'),
   },
   es: {
     common: () => import('@/locales/es/common.json'),
     marketplace: () => import('@/locales/es/marketplace.json'),
     'customer-app': () => import('@/locales/es/customer-app.json'),
     passport: () => import('@/locales/es/passport.json'),
+    auth: () => import('@/locales/es/auth.json'),
   },
   de: {
     common: () => import('@/locales/de/common.json'),
     marketplace: () => import('@/locales/de/marketplace.json'),
     'customer-app': () => import('@/locales/de/customer-app.json'),
     passport: () => import('@/locales/de/passport.json'),
+    auth: () => import('@/locales/de/auth.json'),
   },
   it: {
     common: () => import('@/locales/it/common.json'),
     marketplace: () => import('@/locales/it/marketplace.json'),
     'customer-app': () => import('@/locales/it/customer-app.json'),
     passport: () => import('@/locales/it/passport.json'),
+    auth: () => import('@/locales/it/auth.json'),
   },
   pt: {
     common: () => import('@/locales/pt/common.json'),
     marketplace: () => import('@/locales/pt/marketplace.json'),
     'customer-app': () => import('@/locales/pt/customer-app.json'),
     passport: () => import('@/locales/pt/passport.json'),
+    auth: () => import('@/locales/pt/auth.json'),
   },
   ar: {
     common: () => import('@/locales/ar/common.json'),
     marketplace: () => import('@/locales/ar/marketplace.json'),
     'customer-app': () => import('@/locales/ar/customer-app.json'),
     passport: () => import('@/locales/ar/passport.json'),
+    auth: () => import('@/locales/ar/auth.json'),
   },
   'zh-CN': {
     common: () => import('@/locales/zh-CN/common.json'),
     marketplace: () => import('@/locales/zh-CN/marketplace.json'),
     'customer-app': () => import('@/locales/zh-CN/customer-app.json'),
     passport: () => import('@/locales/zh-CN/passport.json'),
+    auth: () => import('@/locales/zh-CN/auth.json'),
   },
   ja: {
     common: () => import('@/locales/ja/common.json'),
     marketplace: () => import('@/locales/ja/marketplace.json'),
     'customer-app': () => import('@/locales/ja/customer-app.json'),
     passport: () => import('@/locales/ja/passport.json'),
+    auth: () => import('@/locales/ja/auth.json'),
   },
   ru: {
     common: () => import('@/locales/ru/common.json'),
     marketplace: () => import('@/locales/ru/marketplace.json'),
     'customer-app': () => import('@/locales/ru/customer-app.json'),
     passport: () => import('@/locales/ru/passport.json'),
+    auth: () => import('@/locales/ru/auth.json'),
   },
 }
 

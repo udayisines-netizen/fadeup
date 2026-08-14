@@ -6,6 +6,7 @@ import { Navbar } from '@/components/ui/navbar'
 import { AppNavLink } from '@/components/ui/nav-link'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { NotificationBell } from '@/components/platform/notification-bell'
 import { getSupabaseClient } from '@/lib/supabase'
 
 /**
@@ -49,6 +50,7 @@ function PlatformShell() {
             <AppNavLink to="/platform" end>
               Overview
             </AppNavLink>
+            <AppNavLink to="/platform/applications">Applications</AppNavLink>
             <AppNavLink to="/platform/organizations">Organizations</AppNavLink>
             <AppNavLink to="/platform/acquisition">Acquisition</AppNavLink>
             <AppNavLink to="/platform/team">Team</AppNavLink>
@@ -57,6 +59,7 @@ function PlatformShell() {
         }
         actions={
           <>
+            <NotificationBell />
             <ThemeToggle />
             <Button variant="secondary" onClick={() => void handleSignOut()}>
               Sign out

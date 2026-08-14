@@ -34,6 +34,20 @@ const envSchema = z.object({
   OVERPASS_MAX_CONCURRENT_REQUESTS: z.coerce.number().int().positive().default(2),
   INSEE_MAX_CONCURRENT_REQUESTS: z.coerce.number().int().positive().default(2),
 
+  // Transactional email dispatch (public.email_outbox). SMTP_HOST unset
+  // simply disables the dispatcher — rows stay queued and visible rather
+  // than being silently dropped.
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  EMAIL_FROM_NAME: z.string().min(1).default('FadeUp'),
+  EMAIL_FROM_ADDRESS: z.string().min(1).default('no-reply@fadeup.app'),
+  EMAIL_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(15000),
+  EMAIL_BATCH_SIZE: z.coerce.number().int().positive().default(10),
+  EMAIL_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  APP_BASE_URL: z.string().url().default('https://fadeup.app'),
+
   DEFAULT_COUNTRY: z.string().length(2).default('FR'),
   DEFAULT_LOCALE: z.string().min(2).default('fr-FR'),
 })

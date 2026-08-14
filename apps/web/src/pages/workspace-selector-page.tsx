@@ -2,6 +2,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import { useOwnPlatformRole } from '@/lib/queries/platform'
 import { useMyMemberships } from '@/lib/queries/memberships'
+import { useMyProfessionalApplication } from '@/lib/queries/professional-applications'
 import { setStoredOrganizationId } from '@/lib/current-organization'
 import { PageSpinner } from '@/components/ui/spinner'
 import { Container } from '@/components/ui/container'
@@ -31,20 +32,31 @@ export function WorkspaceSelectorPage() {
   const { user, loading: authLoading } = useAuth()
   const platformRoleQuery = useOwnPlatformRole(user?.id)
   const membershipsQuery = useMyMemberships(user?.id)
+  const applicationQuery = useMyProfessionalApplication(Boolean(user))
 
-  if (authLoading || platformRoleQuery.isPending || membershipsQuery.isPending) {
+  if (authLoading || platformRoleQuery.isPending || membershipsQuery.isPending || applicationQuery.isPending) {
     return <PageSpinner label="Loading your workspaces" />
   }
 
   const platformRole = platformRoleQuery.data
   const memberships = membershipsQuery.data ?? []
+  const application = applicationQuery.data
   const contextCount = (platformRole ? 1 : 0) + memberships.length
 
   if (contextCount === 0) {
+    // An outstanding or refused professional application outranks the
+    // signup-intent guess: this account applied, and the honest destination
+    // is its status — not the "create your shop" flow, which the database
+    // would refuse anyway (create_organization rejects pending/rejected
+    // applicants), and not the customer app.
+    if (application && application.status !== 'approved') {
+      return <Navigate to="/pro/application" replace />
+    }
+
     // Brand-new account with no workspace yet. A signup made through
-    // /customer/signup has no shop-creation step; everything else
-    // (existing accounts predating signup_intent, and /pro/signup) keeps
-    // the historical "go create your shop" default.
+    // /register has no shop-creation step; everything else (existing
+    // accounts predating signup_intent, and /pro/register) keeps the
+    // historical "go create your shop" default.
     const signupIntent = (user?.user_metadata as { signup_intent?: string } | undefined)?.signup_intent
     return <Navigate to={signupIntent === 'customer' ? '/app/customer' : '/onboarding'} replace />
   }

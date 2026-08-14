@@ -5,6 +5,8 @@ import { AppLayout } from '@/routes/app-layout'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { WorkspaceSelectorRoute } from '@/routes/workspace-selector-route'
 import { CustomerAppLayout } from '@/routes/customer-app-layout'
+import { RequireProAccess } from '@/routes/require-pro-access'
+import { ProApplicationRoute } from '@/routes/pro-application-route'
 import { MarketingLayout } from '@/routes/marketing-layout'
 import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
@@ -58,15 +60,24 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        // Compatibility redirect to /pro/login — see src/pages/login-page.tsx.
+        // Canonical CUSTOMER sign-in. Professionals use /pro/login.
         path: 'login',
         lazy: async () => {
-          const { LoginPage } = await import('@/pages/login-page')
-          return { Component: LoginPage }
+          const { CustomerLoginPage } = await import('@/pages/customer-login-page')
+          return { Component: CustomerLoginPage }
         },
       },
       {
-        // Compatibility redirect to /pro/signup — see src/pages/signup-page.tsx.
+        // Canonical CUSTOMER sign-up — never creates a professional
+        // application. Professionals apply at /pro/register.
+        path: 'register',
+        lazy: async () => {
+          const { CustomerRegisterPage } = await import('@/pages/customer-register-page')
+          return { Component: CustomerRegisterPage }
+        },
+      },
+      {
+        // Compatibility redirect to /register — see src/pages/signup-page.tsx.
         path: 'signup',
         lazy: async () => {
           const { SignupPage } = await import('@/pages/signup-page')
@@ -81,6 +92,16 @@ export const router = createBrowserRouter([
         },
       },
       {
+        // The professional APPLICATION. Submitting grants nothing until a
+        // platform reviewer approves it.
+        path: 'pro/register',
+        lazy: async () => {
+          const { ProRegisterPage } = await import('@/pages/pro-register-page')
+          return { Component: ProRegisterPage }
+        },
+      },
+      {
+        // Compatibility redirect to /pro/register.
         path: 'pro/signup',
         lazy: async () => {
           const { ProSignupPage } = await import('@/pages/pro-signup-page')
@@ -88,17 +109,31 @@ export const router = createBrowserRouter([
         },
       },
       {
+        // Where an applicant lives between submitting and being decided on,
+        // and where a refused applicant is sent instead of a bare
+        // authorization error.
+        path: 'pro/application',
+        element: (
+          <RequireAuth loginPath="/pro/login">
+            <ProApplicationRoute />
+          </RequireAuth>
+        ),
+      },
+      {
+        // Compatibility redirects: the canonical customer routes are now
+        // /login and /register. Kept so existing links (FavoriteButton,
+        // RequireAuth's loginPath, bookmarks) keep working.
         path: 'customer/login',
         lazy: async () => {
-          const { CustomerLoginPage } = await import('@/pages/customer-login-page')
-          return { Component: CustomerLoginPage }
+          const { CustomerLoginRedirect } = await import('@/pages/customer-login-redirect')
+          return { Component: CustomerLoginRedirect }
         },
       },
       {
         path: 'customer/signup',
         lazy: async () => {
-          const { CustomerSignupPage } = await import('@/pages/customer-signup-page')
-          return { Component: CustomerSignupPage }
+          const { CustomerSignupRedirect } = await import('@/pages/customer-login-redirect')
+          return { Component: CustomerSignupRedirect }
         },
       },
       {
@@ -230,6 +265,20 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { PlatformOverviewPage } = await import('@/pages/platform-overview-page')
               return { Component: PlatformOverviewPage }
+            },
+          },
+          {
+            path: 'applications',
+            lazy: async () => {
+              const { PlatformApplicationsPage } = await import('@/pages/platform-applications-page')
+              return { Component: PlatformApplicationsPage }
+            },
+          },
+          {
+            path: 'applications/:applicationId',
+            lazy: async () => {
+              const { PlatformApplicationDetailPage } = await import('@/pages/platform-application-detail-page')
+              return { Component: PlatformApplicationDetailPage }
             },
           },
           {
@@ -426,7 +475,9 @@ export const router = createBrowserRouter([
         path: 'app',
         element: (
           <RequireAuth>
-            <AppLayout />
+            <RequireProAccess>
+              <AppLayout />
+            </RequireProAccess>
           </RequireAuth>
         ),
         children: [

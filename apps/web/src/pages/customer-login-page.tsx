@@ -1,26 +1,43 @@
 import { useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthCard } from '@/components/auth/auth-card'
 import { LoginForm } from '@/components/auth/login-form'
 
-/** /customer/login — separate entry point from /pro/login per CLAUDE.md section 15; same underlying Supabase Auth. */
+/**
+ * /login — the canonical customer sign-in.
+ *
+ * Professionals sign in at /pro/login instead; the cross-link below makes
+ * that obvious rather than leaving someone stuck on the wrong form. Both
+ * entry points share one Supabase Auth system (CLAUDE.md: never separate
+ * auth databases) — only the surrounding context differs.
+ */
 export function CustomerLoginPage() {
+  const { t } = useTranslation('auth')
   const [searchParams] = useSearchParams()
   const redirectParam = searchParams.get('redirect')
 
   return (
     <AuthCard
-      title="Log in"
-      subtitle="Manage your bookings and account."
+      title={t('customer.loginTitle')}
+      subtitle={t('customer.loginSubtitle')}
       footer={
-        <p>
-          Don&apos;t have an account?{' '}
-          <Link
-            to={`/customer/signup${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
-            className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
-          >
-            Sign up
-          </Link>
-        </p>
+        <div className="flex flex-col gap-1">
+          <p>
+            {t('customer.noAccount')}{' '}
+            <Link
+              to={`/register${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
+              className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
+            >
+              {t('customer.signUp')}
+            </Link>
+          </p>
+          <p className="text-ink-500">
+            {t('customer.switchToPro')}{' '}
+            <Link to="/pro/login" className="font-medium text-ink-700 underline underline-offset-2 hover:text-ink-950">
+              {t('customer.switchToProCta')}
+            </Link>
+          </p>
+        </div>
       }
     >
       <LoginForm defaultRedirect="/workspace" />

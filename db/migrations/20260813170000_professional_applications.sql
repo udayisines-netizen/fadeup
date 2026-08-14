@@ -846,3 +846,107 @@ $$;
 
 revoke execute on function public.mark_all_platform_notifications_read() from public, anon;
 grant execute on function public.mark_all_platform_notifications_read() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 11. Outbox dispatch RPCs
+--
+--     The dispatcher (apps/prospect-worker-v2) connects with a privileged
+--     role and drives delivery through these, so the outbox table itself
+--     never needs a write policy. Claiming uses the same
+--     `for update skip locked` lease pattern the prospect job queue already
+--     uses, so two dispatcher instances can run without double-sending.
+-- ---------------------------------------------------------------------------
+
+create or replace function private.claim_next_email(p_limit integer default 10)
+returns setof public.email_outbox
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  return query
+  update public.email_outbox o
+    set status = 'queued', locked_at = now(), attempts = o.attempts + 1
+    where o.id in (
+      select i.id from public.email_outbox i
+      where i.status = 'queued' and i.next_attempt_at <= now()
+      order by i.next_attempt_at
+      for update skip locked
+      limit greatest(coalesce(p_limit, 10), 1)
+    )
+    returning o.*;
+end;
+$$;
+
+comment on function private.claim_next_email(integer) is
+  'Leases up to p_limit queued emails for delivery, incrementing attempts. `for update skip locked` mirrors the prospect job queue so concurrent dispatchers never claim the same row.';
+
+revoke execute on function private.claim_next_email(integer) from public, anon, authenticated;
+
+create or replace function private.mark_email_sent(p_id uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.email_outbox set status = 'sent', sent_at = now(), locked_at = null, last_error = null where id = p_id;
+$$;
+
+revoke execute on function private.mark_email_sent(uuid) from public, anon, authenticated;
+
+create or replace function private.mark_email_failed(p_id uuid, p_error text, p_max_attempts integer default 5)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_attempts integer;
+begin
+  select attempts into v_attempts from public.email_outbox where id = p_id;
+
+  -- Exponential backoff while retries remain, then park it as 'failed' so it
+  -- stays visible in the platform outbox view rather than retrying forever
+  -- or disappearing.
+  if coalesce(v_attempts, 0) >= greatest(coalesce(p_max_attempts, 5), 1) then
+    update public.email_outbox
+      set status = 'failed', locked_at = null, last_error = left(coalesce(p_error, 'unknown error'), 1000)
+      where id = p_id;
+  else
+    update public.email_outbox
+      set status = 'queued',
+          locked_at = null,
+          last_error = left(coalesce(p_error, 'unknown error'), 1000),
+          next_attempt_at = now() + (interval '1 minute' * power(3, coalesce(v_attempts, 1)))
+      where id = p_id;
+  end if;
+end;
+$$;
+
+comment on function private.mark_email_failed(uuid, text, integer) is
+  'Records a delivery failure. Backs off exponentially while attempts remain, then parks the row as failed so it stays observable and retryable instead of silently disappearing.';
+
+revoke execute on function private.mark_email_failed(uuid, text, integer) from public, anon, authenticated;
+
+-- The dispatcher runs inside the existing prospect worker, which connects as
+-- the dedicated `prospect_worker` role (never postgres/service_role, no
+-- BYPASSRLS — see 20260811150100). Give that role exactly the three
+-- functions it needs and read access to the queue it drives, nothing more.
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'prospect_worker') then
+    grant execute on function private.claim_next_email(integer) to prospect_worker;
+    grant execute on function private.mark_email_sent(uuid) to prospect_worker;
+    grant execute on function private.mark_email_failed(uuid, text, integer) to prospect_worker;
+    grant select on public.email_outbox to prospect_worker;
+
+    -- The SECURITY DEFINER functions above do the actual writing, so the
+    -- role needs no direct INSERT/UPDATE/DELETE on the table.
+    drop policy if exists email_outbox_worker_select on public.email_outbox;
+    create policy email_outbox_worker_select
+      on public.email_outbox
+      for select
+      to prospect_worker
+      using (true);
+  end if;
+end $$;

@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises'
 import type { Config } from './config.js'
 import { getPool, closePool } from './db.js'
 import { logger } from './logger.js'
+import { EmailDispatcher } from './email/dispatcher.js'
 import { claimNextJob, completeJob, extendLease, failJob, recoverStaleLeases } from './queue/claim.js'
 import { classifyError, computeNextAttemptAt } from './retry.js'
 import { buildSourceRegistry } from './sources/registry.js'
@@ -21,6 +22,7 @@ const STALE_LEASE_SWEEP_INTERVAL_MS = 60_000
 const HEARTBEAT_FILE = process.env['HEARTBEAT_FILE'] ?? '/tmp/prospect-worker-heartbeat'
 
 export class ProspectWorker {
+  private readonly emailDispatcher: EmailDispatcher
   private readonly workerId: string
   private readonly pool
   private readonly sources
@@ -32,6 +34,9 @@ export class ProspectWorker {
     this.workerId = `${config.WORKER_NAME}-${randomUUID().slice(0, 8)}`
     this.pool = getPool(config)
     this.sources = buildSourceRegistry(config)
+    // Shares this worker's pool and lifecycle: it is a second small queue
+    // consumer, not a second service.
+    this.emailDispatcher = new EmailDispatcher(this.pool, config)
   }
 
   async start(): Promise<void> {
@@ -42,6 +47,7 @@ export class ProspectWorker {
     // header) — the Worker sweeps stale leases itself, opportunistically,
     // same pattern as LOT 13's no-show rule.
     this.staleLeaseTimer = setInterval(() => void this.sweepStaleLeases(), STALE_LEASE_SWEEP_INTERVAL_MS)
+    this.emailDispatcher.start()
     void this.sweepStaleLeases()
 
     const lanes = Array.from({ length: this.config.WORKER_CONCURRENCY }, (_, i) => this.runLane(i))
@@ -49,6 +55,7 @@ export class ProspectWorker {
   }
 
   async stop(): Promise<void> {
+    await this.emailDispatcher.stop()
     logger.info('worker stopping — waiting for in-flight jobs to finish', { worker_id: this.workerId, in_flight: this.inFlight })
     this.running = false
     if (this.staleLeaseTimer) clearInterval(this.staleLeaseTimer)

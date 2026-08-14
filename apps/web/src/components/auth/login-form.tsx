@@ -81,7 +81,7 @@ export function LoginForm({ defaultRedirect }: { defaultRedirect: string }) {
       <div className="flex justify-end">
         <Link
           to="/forgot-password"
-          className="text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
         >
           Forgot password?
         </Link>
