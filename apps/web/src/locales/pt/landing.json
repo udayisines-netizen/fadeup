@@ -66,5 +66,187 @@
       "subtitle": "Procure por cidade, barbearia, barbeiro ou serviço."
     },
     "demoLabel": "Ilustração do produto"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp para barbearias — faça toda a barbearia andar",
+      "description": "Marcações, sem marcação, fila ao vivo, cadeiras e clientes num só sistema feito para barbearias."
+    },
+    "nav": {
+      "product": "Produto",
+      "how": "Como funciona",
+      "pricing": "Preço"
+    },
+    "hero": {
+      "eyebrow": "Para barbearias e barbeiros",
+      "titleLead": "Faça toda a barbearia andar.",
+      "subtitle": "Marcações. Sem marcação. Cadeiras. Clientes. Um sistema, feito para como uma barbearia funciona de facto.",
+      "primary": "Junte-se ao FadeUp",
+      "secondary": "Entrar como Pro",
+      "scrollHint": "Role para gerir a barbearia"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Marcações",
+        "title": "O seu dia, já organizado.",
+        "body": "Cada marcação, cada barbeiro, um ecrã. Abre a porta e o dia já está posto."
+      },
+      "walkins": {
+        "eyebrow": "Sem marcação",
+        "title": "Mas a sua barbearia não é só marcações.",
+        "body": "Entra alguém sem marcação. Escolhe um serviço e um barbeiro, ou o primeiro livre."
+      },
+      "queue": {
+        "eyebrow": "Fila ao vivo",
+        "title": "Entrar. Não ficar à espera.",
+        "body": "Pega num lugar pelo telemóvel e vê a fila andar. Ninguém à porta a perguntar quanto falta."
+      },
+      "barber": {
+        "eyebrow": "Atribuição",
+        "title": "A cadeira que vaga primeiro.",
+        "body": "A fila entrega o cliente a um barbeiro específico, ou ao próximo livre."
+      },
+      "chair": {
+        "eyebrow": "Modo Cadeira",
+        "title": "O FadeUp trabalha enquanto trabalha.",
+        "body": "Um ecrã na cadeira: quem está, o que pediu, o que fez da última vez. Termina e o seguinte já está ali."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Lembre-se do corte.",
+        "body": "O número, o comprimento, a linha da barba. É do cliente, e a segunda visita começa onde a primeira acabou."
+      },
+      "history": {
+        "eyebrow": "Cliente",
+        "title": "Transforme um corte num cliente.",
+        "body": "Cada visita constrói um ritmo visível — e um motivo para falar antes que se afaste."
+      },
+      "floor": {
+        "eyebrow": "A sala",
+        "title": "Veja a sala toda.",
+        "body": "Cadeiras, barbeiros, a fila e o que vem a seguir. Não é só uma agenda: é o espaço."
+      },
+      "owner": {
+        "eyebrow": "Operação",
+        "title": "Hoje primeiro. O resto depois.",
+        "body": "O que está a acontecer agora fica em cima. Unidades, equipa e serviços estão lá quando precisa."
+      },
+      "team": {
+        "eyebrow": "Equipa",
+        "title": "Os seus barbeiros, as suas cadeiras, as suas regras.",
+        "body": "Convide barbeiros e receção, defina o que cada um pode fazer e coloque-os onde trabalham."
+      },
+      "marketplace": {
+        "eyebrow": "Marketplace",
+        "title": "Conheça os próximos.",
+        "body": "A sua barbearia e cada barbeiro ganham perfil público. Mesmas cadeiras — agora encontráveis."
+      },
+      "discovery": {
+        "eyebrow": "Descoberta",
+        "title": "Encontrado por cidade, serviço ou nome.",
+        "body": "Os clientes procuram um barbeiro perto no FadeUp. Encontram as barbearias publicadas."
+      },
+      "rebook": {
+        "eyebrow": "E outra vez",
+        "title": "De volta à cadeira.",
+        "body": "Mesmo barbeiro, mesmo corte, um toque. A marcação cai no dia de hoje e recomeça."
+      }
+    },
+    "loop": {
+      "eyebrow": "O ciclo",
+      "title": "Um sistema. Da descoberta ao corte seguinte.",
+      "body": "Não é uma agenda com extras colados. Cada passo alimenta o seguinte.",
+      "steps": [
+        "Descobrir",
+        "Marcar ou fila",
+        "Barbeiro",
+        "Cadeira",
+        "Passport",
+        "Voltar"
+      ]
+    },
+    "existing": {
+      "eyebrow": "Já usa software de marcações?",
+      "title": "Bem. A sua agenda já é digital.",
+      "body": "Essa era a parte fácil. O que quase nenhum software toca é tudo o que acontece depois da porta.",
+      "keepLabel": "Mantenha",
+      "keep": "As marcações",
+      "addLabel": "Acrescente",
+      "add": [
+        "Sem marcação",
+        "Fila ao vivo",
+        "Cadeiras",
+        "Barbeiros",
+        "Fade Passport",
+        "Marketplace"
+      ],
+      "note": "Passe as marcações à mão ou comece do zero — hoje não há importação automática, e não vamos fingir que há."
+    },
+    "types": {
+      "eyebrow": "Qualquer tamanho",
+      "title": "Um barbeiro ou quatro unidades.",
+      "independent": {
+        "name": "Barbeiro independente",
+        "detail": "Uma cadeira, a sua agenda."
+      },
+      "studio": {
+        "name": "Estúdio privado",
+        "detail": "Só com marcação, poucas cadeiras."
+      },
+      "barbershop": {
+        "name": "Barbearia",
+        "detail": "Sala cheia e gente de passagem."
+      },
+      "multi": {
+        "name": "Várias unidades",
+        "detail": "Várias barbearias, uma casa."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Preço",
+      "title": "Toda a barbearia.",
+      "perMonth": "por mês",
+      "body": "Um preço. Todos os barbeiros, todas as cadeiras, tudo o que está nesta página.",
+      "resolving": "A verificar a sua região…",
+      "cta": "Junte-se ao FadeUp",
+      "note": "Analisado em 24 horas. Sem cartão."
+    },
+    "final": {
+      "lines": [
+        "As suas marcações.",
+        "Os seus clientes sem marcação.",
+        "As suas cadeiras.",
+        "Os seus clientes."
+      ],
+      "together": "Num só lugar.",
+      "title": "Ponha a sua barbearia no FadeUp.",
+      "primary": "Junte-se ao FadeUp",
+      "secondary": "Entrar como Pro"
+    },
+    "demoLabel": "Ilustração do produto",
+    "stage": {
+      "today": "Hoje",
+      "available": "Livre",
+      "walkIn": "Sem marcação",
+      "anyBarber": "Qualquer um",
+      "waiting": "À espera",
+      "inChair": "Na cadeira",
+      "free": "Livre",
+      "next": "Seguinte",
+      "complete": "Concluir",
+      "queueLabel": "Fila",
+      "chairLabel": "Cadeira",
+      "lastTime": "Da última vez",
+      "visits": "Visitas",
+      "everyWeeks": "A cada {{count}} semanas",
+      "publicProfile": "Perfil público",
+      "book": "Marcar",
+      "joinQueue": "Entrar na fila",
+      "searchPlaceholder": "Barbeiro, barbearia ou serviço",
+      "daysSince": "{{count}} dias",
+      "rebook": "Marcar de novo",
+      "role": "Função",
+      "location": "Unidade"
+    }
   }
 }

@@ -66,5 +66,187 @@
       "subtitle": "Busca por ciudad, barbería, barbero o servicio."
     },
     "demoLabel": "Ilustración del producto"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp para barberías — lleva toda la barbería",
+      "description": "Citas, sin cita, fila en directo, sillones y clientes en un solo sistema hecho para barberías."
+    },
+    "nav": {
+      "product": "Producto",
+      "how": "Cómo funciona",
+      "pricing": "Precio"
+    },
+    "hero": {
+      "eyebrow": "Para barberías y barberos",
+      "titleLead": "Lleva toda la barbería.",
+      "subtitle": "Citas. Sin cita. Sillones. Clientes. Un sistema, hecho para cómo funciona de verdad una barbería.",
+      "primary": "Únete a FadeUp",
+      "secondary": "Acceso Pro",
+      "scrollHint": "Desplázate para llevar la barbería"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Citas",
+        "title": "Tu día, ya organizado.",
+        "body": "Cada reserva, cada barbero, una pantalla. Abres y el día ya está puesto."
+      },
+      "walkins": {
+        "eyebrow": "Sin cita",
+        "title": "Pero tu barbería no es solo citas.",
+        "body": "Alguien entra sin reserva. Elige servicio, y barbero o el primero libre."
+      },
+      "queue": {
+        "eyebrow": "Fila en directo",
+        "title": "Entrar. No esperar de pie.",
+        "body": "Coge sitio desde el móvil y la ve avanzar. Nadie en la puerta preguntando cuánto falta."
+      },
+      "barber": {
+        "eyebrow": "Asignación",
+        "title": "El sillón que se libera antes.",
+        "body": "La fila pasa el cliente a un barbero concreto, o al siguiente disponible."
+      },
+      "chair": {
+        "eyebrow": "Modo Sillón",
+        "title": "FadeUp trabaja mientras trabajas.",
+        "body": "Una pantalla en el sillón: quién está, qué pidió, qué hiciste la última vez. Terminas y el siguiente ya está."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Recuerda el corte.",
+        "body": "El número, el largo, la línea de la barba. Es del cliente, y la segunda visita empieza donde acabó la primera."
+      },
+      "history": {
+        "eyebrow": "Cliente",
+        "title": "Convierte un corte en un cliente.",
+        "body": "Cada visita dibuja un ritmo que puedes ver — y un motivo para escribir antes de que se aleje."
+      },
+      "floor": {
+        "eyebrow": "La sala",
+        "title": "Ve toda la sala.",
+        "body": "Sillones, barberos, la fila y lo que viene. No solo una agenda: el local."
+      },
+      "owner": {
+        "eyebrow": "Operación",
+        "title": "Hoy primero. Lo demás después.",
+        "body": "Lo que pasa ahora va arriba. Locales, equipo y servicios están cuando hacen falta."
+      },
+      "team": {
+        "eyebrow": "Equipo",
+        "title": "Tus barberos, tus sillones, tus reglas.",
+        "body": "Invita a barberos y recepción, define qué puede hacer cada uno y ponlos donde trabajan."
+      },
+      "marketplace": {
+        "eyebrow": "Marketplace",
+        "title": "Conoce a los siguientes.",
+        "body": "Tu barbería y cada barbero tienen perfil público. Mismos sillones, ahora encontrables."
+      },
+      "discovery": {
+        "eyebrow": "Descubrimiento",
+        "title": "Te encuentran por ciudad, servicio o nombre.",
+        "body": "Los clientes buscan barbero cerca en FadeUp. Encuentran las barberías publicadas."
+      },
+      "rebook": {
+        "eyebrow": "Y otra vez",
+        "title": "De vuelta al sillón.",
+        "body": "Mismo barbero, mismo corte, un toque. La reserva cae en hoy y el día vuelve a empezar."
+      }
+    },
+    "loop": {
+      "eyebrow": "El ciclo",
+      "title": "Un sistema. Del descubrimiento al siguiente corte.",
+      "body": "No es una agenda con añadidos. Cada paso alimenta al siguiente.",
+      "steps": [
+        "Descubrir",
+        "Reservar o fila",
+        "Barbero",
+        "Sillón",
+        "Passport",
+        "Repetir"
+      ]
+    },
+    "existing": {
+      "eyebrow": "¿Ya usas software de reservas?",
+      "title": "Bien. Tu agenda ya es digital.",
+      "body": "Esa era la parte fácil. Lo que casi ningún software toca es lo que pasa una vez que entran por la puerta.",
+      "keepLabel": "Mantén",
+      "keep": "Las citas",
+      "addLabel": "Añade",
+      "add": [
+        "Sin cita",
+        "Fila en directo",
+        "Sillones",
+        "Barberos",
+        "Fade Passport",
+        "Marketplace"
+      ],
+      "note": "Pasa tus citas a mano o empieza de cero — hoy no hay importación automática, y no vamos a fingir lo contrario."
+    },
+    "types": {
+      "eyebrow": "Cualquier tamaño",
+      "title": "Un barbero o cuatro locales.",
+      "independent": {
+        "name": "Barbero independiente",
+        "detail": "Un sillón, tu propia agenda."
+      },
+      "studio": {
+        "name": "Estudio privado",
+        "detail": "Solo con cita, pocos sillones."
+      },
+      "barbershop": {
+        "name": "Barbería",
+        "detail": "Sala completa y gente sin cita."
+      },
+      "multi": {
+        "name": "Multi-local",
+        "detail": "Varias barberías, una casa."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Precio",
+      "title": "Toda la barbería.",
+      "perMonth": "al mes",
+      "body": "Un precio. Todos los barberos, todos los sillones, todo lo de esta página.",
+      "resolving": "Comprobando tu región…",
+      "cta": "Únete a FadeUp",
+      "note": "Revisado en 24 horas. Sin tarjeta."
+    },
+    "final": {
+      "lines": [
+        "Tus citas.",
+        "Tus clientes sin cita.",
+        "Tus sillones.",
+        "Tus clientes."
+      ],
+      "together": "En un sitio.",
+      "title": "Lleva tu barbería con FadeUp.",
+      "primary": "Únete a FadeUp",
+      "secondary": "Acceso Pro"
+    },
+    "demoLabel": "Ilustración del producto",
+    "stage": {
+      "today": "Hoy",
+      "available": "Libre",
+      "walkIn": "Sin cita",
+      "anyBarber": "Cualquiera",
+      "waiting": "Esperando",
+      "inChair": "En el sillón",
+      "free": "Libre",
+      "next": "Siguiente",
+      "complete": "Terminar",
+      "queueLabel": "Fila",
+      "chairLabel": "Sillón",
+      "lastTime": "La última vez",
+      "visits": "Visitas",
+      "everyWeeks": "Cada {{count}} semanas",
+      "publicProfile": "Perfil público",
+      "book": "Reservar",
+      "joinQueue": "Entrar en la fila",
+      "searchPlaceholder": "Barbero, barbería o servicio",
+      "daysSince": "{{count}} días",
+      "rebook": "Reservar otra vez",
+      "role": "Rol",
+      "location": "Local"
+    }
   }
 }

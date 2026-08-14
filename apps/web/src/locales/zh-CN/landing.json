@@ -66,5 +66,187 @@
       "subtitle": "按城市、店铺、理发师或服务搜索。"
     },
     "demoLabel": "产品示意"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp 面向理发店 — 经营整间店",
+      "description": "预约、到店客人、现场排队、椅位与客户，集中在一个为理发店打造的系统里。"
+    },
+    "nav": {
+      "product": "产品",
+      "how": "如何运作",
+      "pricing": "价格"
+    },
+    "hero": {
+      "eyebrow": "面向理发店与理发师",
+      "titleLead": "经营整间店。",
+      "subtitle": "预约。到店客人。椅位。客户。一个系统，按理发店真实的运作方式打造。",
+      "primary": "加入 FadeUp",
+      "secondary": "商家登录",
+      "scrollHint": "向下滚动，开始经营"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "预约",
+        "title": "你的一天，已经排好。",
+        "body": "每一个预约、每一位理发师，一块屏幕。开门时，一天已经摆在眼前。"
+      },
+      "walkins": {
+        "eyebrow": "到店客人",
+        "title": "但你的店不只有预约。",
+        "body": "有人没预约就进来了。他选好项目，再选理发师或最快空出的那位。"
+      },
+      "queue": {
+        "eyebrow": "现场排队",
+        "title": "进来，而不是干等。",
+        "body": "他用手机取号，看着队伍前进。没人再堵在门口问还要多久。"
+      },
+      "barber": {
+        "eyebrow": "分配",
+        "title": "最先空出的那张椅子。",
+        "body": "队列把客人交给指定的理发师，或者下一位有空的人。"
+      },
+      "chair": {
+        "eyebrow": "椅位模式",
+        "title": "FadeUp 在你工作时替你工作。",
+        "body": "椅子旁一块屏：谁坐着、他要什么、上次做了什么。做完，下一位已经在了。"
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "记住这个发型。",
+        "body": "推子号数、长度、胡须轮廓。它属于客人，所以第二次从第一次结束的地方开始。"
+      },
+      "history": {
+        "eyebrow": "客户",
+        "title": "把一次理发变成一位客户。",
+        "body": "每次到店都积累出看得见的节奏 — 也给了你在他淡出前联系的理由。"
+      },
+      "floor": {
+        "eyebrow": "店面",
+        "title": "看见整个店面。",
+        "body": "椅位、理发师、队列，以及接下来会发生什么。不只是日历：是这个空间。"
+      },
+      "owner": {
+        "eyebrow": "运营",
+        "title": "先看今天。其余在后。",
+        "body": "正在发生的排在最上面。门店、团队与服务在需要时才出现，不挡路。"
+      },
+      "team": {
+        "eyebrow": "团队",
+        "title": "你的理发师、你的椅位、你的规则。",
+        "body": "邀请理发师和前台，设定各自权限，并安排到他们真正工作的门店。"
+      },
+      "marketplace": {
+        "eyebrow": "平台",
+        "title": "认识下一批客人。",
+        "body": "你的店和每位理发师都有公开主页。还是同一批椅子 — 只是现在能被找到。"
+      },
+      "discovery": {
+        "eyebrow": "被发现",
+        "title": "通过城市、服务或名字找到你。",
+        "body": "客人在 FadeUp 上搜索附近的理发师，看到的是已发布的店铺。"
+      },
+      "rebook": {
+        "eyebrow": "再一次",
+        "title": "重新坐回椅子上。",
+        "body": "同一位理发师、同样的发型，一次点击。预约落回今天，新的一天重新开始。"
+      }
+    },
+    "loop": {
+      "eyebrow": "闭环",
+      "title": "一个系统。从被发现到下一次理发。",
+      "body": "不是在日历上外挂功能。每一步都喂给下一步。",
+      "steps": [
+        "发现",
+        "预约或排队",
+        "理发师",
+        "椅位",
+        "Passport",
+        "再预约"
+      ]
+    },
+    "existing": {
+      "eyebrow": "已经在用预约软件？",
+      "title": "很好。你的日历已经数字化了。",
+      "body": "那是容易的部分。大多数预约工具没碰的，是客人进门之后发生的一切。",
+      "keepLabel": "保留",
+      "keep": "预约",
+      "addLabel": "加上",
+      "add": [
+        "到店客人",
+        "现场排队",
+        "椅位",
+        "理发师",
+        "Fade Passport",
+        "平台"
+      ],
+      "note": "手动搬迁你的预约，或者重新开始 — 目前没有自动导入，我们不会假装有。"
+    },
+    "types": {
+      "eyebrow": "任何规模",
+      "title": "一位理发师，或四家门店。",
+      "independent": {
+        "name": "独立理发师",
+        "detail": "一张椅子，自己的本子。"
+      },
+      "studio": {
+        "name": "私人工作室",
+        "detail": "仅限预约，几张椅子。"
+      },
+      "barbershop": {
+        "name": "理发店",
+        "detail": "完整店面，接待到店客人。"
+      },
+      "multi": {
+        "name": "多门店",
+        "detail": "多家店铺，同一个体系。"
+      }
+    },
+    "pricing": {
+      "eyebrow": "价格",
+      "title": "整间店。",
+      "perMonth": "每月",
+      "body": "一个价格。所有理发师、所有椅位、这一页上的所有功能。",
+      "resolving": "正在确认你所在区域…",
+      "cta": "加入 FadeUp",
+      "note": "24 小时内审核。无需绑卡。"
+    },
+    "final": {
+      "lines": [
+        "你的预约。",
+        "你的到店客人。",
+        "你的椅位。",
+        "你的客户。"
+      ],
+      "together": "在一个地方。",
+      "title": "用 FadeUp 经营你的店。",
+      "primary": "加入 FadeUp",
+      "secondary": "商家登录"
+    },
+    "demoLabel": "产品示意",
+    "stage": {
+      "today": "今天",
+      "available": "空闲",
+      "walkIn": "到店",
+      "anyBarber": "任意理发师",
+      "waiting": "等待中",
+      "inChair": "服务中",
+      "free": "空闲",
+      "next": "下一位",
+      "complete": "完成",
+      "queueLabel": "队列",
+      "chairLabel": "椅位",
+      "lastTime": "上次",
+      "visits": "到店次数",
+      "everyWeeks": "每 {{count}} 周",
+      "publicProfile": "公开主页",
+      "book": "预约",
+      "joinQueue": "加入排队",
+      "searchPlaceholder": "理发师、店铺或服务",
+      "daysSince": "{{count}} 天",
+      "rebook": "再次预约",
+      "role": "角色",
+      "location": "门店"
+    }
   }
 }

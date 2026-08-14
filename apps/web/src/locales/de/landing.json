@@ -66,5 +66,187 @@
       "subtitle": "Such nach Stadt, Shop, Barbier oder Leistung."
     },
     "demoLabel": "Produktdarstellung"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp für Barbershops — den ganzen Laden führen",
+      "description": "Termine, Laufkundschaft, Live-Schlange, Stühle und Kunden in einem System für Barbershops."
+    },
+    "nav": {
+      "product": "Produkt",
+      "how": "So funktioniert es",
+      "pricing": "Preis"
+    },
+    "hero": {
+      "eyebrow": "Für Barbershops und Barbiere",
+      "titleLead": "Führen Sie den ganzen Laden.",
+      "subtitle": "Termine. Laufkundschaft. Stühle. Kunden. Ein System, gebaut für den echten Ablauf im Barbershop.",
+      "primary": "FadeUp beitreten",
+      "secondary": "Pro-Anmeldung",
+      "scrollHint": "Scrollen und den Laden führen"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Termine",
+        "title": "Ihr Tag, schon geordnet.",
+        "body": "Jede Buchung, jeder Barbier, ein Bildschirm. Sie sperren auf und der Tag liegt bereit."
+      },
+      "walkins": {
+        "eyebrow": "Laufkundschaft",
+        "title": "Ihr Laden ist aber nicht nur Termine.",
+        "body": "Jemand kommt ohne Buchung. Er wählt eine Leistung und einen Barbier oder den nächsten freien."
+      },
+      "queue": {
+        "eyebrow": "Live-Schlange",
+        "title": "Reinkommen statt rumstehen.",
+        "body": "Er nimmt sich per Handy einen Platz und sieht ihn wandern. Niemand fragt mehr an der Tür."
+      },
+      "barber": {
+        "eyebrow": "Zuteilung",
+        "title": "Der Stuhl, der zuerst frei wird.",
+        "body": "Die Schlange übergibt den Kunden an einen bestimmten Barbier oder an den nächsten freien."
+      },
+      "chair": {
+        "eyebrow": "Chair Mode",
+        "title": "FadeUp arbeitet, während Sie arbeiten.",
+        "body": "Ein Bildschirm am Stuhl: wer sitzt, was er wollte, was letztes Mal war. Fertig — der Nächste steht schon."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Den Schnitt merken.",
+        "body": "Aufsatz, Länge, Bartlinie. Er gehört dem Kunden, und der zweite Besuch beginnt, wo der erste endete."
+      },
+      "history": {
+        "eyebrow": "Kunde",
+        "title": "Aus einem Schnitt einen Kunden machen.",
+        "body": "Jeder Besuch ergibt einen sichtbaren Rhythmus — und einen Anlass, sich zu melden."
+      },
+      "floor": {
+        "eyebrow": "Der Laden",
+        "title": "Den ganzen Laden sehen.",
+        "body": "Stühle, Barbiere, Schlange und was als Nächstes kommt. Nicht nur ein Kalender: der Raum."
+      },
+      "owner": {
+        "eyebrow": "Betrieb",
+        "title": "Heute zuerst. Alles andere danach.",
+        "body": "Was jetzt passiert, steht oben. Standorte, Team und Leistungen sind da, wenn Sie sie brauchen."
+      },
+      "team": {
+        "eyebrow": "Team",
+        "title": "Ihre Barbiere, Ihre Stühle, Ihre Regeln.",
+        "body": "Barbiere und Empfang einladen, Rechte festlegen und dort einsetzen, wo sie wirklich arbeiten."
+      },
+      "marketplace": {
+        "eyebrow": "Marktplatz",
+        "title": "Die Nächsten kennenlernen.",
+        "body": "Ihr Laden und jeder Barbier bekommen ein öffentliches Profil. Gleiche Stühle — jetzt auffindbar."
+      },
+      "discovery": {
+        "eyebrow": "Gefunden werden",
+        "title": "Über Stadt, Leistung oder Namen.",
+        "body": "Kunden suchen auf FadeUp einen Barbier in der Nähe. Sie finden veröffentlichte Läden."
+      },
+      "rebook": {
+        "eyebrow": "Und wieder",
+        "title": "Zurück auf dem Stuhl.",
+        "body": "Gleicher Barbier, gleicher Schnitt, ein Tippen. Die Buchung landet im Heute, und der Tag beginnt neu."
+      }
+    },
+    "loop": {
+      "eyebrow": "Der Kreis",
+      "title": "Ein System. Vom Finden bis zum nächsten Schnitt.",
+      "body": "Kein Kalender mit Anbauten. Jeder Schritt speist den nächsten.",
+      "steps": [
+        "Finden",
+        "Buchen oder Schlange",
+        "Barbier",
+        "Stuhl",
+        "Passport",
+        "Wiederkommen"
+      ]
+    },
+    "existing": {
+      "eyebrow": "Schon Buchungssoftware im Einsatz?",
+      "title": "Gut. Ihr Kalender ist bereits digital.",
+      "body": "Das war der einfache Teil. Was die meisten Buchungstools nicht anfassen, ist alles nach der Tür.",
+      "keepLabel": "Behalten",
+      "keep": "Termine",
+      "addLabel": "Dazu",
+      "add": [
+        "Laufkundschaft",
+        "Live-Schlange",
+        "Stühle",
+        "Barbiere",
+        "Fade Passport",
+        "Marktplatz"
+      ],
+      "note": "Termine von Hand übernehmen oder neu starten — einen automatischen Import gibt es heute nicht, und wir behaupten es auch nicht."
+    },
+    "types": {
+      "eyebrow": "Jede Größe",
+      "title": "Ein Barbier oder vier Standorte.",
+      "independent": {
+        "name": "Selbstständiger Barbier",
+        "detail": "Ein Stuhl, Ihr eigenes Buch."
+      },
+      "studio": {
+        "name": "Privatstudio",
+        "detail": "Nur mit Termin, wenige Stühle."
+      },
+      "barbershop": {
+        "name": "Barbershop",
+        "detail": "Voller Laden und Laufkundschaft."
+      },
+      "multi": {
+        "name": "Mehrere Standorte",
+        "detail": "Mehrere Läden unter einem Dach."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Preis",
+      "title": "Der ganze Laden.",
+      "perMonth": "pro Monat",
+      "body": "Ein Preis. Alle Barbiere, alle Stühle, alles auf dieser Seite.",
+      "resolving": "Region wird geprüft…",
+      "cta": "FadeUp beitreten",
+      "note": "Prüfung innerhalb von 24 Stunden. Ohne Karte."
+    },
+    "final": {
+      "lines": [
+        "Ihre Termine.",
+        "Ihre Laufkundschaft.",
+        "Ihre Stühle.",
+        "Ihre Kunden."
+      ],
+      "together": "An einem Ort.",
+      "title": "Führen Sie Ihren Laden mit FadeUp.",
+      "primary": "FadeUp beitreten",
+      "secondary": "Pro-Anmeldung"
+    },
+    "demoLabel": "Produktdarstellung",
+    "stage": {
+      "today": "Heute",
+      "available": "Frei",
+      "walkIn": "Ohne Termin",
+      "anyBarber": "Egal wer",
+      "waiting": "Wartet",
+      "inChair": "Am Stuhl",
+      "free": "Frei",
+      "next": "Nächster",
+      "complete": "Fertig",
+      "queueLabel": "Schlange",
+      "chairLabel": "Stuhl",
+      "lastTime": "Letztes Mal",
+      "visits": "Besuche",
+      "everyWeeks": "Alle {{count}} Wochen",
+      "publicProfile": "Öffentliches Profil",
+      "book": "Buchen",
+      "joinQueue": "Anstellen",
+      "searchPlaceholder": "Barbier, Laden oder Leistung",
+      "daysSince": "{{count}} Tage",
+      "rebook": "Erneut buchen",
+      "role": "Rolle",
+      "location": "Standort"
+    }
   }
 }

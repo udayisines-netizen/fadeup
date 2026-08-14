@@ -66,5 +66,187 @@
       "subtitle": "Cerca per città, negozio, barbiere o servizio."
     },
     "demoLabel": "Illustrazione del prodotto"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp per barbershop — gestisci tutto il negozio",
+      "description": "Appuntamenti, senza appuntamento, coda in diretta, poltrone e clienti in un solo sistema pensato per i barbershop."
+    },
+    "nav": {
+      "product": "Prodotto",
+      "how": "Come funziona",
+      "pricing": "Prezzo"
+    },
+    "hero": {
+      "eyebrow": "Per barbershop e barbieri",
+      "titleLead": "Gestisci tutto il negozio.",
+      "subtitle": "Appuntamenti. Senza appuntamento. Poltrone. Clienti. Un sistema, costruito su come funziona davvero un barbershop.",
+      "primary": "Unisciti a FadeUp",
+      "secondary": "Accesso Pro",
+      "scrollHint": "Scorri per gestire il negozio"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Appuntamenti",
+        "title": "La tua giornata, già organizzata.",
+        "body": "Ogni prenotazione, ogni barbiere, una schermata. Apri e la giornata è già pronta."
+      },
+      "walkins": {
+        "eyebrow": "Senza appuntamento",
+        "title": "Ma il tuo negozio non è solo appuntamenti.",
+        "body": "Entra qualcuno senza prenotazione. Sceglie un servizio e un barbiere, o il primo libero."
+      },
+      "queue": {
+        "eyebrow": "Coda in diretta",
+        "title": "Entrare. Non aspettare in piedi.",
+        "body": "Prende posto dal telefono e la guarda avanzare. Nessuno sulla porta a chiedere quanto manca."
+      },
+      "barber": {
+        "eyebrow": "Assegnazione",
+        "title": "La poltrona che si libera per prima.",
+        "body": "La coda affida il cliente a un barbiere preciso, o al primo disponibile."
+      },
+      "chair": {
+        "eyebrow": "Modalità Poltrona",
+        "title": "FadeUp lavora mentre lavori.",
+        "body": "Una schermata alla poltrona: chi è seduto, cosa ha chiesto, cosa hai fatto l’ultima volta. Concludi e il prossimo è già lì."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Ricorda il taglio.",
+        "body": "Il numero, la lunghezza, la linea della barba. È del cliente, e la seconda visita riparte da dove è finita la prima."
+      },
+      "history": {
+        "eyebrow": "Cliente",
+        "title": "Trasforma un taglio in un cliente.",
+        "body": "Ogni passaggio costruisce un ritmo visibile — e un motivo per farsi sentire prima che si allontani."
+      },
+      "floor": {
+        "eyebrow": "La sala",
+        "title": "Vedi tutta la sala.",
+        "body": "Poltrone, barbieri, coda e cosa arriva. Non solo un’agenda: il locale."
+      },
+      "owner": {
+        "eyebrow": "Operatività",
+        "title": "Prima oggi. Il resto dopo.",
+        "body": "Quello che succede ora sta in alto. Sedi, team e servizi ci sono quando servono."
+      },
+      "team": {
+        "eyebrow": "Team",
+        "title": "I tuoi barbieri, le tue poltrone, le tue regole.",
+        "body": "Invita barbieri e reception, decidi cosa può fare ognuno e mettili dove lavorano davvero."
+      },
+      "marketplace": {
+        "eyebrow": "Marketplace",
+        "title": "Incontra i prossimi.",
+        "body": "Il tuo negozio e ogni barbiere hanno un profilo pubblico. Stesse poltrone — ora trovabili."
+      },
+      "discovery": {
+        "eyebrow": "Scoperta",
+        "title": "Trovato per città, servizio o nome.",
+        "body": "I clienti cercano un barbiere vicino su FadeUp. Trovano i negozi pubblicati."
+      },
+      "rebook": {
+        "eyebrow": "E ancora",
+        "title": "Di nuovo in poltrona.",
+        "body": "Stesso barbiere, stesso taglio, un tocco. La prenotazione torna nella giornata e si ricomincia."
+      }
+    },
+    "loop": {
+      "eyebrow": "Il ciclo",
+      "title": "Un sistema. Dalla scoperta al taglio successivo.",
+      "body": "Non un’agenda con aggiunte. Ogni passo alimenta il successivo.",
+      "steps": [
+        "Scoprire",
+        "Prenotare o coda",
+        "Barbiere",
+        "Poltrona",
+        "Passport",
+        "Tornare"
+      ]
+    },
+    "existing": {
+      "eyebrow": "Usi già un software di prenotazione?",
+      "title": "Bene. La tua agenda è già digitale.",
+      "body": "Quella era la parte facile. Ciò che quasi nessun gestionale tocca è tutto quello che succede dopo la porta.",
+      "keepLabel": "Tieni",
+      "keep": "Gli appuntamenti",
+      "addLabel": "Aggiungi",
+      "add": [
+        "Senza appuntamento",
+        "Coda in diretta",
+        "Poltrone",
+        "Barbieri",
+        "Fade Passport",
+        "Marketplace"
+      ],
+      "note": "Riporta gli appuntamenti a mano o riparti da zero — oggi non c’è un import automatico, e non fingeremo il contrario."
+    },
+    "types": {
+      "eyebrow": "Qualsiasi dimensione",
+      "title": "Un barbiere o quattro sedi.",
+      "independent": {
+        "name": "Barbiere indipendente",
+        "detail": "Una poltrona, la tua agenda."
+      },
+      "studio": {
+        "name": "Studio privato",
+        "detail": "Solo su appuntamento, poche poltrone."
+      },
+      "barbershop": {
+        "name": "Barbershop",
+        "detail": "Sala piena e gente di passaggio."
+      },
+      "multi": {
+        "name": "Più sedi",
+        "detail": "Più negozi sotto un unico tetto."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Prezzo",
+      "title": "Tutto il negozio.",
+      "perMonth": "al mese",
+      "body": "Un prezzo. Tutti i barbieri, tutte le poltrone, tutto quello che c’è in questa pagina.",
+      "resolving": "Verifica della tua area…",
+      "cta": "Unisciti a FadeUp",
+      "note": "Valutato entro 24 ore. Senza carta."
+    },
+    "final": {
+      "lines": [
+        "I tuoi appuntamenti.",
+        "I tuoi clienti di passaggio.",
+        "Le tue poltrone.",
+        "I tuoi clienti."
+      ],
+      "together": "In un posto solo.",
+      "title": "Gestisci il tuo negozio con FadeUp.",
+      "primary": "Unisciti a FadeUp",
+      "secondary": "Accesso Pro"
+    },
+    "demoLabel": "Illustrazione del prodotto",
+    "stage": {
+      "today": "Oggi",
+      "available": "Libero",
+      "walkIn": "Senza app.",
+      "anyBarber": "Chiunque",
+      "waiting": "In attesa",
+      "inChair": "In poltrona",
+      "free": "Libera",
+      "next": "Prossimo",
+      "complete": "Concludi",
+      "queueLabel": "Coda",
+      "chairLabel": "Poltrona",
+      "lastTime": "L’ultima volta",
+      "visits": "Visite",
+      "everyWeeks": "Ogni {{count}} settimane",
+      "publicProfile": "Profilo pubblico",
+      "book": "Prenota",
+      "joinQueue": "Mettiti in coda",
+      "searchPlaceholder": "Barbiere, negozio o servizio",
+      "daysSince": "{{count}} giorni",
+      "rebook": "Prenota di nuovo",
+      "role": "Ruolo",
+      "location": "Sede"
+    }
   }
 }

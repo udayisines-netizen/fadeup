@@ -39,8 +39,8 @@ export const router = createBrowserRouter([
           {
             path: 'for-business',
             lazy: async () => {
-              const { ForBusinessPage } = await import('@/pages/for-business-page')
-              return { Component: ForBusinessPage }
+              const { BusinessLandingPage } = await import('@/pages/business-landing-page')
+              return { Component: BusinessLandingPage }
             },
           },
           {

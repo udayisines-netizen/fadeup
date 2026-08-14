@@ -66,5 +66,187 @@
       "subtitle": "Search by city, shop, barber or service."
     },
     "demoLabel": "Product illustration"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp for barbershops — run the whole shop",
+      "description": "Appointments, walk-ins, the live queue, chairs and customers in one system built for barbershops. See the whole floor, remember every cut, and get found by new clients."
+    },
+    "nav": {
+      "product": "Product",
+      "how": "How it works",
+      "pricing": "Pricing"
+    },
+    "hero": {
+      "eyebrow": "For barbershops and barbers",
+      "titleLead": "Run the whole shop.",
+      "subtitle": "Appointments. Walk-ins. Chairs. Customers. One system, built for how a barbershop actually runs.",
+      "primary": "Join FadeUp",
+      "secondary": "Pro login",
+      "scrollHint": "Scroll to run the shop"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Appointments",
+        "title": "Your day, already organised.",
+        "body": "Every booking, every barber, one screen. Open the shop and the day is already laid out."
+      },
+      "walkins": {
+        "eyebrow": "Walk-ins",
+        "title": "But your shop is not only appointments.",
+        "body": "Someone walks in without a booking. They pick a service, and a barber or the next one free."
+      },
+      "queue": {
+        "eyebrow": "Live queue",
+        "title": "Walk in. Not wait around.",
+        "body": "They take a place from their phone and watch it move. Nobody stands by the door asking how long."
+      },
+      "barber": {
+        "eyebrow": "Assignment",
+        "title": "The chair that frees up first.",
+        "body": "The queue hands the customer to a specific barber, or to whoever is next available."
+      },
+      "chair": {
+        "eyebrow": "Chair Mode",
+        "title": "FadeUp works while you work.",
+        "body": "One screen at the chair: who is in it, what they asked for, what you did last time. Complete, and the next one is already there."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Remember the cut.",
+        "body": "The guard, the length, the beard line. The customer owns it, and it means the second visit starts where the first ended."
+      },
+      "history": {
+        "eyebrow": "Customer",
+        "title": "Turn a cut into a customer.",
+        "body": "Every visit builds a rhythm you can see — and a reason to reach out before they drift."
+      },
+      "floor": {
+        "eyebrow": "The floor",
+        "title": "See the whole floor.",
+        "body": "Chairs, barbers, the queue and what is coming next. Not just a calendar — the room."
+      },
+      "owner": {
+        "eyebrow": "Operations",
+        "title": "Today first. Everything else after.",
+        "body": "What is happening now sits at the top. Locations, team and services are there when you need them, not in your way."
+      },
+      "team": {
+        "eyebrow": "Team",
+        "title": "Your barbers, your chairs, your rules.",
+        "body": "Invite barbers and reception, set what each of them can do, and put them where they actually work."
+      },
+      "marketplace": {
+        "eyebrow": "Marketplace",
+        "title": "Meet the next ones.",
+        "body": "Your shop and every barber in it get a public profile. Same chairs, same services — now findable."
+      },
+      "discovery": {
+        "eyebrow": "Discovery",
+        "title": "Found by city, service or name.",
+        "body": "Customers search FadeUp for a barber near them. Published shops are what they find."
+      },
+      "rebook": {
+        "eyebrow": "And again",
+        "title": "Back in the chair.",
+        "body": "Same barber, same cut, one tap. The booking lands in today, and the day starts over."
+      }
+    },
+    "loop": {
+      "eyebrow": "The loop",
+      "title": "One system. From discovery to the next cut.",
+      "body": "Not a calendar with extras bolted on. Every step feeds the next one.",
+      "steps": [
+        "Discover",
+        "Book or queue",
+        "Barber",
+        "Chair",
+        "Passport",
+        "Rebook"
+      ]
+    },
+    "existing": {
+      "eyebrow": "Already using booking software?",
+      "title": "Good. Your calendar is already digital.",
+      "body": "That was the easy part. What most booking tools do not touch is everything that happens after someone walks through the door.",
+      "keepLabel": "Keep",
+      "keep": "Appointments",
+      "addLabel": "Add",
+      "add": [
+        "Walk-ins",
+        "Live queue",
+        "Chairs",
+        "Barbers",
+        "Fade Passport",
+        "Marketplace"
+      ],
+      "note": "Bring your appointments across by hand or start fresh — there is no automatic import today, and we will not pretend otherwise."
+    },
+    "types": {
+      "eyebrow": "Any shape of shop",
+      "title": "One barber or four locations.",
+      "independent": {
+        "name": "Independent barber",
+        "detail": "One chair, your own book."
+      },
+      "studio": {
+        "name": "Private studio",
+        "detail": "Appointment-only, a few chairs."
+      },
+      "barbershop": {
+        "name": "Barbershop",
+        "detail": "A full floor and walk-ins."
+      },
+      "multi": {
+        "name": "Multi-location",
+        "detail": "Several shops under one roof."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "The whole shop.",
+      "perMonth": "per month",
+      "body": "One price. Every barber, every chair, every feature on this page.",
+      "resolving": "Checking your region…",
+      "cta": "Join FadeUp",
+      "note": "Reviewed within 24 hours. No card required."
+    },
+    "final": {
+      "lines": [
+        "Your appointments.",
+        "Your walk-ins.",
+        "Your chairs.",
+        "Your customers."
+      ],
+      "together": "One place.",
+      "title": "Run your shop on FadeUp.",
+      "primary": "Join FadeUp",
+      "secondary": "Pro login"
+    },
+    "demoLabel": "Product illustration",
+    "stage": {
+      "today": "Today",
+      "available": "Available",
+      "walkIn": "Walk-in",
+      "anyBarber": "Any barber",
+      "waiting": "Waiting",
+      "inChair": "In the chair",
+      "free": "Free",
+      "next": "Next",
+      "complete": "Complete",
+      "queueLabel": "Queue",
+      "chairLabel": "Chair",
+      "lastTime": "Last time",
+      "visits": "Visits",
+      "everyWeeks": "Every {{count}} weeks",
+      "publicProfile": "Public profile",
+      "book": "Book",
+      "joinQueue": "Join queue",
+      "searchPlaceholder": "Barber, shop or service",
+      "daysSince": "{{count}} days",
+      "rebook": "Rebook",
+      "role": "Role",
+      "location": "Location"
+    }
   }
 }

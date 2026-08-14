@@ -66,5 +66,187 @@
       "subtitle": "Cherchez par ville, salon, barbier ou prestation."
     },
     "demoLabel": "Illustration du produit"
+  },
+  "business": {
+    "meta": {
+      "title": "FadeUp pour les barbershops — gérez tout le salon",
+      "description": "Rendez-vous, sans rendez-vous, file en direct, fauteuils et clients dans un seul système pensé pour les barbershops. Voyez toute la salle, retenez chaque coupe, et faites-vous trouver."
+    },
+    "nav": {
+      "product": "Produit",
+      "how": "Comment ça marche",
+      "pricing": "Tarif"
+    },
+    "hero": {
+      "eyebrow": "Pour les barbershops et les barbiers",
+      "titleLead": "Gérez tout le salon.",
+      "subtitle": "Rendez-vous. Sans rendez-vous. Fauteuils. Clients. Un seul système, pensé pour la réalité d’un barbershop.",
+      "primary": "Rejoindre FadeUp",
+      "secondary": "Connexion Pro",
+      "scrollHint": "Faites défiler pour gérer le salon"
+    },
+    "scenes": {
+      "appointments": {
+        "eyebrow": "Rendez-vous",
+        "title": "Votre journée, déjà organisée.",
+        "body": "Chaque réservation, chaque barbier, un seul écran. Vous ouvrez, la journée est déjà posée."
+      },
+      "walkins": {
+        "eyebrow": "Sans rendez-vous",
+        "title": "Mais votre salon, ce n’est pas que des rendez-vous.",
+        "body": "Quelqu’un entre sans avoir réservé. Il choisit une prestation, et un barbier ou le premier disponible."
+      },
+      "queue": {
+        "eyebrow": "File en direct",
+        "title": "Entrer. Pas attendre.",
+        "body": "Il prend sa place depuis son téléphone et la suit avancer. Plus personne près de la porte à demander combien de temps."
+      },
+      "barber": {
+        "eyebrow": "Attribution",
+        "title": "Le fauteuil qui se libère en premier.",
+        "body": "La file confie le client à un barbier précis, ou au prochain disponible."
+      },
+      "chair": {
+        "eyebrow": "Mode Fauteuil",
+        "title": "FadeUp travaille pendant que vous travaillez.",
+        "body": "Un écran au fauteuil : qui est assis, ce qu’il a demandé, ce que vous avez fait la dernière fois. Vous terminez, le suivant est déjà là."
+      },
+      "passport": {
+        "eyebrow": "Fade Passport",
+        "title": "Retenez la coupe.",
+        "body": "Le sabot, la longueur, la ligne de barbe. Il appartient au client, et la deuxième visite reprend là où la première s’est arrêtée."
+      },
+      "history": {
+        "eyebrow": "Client",
+        "title": "Transformez une coupe en client.",
+        "body": "Chaque passage dessine un rythme visible — et une raison de reprendre contact avant qu’il ne s’éloigne."
+      },
+      "floor": {
+        "eyebrow": "La salle",
+        "title": "Voyez toute la salle.",
+        "body": "Fauteuils, barbiers, file et ce qui arrive. Pas juste un agenda : la pièce."
+      },
+      "owner": {
+        "eyebrow": "Exploitation",
+        "title": "Aujourd’hui d’abord. Le reste ensuite.",
+        "body": "Ce qui se passe maintenant est en haut. Établissements, équipe et prestations sont là quand il faut, pas dans le passage."
+      },
+      "team": {
+        "eyebrow": "Équipe",
+        "title": "Vos barbiers, vos fauteuils, vos règles.",
+        "body": "Invitez barbiers et réception, définissez ce que chacun peut faire, et placez-les là où ils travaillent vraiment."
+      },
+      "marketplace": {
+        "eyebrow": "Marketplace",
+        "title": "Rencontrez les suivants.",
+        "body": "Votre salon et chaque barbier obtiennent un profil public. Mêmes fauteuils, mêmes prestations — désormais trouvables."
+      },
+      "discovery": {
+        "eyebrow": "Découverte",
+        "title": "Trouvé par ville, prestation ou nom.",
+        "body": "Les clients cherchent un barbier près d’eux sur FadeUp. Ce sont les salons publiés qu’ils trouvent."
+      },
+      "rebook": {
+        "eyebrow": "Et encore",
+        "title": "De retour au fauteuil.",
+        "body": "Même barbier, même coupe, un geste. La réservation retombe dans la journée, et tout recommence."
+      }
+    },
+    "loop": {
+      "eyebrow": "La boucle",
+      "title": "Un seul système. De la découverte à la prochaine coupe.",
+      "body": "Pas un agenda auquel on a greffé des options. Chaque étape alimente la suivante.",
+      "steps": [
+        "Découvrir",
+        "Réserver ou file",
+        "Barbier",
+        "Fauteuil",
+        "Passport",
+        "Revenir"
+      ]
+    },
+    "existing": {
+      "eyebrow": "Déjà un logiciel de réservation ?",
+      "title": "Très bien. Votre agenda est déjà numérique.",
+      "body": "C’était la partie facile. Ce que la plupart des outils de réservation ne touchent pas, c’est tout ce qui se passe une fois la porte franchie.",
+      "keepLabel": "Gardez",
+      "keep": "Les rendez-vous",
+      "addLabel": "Ajoutez",
+      "add": [
+        "Sans rendez-vous",
+        "File en direct",
+        "Fauteuils",
+        "Barbiers",
+        "Fade Passport",
+        "Marketplace"
+      ],
+      "note": "Reprenez vos rendez-vous à la main ou repartez de zéro — il n’y a pas d’import automatique aujourd’hui, et nous ne prétendrons pas le contraire."
+    },
+    "types": {
+      "eyebrow": "Quelle que soit la taille",
+      "title": "Un barbier ou quatre établissements.",
+      "independent": {
+        "name": "Barbier indépendant",
+        "detail": "Un fauteuil, votre propre carnet."
+      },
+      "studio": {
+        "name": "Studio privé",
+        "detail": "Sur rendez-vous, quelques fauteuils."
+      },
+      "barbershop": {
+        "name": "Barbershop",
+        "detail": "Une salle complète et du passage."
+      },
+      "multi": {
+        "name": "Multi-établissements",
+        "detail": "Plusieurs salons, une seule maison."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Tarif",
+      "title": "Tout le salon.",
+      "perMonth": "par mois",
+      "body": "Un seul prix. Tous les barbiers, tous les fauteuils, tout ce qui est sur cette page.",
+      "resolving": "Vérification de votre région…",
+      "cta": "Rejoindre FadeUp",
+      "note": "Étudié sous 24 h. Sans carte bancaire."
+    },
+    "final": {
+      "lines": [
+        "Vos rendez-vous.",
+        "Vos sans rendez-vous.",
+        "Vos fauteuils.",
+        "Vos clients."
+      ],
+      "together": "Au même endroit.",
+      "title": "Gérez votre salon sur FadeUp.",
+      "primary": "Rejoindre FadeUp",
+      "secondary": "Connexion Pro"
+    },
+    "demoLabel": "Illustration du produit",
+    "stage": {
+      "today": "Aujourd’hui",
+      "available": "Libre",
+      "walkIn": "Sans RDV",
+      "anyBarber": "Peu importe",
+      "waiting": "En attente",
+      "inChair": "Au fauteuil",
+      "free": "Libre",
+      "next": "Suivant",
+      "complete": "Terminer",
+      "queueLabel": "File",
+      "chairLabel": "Fauteuil",
+      "lastTime": "La dernière fois",
+      "visits": "Visites",
+      "everyWeeks": "Toutes les {{count}} semaines",
+      "publicProfile": "Profil public",
+      "book": "Réserver",
+      "joinQueue": "Prendre la file",
+      "searchPlaceholder": "Barbier, salon ou prestation",
+      "daysSince": "{{count}} jours",
+      "rebook": "Reprendre RDV",
+      "role": "Rôle",
+      "location": "Établissement"
+    }
   }
 }
