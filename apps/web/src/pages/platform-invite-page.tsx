@@ -65,7 +65,7 @@ export function PlatformInvitePage() {
                 Log in
               </Link>
               <Link
-                to={`/signup?redirect=${encodeURIComponent(redirectPath)}`}
+                to={`/register?redirect=${encodeURIComponent(redirectPath)}`}
                 className={buttonVariants({ variant: 'primary' }, 'flex-1')}
               >
                 Sign up

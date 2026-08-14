@@ -150,7 +150,7 @@ export const router = createBrowserRouter([
       {
         path: 'app/customer',
         element: (
-          <RequireAuth loginPath="/customer/login">
+          <RequireAuth loginPath="/login">
             <CustomerAppLayout />
           </RequireAuth>
         ),

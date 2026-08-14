@@ -848,13 +848,13 @@ function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
             Create an account to track this appointment, rebook in one tap, and keep your Fade Passport.
           </p>
           <Link
-            to="/customer/signup?redirect=%2Fapp%2Fcustomer"
+            to="/register?redirect=%2Fapp%2Fcustomer"
             className={buttonVariants({ variant: 'primary' }, 'w-full')}
           >
             Create an account
           </Link>
           <Link
-            to="/customer/login?redirect=%2Fapp%2Fcustomer"
+            to="/login?redirect=%2Fapp%2Fcustomer"
             className={buttonVariants({ variant: 'secondary' }, 'w-full')}
           >
             I already have an account

@@ -94,7 +94,7 @@ export function CustomerProfilePage() {
   async function handleSignOut() {
     const supabase = getSupabaseClient()
     await supabase.auth.signOut()
-    navigate('/customer/login', { replace: true })
+    navigate('/login', { replace: true })
   }
 
   const profile = profileQuery.data

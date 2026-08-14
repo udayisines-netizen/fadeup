@@ -155,7 +155,7 @@ describe('PublicBookingPage', () => {
     expect(mockStorePendingClaimToken).toHaveBeenCalledWith('tok-xyz')
     expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
       'href',
-      '/customer/signup?redirect=%2Fapp%2Fcustomer',
+      '/register?redirect=%2Fapp%2Fcustomer',
     )
     expect(screen.getByRole('link', { name: 'I already have an account' })).toBeInTheDocument()
   })

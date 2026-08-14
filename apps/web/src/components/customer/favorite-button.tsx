@@ -14,7 +14,7 @@ interface FavoriteButtonProps {
 
 /**
  * Heart toggle shown on marketplace cards and profile pages. Signed-out
- * visitors get a link to /customer/login (with a redirect back here) rather
+ * visitors get a link to /login (with a redirect back here) rather
  * than a button that silently fails — favorites genuinely belong to an
  * account (spec: "Favorites must belong exclusively to their customer").
  * Reused across contexts with different i18n needs (translated marketplace
@@ -44,7 +44,7 @@ export function FavoriteButton({
     const redirectTarget = `${location.pathname}${location.search}`
     return (
       <Link
-        to={`/customer/login?redirect=${encodeURIComponent(redirectTarget)}`}
+        to={`/login?redirect=${encodeURIComponent(redirectTarget)}`}
         aria-label={favoriteLabel}
         className={cn('inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-400 hover:bg-paper-100 hover:text-ink-600', className)}
       >

@@ -131,6 +131,6 @@ describe('CustomerProfilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
 
     await waitFor(() => expect(signOut).toHaveBeenCalled())
-    expect(mockNavigate).toHaveBeenCalledWith('/customer/login', { replace: true })
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true })
   })
 })

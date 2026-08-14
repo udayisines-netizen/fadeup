@@ -5,7 +5,11 @@ import { PageSpinner } from '@/components/ui/spinner'
 
 interface RequireAuthProps {
   children: ReactNode
-  /** Where to send an unauthenticated visitor. Defaults to /login (which itself redirects to /pro/login) — pass /customer/login for customer-facing routes so the sign-in form matches the context. */
+  /**
+   * Where to send an unauthenticated visitor. Defaults to /login, which is
+   * the customer sign-in; pass /pro/login for professional routes and
+   * /platform/login for platform staff so the form matches the context.
+   */
   loginPath?: string
 }
 

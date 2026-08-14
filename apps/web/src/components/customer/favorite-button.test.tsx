@@ -38,7 +38,7 @@ describe('FavoriteButton', () => {
     renderButton()
 
     const link = screen.getByRole('link', { name: 'Add to favorites' })
-    expect(link).toHaveAttribute('href', `/customer/login?redirect=${encodeURIComponent('/s/demo-shop/profile')}`)
+    expect(link).toHaveAttribute('href', `/login?redirect=${encodeURIComponent('/s/demo-shop/profile')}`)
   })
 
   it('signed-in customers can add and, once favorited, remove', async () => {

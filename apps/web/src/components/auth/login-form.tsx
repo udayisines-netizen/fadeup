@@ -22,8 +22,8 @@ function safeRedirectTarget(target: string | null, fallback: string): string {
 }
 
 /**
- * Shared sign-in form used by every login entry point (/login, /pro/login,
- * /customer/login, /platform/login has its own — platform staff should
+ * Shared sign-in form used by every login entry point (/login, /pro/login;
+ * /platform/login has its own — platform staff should
  * never see customer/pro copy or a "forgot password" link styled the same
  * as the public ones). All entry points share one Supabase Auth system
  * (CLAUDE.md: never separate auth databases) — only the surrounding
