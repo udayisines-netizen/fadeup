@@ -69,8 +69,8 @@
   },
   "business": {
     "meta": {
-      "title": "FadeUp — バーバーショップの店全体を動かす",
-      "description": "予約、飛び込み、ライブ待ち列、チェア、顧客をひとつに。バーバーショップのために作られたシステム。"
+      "title": "FadeUp（バーバー向け）— 店まるごと回す",
+      "description": "予約、飛び込み、リアルタイムの順番待ち、チェア、顧客。バーバーのために作られた一つのシステムに。ひとりでも、一店舗でも、複数店舗でも——選べば FadeUp がその形になります。"
     },
     "nav": {
       "product": "プロダクト",
@@ -78,175 +78,368 @@
       "pricing": "料金"
     },
     "hero": {
-      "eyebrow": "バーバーショップと理容師のために",
-      "titleLead": "店全体を動かす。",
-      "subtitle": "予約。飛び込み。チェア。顧客。バーバーショップの実際の動き方に合わせた、ひとつのシステム。",
+      "eyebrow": "バーバーとバーバーショップのために",
       "primary": "FadeUp に参加",
-      "secondary": "プロ ログイン",
-      "scrollHint": "スクロールして店を動かす"
+      "secondary": "事業者ログイン",
+      "scrollHint": "スクロールして店を開ける"
     },
+    "modes": {
+      "groupLabel": "あなたの業態を選んでください",
+      "previous": "前の業態",
+      "next": "次の業態",
+      "announce": "{{name}} 向けの FadeUp を表示中",
+      "independent": {
+        "name": "個人",
+        "headline": "自分の帳面を、まるごと。",
+        "lines": [
+          "自分の予定。",
+          "自分のお客さん。",
+          "自分の腕。",
+          "シンプルな一つのシステム。"
+        ]
+      },
+      "barbershop": {
+        "name": "バーバーショップ",
+        "headline": "店をまるごと回す。",
+        "lines": [
+          "予約。",
+          "飛び込み。",
+          "スタッフ。",
+          "チェア。",
+          "一つのシステム。"
+        ]
+      },
+      "multi_location": {
+        "name": "複数店舗",
+        "headline": "どの店も、まるごと。",
+        "lines": [
+          "どの店も。",
+          "どのチームも。",
+          "一つのオペレーティングシステム。"
+        ]
+      }
+    },
+    "roadmapBadge": "開発中",
+    "demoLabel": "プロダクトのイメージ",
     "scenes": {
+      "today": {
+        "eyebrow": "今日",
+        "title": "今日はもう並んでいる。",
+        "body": "店を開ければ、一日ぜんぶが一画面に。どの予約も、どのスタッフも、起こる順番のまま。",
+        "modes": {
+          "independent": {
+            "title": "一日が、一画面に。",
+            "body": "アプリを開けば今日はもうそこにある。誰が、何時に、何をしに来るか。先に用意することは何もありません。"
+          },
+          "multi_location": {
+            "title": "どの店も、同じ朝に。",
+            "body": "二つのフロアを一度に見て、そのままどちらにも入れます。アカウントの切り替えは不要です。"
+          }
+        }
+      },
       "appointments": {
         "eyebrow": "予約",
-        "title": "一日は、もう組まれている。",
-        "body": "すべての予約、すべての理容師が一画面に。店を開けた時点で、一日は並んでいます。"
+        "title": "枠がひとりでに埋まる。",
+        "body": "お客さんがメニューとスタッフと時間を選ぶ。それが今日に入り、チェアが押さえられます。"
       },
       "walkins": {
         "eyebrow": "飛び込み",
-        "title": "でも、店は予約だけではない。",
-        "body": "予約なしで人が入ってくる。メニューを選び、理容師か「空いた人」を選ぶ。"
+        "title": "店は予約だけでできていない。",
+        "body": "予約なしで誰かが入ってくる。メニューとスタッフを選ぶか、次に空いた人に回ります。",
+        "modes": {
+          "independent": {
+            "title": "みんなが先に予約するわけではない。",
+            "body": "予約と予約のあいだに誰かが来る。残りの一日を崩さずに受けられます。"
+          }
+        }
       },
       "queue": {
-        "eyebrow": "ライブ待ち列",
-        "title": "入る。立って待たない。",
-        "body": "スマホから並び、列が進むのを見る。入口で「あとどれくらい」と聞く人はもういません。"
+        "eyebrow": "リアルタイムの順番待ち",
+        "title": "入って。立って待たない。",
+        "body": "自分の携帯で順番を取り、それが進むのが見えます。あと何分か、入口で聞く人はいなくなります。"
       },
       "barber": {
         "eyebrow": "割り当て",
-        "title": "最初に空いたチェアへ。",
-        "body": "待ち列が、指名された理容師か、次に空いた人へ客を渡します。"
+        "title": "先に空いたチェアへ。",
+        "body": "順番待ちが、お客さんを指名したスタッフか、次に空いた人へ渡します。",
+        "modes": {
+          "independent": {
+            "title": "チェアは一つだけ。",
+            "body": "割り当てるものはありません。列はあなたのもので、次の人もあなたのお客さんです。"
+          }
+        }
       },
       "chair": {
-        "eyebrow": "チェアモード",
-        "title": "FadeUp は、あなたが働く間に働く。",
-        "body": "チェア横の一画面に、誰が座り、何を頼み、前回何をしたか。終えれば、次の人がもう表示されています。"
+        "eyebrow": "チェアで",
+        "title": "手を動かしている間も、FadeUp が動く。",
+        "body": "誰が座っていて、何を頼んでいて、前回どう切ったか。終わらせれば、次の人がもうそこにいます。"
       },
       "passport": {
         "eyebrow": "Fade Passport",
-        "title": "カットを覚えておく。",
-        "body": "ミリ数、長さ、髭のライン。お客様のものだから、二度目は一度目の続きから始まります。"
+        "title": "その髪型を、覚えておく。",
+        "body": "ミリ数、長さ、ヒゲのライン。持ち主はお客さん本人で、本人と一緒に移動します。だから二回目は、一回目の続きから始まります。"
       },
       "history": {
-        "eyebrow": "顧客",
-        "title": "一度のカットを、顧客に変える。",
-        "body": "来店のたびにリズムが見えてくる — 離れる前に声をかける理由にもなります。"
+        "eyebrow": "お客さん",
+        "title": "一度の来店を、常連に。",
+        "body": "来店はすべて同じカルテに乗ります。前回のメニュー、いつもの担当、前回からの日数——聞かなくてもそこにあります。"
       },
-      "floor": {
-        "eyebrow": "フロア",
-        "title": "フロア全体を見る。",
-        "body": "チェア、理容師、待ち列、そして次に来るもの。カレンダーではなく、店そのもの。"
+      "retention": {
+        "eyebrow": "再来店",
+        "title": "戻ってきてもらうのが Pro。",
+        "body": "Passport は FadeUp がお客さんを覚えておく仕組みです。誰がそろそろ来る頃かを割り出し、離れる前に届くのが Retention Suite——Pro 相当で、まだ作られていません。今日それを売るより、ここで正直に書きます。"
       },
-      "owner": {
-        "eyebrow": "オペレーション",
-        "title": "まず今日。ほかはその後。",
-        "body": "今起きていることが一番上に。店舗・チーム・メニューは必要なときにだけ出てきます。"
+      "control": {
+        "eyebrow": "コントロール",
+        "title": "まず今日。設定はその後。",
+        "body": "いま起きていることが一番上。設定するものは、必要なときにあり、必要でないときは邪魔をしません。",
+        "modes": {
+          "independent": {
+            "title": "自分の帳面、自分のルール。",
+            "body": "営業時間も、メニューも、値段も。朝に変えれば、その場で公開されます。"
+          },
+          "multi_location": {
+            "title": "どのフロアも、一つの管理画面。",
+            "body": "店舗、チーム、順番待ち、チェア。一店ずつでも、まとめてでも。"
+          }
+        }
       },
       "team": {
         "eyebrow": "チーム",
-        "title": "あなたの理容師、チェア、ルール。",
-        "body": "理容師と受付を招待し、それぞれの権限を決め、実際に働く店舗に配置します。"
+        "title": "あなたのスタッフ、チェア、ルール。",
+        "body": "スタッフ、受付、マネージャーを招待。それぞれができることを決めて、実際に働く場所に配置します。",
+        "modes": {
+          "multi_location": {
+            "title": "店ごとのチーム。",
+            "body": "特定の店舗に招待して、マネージャーには自分のフロアだけを任せられます。他店は見えません。"
+          }
+        }
       },
       "marketplace": {
         "eyebrow": "マーケットプレイス",
-        "title": "次のお客様に出会う。",
-        "body": "店と在籍する理容師に公開プロフィールができます。同じチェアが、見つけられるようになる。"
+        "title": "次のお客さんに会う。",
+        "body": "店にも、在籍するスタッフ一人ひとりにも公開ページができます。同じチェア、同じメニュー——ただし、見つけてもらえる形で。",
+        "modes": {
+          "independent": {
+            "title": "プロフィールがそのまま店。",
+            "body": "メニューと営業時間と仕事を載せた公開ページが一つ。それがあなたの店構えです。"
+          }
+        }
       },
       "discovery": {
-        "eyebrow": "発見",
-        "title": "街・メニュー・名前で見つかる。",
-        "body": "お客様は FadeUp で近くの理容師を探します。見つかるのは公開された店です。"
+        "eyebrow": "見つかる",
+        "title": "街から、メニューから、名前から。",
+        "body": "お客さんは FadeUp で近くのバーバーを探します。出てくるのは公開されている店だけで、それ以外は載りません。"
       },
       "rebook": {
         "eyebrow": "そしてまた",
-        "title": "またチェアへ。",
-        "body": "同じ理容師、同じカット、ワンタップ。予約は「今日」に戻り、一日がまた始まります。"
+        "title": "またチェアに戻る。",
+        "body": "同じ担当、同じ髪型、ワンタップ。予約が今日に入り、一日がまた始まります。"
       }
     },
     "loop": {
-      "eyebrow": "ループ",
-      "title": "ひとつのシステム。発見から次のカットまで。",
-      "body": "カレンダーに機能を足したものではありません。各段階が次を動かします。",
+      "eyebrow": "この循環",
+      "title": "一つのシステム。見つかることから、次の一回まで。",
+      "body": "カレンダーに機能を後付けしたものではありません。どの段も、次の段の材料になります。",
       "steps": [
-        "発見",
-        "予約/待ち列",
-        "理容師",
+        "見つかる",
+        "予約か順番待ち",
+        "スタッフ",
         "チェア",
         "Passport",
-        "再来店"
+        "再予約"
       ]
     },
     "existing": {
-      "eyebrow": "すでに予約システムをお使いですか？",
+      "eyebrow": "もう予約システムを使っていますか？",
       "title": "結構です。カレンダーはもうデジタルですね。",
-      "body": "それは簡単な部分でした。多くの予約ツールが触れないのは、ドアをくぐった後に起きるすべてです。",
-      "keepLabel": "残すもの",
+      "body": "そこは簡単な方でした。ほとんどの予約ツールが手をつけないのは、お客さんがドアをくぐった後に起きること全部です。",
+      "keepLabel": "そのまま",
       "keep": "予約",
       "addLabel": "足すもの",
       "add": [
         "飛び込み",
-        "ライブ待ち列",
+        "リアルタイムの順番待ち",
         "チェア",
-        "理容師",
+        "スタッフ",
         "Fade Passport",
         "マーケットプレイス"
       ],
-      "note": "予約は手作業で移すか、新しく始めてください。現時点で自動インポートはなく、あるふりもしません。"
-    },
-    "types": {
-      "eyebrow": "どんな規模でも",
-      "title": "理容師ひとりから、4店舗まで。",
-      "independent": {
-        "name": "独立理容師",
-        "detail": "チェア1台、自分の台帳。"
-      },
-      "studio": {
-        "name": "プライベートスタジオ",
-        "detail": "予約制、少数のチェア。"
-      },
-      "barbershop": {
-        "name": "バーバーショップ",
-        "detail": "フロア一式と飛び込み客。"
-      },
-      "multi": {
-        "name": "複数店舗",
-        "detail": "複数の店をひとつの体制で。"
-      }
+      "note": "予約は手で移すか、新しく始めるかです。今日の時点で自動インポートはありませんし、あるふりもしません。"
     },
     "pricing": {
       "eyebrow": "料金",
-      "title": "店のすべて。",
-      "perMonth": "月あたり",
-      "body": "ひとつの価格。すべての理容師、すべてのチェア、このページのすべて。",
+      "title": "実際に回している店の分だけ払う。",
+      "for": {
+        "independent": "ひとりのバーバーに、一つのプラン。見つけてもらい、予約され、覚えてもらうのに必要なものが全部。",
+        "barbershop": "一店舗向けの三段階。今いる場所から始めて、フロアが求めたときに上げてください。",
+        "multi_location": "二店舗以上を回す事業のための三段階。"
+      },
+      "perMonth": "月額",
+      "recommended": "いちばん選ばれています",
       "resolving": "地域を確認しています…",
-      "cta": "FadeUp に参加",
-      "note": "24時間以内に審査。カード不要。"
+      "taxNote": "お客様の地域向けの表示、税別です。請求はまだ稼働していません——参加は申し込みであって、支払いではありません。",
+      "locationLimit": "最大 {{count}} 店舗",
+      "passportEveryPlan": "どのプランにも、いつでも。有料アップグレードにはしません。",
+      "retentionSuite": "Retention Suite",
+      "retentionComingToPlan": "このプランに含まれます。まだ未実装です——公開前に請求することはありません。",
+      "retentionNotInPlan": "Pro 以上。このプランには含まれません。",
+      "choose": "{{name}} を選ぶ",
+      "applicationNote": "参加すると申し込みが送られ、人が確認します。カード登録も課金もありません。"
+    },
+    "plans": {
+      "solo": {
+        "name": "Solo",
+        "positioning": "ひとりのバーバー、一冊の帳面",
+        "body": "FadeUp のすべてを、ひとりで働く人の寸法に。見つけてもらえる公開ページ、予約ページ、飛び込み対応、リアルタイムの順番待ち、Fade Passport——スタッフ管理の画面は一つもありません。"
+      },
+      "shop_essential": {
+        "name": "Essential",
+        "positioning": "デジタルな店を回す",
+        "body": "いまのバーバーショップが予約を受け、お客さんを離さないために必要なもの一式。店とスタッフ全員の公開ページ、メニュー、空き状況、飛び込み対応、チーム、そして Fade Passport。"
+      },
+      "shop_pro": {
+        "name": "Pro",
+        "positioning": "リアルタイムに回し、戻ってきてもらう",
+        "body": "Essential のすべてに、動いているフロアが加わります。順番待ち、店内のディスプレイ、チェア、キャンセル待ち。このページがずっと描いてきたのは、このプランです。"
+      },
+      "shop_business": {
+        "name": "Business",
+        "positioning": "一店舗の高度なコントロール",
+        "body": "Pro のすべてに、何人かで店を回すようになった忙しい店が求める、細かい設定を加えたもの。"
+      },
+      "multi_growth": {
+        "name": "Growth",
+        "positioning": "店が一つではなくなったら",
+        "body": "一つの事業の下に複数店舗。店ごとのチーム、メニュー、順番待ち、チェア。そしてまとめて見られる場所。"
+      },
+      "multi_pro": {
+        "name": "Pro",
+        "positioning": "複数店舗に、再来店を",
+        "body": "Growth のすべてに加えて、店ごとではなくグループ全体でのお客さんの再来店。"
+      },
+      "multi_scale": {
+        "name": "Scale",
+        "positioning": "中央からのコントロール",
+        "body": "Multi Pro のすべてに、規模の大きいグループが必要とする一元設定とレポートを加えたもの。"
+      }
+    },
+    "capabilities": {
+      "marketplace": "マーケットプレイス掲載",
+      "publicProfile": "店とスタッフの公開ページ",
+      "services": "メニューと料金",
+      "availability": "営業時間と空き状況",
+      "booking": "オンライン予約",
+      "customers": "顧客カルテ",
+      "customerHistory": "来店履歴",
+      "passport": "Fade Passport",
+      "manualRebook": "手動での再予約",
+      "notifications": "予約と順番待ちの通知",
+      "walkIns": "飛び込みの受付",
+      "team": "チームと招待",
+      "liveQueue": "リアルタイムの順番待ち",
+      "queueDisplay": "店内の順番表示",
+      "chairs": "チェア",
+      "chairMode": "チェアモード",
+      "waitlist": "キャンセル待ちと無断キャンセル規則",
+      "returnCycles": "再来店サイクルの検出",
+      "comebackReminders": "再来店のリマインド",
+      "inactiveCustomers": "離脱客の検出",
+      "customerSegments": "顧客セグメント",
+      "retentionAutomation": "再来店の自動化",
+      "retentionInsights": "再来店の分析",
+      "multiLocation": "複数店舗",
+      "locationSwitching": "店舗の切り替え",
+      "crossLocationView": "店舗横断のビュー",
+      "advancedPermissions": "詳細な権限",
+      "advancedBookingRules": "詳細な予約ルール",
+      "advancedReporting": "運営レポート",
+      "prioritySupport": "優先サポート"
+    },
+    "capabilityGroups": {
+      "foundation": "土台",
+      "floor": "フロア",
+      "retention": "再来店",
+      "scale": "規模とコントロール"
+    },
+    "compare": {
+      "show": "プランごとの違いを見る",
+      "hide": "比較を閉じる",
+      "caption": "FadeUp 各プランの機能比較",
+      "feature": "機能",
+      "included": "含まれる",
+      "notIncluded": "含まれない",
+      "coming": "開発中",
+      "plannedNote": "「開発中」は、そのプランに含める予定だがまだ作られていない、という意味です。今日受け取れるものには入りません。"
     },
     "final": {
-      "lines": [
-        "あなたの予約。",
-        "あなたの飛び込み客。",
-        "あなたのチェア。",
-        "あなたの顧客。"
-      ],
-      "together": "ひとつの場所に。",
-      "title": "FadeUp で店を動かす。",
+      "together": "同じ場所に。",
+      "title": "FadeUp で店を回す。",
       "primary": "FadeUp に参加",
-      "secondary": "プロ ログイン"
+      "secondary": "事業者ログイン"
     },
-    "demoLabel": "製品イメージ",
     "stage": {
       "today": "今日",
-      "available": "空き",
+      "free": "空き",
+      "switchLocation": "切り替え",
+      "available": "予約可",
       "walkIn": "飛び込み",
       "anyBarber": "指名なし",
+      "addToQueue": "順番待ちに追加",
+      "queueLabel": "順番待ち",
       "waiting": "待機中",
-      "inChair": "施術中",
-      "free": "空き",
-      "next": "次",
-      "complete": "完了",
-      "queueLabel": "待ち列",
+      "youreNext": "次はあなたです",
+      "aboutMinutes": "およそ {{count}} 分",
+      "nobodyAhead": "前に待っている人はいません",
       "chairLabel": "チェア",
+      "inChair": "施術中",
       "lastTime": "前回",
-      "visits": "来店",
-      "everyWeeks": "{{count}}週ごと",
-      "publicProfile": "公開プロフィール",
-      "book": "予約",
-      "joinQueue": "列に並ぶ",
-      "searchPlaceholder": "理容師・店・メニュー",
-      "daysSince": "{{count}}日",
-      "rebook": "再予約",
-      "role": "役割",
-      "location": "店舗"
+      "lastCutDetail": "ローのスキンフェード・トップ 4 ミリ・ヒゲのライン整え",
+      "complete": "完了",
+      "next": "次の人",
+      "everyPlan": "全プラン",
+      "passportFade": "フェード",
+      "passportFadeValue": "スキンフェード、ロー",
+      "passportTop": "トップ",
+      "passportTopValue": "4 ミリ、動きを出す",
+      "passportBeard": "ヒゲ",
+      "passportBeardValue": "ライン整え、短め",
+      "passportRhythm": "ペース",
+      "everyWeeks": "{{count}} 週ごと",
+      "visits": "回来店",
+      "retentionTitle": "再来店",
+      "roadmap": "開発中",
+      "retentionLead": "{{name}} さんはだいたい三週間ごとに来ています。",
+      "retentionCycle": "そろそろの人を見つける",
+      "retentionReminder": "再来店のひとことを送る",
+      "retentionInactive": "来なくなったお客さんを見つける",
+      "ctrlSchedule": "予定",
+      "ctrlAvailability": "空き状況",
+      "ctrlServices": "メニュー",
+      "ctrlCustomers": "顧客",
+      "ctrlAppointments": "予約",
+      "ctrlQueue": "順番待ち",
+      "ctrlBarbers": "スタッフ",
+      "ctrlChairs": "チェア",
+      "ctrlLocations": "店舗",
+      "ctrlTeams": "チーム",
+      "teamLabel": "チーム",
+      "perLocation": "店舗ごと",
+      "roleOwner": "オーナー",
+      "roleBarber": "スタッフ",
+      "roleReception": "受付",
+      "roleManager": "マネージャー",
+      "publicProfile": "公開ページ",
+      "book": "予約する",
+      "joinQueue": "順番を取る",
+      "searchPlaceholder": "スタッフ・店・メニュー",
+      "openNow": "営業中",
+      "daysSince": "前回のカットから {{count}} 日",
+      "rebook": "また予約する"
+    },
+    "register": {
+      "planLabel": "選択したプラン",
+      "planNote": "料金ページから引き継いだものです。課金も確保もされていません——請求が始まるまではいつでも変更できます。"
     }
   }
 }

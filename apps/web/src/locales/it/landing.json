@@ -69,184 +69,377 @@
   },
   "business": {
     "meta": {
-      "title": "FadeUp per barbershop — gestisci tutto il negozio",
-      "description": "Appuntamenti, senza appuntamento, coda in diretta, poltrone e clienti in un solo sistema pensato per i barbershop."
+      "title": "FadeUp per barbieri — gestisci tutto il negozio",
+      "description": "Appuntamenti, clienti senza prenotazione, coda in tempo reale, poltrone e clienti in un solo sistema pensato per i barbieri. Da solo, un negozio o più: scegli e guarda FadeUp adattarsi."
     },
     "nav": {
       "product": "Prodotto",
       "how": "Come funziona",
-      "pricing": "Prezzo"
+      "pricing": "Prezzi"
     },
     "hero": {
-      "eyebrow": "Per barbershop e barbieri",
-      "titleLead": "Gestisci tutto il negozio.",
-      "subtitle": "Appuntamenti. Senza appuntamento. Poltrone. Clienti. Un sistema, costruito su come funziona davvero un barbershop.",
-      "primary": "Unisciti a FadeUp",
+      "eyebrow": "Per barbieri e barber shop",
+      "primary": "Entra in FadeUp",
       "secondary": "Accesso Pro",
-      "scrollHint": "Scorri per gestire il negozio"
+      "scrollHint": "Scorri per aprire il negozio"
     },
+    "modes": {
+      "groupLabel": "Scegli il tipo di attività che gestisci",
+      "previous": "Tipo di attività precedente",
+      "next": "Tipo di attività successivo",
+      "announce": "FadeUp mostrato per: {{name}}",
+      "independent": {
+        "name": "Indipendente",
+        "headline": "Gestisci tutta la tua agenda.",
+        "lines": [
+          "I tuoi orari.",
+          "I tuoi clienti.",
+          "Il tuo mestiere.",
+          "Un sistema semplice."
+        ]
+      },
+      "barbershop": {
+        "name": "Barber shop",
+        "headline": "Gestisci tutto il negozio.",
+        "lines": [
+          "Appuntamenti.",
+          "Senza prenotazione.",
+          "Barbieri.",
+          "Poltrone.",
+          "Un solo sistema."
+        ]
+      },
+      "multi_location": {
+        "name": "Più sedi",
+        "headline": "Gestisci ogni negozio.",
+        "lines": [
+          "Ogni negozio.",
+          "Ogni squadra.",
+          "Un solo sistema operativo."
+        ]
+      }
+    },
+    "roadmapBadge": "In arrivo",
+    "demoLabel": "Illustrazione del prodotto",
     "scenes": {
+      "today": {
+        "eyebrow": "Oggi",
+        "title": "La tua giornata, già pronta.",
+        "body": "Apri e tutta la giornata sta in una schermata: ogni appuntamento, ogni barbiere, nell'ordine in cui accadono.",
+        "modes": {
+          "independent": {
+            "title": "La tua giornata in una schermata.",
+            "body": "Apri l'app e oggi è già lì: chi arriva, a che ora e per cosa. Niente da preparare prima."
+          },
+          "multi_location": {
+            "title": "Tutti i negozi, una sola mattina.",
+            "body": "Vedi entrambe le sale in un colpo d'occhio, poi entri in una delle due senza cambiare account."
+          }
+        }
+      },
       "appointments": {
         "eyebrow": "Appuntamenti",
-        "title": "La tua giornata, già organizzata.",
-        "body": "Ogni prenotazione, ogni barbiere, una schermata. Apri e la giornata è già pronta."
+        "title": "Uno slot si riempie da solo.",
+        "body": "Il cliente sceglie servizio, barbiere e orario. Finisce nella giornata e la poltrona è tenuta."
       },
       "walkins": {
-        "eyebrow": "Senza appuntamento",
-        "title": "Ma il tuo negozio non è solo appuntamenti.",
-        "body": "Entra qualcuno senza prenotazione. Sceglie un servizio e un barbiere, o il primo libero."
+        "eyebrow": "Senza prenotazione",
+        "title": "Un negozio non è solo appuntamenti.",
+        "body": "Qualcuno entra senza aver prenotato. Sceglie un servizio e un barbiere, o il primo che si libera.",
+        "modes": {
+          "independent": {
+            "title": "Non tutti prenotano prima.",
+            "body": "Qualcuno bussa tra due appuntamenti. Prendilo senza perdere il resto della giornata."
+          }
+        }
       },
       "queue": {
-        "eyebrow": "Coda in diretta",
-        "title": "Entrare. Non aspettare in piedi.",
-        "body": "Prende posto dal telefono e la guarda avanzare. Nessuno sulla porta a chiedere quanto manca."
+        "eyebrow": "Coda in tempo reale",
+        "title": "Entra. Senza aspettare in piedi.",
+        "body": "Prende il suo posto dal telefono e lo vede avanzare. Nessuno resta sulla porta a chiedere quanto manca."
       },
       "barber": {
         "eyebrow": "Assegnazione",
         "title": "La poltrona che si libera per prima.",
-        "body": "La coda affida il cliente a un barbiere preciso, o al primo disponibile."
+        "body": "La coda manda il cliente dal barbiere che ha chiesto, o da chi si libera per primo.",
+        "modes": {
+          "independent": {
+            "title": "C'è una sola poltrona.",
+            "body": "Niente da assegnare. La coda è la tua, e il prossimo pure."
+          }
+        }
       },
       "chair": {
-        "eyebrow": "Modalità Poltrona",
-        "title": "FadeUp lavora mentre lavori.",
-        "body": "Una schermata alla poltrona: chi è seduto, cosa ha chiesto, cosa hai fatto l’ultima volta. Concludi e il prossimo è già lì."
+        "eyebrow": "Alla poltrona",
+        "title": "FadeUp lavora mentre lavori tu.",
+        "body": "Chi è in poltrona, cosa ha chiesto, cosa gli hai fatto l'ultima volta. Finisci, e il prossimo è già lì."
       },
       "passport": {
         "eyebrow": "Fade Passport",
         "title": "Ricorda il taglio.",
-        "body": "Il numero, la lunghezza, la linea della barba. È del cliente, e la seconda visita riparte da dove è finita la prima."
+        "body": "Il numero, la lunghezza, la linea della barba. È del cliente e viaggia con lui: la seconda visita riparte da dove è finita la prima."
       },
       "history": {
-        "eyebrow": "Cliente",
-        "title": "Trasforma un taglio in un cliente.",
-        "body": "Ogni passaggio costruisce un ritmo visibile — e un motivo per farsi sentire prima che si allontani."
+        "eyebrow": "Il cliente",
+        "title": "Trasforma un taglio in un abituale.",
+        "body": "Ogni visita finisce sulla stessa scheda. Ultimo servizio, barbiere di sempre, quanto tempo è passato — senza doverglielo chiedere."
       },
-      "floor": {
-        "eyebrow": "La sala",
-        "title": "Vedi tutta la sala.",
-        "body": "Poltrone, barbieri, coda e cosa arriva. Non solo un’agenda: il locale."
+      "retention": {
+        "eyebrow": "Fidelizzazione",
+        "title": "Pro è quello che li fa tornare.",
+        "body": "Passport è la memoria del cliente. Capire chi è in ritardo e raggiungerlo prima che si allontani è la Retention Suite: livello Pro, e non ancora costruita. Preferiamo dirtelo qui piuttosto che vendertela oggi."
       },
-      "owner": {
-        "eyebrow": "Operatività",
-        "title": "Prima oggi. Il resto dopo.",
-        "body": "Quello che succede ora sta in alto. Sedi, team e servizi ci sono quando servono."
+      "control": {
+        "eyebrow": "Controllo",
+        "title": "Prima la giornata. Poi le impostazioni.",
+        "body": "Quello che succede adesso sta in alto. Tutto ciò che si configura è a portata quando serve e fuori dai piedi quando no.",
+        "modes": {
+          "independent": {
+            "title": "La tua agenda, le tue regole.",
+            "body": "I tuoi orari, i tuoi servizi, i tuoi prezzi. Li cambi la mattina e il cambio è già online."
+          },
+          "multi_location": {
+            "title": "Ogni sala, una sola console.",
+            "body": "Sedi, squadre, code e poltrone: un negozio alla volta, o tutti insieme."
+          }
+        }
       },
       "team": {
-        "eyebrow": "Team",
+        "eyebrow": "Squadra",
         "title": "I tuoi barbieri, le tue poltrone, le tue regole.",
-        "body": "Invita barbieri e reception, decidi cosa può fare ognuno e mettili dove lavorano davvero."
+        "body": "Invita barbieri, reception e responsabili. Decidi cosa può fare ciascuno e mettili dove lavorano davvero.",
+        "modes": {
+          "multi_location": {
+            "title": "Una squadra per negozio.",
+            "body": "Invita le persone in una sede precisa e lascia che un responsabile gestisca la sua sala senza vedere quella degli altri."
+          }
+        }
       },
       "marketplace": {
         "eyebrow": "Marketplace",
         "title": "Incontra i prossimi.",
-        "body": "Il tuo negozio e ogni barbiere hanno un profilo pubblico. Stesse poltrone — ora trovabili."
+        "body": "Il tuo negozio e ogni barbiere hanno una pagina pubblica. Stesse poltrone, stessi servizi: adesso trovabili.",
+        "modes": {
+          "independent": {
+            "title": "Il tuo profilo è il negozio.",
+            "body": "Una pagina pubblica con i tuoi servizi, i tuoi orari e il tuo lavoro. Quella è la vetrina."
+          }
+        }
       },
       "discovery": {
         "eyebrow": "Scoperta",
         "title": "Trovato per città, servizio o nome.",
-        "body": "I clienti cercano un barbiere vicino su FadeUp. Trovano i negozi pubblicati."
+        "body": "I clienti cercano su FadeUp un barbiere vicino. Trovano i negozi pubblicati, e nient'altro."
       },
       "rebook": {
-        "eyebrow": "E ancora",
+        "eyebrow": "E di nuovo",
         "title": "Di nuovo in poltrona.",
-        "body": "Stesso barbiere, stesso taglio, un tocco. La prenotazione torna nella giornata e si ricomincia."
+        "body": "Stesso barbiere, stesso taglio, un tocco. L'appuntamento finisce nella giornata, e si riparte."
       }
     },
     "loop": {
       "eyebrow": "Il ciclo",
       "title": "Un sistema. Dalla scoperta al taglio successivo.",
-      "body": "Non un’agenda con aggiunte. Ogni passo alimenta il successivo.",
+      "body": "Non un'agenda con delle aggiunte avvitate sopra. Ogni passo alimenta il successivo.",
       "steps": [
         "Scoprire",
         "Prenotare o coda",
         "Barbiere",
         "Poltrona",
         "Passport",
-        "Tornare"
+        "Riprenotare"
       ]
     },
     "existing": {
-      "eyebrow": "Usi già un software di prenotazione?",
+      "eyebrow": "Usi già un software di prenotazioni?",
       "title": "Bene. La tua agenda è già digitale.",
-      "body": "Quella era la parte facile. Ciò che quasi nessun gestionale tocca è tutto quello che succede dopo la porta.",
+      "body": "Quella era la parte facile. Quello che quasi nessun sistema di prenotazione tocca è tutto ciò che succede dopo che qualcuno è entrato dalla porta.",
       "keepLabel": "Tieni",
       "keep": "Gli appuntamenti",
       "addLabel": "Aggiungi",
       "add": [
-        "Senza appuntamento",
-        "Coda in diretta",
+        "Senza prenotazione",
+        "Coda in tempo reale",
         "Poltrone",
         "Barbieri",
         "Fade Passport",
         "Marketplace"
       ],
-      "note": "Riporta gli appuntamenti a mano o riparti da zero — oggi non c’è un import automatico, e non fingeremo il contrario."
-    },
-    "types": {
-      "eyebrow": "Qualsiasi dimensione",
-      "title": "Un barbiere o quattro sedi.",
-      "independent": {
-        "name": "Barbiere indipendente",
-        "detail": "Una poltrona, la tua agenda."
-      },
-      "studio": {
-        "name": "Studio privato",
-        "detail": "Solo su appuntamento, poche poltrone."
-      },
-      "barbershop": {
-        "name": "Barbershop",
-        "detail": "Sala piena e gente di passaggio."
-      },
-      "multi": {
-        "name": "Più sedi",
-        "detail": "Più negozi sotto un unico tetto."
-      }
+      "note": "Porta i tuoi appuntamenti a mano o riparti da zero: oggi non c'è un import automatico, e non facciamo finta del contrario."
     },
     "pricing": {
-      "eyebrow": "Prezzo",
-      "title": "Tutto il negozio.",
+      "eyebrow": "Prezzi",
+      "title": "Paga per il negozio che gestisci davvero.",
+      "for": {
+        "independent": "Un solo piano, per un solo barbiere. Tutto quello che serve per essere trovato, prenotato e ricordato.",
+        "barbershop": "Tre livelli per un negozio con una sede. Parti da dove sei e sali quando la sala lo chiede.",
+        "multi_location": "Tre livelli per un'attività con più di un negozio."
+      },
       "perMonth": "al mese",
-      "body": "Un prezzo. Tutti i barbieri, tutte le poltrone, tutto quello che c’è in questa pagina.",
+      "recommended": "Il più scelto",
       "resolving": "Verifica della tua area…",
-      "cta": "Unisciti a FadeUp",
-      "note": "Valutato entro 24 ore. Senza carta."
+      "taxNote": "Mostrato per la tua area, IVA esclusa. La fatturazione non è ancora attiva: entrare significa inviare una candidatura, non pagare.",
+      "locationLimit": "Fino a {{count}} sedi",
+      "passportEveryPlan": "In ogni piano, sempre. Mai un upgrade a pagamento.",
+      "retentionSuite": "Retention Suite",
+      "retentionComingToPlan": "Compresa in questo piano. Non ancora costruita: non ti verrà addebitata prima che esca.",
+      "retentionNotInPlan": "Da Pro in su. Non in questo piano.",
+      "choose": "Scegli {{name}}",
+      "applicationNote": "Entrare invia una candidatura. La legge una persona: nessuna carta, nessun addebito."
+    },
+    "plans": {
+      "solo": {
+        "name": "Solo",
+        "positioning": "Un barbiere, un'agenda",
+        "body": "Tutto il prodotto FadeUp, tagliato su chi lavora da solo. Una pagina pubblica dove ti trovano, una pagina di prenotazione, i clienti senza appuntamento, la coda in tempo reale e Fade Passport, senza una sola schermata di gestione del personale."
+      },
+      "shop_essential": {
+        "name": "Essential",
+        "positioning": "Gestire un negozio digitale",
+        "body": "Tutto ciò che serve a un barber shop moderno per prendere prenotazioni e tenersi i clienti: pagine pubbliche del negozio e di ogni barbiere, servizi, disponibilità, clienti senza appuntamento, squadra e Fade Passport."
+      },
+      "shop_pro": {
+        "name": "Pro",
+        "positioning": "Gestirlo in tempo reale e farli tornare",
+        "body": "Tutto Essential, più la sala in tempo reale: la coda, lo schermo in negozio, le poltrone e la lista d'attesa. È il piano che tutta questa pagina stava descrivendo."
+      },
+      "shop_business": {
+        "name": "Business",
+        "positioning": "Controllo avanzato, una sede",
+        "body": "Tutto Pro, più i controlli più fini che un negozio pieno chiede quando a mandarlo avanti sono in diversi."
+      },
+      "multi_growth": {
+        "name": "Growth",
+        "positioning": "Più di un negozio",
+        "body": "Più sedi sotto una sola attività. Squadre, servizi, code e poltrone per negozio, e un posto da cui vederli tutti."
+      },
+      "multi_pro": {
+        "name": "Pro",
+        "positioning": "Più sedi, più fidelizzazione",
+        "body": "Tutto Growth, e la fidelizzazione dei clienti su tutto il gruppo invece che negozio per negozio."
+      },
+      "multi_scale": {
+        "name": "Scale",
+        "positioning": "Controllo centralizzato",
+        "body": "Tutto Multi Pro, più la configurazione centralizzata e la reportistica che serve a un gruppo più grande."
+      }
+    },
+    "capabilities": {
+      "marketplace": "Presenza sul marketplace",
+      "publicProfile": "Pagine pubbliche di negozio e barbieri",
+      "services": "Servizi e prezzi",
+      "availability": "Orari e disponibilità",
+      "booking": "Prenotazione online",
+      "customers": "Schede cliente",
+      "customerHistory": "Storico delle visite",
+      "passport": "Fade Passport",
+      "manualRebook": "Riprenotazione manuale",
+      "notifications": "Notifiche di prenotazione e coda",
+      "walkIns": "Accoglienza senza prenotazione",
+      "team": "Squadra e inviti",
+      "liveQueue": "Coda in tempo reale",
+      "queueDisplay": "Schermo della coda in negozio",
+      "chairs": "Poltrone",
+      "chairMode": "Modalità Poltrona",
+      "waitlist": "Lista d'attesa e regole no-show",
+      "returnCycles": "Rilevamento del ritmo di ritorno",
+      "comebackReminders": "Solleciti di ritorno",
+      "inactiveCustomers": "Rilevamento clienti inattivi",
+      "customerSegments": "Segmenti di clienti",
+      "retentionAutomation": "Automazione della fidelizzazione",
+      "retentionInsights": "Analisi di fidelizzazione",
+      "multiLocation": "Più sedi",
+      "locationSwitching": "Cambio sede",
+      "crossLocationView": "Vista tra le sedi",
+      "advancedPermissions": "Permessi avanzati",
+      "advancedBookingRules": "Regole di prenotazione avanzate",
+      "advancedReporting": "Reportistica operativa",
+      "prioritySupport": "Supporto prioritario"
+    },
+    "capabilityGroups": {
+      "foundation": "Le fondamenta",
+      "floor": "La sala",
+      "retention": "Fidelizzazione",
+      "scale": "Scala e controllo"
+    },
+    "compare": {
+      "show": "Vedi cosa cambia tra i piani",
+      "hide": "Nascondi il confronto",
+      "caption": "Confronto delle funzioni tra i piani FadeUp",
+      "feature": "Funzione",
+      "included": "Incluso",
+      "notIncluded": "Non incluso",
+      "coming": "In arrivo",
+      "plannedNote": "«In arrivo» significa che la funzione fa parte del piano ma non è ancora costruita. Non fa parte di quello che ricevi oggi."
     },
     "final": {
-      "lines": [
-        "I tuoi appuntamenti.",
-        "I tuoi clienti di passaggio.",
-        "Le tue poltrone.",
-        "I tuoi clienti."
-      ],
       "together": "In un posto solo.",
       "title": "Gestisci il tuo negozio con FadeUp.",
-      "primary": "Unisciti a FadeUp",
+      "primary": "Entra in FadeUp",
       "secondary": "Accesso Pro"
     },
-    "demoLabel": "Illustrazione del prodotto",
     "stage": {
       "today": "Oggi",
-      "available": "Libero",
-      "walkIn": "Senza app.",
-      "anyBarber": "Chiunque",
-      "waiting": "In attesa",
-      "inChair": "In poltrona",
       "free": "Libera",
-      "next": "Prossimo",
-      "complete": "Concludi",
+      "switchLocation": "Cambia",
+      "available": "Disponibile",
+      "walkIn": "Senza prenotazione",
+      "anyBarber": "Un barbiere qualsiasi",
+      "addToQueue": "Aggiungi alla coda",
       "queueLabel": "Coda",
-      "chairLabel": "Poltrona",
-      "lastTime": "L’ultima volta",
-      "visits": "Visite",
+      "waiting": "In attesa",
+      "youreNext": "Tocca a te",
+      "aboutMinutes": "Circa {{count}} min",
+      "nobodyAhead": "Nessuno davanti a te",
+      "chairLabel": "Poltrone",
+      "inChair": "In poltrona",
+      "lastTime": "L'ultima volta",
+      "lastCutDetail": "Skin fade basso · 4 sopra · barba rifinita",
+      "complete": "Completa",
+      "next": "Prossimo",
+      "everyPlan": "Ogni piano",
+      "passportFade": "Fade",
+      "passportFadeValue": "Skin fade, basso",
+      "passportTop": "Sopra",
+      "passportTopValue": "4, texturizzato",
+      "passportBeard": "Barba",
+      "passportBeardValue": "Rifinita, corta",
+      "passportRhythm": "Ritmo",
       "everyWeeks": "Ogni {{count}} settimane",
-      "publicProfile": "Profilo pubblico",
+      "visits": "visite",
+      "retentionTitle": "Fidelizzazione",
+      "roadmap": "In arrivo",
+      "retentionLead": "{{name}} di solito torna ogni tre settimane.",
+      "retentionCycle": "Capire chi è in ritardo",
+      "retentionReminder": "Mandare un sollecito di ritorno",
+      "retentionInactive": "Trovare i clienti che hanno smesso di venire",
+      "ctrlSchedule": "Agenda",
+      "ctrlAvailability": "Disponibilità",
+      "ctrlServices": "Servizi",
+      "ctrlCustomers": "Clienti",
+      "ctrlAppointments": "Appuntamenti",
+      "ctrlQueue": "Coda",
+      "ctrlBarbers": "Barbieri",
+      "ctrlChairs": "Poltrone",
+      "ctrlLocations": "Sedi",
+      "ctrlTeams": "Squadre",
+      "teamLabel": "Squadra",
+      "perLocation": "Per sede",
+      "roleOwner": "Titolare",
+      "roleBarber": "Barbiere",
+      "roleReception": "Reception",
+      "roleManager": "Responsabile",
+      "publicProfile": "Pagina pubblica",
       "book": "Prenota",
-      "joinQueue": "Mettiti in coda",
+      "joinQueue": "Entra in coda",
       "searchPlaceholder": "Barbiere, negozio o servizio",
-      "daysSince": "{{count}} giorni",
-      "rebook": "Prenota di nuovo",
-      "role": "Ruolo",
-      "location": "Sede"
+      "openNow": "Aperto",
+      "daysSince": "{{count}} giorni dal tuo ultimo taglio",
+      "rebook": "Riprenota"
+    },
+    "register": {
+      "planLabel": "Piano selezionato",
+      "planNote": "Ripreso dalla pagina dei prezzi. Non viene addebitato né riservato nulla: puoi cambiarlo finché la fatturazione non è attiva."
     }
   }
 }

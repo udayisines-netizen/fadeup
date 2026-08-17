@@ -30,13 +30,36 @@ import { useAuth } from '@/lib/auth-context'
  */
 export function MarketingHeader() {
   const { t } = useTranslation()
+  const { t: tLanding } = useTranslation('landing')
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const { session } = useAuth()
 
+  /*
+   * /for-business is professional territory, and its chrome says so. On that
+   * page the nav becomes in-page sections of the professional story and the
+   * auth pair becomes the PROFESSIONAL one — Pro login and Join FadeUp — while
+   * every consumer surface keeps the two customer actions untouched.
+   *
+   * The distinction is the whole point of separating the journeys: a customer
+   * looking for a haircut must never be asked to pick between four sign-in
+   * concepts, and a shop owner reading the pitch should not have to hunt for
+   * the professional door.
+   */
+  const isProfessional = location.pathname.startsWith('/for-business')
+
   const marketingLinks: { to: string; label: string; end: boolean }[] = [
     { to: '/', label: t('nav.home'), end: true },
     { to: '/for-business', label: t('nav.forBusiness'), end: false },
+  ]
+
+  // Plain anchors, not <Link>: these are positions within the page that is
+  // already rendered, and the browser's own fragment navigation handles them
+  // (including the back button) better than a client-side route change would.
+  const sectionLinks = [
+    { href: '#product', label: tLanding('business.nav.product') },
+    { href: '#how', label: tLanding('business.nav.how') },
+    { href: '#pricing', label: tLanding('business.nav.pricing') },
   ]
 
   // Close the mobile drawer automatically on navigation (route change).
@@ -52,17 +75,36 @@ export function MarketingHeader() {
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
-          {marketingLinks.map((link) => (
-            <AppNavLink key={link.to} to={link.to} end={link.end}>
-              {link.label}
-            </AppNavLink>
-          ))}
+          {isProfessional
+            ? sectionLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-md px-3 py-2 text-sm text-ink-700 transition-colors hover:text-ink-950"
+                >
+                  {link.label}
+                </a>
+              ))
+            : marketingLinks.map((link) => (
+                <AppNavLink key={link.to} to={link.to} end={link.end}>
+                  {link.label}
+                </AppNavLink>
+              ))}
         </nav>
 
         <div className="hidden items-center gap-1 md:flex">
           <LanguageSwitcher />
           <ThemeToggle />
-          {session ? (
+          {isProfessional ? (
+            <>
+              <Link to="/pro/login" className={buttonVariants({ variant: 'ghost' })}>
+                {t('auth.proLogIn')}
+              </Link>
+              <Link to="/pro/register" className={buttonVariants({ variant: 'primary' })}>
+                {t('auth.proApply')}
+              </Link>
+            </>
+          ) : session ? (
             <Link to="/app/customer" className={buttonVariants({ variant: 'primary' })}>
               {t('nav.myFadeUp')}
             </Link>
@@ -95,9 +137,30 @@ export function MarketingHeader() {
                     {link.label}
                   </AppNavLink>
                 ))}
+                {isProfessional
+                  ? sectionLinks.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="w-full rounded-md px-3 py-3 text-sm text-ink-700 transition-colors hover:text-ink-950"
+                      >
+                        {link.label}
+                      </a>
+                    ))
+                  : null}
               </nav>
               <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
-                {session ? (
+                {isProfessional ? (
+                  <>
+                    <Link to="/pro/login" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                      {t('auth.proLogIn')}
+                    </Link>
+                    <Link to="/pro/register" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+                      {t('auth.proApply')}
+                    </Link>
+                  </>
+                ) : session ? (
                   <Link to="/app/customer" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
                     {t('nav.myFadeUp')}
                   </Link>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Store, User, Scissors, Home, Car, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -13,6 +13,8 @@ import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { cn } from '@/lib/cn'
+import { parsePlanId } from '@/lib/commerce/plans'
+import { useOptionalFadeUpPricing } from '@/lib/commerce/pricing-context'
 import {
   PROFESSIONAL_TYPES,
   useSubmitProfessionalApplication,
@@ -45,6 +47,41 @@ const TYPE_ICONS: Record<ProfessionalType, LucideIcon> = {
 // number of plausible length. The server normalizes and is the real
 // authority — this only spares the applicant a round trip.
 const PHONE_PATTERN = /^(\+[1-9]\d{6,14}|00[1-9]\d{6,14}|0?\d{6,14})$/
+
+/**
+ * Shows the plan the applicant picked on /for-business, when they picked one.
+ *
+ * `?plan=` is INTENT and nothing else. It pre-fills a sentence on a form; it
+ * does not create a subscription, does not grant a capability, and is not read
+ * by anything server-side. `parsePlanId` rejects anything that is not one of the
+ * seven canonical identifiers, so an edited query string produces no banner
+ * rather than an invented plan name — and even a valid one changes only what
+ * this paragraph says. The application still goes to a platform reviewer, and
+ * entitlement will come from the server when billing exists.
+ */
+function SelectedPlanNotice() {
+  const { t } = useTranslation('landing')
+  const [searchParams] = useSearchParams()
+  const pricing = useOptionalFadeUpPricing()
+
+  const planId = parsePlanId(searchParams.get('plan'))
+  if (!planId) return null
+
+  return (
+    <div className="rounded-lg border border-border bg-paper-50 px-4 py-3">
+      <p className="text-xs uppercase tracking-[0.14em] text-ink-500">{t('business.register.planLabel')}</p>
+      <p className="mt-1 text-base font-medium text-ink-950">
+        {t(`business.plans.${planId}.name`)}
+        {pricing?.isResolved ? (
+          <span className="ms-2 font-normal text-ink-500">
+            {pricing.formatPlan(planId)} · {t('business.pricing.perMonth')}
+          </span>
+        ) : null}
+      </p>
+      <p className="mt-1.5 text-sm text-ink-500">{t('business.register.planNote')}</p>
+    </div>
+  )
+}
 
 export function ProRegisterPage() {
   const { t } = useTranslation('auth')
@@ -195,6 +232,8 @@ export function ProRegisterPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         {formError ? <Alert variant="error">{formError}</Alert> : null}
+
+        <SelectedPlanNotice />
 
         <fieldset className="flex flex-col gap-4">
           <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-500">

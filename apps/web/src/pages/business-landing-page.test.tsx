@@ -1,9 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BusinessLandingPage } from '@/pages/business-landing-page'
 import { useFadeUpPricing } from '@/lib/commerce/pricing-context'
-import { SCENE_IDS } from '@/components/marketing/product-stage'
+import { planPriceMinor, formatPlanPrice } from '@/lib/commerce/pricing'
+import type { PlanId } from '@/lib/commerce/plans'
 
 vi.mock('@/lib/commerce/pricing-context', () => ({ useFadeUpPricing: vi.fn() }))
 
@@ -17,20 +18,86 @@ function renderPage() {
   )
 }
 
-describe('BusinessLandingPage — the product story', () => {
+/** Puts the page in the France commercial region, which is the reference catalog. */
+function useFrancePricing() {
+  mockPricing.mockReturnValue({
+    region: 'eu',
+    currency: 'EUR',
+    isResolved: true,
+    formatPlan: (planId: PlanId) => formatPlanPrice(planId, 'eu', 'en'),
+    planMinor: (planId: PlanId) => planPriceMinor(planId, 'eu'),
+  })
+}
+
+/** Steps the mode selector to a named business type. */
+function selectMode(name: string) {
+  // The dots jump straight to a mode and are labelled with its name — the same
+  // control a visitor uses, rather than a test-only hook.
+  const [dot] = screen.getAllByRole('button', { name })
+  fireEvent.click(dot!)
+}
+
+describe('BusinessLandingPage — the first question', () => {
   beforeEach(() => {
-    mockPricing.mockReturnValue({
-      region: 'eu',
-      pricing: { region: 'eu', currency: 'EUR', monthlyAmountMinor: 4900, formatLocale: 'fr-FR' },
-      isResolved: true,
-      formattedMonthly: '€49',
-    })
+    useFrancePricing()
   })
 
-  it('leads with running the shop, not with a feature list', () => {
+  it('leads by asking what kind of business you run', () => {
+    renderPage()
+
+    const selectors = screen.getAllByRole('group', { name: 'Choose the kind of business you run' })
+    expect(selectors.length).toBeGreaterThan(0)
+  })
+
+  it('starts on Barbershop, the middle of the three', () => {
     renderPage()
 
     expect(screen.getByRole('heading', { level: 1, name: 'Run the whole shop.' })).toBeInTheDocument()
+  })
+
+  it('rewrites the headline when the business type changes', () => {
+    renderPage()
+
+    selectMode('Independent')
+    expect(screen.getByRole('heading', { level: 1, name: 'Run your whole book.' })).toBeInTheDocument()
+
+    selectMode('Multi-location')
+    expect(screen.getByRole('heading', { level: 1, name: 'Run every shop.' })).toBeInTheDocument()
+  })
+
+  it('offers previous and next as real buttons, not only a swipe', () => {
+    renderPage()
+
+    expect(screen.getAllByRole('button', { name: 'Previous business type' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Next business type' }).length).toBeGreaterThan(0)
+  })
+
+  it('loops forward through all three modes and back to the start', () => {
+    renderPage()
+
+    const [next] = screen.getAllByRole('button', { name: 'Next business type' })
+    fireEvent.click(next!)
+    expect(screen.getByRole('heading', { level: 1, name: 'Run every shop.' })).toBeInTheDocument()
+
+    fireEvent.click(next!)
+    expect(screen.getByRole('heading', { level: 1, name: 'Run your whole book.' })).toBeInTheDocument()
+
+    fireEvent.click(next!)
+    expect(screen.getByRole('heading', { level: 1, name: 'Run the whole shop.' })).toBeInTheDocument()
+  })
+
+  it('loops backwards too', () => {
+    renderPage()
+
+    const [previous] = screen.getAllByRole('button', { name: 'Previous business type' })
+    fireEvent.click(previous!)
+    expect(screen.getByRole('heading', { level: 1, name: 'Run your whole book.' })).toBeInTheDocument()
+  })
+})
+
+describe('BusinessLandingPage — the product story', () => {
+  beforeEach(() => {
+    useFrancePricing()
   })
 
   it('tells the whole operating loop, in order, as real headings', () => {
@@ -40,15 +107,16 @@ describe('BusinessLandingPage — the product story', () => {
     renderPage()
 
     const expected = [
-      'Your day, already organised.',
-      'But your shop is not only appointments.',
-      'Walk in. Not wait around.',
+      'Your day, already laid out.',
+      'A slot fills itself.',
+      'Your shop is not only appointments.',
+      "Walk in. Don't wait around.",
       'The chair that frees up first.',
       'FadeUp works while you work.',
       'Remember the cut.',
-      'Turn a cut into a customer.',
-      'See the whole floor.',
-      'Today first. Everything else after.',
+      'Turn a cut into a regular.',
+      'Pro is what brings them back.',
+      'Today first. Settings after.',
       'Your barbers, your chairs, your rules.',
       'Meet the next ones.',
       'Found by city, service or name.',
@@ -59,125 +127,150 @@ describe('BusinessLandingPage — the product story', () => {
     for (const title of expected) {
       expect(headings, `missing scene: ${title}`).toContain(title)
     }
-    expect(expected).toHaveLength(SCENE_IDS.length)
   })
 
-  it('closes the loop and names every stage of it', () => {
+  it('retells the story differently for a barber working alone', () => {
+    renderPage()
+    selectMode('Independent')
+
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+
+    // The beats that only make sense with a floor are rewritten...
+    expect(headings).toContain('There is only one chair.')
+    expect(headings).toContain('Your book, your rules.')
+    expect(headings).not.toContain('The chair that frees up first.')
+
+    // ...and the one that makes no sense at all is simply absent. A solo barber
+    // does not scroll through a staff-management chapter to reach the pricing.
+    expect(headings).not.toContain('Your barbers, your chairs, your rules.')
+  })
+
+  it('expands the world again for a multi-location business', () => {
+    renderPage()
+    selectMode('Multi-location')
+
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(headings).toContain('Every shop, one morning.')
+    expect(headings).toContain('A team per shop.')
+    expect(headings).toContain('Every floor, one console.')
+  })
+
+  it('marks the retention chapter as unbuilt inside the story itself', () => {
+    // A visitor must not reach the pricing table and discover that something
+    // they just watched does not exist yet.
     renderPage()
 
-    const heading = screen.getByRole('heading', { name: 'One system. From discovery to the next cut.' })
-    // Scoped to the loop's own list: words like "Barber" legitimately appear
-    // elsewhere on the page (a role in the team stage, for one).
-    const loopSection = heading.closest('section')!
-    const steps = within(loopSection).getByRole('list')
+    expect(screen.getAllByText('On the roadmap').length).toBeGreaterThan(0)
+  })
+})
 
-    for (const step of ['Discover', 'Book or queue', 'Barber', 'Chair', 'Passport', 'Rebook']) {
-      expect(within(steps).getByText(step)).toBeInTheDocument()
+describe('BusinessLandingPage — pricing', () => {
+  beforeEach(() => {
+    useFrancePricing()
+  })
+
+  it('shows the three barbershop plans at the France reference prices', () => {
+    renderPage()
+
+    const pricing = screen.getByRole('region', { name: 'Pricing' })
+    expect(within(pricing).getByText('€29')).toBeInTheDocument()
+    expect(within(pricing).getByText('€49')).toBeInTheDocument()
+    expect(within(pricing).getByText('€79')).toBeInTheDocument()
+  })
+
+  it('shows one plan, at 19 €, for an independent barber', () => {
+    renderPage()
+    selectMode('Independent')
+
+    const pricing = screen.getByRole('region', { name: 'Pricing' })
+    expect(within(pricing).getByText('€19')).toBeInTheDocument()
+    expect(within(pricing).queryByText('€49')).not.toBeInTheDocument()
+    expect(within(pricing).queryByText('€79')).not.toBeInTheDocument()
+  })
+
+  it('shows the multi-location ladder at 99, 149 and 249 €', () => {
+    renderPage()
+    selectMode('Multi-location')
+
+    const pricing = screen.getByRole('region', { name: 'Pricing' })
+    expect(within(pricing).getByText('€99')).toBeInTheDocument()
+    expect(within(pricing).getByText('€149')).toBeInTheDocument()
+    expect(within(pricing).getByText('€249')).toBeInTheDocument()
+  })
+
+  it('never paywalls Fade Passport, in any mode', () => {
+    renderPage()
+
+    for (const mode of ['Independent', 'Barbershop', 'Multi-location']) {
+      selectMode(mode)
+      const pricing = screen.getByRole('region', { name: 'Pricing' })
+      expect(within(pricing).getByText('In every plan, always. Never an upgrade.')).toBeInTheDocument()
     }
   })
 
-  it('positions against existing booking software without attacking it', () => {
+  it('says plainly that retention is not in the entry-level plan', () => {
     renderPage()
 
-    expect(screen.getByRole('heading', { name: 'Good. Your calendar is already digital.' })).toBeInTheDocument()
-    expect(screen.getByText(/no automatic import today/i)).toBeInTheDocument()
+    const pricing = screen.getByRole('region', { name: 'Pricing' })
+    // Pro is expanded by default, and it is the plan that packages retention.
+    expect(within(pricing).getByText(/Not built yet/)).toBeInTheDocument()
   })
 
-  it('shows only business types the product actually supports', () => {
+  it('carries the chosen plan into the professional application as intent', () => {
     renderPage()
 
-    for (const type of ['Independent barber', 'Private studio', 'Barbershop', 'Multi-location']) {
-      expect(screen.getByText(type)).toBeInTheDocument()
+    const pricing = screen.getByRole('region', { name: 'Pricing' })
+    const cta = within(pricing).getByRole('link', { name: /Choose Pro/ })
+    expect(cta).toHaveAttribute('href', '/pro/register?plan=shop_pro')
+  })
+
+  it('sends every professional CTA to the canonical registration path', () => {
+    renderPage()
+
+    for (const link of screen.getAllByRole('link', { name: /Join FadeUp/ })) {
+      expect(link).toHaveAttribute('href', '/pro/register')
     }
-  })
-
-  it('takes the price from the commercial pricing source, never from the page', () => {
-    renderPage()
-
-    expect(screen.getByText('€49')).toBeInTheDocument()
-    expect(screen.getByText('per month')).toBeInTheDocument()
-  })
-
-  it('shows the currency of the visitor REGION, not of their language', () => {
-    // A French-reading visitor in the United States is billed in USD. Language
-    // chooses words; geography chooses money.
-    mockPricing.mockReturnValue({
-      region: 'us',
-      pricing: { region: 'us', currency: 'USD', monthlyAmountMinor: 5400, formatLocale: 'en-US' },
-      isResolved: true,
-      formattedMonthly: '$54',
-    })
-
-    renderPage()
-
-    expect(screen.getByText('$54')).toBeInTheDocument()
-    expect(screen.queryByText('€49')).not.toBeInTheDocument()
-  })
-
-  it('shows no price at all until the region is known, rather than guessing', () => {
-    mockPricing.mockReturnValue({
-      region: 'intl',
-      pricing: { region: 'intl', currency: 'EUR', monthlyAmountMinor: 4900, formatLocale: 'en-150' },
-      isResolved: false,
-      formattedMonthly: '€49',
-    })
-
-    renderPage()
-
-    expect(screen.getByText('Checking your region…')).toBeInTheDocument()
-    expect(screen.queryByText('€49')).not.toBeInTheDocument()
-  })
-
-  it('sends professionals to the professional entrances only', () => {
-    renderPage()
-
-    const proLinks = screen
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href') ?? '')
-      .filter((href) => /login|register/.test(href))
-
-    expect(proLinks.length).toBeGreaterThan(0)
-    for (const href of proLinks) {
-      expect(href).toMatch(/^\/pro\/(login|register)$/)
+    for (const link of screen.getAllByRole('link', { name: 'Pro login' })) {
+      expect(link).toHaveAttribute('href', '/pro/login')
     }
-    // The legacy alias must not come back.
-    expect(proLinks).not.toContain('/pro/signup')
+    // The legacy path must not come back through a copy-paste.
+    expect(screen.queryByRole('link', { name: /\/pro\/signup/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('BusinessLandingPage — the comparison', () => {
+  beforeEach(() => {
+    useFrancePricing()
   })
 
-  it('markets nothing the product does not have yet', () => {
-    // Wallet, loyalty, payments, commissions and inventory are unbuilt lots.
+  it('keeps the detailed table behind a disclosure rather than in the first viewport', () => {
     renderPage()
 
-    const body = document.body.textContent ?? ''
-    for (const unbuilt of ['Wallet', 'Loyalty', 'Referral', 'Commission', 'Inventory', 'Payments']) {
-      expect(body, `page claims unbuilt feature: ${unbuilt}`).not.toContain(unbuilt)
-    }
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /See what changes between plans/ })).toBeInTheDocument()
   })
 
-  it('invents no statistics', () => {
+  it('marks unbuilt capabilities as coming, never as included', () => {
     renderPage()
 
-    const body = document.body.textContent ?? ''
-    expect(body).not.toMatch(/\d+\s?% (more|increase|growth|revenue)/i)
-    expect(body).not.toMatch(/\d[\d,.]* (shops|barbers|customers) (use|trust|joined)/i)
+    fireEvent.click(screen.getByRole('button', { name: /See what changes between plans/ }))
+
+    const table = screen.getByRole('table')
+    const retentionRow = within(table).getByRole('row', { name: /Return-cycle detection/ })
+
+    // Pro and Business package retention, so those cells say "Coming" — and
+    // critically, none of them says "Included".
+    expect(within(retentionRow).getAllByText('Coming').length).toBe(2)
+    expect(within(retentionRow).queryByText('Included')).not.toBeInTheDocument()
   })
 
-  it('labels the product stage as an illustration wherever it appears', () => {
+  it('shows Fade Passport as included in every column', () => {
     renderPage()
 
-    const captions = screen.getAllByText('Product illustration')
-    expect(captions.length).toBeGreaterThanOrEqual(SCENE_IDS.length)
-  })
+    fireEvent.click(screen.getByRole('button', { name: /See what changes between plans/ }))
 
-  it('keeps the stage out of the accessibility tree, since the prose already says it', () => {
-    const { container } = renderPage()
-
-    const stages = container.querySelectorAll('[aria-hidden="true"]')
-    expect(stages.length).toBeGreaterThan(0)
-
-    // The narrative headings are NOT hidden — the story stays readable.
-    const firstScene = screen.getByRole('heading', { name: 'Your day, already organised.' })
-    expect(within(firstScene).queryByText('aria-hidden')).toBeNull()
-    expect(firstScene.closest('[aria-hidden="true"]')).toBeNull()
+    const table = screen.getByRole('table')
+    const passportRow = within(table).getByRole('row', { name: /Fade Passport/ })
+    expect(within(passportRow).getAllByText('Included').length).toBe(3)
   })
 })

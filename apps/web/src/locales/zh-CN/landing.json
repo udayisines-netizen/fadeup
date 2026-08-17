@@ -69,184 +69,377 @@
   },
   "business": {
     "meta": {
-      "title": "FadeUp 面向理发店 — 经营整间店",
-      "description": "预约、到店客人、现场排队、椅位与客户，集中在一个为理发店打造的系统里。"
+      "title": "FadeUp 理发师版 —— 把整间店跑起来",
+      "description": "预约、临时到店、实时排队、椅位和客户，全在一套为理发师做的系统里。一个人、一家店还是多家店——选一种，看 FadeUp 变成它。"
     },
     "nav": {
       "product": "产品",
-      "how": "如何运作",
+      "how": "怎么运作",
       "pricing": "价格"
     },
     "hero": {
-      "eyebrow": "面向理发店与理发师",
-      "titleLead": "经营整间店。",
-      "subtitle": "预约。到店客人。椅位。客户。一个系统，按理发店真实的运作方式打造。",
+      "eyebrow": "为理发师与理发店",
       "primary": "加入 FadeUp",
       "secondary": "商家登录",
-      "scrollHint": "向下滚动，开始经营"
+      "scrollHint": "向下滚动，开店"
     },
+    "modes": {
+      "groupLabel": "选择你经营的类型",
+      "previous": "上一种经营类型",
+      "next": "下一种经营类型",
+      "announce": "正在展示：{{name}} 的 FadeUp",
+      "independent": {
+        "name": "独立理发师",
+        "headline": "把你的整本账管起来。",
+        "lines": [
+          "你的时间。",
+          "你的客人。",
+          "你的手艺。",
+          "一套简单的系统。"
+        ]
+      },
+      "barbershop": {
+        "name": "理发店",
+        "headline": "把整间店跑起来。",
+        "lines": [
+          "预约。",
+          "临时到店。",
+          "理发师。",
+          "椅位。",
+          "一套系统。"
+        ]
+      },
+      "multi_location": {
+        "name": "多门店",
+        "headline": "把每一家店都跑起来。",
+        "lines": [
+          "每一家店。",
+          "每一支团队。",
+          "一套操作系统。"
+        ]
+      }
+    },
+    "roadmapBadge": "开发中",
+    "demoLabel": "产品示意",
     "scenes": {
+      "today": {
+        "eyebrow": "今天",
+        "title": "今天已经排好了。",
+        "body": "开门，一整天就在一块屏幕上：每个预约、每位理发师，按发生的顺序排着。",
+        "modes": {
+          "independent": {
+            "title": "一天，一块屏幕。",
+            "body": "打开应用，今天已经在那里：谁来、几点、做什么。不用先设置什么。"
+          },
+          "multi_location": {
+            "title": "所有门店，同一个早上。",
+            "body": "两间店的现场一眼看完，再进任意一间，不用切换账号。"
+          }
+        }
+      },
       "appointments": {
         "eyebrow": "预约",
-        "title": "你的一天，已经排好。",
-        "body": "每一个预约、每一位理发师，一块屏幕。开门时，一天已经摆在眼前。"
+        "title": "空档自己就填上了。",
+        "body": "客人选服务、选理发师、选时间。落进当天，椅子就留住了。"
       },
       "walkins": {
-        "eyebrow": "到店客人",
-        "title": "但你的店不只有预约。",
-        "body": "有人没预约就进来了。他选好项目，再选理发师或最快空出的那位。"
+        "eyebrow": "临时到店",
+        "title": "一家店不只有预约。",
+        "body": "有人没约就进来了。他选一项服务和一位理发师，或者谁先空出来就找谁。",
+        "modes": {
+          "independent": {
+            "title": "不是每个人都会提前约。",
+            "body": "两个预约之间有人敲门。接下他，又不打乱后面一整天。"
+          }
+        }
       },
       "queue": {
-        "eyebrow": "现场排队",
-        "title": "进来，而不是干等。",
-        "body": "他用手机取号，看着队伍前进。没人再堵在门口问还要多久。"
+        "eyebrow": "实时排队",
+        "title": "进来。不用干等。",
+        "body": "他用手机取号，看着号往前走。没人再站在门口问还要多久。"
       },
       "barber": {
         "eyebrow": "分配",
-        "title": "最先空出的那张椅子。",
-        "body": "队列把客人交给指定的理发师，或者下一位有空的人。"
+        "title": "谁的椅子先空出来。",
+        "body": "队列把客人交给他指定的理发师，或者交给下一个空出来的人。",
+        "modes": {
+          "independent": {
+            "title": "只有一把椅子。",
+            "body": "没什么可分配的。队列是你的，下一个人也是你的。"
+          }
+        }
       },
       "chair": {
-        "eyebrow": "椅位模式",
-        "title": "FadeUp 在你工作时替你工作。",
-        "body": "椅子旁一块屏：谁坐着、他要什么、上次做了什么。做完，下一位已经在了。"
+        "eyebrow": "在椅位上",
+        "title": "你在忙，FadeUp 也在忙。",
+        "body": "谁坐在椅子上、他要什么、上次你给他剪的是什么。做完，下一位已经在那儿了。"
       },
       "passport": {
         "eyebrow": "Fade Passport",
         "title": "记住这个发型。",
-        "body": "推子号数、长度、胡须轮廓。它属于客人，所以第二次从第一次结束的地方开始。"
+        "body": "卡尺号、长度、胡线。它属于客人、跟着客人走，所以第二次是从第一次结束的地方开始。"
       },
       "history": {
-        "eyebrow": "客户",
-        "title": "把一次理发变成一位客户。",
-        "body": "每次到店都积累出看得见的节奏 — 也给了你在他淡出前联系的理由。"
+        "eyebrow": "客人",
+        "title": "把一次剪发变成一个熟客。",
+        "body": "每一次到店都落在同一张卡上。上次的服务、常找的理发师、隔了多久——不用问就在那儿。"
       },
-      "floor": {
-        "eyebrow": "店面",
-        "title": "看见整个店面。",
-        "body": "椅位、理发师、队列，以及接下来会发生什么。不只是日历：是这个空间。"
+      "retention": {
+        "eyebrow": "客户召回",
+        "title": "让他们回来的，是 Pro。",
+        "body": "Passport 是 FadeUp 记住客人的方式。而算出谁该来却没来、在他走远之前联系上他，那是召回套件——Pro 级别，而且还没做出来。与其今天卖给你，我们宁可在这里说清楚。"
       },
-      "owner": {
-        "eyebrow": "运营",
-        "title": "先看今天。其余在后。",
-        "body": "正在发生的排在最上面。门店、团队与服务在需要时才出现，不挡路。"
+      "control": {
+        "eyebrow": "掌控",
+        "title": "先看今天。设置放后面。",
+        "body": "正在发生的事排在最上面。要配置的东西，需要时找得到，不需要时不挡路。",
+        "modes": {
+          "independent": {
+            "title": "你的账本，你的规矩。",
+            "body": "你的时间、你的服务、你的价格。早上改完，改完就是线上的样子。"
+          },
+          "multi_location": {
+            "title": "每个现场，一块面板。",
+            "body": "门店、团队、队列和椅位——一家一家看，或者一起看。"
+          }
+        }
       },
       "team": {
         "eyebrow": "团队",
-        "title": "你的理发师、你的椅位、你的规则。",
-        "body": "邀请理发师和前台，设定各自权限，并安排到他们真正工作的门店。"
+        "title": "你的理发师，你的椅位，你的规矩。",
+        "body": "邀请理发师、前台和店长。定好每个人能做什么，再把他们放到真正上班的地方。",
+        "modes": {
+          "multi_location": {
+            "title": "一家店一支团队。",
+            "body": "把人邀请进具体某家门店，让店长管自己的现场，看不到别人的。"
+          }
+        }
       },
       "marketplace": {
-        "eyebrow": "平台",
+        "eyebrow": "商家目录",
         "title": "认识下一批客人。",
-        "body": "你的店和每位理发师都有公开主页。还是同一批椅子 — 只是现在能被找到。"
+        "body": "你的店和店里每位理发师都有一个公开页面。一样的椅位、一样的服务——现在能被找到了。",
+        "modes": {
+          "independent": {
+            "title": "你的主页就是你的店。",
+            "body": "一个公开页面，放你的服务、你的时间和你的作品。那就是你的门面。"
+          }
+        }
       },
       "discovery": {
-        "eyebrow": "被发现",
-        "title": "通过城市、服务或名字找到你。",
-        "body": "客人在 FadeUp 上搜索附近的理发师，看到的是已发布的店铺。"
+        "eyebrow": "被找到",
+        "title": "按城市、服务或名字被找到。",
+        "body": "客人在 FadeUp 上找附近的理发师。他们看到的是已发布的店铺——别的都不会列出来。"
       },
       "rebook": {
-        "eyebrow": "再一次",
-        "title": "重新坐回椅子上。",
-        "body": "同一位理发师、同样的发型，一次点击。预约落回今天，新的一天重新开始。"
+        "eyebrow": "再来一次",
+        "title": "又坐回椅子上。",
+        "body": "同一位理发师、同一个发型，一下就好。预约落进今天，一天重新开始。"
       }
     },
     "loop": {
-      "eyebrow": "闭环",
-      "title": "一个系统。从被发现到下一次理发。",
-      "body": "不是在日历上外挂功能。每一步都喂给下一步。",
+      "eyebrow": "这个循环",
+      "title": "一套系统。从被找到，到下一次剪发。",
+      "body": "不是一个日历外面拧了几个附件。每一步都喂给下一步。",
       "steps": [
-        "发现",
+        "被找到",
         "预约或排队",
         "理发师",
         "椅位",
         "Passport",
-        "再预约"
+        "再次预约"
       ]
     },
     "existing": {
-      "eyebrow": "已经在用预约软件？",
+      "eyebrow": "已经在用预约软件了？",
       "title": "很好。你的日历已经数字化了。",
-      "body": "那是容易的部分。大多数预约工具没碰的，是客人进门之后发生的一切。",
-      "keepLabel": "保留",
+      "body": "那是容易的部分。大多数预约工具不碰的，是有人推门进来之后发生的一切。",
+      "keepLabel": "留下",
       "keep": "预约",
       "addLabel": "加上",
       "add": [
-        "到店客人",
-        "现场排队",
+        "临时到店",
+        "实时排队",
         "椅位",
         "理发师",
         "Fade Passport",
-        "平台"
+        "商家目录"
       ],
-      "note": "手动搬迁你的预约，或者重新开始 — 目前没有自动导入，我们不会假装有。"
-    },
-    "types": {
-      "eyebrow": "任何规模",
-      "title": "一位理发师，或四家门店。",
-      "independent": {
-        "name": "独立理发师",
-        "detail": "一张椅子，自己的本子。"
-      },
-      "studio": {
-        "name": "私人工作室",
-        "detail": "仅限预约，几张椅子。"
-      },
-      "barbershop": {
-        "name": "理发店",
-        "detail": "完整店面，接待到店客人。"
-      },
-      "multi": {
-        "name": "多门店",
-        "detail": "多家店铺，同一个体系。"
-      }
+      "note": "手动把预约搬过来，或者从头开始——今天没有自动导入，我们不会假装有。"
     },
     "pricing": {
       "eyebrow": "价格",
-      "title": "整间店。",
+      "title": "为你真正在跑的那家店付费。",
+      "for": {
+        "independent": "一个方案，给一个人。被找到、被预约、被记住，需要的都在里面。",
+        "barbershop": "单店三个档位。从你现在的位置开始，等现场需要了再往上。",
+        "multi_location": "给经营不止一家店的生意，三个档位。"
+      },
       "perMonth": "每月",
-      "body": "一个价格。所有理发师、所有椅位、这一页上的所有功能。",
-      "resolving": "正在确认你所在区域…",
-      "cta": "加入 FadeUp",
-      "note": "24 小时内审核。无需绑卡。"
+      "recommended": "多数店选这个",
+      "resolving": "正在确认你所在的区域…",
+      "taxNote": "按你所在区域显示，不含税。计费还没上线——加入是提交申请，不是付款。",
+      "locationLimit": "最多 {{count}} 家门店",
+      "passportEveryPlan": "每个方案都有，一直都有。永远不是要加钱的升级。",
+      "retentionSuite": "召回套件",
+      "retentionComingToPlan": "包含在这个方案里。还没做出来——上线之前不会向你收费。",
+      "retentionNotInPlan": "Pro 及以上。这个方案里没有。",
+      "choose": "选择 {{name}}",
+      "applicationNote": "加入会提交一份申请，由人来审核——不用卡，不扣钱。"
+    },
+    "plans": {
+      "solo": {
+        "name": "Solo",
+        "positioning": "一位理发师，一本账",
+        "body": "完整的 FadeUp，按一个人干活的尺寸裁好。一个能被找到的公开页面、一个预约页、临时到店、实时排队和 Fade Passport——一块管员工的界面都没有。"
+      },
+      "shop_essential": {
+        "name": "Essential",
+        "positioning": "把店数字化地开起来",
+        "body": "一家现代理发店接单和留客所需要的一切：店铺和每位理发师的公开页面、服务、可预约时间、临时到店、团队，还有 Fade Passport。"
+      },
+      "shop_pro": {
+        "name": "Pro",
+        "positioning": "实时地跑起来，并把他们带回来",
+        "body": "Essential 的全部，加上实时的现场：队列、店内屏幕、椅位和候补名单。这一页从头到尾讲的就是这个方案。"
+      },
+      "shop_business": {
+        "name": "Business",
+        "positioning": "单店的进阶掌控",
+        "body": "Pro 的全部，加上一家忙碌的店在多人一起打理时会要的那些更细的控制。"
+      },
+      "multi_growth": {
+        "name": "Growth",
+        "positioning": "不止一家店",
+        "body": "一个生意底下多家门店。每家店各自的团队、服务、队列和椅位，还有一个能一起看的地方。"
+      },
+      "multi_pro": {
+        "name": "Pro",
+        "positioning": "多门店，加上召回",
+        "body": "Growth 的全部，而且是整个集团一起做客户召回，不是一家一家做。"
+      },
+      "multi_scale": {
+        "name": "Scale",
+        "positioning": "集中管控",
+        "body": "Multi Pro 的全部，加上更大的集团需要的集中配置与报表。"
+      }
+    },
+    "capabilities": {
+      "marketplace": "出现在商家目录",
+      "publicProfile": "店铺与理发师公开页面",
+      "services": "服务与价格",
+      "availability": "营业时间与可约时段",
+      "booking": "在线预约",
+      "customers": "客户档案",
+      "customerHistory": "到店记录",
+      "passport": "Fade Passport",
+      "manualRebook": "手动再次预约",
+      "notifications": "预约与排队通知",
+      "walkIns": "临时到店接待",
+      "team": "团队与邀请",
+      "liveQueue": "实时排队",
+      "queueDisplay": "店内排队屏幕",
+      "chairs": "椅位",
+      "chairMode": "椅位模式",
+      "waitlist": "候补名单与爽约规则",
+      "returnCycles": "回访周期识别",
+      "comebackReminders": "召回提醒",
+      "inactiveCustomers": "沉默客户识别",
+      "customerSegments": "客户分群",
+      "retentionAutomation": "召回自动化",
+      "retentionInsights": "召回分析",
+      "multiLocation": "多家门店",
+      "locationSwitching": "门店切换",
+      "crossLocationView": "跨门店视图",
+      "advancedPermissions": "进阶权限",
+      "advancedBookingRules": "进阶预约规则",
+      "advancedReporting": "运营报表",
+      "prioritySupport": "优先支持"
+    },
+    "capabilityGroups": {
+      "foundation": "基础",
+      "floor": "现场",
+      "retention": "客户召回",
+      "scale": "规模与管控"
+    },
+    "compare": {
+      "show": "看看各方案之间差在哪",
+      "hide": "收起对比",
+      "caption": "FadeUp 各方案功能对比",
+      "feature": "功能",
+      "included": "包含",
+      "notIncluded": "不包含",
+      "coming": "开发中",
+      "plannedNote": "「开发中」表示该能力属于这个方案，但还没做出来。它不是你今天能拿到的东西。"
     },
     "final": {
-      "lines": [
-        "你的预约。",
-        "你的到店客人。",
-        "你的椅位。",
-        "你的客户。"
-      ],
-      "together": "在一个地方。",
-      "title": "用 FadeUp 经营你的店。",
+      "together": "在同一个地方。",
+      "title": "用 FadeUp 跑你的店。",
       "primary": "加入 FadeUp",
       "secondary": "商家登录"
     },
-    "demoLabel": "产品示意",
     "stage": {
       "today": "今天",
-      "available": "空闲",
-      "walkIn": "到店",
-      "anyBarber": "任意理发师",
-      "waiting": "等待中",
-      "inChair": "服务中",
-      "free": "空闲",
-      "next": "下一位",
-      "complete": "完成",
+      "free": "空着",
+      "switchLocation": "切换",
+      "available": "可预约",
+      "walkIn": "临时到店",
+      "anyBarber": "哪位都行",
+      "addToQueue": "加入队列",
       "queueLabel": "队列",
+      "waiting": "等待中",
+      "youreNext": "下一个就是你",
+      "aboutMinutes": "约 {{count}} 分钟",
+      "nobodyAhead": "前面没人了",
       "chairLabel": "椅位",
-      "lastTime": "上次",
-      "visits": "到店次数",
+      "inChair": "正在椅位上",
+      "lastTime": "上一次",
+      "lastCutDetail": "低位 skin fade · 顶上 4 号 · 胡线修齐",
+      "complete": "完成",
+      "next": "下一位",
+      "everyPlan": "所有方案",
+      "passportFade": "渐变",
+      "passportFadeValue": "skin fade，低位",
+      "passportTop": "顶部",
+      "passportTopValue": "4 号，做纹理",
+      "passportBeard": "胡子",
+      "passportBeardValue": "修齐，留短",
+      "passportRhythm": "节奏",
       "everyWeeks": "每 {{count}} 周",
-      "publicProfile": "公开主页",
+      "visits": "次到店",
+      "retentionTitle": "客户召回",
+      "roadmap": "开发中",
+      "retentionLead": "{{name}} 一般每三周来一次。",
+      "retentionCycle": "看出谁该来却没来",
+      "retentionReminder": "发一条召回提醒",
+      "retentionInactive": "找出不再来的客人",
+      "ctrlSchedule": "排班",
+      "ctrlAvailability": "可约时段",
+      "ctrlServices": "服务",
+      "ctrlCustomers": "客户",
+      "ctrlAppointments": "预约",
+      "ctrlQueue": "队列",
+      "ctrlBarbers": "理发师",
+      "ctrlChairs": "椅位",
+      "ctrlLocations": "门店",
+      "ctrlTeams": "团队",
+      "teamLabel": "团队",
+      "perLocation": "按门店",
+      "roleOwner": "老板",
+      "roleBarber": "理发师",
+      "roleReception": "前台",
+      "roleManager": "店长",
+      "publicProfile": "公开页面",
       "book": "预约",
-      "joinQueue": "加入排队",
+      "joinQueue": "取号排队",
       "searchPlaceholder": "理发师、店铺或服务",
-      "daysSince": "{{count}} 天",
-      "rebook": "再次预约",
-      "role": "角色",
-      "location": "门店"
+      "openNow": "营业中",
+      "daysSince": "距离上次剪发 {{count}} 天",
+      "rebook": "再次预约"
+    },
+    "register": {
+      "planLabel": "已选方案",
+      "planNote": "从价格页带过来的。不扣费、也不占名额——在计费上线之前都可以改。"
     }
   }
 }

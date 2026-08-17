@@ -29,9 +29,9 @@ const mockUseSubmit = vi.mocked(useSubmitProfessionalApplication)
 const signUp = vi.fn()
 const mutateAsync = vi.fn()
 
-function renderPage() {
+function renderPage(initialEntry = '/pro/register') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <ProRegisterPage />
     </MemoryRouter>,
   )
@@ -176,5 +176,52 @@ describe('ProRegisterPage — /pro/register submits an APPLICATION, not an accou
     renderPage()
 
     expect(screen.getByRole('link', { name: 'Client sign-in' })).toHaveAttribute('href', '/login')
+  })
+})
+
+describe('plan intent arriving from /for-business', () => {
+  beforeEach(() => {
+    mockUseSubmit.mockReturnValue({ mutateAsync } as never)
+    mockGetSupabaseClient.mockReturnValue({ auth: { signUp } } as never)
+  })
+
+  it('shows the plan the applicant chose on the pricing page', () => {
+    renderPage('/pro/register?plan=shop_pro')
+
+    const banner = screen.getByText('Plan selected').parentElement!
+    expect(banner.textContent).toContain('Pro')
+  })
+
+  it('shows nothing at all when no plan was chosen', () => {
+    renderPage('/pro/register')
+
+    expect(screen.queryByText('Plan selected')).not.toBeInTheDocument()
+  })
+
+  it('ignores a plan identifier someone typed into the address bar', () => {
+    // The query string is onboarding INTENT, never entitlement. An id that is
+    // not in the catalog produces no banner rather than an invented plan name,
+    // and either way it grants nothing — approval is a platform decision and
+    // billing does not exist yet.
+    renderPage('/pro/register?plan=enterprise_unlimited')
+
+    expect(screen.queryByText('Plan selected')).not.toBeInTheDocument()
+  })
+
+  it('still requires the same application, whatever plan was named', async () => {
+    signUp.mockResolvedValue({ data: { session: { access_token: 'token' } }, error: null })
+    mutateAsync.mockResolvedValue({ id: 'application-id' })
+
+    renderPage('/pro/register?plan=multi_scale')
+    fillRequiredFields()
+    fireEvent.click(screen.getByRole('button', { name: 'Submit my application' }))
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled())
+
+    // The plan is not in the payload: nothing about a subscription reaches the
+    // server from a query parameter.
+    const payload = mutateAsync.mock.calls.at(-1)![0]
+    expect(JSON.stringify(payload)).not.toContain('multi_scale')
+    expect(mockNavigate).toHaveBeenCalledWith('/pro/application', { replace: true })
   })
 })

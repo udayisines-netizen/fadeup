@@ -69,184 +69,377 @@
   },
   "business": {
     "meta": {
-      "title": "FadeUp para barbearias — faça toda a barbearia andar",
-      "description": "Marcações, sem marcação, fila ao vivo, cadeiras e clientes num só sistema feito para barbearias."
+      "title": "FadeUp para barbeiros — toca a barbearia inteira",
+      "description": "Marcações, entradas sem marcação, fila em direto, cadeiras e clientes num só sistema pensado para barbeiros. Sozinho, uma barbearia ou várias: escolha e veja o FadeUp adaptar-se."
     },
     "nav": {
       "product": "Produto",
       "how": "Como funciona",
-      "pricing": "Preço"
+      "pricing": "Preços"
     },
     "hero": {
-      "eyebrow": "Para barbearias e barbeiros",
-      "titleLead": "Faça toda a barbearia andar.",
-      "subtitle": "Marcações. Sem marcação. Cadeiras. Clientes. Um sistema, feito para como uma barbearia funciona de facto.",
-      "primary": "Junte-se ao FadeUp",
-      "secondary": "Entrar como Pro",
-      "scrollHint": "Role para gerir a barbearia"
+      "eyebrow": "Para barbeiros e barbearias",
+      "primary": "Entrar no FadeUp",
+      "secondary": "Login Pro",
+      "scrollHint": "Deslize para abrir a barbearia"
     },
+    "modes": {
+      "groupLabel": "Escolha o tipo de negócio que tem",
+      "previous": "Tipo de negócio anterior",
+      "next": "Tipo de negócio seguinte",
+      "announce": "A mostrar o FadeUp para: {{name}}",
+      "independent": {
+        "name": "Independente",
+        "headline": "Toque a sua agenda inteira.",
+        "lines": [
+          "O seu horário.",
+          "Os seus clientes.",
+          "O seu ofício.",
+          "Um sistema simples."
+        ]
+      },
+      "barbershop": {
+        "name": "Barbearia",
+        "headline": "Toque a barbearia inteira.",
+        "lines": [
+          "Marcações.",
+          "Sem marcação.",
+          "Barbeiros.",
+          "Cadeiras.",
+          "Um só sistema."
+        ]
+      },
+      "multi_location": {
+        "name": "Multi-espaço",
+        "headline": "Toque todas as suas barbearias.",
+        "lines": [
+          "Cada espaço.",
+          "Cada equipa.",
+          "Um só sistema operativo."
+        ]
+      }
+    },
+    "roadmapBadge": "A caminho",
+    "demoLabel": "Ilustração do produto",
     "scenes": {
+      "today": {
+        "eyebrow": "Hoje",
+        "title": "O seu dia, já montado.",
+        "body": "Abre a porta e o dia inteiro cabe num ecrã: cada marcação, cada barbeiro, pela ordem em que acontecem.",
+        "modes": {
+          "independent": {
+            "title": "O seu dia num ecrã.",
+            "body": "Abre a app e hoje já lá está: quem vem, a que horas e para quê. Nada para preparar antes."
+          },
+          "multi_location": {
+            "title": "Todos os espaços, uma só manhã.",
+            "body": "Vê as duas salas de uma vez e entra em qualquer uma sem mudar de conta."
+          }
+        }
+      },
       "appointments": {
         "eyebrow": "Marcações",
-        "title": "O seu dia, já organizado.",
-        "body": "Cada marcação, cada barbeiro, um ecrã. Abre a porta e o dia já está posto."
+        "title": "Um horário preenche-se sozinho.",
+        "body": "O cliente escolhe serviço, barbeiro e hora. Cai no dia e a cadeira fica reservada."
       },
       "walkins": {
         "eyebrow": "Sem marcação",
-        "title": "Mas a sua barbearia não é só marcações.",
-        "body": "Entra alguém sem marcação. Escolhe um serviço e um barbeiro, ou o primeiro livre."
+        "title": "Uma barbearia não é só marcações.",
+        "body": "Alguém entra sem ter marcado. Escolhe um serviço e um barbeiro, ou o primeiro que ficar livre.",
+        "modes": {
+          "independent": {
+            "title": "Nem toda a gente marca antes.",
+            "body": "Alguém bate à porta entre duas marcações. Atenda sem perder o resto do dia."
+          }
+        }
       },
       "queue": {
-        "eyebrow": "Fila ao vivo",
-        "title": "Entrar. Não ficar à espera.",
-        "body": "Pega num lugar pelo telemóvel e vê a fila andar. Ninguém à porta a perguntar quanto falta."
+        "eyebrow": "Fila em direto",
+        "title": "Entre. Sem ficar à espera.",
+        "body": "Tira o lugar pelo telemóvel e vê-o andar. Ninguém fica à porta a perguntar quanto falta."
       },
       "barber": {
         "eyebrow": "Atribuição",
-        "title": "A cadeira que vaga primeiro.",
-        "body": "A fila entrega o cliente a um barbeiro específico, ou ao próximo livre."
+        "title": "A cadeira que fica livre primeiro.",
+        "body": "A fila entrega o cliente ao barbeiro que ele pediu, ou ao próximo que ficar livre.",
+        "modes": {
+          "independent": {
+            "title": "Só há uma cadeira.",
+            "body": "Nada para atribuir. A fila é sua, e o próximo também."
+          }
+        }
       },
       "chair": {
-        "eyebrow": "Modo Cadeira",
-        "title": "O FadeUp trabalha enquanto trabalha.",
-        "body": "Um ecrã na cadeira: quem está, o que pediu, o que fez da última vez. Termina e o seguinte já está ali."
+        "eyebrow": "Na cadeira",
+        "title": "O FadeUp trabalha enquanto você trabalha.",
+        "body": "Quem está na cadeira, o que pediu e o que lhe fez da última vez. Termina, e o próximo já lá está."
       },
       "passport": {
         "eyebrow": "Fade Passport",
-        "title": "Lembre-se do corte.",
-        "body": "O número, o comprimento, a linha da barba. É do cliente, e a segunda visita começa onde a primeira acabou."
+        "title": "Lembrar o corte.",
+        "body": "O número, o comprimento, a linha da barba. É do cliente e viaja com ele, por isso a segunda visita começa onde a primeira acabou."
       },
       "history": {
-        "eyebrow": "Cliente",
-        "title": "Transforme um corte num cliente.",
-        "body": "Cada visita constrói um ritmo visível — e um motivo para falar antes que se afaste."
+        "eyebrow": "O cliente",
+        "title": "Transforme um corte num habitual.",
+        "body": "Cada visita cai na mesma ficha. Último serviço, barbeiro do costume, há quanto tempo — sem ter de perguntar."
       },
-      "floor": {
-        "eyebrow": "A sala",
-        "title": "Veja a sala toda.",
-        "body": "Cadeiras, barbeiros, a fila e o que vem a seguir. Não é só uma agenda: é o espaço."
+      "retention": {
+        "eyebrow": "Fidelização",
+        "title": "O Pro é o que os traz de volta.",
+        "body": "O Passport é a memória do cliente. Perceber quem está atrasado e chegar até ele antes que se afaste é a Retention Suite: nível Pro, e ainda não construída. Preferimos dizê-lo aqui a vendê-la hoje."
       },
-      "owner": {
-        "eyebrow": "Operação",
-        "title": "Hoje primeiro. O resto depois.",
-        "body": "O que está a acontecer agora fica em cima. Unidades, equipa e serviços estão lá quando precisa."
+      "control": {
+        "eyebrow": "Controlo",
+        "title": "Primeiro o dia. As definições depois.",
+        "body": "O que está a acontecer agora fica em cima. Tudo o que se configura está à mão quando é preciso e fora do caminho quando não é.",
+        "modes": {
+          "independent": {
+            "title": "A sua agenda, as suas regras.",
+            "body": "Os seus horários, os seus serviços, os seus preços. Muda de manhã e a mudança já está online."
+          },
+          "multi_location": {
+            "title": "Cada sala, uma só consola.",
+            "body": "Espaços, equipas, filas e cadeiras: uma barbearia de cada vez, ou todas juntas."
+          }
+        }
       },
       "team": {
         "eyebrow": "Equipa",
         "title": "Os seus barbeiros, as suas cadeiras, as suas regras.",
-        "body": "Convide barbeiros e receção, defina o que cada um pode fazer e coloque-os onde trabalham."
+        "body": "Convide barbeiros, receção e gerentes. Defina o que cada um pode fazer e ponha-os onde trabalham mesmo.",
+        "modes": {
+          "multi_location": {
+            "title": "Uma equipa por espaço.",
+            "body": "Convide cada pessoa para um espaço concreto e deixe um gerente tocar a sua sala sem ver a dos outros."
+          }
+        }
       },
       "marketplace": {
         "eyebrow": "Marketplace",
         "title": "Conheça os próximos.",
-        "body": "A sua barbearia e cada barbeiro ganham perfil público. Mesmas cadeiras — agora encontráveis."
+        "body": "A sua barbearia e cada barbeiro têm uma página pública. As mesmas cadeiras, os mesmos serviços: agora encontráveis.",
+        "modes": {
+          "independent": {
+            "title": "O seu perfil é a loja.",
+            "body": "Uma página pública com os seus serviços, os seus horários e o seu trabalho. É essa a montra."
+          }
+        }
       },
       "discovery": {
         "eyebrow": "Descoberta",
         "title": "Encontrado por cidade, serviço ou nome.",
-        "body": "Os clientes procuram um barbeiro perto no FadeUp. Encontram as barbearias publicadas."
+        "body": "Os clientes procuram um barbeiro perto no FadeUp. Encontram as barbearias publicadas, e mais nada."
       },
       "rebook": {
         "eyebrow": "E outra vez",
         "title": "De volta à cadeira.",
-        "body": "Mesmo barbeiro, mesmo corte, um toque. A marcação cai no dia de hoje e recomeça."
+        "body": "Mesmo barbeiro, mesmo corte, um toque. A marcação cai no dia e tudo recomeça."
       }
     },
     "loop": {
       "eyebrow": "O ciclo",
       "title": "Um sistema. Da descoberta ao corte seguinte.",
-      "body": "Não é uma agenda com extras colados. Cada passo alimenta o seguinte.",
+      "body": "Não é uma agenda com extras aparafusados. Cada passo alimenta o seguinte.",
       "steps": [
         "Descobrir",
         "Marcar ou fila",
         "Barbeiro",
         "Cadeira",
         "Passport",
-        "Voltar"
+        "Remarcar"
       ]
     },
     "existing": {
       "eyebrow": "Já usa software de marcações?",
-      "title": "Bem. A sua agenda já é digital.",
-      "body": "Essa era a parte fácil. O que quase nenhum software toca é tudo o que acontece depois da porta.",
-      "keepLabel": "Mantenha",
+      "title": "Ainda bem. A sua agenda já é digital.",
+      "body": "Essa era a parte fácil. O que quase nenhum sistema de marcações toca é tudo o que acontece depois de alguém entrar pela porta.",
+      "keepLabel": "Mantém",
       "keep": "As marcações",
-      "addLabel": "Acrescente",
+      "addLabel": "Acrescenta",
       "add": [
         "Sem marcação",
-        "Fila ao vivo",
+        "Fila em direto",
         "Cadeiras",
         "Barbeiros",
         "Fade Passport",
         "Marketplace"
       ],
-      "note": "Passe as marcações à mão ou comece do zero — hoje não há importação automática, e não vamos fingir que há."
-    },
-    "types": {
-      "eyebrow": "Qualquer tamanho",
-      "title": "Um barbeiro ou quatro unidades.",
-      "independent": {
-        "name": "Barbeiro independente",
-        "detail": "Uma cadeira, a sua agenda."
-      },
-      "studio": {
-        "name": "Estúdio privado",
-        "detail": "Só com marcação, poucas cadeiras."
-      },
-      "barbershop": {
-        "name": "Barbearia",
-        "detail": "Sala cheia e gente de passagem."
-      },
-      "multi": {
-        "name": "Várias unidades",
-        "detail": "Várias barbearias, uma casa."
-      }
+      "note": "Traga as suas marcações à mão ou comece do zero: hoje não há importação automática, e não vamos fingir o contrário."
     },
     "pricing": {
-      "eyebrow": "Preço",
-      "title": "Toda a barbearia.",
+      "eyebrow": "Preços",
+      "title": "Pague pela barbearia que tem mesmo.",
+      "for": {
+        "independent": "Um só plano, para um só barbeiro. Tudo o que é preciso para ser encontrado, marcado e lembrado.",
+        "barbershop": "Três níveis para uma barbearia de um espaço. Comece onde está e suba quando a sala pedir.",
+        "multi_location": "Três níveis para um negócio com mais de uma barbearia."
+      },
       "perMonth": "por mês",
-      "body": "Um preço. Todos os barbeiros, todas as cadeiras, tudo o que está nesta página.",
+      "recommended": "O mais escolhido",
       "resolving": "A verificar a sua região…",
-      "cta": "Junte-se ao FadeUp",
-      "note": "Analisado em 24 horas. Sem cartão."
+      "taxNote": "Mostrado para a sua região, sem impostos. A faturação ainda não está ativa: entrar envia uma candidatura, não um pagamento.",
+      "locationLimit": "Até {{count}} espaços",
+      "passportEveryPlan": "Em todos os planos, sempre. Nunca um upgrade pago.",
+      "retentionSuite": "Retention Suite",
+      "retentionComingToPlan": "Incluída neste plano. Ainda não construída: não será cobrada antes de sair.",
+      "retentionNotInPlan": "A partir do Pro. Não está neste plano.",
+      "choose": "Escolher {{name}}",
+      "applicationNote": "Entrar envia uma candidatura. É uma pessoa que a analisa: sem cartão, sem cobrança."
+    },
+    "plans": {
+      "solo": {
+        "name": "Solo",
+        "positioning": "Um barbeiro, uma agenda",
+        "body": "O produto FadeUp inteiro, à medida de quem trabalha sozinho. Uma página pública onde o encontram, uma página de marcações, entradas sem marcação, fila em direto e Fade Passport, sem um único ecrã de gestão de pessoal."
+      },
+      "shop_essential": {
+        "name": "Essential",
+        "positioning": "Tocar uma barbearia digital",
+        "body": "Tudo o que uma barbearia moderna precisa para receber marcações e manter os clientes: páginas públicas da loja e de cada barbeiro, serviços, disponibilidade, entradas sem marcação, equipa e Fade Passport."
+      },
+      "shop_pro": {
+        "name": "Pro",
+        "positioning": "Tocá-la em direto e trazê-los de volta",
+        "body": "Tudo o do Essential, mais a sala em direto: a fila, o ecrã na loja, as cadeiras e a lista de espera. É o plano que esta página inteira estava a descrever."
+      },
+      "shop_business": {
+        "name": "Business",
+        "positioning": "Controlo avançado, um espaço",
+        "body": "Tudo o do Pro, mais os controlos mais finos que uma barbearia cheia pede assim que são várias pessoas a tocá-la."
+      },
+      "multi_growth": {
+        "name": "Growth",
+        "positioning": "Mais do que uma barbearia",
+        "body": "Vários espaços sob o mesmo negócio. Equipas, serviços, filas e cadeiras por espaço, e um sítio de onde ver tudo."
+      },
+      "multi_pro": {
+        "name": "Pro",
+        "positioning": "Multi-espaço, mais fidelização",
+        "body": "Tudo o do Growth, e fidelização de clientes em todo o grupo em vez de espaço a espaço."
+      },
+      "multi_scale": {
+        "name": "Scale",
+        "positioning": "Controlo centralizado",
+        "body": "Tudo o do Multi Pro, mais a configuração centralizada e os relatórios de que um grupo maior precisa."
+      }
+    },
+    "capabilities": {
+      "marketplace": "Presença no marketplace",
+      "publicProfile": "Páginas públicas da loja e dos barbeiros",
+      "services": "Serviços e preços",
+      "availability": "Horários e disponibilidade",
+      "booking": "Marcação online",
+      "customers": "Fichas de cliente",
+      "customerHistory": "Histórico de visitas",
+      "passport": "Fade Passport",
+      "manualRebook": "Remarcação manual",
+      "notifications": "Notificações de marcação e fila",
+      "walkIns": "Atendimento sem marcação",
+      "team": "Equipa e convites",
+      "liveQueue": "Fila em direto",
+      "queueDisplay": "Ecrã da fila na loja",
+      "chairs": "Cadeiras",
+      "chairMode": "Modo Cadeira",
+      "waitlist": "Lista de espera e regras de faltas",
+      "returnCycles": "Deteção do ritmo de regresso",
+      "comebackReminders": "Lembretes de regresso",
+      "inactiveCustomers": "Deteção de clientes inativos",
+      "customerSegments": "Segmentos de clientes",
+      "retentionAutomation": "Automatização da fidelização",
+      "retentionInsights": "Análises de fidelização",
+      "multiLocation": "Vários espaços",
+      "locationSwitching": "Mudança de espaço",
+      "crossLocationView": "Vista entre espaços",
+      "advancedPermissions": "Permissões avançadas",
+      "advancedBookingRules": "Regras de marcação avançadas",
+      "advancedReporting": "Relatórios operacionais",
+      "prioritySupport": "Apoio prioritário"
+    },
+    "capabilityGroups": {
+      "foundation": "A base",
+      "floor": "A sala",
+      "retention": "Fidelização",
+      "scale": "Escala e controlo"
+    },
+    "compare": {
+      "show": "Ver o que muda entre planos",
+      "hide": "Esconder a comparação",
+      "caption": "Comparação de funcionalidades entre os planos FadeUp",
+      "feature": "Funcionalidade",
+      "included": "Incluído",
+      "notIncluded": "Não incluído",
+      "coming": "A caminho",
+      "plannedNote": "«A caminho» quer dizer que a funcionalidade faz parte do plano mas ainda não está construída. Não faz parte do que recebe hoje."
     },
     "final": {
-      "lines": [
-        "As suas marcações.",
-        "Os seus clientes sem marcação.",
-        "As suas cadeiras.",
-        "Os seus clientes."
-      ],
-      "together": "Num só lugar.",
-      "title": "Ponha a sua barbearia no FadeUp.",
-      "primary": "Junte-se ao FadeUp",
-      "secondary": "Entrar como Pro"
+      "together": "Num só sítio.",
+      "title": "Toque a sua barbearia no FadeUp.",
+      "primary": "Entrar no FadeUp",
+      "secondary": "Login Pro"
     },
-    "demoLabel": "Ilustração do produto",
     "stage": {
       "today": "Hoje",
-      "available": "Livre",
-      "walkIn": "Sem marcação",
-      "anyBarber": "Qualquer um",
-      "waiting": "À espera",
-      "inChair": "Na cadeira",
       "free": "Livre",
-      "next": "Seguinte",
-      "complete": "Concluir",
+      "switchLocation": "Mudar",
+      "available": "Disponível",
+      "walkIn": "Sem marcação",
+      "anyBarber": "Qualquer barbeiro",
+      "addToQueue": "Juntar à fila",
       "queueLabel": "Fila",
-      "chairLabel": "Cadeira",
+      "waiting": "À espera",
+      "youreNext": "É a sua vez",
+      "aboutMinutes": "Cerca de {{count}} min",
+      "nobodyAhead": "Ninguém à sua frente",
+      "chairLabel": "Cadeiras",
+      "inChair": "Na cadeira",
       "lastTime": "Da última vez",
-      "visits": "Visitas",
+      "lastCutDetail": "Skin fade baixo · 4 em cima · barba alinhada",
+      "complete": "Concluir",
+      "next": "Seguinte",
+      "everyPlan": "Todos os planos",
+      "passportFade": "Fade",
+      "passportFadeValue": "Skin fade, baixo",
+      "passportTop": "Em cima",
+      "passportTopValue": "4, texturado",
+      "passportBeard": "Barba",
+      "passportBeardValue": "Alinhada, curta",
+      "passportRhythm": "Ritmo",
       "everyWeeks": "A cada {{count}} semanas",
-      "publicProfile": "Perfil público",
+      "visits": "visitas",
+      "retentionTitle": "Fidelização",
+      "roadmap": "A caminho",
+      "retentionLead": "O {{name}} costuma voltar de três em três semanas.",
+      "retentionCycle": "Perceber quem está atrasado",
+      "retentionReminder": "Enviar um lembrete de regresso",
+      "retentionInactive": "Encontrar clientes que deixaram de vir",
+      "ctrlSchedule": "Horário",
+      "ctrlAvailability": "Disponibilidade",
+      "ctrlServices": "Serviços",
+      "ctrlCustomers": "Clientes",
+      "ctrlAppointments": "Marcações",
+      "ctrlQueue": "Fila",
+      "ctrlBarbers": "Barbeiros",
+      "ctrlChairs": "Cadeiras",
+      "ctrlLocations": "Espaços",
+      "ctrlTeams": "Equipas",
+      "teamLabel": "Equipa",
+      "perLocation": "Por espaço",
+      "roleOwner": "Proprietário",
+      "roleBarber": "Barbeiro",
+      "roleReception": "Receção",
+      "roleManager": "Gerente",
+      "publicProfile": "Página pública",
       "book": "Marcar",
       "joinQueue": "Entrar na fila",
       "searchPlaceholder": "Barbeiro, barbearia ou serviço",
-      "daysSince": "{{count}} dias",
-      "rebook": "Marcar de novo",
-      "role": "Função",
-      "location": "Unidade"
+      "openNow": "Aberto",
+      "daysSince": "{{count}} dias desde o seu último corte",
+      "rebook": "Remarcar"
+    },
+    "register": {
+      "planLabel": "Plano selecionado",
+      "planNote": "Vem da página de preços. Nada é cobrado nem reservado: pode mudá-lo enquanto a faturação não estiver ativa."
     }
   }
 }
