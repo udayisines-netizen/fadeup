@@ -2,21 +2,22 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '@/lib/supabase'
 import {
-  formatPrice,
-  pricingForRegion,
+  currencyForRegion,
+  formatPlanPrice,
+  planPriceMinor,
   regionForCountry,
   type PricingRegion,
-  type RegionPricing,
 } from '@/lib/commerce/pricing'
+import type { PlanId } from '@/lib/commerce/plans'
 
 /**
  * Resolves which commercial region a visitor is billed in, and formats FadeUp
- * prices for them.
+ * plan prices for them.
  *
- * The country comes from the same first-party `locale-detect` edge function
- * the language default uses — it already returns `{ locale, source, country }`
- * from a reverse-proxy geo header. Reusing it means one network call and one
- * trusted server-side answer, rather than a second third-party IP lookup.
+ * The country comes from the same first-party `locale-detect` edge function the
+ * language default uses — it already returns `{ locale, source, country }` from
+ * a reverse-proxy geo header. Reusing it means one network call and one trusted
+ * server-side answer, rather than a second third-party IP lookup.
  *
  * The two consumers of that call are deliberately independent:
  *
@@ -30,11 +31,13 @@ import {
 
 interface PricingContextValue {
   region: PricingRegion
-  pricing: RegionPricing
+  currency: string
   /** False until the geo lookup settles; lets callers avoid flashing the wrong currency. */
   isResolved: boolean
-  /** FadeUp's monthly subscription, formatted in the visitor's UI locale. */
-  formattedMonthly: string
+  /** A plan's monthly price, in the visitor's region, formatted in their UI locale. */
+  formatPlan: (planId: PlanId) => string
+  /** Raw minor units, for callers that need to compare rather than display. */
+  planMinor: (planId: PlanId) => number
 }
 
 const PricingContext = createContext<PricingContextValue | null>(null)
@@ -93,12 +96,12 @@ export function PricingProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<PricingContextValue>(() => {
     const region = regionForCountry(country)
-    const pricing = pricingForRegion(region)
     return {
       region,
-      pricing,
+      currency: currencyForRegion(region).currency,
       isResolved,
-      formattedMonthly: formatPrice(pricing, i18n.language),
+      formatPlan: (planId: PlanId) => formatPlanPrice(planId, region, i18n.language),
+      planMinor: (planId: PlanId) => planPriceMinor(planId, region),
     }
   }, [country, isResolved, i18n.language])
 
@@ -109,4 +112,16 @@ export function useFadeUpPricing(): PricingContextValue {
   const ctx = useContext(PricingContext)
   if (!ctx) throw new Error('useFadeUpPricing must be used within a PricingProvider')
   return ctx
+}
+
+/**
+ * Pricing where it is a nice-to-have rather than the point of the screen.
+ *
+ * Returns null outside a provider instead of throwing. The one caller is the
+ * plan-intent banner on /pro/register: a professional application must render
+ * whether or not commerce is mounted, and a decorative price line is not a
+ * reason to make the whole form depend on geo detection.
+ */
+export function useOptionalFadeUpPricing(): PricingContextValue | null {
+  return useContext(PricingContext)
 }
