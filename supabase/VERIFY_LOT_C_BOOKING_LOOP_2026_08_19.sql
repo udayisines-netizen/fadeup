@@ -517,6 +517,28 @@ select pg_temp.expect(
     where id = (select v from v_ids where k = 'req_4')),
   'showing it would offer an Accept that confirm_booking_request refuses');
 
+-- Requests that predate LOT C must not keep holding their slot forever.
+do $$
+declare v_id uuid; a public.appointments;
+begin
+  v_id := pg_temp.book((select v from v_ids where k = 'customer_1'), 13);
+  -- Exactly the state ADD COLUMN leaves on a pre-existing row.
+  update public.appointments set expires_at = null where id = v_id;
+
+  -- The same statement the migration runs.
+  update public.appointments x
+    set expires_at = least(now() + make_interval(mins => coalesce(o.booking_request_ttl_minutes, 1440)), x.starts_at)
+    from public.organizations o
+    where o.id = x.organization_id and x.status = 'pending' and x.expires_at is null;
+
+  select * into a from public.appointments where id = v_id;
+  perform pg_temp.expect('C5.backfill: a pre-LOT-C pending request gains a deadline',
+    a.expires_at is not null);
+  perform pg_temp.expect('C5.backfill: the clock starts now, not at created_at',
+    a.expires_at > now(),
+    'backdating would expire a request the shop never had a chance to see');
+end $$;
+
 -- ============================================================================
 -- SECTION 6 — Cancellation, both directions
 -- ============================================================================

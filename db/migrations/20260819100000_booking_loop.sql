@@ -173,6 +173,33 @@ create trigger appointments_set_request_expiry
   for each row execute function public.set_appointment_request_expiry();
 
 -- ---------------------------------------------------------------------------
+-- 2b. Give the requests that already exist a deadline
+--
+--     `alter table ... add column` leaves expires_at NULL on every existing
+--     row, and the sweep only considers rows where it is NOT NULL. Without
+--     this, every booking request made before LOT C would keep holding its
+--     slot forever — precisely the bug this migration exists to fix, left
+--     intact for exactly the requests that have been suffering from it.
+--
+--     The clock starts NOW, not at created_at. Backdating would mean any
+--     request older than the TTL expires on the very first scheduler tick,
+--     silently killing a real customer's request that the shop never had a
+--     chance to see, because until this migration there was nowhere to see it.
+--     Giving everyone one full, fair window from the moment the inbox exists
+--     is the only humane reading.
+-- ---------------------------------------------------------------------------
+
+update public.appointments a
+  set expires_at = least(
+    now() + make_interval(mins => coalesce(o.booking_request_ttl_minutes, 1440)),
+    a.starts_at
+  )
+  from public.organizations o
+  where o.id = a.organization_id
+    and a.status = 'pending'
+    and a.expires_at is null;
+
+-- ---------------------------------------------------------------------------
 -- 3. Product notifications
 --
 --    public.platform_notifications is FadeUp staff only — its RLS demands a
