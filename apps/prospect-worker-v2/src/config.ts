@@ -50,6 +50,45 @@ const envSchema = z.object({
 
   DEFAULT_COUNTRY: z.string().length(2).default('FR'),
   DEFAULT_LOCALE: z.string().min(2).default('fr-FR'),
+
+  // --- WhatsApp Business Cloud API (official Meta platform only) -------
+  // Every one of these is OPTIONAL. With no token present, whatsapp_accounts
+  // rows fall back to the MOCK provider and the outreach pipeline stays
+  // fully exercisable without sending anything (spec §61). There is no
+  // browser-automation fallback and never will be.
+  META_WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  // Validates X-Hub-Signature-256 on inbound webhooks. Without it the
+  // webhook endpoint stores envelopes but refuses to PROCESS them.
+  META_APP_SECRET: z.string().optional(),
+  // Echoed back during Meta's webhook subscription challenge.
+  META_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
+  META_GRAPH_API_VERSION: z.string().regex(/^v\d+\.\d+$/).default('v23.0'),
+  WHATSAPP_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
+  WHATSAPP_SEND_BATCH_SIZE: z.coerce.number().int().positive().default(25),
+
+  // --- Webhook HTTP listener -------------------------------------------
+  // Bound to localhost by default: the endpoint is meant to sit behind the
+  // existing Nginx TLS terminator, never exposed directly.
+  // Explicit opt-in only: an unset, empty or unrecognised value means
+  // disabled, so a typo can never accidentally open an HTTP listener.
+  WEBHOOK_HTTP_ENABLED: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
+  WEBHOOK_HTTP_PORT: z.coerce.number().int().positive().default(8088),
+  WEBHOOK_HTTP_HOST: z.string().default('0.0.0.0'),
+  WEBHOOK_PATH: z.string().startsWith('/').default('/webhooks/whatsapp'),
+
+  // --- Machine learning -------------------------------------------------
+  // Where train.py writes model artifacts and where inference reads them.
+  // Inference REFUSES any registry artifact_path outside this directory.
+  ML_ARTIFACT_DIR: z.string().default('/app/ml-artifacts'),
+  ML_MODEL_CACHE_TTL_MS: z.coerce.number().int().positive().default(300_000),
+
+  // --- Website enrichment crawler --------------------------------------
+  CRAWLER_MAX_PAGES_PER_DOMAIN: z.coerce.number().int().positive().max(50).default(8),
+  CRAWLER_MAX_DEPTH: z.coerce.number().int().nonnegative().max(4).default(2),
+  CRAWLER_TOTAL_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
 })
 
 export type Config = z.infer<typeof envSchema>

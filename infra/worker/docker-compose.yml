@@ -27,8 +27,18 @@ services:
       - .env.worker
     networks:
       - fadeup-supabase_default
-    # No public port — the Worker only makes outbound requests (Postgres,
-    # discovery/enrichment provider APIs) and is never itself a server.
+    volumes:
+      # ML model artifacts, produced by ml/train.py and read by inference.
+      # A named volume so they survive image rebuilds; never baked into the
+      # image and never committed.
+      - fadeup-worker-ml-artifacts:/app/ml-artifacts
+    # No published port by default: the Worker is outbound-only (Postgres,
+    # provider APIs) unless WEBHOOK_HTTP_ENABLED=true, in which case the
+    # WhatsApp webhook listener binds on WEBHOOK_HTTP_PORT INSIDE this
+    # network. Publish it to the host only via the existing Nginx TLS
+    # terminator — never expose the container port directly.
+    expose:
+      - "8088"
     healthcheck:
       test: ["CMD", "node", "dist/healthcheck.js"]
       interval: 30s
@@ -48,6 +58,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  fadeup-worker-ml-artifacts:
+    name: fadeup-worker-ml-artifacts
 
 networks:
   fadeup-supabase_default:

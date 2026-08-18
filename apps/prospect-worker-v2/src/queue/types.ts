@@ -1,6 +1,31 @@
 export type ProspectJobStatus = 'queued' | 'running' | 'retry' | 'completed' | 'failed' | 'cancelled'
 
-export type ProspectJobType = 'discovery' | 'enrichment' | 'dedup_scan' | 'scoring' | 'website_crawl' | 'instagram_enrich'
+/**
+ * Mirrors the prospect_jobs.job_type CHECK constraint. The first six are
+ * the original V2 types; the rest were added by
+ * db/migrations/20260818100000_prospect_competitor_intelligence.sql for
+ * the acquisition-intelligence and outreach pipeline.
+ */
+export type ProspectJobType =
+  | 'discovery'
+  | 'enrichment'
+  | 'dedup_scan'
+  | 'scoring'
+  | 'website_crawl'
+  | 'instagram_enrich'
+  | 'search_plan'
+  | 'identity_resolution'
+  | 'competitor_detection'
+  | 'website_enrichment'
+  | 'feature_computation'
+  | 'fit_scoring'
+  | 'segmentation'
+  | 'locale_resolution'
+  | 'data_quality'
+  | 'ml_prediction'
+  | 'outreach_preparation'
+  | 'whatsapp_send'
+  | 'outcome_processing'
 
 export interface ProspectJob {
   id: string

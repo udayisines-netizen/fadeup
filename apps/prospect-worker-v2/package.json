@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "FadeUp Prospect Worker V2 — deterministic barbershop/barber discovery, enrichment, deduplication and scoring worker. PostgreSQL-backed job queue, no Redis.",
+  "description": "FadeUp Prospect Worker V2 \u2014 deterministic barbershop/barber discovery, enrichment, deduplication and scoring worker. PostgreSQL-backed job queue, no Redis.",
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -p tsconfig.test.json --noEmit",
@@ -12,7 +12,11 @@
     "cli": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "oxlint"
+    "lint": "oxlint",
+    "benchmark": "tsx src/benchmark.ts",
+    "ml:dataset": "python3 ml/dataset.py",
+    "ml:train": "python3 ml/train.py",
+    "ml:test": "python3 ml/test_ml.py"
   },
   "dependencies": {
     "nodemailer": "^9.0.5",

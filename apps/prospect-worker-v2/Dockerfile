@@ -17,6 +17,12 @@ COPY package.json package-lock.json* ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 
+# Model artifacts live on a mounted volume, not in the image: they are
+# produced by ml/train.py against real outcome data, are environment
+# specific, and must survive a rebuild. Inference refuses to load an
+# artifact whose registry path falls outside this directory.
+RUN mkdir -p /app/ml-artifacts
+
 RUN groupadd --system fadeup && useradd --system --gid fadeup --home-dir /app fadeup \
   && chown -R fadeup:fadeup /app
 USER fadeup

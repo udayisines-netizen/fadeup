@@ -9,6 +9,8 @@ import { classifyError, computeNextAttemptAt } from './retry.js'
 import { buildSourceRegistry } from './sources/registry.js'
 import { runJob } from './jobs/runner.js'
 import { HttpError } from './quota.js'
+import { ModelCache } from './ml/inference.js'
+import { WebhookServer } from './whatsapp/webhook-server.js'
 
 const LEASE_SECONDS = 300
 const LEASE_EXTEND_INTERVAL_MS = (LEASE_SECONDS * 1000) / 2
@@ -23,6 +25,8 @@ const HEARTBEAT_FILE = process.env['HEARTBEAT_FILE'] ?? '/tmp/prospect-worker-he
 
 export class ProspectWorker {
   private readonly emailDispatcher: EmailDispatcher
+  private readonly webhookServer: WebhookServer
+  private readonly modelCache: ModelCache
   private readonly workerId: string
   private readonly pool
   private readonly sources
@@ -37,6 +41,13 @@ export class ProspectWorker {
     // Shares this worker's pool and lifecycle: it is a second small queue
     // consumer, not a second service.
     this.emailDispatcher = new EmailDispatcher(this.pool, config)
+    // The WhatsApp webhook listener. Disabled unless WEBHOOK_HTTP_ENABLED
+    // is set, so the Worker stays a pure outbound process by default.
+    this.webhookServer = new WebhookServer(this.pool, config, logger.child({ component: 'webhook' }))
+    // Promoted-model cache for template ranking. Holding it on the worker
+    // (not per-job) means one artifact read per TTL rather than per
+    // recipient.
+    this.modelCache = new ModelCache(config.ML_ARTIFACT_DIR, config.ML_MODEL_CACHE_TTL_MS)
   }
 
   async start(): Promise<void> {
@@ -48,6 +59,7 @@ export class ProspectWorker {
     // same pattern as LOT 13's no-show rule.
     this.staleLeaseTimer = setInterval(() => void this.sweepStaleLeases(), STALE_LEASE_SWEEP_INTERVAL_MS)
     this.emailDispatcher.start()
+    this.webhookServer.start()
     void this.sweepStaleLeases()
 
     const lanes = Array.from({ length: this.config.WORKER_CONCURRENCY }, (_, i) => this.runLane(i))
@@ -56,6 +68,7 @@ export class ProspectWorker {
 
   async stop(): Promise<void> {
     await this.emailDispatcher.stop()
+    await this.webhookServer.stop()
     logger.info('worker stopping — waiting for in-flight jobs to finish', { worker_id: this.workerId, in_flight: this.inFlight })
     this.running = false
     if (this.staleLeaseTimer) clearInterval(this.staleLeaseTimer)
@@ -93,7 +106,16 @@ export class ProspectWorker {
 
       try {
         jobLog.info('job started', { attempt: job.attempts })
-        const result = await runJob(this.pool, job, this.sources, jobLog)
+        const result = await runJob(
+          {
+            pool: this.pool,
+            config: this.config,
+            sources: this.sources,
+            modelCache: this.modelCache,
+            log: jobLog,
+          },
+          job,
+        )
         await completeJob(this.pool, job.id, this.workerId, result)
         jobLog.info('job completed', { result })
       } catch (error) {
