@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import { useMyMemberships } from '@/lib/queries/memberships'
 import { useMyProfessionalApplication } from '@/lib/queries/professional-applications'
+import { useOrganizationReadiness } from '@/lib/queries/onboarding'
+import { getStoredOrganizationId } from '@/lib/current-organization'
 import { PageSpinner } from '@/components/ui/spinner'
 
 /**
@@ -22,15 +24,45 @@ import { PageSpinner } from '@/components/ui/spinner'
  */
 export function RequireProAccess({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth()
+  const location = useLocation()
   const membershipsQuery = useMyMemberships(user?.id)
   const applicationQuery = useMyProfessionalApplication(Boolean(user))
+
+  const memberships = membershipsQuery.data ?? []
+  const storedOrganizationId = getStoredOrganizationId()
+  // Same resolution CurrentOrgProvider uses, duplicated here only because
+  // this guard runs OUTSIDE that provider (it wraps AppLayout, which is what
+  // mounts it).
+  const activeOrganizationId =
+    memberships.find((membership) => membership.organizationId === storedOrganizationId)?.organizationId ??
+    memberships[0]?.organizationId
+
+  const readinessQuery = useOrganizationReadiness(activeOrganizationId)
 
   if (authLoading || membershipsQuery.isPending || applicationQuery.isPending) {
     return <PageSpinner label="Checking your access" />
   }
 
-  const hasMembership = (membershipsQuery.data ?? []).length > 0
+  const hasMembership = memberships.length > 0
   if (hasMembership) {
+    // Holding a membership no longer means setup is finished — that
+    // assumption is why approved shops sat on a placeholder home page with
+    // no services and no hours, unable to be booked and with nothing telling
+    // them so.
+    //
+    // Only the INDEX route bounces. /app/services, /app/locations,
+    // /app/team and the rest stay reachable throughout setup, because the
+    // wizard itself sends people to them; redirecting the whole subtree
+    // would trap someone in a loop between a step and the screen it links
+    // to. Readiness is the server's answer (get_organization_readiness),
+    // never a local flag.
+    const isAppIndex = location.pathname === '/app' || location.pathname === '/app/'
+    if (isAppIndex && readinessQuery.isPending) {
+      return <PageSpinner label="Checking your setup" />
+    }
+    if (isAppIndex && readinessQuery.data && !readinessQuery.data.readyToBook) {
+      return <Navigate to="/onboarding" replace />
+    }
     return <>{children}</>
   }
 

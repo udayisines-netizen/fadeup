@@ -43,6 +43,37 @@ update public.staff_profiles set location_id = (select id from public.locations 
 insert into public.barbers (organization_id, staff_profile_id, is_bookable)
   select sp.organization_id, sp.id, true from public.staff_profiles sp join public.organizations o on o.id = sp.organization_id
   where o.slug = 'wave1-boundary-a' and sp.user_id = (select auth.uid());
+-- Everything from here to the publish call was added when LOT B
+-- (20260818220000) made publication conditional on
+-- get_organization_readiness().ready_to_publish. This fixture published a
+-- shop with no hours, no address, no currency and no service/professional
+-- link — i.e. a shop that could never actually return a bookable slot. That
+-- is exactly what the new gate exists to stop, so the fixture is completed
+-- rather than the gate weakened. The boundary this file tests (an
+-- unpublished org and an acquisition prospect must never leak into search)
+-- is unchanged.
+select public.save_business_profile(
+  (select id from public.organizations where slug = 'wave1-boundary-a'),
+  'barbershop'::public.business_type, 'EUR', 'FR');
+update public.locations
+  set address_line1 = '1 rue Boundary', city = 'Paris', country = 'FR', postal_code = '75001'
+  where organization_id = (select id from public.organizations where slug = 'wave1-boundary-a');
+insert into public.barber_services (organization_id, barber_id, service_id)
+  select b.organization_id, b.id, s.id
+  from public.barbers b join public.services s on s.organization_id = b.organization_id
+  where b.organization_id = (select id from public.organizations where slug = 'wave1-boundary-a')
+  on conflict do nothing;
+select public.apply_weekly_hours(
+  (select id from public.organizations where slug = 'wave1-boundary-a'),
+  (select id from public.locations where organization_id = (select id from public.organizations where slug = 'wave1-boundary-a')),
+  (select b.id from public.barbers b where b.organization_id = (select id from public.organizations where slug = 'wave1-boundary-a')),
+  '[{"day_of_week":0,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":1,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":2,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":3,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":4,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":5,"open_time":"09:00","close_time":"18:00"},
+    {"day_of_week":6,"open_time":"09:00","close_time":"18:00"}]'::jsonb);
 select public.set_organization_marketplace_visible(id, true) from public.organizations where slug = 'wave1-boundary-a';
 commit;
 
