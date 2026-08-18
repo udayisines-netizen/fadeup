@@ -1,0 +1,201 @@
+{
+  "shell": {
+    "titleNamed": "Configurer {{name}}",
+    "titleGeneric": "Configurer votre établissement",
+    "subtitleReady": "Tout ce qu'il faut pour recevoir des réservations est en place. Vérifiez et publiez quand vous voulez.",
+    "subtitleIncomplete": "Encore quelques étapes et vos clients pourront réserver. Vous pouvez partir et revenir — rien n'est perdu.",
+    "switching": "Configuration de :",
+    "progress": "{{done}} sur {{total}} terminées",
+    "stepsLabel": "Étapes de configuration",
+    "loading": "Chargement de votre configuration",
+    "loadErrorTitle": "Impossible de charger votre configuration",
+    "loadErrorEmpty": "Aucune information de progression n'a été renvoyée.",
+    "orgsErrorTitle": "Impossible de charger vos établissements"
+  },
+  "steps": {
+    "type": "Type d'activité",
+    "identity": "Nom de l'établissement",
+    "location": "Adresse",
+    "locale": "Pays et devise",
+    "services": "Prestations",
+    "professional": "Professionnels",
+    "hours": "Horaires d'ouverture",
+    "proHours": "Horaires de travail",
+    "profile": "Page publique",
+    "review": "Vérifier et publier"
+  },
+  "actions": {
+    "saveContinue": "Enregistrer et continuer",
+    "continue": "Continuer",
+    "keepExisting": "Garder ce que j'ai"
+  },
+  "errors": {
+    "generic": "Impossible d'enregistrer.",
+    "noLocation": "Ajoutez d'abord une adresse."
+  },
+  "create": {
+    "title": "Configurer votre établissement",
+    "description": "Créez votre établissement et sa première adresse. Nous verrons le reste juste après — prestations, horaires et page publique.",
+    "nameLabel": "Nom de l'établissement",
+    "slugLabel": "Lien de réservation",
+    "slugHint": "Utilisé dans votre URL de réservation publique. Minuscules, chiffres et tirets uniquement.",
+    "slugTaken": "Cette URL est déjà prise — essayez-en une autre.",
+    "locationLabel": "Nom de la première adresse",
+    "locationHint": "par ex. « Bastille » — ou le nom de votre établissement si vous n'avez qu'une adresse.",
+    "timezoneLabel": "Fuseau horaire",
+    "errors": {
+      "nameRequired": "Le nom de l'établissement est obligatoire",
+      "slugRequired": "L'URL est obligatoire",
+      "slugFormat": "Minuscules, chiffres et tirets simples uniquement, par ex. « le-fade-parisien »",
+      "locationRequired": "Le nom de l'adresse est obligatoire",
+      "timezoneRequired": "Le fuseau horaire est obligatoire"
+    }
+  },
+  "type": {
+    "title": "Quel type d'activité exercez-vous ?",
+    "description": "Cela adapte la suite — les prestations proposées, et si nous vous parlons d'équipe. Modifiable plus tard.",
+    "options": {
+      "solo_professional": {
+        "label": "Professionnel indépendant",
+        "hint": "Vous travaillez seul — barber, coiffeur, coloriste, braideur."
+      },
+      "barbershop": {
+        "label": "Barbershop",
+        "hint": "Un établissement avec une équipe de barbers."
+      },
+      "hair_salon": {
+        "label": "Salon de coiffure",
+        "hint": "Un salon axé sur la coupe, la couleur et le coiffage."
+      },
+      "mixed_salon": {
+        "label": "Salon mixte",
+        "hint": "Barbershop et salon réunis sous un même toit."
+      },
+      "multi_location": {
+        "label": "Multi-adresses",
+        "hint": "Plusieurs adresses au sein d'un même établissement."
+      }
+    }
+  },
+  "identity": {
+    "title": "Sous quel nom vos clients vous voient-ils ?",
+    "description": "C'est le nom affiché sur votre page publique et dans les résultats de recherche.",
+    "nameLabel": "Nom de l'établissement",
+    "nameRequired": "Un nom d'établissement est obligatoire."
+  },
+  "location": {
+    "title": "Où travaillez-vous ?",
+    "description": "Les clients cherchent par ville : c'est ce qui vous rend trouvable. L'adresse apparaît sur votre page publique.",
+    "nameLabel": "Nom de l'adresse",
+    "nameHint": "Comment vous l'appelez en interne, par ex. « Bastille ».",
+    "line1Label": "Adresse",
+    "line2Label": "Complément d'adresse",
+    "line2Hint": "Facultatif.",
+    "cityLabel": "Ville",
+    "postalLabel": "Code postal",
+    "required": "Une adresse et une ville sont obligatoires — les clients cherchent par ville.",
+    "missingTitle": "Votre première adresse",
+    "missingDescription": "Un problème est survenu — votre établissement n'a encore aucune adresse.",
+    "missingBody": "Aucune adresse n'existe pour cet établissement. Créez-en une dans Adresses, puis revenez terminer la configuration.",
+    "missingCta": "Aller aux adresses"
+  },
+  "locale": {
+    "title": "Pays, devise et fuseau horaire",
+    "description": "Le fuseau horaire détermine l'heure réelle d'un créneau : il compte plus qu'il n'y paraît. La devise est celle de tous vos tarifs.",
+    "countryLabel": "Pays",
+    "currencyLabel": "Devise",
+    "currencyPlaceholder": "Choisir une devise",
+    "currencyHint": "Suggérée d'après votre pays. Changez-la si besoin — tous vos tarifs sont exprimés dans cette devise.",
+    "timezoneLabel": "Fuseau horaire",
+    "timezoneHint": "Un nom IANA, par ex. Europe/Paris.",
+    "currencyRequired": "Choisissez une devise — tous vos tarifs y seront exprimés."
+  },
+  "services": {
+    "title": "Que proposez-vous ?",
+    "description": "Un point de départ, pas une liste définitive. Renommez, ajustez les tarifs et les durées, ajoutez les vôtres — tout reste modifiable dans Prestations.",
+    "nameLabel": "Nom",
+    "minutesLabel": "Minutes",
+    "priceLabel": "Tarif",
+    "priceHint": "En unités entières de votre devise.",
+    "pickOne": "Choisissez au moins une prestation. Vous pourrez en ajouter et tout modifier plus tard.",
+    "saveError": "Impossible d'enregistrer ces prestations.",
+    "templates": {
+      "cut": "Coupe",
+      "fade": "Fade",
+      "cutBeard": "Coupe + barbe",
+      "taper": "Taper",
+      "beard": "Barbe",
+      "lineup": "Contours",
+      "blowdry": "Brushing",
+      "cutBlowdry": "Coupe + brushing",
+      "color": "Couleur",
+      "balayage": "Balayage",
+      "treatment": "Soin"
+    }
+  },
+  "professional": {
+    "title": "Qui reçoit les clients ?",
+    "description": "Il faut au moins un professionnel réservable avant que quiconque puisse réserver. Si vous travaillez vous-même, c'est vous.",
+    "nameLabel": "Votre nom affiché aux clients",
+    "titleLabel": "Intitulé",
+    "titleHint": "Facultatif — par ex. « Barber », « Coloriste », « Loctician ».",
+    "submit": "Je reçois des clients — continuer",
+    "nameRequired": "Un nom est obligatoire — c'est ce que voient les clients.",
+    "teamTitle": "Vous travaillez en équipe ?",
+    "teamBody": "Invitez-la depuis l'écran Équipe quand vous voulez — ce n'est pas nécessaire pour terminer la configuration.",
+    "teamCta": "Aller à l'équipe"
+  },
+  "hours": {
+    "title": "Quand êtes-vous ouvert ?",
+    "description": "Les horaires de votre établissement. Les horaires de chaque professionnel viennent ensuite, et un client ne peut réserver que sur les plages communes.",
+    "open": "Ouvert",
+    "closed": "Fermé",
+    "opensLabel": "Ouverture",
+    "closesLabel": "Fermeture",
+    "oneWindowNote": "Une seule plage par jour pour l'instant. Une fermeture le midi demanderait une seconde plage, que nous n'avons pas encore ajoutée — indiquez l'amplitude complète ici et bloquez la pause dans Disponibilités.",
+    "allClosed": "Au moins un jour doit être ouvert.",
+    "saveError": "Impossible d'enregistrer ces horaires."
+  },
+  "proHours": {
+    "title": "Quand travaillez-vous ?",
+    "description": "Vos propres horaires, qui peuvent être plus restreints que ceux de l'établissement. Les créneaux n'apparaissent que sur les plages communes."
+  },
+  "profile": {
+    "title": "Votre page publique",
+    "description": "Ce qu'un client lit avant de réserver. Court suffit — vous pourrez le réécrire quand vous voulez.",
+    "displayNameLabel": "Nom affiché",
+    "displayNameHint": "Laissez vide pour conserver le nom actuel.",
+    "titleLabel": "Intitulé",
+    "titleHint": "Facultatif — par ex. « Barber », « Coloriste ».",
+    "aboutLabel": "À propos",
+    "aboutHint": "Facultatif. Quelques phrases sur votre façon de travailler.",
+    "photosNote": "Les photos viendront plus tard — FadeUp n'a pas encore de stockage d'images pour les établissements ou les portfolios, nous ne faisons donc pas semblant de les demander."
+  },
+  "review": {
+    "titleReady": "Vous pouvez être réservé",
+    "titleAlmost": "Presque terminé",
+    "descriptionReady": "Tout ce qu'il faut pour une réservation est en place. La publication vous fait aussi apparaître dans la recherche.",
+    "descriptionAlmost": "Voici ce qu'il manque encore. Chaque élément renvoie à l'étape qui le corrige.",
+    "complete": "Votre configuration est terminée.",
+    "publish": "Publier et terminer",
+    "finish": "Terminer",
+    "finishWithoutPublishing": "Terminer sans publier",
+    "stillMissing": "Il manque encore quelques éléments — voir la liste ci-dessous.",
+    "bookableNotPublished": "Vous pouvez déjà recevoir des réservations via votre propre lien. Pour apparaître dans la recherche, il reste les éléments ci-dessus.",
+    "finishError": "Impossible de terminer la configuration.",
+    "requirements": {
+      "business_type": "Choisir un type d'activité",
+      "currency": "Choisir une devise",
+      "location": "Ajouter une adresse",
+      "location_address": "Ajouter une adresse et une ville",
+      "timezone": "Définir un fuseau horaire",
+      "professional": "Ajouter un professionnel réservable",
+      "service": "Ajouter au moins une prestation",
+      "service_at_location": "Proposer une prestation à votre adresse",
+      "service_for_professional": "Autoriser un professionnel à réaliser une prestation",
+      "location_hours": "Définir vos horaires d'ouverture",
+      "professional_hours": "Définir vos horaires de travail",
+      "public_profile": "Compléter votre page publique"
+    }
+  }
+}

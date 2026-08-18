@@ -10,7 +10,7 @@ import { SUPPORTED_LOCALES, resolveInitialLocale, isRtl } from '@/lib/locale'
  * locale in NAMESPACES below is auto-wired, (2) adding its name to
  * NAMESPACES here.
  */
-const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport', 'auth', 'landing'] as const
+const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport', 'auth', 'landing', 'onboarding'] as const
 type Namespace = (typeof NAMESPACES)[number]
 
 const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object }>>> = {
@@ -21,6 +21,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/en/passport.json'),
     auth: () => import('@/locales/en/auth.json'),
     landing: () => import('@/locales/en/landing.json'),
+    onboarding: () => import('@/locales/en/onboarding.json'),
   },
   fr: {
     common: () => import('@/locales/fr/common.json'),
@@ -29,6 +30,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/fr/passport.json'),
     auth: () => import('@/locales/fr/auth.json'),
     landing: () => import('@/locales/fr/landing.json'),
+    onboarding: () => import('@/locales/fr/onboarding.json'),
   },
   es: {
     common: () => import('@/locales/es/common.json'),
@@ -37,6 +39,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/es/passport.json'),
     auth: () => import('@/locales/es/auth.json'),
     landing: () => import('@/locales/es/landing.json'),
+    onboarding: () => import('@/locales/es/onboarding.json'),
   },
   de: {
     common: () => import('@/locales/de/common.json'),
@@ -45,6 +48,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/de/passport.json'),
     auth: () => import('@/locales/de/auth.json'),
     landing: () => import('@/locales/de/landing.json'),
+    onboarding: () => import('@/locales/de/onboarding.json'),
   },
   it: {
     common: () => import('@/locales/it/common.json'),
@@ -53,6 +57,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/it/passport.json'),
     auth: () => import('@/locales/it/auth.json'),
     landing: () => import('@/locales/it/landing.json'),
+    onboarding: () => import('@/locales/it/onboarding.json'),
   },
   pt: {
     common: () => import('@/locales/pt/common.json'),
@@ -61,6 +66,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/pt/passport.json'),
     auth: () => import('@/locales/pt/auth.json'),
     landing: () => import('@/locales/pt/landing.json'),
+    onboarding: () => import('@/locales/pt/onboarding.json'),
   },
   ar: {
     common: () => import('@/locales/ar/common.json'),
@@ -69,6 +75,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/ar/passport.json'),
     auth: () => import('@/locales/ar/auth.json'),
     landing: () => import('@/locales/ar/landing.json'),
+    onboarding: () => import('@/locales/ar/onboarding.json'),
   },
   'zh-CN': {
     common: () => import('@/locales/zh-CN/common.json'),
@@ -77,6 +84,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/zh-CN/passport.json'),
     auth: () => import('@/locales/zh-CN/auth.json'),
     landing: () => import('@/locales/zh-CN/landing.json'),
+    onboarding: () => import('@/locales/zh-CN/onboarding.json'),
   },
   ja: {
     common: () => import('@/locales/ja/common.json'),
@@ -85,6 +93,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/ja/passport.json'),
     auth: () => import('@/locales/ja/auth.json'),
     landing: () => import('@/locales/ja/landing.json'),
+    onboarding: () => import('@/locales/ja/onboarding.json'),
   },
   ru: {
     common: () => import('@/locales/ru/common.json'),
@@ -93,6 +102,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     passport: () => import('@/locales/ru/passport.json'),
     auth: () => import('@/locales/ru/auth.json'),
     landing: () => import('@/locales/ru/landing.json'),
+    onboarding: () => import('@/locales/ru/onboarding.json'),
   },
 }
 

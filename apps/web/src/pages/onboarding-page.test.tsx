@@ -138,10 +138,23 @@ describe('isStepComplete', () => {
     expect(isStepComplete('services', readiness({ hasService: true, hasServiceAtLocation: false }))).toBe(false)
   })
 
-  it('does not call the professional step complete when they perform no service', () => {
+  it('completes the Professionals step as soon as a professional exists', () => {
+    // The production bug: this step also required hasServiceForProfessional,
+    // so it stayed unticked forever even after the professional had persisted
+    // correctly. Service assignment is a separate fact — it gates
+    // READY_TO_BOOK, which the review step reports, not this step.
     expect(
       isStepComplete('professional', readiness({ hasProfessional: true, hasServiceForProfessional: false })),
-    ).toBe(false)
+    ).toBe(true)
+  })
+
+  it('keeps PROFESSIONAL_STEP_COMPLETE and READY_TO_BOOK separate', () => {
+    // A professional with no hours and no linked service: the step is done,
+    // the business is not bookable, and readiness still says so.
+    const professionalOnly = readiness({ hasProfessional: true, readyToBook: false })
+    expect(isStepComplete('professional', professionalOnly)).toBe(true)
+    expect(isStepComplete('review', professionalOnly)).toBe(false)
+    expect(professionalOnly.readyToBook).toBe(false)
   })
 
   it('recognises a business configured entirely outside the wizard', () => {
@@ -170,8 +183,20 @@ describe('starter templates', () => {
   })
 
   it('gives a salon a salon template, not a barbershop one', () => {
-    expect(templateFor('hair_salon').map((service) => service.name)).toContain('Brushing')
-    expect(templateFor('barbershop').map((service) => service.name)).not.toContain('Brushing')
+    expect(templateFor('hair_salon').map((service) => service.id)).toContain('blowdry')
+    expect(templateFor('barbershop').map((service) => service.id)).not.toContain('blowdry')
+  })
+
+  it('carries a stable id rather than a hardcoded name', () => {
+    // The name becomes a real services row, so it is resolved per locale from
+    // `services.templates.*` at the moment the wizard renders. A name baked
+    // into the template would seed a German salon with French service names.
+    for (const businessType of BUSINESS_TYPES) {
+      for (const service of SERVICE_TEMPLATES[businessType]) {
+        expect(typeof service.id).toBe('string')
+        expect(service).not.toHaveProperty('name')
+      }
+    }
   })
 
   it('quotes every price in whole cents and every duration as positive minutes', () => {
@@ -182,13 +207,6 @@ describe('starter templates', () => {
         expect(service.durationMinutes).toBeGreaterThan(0)
       }
     }
-  })
-
-  it('uses no French copy containing "barbier"', () => {
-    // Product rule: the French vocabulary is barber/coiffeur/professionnel/
-    // spécialiste/barbershop/salon/équipe.
-    const allNames = BUSINESS_TYPES.flatMap((type) => SERVICE_TEMPLATES[type].map((service) => service.name))
-    expect(allNames.join(' ').toLowerCase()).not.toContain('barbier')
   })
 
   it('defaults to a week that is actually open on some days', () => {

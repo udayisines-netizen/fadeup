@@ -1,0 +1,201 @@
+{
+  "shell": {
+    "titleNamed": "Configurar {{name}}",
+    "titleGeneric": "Configure o seu negócio",
+    "subtitleReady": "Está tudo o que é preciso para receber marcações. Reveja e publique quando quiser.",
+    "subtitleIncomplete": "Mais alguns passos e os clientes poderão marcar. Pode sair e voltar — nada se perde.",
+    "switching": "A configurar:",
+    "progress": "{{done}} de {{total}} concluídos",
+    "stepsLabel": "Passos de configuração",
+    "loading": "A carregar a sua configuração",
+    "loadErrorTitle": "Não foi possível carregar a sua configuração",
+    "loadErrorEmpty": "Não foi devolvida informação de progresso.",
+    "orgsErrorTitle": "Não foi possível carregar os seus negócios"
+  },
+  "steps": {
+    "type": "Tipo de negócio",
+    "identity": "Nome do negócio",
+    "location": "Morada",
+    "locale": "País e moeda",
+    "services": "Serviços",
+    "professional": "Profissionais",
+    "hours": "Horário de abertura",
+    "proHours": "Horário de trabalho",
+    "profile": "Página pública",
+    "review": "Rever e publicar"
+  },
+  "actions": {
+    "saveContinue": "Guardar e continuar",
+    "continue": "Continuar",
+    "keepExisting": "Manter o que tenho"
+  },
+  "errors": {
+    "generic": "Não foi possível guardar.",
+    "noLocation": "Adicione primeiro uma morada."
+  },
+  "create": {
+    "title": "Configure o seu negócio",
+    "description": "Crie o seu negócio e a sua primeira morada. O resto vemos logo a seguir — serviços, horários e a sua página pública.",
+    "nameLabel": "Nome do negócio",
+    "slugLabel": "Link de marcação",
+    "slugHint": "Usado no seu URL público de marcações. Apenas minúsculas, números e hífenes.",
+    "slugTaken": "Esse URL já está ocupado — experimente outro.",
+    "locationLabel": "Nome da primeira morada",
+    "locationHint": "p. ex. «Baixa» — ou o nome do seu negócio se tiver apenas uma morada.",
+    "timezoneLabel": "Fuso horário",
+    "errors": {
+      "nameRequired": "O nome do negócio é obrigatório",
+      "slugRequired": "O URL é obrigatório",
+      "slugFormat": "Apenas minúsculas, números e hífenes simples, p. ex. «le-fade-parisien»",
+      "locationRequired": "O nome da morada é obrigatório",
+      "timezoneRequired": "O fuso horário é obrigatório"
+    }
+  },
+  "type": {
+    "title": "Que tipo de negócio tem?",
+    "description": "Isto adapta o resto — que serviços sugerimos e se lhe falamos de equipa. Pode mudar depois.",
+    "options": {
+      "solo_professional": {
+        "label": "Profissional independente",
+        "hint": "Trabalha sozinho — barber, cabeleireiro, colorista, braider."
+      },
+      "barbershop": {
+        "label": "Barbershop",
+        "hint": "Um espaço com uma equipa de barbers."
+      },
+      "hair_salon": {
+        "label": "Salão de cabeleireiro",
+        "hint": "Um salão focado em corte, cor e styling."
+      },
+      "mixed_salon": {
+        "label": "Salão misto",
+        "hint": "Barbershop e salão sob o mesmo teto."
+      },
+      "multi_location": {
+        "label": "Várias moradas",
+        "hint": "Várias moradas dentro do mesmo negócio."
+      }
+    }
+  },
+  "identity": {
+    "title": "Com que nome os clientes o veem?",
+    "description": "É o nome na sua página pública e nos resultados de pesquisa.",
+    "nameLabel": "Nome do negócio",
+    "nameRequired": "O nome do negócio é obrigatório."
+  },
+  "location": {
+    "title": "Onde trabalha?",
+    "description": "Os clientes pesquisam por cidade, por isso é isto que o torna encontrável. Aparece na sua página pública.",
+    "nameLabel": "Nome da morada",
+    "nameHint": "Como lhe chama internamente, p. ex. «Baixa».",
+    "line1Label": "Morada",
+    "line2Label": "Morada linha 2",
+    "line2Hint": "Opcional.",
+    "cityLabel": "Cidade",
+    "postalLabel": "Código postal",
+    "required": "A morada e a cidade são obrigatórias — os clientes pesquisam por cidade.",
+    "missingTitle": "A sua primeira morada",
+    "missingDescription": "Algo correu mal — o seu negócio ainda não tem nenhuma morada.",
+    "missingBody": "Não existe nenhuma morada para este negócio. Crie uma em Moradas e volte para terminar a configuração.",
+    "missingCta": "Ir para Moradas"
+  },
+  "locale": {
+    "title": "País, moeda e fuso horário",
+    "description": "O fuso horário determina a hora real de cada marcação, por isso conta mais do que parece. A moeda é a de todos os seus preços.",
+    "countryLabel": "País",
+    "currencyLabel": "Moeda",
+    "currencyPlaceholder": "Escolha uma moeda",
+    "currencyHint": "Sugerida a partir do seu país. Altere se não estiver certa — todos os preços são indicados nela.",
+    "timezoneLabel": "Fuso horário",
+    "timezoneHint": "Um nome IANA, p. ex. Europe/Lisbon.",
+    "currencyRequired": "Escolha uma moeda — todos os seus preços serão indicados nela."
+  },
+  "services": {
+    "title": "O que oferece?",
+    "description": "Um ponto de partida, não uma lista final. Renomeie, altere preços e durações, acrescente os seus — tudo continua editável em Serviços.",
+    "nameLabel": "Nome",
+    "minutesLabel": "Minutos",
+    "priceLabel": "Preço",
+    "priceHint": "Em unidades inteiras da sua moeda.",
+    "pickOne": "Escolha pelo menos um serviço. Poderá acrescentar mais e editar todos mais tarde.",
+    "saveError": "Não foi possível guardar esses serviços.",
+    "templates": {
+      "cut": "Corte",
+      "fade": "Fade",
+      "cutBeard": "Corte + barba",
+      "taper": "Taper",
+      "beard": "Barba",
+      "lineup": "Contornos",
+      "blowdry": "Brushing",
+      "cutBlowdry": "Corte + brushing",
+      "color": "Cor",
+      "balayage": "Balayage",
+      "treatment": "Tratamento"
+    }
+  },
+  "professional": {
+    "title": "Quem recebe os clientes?",
+    "description": "É preciso pelo menos um profissional disponível para marcação antes que alguém possa marcar. Se trabalha você, é você.",
+    "nameLabel": "O seu nome tal como os clientes o veem",
+    "titleLabel": "Função",
+    "titleHint": "Opcional — p. ex. «Barber», «Colorista», «Loctician».",
+    "submit": "Recebo clientes — continuar",
+    "nameRequired": "O nome é obrigatório — é o que os clientes veem.",
+    "teamTitle": "Trabalha com equipa?",
+    "teamBody": "Convide-a no ecrã Equipa quando quiser — não é preciso aqui para terminar a configuração.",
+    "teamCta": "Ir para Equipa"
+  },
+  "hours": {
+    "title": "Quando está aberto?",
+    "description": "O horário do seu espaço. O horário de cada profissional vem a seguir, e só é possível marcar onde os dois coincidem.",
+    "open": "Aberto",
+    "closed": "Fechado",
+    "opensLabel": "Abre",
+    "closesLabel": "Fecha",
+    "oneWindowNote": "Por agora, um período por dia. Um fecho ao almoço exigiria um segundo período, que ainda não acrescentámos — indique aqui o horário completo e bloqueie a pausa em Disponibilidade.",
+    "allClosed": "Pelo menos um dia tem de estar aberto.",
+    "saveError": "Não foi possível guardar esses horários."
+  },
+  "proHours": {
+    "title": "Quando trabalha?",
+    "description": "Os seus próprios horários, que podem ser mais curtos do que os do espaço. As marcações só aparecem onde os dois coincidem."
+  },
+  "profile": {
+    "title": "A sua página pública",
+    "description": "O que um cliente lê antes de marcar. Curto chega — pode reescrever quando quiser.",
+    "displayNameLabel": "Nome visível",
+    "displayNameHint": "Deixe vazio para manter o atual.",
+    "titleLabel": "Função",
+    "titleHint": "Opcional — p. ex. «Barber», «Colorista».",
+    "aboutLabel": "Sobre si",
+    "aboutHint": "Opcional. Duas frases sobre como trabalha.",
+    "photosNote": "As fotografias chegam mais tarde — o FadeUp ainda não guarda imagens de espaços nem portfólios, por isso não fingimos pedi-las."
+  },
+  "review": {
+    "titleReady": "Já pode receber marcações",
+    "titleAlmost": "Quase lá",
+    "descriptionReady": "Está tudo o que é preciso para uma marcação. Publicar também o inclui na pesquisa.",
+    "descriptionAlmost": "É isto que ainda falta. Cada item leva ao passo que o resolve.",
+    "complete": "A sua configuração está completa.",
+    "publish": "Publicar e terminar",
+    "finish": "Terminar",
+    "finishWithoutPublishing": "Terminar sem publicar",
+    "stillMissing": "Ainda faltam algumas coisas — veja a lista abaixo.",
+    "bookableNotPublished": "Já pode receber marcações através do seu próprio link. Para aparecer na pesquisa faltam os itens acima.",
+    "finishError": "Não foi possível terminar a configuração.",
+    "requirements": {
+      "business_type": "Escolher um tipo de negócio",
+      "currency": "Escolher uma moeda",
+      "location": "Adicionar uma morada",
+      "location_address": "Adicionar morada e cidade",
+      "timezone": "Definir um fuso horário",
+      "professional": "Adicionar um profissional disponível para marcação",
+      "service": "Adicionar pelo menos um serviço",
+      "service_at_location": "Oferecer um serviço na sua morada",
+      "service_for_professional": "Permitir que um profissional preste um serviço",
+      "location_hours": "Definir o horário de abertura",
+      "professional_hours": "Definir o seu horário de trabalho",
+      "public_profile": "Completar a página pública"
+    }
+  }
+}

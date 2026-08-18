@@ -1,4 +1,4 @@
-import type { BusinessType, StarterService, WeeklyDay } from '@/lib/queries/onboarding'
+import type { BusinessType, WeeklyDay } from '@/lib/queries/onboarding'
 
 /**
  * Starter templates for onboarding.
@@ -17,39 +17,54 @@ import type { BusinessType, StarterService, WeeklyDay } from '@/lib/queries/onbo
  * assumes one.
  */
 
-export interface ServiceTemplate extends StarterService {
+/**
+ * A template entry carries a stable ID and the numbers — never the name.
+ *
+ * The name matters more than it looks: these become real `services` rows, so
+ * a German salon seeded with "Brushing" has a French word in its live price
+ * list. The wizard resolves `id` through the `onboarding` namespace
+ * (`services.templates.*`) so each shop starts in its own language.
+ */
+export type ServiceTemplateId =
+  | 'cut' | 'fade' | 'cutBeard' | 'taper' | 'beard' | 'lineup'
+  | 'blowdry' | 'cutBlowdry' | 'color' | 'balayage' | 'treatment'
+
+export interface ServiceTemplate {
+  id: ServiceTemplateId
+  durationMinutes: number
+  priceCents: number
   /** Preselected in the wizard. The rest are offered unticked. */
   recommended: boolean
 }
 
 const BARBER_SERVICES: ServiceTemplate[] = [
-  { name: 'Coupe', durationMinutes: 30, priceCents: 2500, recommended: true },
-  { name: 'Fade', durationMinutes: 45, priceCents: 3000, recommended: true },
-  { name: 'Coupe + barbe', durationMinutes: 60, priceCents: 4000, recommended: true },
-  { name: 'Taper', durationMinutes: 30, priceCents: 2500, recommended: false },
-  { name: 'Barbe', durationMinutes: 20, priceCents: 1500, recommended: false },
-  { name: 'Contours', durationMinutes: 15, priceCents: 1000, recommended: false },
+  { id: 'cut', durationMinutes: 30, priceCents: 2500, recommended: true },
+  { id: 'fade', durationMinutes: 45, priceCents: 3000, recommended: true },
+  { id: 'cutBeard', durationMinutes: 60, priceCents: 4000, recommended: true },
+  { id: 'taper', durationMinutes: 30, priceCents: 2500, recommended: false },
+  { id: 'beard', durationMinutes: 20, priceCents: 1500, recommended: false },
+  { id: 'lineup', durationMinutes: 15, priceCents: 1000, recommended: false },
 ]
 
 const SALON_SERVICES: ServiceTemplate[] = [
-  { name: 'Coupe', durationMinutes: 45, priceCents: 3500, recommended: true },
-  { name: 'Brushing', durationMinutes: 30, priceCents: 2500, recommended: true },
-  { name: 'Coupe + brushing', durationMinutes: 60, priceCents: 5000, recommended: true },
-  { name: 'Couleur', durationMinutes: 90, priceCents: 6500, recommended: false },
-  { name: 'Balayage', durationMinutes: 120, priceCents: 9000, recommended: false },
-  { name: 'Soin', durationMinutes: 30, priceCents: 2500, recommended: false },
+  { id: 'cut', durationMinutes: 45, priceCents: 3500, recommended: true },
+  { id: 'blowdry', durationMinutes: 30, priceCents: 2500, recommended: true },
+  { id: 'cutBlowdry', durationMinutes: 60, priceCents: 5000, recommended: true },
+  { id: 'color', durationMinutes: 90, priceCents: 6500, recommended: false },
+  { id: 'balayage', durationMinutes: 120, priceCents: 9000, recommended: false },
+  { id: 'treatment', durationMinutes: 30, priceCents: 2500, recommended: false },
 ]
 
 // A mixed salon serves both sides of the room, so its starter set is the
 // overlap plus the signature service from each — not both full lists, which
 // would open onboarding with twelve checkboxes.
 const MIXED_SERVICES: ServiceTemplate[] = [
-  { name: 'Coupe', durationMinutes: 45, priceCents: 3000, recommended: true },
-  { name: 'Fade', durationMinutes: 45, priceCents: 3000, recommended: true },
-  { name: 'Brushing', durationMinutes: 30, priceCents: 2500, recommended: true },
-  { name: 'Coupe + barbe', durationMinutes: 60, priceCents: 4000, recommended: false },
-  { name: 'Couleur', durationMinutes: 90, priceCents: 6500, recommended: false },
-  { name: 'Soin', durationMinutes: 30, priceCents: 2500, recommended: false },
+  { id: 'cut', durationMinutes: 45, priceCents: 3000, recommended: true },
+  { id: 'fade', durationMinutes: 45, priceCents: 3000, recommended: true },
+  { id: 'blowdry', durationMinutes: 30, priceCents: 2500, recommended: true },
+  { id: 'cutBeard', durationMinutes: 60, priceCents: 4000, recommended: false },
+  { id: 'color', durationMinutes: 90, priceCents: 6500, recommended: false },
+  { id: 'treatment', durationMinutes: 30, priceCents: 2500, recommended: false },
 ]
 
 export const SERVICE_TEMPLATES: Record<BusinessType, ServiceTemplate[]> = {
@@ -88,23 +103,16 @@ export const DEFAULT_WEEK: WeeklyDay[] = [
   { dayOfWeek: 6, isClosed: false, openTime: '09:00', closeTime: '18:00' },
 ]
 
-export const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const
-
 /** The currencies onboarding offers directly; any other is reachable by country. */
 export const COMMON_CURRENCIES = ['EUR', 'GBP', 'CHF', 'USD', 'CAD', 'MAD', 'AED'] as const
 
-export const COMMON_COUNTRIES: { code: string; label: string }[] = [
-  { code: 'FR', label: 'France' },
-  { code: 'BE', label: 'Belgium' },
-  { code: 'CH', label: 'Switzerland' },
-  { code: 'LU', label: 'Luxembourg' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'ES', label: 'Spain' },
-  { code: 'IT', label: 'Italy' },
-  { code: 'DE', label: 'Germany' },
-  { code: 'PT', label: 'Portugal' },
-  { code: 'NL', label: 'Netherlands' },
-  { code: 'MA', label: 'Morocco' },
-  { code: 'CA', label: 'Canada' },
-  { code: 'US', label: 'United States' },
+/**
+ * Codes only. The displayed name comes from Intl in the reader's language
+ * (see intl-labels.ts) rather than a hardcoded English list.
+ */
+export const COMMON_COUNTRIES: { code: string }[] = [
+  { code: 'FR' }, { code: 'BE' }, { code: 'CH' }, { code: 'LU' },
+  { code: 'GB' }, { code: 'ES' }, { code: 'IT' }, { code: 'DE' },
+  { code: 'PT' }, { code: 'NL' }, { code: 'MA' }, { code: 'CA' },
+  { code: 'US' },
 ]

@@ -1,0 +1,201 @@
+{
+  "shell": {
+    "titleNamed": "{{name}} のセットアップ",
+    "titleGeneric": "お店のセットアップ",
+    "subtitleReady": "予約を受け付けるのに必要なものはすべて揃っています。確認して、好きなタイミングで公開してください。",
+    "subtitleIncomplete": "あと少しでお客様が予約できるようになります。途中で離れても大丈夫です — 入力内容は失われません。",
+    "switching": "セットアップ中:",
+    "progress": "{{total}} 件中 {{done}} 件完了",
+    "stepsLabel": "セットアップの手順",
+    "loading": "セットアップを読み込んでいます",
+    "loadErrorTitle": "セットアップを読み込めませんでした",
+    "loadErrorEmpty": "進捗情報が返されませんでした。",
+    "orgsErrorTitle": "お店の情報を読み込めませんでした"
+  },
+  "steps": {
+    "type": "business の種類",
+    "identity": "店名",
+    "location": "住所",
+    "locale": "国と通貨",
+    "services": "メニュー",
+    "professional": "スタッフ",
+    "hours": "営業時間",
+    "proHours": "勤務時間",
+    "profile": "公開ページ",
+    "review": "確認と公開"
+  },
+  "actions": {
+    "saveContinue": "保存して次へ",
+    "continue": "次へ",
+    "keepExisting": "現在の設定のまま"
+  },
+  "errors": {
+    "generic": "保存できませんでした。",
+    "noLocation": "先に住所を追加してください。"
+  },
+  "create": {
+    "title": "お店のセットアップ",
+    "description": "お店と最初の住所を作成します。メニュー・営業時間・公開ページは、この直後に続けて設定します。",
+    "nameLabel": "店名",
+    "slugLabel": "予約リンク",
+    "slugHint": "公開予約ページの URL に使われます。小文字・数字・ハイフンのみ。",
+    "slugTaken": "この URL はすでに使われています — 別のものをお試しください。",
+    "locationLabel": "最初の住所の名称",
+    "locationHint": "例:「本店」— 住所が 1 つだけならお店の名前でも構いません。",
+    "timezoneLabel": "タイムゾーン",
+    "errors": {
+      "nameRequired": "店名は必須です",
+      "slugRequired": "URL は必須です",
+      "slugFormat": "小文字・数字・単一のハイフンのみ（例:「le-fade-parisien」）",
+      "locationRequired": "住所の名称は必須です",
+      "timezoneRequired": "タイムゾーンは必須です"
+    }
+  },
+  "type": {
+    "title": "どのような business ですか？",
+    "description": "これに応じて以降の設定が変わります — おすすめするメニューや、チームについて尋ねるかどうか。あとから変更できます。",
+    "options": {
+      "solo_professional": {
+        "label": "個人の professional",
+        "hint": "おひとりで営業 — barber、スタイリスト、カラリスト、ブレイダーなど。"
+      },
+      "barbershop": {
+        "label": "barbershop",
+        "hint": "barber のチームがいるお店。"
+      },
+      "hair_salon": {
+        "label": "ヘアサロン",
+        "hint": "カット・カラー・スタイリングを中心とするサロン。"
+      },
+      "mixed_salon": {
+        "label": "複合サロン",
+        "hint": "barbershop とサロンを同じ店舗で。"
+      },
+      "multi_location": {
+        "label": "複数店舗",
+        "hint": "1 つの組織で複数の住所を運営。"
+      }
+    }
+  },
+  "identity": {
+    "title": "お客様にはどの名前で表示しますか？",
+    "description": "公開ページと検索結果に表示される名前です。",
+    "nameLabel": "店名",
+    "nameRequired": "店名は必須です。"
+  },
+  "location": {
+    "title": "どこで営業していますか？",
+    "description": "お客様は都市名で検索します。見つけてもらうために必要で、公開ページにも表示されます。",
+    "nameLabel": "住所の名称",
+    "nameHint": "社内での呼び名。例:「本店」。",
+    "line1Label": "住所",
+    "line2Label": "建物名・部屋番号",
+    "line2Hint": "任意。",
+    "cityLabel": "市区町村",
+    "postalLabel": "郵便番号",
+    "required": "住所と市区町村は必須です — お客様は都市名で検索します。",
+    "missingTitle": "最初の住所",
+    "missingDescription": "問題が発生しました — お店にまだ住所が登録されていません。",
+    "missingBody": "この business には住所がありません。「住所」で作成してから戻って、セットアップを完了してください。",
+    "missingCta": "住所へ移動"
+  },
+  "locale": {
+    "title": "国・通貨・タイムゾーン",
+    "description": "タイムゾーンは予約枠が実際に何時を指すかを決めるため、見た目以上に重要です。通貨はすべての料金の表示単位になります。",
+    "countryLabel": "国",
+    "currencyLabel": "通貨",
+    "currencyPlaceholder": "通貨を選択",
+    "currencyHint": "国から推定しています。違う場合は変更してください — すべての料金がこの通貨で表示されます。",
+    "timezoneLabel": "タイムゾーン",
+    "timezoneHint": "IANA 名（例: Asia/Tokyo）。",
+    "currencyRequired": "通貨を選択してください — すべての料金がこの通貨で表示されます。"
+  },
+  "services": {
+    "title": "どんなメニューがありますか？",
+    "description": "あくまで出発点で、確定リストではありません。名前・料金・所要時間を変更したり、独自のメニューを追加したりできます。あとから「メニュー」でいつでも編集できます。",
+    "nameLabel": "名称",
+    "minutesLabel": "分",
+    "priceLabel": "料金",
+    "priceHint": "通貨の整数単位で入力してください。",
+    "pickOne": "メニューを 1 つ以上選んでください。あとから追加も編集もできます。",
+    "saveError": "これらのメニューを保存できませんでした。",
+    "templates": {
+      "cut": "カット",
+      "fade": "フェード",
+      "cutBeard": "カット + ひげ",
+      "taper": "テーパー",
+      "beard": "ひげ整え",
+      "lineup": "ラインアップ",
+      "blowdry": "ブロー",
+      "cutBlowdry": "カット + ブロー",
+      "color": "カラー",
+      "balayage": "バレイヤージュ",
+      "treatment": "トリートメント"
+    }
+  },
+  "professional": {
+    "title": "どなたがお客様を担当しますか？",
+    "description": "予約を受けるには、予約可能な professional が少なくとも 1 人必要です。ご自身が施術するなら、それはあなたです。",
+    "nameLabel": "お客様に表示されるお名前",
+    "titleLabel": "肩書き",
+    "titleHint": "任意 — 例:「barber」「カラリスト」「loctician」。",
+    "submit": "お客様を担当します — 次へ",
+    "nameRequired": "お名前は必須です — お客様に表示されます。",
+    "teamTitle": "チームで運営していますか？",
+    "teamBody": "「チーム」画面からいつでも招待できます — セットアップの完了に必須ではありません。",
+    "teamCta": "チームへ移動"
+  },
+  "hours": {
+    "title": "営業時間を教えてください",
+    "description": "お店の営業時間です。各 professional の勤務時間は次に設定し、お客様は両方が重なる時間帯にのみ予約できます。",
+    "open": "営業",
+    "closed": "定休",
+    "opensLabel": "開店",
+    "closesLabel": "閉店",
+    "oneWindowNote": "現在は 1 日 1 区間のみです。中休みには 2 つ目の区間が必要ですが、まだ対応していません — ここでは通しの時間を設定し、休憩は「空き状況」でブロックしてください。",
+    "allClosed": "少なくとも 1 日は営業日にしてください。",
+    "saveError": "営業時間を保存できませんでした。"
+  },
+  "proHours": {
+    "title": "あなたの勤務時間は？",
+    "description": "あなた自身の勤務時間です。お店の営業時間より短くても構いません。予約枠は両方が重なる時間帯にのみ表示されます。"
+  },
+  "profile": {
+    "title": "公開ページ",
+    "description": "予約前にお客様が読む内容です。短くても構いません — いつでも書き直せます。",
+    "displayNameLabel": "表示名",
+    "displayNameHint": "空欄のままにすると現在の表示名を維持します。",
+    "titleLabel": "肩書き",
+    "titleHint": "任意 — 例:「barber」「カラリスト」。",
+    "aboutLabel": "紹介",
+    "aboutHint": "任意。仕事のスタイルを 2〜3 文で。",
+    "photosNote": "写真は今後対応します — FadeUp には店舗写真やポートフォリオ用の画像保存機能がまだないため、お尋ねするふりはしません。"
+  },
+  "review": {
+    "titleReady": "予約を受け付けられます",
+    "titleAlmost": "あと少しです",
+    "descriptionReady": "予約に必要なものはすべて揃っています。公開すると検索結果にも掲載されます。",
+    "descriptionAlmost": "まだ足りない項目です。それぞれが該当の手順にリンクしています。",
+    "complete": "セットアップが完了しました。",
+    "publish": "公開して完了",
+    "finish": "完了",
+    "finishWithoutPublishing": "公開せずに完了",
+    "stillMissing": "まだ足りない項目があります — 下のリストをご確認ください。",
+    "bookableNotPublished": "ご自身のリンクからはすでに予約を受け付けられます。検索結果に掲載するには、上の項目が残っています。",
+    "finishError": "セットアップを完了できませんでした。",
+    "requirements": {
+      "business_type": "business の種類を選ぶ",
+      "currency": "通貨を選ぶ",
+      "location": "住所を追加する",
+      "location_address": "住所と市区町村を追加する",
+      "timezone": "タイムゾーンを設定する",
+      "professional": "予約可能な professional を追加する",
+      "service": "メニューを 1 つ以上追加する",
+      "service_at_location": "住所でメニューを提供する",
+      "service_for_professional": "professional がメニューを担当できるようにする",
+      "location_hours": "営業時間を設定する",
+      "professional_hours": "勤務時間を設定する",
+      "public_profile": "公開ページを完成させる"
+    }
+  }
+}

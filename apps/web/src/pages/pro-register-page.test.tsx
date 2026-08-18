@@ -179,6 +179,23 @@ describe('ProRegisterPage — /pro/register submits an APPLICATION, not an accou
   })
 
   it('surfaces a signup failure instead of silently continuing to the application', async () => {
+    // An error we cannot classify keeps the provider's own message — a wrong
+    // guess that swallowed a real error would be worse than showing it.
+    signUp.mockResolvedValue({ data: { session: null, user: null }, error: { message: 'Database is unavailable' } })
+
+    renderPage()
+    fillRequiredFields()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit my application' }))
+
+    expect(await screen.findByText('Database is unavailable')).toBeInTheDocument()
+    expect(mutateAsync).not.toHaveBeenCalled()
+  })
+
+  it('routes an existing account to sign in rather than showing "User already registered"', async () => {
+    // The production symptom. Becoming a professional must never require a
+    // second account, so this is a signpost, not an error — and signing in
+    // returns them HERE to finish the application they had started.
     signUp.mockResolvedValue({ data: { session: null, user: null }, error: { message: 'User already registered' } })
 
     renderPage()
@@ -186,7 +203,12 @@ describe('ProRegisterPage — /pro/register submits an APPLICATION, not an accou
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit my application' }))
 
-    expect(await screen.findByText('User already registered')).toBeInTheDocument()
+    expect(await screen.findByText(/this account already exists/i)).toBeInTheDocument()
+    expect(screen.queryByText('User already registered')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute(
+      'href',
+      `/pro/login?redirect=${encodeURIComponent('/pro/register')}`,
+    )
     expect(mutateAsync).not.toHaveBeenCalled()
   })
 

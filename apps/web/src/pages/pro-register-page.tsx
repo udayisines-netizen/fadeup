@@ -8,11 +8,12 @@ import { Store, User, Scissors, Home, Car, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AuthCard } from '@/components/auth/auth-card'
 import { TextField } from '@/components/ui/text-field'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useAuth } from '@/lib/auth-context'
+import { classifyAuthError, authErrorKey } from '@/lib/auth-errors'
 import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
 import { cn } from '@/lib/cn'
 import { parsePlanId } from '@/lib/commerce/plans'
@@ -91,6 +92,7 @@ export function ProRegisterPage() {
   const submitApplication = useSubmitProfessionalApplication()
   const { user, loading: authLoading } = useAuth()
   const [formError, setFormError] = useState<string | null>(null)
+  const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null)
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
   const [showOptional, setShowOptional] = useState(false)
 
@@ -185,7 +187,17 @@ export function ProRegisterPage() {
       })
 
       if (error) {
-        setFormError(error.message)
+        // The applicant already has a FadeUp identity. Becoming a
+        // professional must never mean a second account, so this is a
+        // sign-in prompt rather than an error — and the link below returns
+        // them here, signed in, to finish the application they started.
+        const kind = classifyAuthError(error)
+        if (kind === 'alreadyRegistered') {
+          setExistingAccountEmail(values.email ?? '')
+          return
+        }
+        const key = authErrorKey(kind)
+        setFormError(key ? t(key) : error.message)
         return
       }
 
@@ -218,6 +230,35 @@ export function ProRegisterPage() {
     } catch (submitError) {
       setFormError(getErrorMessage(submitError) ?? 'Something went wrong. Please try again.')
     }
+  }
+
+  if (existingAccountEmail) {
+    return (
+      <AuthCard badge={t('pro.badge')} title={t('pro.registerTitle')} subtitle={t('pro.registerSubtitle')}>
+        <Alert variant="info">{t('errors.alreadyRegistered')}</Alert>
+        <div className="mt-6 flex flex-col gap-3">
+          {/*
+            redirect back to /pro/register: after signing in they land on this
+            same form, which — because a session now exists — drops the
+            account fields and is purely the application. The journey
+            continues instead of restarting.
+          */}
+          <Link
+            to={`/pro/login?redirect=${encodeURIComponent('/pro/register')}`}
+            className={buttonVariants({ variant: 'primary' }, 'w-full')}
+          >
+            {t('errors.alreadyRegisteredCta')}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setExistingAccountEmail(null)}
+            className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
+          >
+            {t('errors.useAnotherEmail')}
+          </button>
+        </div>
+      </AuthCard>
+    )
   }
 
   if (confirmationEmail) {

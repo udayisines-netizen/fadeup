@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,6 +8,9 @@ import { useMyAccess, type MyAccess } from '@/lib/queries/access'
 import { useResolvedOrganization, type MembershipWithOrganization } from '@/lib/queries/memberships'
 import { useOrganizationReadiness, type OrganizationReadiness } from '@/lib/queries/onboarding'
 import { useOrgLocations } from '@/lib/queries/locations'
+import { useOrgServices } from '@/lib/queries/services'
+import { useAssignBarberServices } from '@/lib/queries/barber-services'
+import { useEnsureOwnerProfessional } from '@/lib/queries/onboarding'
 
 /**
  * The production crash this file exists to prevent from returning:
@@ -30,8 +33,13 @@ vi.mock('@/lib/queries/access', () => ({ useMyAccess: vi.fn() }))
 vi.mock('@/lib/queries/memberships', () => ({ useResolvedOrganization: vi.fn() }))
 vi.mock('@/lib/queries/onboarding', async () => {
   const actual = await vi.importActual<typeof import('@/lib/queries/onboarding')>('@/lib/queries/onboarding')
-  return { ...actual, useOrganizationReadiness: vi.fn() }
+  return { ...actual, useOrganizationReadiness: vi.fn(), useEnsureOwnerProfessional: vi.fn() }
 })
+vi.mock('@/lib/queries/services', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/queries/services')>('@/lib/queries/services')
+  return { ...actual, useOrgServices: vi.fn() }
+})
+vi.mock('@/lib/queries/barber-services', () => ({ useAssignBarberServices: vi.fn() }))
 vi.mock('@/lib/queries/locations', async () => {
   const actual = await vi.importActual<typeof import('@/lib/queries/locations')>('@/lib/queries/locations')
   return { ...actual, useOrgLocations: vi.fn() }
@@ -42,6 +50,9 @@ const mockUseAccess = vi.mocked(useMyAccess)
 const mockUseResolvedOrg = vi.mocked(useResolvedOrganization)
 const mockUseReadiness = vi.mocked(useOrganizationReadiness)
 const mockUseLocations = vi.mocked(useOrgLocations)
+const mockUseServices = vi.mocked(useOrgServices)
+const mockUseAssignServices = vi.mocked(useAssignBarberServices)
+const mockUseEnsurePro = vi.mocked(useEnsureOwnerProfessional)
 
 function resolved(data: unknown) {
   return { data, isPending: false, isError: false, error: null, refetch: vi.fn() } as never
@@ -312,5 +323,105 @@ describe('OnboardingPage — multiple organizations', () => {
 
     expect(mockUseReadiness).toHaveBeenCalledWith('org-2')
     expect(screen.getByRole('heading', { name: /set up studio lyon/i })).toBeInTheDocument()
+  })
+})
+
+describe('OnboardingPage — the Professionals step actually persists', () => {
+  const ensureMutate = vi.fn()
+  const assignMutate = vi.fn()
+
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({ session: {} as never, user: { id: 'user-1' } as never, loading: false })
+    mockUseAccess.mockReturnValue(resolved(access()))
+    withOrganizations([membership()])
+    mockUseLocations.mockReturnValue(
+      resolved([
+        {
+          id: 'loc-1', organizationId: 'org-1', name: 'Bastille',
+          addressLine1: '2 rue de la Roquette', addressLine2: null, city: 'Paris', region: null,
+          postalCode: '75011', country: 'FR', timezone: 'Europe/Paris', isActive: true,
+          createdAt: '', updatedAt: '',
+        },
+      ]),
+    )
+    mockUseServices.mockReturnValue(
+      resolved([
+        { id: 'svc-1', organizationId: 'org-1', categoryId: null, name: 'Coupe', description: null, durationMinutes: 30, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, priceCents: 2500, isActive: true, createdAt: '', updatedAt: '' },
+        { id: 'svc-2', organizationId: 'org-1', categoryId: null, name: 'Fade', description: null, durationMinutes: 45, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, priceCents: 3000, isActive: true, createdAt: '', updatedAt: '' },
+        { id: 'svc-3', organizationId: 'org-1', categoryId: null, name: 'Retired', description: null, durationMinutes: 30, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, priceCents: 1000, isActive: false, createdAt: '', updatedAt: '' },
+      ]),
+    )
+
+    ensureMutate.mockReset()
+    ensureMutate.mockResolvedValue('barber-1')
+    assignMutate.mockReset()
+    assignMutate.mockResolvedValue(undefined)
+    mockUseEnsurePro.mockReturnValue({ mutateAsync: ensureMutate, isPending: false } as never)
+    mockUseAssignServices.mockReturnValue({ mutateAsync: assignMutate, isPending: false } as never)
+
+    mockUseReadiness.mockReturnValue(
+      resolved(incompleteReadiness({ hasService: true, hasServiceAtLocation: true })),
+    )
+  })
+
+  function submitProfessionalStep() {
+    renderOnboarding('/onboarding?step=professional')
+    fireEvent.change(screen.getByLabelText('Your name as customers see it'), { target: { value: 'Karim B.' } })
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Barber' } })
+    fireEvent.submit(screen.getByRole('button', { name: /i take clients/i }))
+  }
+
+  it('persists the professional with the name and title the owner typed', async () => {
+    submitProfessionalStep()
+
+    await waitFor(() => expect(ensureMutate).toHaveBeenCalled())
+    expect(ensureMutate).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      locationId: 'loc-1',
+      displayName: 'Karim B.',
+      title: 'Barber',
+    })
+  })
+
+  it('links the ACTIVE catalog to the new professional', async () => {
+    // The production bug: this passed an empty services array, so no
+    // barber_services row was ever created.
+    submitProfessionalStep()
+
+    await waitFor(() => expect(assignMutate).toHaveBeenCalled())
+    expect(assignMutate).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      barberId: 'barber-1',
+      serviceIds: ['svc-1', 'svc-2'],
+    })
+  })
+
+  it('completes even when there is no catalog to link yet', async () => {
+    mockUseServices.mockReturnValue(resolved([]))
+
+    submitProfessionalStep()
+
+    await waitFor(() => expect(ensureMutate).toHaveBeenCalled())
+    expect(assignMutate).toHaveBeenCalledWith({ organizationId: 'org-1', barberId: 'barber-1', serviceIds: [] })
+  })
+
+  it('refuses to save without a name, and does not touch the database', async () => {
+    renderOnboarding('/onboarding?step=professional')
+    fireEvent.submit(screen.getByRole('button', { name: /i take clients/i }))
+
+    await waitFor(() => expect(screen.getByText(/a name is required/i)).toBeInTheDocument())
+    expect(ensureMutate).not.toHaveBeenCalled()
+  })
+
+  it('shows the Professionals step ticked once a professional exists', () => {
+    // Derived from persisted readiness, so a refresh, a re-login or a Google
+    // sign-in all reach the same conclusion.
+    mockUseReadiness.mockReturnValue(
+      resolved(incompleteReadiness({ hasProfessional: true, hasService: true, hasServiceAtLocation: true })),
+    )
+
+    renderOnboarding('/onboarding?step=review')
+
+    expect(screen.getByRole('button', { name: 'Professionals' }).className).toContain('success')
   })
 })

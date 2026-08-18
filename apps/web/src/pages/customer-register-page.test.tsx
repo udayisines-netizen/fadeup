@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CustomerRegisterPage } from '@/pages/customer-register-page'
 import { CustomerLoginPage } from '@/pages/customer-login-page'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 
 const mockNavigate = vi.fn()
 
@@ -14,7 +15,12 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('@/lib/supabase', () => ({ getSupabaseClient: vi.fn() }))
 
+// SignupForm now checks for an existing session: FadeUp has one identity, so
+// a signed-in visitor must never be shown a create-account form.
+vi.mock('@/lib/auth-context', () => ({ useAuth: vi.fn() }))
+
 const mockGetSupabaseClient = vi.mocked(getSupabaseClient)
+const mockUseAuth = vi.mocked(useAuth)
 const signUp = vi.fn()
 const signInWithPassword = vi.fn()
 
@@ -27,6 +33,7 @@ const signInWithPassword = vi.fn()
  */
 describe('Customer auth routes stay clear of the professional workflow', () => {
   beforeEach(() => {
+    mockUseAuth.mockReturnValue({ session: null, user: null, loading: false })
     mockNavigate.mockClear()
     signUp.mockReset()
     signInWithPassword.mockReset()

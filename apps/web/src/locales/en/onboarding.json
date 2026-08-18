@@ -1,0 +1,201 @@
+{
+  "shell": {
+    "titleNamed": "Set up {{name}}",
+    "titleGeneric": "Set up your business",
+    "subtitleReady": "Everything a customer needs is in place. Review and publish when you like.",
+    "subtitleIncomplete": "A few steps and customers can book you. You can leave and come back — nothing is lost.",
+    "switching": "Setting up:",
+    "progress": "{{done}} of {{total}} done",
+    "stepsLabel": "Setup steps",
+    "loading": "Loading your setup",
+    "loadErrorTitle": "Couldn't load your setup",
+    "loadErrorEmpty": "No readiness information came back.",
+    "orgsErrorTitle": "Couldn't load your organizations"
+  },
+  "steps": {
+    "type": "Business type",
+    "identity": "Business name",
+    "location": "Address",
+    "locale": "Country & currency",
+    "services": "Services",
+    "professional": "Professionals",
+    "hours": "Opening hours",
+    "proHours": "Working hours",
+    "profile": "Public profile",
+    "review": "Review & publish"
+  },
+  "actions": {
+    "saveContinue": "Save and continue",
+    "continue": "Continue",
+    "keepExisting": "Keep what I have"
+  },
+  "errors": {
+    "generic": "Could not save that.",
+    "noLocation": "Add an address first."
+  },
+  "create": {
+    "title": "Set up your business",
+    "description": "Create your organization and its first location. We'll walk through the rest — services, hours and your public page — straight afterwards.",
+    "nameLabel": "Business name",
+    "slugLabel": "Booking link",
+    "slugHint": "Used in your public booking URL. Lowercase letters, numbers and hyphens only.",
+    "slugTaken": "That URL is already taken — try another.",
+    "locationLabel": "First location name",
+    "locationHint": "e.g. \"Bastille\" — or your business name if you only have one address.",
+    "timezoneLabel": "Timezone",
+    "errors": {
+      "nameRequired": "Business name is required",
+      "slugRequired": "URL is required",
+      "slugFormat": "Use lowercase letters, numbers and single hyphens only, e.g. \"le-fade-parisien\"",
+      "locationRequired": "Location name is required",
+      "timezoneRequired": "Timezone is required"
+    }
+  },
+  "type": {
+    "title": "What kind of business do you run?",
+    "description": "This shapes the rest of setup — which services we suggest, and whether we ask about a team. You can change it later.",
+    "options": {
+      "solo_professional": {
+        "label": "Solo professional",
+        "hint": "You work on your own — barber, stylist, colorist, braider."
+      },
+      "barbershop": {
+        "label": "Barbershop",
+        "hint": "A shop with a team of barbers."
+      },
+      "hair_salon": {
+        "label": "Hair salon",
+        "hint": "A salon focused on cutting, colour and styling."
+      },
+      "mixed_salon": {
+        "label": "Mixed salon",
+        "hint": "Barbering and salon services under one roof."
+      },
+      "multi_location": {
+        "label": "Multi-location",
+        "hint": "Several addresses under one organization."
+      }
+    }
+  },
+  "identity": {
+    "title": "How should customers see your name?",
+    "description": "This is the name on your public page and in search results.",
+    "nameLabel": "Business name",
+    "nameRequired": "A business name is required."
+  },
+  "location": {
+    "title": "Where do you work?",
+    "description": "Customers search by city, so this is what makes you findable. It appears on your public page.",
+    "nameLabel": "Location name",
+    "nameHint": "What you call this address internally, e.g. \"Bastille\".",
+    "line1Label": "Street address",
+    "line2Label": "Address line 2",
+    "line2Hint": "Optional.",
+    "cityLabel": "City",
+    "postalLabel": "Postal code",
+    "required": "A street address and city are required — customers search by city.",
+    "missingTitle": "Your first address",
+    "missingDescription": "Something went wrong — your organization has no location yet.",
+    "missingBody": "No location exists for this business. Create one in Locations, then come back to finish setup.",
+    "missingCta": "Go to Locations"
+  },
+  "locale": {
+    "title": "Country, currency and timezone",
+    "description": "The timezone decides what time a slot actually means, so it matters more than it looks. The currency is what every price you set is quoted in.",
+    "countryLabel": "Country",
+    "currencyLabel": "Currency",
+    "currencyPlaceholder": "Choose a currency",
+    "currencyHint": "Suggested from your country. Change it if that isn't right — every price you set is quoted in it.",
+    "timezoneLabel": "Timezone",
+    "timezoneHint": "An IANA name, e.g. Europe/Paris.",
+    "currencyRequired": "Choose a currency — every price you set is quoted in it."
+  },
+  "services": {
+    "title": "What do you offer?",
+    "description": "A starting point, not a final list. Rename anything, change the prices and durations, and add your own — all of it stays editable in Services afterwards.",
+    "nameLabel": "Name",
+    "minutesLabel": "Minutes",
+    "priceLabel": "Price",
+    "priceHint": "In whole units of your currency.",
+    "pickOne": "Pick at least one service. You can add more, and edit all of them, later.",
+    "saveError": "Could not save those services.",
+    "templates": {
+      "cut": "Haircut",
+      "fade": "Fade",
+      "cutBeard": "Haircut + beard",
+      "taper": "Taper",
+      "beard": "Beard trim",
+      "lineup": "Line-up",
+      "blowdry": "Blow dry",
+      "cutBlowdry": "Cut + blow dry",
+      "color": "Colour",
+      "balayage": "Balayage",
+      "treatment": "Treatment"
+    }
+  },
+  "professional": {
+    "title": "Who takes clients?",
+    "description": "At least one bookable professional is needed before anyone can book. If you work yourself, that is you.",
+    "nameLabel": "Your name as customers see it",
+    "titleLabel": "Title",
+    "titleHint": "Optional — e.g. \"Barber\", \"Colorist\", \"Loctician\".",
+    "submit": "I take clients — continue",
+    "nameRequired": "A name is required — this is what customers see.",
+    "teamTitle": "Working with a team?",
+    "teamBody": "Invite them from the Team screen whenever you like — you do not need them here to finish setup.",
+    "teamCta": "Go to Team"
+  },
+  "hours": {
+    "title": "When are you open?",
+    "description": "Your shop's opening hours. A professional's own hours are set next, and a customer can only book where the two overlap.",
+    "open": "Open",
+    "closed": "Closed",
+    "opensLabel": "Opens",
+    "closesLabel": "Closes",
+    "oneWindowNote": "One opening window per day for now. A midday closure needs a second window, which is a change we have not made yet — set the full span here and block the break in Availability.",
+    "allClosed": "At least one day needs to be open.",
+    "saveError": "Could not save those hours."
+  },
+  "proHours": {
+    "title": "When do you work?",
+    "description": "Your own hours, which can be narrower than the shop's. Slots appear only where your hours and the shop's overlap."
+  },
+  "profile": {
+    "title": "Your public page",
+    "description": "What a customer reads before booking. Short is fine — you can rewrite it any time.",
+    "displayNameLabel": "Display name",
+    "displayNameHint": "Leave blank to keep what you already have.",
+    "titleLabel": "Title",
+    "titleHint": "Optional — e.g. \"Barber\", \"Colorist\".",
+    "aboutLabel": "About",
+    "aboutHint": "Optional. A couple of sentences about how you work.",
+    "photosNote": "Photos come later — FadeUp has no image storage for shop or portfolio pictures yet, so we are not pretending to ask for them."
+  },
+  "review": {
+    "titleReady": "You can be booked",
+    "titleAlmost": "Almost there",
+    "descriptionReady": "Everything a booking needs is in place. Publishing also lists you in marketplace search.",
+    "descriptionAlmost": "These are the pieces still missing. Each one links to the step that fixes it.",
+    "complete": "Your setup is complete.",
+    "publish": "Publish and finish",
+    "finish": "Finish",
+    "finishWithoutPublishing": "Finish without publishing",
+    "stillMissing": "Still a few things missing — see the list below.",
+    "bookableNotPublished": "You can take bookings from your own link now. Publishing to marketplace search needs the remaining items above.",
+    "finishError": "Could not finish setup.",
+    "requirements": {
+      "business_type": "Choose a business type",
+      "currency": "Choose a currency",
+      "location": "Add a location",
+      "location_address": "Add a street address and city",
+      "timezone": "Set a timezone",
+      "professional": "Add a bookable professional",
+      "service": "Add at least one service",
+      "service_at_location": "Offer a service at your location",
+      "service_for_professional": "Let a professional perform a service",
+      "location_hours": "Set your opening hours",
+      "professional_hours": "Set your working hours",
+      "public_profile": "Complete your public profile"
+    }
+  }
+}

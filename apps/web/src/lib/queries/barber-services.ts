@@ -74,6 +74,53 @@ export function useAssignBarberService() {
   })
 }
 
+export interface BulkBarberServiceInput {
+  organizationId: string
+  barberId: string
+  serviceIds: string[]
+}
+
+/**
+ * Make one professional eligible for many services at once, idempotently.
+ *
+ * Used by onboarding when the owner says they take clients: the services step
+ * has already created the catalog, and a bookable professional who performs
+ * none of it can never produce a slot. Doing it here rather than asking the
+ * owner to tick boxes twice is the point.
+ *
+ * `ignoreDuplicates` matters more than it looks. barber_services is keyed on
+ * (barber_id, service_id), so a plain insert throws 23505 the second time —
+ * and onboarding is explicitly resumable, so "the second time" is a normal
+ * path, not an edge case. Nothing is overwritten: an existing link is left
+ * exactly as it was.
+ *
+ * RLS restricts the write to owner/manager of that organization regardless of
+ * what the client sends, and the tenant-consistency trigger rejects a barber
+ * or service belonging to a different organization.
+ */
+export function useAssignBarberServices() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: BulkBarberServiceInput) => {
+      if (input.serviceIds.length === 0) return
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from('barber_services').upsert(
+        input.serviceIds.map((serviceId) => ({
+          organization_id: input.organizationId,
+          barber_id: input.barberId,
+          service_id: serviceId,
+        })),
+        { onConflict: 'barber_id,service_id', ignoreDuplicates: true },
+      )
+      if (error) throw error
+    },
+    onSuccess: (_result, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['barber-services', variables.organizationId] })
+    },
+  })
+}
+
 /** Remove a barber's eligibility for a service. RLS restricts this to owner/manager regardless of what the client sends. */
 export function useUnassignBarberService() {
   const queryClient = useQueryClient()

@@ -1,0 +1,201 @@
+{
+  "shell": {
+    "titleNamed": "设置 {{name}}",
+    "titleGeneric": "设置您的店铺",
+    "subtitleReady": "接受预约所需的一切都已就绪。随时查看并发布。",
+    "subtitleIncomplete": "再完成几步，顾客就能预约了。可以随时离开再回来 — 内容不会丢失。",
+    "switching": "正在设置：",
+    "progress": "已完成 {{done}}/{{total}}",
+    "stepsLabel": "设置步骤",
+    "loading": "正在加载您的设置",
+    "loadErrorTitle": "无法加载您的设置",
+    "loadErrorEmpty": "未返回进度信息。",
+    "orgsErrorTitle": "无法加载您的店铺"
+  },
+  "steps": {
+    "type": "店铺类型",
+    "identity": "店铺名称",
+    "location": "地址",
+    "locale": "国家与货币",
+    "services": "服务项目",
+    "professional": "专业人员",
+    "hours": "营业时间",
+    "proHours": "工作时间",
+    "profile": "公开主页",
+    "review": "检查并发布"
+  },
+  "actions": {
+    "saveContinue": "保存并继续",
+    "continue": "继续",
+    "keepExisting": "保持现状"
+  },
+  "errors": {
+    "generic": "保存失败。",
+    "noLocation": "请先添加地址。"
+  },
+  "create": {
+    "title": "设置您的店铺",
+    "description": "创建您的店铺及其第一个地址。服务项目、营业时间和公开主页会在随后依次设置。",
+    "nameLabel": "店铺名称",
+    "slugLabel": "预约链接",
+    "slugHint": "用于您的公开预约网址。仅限小写字母、数字和连字符。",
+    "slugTaken": "该网址已被占用 — 请换一个。",
+    "locationLabel": "第一个地址的名称",
+    "locationHint": "例如「总店」— 若只有一个地址，用店名也可以。",
+    "timezoneLabel": "时区",
+    "errors": {
+      "nameRequired": "店铺名称为必填项",
+      "slugRequired": "网址为必填项",
+      "slugFormat": "仅限小写字母、数字和单个连字符，例如「le-fade-parisien」",
+      "locationRequired": "地址名称为必填项",
+      "timezoneRequired": "时区为必填项"
+    }
+  },
+  "type": {
+    "title": "您经营的是哪类店铺？",
+    "description": "这会调整后续设置 — 我们推荐哪些服务，以及是否询问团队情况。之后可以更改。",
+    "options": {
+      "solo_professional": {
+        "label": "独立专业人员",
+        "hint": "您独自经营 — barber、发型师、染发师、编发师。"
+      },
+      "barbershop": {
+        "label": "barbershop",
+        "hint": "拥有 barber 团队的店铺。"
+      },
+      "hair_salon": {
+        "label": "美发沙龙",
+        "hint": "以剪发、染发和造型为主的沙龙。"
+      },
+      "mixed_salon": {
+        "label": "综合沙龙",
+        "hint": "barbershop 与沙龙同处一店。"
+      },
+      "multi_location": {
+        "label": "多个门店",
+        "hint": "同一组织下的多个地址。"
+      }
+    }
+  },
+  "identity": {
+    "title": "顾客看到的名称是什么？",
+    "description": "这是显示在您的公开主页和搜索结果中的名称。",
+    "nameLabel": "店铺名称",
+    "nameRequired": "店铺名称为必填项。"
+  },
+  "location": {
+    "title": "您在哪里工作？",
+    "description": "顾客按城市搜索，这决定了他们能否找到您。该地址会显示在您的公开主页上。",
+    "nameLabel": "地址名称",
+    "nameHint": "内部称呼，例如「总店」。",
+    "line1Label": "街道地址",
+    "line2Label": "地址第二行",
+    "line2Hint": "选填。",
+    "cityLabel": "城市",
+    "postalLabel": "邮政编码",
+    "required": "街道地址和城市为必填项 — 顾客按城市搜索。",
+    "missingTitle": "您的第一个地址",
+    "missingDescription": "出了点问题 — 您的店铺还没有任何地址。",
+    "missingBody": "该店铺没有地址。请先在「地址」中创建，然后返回完成设置。",
+    "missingCta": "前往地址"
+  },
+  "locale": {
+    "title": "国家、货币与时区",
+    "description": "时区决定了预约时段实际代表的时间，比看上去更重要。货币是您所有价格的计价单位。",
+    "countryLabel": "国家",
+    "currencyLabel": "货币",
+    "currencyPlaceholder": "选择货币",
+    "currencyHint": "根据您的国家推荐。如不正确请更改 — 您的所有价格都以此计价。",
+    "timezoneLabel": "时区",
+    "timezoneHint": "IANA 名称，例如 Asia/Shanghai。",
+    "currencyRequired": "请选择货币 — 您的所有价格都将以此计价。"
+  },
+  "services": {
+    "title": "您提供哪些服务？",
+    "description": "这只是起点，并非最终清单。可以重命名、修改价格和时长、添加自己的项目 — 之后都能在「服务项目」中编辑。",
+    "nameLabel": "名称",
+    "minutesLabel": "分钟",
+    "priceLabel": "价格",
+    "priceHint": "以您所选货币的整数单位填写。",
+    "pickOne": "请至少选择一项服务。之后可以添加更多并全部编辑。",
+    "saveError": "无法保存这些服务项目。",
+    "templates": {
+      "cut": "剪发",
+      "fade": "渐变(Fade)",
+      "cutBeard": "剪发 + 修胡",
+      "taper": "渐层(Taper)",
+      "beard": "修胡",
+      "lineup": "修边",
+      "blowdry": "吹造型",
+      "cutBlowdry": "剪发 + 吹造型",
+      "color": "染发",
+      "balayage": "挑染(Balayage)",
+      "treatment": "护理"
+    }
+  },
+  "professional": {
+    "title": "由谁接待顾客？",
+    "description": "必须至少有一位可预约的专业人员，顾客才能预约。如果由您本人接待，那就是您。",
+    "nameLabel": "顾客看到的您的姓名",
+    "titleLabel": "职称",
+    "titleHint": "选填 — 例如「barber」「染发师」「loctician」。",
+    "submit": "我接待顾客 — 继续",
+    "nameRequired": "姓名为必填项 — 这是顾客看到的内容。",
+    "teamTitle": "与团队一起经营？",
+    "teamBody": "随时可在「团队」页面邀请成员 — 完成设置并不需要他们。",
+    "teamCta": "前往团队"
+  },
+  "hours": {
+    "title": "您的营业时间？",
+    "description": "店铺的营业时间。每位专业人员的工作时间在下一步设置，顾客只能在两者重叠的时段预约。",
+    "open": "营业",
+    "closed": "休息",
+    "opensLabel": "开始",
+    "closesLabel": "结束",
+    "oneWindowNote": "目前每天仅支持一个时段。午休需要第二个时段，我们尚未支持 — 请在此填写完整营业时间，并在「可预约时间」中屏蔽休息时段。",
+    "allClosed": "至少需要有一天营业。",
+    "saveError": "无法保存这些营业时间。"
+  },
+  "proHours": {
+    "title": "您的工作时间？",
+    "description": "您本人的工作时间，可以比店铺营业时间更短。预约时段只在两者重叠处显示。"
+  },
+  "profile": {
+    "title": "您的公开主页",
+    "description": "顾客预约前会看到的内容。简短也没关系 — 随时可以重写。",
+    "displayNameLabel": "显示名称",
+    "displayNameHint": "留空则保留现有名称。",
+    "titleLabel": "职称",
+    "titleHint": "选填 — 例如「barber」「染发师」。",
+    "aboutLabel": "简介",
+    "aboutHint": "选填。用一两句话介绍您的工作方式。",
+    "photosNote": "照片功能稍后推出 — FadeUp 目前还没有店铺或作品集图片的存储，因此我们不会假装向您索取。"
+  },
+  "review": {
+    "titleReady": "顾客可以预约您了",
+    "titleAlmost": "就快完成了",
+    "descriptionReady": "预约所需的一切都已就绪。发布后还会出现在搜索结果中。",
+    "descriptionAlmost": "以下是仍缺少的部分。每一项都链接到对应的步骤。",
+    "complete": "您的设置已完成。",
+    "publish": "发布并完成",
+    "finish": "完成",
+    "finishWithoutPublishing": "完成但不发布",
+    "stillMissing": "还有几项未完成 — 请查看下方列表。",
+    "bookableNotPublished": "您已经可以通过自己的链接接受预约。若要出现在搜索结果中，还需完成上方各项。",
+    "finishError": "无法完成设置。",
+    "requirements": {
+      "business_type": "选择店铺类型",
+      "currency": "选择货币",
+      "location": "添加地址",
+      "location_address": "填写街道地址和城市",
+      "timezone": "设置时区",
+      "professional": "添加可预约的专业人员",
+      "service": "至少添加一项服务",
+      "service_at_location": "在您的地址提供服务",
+      "service_for_professional": "允许专业人员提供该服务",
+      "location_hours": "设置营业时间",
+      "professional_hours": "设置工作时间",
+      "public_profile": "完善公开主页"
+    }
+  }
+}

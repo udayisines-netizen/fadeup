@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { TextField } from '@/components/ui/text-field'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
 import { safeInternalPath } from '@/lib/safe-redirect'
+import { useAuth } from '@/lib/auth-context'
+import { classifyAuthError, authErrorKey } from '@/lib/auth-errors'
 import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
 
 const signupSchema = z.object({
@@ -42,12 +45,18 @@ export function SignupForm({
   defaultRedirect: string
   loginPath: string
 }) {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
+  const { user, loading: authLoading } = useAuth()
   const [searchParams] = useSearchParams()
   const [formError, setFormError] = useState<string | null>(null)
+  const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null)
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
   const redirectParam = searchParams.get('redirect')
   const redirectTo = safeInternalPath(redirectParam)
+
+  /** Sign-in link that keeps whatever the visitor was on their way to. */
+  const signInHref = redirectTo ? `${loginPath}?redirect=${encodeURIComponent(redirectTo)}` : loginPath
 
   const {
     register,
@@ -65,7 +74,18 @@ export function SignupForm({
     })
 
     if (error) {
-      setFormError(error.message)
+      // "User already registered" is a signpost, not a failure: this person
+      // has a FadeUp identity and simply needs to sign in. Showing GoTrue's
+      // raw string left them stuck mid-journey with no next action.
+      const kind = classifyAuthError(error)
+      if (kind === 'alreadyRegistered') {
+        setExistingAccountEmail(values.email)
+        return
+      }
+      const key = authErrorKey(kind)
+      // `unknown` keeps the provider's own message — a wrong guess that
+      // swallowed a real error would be worse than showing it.
+      setFormError(key ? t(key) : error.message)
       return
     }
 
@@ -75,6 +95,34 @@ export function SignupForm({
     }
 
     navigate(redirectTo ?? defaultRedirect, { replace: true })
+  }
+
+  // Already signed in: there is nothing to create. FadeUp has one identity,
+  // and becoming a professional never means a second account — so send them
+  // where they were going instead of showing a create-account form they must
+  // not use.
+  if (!authLoading && user) {
+    return <Navigate to={redirectTo ?? defaultRedirect} replace />
+  }
+
+  if (existingAccountEmail) {
+    return (
+      <div>
+        <Alert variant="info">{t('errors.alreadyRegistered')}</Alert>
+        <div className="mt-6 flex flex-col gap-3">
+          <Link to={signInHref} className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+            {t('errors.alreadyRegisteredCta')}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setExistingAccountEmail(null)}
+            className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
+          >
+            {t('errors.useAnotherEmail')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (confirmationEmail) {

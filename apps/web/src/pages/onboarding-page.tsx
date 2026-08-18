@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Check, CircleAlert } from 'lucide-react'
 import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +26,8 @@ import { setStoredOrganizationId } from '@/lib/current-organization'
 import { guessTimezone } from '@/lib/timezone'
 import { cn } from '@/lib/cn'
 import { useOrgLocations, useUpdateLocation, type Location } from '@/lib/queries/locations'
+import { useOrgServices } from '@/lib/queries/services'
+import { useAssignBarberServices } from '@/lib/queries/barber-services'
 import {
   useApplyStarterServices,
   useApplyWeeklyHours,
@@ -33,6 +36,7 @@ import {
   useLocaleSuggestions,
   useOrganizationReadiness,
   useSaveBusinessProfile,
+  readinessKey,
   type BusinessType,
   type OrganizationReadiness,
   type WeeklyDay,
@@ -40,11 +44,11 @@ import {
 import {
   COMMON_COUNTRIES,
   COMMON_CURRENCIES,
-  DAY_LABELS,
   DEFAULT_WEEK,
   templateFor,
   type ServiceTemplate,
 } from '@/lib/onboarding/templates'
+import { countryLabel, weekdayLabels } from '@/lib/onboarding/intl-labels'
 
 /**
  * /onboarding — the adaptive setup that turns an approved organization into a
@@ -90,25 +94,31 @@ export const STEPS = [
 
 export type Step = (typeof STEPS)[number]
 
-const STEP_LABELS: Record<Step, string> = {
-  type: 'Business type',
-  identity: 'Business name',
-  location: 'Address',
-  locale: 'Country & currency',
-  services: 'Services',
-  professional: 'Professionals',
-  hours: 'Opening hours',
-  'pro-hours': 'Working hours',
-  profile: 'Public profile',
-  review: 'Review & publish',
+/** Step id -> `onboarding` translation key for its short navigation label. */
+const STEP_LABEL_KEYS: Record<Step, string> = {
+  type: 'steps.type',
+  identity: 'steps.identity',
+  location: 'steps.location',
+  locale: 'steps.locale',
+  services: 'steps.services',
+  professional: 'steps.professional',
+  hours: 'steps.hours',
+  'pro-hours': 'steps.proHours',
+  profile: 'steps.profile',
+  review: 'steps.review',
 }
 
-const BUSINESS_TYPE_OPTIONS: { value: BusinessType; label: string; hint: string }[] = [
-  { value: 'solo_professional', label: 'Solo professional', hint: 'You work on your own — barber, stylist, colorist, braider.' },
-  { value: 'barbershop', label: 'Barbershop', hint: 'A shop with a team of barbers.' },
-  { value: 'hair_salon', label: 'Hair salon', hint: 'A salon focused on cutting, colour and styling.' },
-  { value: 'mixed_salon', label: 'Mixed salon', hint: 'Barbering and salon services under one roof.' },
-  { value: 'multi_location', label: 'Multi-location', hint: 'Several addresses under one organization.' },
+/**
+ * The five business shapes, in display order. Only the ENUM VALUE lives here;
+ * the label and hint are looked up per locale. That keeps the enum — which is
+ * a database contract — separate from the copy, which is not.
+ */
+const BUSINESS_TYPE_ORDER: BusinessType[] = [
+  'solo_professional',
+  'barbershop',
+  'hair_salon',
+  'mixed_salon',
+  'multi_location',
 ]
 
 /**
@@ -137,7 +147,11 @@ export function isStepComplete(step: Step, readiness: OrganizationReadiness): bo
     case 'location': return readiness.hasLocation && readiness.hasLocationAddress
     case 'locale': return readiness.hasCurrency && readiness.hasTimezone
     case 'services': return readiness.hasService && readiness.hasServiceAtLocation
-    case 'professional': return readiness.hasProfessional && readiness.hasServiceForProfessional
+    // A professional existing is what this step is FOR. Service assignment is
+    // a separate fact, required for READY_TO_BOOK and reported by readiness on
+    // the review step — requiring it here left the step permanently unticked
+    // even after the professional had persisted correctly.
+    case 'professional': return readiness.hasProfessional
     case 'hours': return readiness.hasLocationHours
     case 'pro-hours': return readiness.hasProfessionalHours
     case 'profile': return readiness.hasPublicProfile
@@ -160,6 +174,7 @@ export function isStepComplete(step: Step, readiness: OrganizationReadiness): bo
  * -> readiness -> wizard.
  */
 export function OnboardingPage() {
+  const { t } = useTranslation('onboarding')
   const { user, loading: authLoading } = useAuth()
   const [searchParams] = useSearchParams()
   const accessQuery = useMyAccess(user?.id)
@@ -175,13 +190,13 @@ export function OnboardingPage() {
   )
 
   if (authLoading || membershipsQuery.isPending || accessQuery.isPending) {
-    return <PageSpinner label="Loading your setup" />
+    return <PageSpinner label={t('shell.loading')} />
   }
 
   if (membershipsQuery.isError) {
     return (
       <Container size="sm" className="py-16">
-        <ErrorState title="Couldn't load your organizations" description={membershipsQuery.error.message} />
+        <ErrorState title={t('shell.orgsErrorTitle')} description={membershipsQuery.error.message} />
       </Container>
     )
   }
@@ -226,24 +241,28 @@ export function OnboardingPage() {
 // Step 0 — create the organization (self-serve only)
 // ---------------------------------------------------------------------------
 
-const createSchema = z.object({
-  shopName: z.string().trim().min(1, 'Business name is required'),
-  slug: z
-    .string()
-    .trim()
-    .min(1, 'URL is required')
-    .regex(SLUG_PATTERN, 'Use lowercase letters, numbers and single hyphens only, e.g. "le-fade-parisien"'),
-  locationName: z.string().trim().min(1, 'Location name is required'),
-  timezone: z.string().trim().min(1, 'Timezone is required'),
-})
+/** Built inside the component so validation messages follow the active locale. */
+function buildCreateSchema(t: (key: string) => string) {
+  return z.object({
+    shopName: z.string().trim().min(1, t('create.errors.nameRequired')),
+    slug: z
+      .string()
+      .trim()
+      .min(1, t('create.errors.slugRequired'))
+      .regex(SLUG_PATTERN, t('create.errors.slugFormat')),
+    locationName: z.string().trim().min(1, t('create.errors.locationRequired')),
+    timezone: z.string().trim().min(1, t('create.errors.timezoneRequired')),
+  })
+}
 
-type CreateFormValues = z.infer<typeof createSchema>
+type CreateFormValues = z.infer<ReturnType<typeof buildCreateSchema>>
 
 interface CreateResult {
   organization_id: string
 }
 
 function CreateOrganizationStep() {
+  const { t } = useTranslation('onboarding')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user } = useAuth()
@@ -258,7 +277,7 @@ function CreateOrganizationStep() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateFormValues>({
-    resolver: zodResolver(createSchema),
+    resolver: zodResolver(buildCreateSchema(t)),
     defaultValues: { timezone: guessTimezone() },
   })
 
@@ -284,10 +303,10 @@ function CreateOrganizationStep() {
     },
     onError: (error: Error) => {
       if (error.message.toLowerCase().includes('slug')) {
-        setError('slug', { message: 'That URL is already taken — try another.' })
+        setError('slug', { message: t('create.slugTaken') })
         return
       }
-      setFormError(getErrorMessage(error) ?? 'Something went wrong.')
+      setFormError(getErrorMessage(error) ?? t('errors.generic'))
     },
   })
 
@@ -302,11 +321,8 @@ function CreateOrganizationStep() {
     <main className="flex min-h-svh items-center justify-center bg-paper-50 py-12">
       <Container size="sm">
         <Card elevated className="p-6 sm:p-8">
-          <h1 className="text-xl font-semibold text-ink-950">Set up your business</h1>
-          <p className="mt-1 text-sm text-ink-500">
-            Create your organization and its first location. We&apos;ll walk through the rest — services, hours and
-            your public page — straight afterwards.
-          </p>
+          <h1 className="text-xl font-semibold text-ink-950">{t('create.title')}</h1>
+          <p className="mt-1 text-sm text-ink-500">{t('create.description')}</p>
 
           <form
             onSubmit={handleSubmit((values) => {
@@ -319,29 +335,29 @@ function CreateOrganizationStep() {
             {formError ? <Alert variant="error">{formError}</Alert> : null}
 
             <TextField
-              label="Business name"
+              label={t('create.nameLabel')}
               autoComplete="organization"
               error={errors.shopName?.message}
               {...register('shopName', { onBlur: handleShopNameBlur })}
             />
             <TextField
-              label="Booking link"
-              hint="Used in your public booking URL. Lowercase letters, numbers and hyphens only."
+              label={t('create.slugLabel')}
+              hint={t('create.slugHint')}
               autoComplete="off"
               spellCheck={false}
               error={errors.slug?.message}
               {...register('slug', { onChange: () => setSlugTouched(true) })}
             />
             <TextField
-              label="First location name"
-              hint='e.g. "Bastille" — or your business name if you only have one address.'
+              label={t('create.locationLabel')}
+              hint={t('create.locationHint')}
               error={errors.locationName?.message}
               {...register('locationName')}
             />
-            <TextField label="Timezone" error={errors.timezone?.message} {...register('timezone')} />
+            <TextField label={t('create.timezoneLabel')} error={errors.timezone?.message} {...register('timezone')} />
 
             <Button type="submit" isLoading={isSubmitting || mutation.isPending} className="w-full">
-              Continue
+              {t('actions.continue')}
             </Button>
           </form>
         </Card>
@@ -363,6 +379,7 @@ function OnboardingWizard({
   membership: MembershipWithOrganization
   memberships: MembershipWithOrganization[]
 }) {
+  const { t } = useTranslation('onboarding')
   const [searchParams, setSearchParams] = useSearchParams()
   const readinessQuery = useOrganizationReadiness(organizationId)
   const locationsQuery = useOrgLocations(organizationId)
@@ -376,7 +393,14 @@ function OnboardingWizard({
     const params = new URLSearchParams(searchParams)
     params.set('step', next)
     setSearchParams(params, { replace: false })
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
+    // jsdom has no scrollTo, and a step change must not fail because of it.
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: 0 })
+      } catch {
+        // Purely cosmetic — never worth breaking navigation over.
+      }
+    }
   }
 
   function goToNext() {
@@ -401,13 +425,13 @@ function OnboardingWizard({
   }
 
   if (readinessQuery.isPending || locationsQuery.isPending) {
-    return <PageSpinner label="Loading your setup" />
+    return <PageSpinner label={t('shell.loading')} />
   }
 
   if (readinessQuery.isError) {
     return (
       <Container size="sm" className="py-16">
-        <ErrorState title="Couldn't load your setup" description={readinessQuery.error.message} />
+        <ErrorState title={t('shell.loadErrorTitle')} description={readinessQuery.error.message} />
       </Container>
     )
   }
@@ -415,7 +439,7 @@ function OnboardingWizard({
   if (!readiness || !step) {
     return (
       <Container size="sm" className="py-16">
-        <ErrorState title="Couldn't load your setup" description="No readiness information came back." />
+        <ErrorState title={t('shell.loadErrorTitle')} description={t('shell.loadErrorEmpty')} />
       </Container>
     )
   }
@@ -426,11 +450,11 @@ function OnboardingWizard({
     <main className="min-h-svh bg-paper-50 py-8 sm:py-12">
       <Container size="md">
         <header className="mb-6">
-          <h1 className="text-xl font-semibold text-ink-950">Set up {membership.organizationName}</h1>
+          <h1 className="text-xl font-semibold text-ink-950">
+            {t('shell.titleNamed', { name: membership.organizationName })}
+          </h1>
           <p className="mt-1 text-sm text-ink-500">
-            {readiness.readyToBook
-              ? 'Everything a customer needs is in place. Review and publish when you like.'
-              : 'A few steps and customers can book you. You can leave and come back — nothing is lost.'}
+            {readiness.readyToBook ? t('shell.subtitleReady') : t('shell.subtitleIncomplete')}
           </p>
 
           {/*
@@ -443,7 +467,7 @@ function OnboardingWizard({
           */}
           {memberships.length > 1 ? (
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-ink-500">Setting up:</span>
+              <span className="text-sm text-ink-500">{t('shell.switching')}</span>
               {memberships.map((candidate) => {
                 const isCurrent = candidate.organizationId === organizationId
                 return (
@@ -502,12 +526,13 @@ function StepNav({
   readiness: OrganizationReadiness
   onSelect: (step: Step) => void
 }) {
+  const { t } = useTranslation('onboarding')
   const completed = STEPS.filter((candidate) => isStepComplete(candidate, readiness)).length
 
   return (
-    <nav aria-label="Setup steps">
+    <nav aria-label={t('shell.stepsLabel')}>
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-ink-500">
-        {completed} of {STEPS.length} done
+        {t('shell.progress', { done: completed, total: STEPS.length })}
       </p>
       <ol className="flex flex-wrap gap-2">
         {STEPS.map((candidate) => {
@@ -529,7 +554,7 @@ function StepNav({
                 )}
               >
                 {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : null}
-                {STEP_LABELS[candidate]}
+                {t(STEP_LABEL_KEYS[candidate])}
               </button>
             </li>
           )
@@ -576,6 +601,7 @@ function TypeStep({
   readiness: OrganizationReadiness
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const save = useSaveBusinessProfile(organizationId)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<BusinessType | null>(null)
@@ -588,38 +614,34 @@ function TypeStep({
       onDone()
     } catch (cause) {
       setSelected(null)
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   return (
-    <StepShell
-      title="What kind of business do you run?"
-      description="This shapes the rest of setup — which services we suggest, and whether we ask about a team. You can change it later."
-      error={error}
-    >
+    <StepShell title={t('type.title')} description={t('type.description')} error={error}>
       <div className="flex flex-col gap-3">
-        {BUSINESS_TYPE_OPTIONS.map((option) => (
+        {BUSINESS_TYPE_ORDER.map((value) => (
           <button
-            key={option.value}
+            key={value}
             type="button"
-            onClick={() => choose(option.value)}
+            onClick={() => choose(value)}
             disabled={save.isPending}
-            aria-pressed={selected === option.value}
+            aria-pressed={selected === value}
             className={cn(
-              'rounded-lg border p-4 text-left transition-colors disabled:cursor-wait',
-              selected === option.value ? 'border-ink-950 bg-paper-100' : 'border-border hover:border-border-strong',
+              'rounded-lg border p-4 text-start transition-colors disabled:cursor-wait',
+              selected === value ? 'border-ink-950 bg-paper-100' : 'border-border hover:border-border-strong',
             )}
           >
-            <span className="block font-medium text-ink-950">{option.label}</span>
-            <span className="mt-0.5 block text-sm text-ink-500">{option.hint}</span>
+            <span className="block font-medium text-ink-950">{t(`type.options.${value}.label`)}</span>
+            <span className="mt-0.5 block text-sm text-ink-500">{t(`type.options.${value}.hint`)}</span>
           </button>
         ))}
       </div>
       {readiness.hasBusinessType ? (
         <div className="mt-6">
           <Button variant="secondary" onClick={onDone}>
-            Keep what I have
+            {t('actions.keepExisting')}
           </Button>
         </div>
       ) : null}
@@ -638,6 +660,7 @@ function IdentityStep({
   membership: MembershipWithOrganization
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const save = useSaveBusinessProfile(organizationId)
   const [name, setName] = useState(membership.organizationName)
   const [error, setError] = useState<string | null>(null)
@@ -646,33 +669,29 @@ function IdentityStep({
     event.preventDefault()
     setError(null)
     if (!name.trim()) {
-      setError('A business name is required.')
+      setError(t('identity.nameRequired'))
       return
     }
     try {
       await save.mutateAsync({ organizationId, name: name.trim() })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   return (
-    <StepShell
-      title="How should customers see your name?"
-      description="This is the name on your public page and in search results."
-      error={error}
-    >
+    <StepShell title={t('identity.title')} description={t('identity.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <TextField
-          label="Business name"
+          label={t('identity.nameLabel')}
           autoComplete="organization"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
         <div className="flex gap-3">
           <Button type="submit" isLoading={save.isPending}>
-            Save and continue
+            {t('actions.saveContinue')}
           </Button>
         </div>
       </form>
@@ -691,6 +710,7 @@ function LocationStep({
   location: Location | null
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const updateLocation = useUpdateLocation()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -703,12 +723,10 @@ function LocationStep({
 
   if (!location) {
     return (
-      <StepShell title="Your first address" description="Something went wrong — your organization has no location yet.">
-        <Alert variant="error">
-          No location exists for this business. Create one in Locations, then come back to finish setup.
-        </Alert>
+      <StepShell title={t('location.missingTitle')} description={t('location.missingDescription')}>
+        <Alert variant="error">{t('location.missingBody')}</Alert>
         <Link to="/app/locations" className={buttonVariants({ variant: 'secondary' }, 'mt-4')}>
-          Go to Locations
+          {t('location.missingCta')}
         </Link>
       </StepShell>
     )
@@ -718,7 +736,7 @@ function LocationStep({
     event.preventDefault()
     setError(null)
     if (!form.addressLine1.trim() || !form.city.trim()) {
-      setError('A street address and city are required — customers search by city.')
+      setError(t('location.required'))
       return
     }
     try {
@@ -737,52 +755,48 @@ function LocationStep({
       })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   return (
-    <StepShell
-      title="Where do you work?"
-      description="Customers search by city, so this is what makes you findable. It appears on your public page."
-      error={error}
-    >
+    <StepShell title={t('location.title')} description={t('location.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <TextField
-          label="Location name"
-          hint='What you call this address internally, e.g. "Bastille".'
+          label={t('location.nameLabel')}
+          hint={t('location.nameHint')}
           value={form.name}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
         />
         <TextField
-          label="Street address"
+          label={t('location.line1Label')}
           autoComplete="address-line1"
           value={form.addressLine1}
           onChange={(event) => setForm({ ...form, addressLine1: event.target.value })}
         />
         <TextField
-          label="Address line 2"
-          hint="Optional."
+          label={t('location.line2Label')}
+          hint={t('location.line2Hint')}
           autoComplete="address-line2"
           value={form.addressLine2}
           onChange={(event) => setForm({ ...form, addressLine2: event.target.value })}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
-            label="City"
+            label={t('location.cityLabel')}
             autoComplete="address-level2"
             value={form.city}
             onChange={(event) => setForm({ ...form, city: event.target.value })}
           />
           <TextField
-            label="Postal code"
+            label={t('location.postalLabel')}
             autoComplete="postal-code"
             value={form.postalCode}
             onChange={(event) => setForm({ ...form, postalCode: event.target.value })}
           />
         </div>
         <Button type="submit" isLoading={updateLocation.isPending} className="self-start">
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -800,6 +814,7 @@ function LocaleStep({
   location: Location | null
   onDone: () => void
 }) {
+  const { t, i18n } = useTranslation('onboarding')
   const save = useSaveBusinessProfile(organizationId)
   const updateLocation = useUpdateLocation()
   const [error, setError] = useState<string | null>(null)
@@ -823,7 +838,7 @@ function LocaleStep({
     event.preventDefault()
     setError(null)
     if (!/^[A-Z]{3}$/.test(currency.toUpperCase())) {
-      setError('Choose a currency — every price you set is quoted in it.')
+      setError(t('locale.currencyRequired'))
       return
     }
     try {
@@ -845,41 +860,40 @@ function LocaleStep({
       }
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   return (
-    <StepShell
-      title="Country, currency and timezone"
-      description="The timezone decides what time a slot actually means, so it matters more than it looks. The currency is what every price you set is quoted in."
-      error={error}
-    >
+    <StepShell title={t('locale.title')} description={t('locale.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <SelectField
-          label="Country"
+          label={t('locale.countryLabel')}
           value={countryCode}
           onChange={(event) => setCountryCode(event.target.value)}
-          options={COMMON_COUNTRIES.map((country) => ({ value: country.code, label: country.label }))}
+          // Country names come from Intl in the reader's own language rather
+          // than from a hand-maintained list in ten locales.
+          options={COMMON_COUNTRIES.map((country) => ({
+            value: country.code,
+            label: countryLabel(i18n.language, country.code),
+          }))}
         />
         <SelectField
-          label="Currency"
+          label={t('locale.currencyLabel')}
           value={currency}
           onChange={(event) => {
             setCurrencyTouched(true)
             setCurrency(event.target.value)
           }}
           options={[
-            { value: '', label: 'Choose a currency' },
+            { value: '', label: t('locale.currencyPlaceholder') },
             ...COMMON_CURRENCIES.map((code) => ({ value: code, label: code })),
           ]}
         />
-        <p className="-mt-2 text-sm text-ink-500">
-          Suggested from your country. Change it if that isn&apos;t right — every price you set is quoted in it.
-        </p>
+        <p className="-mt-2 text-sm text-ink-500">{t('locale.currencyHint')}</p>
         <TextField
-          label="Timezone"
-          hint="An IANA name, e.g. Europe/Paris."
+          label={t('locale.timezoneLabel')}
+          hint={t('locale.timezoneHint')}
           value={timezone}
           onChange={(event) => {
             setTimezoneTouched(true)
@@ -891,7 +905,7 @@ function LocaleStep({
           isLoading={save.isPending || updateLocation.isPending}
           className="self-start"
         >
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -911,14 +925,22 @@ function ServicesStep({
   readiness: OrganizationReadiness
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const apply = useApplyStarterServices(organizationId)
   const [error, setError] = useState<string | null>(null)
   const template = useMemo(() => templateFor(readiness.businessType), [readiness.businessType])
-  const [rows, setRows] = useState<(ServiceTemplate & { selected: boolean })[]>(() =>
-    template.map((service) => ({ ...service, selected: service.recommended })),
+  // The template supplies an id and the numbers; the NAME is resolved per
+  // locale here and then persisted, so a German salon starts with German
+  // service names in its live price list rather than French ones.
+  const [rows, setRows] = useState<(ServiceTemplate & { name: string; selected: boolean })[]>(() =>
+    template.map((service) => ({
+      ...service,
+      name: t(`services.templates.${service.id}`),
+      selected: service.recommended,
+    })),
   )
 
-  function update(index: number, patch: Partial<ServiceTemplate & { selected: boolean }>) {
+  function update(index: number, patch: Partial<ServiceTemplate & { name: string; selected: boolean }>) {
     setRows((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)))
   }
 
@@ -926,12 +948,12 @@ function ServicesStep({
     event.preventDefault()
     setError(null)
     if (!location) {
-      setError('Add an address first — services are offered at a location.')
+      setError(t('errors.noLocation'))
       return
     }
     const chosen = rows.filter((row) => row.selected)
     if (chosen.length === 0) {
-      setError('Pick at least one service. You can add more, and edit all of them, later.')
+      setError(t('services.pickOne'))
       return
     }
     try {
@@ -946,20 +968,16 @@ function ServicesStep({
       })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save those services.')
+      setError(getErrorMessage(cause) ?? t('services.saveError'))
     }
   }
 
   return (
-    <StepShell
-      title="What do you offer?"
-      description="A starting point, not a final list. Rename anything, change the prices and durations, and add your own — all of it stays editable in Services afterwards."
-      error={error}
-    >
+    <StepShell title={t('services.title')} description={t('services.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <ul className="flex flex-col gap-3">
           {rows.map((row, index) => (
-            <li key={`${row.name}-${index}`} className="rounded-lg border border-border p-3">
+            <li key={`${row.id}-${index}`} className="rounded-lg border border-border p-3">
               <Switch
                 label={row.name}
                 checked={row.selected}
@@ -968,22 +986,22 @@ function ServicesStep({
               {row.selected ? (
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
                   <TextField
-                    label="Name"
+                    label={t('services.nameLabel')}
                     value={row.name}
                     onChange={(event) => update(index, { name: event.target.value })}
                   />
                   <TextField
-                    label="Minutes"
+                    label={t('services.minutesLabel')}
                     type="number"
                     inputMode="numeric"
                     value={String(row.durationMinutes)}
                     onChange={(event) => update(index, { durationMinutes: Number(event.target.value) || 0 })}
                   />
                   <TextField
-                    label="Price"
+                    label={t('services.priceLabel')}
                     type="number"
                     inputMode="decimal"
-                    hint="In whole units of your currency."
+                    hint={t('services.priceHint')}
                     value={String(row.priceCents / 100)}
                     onChange={(event) =>
                       update(index, { priceCents: Math.round((Number(event.target.value) || 0) * 100) })
@@ -995,7 +1013,7 @@ function ServicesStep({
           ))}
         </ul>
         <Button type="submit" isLoading={apply.isPending} className="self-start">
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -1015,8 +1033,11 @@ function ProfessionalStep({
   membership: MembershipWithOrganization
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const ensure = useEnsureOwnerProfessional(organizationId)
-  const applyServices = useApplyStarterServices(organizationId)
+  const assignServices = useAssignBarberServices()
+  const servicesQuery = useOrgServices(organizationId)
+  const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [title, setTitle] = useState('')
@@ -1025,11 +1046,11 @@ function ProfessionalStep({
     event.preventDefault()
     setError(null)
     if (!location) {
-      setError('Add an address first — a professional works at a location.')
+      setError(t('errors.noLocation'))
       return
     }
     if (!displayName.trim()) {
-      setError('A name is required — this is what customers see.')
+      setError(t('professional.nameRequired'))
       return
     }
     try {
@@ -1039,57 +1060,58 @@ function ProfessionalStep({
         displayName: displayName.trim(),
         title: title.trim() || null,
       })
-      // Link the services created in the previous step to this professional.
-      // Without it a bookable professional offers nothing and no slot can be
-      // computed — readiness would (correctly) still say "not ready", which
-      // is confusing right after ticking this box. Idempotent, so a resumed
-      // run is harmless.
-      await applyServices.mutateAsync({
-        organizationId,
-        locationId: location.id,
-        services: [],
-        barberId,
-      })
+      // Link the catalog from the services step to this professional. Without
+      // it a bookable professional performs nothing and no slot can ever be
+      // computed. This previously passed an EMPTY array, so it linked nothing
+      // at all — which is why the step never completed.
+      //
+      // Idempotent (see useAssignBarberServices), so a resumed or retried run
+      // adds no duplicates. An empty catalog is fine: the professional still
+      // persists, this step still completes, and readiness keeps reporting the
+      // missing service on the review step.
+      const serviceIds = (servicesQuery.data ?? []).filter((service) => service.isActive).map((service) => service.id)
+      await assignServices.mutateAsync({ organizationId, barberId, serviceIds })
+
+      // ensure_owner_professional already invalidates readiness, but it does
+      // so BEFORE the service links exist — so that refetch can land with
+      // has_service_for_professional still false. Re-invalidate once both
+      // writes are done and await it, so the step this navigates to is
+      // rendering the truth rather than a snapshot taken mid-write.
+      await queryClient.invalidateQueries({ queryKey: readinessKey(organizationId) })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   const canInvite = membership.role === 'owner' || membership.role === 'manager'
 
   return (
-    <StepShell
-      title="Who takes clients?"
-      description="At least one bookable professional is needed before anyone can book. If you work yourself, that is you."
-      error={error}
-    >
+    <StepShell title={t('professional.title')} description={t('professional.description')} error={error}>
       <form onSubmit={takeClients} className="flex flex-col gap-4">
         <TextField
-          label="Your name as customers see it"
+          label={t('professional.nameLabel')}
           autoComplete="name"
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
         />
         <TextField
-          label="Title"
-          hint='Optional — e.g. "Barber", "Coloriste", "Loctician".'
+          label={t('professional.titleLabel')}
+          hint={t('professional.titleHint')}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-        <Button type="submit" isLoading={ensure.isPending || applyServices.isPending} className="self-start">
-          I take clients — continue
+        <Button type="submit" isLoading={ensure.isPending || assignServices.isPending} className="self-start">
+          {t('professional.submit')}
         </Button>
       </form>
 
       {canInvite ? (
         <div className="mt-6 rounded-lg border border-border bg-paper-50 p-4">
-          <p className="text-sm font-medium text-ink-950">Working with a team?</p>
-          <p className="mt-1 text-sm text-ink-500">
-            Invite them from the Team screen whenever you like — you do not need them here to finish setup.
-          </p>
+          <p className="text-sm font-medium text-ink-950">{t('professional.teamTitle')}</p>
+          <p className="mt-1 text-sm text-ink-500">{t('professional.teamBody')}</p>
           <Link to="/app/team" className={buttonVariants({ variant: 'secondary', size: 'sm' }, 'mt-3')}>
-            Go to Team
+            {t('professional.teamCta')}
           </Link>
         </div>
       ) : null}
@@ -1100,6 +1122,11 @@ function ProfessionalStep({
 // --- steps: hours -----------------------------------------------------------
 
 function WeekEditor({ days, onChange }: { days: WeeklyDay[]; onChange: (days: WeeklyDay[]) => void }) {
+  const { t, i18n } = useTranslation('onboarding')
+  // Weekday names come from Intl in the reader's language, correctly cased
+  // per locale, rather than from a hand-maintained list in ten files.
+  const dayNames = useMemo(() => weekdayLabels(i18n.language), [i18n.language])
+
   function update(dayOfWeek: number, patch: Partial<WeeklyDay>) {
     onChange(days.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day)))
   }
@@ -1109,9 +1136,9 @@ function WeekEditor({ days, onChange }: { days: WeeklyDay[]; onChange: (days: We
       {days.map((day) => (
         <li key={day.dayOfWeek} className="rounded-lg border border-border p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="min-w-24 font-medium text-ink-950">{DAY_LABELS[day.dayOfWeek]}</span>
+            <span className="min-w-24 font-medium text-ink-950">{dayNames[day.dayOfWeek]}</span>
             <Switch
-              label={day.isClosed ? 'Closed' : 'Open'}
+              label={day.isClosed ? t('hours.closed') : t('hours.open')}
               checked={!day.isClosed}
               onChange={(event) => update(day.dayOfWeek, { isClosed: !event.target.checked })}
             />
@@ -1119,13 +1146,13 @@ function WeekEditor({ days, onChange }: { days: WeeklyDay[]; onChange: (days: We
           {!day.isClosed ? (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <TextField
-                label="Opens"
+                label={t('hours.opensLabel')}
                 type="time"
                 value={day.openTime ?? '09:00'}
                 onChange={(event) => update(day.dayOfWeek, { openTime: event.target.value })}
               />
               <TextField
-                label="Closes"
+                label={t('hours.closesLabel')}
                 type="time"
                 value={day.closeTime ?? '19:00'}
                 onChange={(event) => update(day.dayOfWeek, { closeTime: event.target.value })}
@@ -1147,6 +1174,7 @@ function HoursStep({
   location: Location | null
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const apply = useApplyWeeklyHours(organizationId)
   const [days, setDays] = useState<WeeklyDay[]>(DEFAULT_WEEK)
   const [error, setError] = useState<string | null>(null)
@@ -1155,35 +1183,28 @@ function HoursStep({
     event.preventDefault()
     setError(null)
     if (!location) {
-      setError('Add an address first.')
+      setError(t('errors.noLocation'))
       return
     }
     if (days.every((day) => day.isClosed)) {
-      setError('At least one day needs to be open.')
+      setError(t('hours.allClosed'))
       return
     }
     try {
       await apply.mutateAsync({ organizationId, locationId: location.id, days })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save those hours.')
+      setError(getErrorMessage(cause) ?? t('hours.saveError'))
     }
   }
 
   return (
-    <StepShell
-      title="When are you open?"
-      description="Your shop's opening hours. A professional's own hours are set next, and a customer can only book where the two overlap."
-      error={error}
-    >
+    <StepShell title={t('hours.title')} description={t('hours.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <WeekEditor days={days} onChange={setDays} />
-        <Alert variant="info">
-          One opening window per day for now. A midday closure needs a second window, which is a change we have not made
-          yet — set the full span here and block the break in Availability.
-        </Alert>
+        <Alert variant="info">{t('hours.oneWindowNote')}</Alert>
         <Button type="submit" isLoading={apply.isPending} className="self-start">
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -1199,6 +1220,7 @@ function ProHoursStep({
   location: Location | null
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const ensure = useEnsureOwnerProfessional(organizationId)
   const apply = useApplyWeeklyHours(organizationId)
   const [days, setDays] = useState<WeeklyDay[]>(DEFAULT_WEEK)
@@ -1208,7 +1230,7 @@ function ProHoursStep({
     event.preventDefault()
     setError(null)
     if (!location) {
-      setError('Add an address first.')
+      setError(t('errors.noLocation'))
       return
     }
     try {
@@ -1218,20 +1240,16 @@ function ProHoursStep({
       await apply.mutateAsync({ organizationId, barberId, days })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save those hours.')
+      setError(getErrorMessage(cause) ?? t('hours.saveError'))
     }
   }
 
   return (
-    <StepShell
-      title="When do you work?"
-      description="Your own hours, which can be narrower than the shop's. Slots appear only where your hours and the shop's overlap."
-      error={error}
-    >
+    <StepShell title={t('proHours.title')} description={t('proHours.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <WeekEditor days={days} onChange={setDays} />
         <Button type="submit" isLoading={ensure.isPending || apply.isPending} className="self-start">
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -1249,6 +1267,7 @@ function ProfileStep({
   location: Location | null
   onDone: () => void
 }) {
+  const { t } = useTranslation('onboarding')
   const ensure = useEnsureOwnerProfessional(organizationId)
   const [displayName, setDisplayName] = useState('')
   const [title, setTitle] = useState('')
@@ -1259,7 +1278,7 @@ function ProfileStep({
     event.preventDefault()
     setError(null)
     if (!location) {
-      setError('Add an address first.')
+      setError(t('errors.noLocation'))
       return
     }
     try {
@@ -1272,42 +1291,35 @@ function ProfileStep({
       })
       onDone()
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not save that.')
+      setError(getErrorMessage(cause) ?? t('errors.generic'))
     }
   }
 
   return (
-    <StepShell
-      title="Your public page"
-      description="What a customer reads before booking. Short is fine — you can rewrite it any time."
-      error={error}
-    >
+    <StepShell title={t('profile.title')} description={t('profile.description')} error={error}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <TextField
-          label="Display name"
-          hint="Leave blank to keep what you already have."
+          label={t('profile.displayNameLabel')}
+          hint={t('profile.displayNameHint')}
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
         />
         <TextField
-          label="Title"
-          hint='Optional — e.g. "Barber", "Coloriste".'
+          label={t('profile.titleLabel')}
+          hint={t('profile.titleHint')}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
         <Textarea
-          label="About"
-          hint="Optional. A couple of sentences about how you work."
+          label={t('profile.aboutLabel')}
+          hint={t('profile.aboutHint')}
           rows={4}
           value={bio}
           onChange={(event) => setBio(event.target.value)}
         />
-        <Alert variant="info">
-          Photos come later — FadeUp has no image storage for shop or portfolio pictures yet, so we are not pretending
-          to ask for them.
-        </Alert>
+        <Alert variant="info">{t('profile.photosNote')}</Alert>
         <Button type="submit" isLoading={ensure.isPending} className="self-start">
-          Save and continue
+          {t('actions.saveContinue')}
         </Button>
       </form>
     </StepShell>
@@ -1316,19 +1328,25 @@ function ProfileStep({
 
 // --- step: review + publish -------------------------------------------------
 
-const REQUIREMENT_LABELS: Record<string, { label: string; step: Step }> = {
-  business_type: { label: 'Choose a business type', step: 'type' },
-  currency: { label: 'Choose a currency', step: 'locale' },
-  location: { label: 'Add a location', step: 'location' },
-  location_address: { label: 'Add a street address and city', step: 'location' },
-  timezone: { label: 'Set a timezone', step: 'locale' },
-  professional: { label: 'Add a bookable professional', step: 'professional' },
-  service: { label: 'Add at least one service', step: 'services' },
-  service_at_location: { label: 'Offer a service at your location', step: 'services' },
-  service_for_professional: { label: 'Let a professional perform a service', step: 'professional' },
-  location_hours: { label: 'Set your opening hours', step: 'hours' },
-  professional_hours: { label: 'Set your working hours', step: 'pro-hours' },
-  public_profile: { label: 'Complete your public profile', step: 'profile' },
+/**
+ * Which step fixes each missing requirement. The LABEL is looked up per
+ * locale from `review.requirements.*`; only the routing lives here, because
+ * the requirement ids are a database contract (get_organization_readiness)
+ * and the copy is not.
+ */
+const REQUIREMENT_STEPS: Record<string, Step> = {
+  business_type: 'type',
+  currency: 'locale',
+  location: 'location',
+  location_address: 'location',
+  timezone: 'locale',
+  professional: 'professional',
+  service: 'services',
+  service_at_location: 'services',
+  service_for_professional: 'professional',
+  location_hours: 'hours',
+  professional_hours: 'pro-hours',
+  public_profile: 'profile',
 }
 
 function ReviewStep({
@@ -1340,6 +1358,7 @@ function ReviewStep({
   readiness: OrganizationReadiness
   onSelect: (step: Step) => void
 }) {
+  const { t } = useTranslation('onboarding')
   const complete = useCompleteOnboarding(organizationId)
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -1352,42 +1371,35 @@ function ReviewStep({
         navigate('/app', { replace: true })
         return
       }
-      setError('Still a few things missing — see the list below.')
+      setError(t('review.stillMissing'))
     } catch (cause) {
-      setError(getErrorMessage(cause) ?? 'Could not finish setup.')
+      setError(getErrorMessage(cause) ?? t('review.finishError'))
     }
   }
 
   return (
     <StepShell
-      title={readiness.readyToBook ? 'You can be booked' : 'Almost there'}
-      description={
-        readiness.readyToBook
-          ? 'Everything a booking needs is in place. Publishing also lists you in marketplace search.'
-          : 'These are the pieces still missing. Each one links to the step that fixes it.'
-      }
+      title={readiness.readyToBook ? t('review.titleReady') : t('review.titleAlmost')}
+      description={readiness.readyToBook ? t('review.descriptionReady') : t('review.descriptionAlmost')}
       error={error}
     >
       {readiness.missingRequirements.length > 0 ? (
         <ul className="flex flex-col gap-2">
-          {readiness.missingRequirements.map((requirement) => {
-            const entry = REQUIREMENT_LABELS[requirement]
-            return (
-              <li key={requirement}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(entry?.step ?? 'type')}
-                  className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-warning-100 bg-warning-100/40 px-3 text-left text-sm text-ink-950 hover:border-warning-700"
-                >
-                  <CircleAlert className="h-4 w-4 shrink-0 text-warning-700" aria-hidden="true" />
-                  {entry?.label ?? requirement}
-                </button>
-              </li>
-            )
-          })}
+          {readiness.missingRequirements.map((requirement) => (
+            <li key={requirement}>
+              <button
+                type="button"
+                onClick={() => onSelect(REQUIREMENT_STEPS[requirement] ?? 'type')}
+                className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-warning-100 bg-warning-100/40 px-3 text-start text-sm text-ink-950 hover:border-warning-700"
+              >
+                <CircleAlert className="h-4 w-4 shrink-0 text-warning-700" aria-hidden="true" />
+                {t(`review.requirements.${requirement}`, { defaultValue: requirement })}
+              </button>
+            </li>
+          ))}
         </ul>
       ) : (
-        <Alert variant="success">Your setup is complete.</Alert>
+        <Alert variant="success">{t('review.complete')}</Alert>
       )}
 
       <div className="mt-6 flex flex-wrap gap-3">
@@ -1396,18 +1408,15 @@ function ReviewStep({
           isLoading={complete.isPending}
           disabled={!readiness.readyToPublish}
         >
-          {readiness.isPublished ? 'Finish' : 'Publish and finish'}
+          {readiness.isPublished ? t('review.finish') : t('review.publish')}
         </Button>
         <Button variant="secondary" onClick={() => finish(false)} disabled={!readiness.readyToBook}>
-          Finish without publishing
+          {t('review.finishWithoutPublishing')}
         </Button>
       </div>
 
       {!readiness.readyToPublish && readiness.readyToBook ? (
-        <p className="mt-3 text-sm text-ink-500">
-          You can take bookings from your own link now. Publishing to marketplace search needs the remaining items
-          above.
-        </p>
+        <p className="mt-3 text-sm text-ink-500">{t('review.bookableNotPublished')}</p>
       ) : null}
     </StepShell>
   )
