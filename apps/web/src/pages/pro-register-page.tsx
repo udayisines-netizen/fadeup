@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useAuth } from '@/lib/auth-context'
+import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
 import { cn } from '@/lib/cn'
 import { parsePlanId } from '@/lib/commerce/plans'
 import { useOptionalFadeUpPricing } from '@/lib/commerce/pricing-context'
@@ -87,15 +89,37 @@ export function ProRegisterPage() {
   const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const submitApplication = useSubmitProfessionalApplication()
+  const { user, loading: authLoading } = useAuth()
   const [formError, setFormError] = useState<string | null>(null)
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
   const [showOptional, setShowOptional] = useState(false)
 
+  /**
+   * Someone who arrived here through "Continue with Google/Apple" already
+   * holds a session, so this page must NOT try to create a second account
+   * for them — that would fail on the duplicate address, and would be the
+   * wrong thing to want: FadeUp has one auth.users namespace, and applying
+   * to be a professional is something an EXISTING identity does. A customer
+   * who has used FadeUp for a year and now opens a shop keeps the same
+   * account, the same Passport and the same booking history.
+   *
+   * So when a session exists, the account fields disappear and the form is
+   * purely an application.
+   */
+  const hasSession = Boolean(user)
+
   const schema = z.object({
     firstName: z.string().trim().min(1, t('register.errors.firstNameRequired')),
     lastName: z.string().trim().min(1, t('register.errors.lastNameRequired')),
-    email: z.string().min(1, t('register.errors.emailRequired')).email(t('register.errors.emailInvalid')),
-    password: z.string().min(8, t('register.errors.passwordTooShort')),
+    // Only required when this form is also creating the account. Apple's
+    // Hide My Email means a signed-in applicant may not even have a usable
+    // address to show here, and the application stores the account's own.
+    email: hasSession
+      ? z.string().trim().optional()
+      : z.string().min(1, t('register.errors.emailRequired')).email(t('register.errors.emailInvalid')),
+    password: hasSession
+      ? z.string().optional()
+      : z.string().min(8, t('register.errors.passwordTooShort')),
     phone: z
       .string()
       .trim()
@@ -144,29 +168,34 @@ export function ProRegisterPage() {
 
   async function onSubmit(values: FormValues) {
     setFormError(null)
-    const supabase = getSupabaseClient()
 
-    // One auth system (CLAUDE.md). signup_intent is a routing hint only —
-    // the application row, not this field, is what the workflow reads.
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: { full_name: `${values.firstName} ${values.lastName}`.trim(), signup_intent: 'pro' },
-      },
-    })
+    // Already signed in — with a password, with Google, or with Apple. Skip
+    // account creation entirely and apply as this identity.
+    if (!hasSession) {
+      const supabase = getSupabaseClient()
 
-    if (error) {
-      setFormError(error.message)
-      return
-    }
+      // One auth system (CLAUDE.md). signup_intent is a routing hint only —
+      // the application row, not this field, is what the workflow reads.
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email ?? '',
+        password: values.password ?? '',
+        options: {
+          data: { full_name: `${values.firstName} ${values.lastName}`.trim(), signup_intent: 'pro' },
+        },
+      })
 
-    // Email confirmation is on: no session yet, so the application cannot be
-    // written (submit_professional_application requires auth.uid()). Tell the
-    // applicant the truth rather than pretending the application landed.
-    if (!data.session) {
-      setConfirmationEmail(values.email)
-      return
+      if (error) {
+        setFormError(error.message)
+        return
+      }
+
+      // Email confirmation is on: no session yet, so the application cannot be
+      // written (submit_professional_application requires auth.uid()). Tell the
+      // applicant the truth rather than pretending the application landed.
+      if (!data.session) {
+        setConfirmationEmail(values.email ?? '')
+        return
+      }
     }
 
     try {
@@ -230,8 +259,23 @@ export function ProRegisterPage() {
         </div>
       }
     >
+      {/*
+        Returns to this same page, so the applicant comes back signed in and
+        finishes the application they were already filling in.
+      */}
+      {!authLoading && !hasSession ? (
+        <>
+          <SocialAuthButtons intent="pro" next="/pro/register" />
+          <AuthDivider />
+        </>
+      ) : null}
+
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         {formError ? <Alert variant="error">{formError}</Alert> : null}
+
+        {hasSession ? (
+          <Alert variant="info">{t('social.applyingAsSignedIn')}</Alert>
+        ) : null}
 
         <SelectedPlanNotice />
 
@@ -243,15 +287,17 @@ export function ProRegisterPage() {
             <TextField label={t('register.firstName')} autoComplete="given-name" error={errors.firstName?.message} {...register('firstName')} />
             <TextField label={t('register.lastName')} autoComplete="family-name" error={errors.lastName?.message} {...register('lastName')} />
           </div>
-          <TextField
-            label={t('register.email')}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            spellCheck={false}
-            error={errors.email?.message}
-            {...register('email')}
-          />
+          {hasSession ? null : (
+            <TextField
+              label={t('register.email')}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              spellCheck={false}
+              error={errors.email?.message}
+              {...register('email')}
+            />
+          )}
           <TextField
             label={t('register.phone')}
             type="tel"
@@ -261,14 +307,16 @@ export function ProRegisterPage() {
             error={errors.phone?.message}
             {...register('phone')}
           />
-          <TextField
-            label={t('register.password')}
-            type="password"
-            autoComplete="new-password"
-            hint={t('register.passwordHint')}
-            error={errors.password?.message}
-            {...register('password')}
-          />
+          {hasSession ? null : (
+            <TextField
+              label={t('register.password')}
+              type="password"
+              autoComplete="new-password"
+              hint={t('register.passwordHint')}
+              error={errors.password?.message}
+              {...register('password')}
+            />
+          )}
         </fieldset>
 
         <fieldset className="flex flex-col gap-4">

@@ -7,6 +7,8 @@ import { TextField } from '@/components/ui/text-field'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
+import { safeInternalPath } from '@/lib/safe-redirect'
+import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -15,11 +17,6 @@ const signupSchema = z.object({
 })
 
 type SignupFormValues = z.infer<typeof signupSchema>
-
-function safeRedirectTarget(target: string | null): string | null {
-  if (target && target.startsWith('/') && !target.startsWith('//')) return target
-  return null
-}
 
 /**
  * Shared account-creation form for every signup entry point. One Supabase
@@ -49,7 +46,8 @@ export function SignupForm({
   const [searchParams] = useSearchParams()
   const [formError, setFormError] = useState<string | null>(null)
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
-  const redirectTo = safeRedirectTarget(searchParams.get('redirect'))
+  const redirectParam = searchParams.get('redirect')
+  const redirectTo = safeInternalPath(redirectParam)
 
   const {
     register,
@@ -99,31 +97,45 @@ export function SignupForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-      {formError ? <Alert variant="error">{formError}</Alert> : null}
+    <div>
+      {/*
+        Google/Apple sit above the form on signup too. Creating an account
+        with a provider is the SAME act as creating one with a password: it
+        produces one ordinary auth.users row with no memberships and no
+        platform role. `signupIntent` is only carried by the password path
+        because it lives in raw_user_meta_data at signUp() time; the provider
+        path carries the equivalent hint through the callback's `intent`
+        parameter instead. Neither is authorization.
+      */}
+      <SocialAuthButtons intent={signupIntent === 'pro' ? 'pro' : 'customer'} next={redirectParam} />
+      <AuthDivider />
 
-      <TextField label="Full name" autoComplete="name" error={errors.fullName?.message} {...register('fullName')} />
-      <TextField
-        label="Email"
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        spellCheck={false}
-        error={errors.email?.message}
-        {...register('email')}
-      />
-      <TextField
-        label="Password"
-        type="password"
-        autoComplete="new-password"
-        hint="At least 8 characters."
-        error={errors.password?.message}
-        {...register('password')}
-      />
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+        {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-      <Button type="submit" isLoading={isSubmitting} className="w-full">
-        Sign up
-      </Button>
-    </form>
+        <TextField label="Full name" autoComplete="name" error={errors.fullName?.message} {...register('fullName')} />
+        <TextField
+          label="Email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          spellCheck={false}
+          error={errors.email?.message}
+          {...register('email')}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          hint="At least 8 characters."
+          error={errors.password?.message}
+          {...register('password')}
+        />
+
+        <Button type="submit" isLoading={isSubmitting} className="w-full">
+          Sign up
+        </Button>
+      </form>
+    </div>
   )
 }

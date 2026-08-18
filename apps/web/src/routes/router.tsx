@@ -120,6 +120,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        // The ONE place every Google/Apple sign-in returns to, whichever
+        // door it started at (/login, /register, /pro/login, /pro/register,
+        // /platform/login). Three callbacks would mean three implementations
+        // of "who is this and where do they belong" — which is exactly how
+        // a platform door ends up with a weaker check than a customer one.
+        path: 'auth/callback',
+        lazy: async () => {
+          const { AuthCallbackPage } = await import('@/pages/auth-callback-page')
+          return { Component: AuthCallbackPage }
+        },
+      },
+      {
         // Compatibility redirects: the canonical customer routes are now
         // /login and /register. Kept so existing links (FavoriteButton,
         // RequireAuth's loginPath, bookmarks) keep working.

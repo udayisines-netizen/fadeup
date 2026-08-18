@@ -1,0 +1,93 @@
+# FadeUp — Google and Apple sign-in for GoTrue. Version-controlled, contains
+# NO secrets: every value below is a ${VARIABLE} read from infra/supabase/.env,
+# which is gitignored.
+#
+# Layers on top of docker-compose.yml the same way
+# docker-compose.fadeup-auth.yml does — Compose merges `environment:` maps
+# across every COMPOSE_FILE entry, later files winning per key.
+#
+# Apply once, on this host:
+#   cd infra/supabase && sh run.sh config add fadeup-oauth
+# (that only rewrites the COMPOSE_FILE= line in .env, never a secret)
+#
+# ---------------------------------------------------------------------------
+# WHY THESE EXACT VARIABLE NAMES
+#
+# Not guessed. The running image is supabase/gotrue:v2.189.0, and its
+# /auth/v1/settings endpoint enumerates the providers it actually supports —
+# `apple` and `google` are both present there. GoTrue's convention is
+# GOTRUE_EXTERNAL_<PROVIDER>_{ENABLED,CLIENT_ID,SECRET,REDIRECT_URI}, which
+# the base docker-compose.yml already documents for GOOGLE in its commented
+# provider block.
+#
+# ---------------------------------------------------------------------------
+# WHY EVERY DEFAULT IS "false"
+#
+# `${VAR:-false}` rather than `${VAR}`. An unset variable would otherwise
+# expand to an empty string, and GoTrue reads an empty ENABLED as invalid
+# configuration and refuses to start — turning "credentials not supplied
+# yet" into "the entire auth service is down", which would take email and
+# password sign-in down with it. With these defaults the stack starts
+# perfectly well with no provider credentials at all; the buttons are simply
+# rejected by GoTrue with a clear error until an operator fills them in.
+#
+# ---------------------------------------------------------------------------
+# WHAT ENABLING THESE DOES AND DOES NOT DO
+#
+# DOES: let anyone authenticate with Google or Apple, at every FadeUp door —
+#       /login, /register, /pro/login, /pro/register AND /platform/login.
+#       All five share this one provider configuration and one auth.users
+#       namespace, because a FadeUp identity may simultaneously be a
+#       customer, a professional, a business owner and platform staff.
+#
+# DOES NOT: grant any FadeUp role. Platform access is a public.platform_members
+#       row — a table with no client-facing INSERT/UPDATE/DELETE grant, and
+#       no path to one through any provider. Professional access is a
+#       public.memberships row. Both are re-checked server-side by RLS on
+#       every request. A Google account whose metadata claims
+#       {"role":"platform_admin"} gets exactly nothing; that is asserted
+#       behaviourally in supabase/VERIFY_LOTS_A_A5_B_2026_08_18.sql.
+#
+# ---------------------------------------------------------------------------
+# THE REDIRECT URI
+#
+# Set EXPLICITLY rather than letting GoTrue derive it from API_EXTERNAL_URL.
+# That is deliberate: API_EXTERNAL_URL also feeds GOTRUE_JWT_ISSUER in the
+# base compose file, so changing it to fix an OAuth URL would quietly change
+# the issuer stamped into every token too. Setting the redirect URI on its
+# own is the surgical change.
+#
+# It must be the PUBLIC HTTPS callback:
+#
+#   https://fadeup.jasmean.com/auth/v1/callback
+#
+# Google refuses a plain-HTTP or bare-IP redirect URI outright; Apple
+# additionally requires a verified domain. Reaching GoTrue at that URL
+# requires the host nginx to proxy /auth/v1/ to Kong — see
+# infra/web/nginx-host-fadeup.conf.example. Configure that FIRST; a provider
+# pointed at an unreachable callback fails at the last hop, after the user
+# has already approved consent, which is the most confusing possible failure.
+#
+# Apple's client secret is a JWT signed with a .p8 private key and EXPIRES —
+# Apple caps it at six months. It is a rotating credential, not a fixed one.
+# Never commit the .p8. See docs/architecture.md for the rotation note.
+
+services:
+  auth:
+    environment:
+      # --- Google ---------------------------------------------------------
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${FADEUP_GOOGLE_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${FADEUP_GOOGLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${FADEUP_GOOGLE_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${FADEUP_OAUTH_CALLBACK_URL:-https://fadeup.jasmean.com/auth/v1/callback}
+
+      # --- Apple ----------------------------------------------------------
+      # CLIENT_ID is the Services ID (e.g. com.fadeup.web). GoTrue accepts a
+      # comma-separated list here, which is how the future FadeUp and FadeUp
+      # Pro native apps will be added: their bundle IDs join this list rather
+      # than needing a second provider configuration or a second identity
+      # namespace.
+      GOTRUE_EXTERNAL_APPLE_ENABLED: ${FADEUP_APPLE_ENABLED:-false}
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${FADEUP_APPLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_APPLE_SECRET: ${FADEUP_APPLE_SECRET:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${FADEUP_OAUTH_CALLBACK_URL:-https://fadeup.jasmean.com/auth/v1/callback}

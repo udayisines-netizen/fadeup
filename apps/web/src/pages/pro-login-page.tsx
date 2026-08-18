@@ -44,7 +44,7 @@ export function ProLoginPage() {
         </div>
       }
     >
-      <LoginForm defaultRedirect="/workspace" />
+      <LoginForm defaultRedirect="/workspace" intent="pro" />
     </AuthCard>
   )
 }

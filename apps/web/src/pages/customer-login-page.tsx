@@ -32,7 +32,7 @@ export function CustomerLoginPage() {
         </p>
       }
     >
-      <LoginForm defaultRedirect="/workspace" />
+      <LoginForm defaultRedirect="/workspace" intent="customer" />
     </AuthCard>
   )
 }

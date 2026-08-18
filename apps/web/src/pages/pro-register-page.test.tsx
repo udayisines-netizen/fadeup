@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProRegisterPage } from '@/pages/pro-register-page'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 import { useSubmitProfessionalApplication } from '@/lib/queries/professional-applications'
 
 const mockNavigate = vi.fn()
@@ -13,6 +14,11 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('@/lib/supabase', () => ({ getSupabaseClient: vi.fn() }))
+
+// The page now branches on whether a session already exists: a visitor who
+// arrived via "Continue with Google/Apple" is already authenticated, so the
+// form must apply as that identity instead of creating a second account.
+vi.mock('@/lib/auth-context', () => ({ useAuth: vi.fn() }))
 
 vi.mock('@/lib/queries/professional-applications', async () => {
   // PROFESSIONAL_TYPES drives the type picker — keep the real constant so the
@@ -25,6 +31,17 @@ vi.mock('@/lib/queries/professional-applications', async () => {
 
 const mockGetSupabaseClient = vi.mocked(getSupabaseClient)
 const mockUseSubmit = vi.mocked(useSubmitProfessionalApplication)
+const mockUseAuth = vi.mocked(useAuth)
+
+/** Signed out — the classic path, where this form also creates the account. */
+function signedOut() {
+  mockUseAuth.mockReturnValue({ session: null, user: null, loading: false })
+}
+
+/** Signed in, e.g. having just come back from Google or Apple. */
+function signedIn() {
+  mockUseAuth.mockReturnValue({ session: {} as never, user: { id: 'user-1' } as never, loading: false })
+}
 
 const signUp = vi.fn()
 const mutateAsync = vi.fn()
@@ -49,6 +66,7 @@ function fillRequiredFields(overrides: { phone?: string } = {}) {
 
 describe('ProRegisterPage — /pro/register submits an APPLICATION, not an account upgrade', () => {
   beforeEach(() => {
+    signedOut()
     mockNavigate.mockClear()
     signUp.mockReset()
     mutateAsync.mockReset()
@@ -181,6 +199,7 @@ describe('ProRegisterPage — /pro/register submits an APPLICATION, not an accou
 
 describe('plan intent arriving from /for-business', () => {
   beforeEach(() => {
+    signedOut()
     mockUseSubmit.mockReturnValue({ mutateAsync } as never)
     mockGetSupabaseClient.mockReturnValue({ auth: { signUp } } as never)
   })
@@ -223,5 +242,51 @@ describe('plan intent arriving from /for-business', () => {
     const payload = mutateAsync.mock.calls.at(-1)![0]
     expect(JSON.stringify(payload)).not.toContain('multi_scale')
     expect(mockNavigate).toHaveBeenCalledWith('/pro/application', { replace: true })
+  })
+})
+
+describe('ProRegisterPage — applying as an identity that already exists', () => {
+  beforeEach(() => {
+    signedIn()
+    mockNavigate.mockClear()
+    signUp.mockReset()
+    mutateAsync.mockReset()
+    mutateAsync.mockResolvedValue({ id: 'app-1', status: 'pending_review' })
+    mockGetSupabaseClient.mockReturnValue({ auth: { signUp } } as never)
+    mockUseSubmit.mockReturnValue({ mutateAsync } as never)
+  })
+
+  it('does not ask a signed-in visitor to create a second account', () => {
+    // FadeUp has ONE auth.users namespace. A customer who has used the app
+    // for a year and now opens a shop applies as themselves — same account,
+    // same Passport, same booking history.
+    renderPage()
+
+    expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
+  })
+
+  it('submits the application without calling signUp', async () => {
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Karim' } })
+    fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Benali' } })
+    fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '06 12 34 56 78' } })
+    fireEvent.change(screen.getByLabelText('Business name'), { target: { value: 'Fade City' } })
+    fireEvent.submit(screen.getByRole('button', { name: /send|submit|application/i }))
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled())
+    expect(signUp).not.toHaveBeenCalled()
+  })
+
+  it('offers Google and Apple only when there is no session to apply as', () => {
+    const signedInRender = renderPage()
+    expect(screen.queryByRole('button', { name: /continue with google/i })).not.toBeInTheDocument()
+    signedInRender.unmount()
+
+    signedOut()
+    renderPage()
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with apple/i })).toBeInTheDocument()
   })
 })
