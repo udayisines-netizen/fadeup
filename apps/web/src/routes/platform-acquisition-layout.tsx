@@ -7,6 +7,7 @@ const ACQUISITION_NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: '/platform/acquisition/search', label: 'Search' },
   { to: '/platform/acquisition/map', label: 'Map' },
   { to: '/platform/acquisition/prospects', label: 'Prospects' },
+  { to: '/platform/acquisition/competitors', label: 'Competitors' },
   { to: '/platform/acquisition/barbershops', label: 'Barbershops' },
   { to: '/platform/acquisition/independent-barbers', label: 'Independent barbers' },
   { to: '/platform/acquisition/pipeline', label: 'Pipeline' },

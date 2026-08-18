@@ -331,6 +331,13 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: 'competitors',
+                lazy: async () => {
+                  const { PlatformAcquisitionCompetitorsPage } = await import('@/pages/platform-acquisition-competitors-page')
+                  return { Component: PlatformAcquisitionCompetitorsPage }
+                },
+              },
+              {
                 path: 'barbershops',
                 lazy: async () => {
                   const { PlatformAcquisitionBarbershopsPage } = await import('@/pages/platform-acquisition-barbershops-page')
@@ -384,6 +391,87 @@ export const router = createBrowserRouter([
                 lazy: async () => {
                   const { PlatformAcquisitionSuppressionsPage } = await import('@/pages/platform-acquisition-suppressions-page')
                   return { Component: PlatformAcquisitionSuppressionsPage }
+                },
+              },
+            ],
+          },
+          {
+            path: 'outreach',
+            lazy: async () => {
+              const { PlatformOutreachLayout } = await import('@/routes/platform-outreach-layout')
+              return { Component: PlatformOutreachLayout }
+            },
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { PlatformOutreachCampaignsPage } = await import('@/pages/platform-outreach-campaigns-page')
+                  return { Component: PlatformOutreachCampaignsPage }
+                },
+              },
+              {
+                path: 'whatsapp',
+                lazy: async () => {
+                  const { PlatformOutreachCampaignsPage } = await import('@/pages/platform-outreach-campaigns-page')
+                  return { Component: PlatformOutreachCampaignsPage }
+                },
+              },
+              {
+                path: 'whatsapp/:campaignId',
+                lazy: async () => {
+                  const { PlatformOutreachCampaignDetailPage } = await import('@/pages/platform-outreach-campaign-detail-page')
+                  return { Component: PlatformOutreachCampaignDetailPage }
+                },
+              },
+              {
+                path: 'templates',
+                lazy: async () => {
+                  const { PlatformOutreachTemplatesPage } = await import('@/pages/platform-outreach-templates-page')
+                  return { Component: PlatformOutreachTemplatesPage }
+                },
+              },
+              {
+                path: 'experiments',
+                lazy: async () => {
+                  const { PlatformDataScienceExperimentsPage } = await import('@/pages/platform-data-science-experiments-page')
+                  return { Component: PlatformDataScienceExperimentsPage }
+                },
+              },
+              {
+                path: 'replies',
+                lazy: async () => {
+                  const { PlatformOutreachRepliesPage } = await import('@/pages/platform-outreach-replies-page')
+                  return { Component: PlatformOutreachRepliesPage }
+                },
+              },
+            ],
+          },
+          {
+            path: 'data-science',
+            lazy: async () => {
+              const { PlatformDataScienceLayout } = await import('@/routes/platform-data-science-layout')
+              return { Component: PlatformDataScienceLayout }
+            },
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { PlatformDataScienceModelsPage } = await import('@/pages/platform-data-science-models-page')
+                  return { Component: PlatformDataScienceModelsPage }
+                },
+              },
+              {
+                path: 'dataset',
+                lazy: async () => {
+                  const { PlatformDataScienceDatasetPage } = await import('@/pages/platform-data-science-dataset-page')
+                  return { Component: PlatformDataScienceDatasetPage }
+                },
+              },
+              {
+                path: 'performance',
+                lazy: async () => {
+                  const { PlatformDataSciencePerformancePage } = await import('@/pages/platform-data-science-performance-page')
+                  return { Component: PlatformDataSciencePerformancePage }
                 },
               },
             ],

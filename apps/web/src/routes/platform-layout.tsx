@@ -53,6 +53,8 @@ function PlatformShell() {
             <AppNavLink to="/platform/applications">Applications</AppNavLink>
             <AppNavLink to="/platform/organizations">Organizations</AppNavLink>
             <AppNavLink to="/platform/acquisition">Acquisition</AppNavLink>
+            <AppNavLink to="/platform/outreach">Outreach</AppNavLink>
+            <AppNavLink to="/platform/data-science">Data science</AppNavLink>
             <AppNavLink to="/platform/team">Team</AppNavLink>
             <AppNavLink to="/platform/audit">Audit log</AppNavLink>
           </>
