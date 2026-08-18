@@ -27,13 +27,21 @@ echo "fadeup-scheduler: starting, interval ${INTERVAL}s, host ${PGHOST}, user ${
 # ticks up behind each other.
 export PGCONNECT_TIMEOUT=10
 
+# statement_timeout goes on the CONNECTION, not in the query. Sending
+# `set statement_timeout = ...; select ...` makes psql return TWO results —
+# the literal string "SET" and then the count — so the output is "SET\n0" and
+# every parse of it is wrong. Found on the first live tick, which logged
+# "expired SET / 0 booking request(s)" and would have logged on all 1,440
+# ticks a day.
+export PGOPTIONS='-c statement_timeout=30s'
+
 while true; do
   # `|| true` around the whole tick on purpose: a database restart or a brief
   # network blip must not kill the scheduler. It logs, waits, and tries again —
   # the maintenance function is idempotent, so a missed tick costs nothing but
   # a minute of latency.
   if output=$(psql -v ON_ERROR_STOP=1 -At \
-        -c "set statement_timeout = '30s'; select public.run_booking_maintenance();" 2>&1); then
+        -c "select public.run_booking_maintenance();" 2>&1); then
     date +%s > "$HEARTBEAT"
     # Only say something when something happened. A quiet log is a readable log,
     # and this runs 1,440 times a day.
