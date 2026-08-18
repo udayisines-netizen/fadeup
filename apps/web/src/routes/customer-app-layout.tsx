@@ -4,6 +4,7 @@ import { House, CalendarDays, Compass, IdCard, CircleUserRound } from 'lucide-re
 import { cn } from '@/lib/cn'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import { usePendingClaimRedemption } from '@/lib/use-pending-claim'
 
 /**
@@ -46,6 +47,12 @@ function TopStrip() {
           FadeUp
         </Link>
         <div className="flex items-center gap-1.5">
+          {/*
+            Also refetches the booking list whenever a notification lands, so a
+            customer sitting on Home sees the badge AND has fresh appointments
+            the moment they tap through.
+          */}
+          <NotificationBell extraInvalidation={[['my-appointments']]} />
           <LanguageSwitcher />
           <ThemeToggle />
         </div>

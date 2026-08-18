@@ -90,7 +90,10 @@
     "statusCancelled": "ملغى",
     "statusNoShow": "لم يحضر",
     "errorTitle": "تعذّر تحميل مواعيدك",
-    "cancelError": "تعذّر إلغاء هذا الموعد"
+    "cancelError": "تعذّر إلغاء هذا الموعد",
+    "withdraw": "سحب الطلب",
+    "findAnotherTime": "البحث عن وقت آخر",
+    "move": "تغيير"
   },
   "favorites": {
     "title": "المفضلة",
@@ -100,5 +103,42 @@
     "remove": "إزالة",
     "viewProfile": "عرض الملف الشخصي",
     "book": "احجز"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "في انتظار التأكيد",
+      "confirmed": "مؤكَّد",
+      "declined": "لم يُقبل",
+      "expired": "انتهت صلاحية الطلب",
+      "cancelled": "ملغى",
+      "completed": "مكتمل",
+      "missed": "لم يتم الحضور"
+    },
+    "expiringNow": "ينتهي الآن",
+    "expiresInDays": "{{count}} ي",
+    "expiresInHours": "{{count}} س",
+    "expiresInMinutes": "{{count}} د",
+    "expiresPrefix": "ينتهي خلال",
+    "waitingExplainer": "لا يزال على النشاط تأكيد الحجز.",
+    "progress": {
+      "label": "حالة الطلب",
+      "sent": "تم إرسال الطلب",
+      "waiting": "رد النشاط",
+      "confirmed": "مؤكَّد"
+    }
+  },
+  "reschedule": {
+    "title": "تغيير موعد الحجز",
+    "description": "اختر وقتًا جديدًا يناسبك.",
+    "dateLabel": "التاريخ",
+    "slotsLabel": "الأوقات المتاحة",
+    "noSlotsTitle": "لا توجد أوقات متاحة",
+    "noSlotsBody": "لا يوجد شاغر في ذلك اليوم. جرّب تاريخًا آخر.",
+    "needsConfirmation": "يؤكّد النشاط الوقت الجديد، تمامًا كما في الحجز الأصلي.",
+    "submit": "طلب هذا الوقت",
+    "cancel": "الإبقاء على الوقت الحالي",
+    "slotTaken": "تم حجز هذا الوقت للتو. اختر وقتًا آخر.",
+    "notAllowed": "لم يعد بالإمكان تغيير هذا الموعد.",
+    "failed": "تعذّر تغيير الموعد. حاول مرة أخرى."
   }
 }

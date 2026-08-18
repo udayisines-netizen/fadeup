@@ -27,3 +27,6 @@ apps/prospect-worker-v2/**/__pycache__/
 
 # Public build-time values for the web container (see infra/web/.env.example).
 infra/web/.env
+
+# Scheduler DB credentials (see .env.scheduler.example).
+infra/scheduler/.env.scheduler

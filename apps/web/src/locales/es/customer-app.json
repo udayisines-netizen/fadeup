@@ -90,7 +90,10 @@
     "statusCancelled": "Cancelada",
     "statusNoShow": "No asistió",
     "errorTitle": "No se pudieron cargar tus citas",
-    "cancelError": "No se pudo cancelar esta cita"
+    "cancelError": "No se pudo cancelar esta cita",
+    "withdraw": "Retirar solicitud",
+    "findAnotherTime": "Buscar otra hora",
+    "move": "Cambiar"
   },
   "favorites": {
     "title": "Favoritos",
@@ -100,5 +103,42 @@
     "remove": "Quitar",
     "viewProfile": "Ver perfil",
     "book": "Reservar"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "Esperando confirmación",
+      "confirmed": "Confirmada",
+      "declined": "No aceptada",
+      "expired": "Solicitud caducada",
+      "cancelled": "Cancelada",
+      "completed": "Completada",
+      "missed": "No asistida"
+    },
+    "expiringNow": "Caduca ahora",
+    "expiresInDays": "{{count}} d",
+    "expiresInHours": "{{count}} h",
+    "expiresInMinutes": "{{count}} min",
+    "expiresPrefix": "Caduca en",
+    "waitingExplainer": "El negocio todavía tiene que confirmarla.",
+    "progress": {
+      "label": "Estado de la solicitud",
+      "sent": "Solicitud enviada",
+      "waiting": "Respuesta del negocio",
+      "confirmed": "Confirmada"
+    }
+  },
+  "reschedule": {
+    "title": "Cambiar esta cita",
+    "description": "Elige una hora nueva que te venga bien.",
+    "dateLabel": "Fecha",
+    "slotsLabel": "Horas disponibles",
+    "noSlotsTitle": "No hay horas disponibles",
+    "noSlotsBody": "Nada libre ese día. Prueba otra fecha.",
+    "needsConfirmation": "El negocio confirma la nueva hora, igual que la reserva original.",
+    "submit": "Solicitar esta hora",
+    "cancel": "Mantener la hora actual",
+    "slotTaken": "Esa hora acaba de ocuparse. Elige otra.",
+    "notAllowed": "Esta cita ya no se puede cambiar.",
+    "failed": "No se pudo cambiar la cita. Inténtalo de nuevo."
   }
 }

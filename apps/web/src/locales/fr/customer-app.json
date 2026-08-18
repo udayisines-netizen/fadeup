@@ -90,7 +90,10 @@
     "statusCancelled": "Annulé",
     "statusNoShow": "Absence",
     "errorTitle": "Impossible de charger tes rendez-vous",
-    "cancelError": "Impossible d'annuler ce rendez-vous"
+    "cancelError": "Impossible d'annuler ce rendez-vous",
+    "withdraw": "Retirer la demande",
+    "findAnotherTime": "Trouver un autre créneau",
+    "move": "Déplacer"
   },
   "favorites": {
     "title": "Favoris",
@@ -100,5 +103,42 @@
     "remove": "Retirer",
     "viewProfile": "Voir le profil",
     "book": "Réserver"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "En attente de confirmation",
+      "confirmed": "Confirmé",
+      "declined": "Non accepté",
+      "expired": "Demande expirée",
+      "cancelled": "Annulé",
+      "completed": "Terminé",
+      "missed": "Non honoré"
+    },
+    "expiringNow": "Expire maintenant",
+    "expiresInDays": "{{count}} j",
+    "expiresInHours": "{{count}} h",
+    "expiresInMinutes": "{{count}} min",
+    "expiresPrefix": "Expire dans",
+    "waitingExplainer": "L'établissement doit encore confirmer.",
+    "progress": {
+      "label": "Suivi de la demande",
+      "sent": "Demande envoyée",
+      "waiting": "Réponse du salon",
+      "confirmed": "Confirmé"
+    }
+  },
+  "reschedule": {
+    "title": "Déplacer ce rendez-vous",
+    "description": "Choisissez un nouveau créneau qui vous convient.",
+    "dateLabel": "Date",
+    "slotsLabel": "Créneaux disponibles",
+    "noSlotsTitle": "Aucun créneau disponible",
+    "noSlotsBody": "Rien de libre ce jour-là. Essayez une autre date.",
+    "needsConfirmation": "L'établissement confirme le nouvel horaire, comme pour la réservation initiale.",
+    "submit": "Demander ce créneau",
+    "cancel": "Garder l'horaire actuel",
+    "slotTaken": "Ce créneau vient d'être pris. Choisissez-en un autre.",
+    "notAllowed": "Ce rendez-vous ne peut plus être déplacé.",
+    "failed": "Impossible de déplacer le rendez-vous. Réessayez."
   }
 }

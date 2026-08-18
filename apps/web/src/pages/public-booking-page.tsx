@@ -21,7 +21,6 @@ import { useMyCustomerProfile, storePendingClaimToken } from '@/lib/queries/cust
 import { useAuth } from '@/lib/auth-context'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -31,6 +30,7 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { BookingProgress, BookingStatusBadge } from '@/components/booking/booking-status'
 import { getErrorMessage } from '@/lib/get-error-message'
 
 // --- small formatting helpers (page-local, mirrors the convention in app-services-page.tsx) ---
@@ -796,13 +796,24 @@ function SuccessScreen({
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-100">
         <CalendarCheck2 className="h-6 w-6 text-success-700" aria-hidden="true" />
       </div>
-      <h1 className="mt-4 text-xl font-semibold text-ink-950">Request sent</h1>
+      {/*
+        Named for the shop rather than repeating "Request sent", which the
+        progress rail below already says as its first step. Two identical
+        headings on one screen is a hierarchy problem, not a reinforcement.
+      */}
+      <h1 className="mt-4 text-xl font-semibold text-ink-950">Sent to {organization.name}</h1>
       <p className="mt-1 text-sm text-ink-500">
-        Your appointment request has been sent to {organization.name} — they&apos;ll confirm it shortly.
+        They&apos;ll confirm it shortly. You&apos;ll be told as soon as they do.
       </p>
 
-      <div className="mt-6 flex justify-center">
-        <Badge variant="warning">Pending confirmation</Badge>
+      {/*
+        The same progress rail the customer will see on their appointments
+        screen, so the story a booking tells starts here and continues there
+        rather than restarting in different words.
+      */}
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <BookingStatusBadge stage="waiting" />
+        <BookingProgress stage="waiting" className="w-full max-w-sm" />
       </div>
 
       <dl className="mt-6 flex flex-col gap-1.5 text-left text-sm">

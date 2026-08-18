@@ -1,0 +1,70 @@
+# FadeUp booking scheduler — the background tick that expires unanswered
+# booking requests.
+#
+# Usage:
+#   Start:  docker compose -f infra/scheduler/docker-compose.yml up -d
+#   Logs:   docker compose -f infra/scheduler/docker-compose.yml logs -f
+#   Stop:   docker compose -f infra/scheduler/docker-compose.yml down
+#
+# WHY THIS EXISTS AS ITS OWN THING
+#
+# A pending booking request holds a barber's slot. If nobody answers it, the
+# slot has to be released — and the entire failure mode is a shop that is NOT
+# looking at the screen. So expiry cannot run on a page load. The audit already
+# flagged the opportunistic no-show sweep (fired when staff happen to open the
+# schedule) as the wrong pattern; repeating it here would be worse, because
+# this one frees inventory.
+#
+# WHY NOT pg_cron
+#   Not installed, and installing it needs shared_preload_libraries plus a
+#   cluster restart — a config-and-restart change to a live database, which is
+#   not something this lot should be doing.
+#
+# WHY NOT the existing Worker V2 queue
+#   It exists and it works, but Worker V2 is feature frozen, and coupling
+#   booking lifecycle to the acquisition pipeline would mean an acquisition
+#   incident could stop slots being released. Two unrelated failure domains.
+#
+# So: the smallest correct thing. A postgres client image, a shell loop, one
+# SQL call, no application code and no dependencies to keep patched.
+#
+# PRIVILEGE
+#   Connects as fadeup_scheduler, which holds EXECUTE on exactly one function
+#   (public.run_booking_maintenance) and no table privileges at all. It cannot
+#   read an appointment, let alone change one by any other route.
+
+name: fadeup-scheduler
+
+services:
+  scheduler:
+    container_name: fadeup-scheduler
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.scheduler
+    # Joins the existing Supabase network as an external network — this file
+    # does not own or manage it, and never touches Jasmean OS resources.
+    networks:
+      - fadeup-supabase_default
+    volumes:
+      - ./tick.sh:/usr/local/bin/tick.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/tick.sh"]
+    healthcheck:
+      # The loop writes a heartbeat after every successful tick. If ticks stop,
+      # the file goes stale and the container reports unhealthy — which is the
+      # signal that matters, since a scheduler that is "running" but not
+      # ticking looks identical to a working one from the outside.
+      test: ["CMD", "sh", "-c", "test -f /tmp/last-tick && [ $(( $(date +%s) - $(cat /tmp/last-tick) )) -lt 300 ]"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  fadeup-supabase_default:
+    external: true

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
+import { pollingInterval, useRealtimeInvalidation } from '@/lib/realtime'
 
 /**
  * The signed-in customer's own appointments/queue/favorites, across every
@@ -11,6 +12,46 @@ import { getSupabaseClient } from '@/lib/supabase'
  */
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
+
+/**
+ * WHY an appointment ended. LOT C deliberately added no new status values —
+ * every terminal state rides on status='cancelled' so the existing GiST
+ * exclusion predicate frees the slot without being rebuilt — so `resolution` is
+ * what lets this UI say "not accepted" or "expired" instead of the blunt
+ * "cancelled" all three would otherwise share.
+ */
+export type AppointmentResolution =
+  | 'declined'
+  | 'expired'
+  | 'cancelled_by_customer'
+  | 'cancelled_by_business'
+  | 'rescheduled'
+
+/**
+ * What the customer is actually looking at. Derived from (status, resolution)
+ * once, here, so every surface tells the same story.
+ */
+export type BookingStage = 'waiting' | 'confirmed' | 'declined' | 'expired' | 'cancelled' | 'completed' | 'missed'
+
+export function bookingStage(appointment: {
+  status: AppointmentStatus
+  resolution: AppointmentResolution | null
+}): BookingStage {
+  if (appointment.status === 'pending') return 'waiting'
+  if (appointment.status === 'confirmed') return 'confirmed'
+  if (appointment.status === 'completed') return 'completed'
+  if (appointment.status === 'no_show') return 'missed'
+  switch (appointment.resolution) {
+    case 'declined': return 'declined'
+    case 'expired': return 'expired'
+    default: return 'cancelled'
+  }
+}
+
+/** Stages that are still going somewhere, as opposed to finished. */
+export function isLiveStage(stage: BookingStage): boolean {
+  return stage === 'waiting' || stage === 'confirmed'
+}
 
 export interface MyAppointment {
   id: string
@@ -27,6 +68,11 @@ export interface MyAppointment {
   endsAt: string
   status: AppointmentStatus
   priceCents: number | null
+  resolution: AppointmentResolution | null
+  resolutionNote: string | null
+  /** Server-derived decision deadline while waiting. Displayed, never computed. */
+  expiresAt: string | null
+  createdAt: string
 }
 
 interface MyAppointmentRow {
@@ -44,6 +90,10 @@ interface MyAppointmentRow {
   ends_at: string
   status: AppointmentStatus
   price_cents: number | null
+  resolution: AppointmentResolution | null
+  resolution_note: string | null
+  expires_at: string | null
+  created_at: string
 }
 
 function mapAppointment(row: MyAppointmentRow): MyAppointment {
@@ -62,14 +112,38 @@ function mapAppointment(row: MyAppointmentRow): MyAppointment {
     endsAt: row.ends_at,
     status: row.status,
     priceCents: row.price_cents,
+    resolution: row.resolution,
+    resolutionNote: row.resolution_note,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
   }
 }
 
 const MY_APPOINTMENTS_KEY = ['my-appointments'] as const
 
-/** Every appointment the caller has ever made, any shop, most recent first. `enabled` on having a session. */
-export function useMyAppointments(enabled: boolean) {
-  return useQuery({
+/**
+ * Every appointment the caller has ever made, any shop, most recent first —
+ * and live.
+ *
+ * The subscription is on `notifications`, not `appointments`, and that is not a
+ * shortcut. Customers deliberately hold NO select policy on appointments (their
+ * reads go through curated RPCs so internal shop columns stay unreachable), so
+ * Postgres Changes on that table would deliver them nothing at all. Every
+ * booking transition writes them a notification row, which they DO own — so
+ * the notification is the signal, and this refetches the authoritative RPC on
+ * receiving one.
+ *
+ * That is what makes "shop accepts → customer sees Confirmed" work without a
+ * refresh.
+ */
+export function useMyAppointments(enabled: boolean, userId?: string) {
+  const realtimeStatus = useRealtimeInvalidation(
+    enabled && userId ? `my-bookings-${userId}` : null,
+    [{ table: 'notifications', filter: userId ? `user_id=eq.${userId}` : undefined, event: 'INSERT' }],
+    [MY_APPOINTMENTS_KEY as unknown as string[]],
+  )
+
+  const query = useQuery({
     queryKey: MY_APPOINTMENTS_KEY,
     queryFn: async (): Promise<MyAppointment[]> => {
       const supabase = getSupabaseClient()
@@ -78,7 +152,12 @@ export function useMyAppointments(enabled: boolean) {
       return ((data ?? []) as MyAppointmentRow[]).map(mapAppointment)
     },
     enabled,
+    // A request can expire on the server clock with no event reaching this tab
+    // at all, so the poll is a correctness backstop and not just a fallback.
+    refetchInterval: enabled ? pollingInterval(realtimeStatus, { live: 60_000, offline: 20_000 }) : false,
   })
+
+  return { ...query, realtimeStatus }
 }
 
 /** Cancels the caller's own pending/confirmed appointment — reuses the existing status machine, never a new cancellation rule. */

@@ -149,7 +149,10 @@ describe('PublicBookingPage', () => {
     renderAtSlug('jacks-barbers')
     await bookThrough('Sam Rivera')
 
-    expect(await screen.findByText('Request sent')).toBeInTheDocument()
+    // The success screen names the shop rather than repeating the progress
+    // rail's own "Request sent" step, and never implies the slot is confirmed.
+    expect(await screen.findByText("Sent to Jack's Barbers")).toBeInTheDocument()
+    expect(screen.getByText('Waiting for confirmation')).toBeInTheDocument()
     // The token is what lets the account they are being offered actually
     // contain this appointment — without it the CTA would be an empty promise.
     expect(mockStorePendingClaimToken).toHaveBeenCalledWith('tok-xyz')
@@ -174,7 +177,10 @@ describe('PublicBookingPage', () => {
     renderAtSlug('jacks-barbers')
     await bookThrough('Sam Rivera')
 
-    expect(await screen.findByText('Request sent')).toBeInTheDocument()
+    // The success screen names the shop rather than repeating the progress
+    // rail's own "Request sent" step, and never implies the slot is confirmed.
+    expect(await screen.findByText("Sent to Jack's Barbers")).toBeInTheDocument()
+    expect(screen.getByText('Waiting for confirmation')).toBeInTheDocument()
     expect(mockStorePendingClaimToken).not.toHaveBeenCalled()
     expect(screen.getByRole('link', { name: 'View my appointments' })).toHaveAttribute('href', '/app/customer/appointments')
     expect(screen.queryByRole('link', { name: 'Create an account' })).not.toBeInTheDocument()

@@ -90,7 +90,10 @@
     "statusCancelled": "Annullato",
     "statusNoShow": "Assente",
     "errorTitle": "Impossibile caricare i tuoi appuntamenti",
-    "cancelError": "Impossibile annullare questo appuntamento"
+    "cancelError": "Impossibile annullare questo appuntamento",
+    "withdraw": "Ritira la richiesta",
+    "findAnotherTime": "Trova un altro orario",
+    "move": "Sposta"
   },
   "favorites": {
     "title": "Preferiti",
@@ -100,5 +103,42 @@
     "remove": "Rimuovi",
     "viewProfile": "Vedi profilo",
     "book": "Prenota"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "In attesa di conferma",
+      "confirmed": "Confermato",
+      "declined": "Non accettata",
+      "expired": "Richiesta scaduta",
+      "cancelled": "Annullato",
+      "completed": "Completato",
+      "missed": "Non presentato"
+    },
+    "expiringNow": "Scade ora",
+    "expiresInDays": "{{count}} g",
+    "expiresInHours": "{{count}} h",
+    "expiresInMinutes": "{{count}} min",
+    "expiresPrefix": "Scade tra",
+    "waitingExplainer": "L'attività deve ancora confermare.",
+    "progress": {
+      "label": "Stato della richiesta",
+      "sent": "Richiesta inviata",
+      "waiting": "Risposta dell'attività",
+      "confirmed": "Confermato"
+    }
+  },
+  "reschedule": {
+    "title": "Sposta questo appuntamento",
+    "description": "Scegli un nuovo orario che ti va bene.",
+    "dateLabel": "Data",
+    "slotsLabel": "Orari disponibili",
+    "noSlotsTitle": "Nessun orario disponibile",
+    "noSlotsBody": "Niente libero quel giorno. Prova un'altra data.",
+    "needsConfirmation": "L'attività conferma il nuovo orario, come per la prenotazione originale.",
+    "submit": "Richiedi questo orario",
+    "cancel": "Mantieni l'orario",
+    "slotTaken": "Quell'orario è appena stato preso. Scegline un altro.",
+    "notAllowed": "Questo appuntamento non può più essere spostato.",
+    "failed": "Impossibile spostare l'appuntamento. Riprova."
   }
 }

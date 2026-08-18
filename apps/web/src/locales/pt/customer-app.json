@@ -90,7 +90,10 @@
     "statusCancelled": "Cancelada",
     "statusNoShow": "Não compareceu",
     "errorTitle": "Não foi possível carregar as tuas marcações",
-    "cancelError": "Não foi possível cancelar esta marcação"
+    "cancelError": "Não foi possível cancelar esta marcação",
+    "withdraw": "Retirar pedido",
+    "findAnotherTime": "Encontrar outro horário",
+    "move": "Alterar"
   },
   "favorites": {
     "title": "Favoritos",
@@ -100,5 +103,42 @@
     "remove": "Remover",
     "viewProfile": "Ver perfil",
     "book": "Marcar"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "A aguardar confirmação",
+      "confirmed": "Confirmada",
+      "declined": "Não aceite",
+      "expired": "Pedido expirado",
+      "cancelled": "Cancelada",
+      "completed": "Concluída",
+      "missed": "Falhou"
+    },
+    "expiringNow": "Expira agora",
+    "expiresInDays": "{{count}} d",
+    "expiresInHours": "{{count}} h",
+    "expiresInMinutes": "{{count}} min",
+    "expiresPrefix": "Expira em",
+    "waitingExplainer": "O negócio ainda tem de confirmar.",
+    "progress": {
+      "label": "Estado do pedido",
+      "sent": "Pedido enviado",
+      "waiting": "Resposta do negócio",
+      "confirmed": "Confirmada"
+    }
+  },
+  "reschedule": {
+    "title": "Alterar esta marcação",
+    "description": "Escolha um novo horário que lhe dê jeito.",
+    "dateLabel": "Data",
+    "slotsLabel": "Horários disponíveis",
+    "noSlotsTitle": "Sem horários disponíveis",
+    "noSlotsBody": "Nada livre nesse dia. Experimente outra data.",
+    "needsConfirmation": "O negócio confirma o novo horário, tal como na marcação original.",
+    "submit": "Pedir este horário",
+    "cancel": "Manter o horário",
+    "slotTaken": "Esse horário acabou de ser ocupado. Escolha outro.",
+    "notAllowed": "Esta marcação já não pode ser alterada.",
+    "failed": "Não foi possível alterar a marcação. Tente novamente."
   }
 }

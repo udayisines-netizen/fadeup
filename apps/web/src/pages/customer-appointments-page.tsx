@@ -3,10 +3,18 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CalendarX } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { useMyAppointments, useCancelMyAppointment, type AppointmentStatus, type MyAppointment } from '@/lib/queries/customer-app'
+import {
+  bookingStage,
+  isLiveStage,
+  useCancelMyAppointment,
+  useMyAppointments,
+  type MyAppointment,
+} from '@/lib/queries/customer-app'
+import { BookingProgress, BookingStatusBadge, ExpiryCountdown } from '@/components/booking/booking-status'
+import { RescheduleDialog } from '@/components/booking/reschedule-dialog'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
-import { Badge, type BadgeVariant } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -15,16 +23,6 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
-
-const CANCELLABLE_STATUSES = new Set<AppointmentStatus>(['pending', 'confirmed'])
-
-const STATUS_VARIANT: Record<AppointmentStatus, BadgeVariant> = {
-  pending: 'warning',
-  confirmed: 'accent',
-  completed: 'success',
-  cancelled: 'neutral',
-  no_show: 'danger',
-}
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -39,7 +37,10 @@ export function CustomerAppointmentsPage() {
   const { t } = useTranslation('customer-app')
   const { user } = useAuth()
   const toast = useToast()
-  const appointmentsQuery = useMyAppointments(Boolean(user))
+  // Live: every booking transition writes this customer a notification row,
+  // and useMyAppointments subscribes to those and refetches. A shop accepting
+  // or declining reaches this screen without a refresh.
+  const appointmentsQuery = useMyAppointments(Boolean(user), user?.id)
   const cancelAppointment = useCancelMyAppointment()
   const [cancellingId, setCancellingId] = useState<string | null>(null)
 
@@ -51,8 +52,11 @@ export function CustomerAppointmentsPage() {
     // confirming would otherwise sit here forever with a live Cancel
     // button — while Home, which does check the date, showed nothing
     // upcoming at all. Same predicate as customer-home-page.tsx.
+    // "Upcoming" means still going somewhere — waiting for an answer, or
+    // confirmed — and not already in the past. A declined or expired request
+    // belongs in history, however recent it is.
     const isUpcoming = (a: MyAppointment) =>
-      CANCELLABLE_STATUSES.has(a.status) && new Date(a.startsAt).getTime() > Date.now()
+      isLiveStage(bookingStage(a)) && new Date(a.startsAt).getTime() > Date.now()
     return {
       upcoming: all.filter(isUpcoming).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
       past: all.filter((a) => !isUpcoming(a)).sort((a, b) => b.startsAt.localeCompare(a.startsAt)),
@@ -106,9 +110,15 @@ export function CustomerAppointmentsPage() {
             <EmptyState icon={CalendarX} title={t('appointments.emptyUpcomingTitle')} description={t('appointments.emptyUpcomingDescription')} />
           ) : (
             <div className="flex flex-col gap-3">
-              {upcoming.map((appointment) => (
-                <AppointmentCard key={appointment.id} appointment={appointment} onCancel={() => setCancellingId(appointment.id)} />
-              ))}
+              <AnimatePresence initial={false}>
+                {upcoming.map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    onCancel={() => setCancellingId(appointment.id)}
+                  />
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </TabsContent>
@@ -148,50 +158,118 @@ export function CustomerAppointmentsPage() {
 
 function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment; onCancel?: () => void }) {
   const { t } = useTranslation('customer-app')
+  const reduced = useReducedMotion()
+  const [moveOpen, setMoveOpen] = useState(false)
+  const stage = bookingStage(appointment)
+
   const rebookHref =
-    appointment.status === 'completed' && appointment.barberId && appointment.serviceId
+    appointment.barberId && appointment.serviceId
       ? `/s/${appointment.organizationSlug}?barber=${appointment.barberId}&service=${appointment.serviceId}`
-      : null
+      : `/s/${appointment.organizationSlug}`
+
+  /**
+   * No dead ends. Every finished state offers the thing the customer most
+   * likely wants next — which after a decline or an expiry is another time,
+   * not a shrug.
+   */
+  const showFindAnother = stage === 'declined' || stage === 'expired' || stage === 'cancelled'
+  const showRebook = stage === 'completed' || stage === 'missed'
 
   return (
-    <Card className="p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-medium text-ink-950">{appointment.organizationName}</p>
-          <p className="text-sm text-ink-500">
-            {appointment.serviceName ?? ''}
-            {appointment.barberDisplayName ? ` · ${appointment.barberDisplayName}` : ''}
-          </p>
-          <p className="mt-1 text-sm text-ink-700">{formatDateTime(appointment.startsAt)}</p>
+    <motion.div
+      layout={!reduced}
+      transition={{ duration: reduced ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <Card className="p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-medium text-ink-950">{appointment.organizationName}</p>
+            <p className="text-sm text-ink-500">
+              {appointment.serviceName ?? ''}
+              {appointment.barberDisplayName ? ` · ${appointment.barberDisplayName}` : ''}
+            </p>
+            <p className="mt-1 text-sm text-ink-700">{formatDateTime(appointment.startsAt)}</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <BookingStatusBadge stage={stage} />
+            {appointment.priceCents !== null ? (
+              <span className="text-sm font-medium text-ink-950">{formatPrice(appointment.priceCents)}</span>
+            ) : null}
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <Badge variant={STATUS_VARIANT[appointment.status]}>{t(`appointments.status${capitalize(appointment.status)}`)}</Badge>
-          {appointment.priceCents !== null ? <span className="text-sm font-medium text-ink-950">{formatPrice(appointment.priceCents)}</span> : null}
-        </div>
-      </div>
 
-      {onCancel || rebookHref ? (
-        <div className="mt-3 flex gap-2">
+        {/*
+          The progress rail only appears while a request is actually in flight
+          or has just been answered. On a booking from four months ago it would
+          be noise.
+        */}
+        {stage === 'waiting' || stage === 'confirmed' ? (
+          <div className="mt-4 border-t border-border pt-4">
+            <BookingProgress stage={stage} />
+            {stage === 'waiting' ? (
+              <p className="mt-3 text-sm text-ink-500">
+                {t('booking.waitingExplainer')}{' '}
+                <ExpiryCountdown expiresAt={appointment.expiresAt} prefix={t('booking.expiresPrefix')} />
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* The shop's own words, when they left any. */}
+        {appointment.resolutionNote ? (
+          <p className="mt-3 rounded-md bg-paper-50 px-3 py-2 text-sm text-ink-700">
+            “{appointment.resolutionNote}”
+          </p>
+        ) : null}
+
+        <div className="mt-4 flex flex-wrap gap-2">
           {onCancel ? (
             <Button variant="secondary" size="sm" onClick={onCancel}>
-              {t('appointments.cancel')}
+              {stage === 'waiting' ? t('appointments.withdraw') : t('appointments.cancel')}
             </Button>
           ) : null}
-          {rebookHref ? (
+          {showFindAnother ? (
+            <Link to={rebookHref} className={buttonVariants({ variant: 'primary', size: 'sm' })}>
+              {t('appointments.findAnotherTime')}
+            </Link>
+          ) : null}
+          {/*
+            Moving is offered only while the appointment is still going
+            somewhere. It needs a professional and a service to compute real
+            availability against.
+          */}
+          {onCancel && appointment.barberId && appointment.serviceId ? (
+            <Button variant="secondary" size="sm" onClick={() => setMoveOpen(true)}>
+              {t('appointments.move')}
+            </Button>
+          ) : null}
+          {showRebook ? (
             <Link to={rebookHref} className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
               {t('appointments.rebook')}
             </Link>
           ) : null}
         </div>
-      ) : null}
-    </Card>
+
+        {/*
+          Mounted only while open. Rendering it alongside every card would run
+          a live availability query per appointment the moment the list loads —
+          twenty cards, twenty slot lookups nobody asked for.
+        */}
+        {moveOpen && appointment.barberId && appointment.serviceId ? (
+          <RescheduleDialog
+            open={moveOpen}
+            onOpenChange={setMoveOpen}
+            appointment={{
+              id: appointment.id,
+              organizationSlug: appointment.organizationSlug,
+              locationId: appointment.locationId,
+              barberId: appointment.barberId,
+              serviceId: appointment.serviceId,
+            }}
+          />
+        ) : null}
+      </Card>
+    </motion.div>
   )
 }
 
-function capitalize(status: AppointmentStatus): string {
-  // Maps status enum values to i18n key suffixes: pending -> Pending, no_show -> NoShow.
-  return status
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('')
-}

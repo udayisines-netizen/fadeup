@@ -90,7 +90,10 @@
     "statusCancelled": "已取消",
     "statusNoShow": "未到店",
     "errorTitle": "无法加载你的预约",
-    "cancelError": "无法取消此预约"
+    "cancelError": "无法取消此预约",
+    "withdraw": "撤回申请",
+    "findAnotherTime": "选择其他时间",
+    "move": "更改"
   },
   "favorites": {
     "title": "收藏",
@@ -100,5 +103,42 @@
     "remove": "移除",
     "viewProfile": "查看资料",
     "book": "预约"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "等待确认",
+      "confirmed": "已确认",
+      "declined": "未接受",
+      "expired": "申请已过期",
+      "cancelled": "已取消",
+      "completed": "已完成",
+      "missed": "未到店"
+    },
+    "expiringNow": "即将过期",
+    "expiresInDays": "{{count}} 天",
+    "expiresInHours": "{{count}} 小时",
+    "expiresInMinutes": "{{count}} 分钟",
+    "expiresPrefix": "剩余",
+    "waitingExplainer": "店铺尚未确认。",
+    "progress": {
+      "label": "预约进度",
+      "sent": "已发送申请",
+      "waiting": "店铺回复",
+      "confirmed": "已确认"
+    }
+  },
+  "reschedule": {
+    "title": "更改此预约",
+    "description": "选择一个适合您的新时间。",
+    "dateLabel": "日期",
+    "slotsLabel": "可预约时间",
+    "noSlotsTitle": "没有可预约的时间",
+    "noSlotsBody": "当天已无空档。请尝试其他日期。",
+    "needsConfirmation": "新时间同样需要店铺确认，与首次预约一致。",
+    "submit": "申请此时间",
+    "cancel": "保留原时间",
+    "slotTaken": "该时间刚被预约。请另选一个。",
+    "notAllowed": "此预约已无法更改。",
+    "failed": "无法更改预约，请重试。"
   }
 }

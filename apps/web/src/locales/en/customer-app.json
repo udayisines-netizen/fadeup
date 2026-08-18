@@ -90,7 +90,10 @@
     "statusCancelled": "Cancelled",
     "statusNoShow": "No-show",
     "errorTitle": "Couldn't load your appointments",
-    "cancelError": "Couldn't cancel this appointment"
+    "cancelError": "Couldn't cancel this appointment",
+    "withdraw": "Withdraw request",
+    "findAnotherTime": "Find another time",
+    "move": "Move"
   },
   "favorites": {
     "title": "Favorites",
@@ -100,5 +103,42 @@
     "remove": "Remove",
     "viewProfile": "View profile",
     "book": "Book"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "Waiting for confirmation",
+      "confirmed": "Confirmed",
+      "declined": "Not accepted",
+      "expired": "Request expired",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "missed": "Missed"
+    },
+    "expiringNow": "Expiring now",
+    "expiresInDays": "{{count}} d",
+    "expiresInHours": "{{count}} h",
+    "expiresInMinutes": "{{count}} min",
+    "expiresPrefix": "Expires in",
+    "waitingExplainer": "The shop still needs to confirm this.",
+    "progress": {
+      "label": "Booking progress",
+      "sent": "Request sent",
+      "waiting": "Shop replies",
+      "confirmed": "Confirmed"
+    }
+  },
+  "reschedule": {
+    "title": "Move this appointment",
+    "description": "Pick a new time that works for you.",
+    "dateLabel": "Date",
+    "slotsLabel": "Available times",
+    "noSlotsTitle": "No times available",
+    "noSlotsBody": "Nothing free that day. Try another date.",
+    "needsConfirmation": "The shop confirms the new time, just like the original booking.",
+    "submit": "Request new time",
+    "cancel": "Keep current time",
+    "slotTaken": "That time was just taken. Pick another.",
+    "notAllowed": "This appointment can no longer be moved.",
+    "failed": "Could not move the appointment. Please try again."
   }
 }

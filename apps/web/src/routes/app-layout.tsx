@@ -9,8 +9,13 @@ import { Navbar } from '@/components/ui/navbar'
 import { AppNavLink } from '@/components/ui/nav-link'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { NotificationBell } from '@/components/notifications/notification-bell'
+import { useBookingRequests } from '@/lib/queries/booking-requests'
+import { cn } from '@/lib/cn'
 
 const MANAGING_ROLES = new Set(['owner', 'manager'])
+/** Front-of-house: the roles that may answer a booking request. Mirrors private.can_manage_appointments. */
+const DECIDING_ROLES = new Set(['owner', 'manager', 'receptionist'])
 
 /** Layout for everything under /app: current-org context, top nav, sign-out. */
 export function AppLayout() {
@@ -58,6 +63,13 @@ function AppShell() {
   }
 
   const canManageTeam = currentMembership ? MANAGING_ROLES.has(currentMembership.role) : false
+  const canDecideBookings = currentMembership ? DECIDING_ROLES.has(currentMembership.role) : false
+
+  // Subscribed at the LAYOUT, so a request arriving while staff are on the
+  // queue or the services screen still lights the badge. This is the only
+  // reason anyone would know to open the inbox.
+  const requestsQuery = useBookingRequests(canDecideBookings ? currentMembership?.organizationId : undefined)
+  const pendingCount = requestsQuery.data?.length ?? 0
 
   return (
     <div className="min-h-svh bg-paper-50">
@@ -72,6 +84,23 @@ function AppShell() {
             <AppNavLink to="/app" end>
               Home
             </AppNavLink>
+            {canDecideBookings ? (
+              <AppNavLink to="/app/requests">
+                <span className="inline-flex items-center gap-1.5">
+                  Requests
+                  {pendingCount > 0 ? (
+                    <span
+                      className={cn(
+                        'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5',
+                        'bg-accent-600 text-xs font-semibold text-on-accent',
+                      )}
+                    >
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  ) : null}
+                </span>
+              </AppNavLink>
+            ) : null}
             <AppNavLink to="/app/appointments">Schedule</AppNavLink>
             <AppNavLink to="/app/queue">Queue</AppNavLink>
             <AppNavLink to="/app/waitlist">Waitlist</AppNavLink>
@@ -91,6 +120,7 @@ function AppShell() {
                 {currentMembership.organizationName}
               </span>
             ) : null}
+            <NotificationBell />
             <LanguageSwitcher />
             <ThemeToggle />
             <Button variant="secondary" onClick={() => void handleSignOut()}>

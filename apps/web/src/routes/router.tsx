@@ -645,6 +645,16 @@ export const router = createBrowserRouter([
             },
           },
           {
+            // The booking inbox. Its own route rather than a tab on the
+            // schedule: the schedule is scoped to one day, and requests span
+            // every future date and expire on their own clock.
+            path: 'requests',
+            lazy: async () => {
+              const { AppRequestsPage } = await import('@/pages/app-requests-page')
+              return { Component: AppRequestsPage }
+            },
+          },
+          {
             path: 'appointments',
             lazy: async () => {
               const { AppAppointmentsPage } = await import('@/pages/app-appointments-page')

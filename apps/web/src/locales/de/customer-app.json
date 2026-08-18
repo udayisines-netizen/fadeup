@@ -90,7 +90,10 @@
     "statusCancelled": "Storniert",
     "statusNoShow": "Nicht erschienen",
     "errorTitle": "Termine konnten nicht geladen werden",
-    "cancelError": "Termin konnte nicht storniert werden"
+    "cancelError": "Termin konnte nicht storniert werden",
+    "withdraw": "Anfrage zurückziehen",
+    "findAnotherTime": "Andere Zeit finden",
+    "move": "Verschieben"
   },
   "favorites": {
     "title": "Favoriten",
@@ -100,5 +103,42 @@
     "remove": "Entfernen",
     "viewProfile": "Profil ansehen",
     "book": "Buchen"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "Wartet auf Bestätigung",
+      "confirmed": "Bestätigt",
+      "declined": "Nicht angenommen",
+      "expired": "Anfrage abgelaufen",
+      "cancelled": "Storniert",
+      "completed": "Abgeschlossen",
+      "missed": "Nicht wahrgenommen"
+    },
+    "expiringNow": "Läuft jetzt ab",
+    "expiresInDays": "{{count}} T",
+    "expiresInHours": "{{count}} Std",
+    "expiresInMinutes": "{{count}} Min",
+    "expiresPrefix": "Läuft ab in",
+    "waitingExplainer": "Der Betrieb muss das noch bestätigen.",
+    "progress": {
+      "label": "Status der Anfrage",
+      "sent": "Anfrage gesendet",
+      "waiting": "Antwort des Betriebs",
+      "confirmed": "Bestätigt"
+    }
+  },
+  "reschedule": {
+    "title": "Termin verschieben",
+    "description": "Wähle eine neue Zeit, die dir passt.",
+    "dateLabel": "Datum",
+    "slotsLabel": "Freie Zeiten",
+    "noSlotsTitle": "Keine Zeiten frei",
+    "noSlotsBody": "An dem Tag ist nichts frei. Probiere ein anderes Datum.",
+    "needsConfirmation": "Der Betrieb bestätigt die neue Zeit — wie bei der ursprünglichen Buchung.",
+    "submit": "Zeit anfragen",
+    "cancel": "Zeit behalten",
+    "slotTaken": "Diese Zeit wurde gerade vergeben. Wähle eine andere.",
+    "notAllowed": "Dieser Termin kann nicht mehr verschoben werden.",
+    "failed": "Termin konnte nicht verschoben werden. Bitte erneut versuchen."
   }
 }

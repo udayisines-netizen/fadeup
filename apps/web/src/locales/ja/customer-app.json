@@ -90,7 +90,10 @@
     "statusCancelled": "キャンセル済み",
     "statusNoShow": "無断キャンセル",
     "errorTitle": "予約を読み込めませんでした",
-    "cancelError": "この予約をキャンセルできませんでした"
+    "cancelError": "この予約をキャンセルできませんでした",
+    "withdraw": "リクエストを取り下げる",
+    "findAnotherTime": "別の時間を探す",
+    "move": "変更"
   },
   "favorites": {
     "title": "お気に入り",
@@ -100,5 +103,42 @@
     "remove": "削除",
     "viewProfile": "プロフィールを見る",
     "book": "予約する"
+  },
+  "booking": {
+    "stage": {
+      "waiting": "確認待ち",
+      "confirmed": "確定",
+      "declined": "承認されませんでした",
+      "expired": "リクエストの期限切れ",
+      "cancelled": "キャンセル済み",
+      "completed": "完了",
+      "missed": "来店なし"
+    },
+    "expiringNow": "まもなく期限切れ",
+    "expiresInDays": "{{count}} 日",
+    "expiresInHours": "{{count}} 時間",
+    "expiresInMinutes": "{{count}} 分",
+    "expiresPrefix": "残り",
+    "waitingExplainer": "お店の確認待ちです。",
+    "progress": {
+      "label": "予約の進行状況",
+      "sent": "リクエスト送信",
+      "waiting": "お店の返答",
+      "confirmed": "確定"
+    }
+  },
+  "reschedule": {
+    "title": "予約時間を変更",
+    "description": "ご都合のよい新しい時間をお選びください。",
+    "dateLabel": "日付",
+    "slotsLabel": "予約可能な時間",
+    "noSlotsTitle": "空き時間がありません",
+    "noSlotsBody": "その日は空きがありません。別の日をお試しください。",
+    "needsConfirmation": "新しい時間も、最初のご予約と同じくお店の確認が必要です。",
+    "submit": "この時間でリクエスト",
+    "cancel": "現在の時間のまま",
+    "slotTaken": "その時間はたった今埋まりました。別の時間をお選びください。",
+    "notAllowed": "この予約はもう変更できません。",
+    "failed": "予約を変更できませんでした。もう一度お試しください。"
   }
 }
