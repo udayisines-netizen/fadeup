@@ -1,0 +1,143 @@
+# FadeUp — host nginx vhost for fadeup.jasmean.com.
+#
+# Reference copy of what /etc/nginx/sites-available/fadeup.jasmean.com must
+# contain. Kept in the repository because two of these location blocks are
+# load-bearing for Google/Apple sign-in, and a config that only exists on one
+# machine is a config nobody can review.
+#
+# WHAT CHANGED, AND WHY IT WAS NECESSARY
+#
+#   Before: everything on this host proxied to the web app, and the browser
+#   reached Supabase directly at http://<public-ip>:18100. That is broken in
+#   two independent ways, both of which had to be fixed for LOT A.5:
+#
+#     1. MIXED CONTENT. A page served from https://fadeup.jasmean.com cannot
+#        call an http:// API. Browsers block active mixed content outright,
+#        so those requests fail before they leave the tab.
+#
+#     2. OAUTH REDIRECT URIs. Google rejects a redirect URI that is plain
+#        HTTP or a bare IP address. Apple additionally requires a registered
+#        domain and HTTPS return URL. GoTrue builds that URI from its own
+#        API_EXTERNAL_URL, so the API must be reachable at a real HTTPS
+#        origin before either provider can be configured at all.
+#
+#   After: the Supabase API is served from the SAME HTTPS origin as the app.
+#   That fixes both, and removes cross-origin preflight from every request as
+#   a side benefit. The OAuth callback becomes:
+#
+#     https://fadeup.jasmean.com/auth/v1/callback
+#
+# STILL TO DO (operator, during a maintenance window)
+#   Kong currently also listens on 0.0.0.0:18100, so the plaintext path
+#   remains reachable alongside this one. Once traffic is confirmed to be
+#   flowing through the proxy below, bind it to localhost by changing the
+#   kong `ports:` mapping in infra/supabase/docker-compose.yml from
+#   "${KONG_HTTP_PORT}:8000" to "127.0.0.1:${KONG_HTTP_PORT}:8000" and
+#   recreating just that container. Not done automatically: it recreates a
+#   running container in the shared Supabase stack.
+
+server {
+    server_name fadeup.jasmean.com;
+
+    # --- Supabase API, same-origin over TLS -------------------------------
+    #
+    # One shared proxy target. `location ^~` so these win over the SPA
+    # fallback below without regex ordering surprises.
+    #
+    # No proxy_set_header Authorization/apikey rewriting: those are sent by
+    # the browser and must reach Kong untouched.
+
+    location ^~ /auth/v1/ {
+        proxy_pass http://127.0.0.1:18100/auth/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # GoTrue's own rate limiting and the provider round trip can both be
+        # slower than a static asset; a short timeout here surfaces as a
+        # failed sign-in.
+        proxy_read_timeout 60s;
+    }
+
+    location ^~ /rest/v1/ {
+        proxy_pass http://127.0.0.1:18100/rest/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location ^~ /storage/v1/ {
+        proxy_pass http://127.0.0.1:18100/storage/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Passport photo uploads. The bucket caps files at 5 MB; allow a
+        # little headroom for multipart overhead rather than failing at the
+        # proxy with a 413 the app cannot explain.
+        client_max_body_size 10m;
+        proxy_read_timeout 120s;
+    }
+
+    # Realtime is a WebSocket upgrade — it needs the Upgrade/Connection
+    # headers set explicitly, and a long read timeout, or the live queue
+    # board silently drops its subscription every 60 seconds.
+    location ^~ /realtime/v1/ {
+        proxy_pass http://127.0.0.1:18100/realtime/v1/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # --- The app ----------------------------------------------------------
+    #
+    # fadeup-web (infra/web/docker-compose.yml), bound to 127.0.0.1:15180.
+    # SPA fallback lives inside that container (apps/web/nginx.conf), so a
+    # hard navigation to /auth/callback or /s/{slug}/profile is served
+    # index.html rather than 404ing.
+    location / {
+        proxy_pass http://127.0.0.1:15180;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+
+    listen [::]:443 ssl; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/fadeup.jasmean.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/fadeup.jasmean.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+server {
+    if ($host = fadeup.jasmean.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    listen [::]:80;
+
+    server_name fadeup.jasmean.com;
+    return 404; # managed by Certbot
+}

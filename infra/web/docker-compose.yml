@@ -1,0 +1,54 @@
+# FadeUp web — production web service.
+#
+# Usage:
+#   Build + start:  docker compose -f infra/web/docker-compose.yml up -d --build
+#   Logs:           docker compose -f infra/web/docker-compose.yml logs -f
+#   Stop:           docker compose -f infra/web/docker-compose.yml down
+#
+# Replaces the `vite preview` process that was serving the public site.
+#
+# PORT BINDING — deliberately 127.0.0.1 only. The host nginx terminates TLS
+# for fadeup.jasmean.com and proxies to this port, so the container itself
+# must never be reachable from the public internet: binding 0.0.0.0 would
+# expose a plaintext HTTP copy of the whole site alongside the HTTPS one,
+# which is exactly the state the audit found.
+#
+# FADEUP_WEB_PORT lets a cutover run on a temporary port (e.g. 15181) so the
+# new service can be proven healthy and serving the right bundle BEFORE
+# anything touches the port the live site depends on. Default 15180 is the
+# steady state.
+#
+# Deliberately does NOT join fadeup-supabase_default. This container serves
+# static files and initiates nothing: the browser calls Supabase directly, so
+# the container has no use for reachability into the database network.
+# Compose gives it its own isolated default network (fadeup-web_default),
+# which is the correct blast radius. It never touches Jasmean OS resources.
+
+name: fadeup-web
+
+services:
+  web:
+    container_name: fadeup-web
+    build:
+      context: ../../apps/web
+      dockerfile: ../../infra/web/Dockerfile
+      args:
+        # Public values, compiled into the bundle. Never a service_role key,
+        # never a provider secret. Supplied by infra/web/.env (gitignored);
+        # see .env.example for the two names.
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FADEUP_WEB_PORT:-15180}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
