@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, CircleAlert } from 'lucide-react'
 import { TextField } from '@/components/ui/text-field'
@@ -16,7 +16,8 @@ import { Container } from '@/components/ui/container'
 import { PageSpinner } from '@/components/ui/spinner'
 import { ErrorState } from '@/components/ui/error-state'
 import { useAuth } from '@/lib/auth-context'
-import { useCurrentOrg } from '@/lib/current-org-context'
+import { useResolvedOrganization, type MembershipWithOrganization } from '@/lib/queries/memberships'
+import { useMyAccess } from '@/lib/queries/access'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { SLUG_PATTERN, slugify } from '@/lib/slug'
@@ -144,17 +145,81 @@ export function isStepComplete(step: Step, readiness: OrganizationReadiness): bo
   }
 }
 
+/**
+ * Resolves WHICH organization is being set up, and whether this account has
+ * any business to set up at all.
+ *
+ * Deliberately does NOT use useCurrentOrg. CurrentOrgProvider is mounted by
+ * AppLayout — that is, inside the finished professional workspace — and
+ * /onboarding is a sibling route, not a child of it. Depending on it here
+ * crashed the route outright, and it was the wrong dependency anyway:
+ * onboarding must be able to work out which shop it is configuring BEFORE a
+ * workspace exists to select one from.
+ *
+ * The order is: authoritative access (get_my_access) -> membership resolution
+ * -> readiness -> wizard.
+ */
 export function OnboardingPage() {
-  const { currentMembership, membershipsQuery } = useCurrentOrg()
-  const organizationId = currentMembership?.organizationId
+  const { user, loading: authLoading } = useAuth()
+  const [searchParams] = useSearchParams()
+  const accessQuery = useMyAccess(user?.id)
 
-  if (membershipsQuery.isPending) return <PageSpinner label="Loading your workspace" />
+  // `?org=` is honoured ONLY when it names an organization this user actually
+  // belongs to — useResolvedOrganization checks it against the RLS-scoped
+  // membership list and silently falls back otherwise. It exists so a
+  // multi-organization owner can link straight to the one they want to
+  // finish, not as a way to address an organization by id.
+  const { membershipsQuery, memberships, organizationId, membership } = useResolvedOrganization(
+    user?.id,
+    searchParams.get('org'),
+  )
 
-  // No organization at all: this is the self-serve path, and the only thing
-  // that can happen first is creating one.
-  if (!organizationId) return <CreateOrganizationStep />
+  if (authLoading || membershipsQuery.isPending || accessQuery.isPending) {
+    return <PageSpinner label="Loading your setup" />
+  }
 
-  return <OnboardingWizard organizationId={organizationId} />
+  if (membershipsQuery.isError) {
+    return (
+      <Container size="sm" className="py-16">
+        <ErrorState title="Couldn't load your organizations" description={membershipsQuery.error.message} />
+      </Container>
+    )
+  }
+
+  if (!organizationId || !membership) {
+    // No business to configure. Where this account belongs instead is a
+    // question the authoritative resolver already answers, so route rather
+    // than guess — and never crash.
+    const access = accessQuery.data
+
+    // An outstanding or refused application outranks everything: the database
+    // would refuse create_organization anyway (LOT A), so offering the create
+    // form here would be an empty promise.
+    if (access?.applicationStatus && access.applicationStatus !== 'approved') {
+      return <Navigate to="/pro/application" replace />
+    }
+
+    // An account that signed up as a customer did not come here to open a
+    // shop. /workspace re-resolves properly — platform role, memberships,
+    // signup intent — instead of this page inventing an answer.
+    if (access?.signupIntent === 'customer') {
+      return <Navigate to="/workspace" replace />
+    }
+
+    // Everyone else: the legitimate self-serve path. create_organization
+    // still enforces the application gate server-side regardless of what
+    // this form shows.
+    return <CreateOrganizationStep />
+  }
+
+  // Only an owner or manager can configure a business. A barber or
+  // receptionist who lands here belongs in the workspace, not the wizard —
+  // and every onboarding RPC re-checks the same thing server-side.
+  if (membership.role !== 'owner' && membership.role !== 'manager') {
+    return <Navigate to="/app" replace />
+  }
+
+  return <OnboardingWizard organizationId={organizationId} membership={membership} memberships={memberships} />
 }
 
 // ---------------------------------------------------------------------------
@@ -289,7 +354,15 @@ function CreateOrganizationStep() {
 // The wizard
 // ---------------------------------------------------------------------------
 
-function OnboardingWizard({ organizationId }: { organizationId: string }) {
+function OnboardingWizard({
+  organizationId,
+  membership,
+  memberships,
+}: {
+  organizationId: string
+  membership: MembershipWithOrganization
+  memberships: MembershipWithOrganization[]
+}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const readinessQuery = useOrganizationReadiness(organizationId)
   const locationsQuery = useOrgLocations(organizationId)
@@ -310,6 +383,21 @@ function OnboardingWizard({ organizationId }: { organizationId: string }) {
     if (!step) return
     const index = STEPS.indexOf(step)
     goTo(STEPS[Math.min(index + 1, STEPS.length - 1)])
+  }
+
+  /**
+   * Switching which organization is being set up. The id goes in the URL so
+   * the choice is shareable and survives a refresh, and into localStorage so
+   * the rest of the app agrees — but it is validated against the membership
+   * list on every read, so neither store is authority. `step` is dropped
+   * because the new organization's own readiness decides where to resume.
+   */
+  function switchOrganization(nextOrganizationId: string) {
+    setStoredOrganizationId(nextOrganizationId)
+    const params = new URLSearchParams(searchParams)
+    params.set('org', nextOrganizationId)
+    params.delete('step')
+    setSearchParams(params, { replace: true })
   }
 
   if (readinessQuery.isPending || locationsQuery.isPending) {
@@ -338,23 +426,63 @@ function OnboardingWizard({ organizationId }: { organizationId: string }) {
     <main className="min-h-svh bg-paper-50 py-8 sm:py-12">
       <Container size="md">
         <header className="mb-6">
-          <h1 className="text-xl font-semibold text-ink-950">Set up your business</h1>
+          <h1 className="text-xl font-semibold text-ink-950">Set up {membership.organizationName}</h1>
           <p className="mt-1 text-sm text-ink-500">
             {readiness.readyToBook
               ? 'Everything a customer needs is in place. Review and publish when you like.'
               : 'A few steps and customers can book you. You can leave and come back — nothing is lost.'}
           </p>
+
+          {/*
+            Belonging to more than one organization is normal — a barber who
+            staffs one shop and owns another, a group with several entities.
+            Naming the one being configured, and letting them switch, is what
+            stops setup silently editing the wrong business. Selection is a
+            preference in the URL and localStorage; the membership list from
+            the database is what validates it.
+          */}
+          {memberships.length > 1 ? (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-ink-500">Setting up:</span>
+              {memberships.map((candidate) => {
+                const isCurrent = candidate.organizationId === organizationId
+                return (
+                  <button
+                    key={candidate.organizationId}
+                    type="button"
+                    aria-pressed={isCurrent}
+                    onClick={() => switchOrganization(candidate.organizationId)}
+                    className={cn(
+                      'inline-flex min-h-11 items-center rounded-full border px-3 text-sm transition-colors',
+                      isCurrent
+                        ? 'border-ink-950 bg-ink-950 text-on-accent'
+                        : 'border-border text-ink-700 hover:bg-paper-100',
+                    )}
+                  >
+                    {candidate.organizationName}
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
         </header>
 
         <StepNav step={step} readiness={readiness} onSelect={goTo} />
 
         <Card elevated className="mt-6 p-6 sm:p-8">
           {step === 'type' ? <TypeStep organizationId={organizationId} readiness={readiness} onDone={goToNext} /> : null}
-          {step === 'identity' ? <IdentityStep organizationId={organizationId} onDone={goToNext} /> : null}
+          {step === 'identity' ? <IdentityStep organizationId={organizationId} membership={membership} onDone={goToNext} /> : null}
           {step === 'location' ? <LocationStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
           {step === 'locale' ? <LocaleStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
           {step === 'services' ? <ServicesStep organizationId={organizationId} location={location} readiness={readiness} onDone={goToNext} /> : null}
-          {step === 'professional' ? <ProfessionalStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
+          {step === 'professional' ? (
+            <ProfessionalStep
+              organizationId={organizationId}
+              location={location}
+              membership={membership}
+              onDone={goToNext}
+            />
+          ) : null}
           {step === 'hours' ? <HoursStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
           {step === 'pro-hours' ? <ProHoursStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
           {step === 'profile' ? <ProfileStep organizationId={organizationId} location={location} onDone={goToNext} /> : null}
@@ -501,10 +629,17 @@ function TypeStep({
 
 // --- step: business identity -----------------------------------------------
 
-function IdentityStep({ organizationId, onDone }: { organizationId: string; onDone: () => void }) {
-  const { currentMembership } = useCurrentOrg()
+function IdentityStep({
+  organizationId,
+  membership,
+  onDone,
+}: {
+  organizationId: string
+  membership: MembershipWithOrganization
+  onDone: () => void
+}) {
   const save = useSaveBusinessProfile(organizationId)
-  const [name, setName] = useState(currentMembership?.organizationName ?? '')
+  const [name, setName] = useState(membership.organizationName)
   const [error, setError] = useState<string | null>(null)
 
   async function submit(event: React.FormEvent) {
@@ -872,13 +1007,14 @@ function ServicesStep({
 function ProfessionalStep({
   organizationId,
   location,
+  membership,
   onDone,
 }: {
   organizationId: string
   location: Location | null
+  membership: MembershipWithOrganization
   onDone: () => void
 }) {
-  const { currentMembership } = useCurrentOrg()
   const ensure = useEnsureOwnerProfessional(organizationId)
   const applyServices = useApplyStarterServices(organizationId)
   const [error, setError] = useState<string | null>(null)
@@ -920,7 +1056,7 @@ function ProfessionalStep({
     }
   }
 
-  const canInvite = currentMembership?.role === 'owner' || currentMembership?.role === 'manager'
+  const canInvite = membership.role === 'owner' || membership.role === 'manager'
 
   return (
     <StepShell

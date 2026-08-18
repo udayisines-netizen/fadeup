@@ -3,17 +3,31 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RequireProAccess } from '@/routes/require-pro-access'
 import { useAuth } from '@/lib/auth-context'
-import { useMyMemberships } from '@/lib/queries/memberships'
+import { useResolvedOrganization } from '@/lib/queries/memberships'
 import { useMyProfessionalApplication } from '@/lib/queries/professional-applications'
 import { useOrganizationReadiness, type OrganizationReadiness } from '@/lib/queries/onboarding'
 
 vi.mock('@/lib/auth-context', () => ({ useAuth: vi.fn() }))
-vi.mock('@/lib/queries/memberships', () => ({ useMyMemberships: vi.fn() }))
+vi.mock('@/lib/queries/memberships', () => ({ useResolvedOrganization: vi.fn() }))
 vi.mock('@/lib/queries/professional-applications', () => ({ useMyProfessionalApplication: vi.fn() }))
 vi.mock('@/lib/queries/onboarding', () => ({ useOrganizationReadiness: vi.fn() }))
 
 const mockUseAuth = vi.mocked(useAuth)
-const mockUseMemberships = vi.mocked(useMyMemberships)
+const mockUseResolvedOrg = vi.mocked(useResolvedOrganization)
+
+/**
+ * The guard resolves its organization through useResolvedOrganization, which
+ * deliberately works WITHOUT CurrentOrgProvider — that provider is mounted by
+ * AppLayout, the very thing this guard decides whether to render.
+ */
+function withMemberships(list: { id: string; organizationId: string; role: string }[]) {
+  mockUseResolvedOrg.mockReturnValue({
+    membershipsQuery: resolved(list),
+    memberships: list,
+    organizationId: list[0]?.organizationId ?? null,
+    membership: list[0] ?? null,
+  } as never)
+}
 const mockUseApplication = vi.mocked(useMyProfessionalApplication)
 const mockUseReadiness = vi.mocked(useOrganizationReadiness)
 
@@ -88,7 +102,7 @@ function renderAdminScreen() {
 describe('RequireProAccess', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ session: {} as never, user: { id: 'user-1' } as never, loading: false })
-    mockUseMemberships.mockReturnValue(resolved([]))
+    withMemberships([])
     mockUseApplication.mockReturnValue(resolved(null))
     mockUseReadiness.mockReturnValue(resolved(readyBusiness()))
   })
@@ -112,7 +126,7 @@ describe('RequireProAccess', () => {
   })
 
   it('lets an APPROVED professional with a membership through', () => {
-    mockUseMemberships.mockReturnValue(resolved([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }]))
+    withMemberships([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }])
     mockUseApplication.mockReturnValue(resolved({ id: 'a-1', status: 'approved' }))
 
     renderGuard()
@@ -123,7 +137,7 @@ describe('RequireProAccess', () => {
   it('lets a member through even while they have an unrelated pending application elsewhere', () => {
     // A barber invited to staff a shop may also have applied for their own.
     // The membership is what grants access, so it wins.
-    mockUseMemberships.mockReturnValue(resolved([{ id: 'm-1', organizationId: 'org-1', role: 'barber' }]))
+    withMemberships([{ id: 'm-1', organizationId: 'org-1', role: 'barber' }])
     mockUseApplication.mockReturnValue(resolved({ id: 'a-1', status: 'pending_review' }))
 
     renderGuard()
@@ -141,7 +155,7 @@ describe('RequireProAccess', () => {
     // The LOT B change: holding a membership no longer implies a finished
     // setup. An approved shop with no services and no hours used to land on
     // a dashboard that could not tell it anything was wrong.
-    mockUseMemberships.mockReturnValue(resolved([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }]))
+    withMemberships([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }])
     mockUseReadiness.mockReturnValue(
       resolved(
         readyBusiness({
@@ -164,7 +178,7 @@ describe('RequireProAccess', () => {
     // The wizard links to /app/services, /app/locations and /app/team.
     // Redirecting the whole /app subtree would trap someone in a loop
     // between a step and the screen that step points at.
-    mockUseMemberships.mockReturnValue(resolved([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }]))
+    withMemberships([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }])
     mockUseReadiness.mockReturnValue(resolved(readyBusiness({ readyToBook: false, missingRequirements: ['service'] })))
 
     renderAdminScreen()
@@ -174,7 +188,7 @@ describe('RequireProAccess', () => {
   })
 
   it('waits for the server answer rather than guessing while readiness loads', () => {
-    mockUseMemberships.mockReturnValue(resolved([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }]))
+    withMemberships([{ id: 'm-1', organizationId: 'org-1', role: 'owner' }])
     mockUseReadiness.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null } as never)
 
     renderGuard()

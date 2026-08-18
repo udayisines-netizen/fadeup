@@ -11,11 +11,25 @@ import { MarketingLayout } from '@/routes/marketing-layout'
 import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
+import { RouteErrorBoundary } from '@/routes/route-error-boundary'
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    /*
+      Without this, a render error anywhere in the tree below reaches React
+      Router's built-in developer screen ("Unexpected Application Error! Hey
+      developer…") — which is what production visitors saw when /onboarding
+      threw. The ErrorBoundary in App.tsx cannot help: it sits ABOVE
+      <RouterProvider>, and the router catches route errors before they can
+      bubble that far.
+
+      Placed on the root route so it covers every branch, including the lazy
+      ones (a chunk that fails to load surfaces here too). Nested routes may
+      add their own errorElement to keep their chrome; none needs to today.
+    */
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         // Shared nav/footer chrome for the public marketing site — kept

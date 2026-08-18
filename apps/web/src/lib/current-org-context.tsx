@@ -2,7 +2,11 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import type { UseQueryResult } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
 import { useMyMemberships, type MembershipWithOrganization } from '@/lib/queries/memberships'
-import { getStoredOrganizationId, setStoredOrganizationId } from '@/lib/current-organization'
+import {
+  getStoredOrganizationId,
+  resolveActiveOrganizationId,
+  setStoredOrganizationId,
+} from '@/lib/current-organization'
 
 interface CurrentOrgContextValue {
   membershipsQuery: UseQueryResult<MembershipWithOrganization[]>
@@ -27,10 +31,14 @@ export function CurrentOrgProvider({ children }: { children: ReactNode }) {
 
   const memberships = useMemo(() => membershipsQuery.data ?? [], [membershipsQuery.data])
 
+  // Selection RULE lives in lib/current-organization so this provider,
+  // RequireProAccess and the onboarding wizard cannot drift into three
+  // different ideas of which shop is being worked on. Local state stays here
+  // because only this provider offers switching, and switching should feel
+  // instant rather than waiting on a refetch.
   const currentMembership = useMemo(() => {
-    if (memberships.length === 0) return null
-    const selected = memberships.find((membership) => membership.organizationId === selectedId)
-    return selected ?? memberships[0] ?? null
+    const organizationId = resolveActiveOrganizationId(memberships, selectedId)
+    return memberships.find((membership) => membership.organizationId === organizationId) ?? null
   }, [memberships, selectedId])
 
   function setCurrentOrganizationId(organizationId: string) {

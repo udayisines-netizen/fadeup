@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
-import { useMyMemberships } from '@/lib/queries/memberships'
+import { useResolvedOrganization } from '@/lib/queries/memberships'
 import { useMyProfessionalApplication } from '@/lib/queries/professional-applications'
 import { useOrganizationReadiness } from '@/lib/queries/onboarding'
-import { getStoredOrganizationId } from '@/lib/current-organization'
 import { PageSpinner } from '@/components/ui/spinner'
 
 /**
@@ -25,19 +24,13 @@ import { PageSpinner } from '@/components/ui/spinner'
 export function RequireProAccess({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth()
   const location = useLocation()
-  const membershipsQuery = useMyMemberships(user?.id)
+  // This guard runs OUTSIDE CurrentOrgProvider — that provider is mounted by
+  // AppLayout, which is the very thing this guard decides whether to render.
+  // useResolvedOrganization gives the same answer without needing it.
+  const { membershipsQuery, memberships, organizationId } = useResolvedOrganization(user?.id)
   const applicationQuery = useMyProfessionalApplication(Boolean(user))
 
-  const memberships = membershipsQuery.data ?? []
-  const storedOrganizationId = getStoredOrganizationId()
-  // Same resolution CurrentOrgProvider uses, duplicated here only because
-  // this guard runs OUTSIDE that provider (it wraps AppLayout, which is what
-  // mounts it).
-  const activeOrganizationId =
-    memberships.find((membership) => membership.organizationId === storedOrganizationId)?.organizationId ??
-    memberships[0]?.organizationId
-
-  const readinessQuery = useOrganizationReadiness(activeOrganizationId)
+  const readinessQuery = useOrganizationReadiness(organizationId ?? undefined)
 
   if (authLoading || membershipsQuery.isPending || applicationQuery.isPending) {
     return <PageSpinner label="Checking your access" />
