@@ -70,11 +70,11 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-paper-0/95 backdrop-blur">
       <Container size="xl" className="flex h-16 items-center justify-between gap-4">
-        <Link to="/" className="shrink-0 text-base font-semibold tracking-tight text-ink-950">
+        <Link to="/" className="shrink-0 text-base font-semibold tracking-tight text-ink-950" translate="no">
           FadeUp
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label={t('nav.mainNavigation')} className="hidden items-center gap-1 md:flex">
           {isProfessional
             ? sectionLinks.map((link) => (
                 <a
@@ -124,14 +124,14 @@ export function MarketingHeader() {
           <LanguageSwitcher />
           <ThemeToggle />
           <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
-            <DrawerTrigger className={buttonVariants({ variant: 'ghost' })} aria-label="Open menu">
+            <DrawerTrigger className={buttonVariants({ variant: 'ghost' })} aria-label={t('nav.openMenu')}>
               <Menu className="h-5 w-5" aria-hidden="true" />
             </DrawerTrigger>
-            <DrawerContent side="right" aria-label="Mobile navigation">
+            <DrawerContent side="right" aria-label={t('nav.mobileNavigation')}>
               <DrawerHeader>
-                <DrawerTitle>Menu</DrawerTitle>
+                <DrawerTitle>{t('nav.menu')}</DrawerTitle>
               </DrawerHeader>
-              <nav aria-label="Mobile" className="flex flex-col gap-1">
+              <nav aria-label={t('nav.mobileNavigation')} className="flex flex-col gap-1">
                 {marketingLinks.map((link) => (
                   <AppNavLink key={link.to} to={link.to} end={link.end} className="w-full">
                     {link.label}

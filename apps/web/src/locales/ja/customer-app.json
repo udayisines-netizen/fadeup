@@ -20,7 +20,8 @@
     "lastCutDays_other": "前回のカットから{{count}}日経ちました。",
     "rebookOverdueTitle": "そろそろカットの時期？",
     "rebookTitle": "前回と同じスタイルにする？",
-    "rebookCta": "{{barber}}さんに再予約"
+    "rebookCta": "{{barber}}さんに再予約",
+    "couldntLoadYourHome": "ホームを読み込めませんでした"
   },
   "onboarding": {
     "title": "簡単な質問です",
@@ -56,7 +57,8 @@
     },
     "skip": "あとで",
     "save": "保存",
-    "saved": "保存しました。ありがとうございます！"
+    "saved": "保存しました。ありがとうございます！",
+    "couldntLoadYourProfile": "プロフィールを読み込めませんでした"
   },
   "profile": {
     "title": "プロフィール",
@@ -68,7 +70,8 @@
     "habitsTitle": "あなたの習慣",
     "editHabits": "習慣を編集",
     "noHabitsYet": "まだ習慣を教えていただいていません。",
-    "signOut": "サインアウト"
+    "signOut": "サインアウト",
+    "couldntLoadYourProfile": "プロフィールを読み込めませんでした"
   },
   "appointments": {
     "title": "予約",
@@ -102,7 +105,8 @@
     "discoverCta": "理容師を探す",
     "remove": "削除",
     "viewProfile": "プロフィールを見る",
-    "book": "予約する"
+    "book": "予約する",
+    "couldntLoadYourFavorites": "お気に入りを読み込めませんでした"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "その時間はたった今埋まりました。別の時間をお選びください。",
     "notAllowed": "この予約はもう変更できません。",
     "failed": "予約を変更できませんでした。もう一度お試しください。"
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "FadeUp へ"
   }
 }

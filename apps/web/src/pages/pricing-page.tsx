@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/cn'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTranslation } from 'react-i18next'
 
 interface Tier {
   name: string
@@ -75,6 +76,7 @@ const FAQ = [
 ]
 
 export function PricingPage() {
+  const { t } = useTranslation()
   useDocumentMeta({
     title: 'Pricing — FadeUp',
     description:
@@ -85,14 +87,12 @@ export function PricingPage() {
     <main>
       <section className="border-b border-border bg-paper-50">
         <Container size="xl" className="py-16 text-center sm:py-20">
-          <Badge variant="accent">Pricing</Badge>
+          <Badge variant="accent">{t('common:nav.pricing')}</Badge>
           <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-semibold text-balance text-ink-950 sm:text-5xl">
-            Plans that scale with your shop.
+            {t('landing:pricingPage.plansThatScaleWithYour')}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-ink-500">
-            FadeUp is in early access. The tiers below describe the intended plan structure —
-            grouped by location count and feature set — not final, committed pricing. Every
-            organization starts the same way: create it free and start setting up your shop.
+            {t('landing:pricingPage.fadeupIsInEarlyAccess')}
           </p>
         </Container>
       </section>
@@ -110,7 +110,7 @@ export function PricingPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle>{tier.name}</CardTitle>
-                    {tier.featured ? <Badge variant="accent">Most common</Badge> : null}
+                    {tier.featured ? <Badge variant="accent">{t('landing:pricingPage.mostCommon')}</Badge> : null}
                   </div>
                   <CardDescription>{tier.tagline}</CardDescription>
                 </CardHeader>
@@ -128,7 +128,7 @@ export function PricingPage() {
                     to="/pro/register"
                     className={buttonVariants({ variant: tier.featured ? 'primary' : 'secondary' }, 'mt-6 w-full')}
                   >
-                    Start free
+                    {t('common:auth.startFree')}
                   </Link>
                 </CardContent>
               </Card>
@@ -144,13 +144,13 @@ export function PricingPage() {
       <section className="border-t border-border bg-paper-50">
         <Container size="xl" className="py-16 sm:py-20">
           <h2 className="text-2xl font-semibold text-balance text-ink-950 sm:text-3xl">
-            Compare plan features
+            {t('landing:pricingPage.comparePlanFeatures')}
           </h2>
           <div className="mt-8">
-            <Table label="Feature comparison by plan">
+            <Table label={t('landing:pricingPage.featureComparisonByPlan')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Feature</TableHead>
+                  <TableHead>{t('landing:pricingPage.feature')}</TableHead>
                   {TIERS.map((tier) => (
                     <TableHead key={tier.name} className="text-center">
                       {tier.name}
@@ -165,9 +165,9 @@ export function PricingPage() {
                     {row.tiers.map((included, index) => (
                       <TableCell key={TIERS[index].name} className="text-center">
                         {included ? (
-                          <Check className="mx-auto h-4 w-4 text-success-600" aria-label="Included" />
+                          <Check className="mx-auto h-4 w-4 text-success-600" aria-label={t('landing:pricingPage.included')} />
                         ) : (
-                          <Minus className="mx-auto h-4 w-4 text-ink-300" aria-label="Not included" />
+                          <Minus className="mx-auto h-4 w-4 text-ink-300" aria-label={t('landing:pricingPage.notIncluded')} />
                         )}
                       </TableCell>
                     ))}
@@ -183,7 +183,7 @@ export function PricingPage() {
       <section className="border-t border-border">
         <Container size="lg" className="py-16 sm:py-20">
           <h2 className="text-2xl font-semibold text-balance text-ink-950 sm:text-3xl">
-            Pricing questions
+            {t('landing:pricingPage.pricingQuestions')}
           </h2>
           <dl className="mt-8 flex flex-col gap-6">
             {FAQ.map((item) => (
@@ -200,10 +200,10 @@ export function PricingPage() {
       <section className="border-t border-border bg-paper-50">
         <Container size="xl" className="flex flex-col items-center gap-4 py-16 text-center sm:py-20">
           <h2 className="text-3xl font-semibold text-balance text-ink-950">
-            Set up your shop on FadeUp today
+            {t('landing:pricingPage.setUpYourShopOn')}
           </h2>
           <Link to="/pro/register" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-            Start free
+            {t('common:auth.startFree')}
           </Link>
         </Container>
       </section>

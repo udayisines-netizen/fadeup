@@ -28,6 +28,7 @@ import {
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
 import { useMoney } from '@/lib/intl/use-intl'
 import { cn } from '@/lib/cn'
+import { useTranslation } from 'react-i18next'
 
 /**
  * One appointment, and everything that can be done to it.
@@ -66,6 +67,7 @@ export function AppointmentSheet({
   currentUserId: string | undefined
   professionals: CalendarProfessional[]
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const money = useMoney()
   const [error, setError] = useState<string | null>(null)
@@ -140,21 +142,21 @@ export function AppointmentSheet({
 
           <div className="flex-1 overflow-y-auto">
             <dl className="flex flex-col gap-3 text-sm">
-              <DetailRow icon={Scissors} label="Service">
+              <DetailRow icon={Scissors} label={t('common:entity.service')}>
                 {appointment.serviceName ?? 'No service recorded'}
                 {appointment.priceCents !== null ? (
                   <span className="text-ink-500"> · {money(appointment.priceCents, appointment.currency)}</span>
                 ) : null}
               </DetailRow>
-              <DetailRow icon={User} label="Professional">
+              <DetailRow icon={User} label={t('common:entity.professional')}>
                 {appointment.barberDisplayName ?? 'Unassigned'}
-                {isOwnChair ? <span className="text-ink-500"> · you</span> : null}
+                {isOwnChair ? <span className="text-ink-500"> {t('app:appointmentSheet.you')}</span> : null}
               </DetailRow>
-              <DetailRow icon={MapPin} label="Location">
+              <DetailRow icon={MapPin} label={t('common:entity.location')}>
                 {appointment.locationName}
               </DetailRow>
               {appointment.customerPhone ? (
-                <DetailRow icon={Phone} label="Phone">
+                <DetailRow icon={Phone} label={t('common:field.phone')}>
                   {/* Tap to call: on a shop phone this is the fastest way to
                       sort out a late or missing customer. */}
                   <a
@@ -166,7 +168,7 @@ export function AppointmentSheet({
                 </DetailRow>
               ) : null}
               {appointment.notes ? (
-                <DetailRow icon={Clock} label="Note from the customer">
+                <DetailRow icon={Clock} label={t('app:appointmentSheet.noteFromTheCustomer')}>
                   <span className="whitespace-pre-wrap">{appointment.notes}</span>
                 </DetailRow>
               ) : null}
@@ -195,12 +197,12 @@ export function AppointmentSheet({
                 {confirmingAction !== 'noShow' ? (
                   <div className="mt-3">
                     <Textarea
-                      label="Message to the customer"
+                      label={t('app:appointmentSheet.messageToTheCustomer')}
                       rows={2}
                       value={note}
                       maxLength={280}
                       onChange={(event) => setNote(event.target.value)}
-                      placeholder="Optional — a reason helps them rebook."
+                      placeholder={t('app:appointmentSheet.optionalAReasonHelpsThem')}
                     />
                   </div>
                 ) : null}
@@ -237,7 +239,7 @@ export function AppointmentSheet({
                       : 'Mark no-show'}
                 </Button>
                 <Button variant="secondary" onClick={() => setConfirmingAction(null)}>
-                  Go back
+                  {t('app:appointmentSheet.goBack')}
                 </Button>
               </>
             ) : (
@@ -249,7 +251,7 @@ export function AppointmentSheet({
                     onClick={() => void run(() => confirmRequest.mutateAsync(appointment.id), 'Request accepted')}
                   >
                     <Check className="h-4 w-4" aria-hidden="true" />
-                    Accept request
+                    {t('app:appointmentSheet.acceptRequest')}
                   </Button>
                 ) : null}
 
@@ -260,7 +262,7 @@ export function AppointmentSheet({
                     onClick={() => void run(() => completeAppointment.mutateAsync(appointment.id), 'Marked as done')}
                   >
                     <Check className="h-4 w-4" aria-hidden="true" />
-                    Mark as done
+                    {t('app:appointmentSheet.markAsDone')}
                   </Button>
                 ) : null}
 
@@ -274,7 +276,7 @@ export function AppointmentSheet({
                 {isLive(appointment.status) && canDecide ? (
                   <Button variant="secondary" onClick={() => setMoveOpen(true)}>
                     <Clock className="h-4 w-4" aria-hidden="true" />
-                    Move to another time
+                    {t('app:appointmentSheet.moveToAnotherTime')}
                   </Button>
                 ) : null}
 
@@ -290,13 +292,13 @@ export function AppointmentSheet({
 
                 {!isLive(appointment.status) ? (
                   <p className="text-center text-sm text-ink-500">
-                    This appointment is finished. Nothing left to do.
+                    {t('app:appointmentSheet.thisAppointmentIsFinishedNothing')}
                   </p>
                 ) : null}
 
                 {isLive(appointment.status) && !canDecide && !canRunService ? (
                   <p className="text-center text-sm text-ink-500">
-                    Booking decisions are handled by owners, managers and reception.
+                    {t('app:appointmentSheet.bookingDecisionsAreHandledBy')}
                   </p>
                 ) : null}
               </>
@@ -315,7 +317,7 @@ export function AppointmentSheet({
           organizationId={organizationId}
           professionals={professionals}
           onMoved={() => {
-            toast({ title: 'Appointment moved', variant: 'success' })
+            toast({ title: t('app:appointmentSheet.appointmentMoved'), variant: 'success' })
             close()
           }}
         />

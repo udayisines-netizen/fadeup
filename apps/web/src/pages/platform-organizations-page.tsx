@@ -5,34 +5,36 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableStateRow } from '@/components/ui/table'
+import { useTranslation } from 'react-i18next'
 
 /** /platform/organizations — every FadeUp tenant, entry point to the tenant explorer (CLAUDE.md section 10). */
 export function PlatformOrganizationsPage() {
+  const { t } = useTranslation()
   const organizationsQuery = useAllOrganizations()
 
   return (
     <Container size="lg" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">Organizations</h1>
-      <p className="mt-1 text-sm text-ink-500">Every barbershop tenant on FadeUp.</p>
+      <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.organizations')}</h1>
+      <p className="mt-1 text-sm text-ink-500">{t('platform:organizations.everyBarbershopTenantOnFadeup')}</p>
 
       <div className="mt-6">
         {organizationsQuery.isPending ? (
           <OrganizationsSkeleton />
         ) : organizationsQuery.isError ? (
-          <ErrorState title="Couldn't load organizations" description={organizationsQuery.error.message} />
+          <ErrorState title={t('platform:organizations.couldntLoadOrganizations')} description={organizationsQuery.error.message} />
         ) : (
-          <Table label="Organizations">
+          <Table label={t('common:entity.organizations')}>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>{t('common:field.name')}</TableHead>
+                <TableHead>{t('platform:organizations.slug')}</TableHead>
+                <TableHead>{t('common:field.created')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {organizationsQuery.data.length === 0 ? (
                 <TableStateRow colSpan={3}>
-                  <EmptyState title="No organizations yet" className="border-none" />
+                  <EmptyState title={t('platform:organizations.noOrganizationsYet')} className="border-none" />
                 </TableStateRow>
               ) : (
                 organizationsQuery.data.map((organization) => (

@@ -3,6 +3,7 @@ import { cn } from '@/lib/cn'
 import type { CalendarAppointment, TimeBlock } from '@/lib/queries/calendar'
 import type { PositionedEvent } from '@/lib/calendar/layout'
 import { STATUS_SHORT_LABELS } from '@/components/calendar/appointment-status'
+import { useTranslation } from 'react-i18next'
 
 /**
  * The two things a calendar draws.
@@ -123,14 +124,15 @@ export function CalendarEntryBlock({
 
 /** Says the rectangle is clipped, so nobody reads a cut edge as the real time. */
 function ContinuationMarks({ from, into }: { from: boolean; into: boolean }) {
+  const { t } = useTranslation()
   if (!from && !into) return null
   return (
     <>
       {from ? (
-        <ArrowUp className="absolute end-0.5 top-0.5 h-3 w-3 opacity-70" aria-label="Started the day before" />
+        <ArrowUp className="absolute end-0.5 top-0.5 h-3 w-3 opacity-70" aria-label={t('app:entry.startedTheDayBefore')} />
       ) : null}
       {into ? (
-        <ArrowDown className="absolute end-0.5 bottom-0.5 h-3 w-3 opacity-70" aria-label="Runs into the next day" />
+        <ArrowDown className="absolute end-0.5 bottom-0.5 h-3 w-3 opacity-70" aria-label={t('app:entry.runsIntoTheNextDay')} />
       ) : null}
     </>
   )

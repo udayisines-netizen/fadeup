@@ -45,6 +45,7 @@ import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/cn'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -96,6 +97,7 @@ export function AppAvailabilityPage() {
 }
 
 function AvailabilityManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const canManage = MANAGING_ROLES.has(role)
   const locationsQuery = useOrgLocations(organizationId)
   const locationHoursQuery = useOrgLocationHours(organizationId)
@@ -131,8 +133,8 @@ function AvailabilityManagement({ organizationId, role }: { organizationId: stri
   return (
     <Container size="lg" className="py-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink-950">Availability</h1>
-        <p className="mt-1 text-sm text-ink-500">Weekly hours for each location and barber, plus one-off time off.</p>
+        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.availability')}</h1>
+        <p className="mt-1 text-sm text-ink-500">{t('app:availability.weeklyHoursForEachLocation')}</p>
       </div>
 
       {isLoading ? (
@@ -142,11 +144,11 @@ function AvailabilityManagement({ organizationId, role }: { organizationId: stri
       ) : isError ? (
         <div className="mt-6">
           <ErrorState
-            title="Couldn't load availability"
+            title={t('app:availability.couldntLoadAvailability')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
@@ -185,6 +187,7 @@ function LocationHoursSection({
   hours: LocationHours[]
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
   const upsertHours = useUpsertLocationHours()
 
@@ -209,15 +212,15 @@ function LocationHoursSection({
 
   return (
     <section className="mt-8">
-      <h2 className="text-sm font-semibold text-ink-950">Location hours</h2>
+      <h2 className="text-sm font-semibold text-ink-950">{t('app:availability.locationHours')}</h2>
       <div className="mt-3">
         {locations.length === 0 ? (
           <EmptyState
-            title="No locations yet"
-            description="Add a location before setting its hours."
+            title={t('app:availability.noLocationsYet')}
+            description={t('app:availability.addALocationBeforeSetting')}
             action={
               <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to locations
+                {t('app:availability.goToLocations')}
               </Link>
             }
           />
@@ -235,7 +238,7 @@ function LocationHoursSection({
                 <WeeklyHoursTable
                   days={buildWeek(hoursByLocation.get(location.id) ?? new Map())}
                   canManage={canManage}
-                  closedLabel="Closed"
+                  closedLabel={t('app:availability.closed')}
                   onSave={(value) =>
                     upsertHours.mutateAsync({
                       organizationId,
@@ -273,6 +276,7 @@ function BarberAvailabilitySection({
   workingHours: BarberWorkingHours[]
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null)
   const upsertHours = useUpsertBarberWorkingHours()
 
@@ -314,11 +318,11 @@ function BarberAvailabilitySection({
       <div className="mt-3">
         {bookableBarbers.length === 0 ? (
           <EmptyState
-            title="No bookable barbers yet"
-            description="Mark a team member as a bookable barber to set their schedule."
+            title={t('app:availability.noBookableBarbersYet')}
+            description={t('app:availability.markATeamMemberAs')}
             action={
               <Link to="/app/team" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to team
+                {t('app:availability.goToTeam')}
               </Link>
             }
           />
@@ -326,7 +330,7 @@ function BarberAvailabilitySection({
           <div className="flex flex-col gap-4">
             <div className="sm:w-64">
               <SelectField
-                label="Barber"
+                label={t('common:entity.barber')}
                 options={barberOptions}
                 value={activeBarberId ?? undefined}
                 onChange={(event) => setSelectedBarberId(event.target.value)}
@@ -339,7 +343,7 @@ function BarberAvailabilitySection({
                   key={`hours-${activeBarberId}`}
                   days={buildWeek(hoursByBarber.get(activeBarberId) ?? new Map())}
                   canManage={canManage}
-                  closedLabel="Off"
+                  closedLabel={t('app:availability.off')}
                   onSave={(value) =>
                     upsertHours.mutateAsync({
                       organizationId,
@@ -381,18 +385,19 @@ function WeeklyHoursTable({
   closedLabel: string
   onSave: (value: WeeklyDayValue) => Promise<void>
 }) {
+  const { t } = useTranslation()
   return (
-    <Table label="Weekly hours">
+    <Table label={t('app:availability.weeklyHours')}>
       <TableHeader>
         <TableRow>
-          <TableHead>Day</TableHead>
+          <TableHead>{t('common:field.day')}</TableHead>
           <TableHead>{closedLabel}</TableHead>
-          <TableHead>Break</TableHead>
-          <TableHead>Start</TableHead>
-          <TableHead>End</TableHead>
+          <TableHead>{t('app:availability.break')}</TableHead>
+          <TableHead>{t('app:availability.start')}</TableHead>
+          <TableHead>{t('app:availability.end')}</TableHead>
           {canManage ? (
             <TableHead>
-              <span className="sr-only">Save</span>
+              <span className="sr-only">{t('common:action.save')}</span>
             </TableHead>
           ) : null}
         </TableRow>
@@ -422,6 +427,7 @@ function WeeklyHoursRow({
   closedLabel: string
   onSave: (value: WeeklyDayValue) => Promise<void>
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const dayLabel = DAY_LABELS[day.dayOfWeek] ?? `Day ${day.dayOfWeek}`
   const initialStart = toTimeInputValue(day.startTime)
@@ -470,7 +476,7 @@ function WeeklyHoursRow({
       toast({ title: `${dayLabel} updated`, variant: 'success' })
     } catch (error) {
       toast({
-        title: "Couldn't save hours",
+        title: t('app:availability.couldntSaveHours'),
         description: getErrorMessage(error),
         variant: 'error',
       })
@@ -553,17 +559,17 @@ function WeeklyHoursRow({
             />
           ) : null}
         </div>
-        {firstInvalid ? <p className="mt-1 text-xs text-danger-600">End must be after start.</p> : null}
+        {firstInvalid ? <p className="mt-1 text-xs text-danger-600">{t('app:availability.endMustBeAfterStart')}</p> : null}
         {secondInvalid ? (
           <p className="mt-1 text-xs text-danger-600">
-            The afternoon must start after the morning ends, and end after it starts.
+            {t('app:availability.theAfternoonMustStartAfter')}
           </p>
         ) : null}
       </TableCell>
       {canManage ? (
         <TableCell className="text-right">
           <Button size="sm" variant="secondary" disabled={!isDirty || isInvalid} isLoading={isSaving} onClick={() => void handleSave()}>
-            Save
+            {t('common:action.save')}
           </Button>
         </TableCell>
       ) : null}
@@ -597,6 +603,7 @@ function ExceptionsSection({
   barberId: string
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const exceptionsQuery = useBarberAvailabilityExceptions(organizationId, barberId)
   const deleteException = useDeleteBarberAvailabilityException()
@@ -611,10 +618,10 @@ function ExceptionsSection({
     deleteException.mutate(
       { id: exception.id, organizationId, barberId },
       {
-        onSuccess: () => toast({ title: 'Time off removed', variant: 'success' }),
+        onSuccess: () => toast({ title: t('app:availability.timeOffRemoved'), variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't remove time off",
+            title: t('app:availability.couldntRemoveTimeOff'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -628,7 +635,7 @@ function ExceptionsSection({
         <h3 className="text-sm font-medium text-ink-950">Upcoming time off &amp; overrides</h3>
         {canManage ? (
           <Button size="sm" variant="secondary" onClick={() => setDialogOpen(true)}>
-            Add override
+            {t('app:availability.addOverride')}
           </Button>
         ) : null}
       </div>
@@ -638,16 +645,16 @@ function ExceptionsSection({
           <Skeleton className="h-16 w-full" />
         ) : exceptionsQuery.isError ? (
           <ErrorState
-            title="Couldn't load overrides"
+            title={t('app:availability.couldntLoadOverrides')}
             description={exceptionsQuery.error.message}
             action={
               <Button variant="secondary" size="sm" onClick={() => void exceptionsQuery.refetch()}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : upcoming.length === 0 ? (
-          <EmptyState title="No upcoming overrides" description="This barber follows their regular weekly hours." />
+          <EmptyState title={t('app:availability.noUpcomingOverrides')} description={t('app:availability.thisBarberFollowsTheirRegular')} />
         ) : (
           <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
             {upcoming.map((exception) => (
@@ -676,7 +683,7 @@ function ExceptionsSection({
                     isLoading={deleteException.isPending && deleteException.variables?.id === exception.id}
                     onClick={() => handleDelete(exception)}
                   >
-                    Remove
+                    {t('common:action.remove')}
                   </Button>
                 ) : null}
               </li>
@@ -701,6 +708,7 @@ function ExceptionFormDialog({
   barberId: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const createException = useCreateBarberAvailabilityException()
   const [formError, setFormError] = useState<string | null>(null)
@@ -735,11 +743,11 @@ function ExceptionFormDialog({
         endTime: values.isUnavailable ? null : values.endTime,
         reason: values.reason || null,
       })
-      toast({ title: 'Override added', variant: 'success' })
+      toast({ title: t('app:availability.overrideAdded'), variant: 'success' })
       onClose()
     } catch (error) {
       if (getErrorMessage(error)?.toLowerCase().includes('duplicate')) {
-        setFormError('This barber already has an override for that date.')
+        setFormError(t('app:availability.thisBarberAlreadyHasAn'))
         return
       }
       setFormError(getErrorMessage(error) ?? 'Something went wrong.')
@@ -755,32 +763,32 @@ function ExceptionFormDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add override</DialogTitle>
+          <DialogTitle>{t('app:availability.addOverride')}</DialogTitle>
           <DialogDescription>Set a one-off exception to this barber&apos;s regular schedule.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
           <TextField
-            label="Date"
+            label={t('common:field.date')}
             type="date"
             min={todayIsoDate()}
             error={errors.exceptionDate?.message}
             {...register('exceptionDate')}
           />
-          <Switch label="Unavailable all day" {...register('isUnavailable')} />
+          <Switch label={t('app:availability.unavailableAllDay')} {...register('isUnavailable')} />
 
           {!isUnavailable ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="exception-start" className="text-sm font-medium text-ink-950">
-                  Start time
+                  {t('app:availability.startTime')}
                 </label>
                 <input id="exception-start" type="time" className={TIME_INPUT_CLASSES} {...register('startTime')} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="exception-end" className="text-sm font-medium text-ink-950">
-                  End time
+                  {t('app:availability.endTime')}
                 </label>
                 <input id="exception-end" type="time" className={TIME_INPUT_CLASSES} {...register('endTime')} />
                 {errors.endTime ? <p className="text-xs text-danger-600">{errors.endTime.message}</p> : null}
@@ -788,16 +796,16 @@ function ExceptionFormDialog({
             </div>
           ) : null}
 
-          <Textarea label="Reason (optional)" rows={2} {...register('reason')} />
+          <Textarea label={t('common:field.reasonOptional')} rows={2} {...register('reason')} />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
-              Add override
+              {t('app:availability.addOverride')}
             </Button>
           </DialogFooter>
         </form>

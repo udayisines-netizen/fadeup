@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Unattended TV/kiosk display for one shop location's live walk-in queue —
@@ -24,6 +25,7 @@ import { useDocumentMeta } from '@/lib/use-document-meta'
  * would be a clean follow-up if this becomes the primary way shops run it.
  */
 export function PublicQueueDisplayPage() {
+  const { t } = useTranslation()
   const { slug } = useParams<{ slug: string }>()
   const [searchParams] = useSearchParams()
   const requestedLocationId = searchParams.get('location')
@@ -51,7 +53,7 @@ export function PublicQueueDisplayPage() {
   if (organizationQuery.isPending || locationsQuery.isPending) {
     return (
       <div className="flex flex-1 items-center justify-center bg-ink-950 py-24">
-        <Spinner className="h-8 w-8 text-on-accent" label="Loading queue…" />
+        <Spinner className="h-8 w-8 text-on-accent" label={t('booking:queueDisplay.loadingQueue')} />
       </div>
     )
   }
@@ -59,7 +61,7 @@ export function PublicQueueDisplayPage() {
   if (organizationQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
-        <ErrorState title="Couldn't load this display" description={organizationQuery.error.message} />
+        <ErrorState title={t('booking:queueDisplay.couldntLoadThisDisplay')} description={organizationQuery.error.message} />
       </Container>
     )
   }
@@ -68,11 +70,11 @@ export function PublicQueueDisplayPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="We couldn't find this shop"
-          description="This display link may be out of date, or the web address may have changed."
+          title={t('booking:queueDisplay.weCouldntFindThisShop')}
+          description={t('booking:queueDisplay.thisDisplayLinkMayBe')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('booking:queueDisplay.goToFadeup')}
             </Link>
           }
         />
@@ -83,7 +85,7 @@ export function PublicQueueDisplayPage() {
   if (locationsQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
-        <ErrorState title="Couldn't load locations" description={locationsQuery.error.message} />
+        <ErrorState title={t('booking:queueDisplay.couldntLoadLocations')} description={locationsQuery.error.message} />
       </Container>
     )
   }
@@ -92,8 +94,8 @@ export function PublicQueueDisplayPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="No location to display"
-          description="This shop doesn't have any active locations set up yet."
+          title={t('booking:queueDisplay.noLocationToDisplay')}
+          description={t('booking:queueDisplay.thisShopDoesntHaveAny')}
         />
       </Container>
     )
@@ -103,7 +105,7 @@ export function PublicQueueDisplayPage() {
     <div className="flex flex-1 flex-col bg-ink-950 text-on-accent">
       <Container size="xl" className="flex flex-1 flex-col py-8 sm:py-12">
         <div className="mb-8 text-center sm:mb-12">
-          <p className="text-sm font-medium uppercase tracking-widest text-accent-200">Live queue</p>
+          <p className="text-sm font-medium uppercase tracking-widest text-accent-200">{t('booking:queueDisplay.liveQueue')}</p>
           <h1 className="mt-2 text-4xl font-semibold text-balance sm:text-5xl">{organizationQuery.data.name}</h1>
           {resolvedLocation ? <p className="mt-2 text-lg text-on-accent/60">{resolvedLocation.name}</p> : null}
         </div>
@@ -126,6 +128,7 @@ export function PublicQueueDisplayPage() {
 }
 
 function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
+  const { t } = useTranslation()
   const nowServing = entries.filter((entry) => entry.status === 'in_service' || entry.status === 'called')
   const waiting = entries
     .filter((entry) => entry.status === 'waiting')
@@ -135,8 +138,8 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         <CircleCheckBig className="h-16 w-16 text-accent-200" aria-hidden="true" />
-        <p className="text-3xl font-semibold text-balance sm:text-4xl">No one is currently waiting</p>
-        <p className="text-lg text-on-accent/60">Walk right up — a barber will be with you shortly.</p>
+        <p className="text-3xl font-semibold text-balance sm:text-4xl">{t('booking:queueDisplay.noOneIsCurrentlyWaiting')}</p>
+        <p className="text-lg text-on-accent/60">{t('booking:queueDisplay.walkRightUpABarber')}</p>
       </div>
     )
   }
@@ -145,10 +148,10 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
     <div className="grid flex-1 grid-cols-1 gap-8 lg:grid-cols-2">
       <section aria-labelledby="now-serving-heading">
         <h2 id="now-serving-heading" className="mb-4 text-xl font-semibold uppercase tracking-wide text-accent-200">
-          Now serving
+          {t('booking:queueDisplay.nowServing')}
         </h2>
         {nowServing.length === 0 ? (
-          <p className="text-lg text-on-accent/50">No one is being served right now.</p>
+          <p className="text-lg text-on-accent/50">{t('booking:queueDisplay.noOneIsBeingServed')}</p>
         ) : (
           <ul className="flex flex-col gap-4">
             {nowServing.map((entry) => (
@@ -176,10 +179,10 @@ function QueueBoard({ entries }: { entries: PublicQueueEntry[] }) {
 
       <section aria-labelledby="up-next-heading">
         <h2 id="up-next-heading" className="mb-4 text-xl font-semibold uppercase tracking-wide text-on-accent/60">
-          Up next
+          {t('booking:queueDisplay.upNext')}
         </h2>
         {waiting.length === 0 ? (
-          <p className="text-lg text-on-accent/50">No one is waiting.</p>
+          <p className="text-lg text-on-accent/50">{t('booking:queueDisplay.noOneIsWaiting')}</p>
         ) : (
           <ol className="flex flex-col gap-3">
             {waiting.map((entry) => (

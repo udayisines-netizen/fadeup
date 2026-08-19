@@ -20,7 +20,8 @@
     "lastCutDays_other": "Sono passati {{count}} giorni dal tuo ultimo taglio.",
     "rebookOverdueTitle": "È ora di un nuovo taglio?",
     "rebookTitle": "Stesso taglio dell'ultima volta?",
-    "rebookCta": "Riprenota con {{barber}}"
+    "rebookCta": "Riprenota con {{barber}}",
+    "couldntLoadYourHome": "Impossibile caricare la tua home"
   },
   "onboarding": {
     "title": "Un paio di domande veloci",
@@ -56,7 +57,8 @@
     },
     "skip": "Salta per ora",
     "save": "Salva",
-    "saved": "Salvato — grazie!"
+    "saved": "Salvato — grazie!",
+    "couldntLoadYourProfile": "Impossibile caricare il tuo profilo"
   },
   "profile": {
     "title": "Profilo",
@@ -68,7 +70,8 @@
     "habitsTitle": "Le tue abitudini",
     "editHabits": "Modifica le tue abitudini",
     "noHabitsYet": "Non ci hai ancora parlato delle tue abitudini.",
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "couldntLoadYourProfile": "Impossibile caricare il tuo profilo"
   },
   "appointments": {
     "title": "Appuntamenti",
@@ -102,7 +105,8 @@
     "discoverCta": "Scopri i barbieri",
     "remove": "Rimuovi",
     "viewProfile": "Vedi profilo",
-    "book": "Prenota"
+    "book": "Prenota",
+    "couldntLoadYourFavorites": "Impossibile caricare i tuoi preferiti"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "Quell'orario è appena stato preso. Scegline un altro.",
     "notAllowed": "Questo appuntamento non può più essere spostato.",
     "failed": "Impossibile spostare l'appuntamento. Riprova."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "Vai su FadeUp"
   }
 }

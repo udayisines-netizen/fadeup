@@ -41,6 +41,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -85,6 +86,7 @@ export function AppLocationsPage() {
  * already where a shop manages its physical, customer-facing presence.
  */
 function MarketplaceVisibilityCard({ organizationId }: { organizationId: string }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const visibilityQuery = useOrganizationMarketplaceVisibility(organizationId)
   const setVisibility = useSetMarketplaceVisibility(organizationId)
@@ -115,7 +117,7 @@ function MarketplaceVisibilityCard({ organizationId }: { organizationId: string 
         <div className="max-w-xl">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-950">
             <Store className="h-4 w-4 text-ink-500" aria-hidden="true" />
-            Your shop on FadeUp
+            {t('app:locations.yourShopOnFadeup')}
           </h2>
           <p className="mt-1 text-sm text-ink-500">
             {marketplaceVisible
@@ -127,12 +129,12 @@ function MarketplaceVisibilityCard({ organizationId }: { organizationId: string 
               to={`/s/${slug}/profile`}
               className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-accent-700 underline underline-offset-2"
             >
-              View your public profile
+              {t('app:locations.viewYourPublicProfile')}
             </Link>
           ) : null}
         </div>
         <Switch
-          label="Listed publicly"
+          label={t('app:locations.listedPublicly')}
           checked={marketplaceVisible}
           disabled={setVisibility.isPending}
           onChange={(event) => void handleToggle(event.target.checked)}
@@ -143,6 +145,7 @@ function MarketplaceVisibilityCard({ organizationId }: { organizationId: string 
 }
 
 function LocationsManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
   const locationsQuery = useOrgLocations(organizationId)
@@ -159,10 +162,10 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
     <Container size="lg" className="py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-950">Locations</h1>
-          <p className="mt-1 text-sm text-ink-500">Shops and addresses for your organization.</p>
+          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.locations')}</h1>
+          <p className="mt-1 text-sm text-ink-500">{t('app:locations.shopsAndAddressesForYour')}</p>
         </div>
-        {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>Add location</Button> : null}
+        {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>{t('app:locations.addLocation')}</Button> : null}
       </div>
 
       {canManage ? <MarketplaceVisibilityCard organizationId={organizationId} /> : null}
@@ -172,25 +175,25 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
           <LocationsSkeleton />
         ) : locationsQuery.isError ? (
           <ErrorState
-            title="Couldn't load locations"
+            title={t('app:locations.couldntLoadLocations')}
             description={locationsQuery.error.message}
             action={
               <Button variant="secondary" onClick={() => void locationsQuery.refetch()}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : (
-          <Table label="Locations">
+          <Table label={t('common:entity.locations')}>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Timezone</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('common:field.name')}</TableHead>
+                <TableHead>{t('app:locations.address')}</TableHead>
+                <TableHead>{t('common:field.timezone')}</TableHead>
+                <TableHead>{t('common:field.status')}</TableHead>
                 {canManage ? (
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('common:action.actions')}</span>
                   </TableHead>
                 ) : null}
               </TableRow>
@@ -199,7 +202,7 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
               {locationsQuery.data.length === 0 ? (
                 <TableStateRow colSpan={columnCount}>
                   <EmptyState
-                    title="No locations yet"
+                    title={t('app:locations.noLocationsYet')}
                     description={
                       canManage
                         ? 'Add your first location to get started.'
@@ -208,7 +211,7 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
                     action={
                       canManage ? (
                         <Button size="sm" onClick={() => setDialogState({ mode: 'create' })}>
-                          Add location
+                          {t('app:locations.addLocation')}
                         </Button>
                       ) : undefined
                     }
@@ -233,7 +236,7 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
                           size="sm"
                           onClick={() => setDialogState({ mode: 'edit', location })}
                         >
-                          Edit
+                          {t('common:action.edit')}
                         </Button>
                       </TableCell>
                     ) : null}
@@ -269,6 +272,7 @@ function LocationFormDialog({
   onClose: () => void
   onSaved: (message: string) => void
 }) {
+  const { t } = useTranslation()
   const isEdit = Boolean(location)
   const createLocation = useCreateLocation()
   const updateLocation = useUpdateLocation()
@@ -347,30 +351,30 @@ function LocationFormDialog({
           <DialogBody className="flex flex-col gap-4">
             {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-            <TextField label="Name" error={errors.name?.message} {...register('name')} />
-            <TextField label="Address line 1" {...register('addressLine1')} />
-            <TextField label="Address line 2" {...register('addressLine2')} />
+            <TextField label={t('common:field.name')} error={errors.name?.message} {...register('name')} />
+            <TextField label={t('app:locations.addressLine1')} {...register('addressLine1')} />
+            <TextField label={t('app:locations.addressLine2')} {...register('addressLine2')} />
             <div className="grid grid-cols-2 gap-4">
-              <TextField label="City" {...register('city')} />
-              <TextField label="Region / state" {...register('region')} />
+              <TextField label={t('app:locations.city')} {...register('city')} />
+              <TextField label={t('app:locations.regionState')} {...register('region')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <TextField label="Postal code" {...register('postalCode')} />
-              <TextField label="Country" {...register('country')} />
+              <TextField label={t('app:locations.postalCode')} {...register('postalCode')} />
+              <TextField label={t('common:field.country')} {...register('country')} />
             </div>
             <TextField
-              label="Timezone"
-              hint="IANA name, e.g. America/New_York"
+              label={t('common:field.timezone')}
+              hint={t('app:locations.ianaNameEGAmerica')}
               error={errors.timezone?.message}
               {...register('timezone')}
             />
-            <Switch label="Active" description="Inactive locations are hidden from booking." {...register('isActive')} />
+            <Switch label={t('common:state.active')} description={t('app:locations.inactiveLocationsAreHiddenFrom')} {...register('isActive')} />
           </DialogBody>
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>

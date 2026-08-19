@@ -56,18 +56,18 @@ export function CustomerProfilePage() {
   if (!user) return null
 
   if (profileQuery.isPending) {
-    return <PageSpinner label="Loading…" />
+    return <PageSpinner label={t('common:state.loadingEllipsis')} />
   }
 
   if (profileQuery.isError) {
     return (
       <Container size="sm" className="py-10">
         <ErrorState
-          title="Couldn't load your profile"
+          title={t('customer-app:profile.couldntLoadYourProfile')}
           description={profileQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void profileQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />

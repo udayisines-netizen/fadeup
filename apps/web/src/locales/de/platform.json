@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "Diese Bewerbung konnte nicht geladen werden",
+    "applicationNotFound": "Bewerbung nicht gefunden"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "FadeUp-Plattform beanspruchen",
+    "thisCanOnlyBeDone": "Das ist nur einmal möglich, durch die Person mit diesem Link.",
+    "logInOrCreateAn": "Melde dich an oder erstelle ein Konto, um fortzufahren.",
+    "claimPlatformOwnership": "Plattform beanspruchen"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "Dem FadeUp-Plattformteam beitreten",
+    "acceptThisInvitationToGet": "Nimm diese Einladung an, um Plattformzugang zu erhalten.",
+    "logInOrCreateAn": "Melde dich an oder erstelle ein Konto, um fortzufahren.",
+    "acceptInvitation": "Einladung annehmen"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "Arbeitsbereich wird geladen",
+    "barberNotFoundInThis": "Fachkraft in diesem Betrieb nicht gefunden",
+    "noServicesAssigned": "Keine Leistungen zugewiesen.",
+    "weeklyHours": "Wochenarbeitszeit",
+    "noWorkingHoursSet": "Keine Arbeitszeiten hinterlegt.",
+    "upcomingExceptions": "Kommende Ausnahmen",
+    "noAvailabilityExceptionsOnFile": "Keine Verfügbarkeitsausnahmen hinterlegt.",
+    "couldntEnterSupportView": "Support-Ansicht konnte nicht geöffnet werden"
+  },
+  "applications": {
+    "couldntLoadApplications": "Bewerbungen konnten nicht geladen werden"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "Plattformteam konnte nicht geladen werden",
+    "platformTeamMembers": "Mitglieder des Plattformteams",
+    "couldntLoadInvitations": "Einladungen konnten nicht geladen werden",
+    "pendingPlatformInvitations": "Offene Plattform-Einladungen",
+    "noPendingInvitations": "Keine offenen Einladungen",
+    "leaveBlankToCreateA": "Leer lassen, um einen einmalig nutzbaren Link zu erzeugen.",
+    "platformTeam": "Plattformteam",
+    "whoHasFadeupPlatformAccess": "Wer Zugang zur FadeUp-Plattform hat, und offene Einladungen.",
+    "user": "Benutzer",
+    "since": "Seit",
+    "pendingInvitations": "Offene Einladungen",
+    "revoke": "Zurückziehen",
+    "inviteSomeone": "Jemanden einladen",
+    "sendInvitation": "Einladung senden",
+    "invitationCreated": "Einladung erstellt",
+    "invitationRevoked": "Einladung zurückgezogen",
+    "couldntRevokeInvitation": "Einladung konnte nicht zurückgezogen werden"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "Betriebe konnten nicht geladen werden",
+    "noOrganizationsYet": "Noch keine Betriebe",
+    "everyBarbershopTenantOnFadeup": "Alle Betriebe auf FadeUp.",
+    "slug": "URL-Kürzel"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "Audit-Log konnte nicht geladen werden",
+    "auditLog": "Audit-Log",
+    "noPlatformActivityYet": "Noch keine Aktivität",
+    "platformlevelSecurityEventsMostRecent": "Sicherheitsereignisse der Plattform, neueste zuerst.",
+    "action": "Aktion",
+    "actor": "Ausgeführt von"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "Betrieb wird geladen",
+    "couldntLoadOrganization": "Betrieb konnte nicht geladen werden",
+    "organizationNotFound": "Betrieb nicht gefunden",
+    "couldntLoadLocations": "Standorte konnten nicht geladen werden",
+    "noLocationsYet": "Noch keine Standorte",
+    "couldntLoadTeam": "Team konnte nicht geladen werden",
+    "noTeamMembersYet": "Noch keine Mitglieder",
+    "organizations": "← Betriebe",
+    "viewBarberWorkspace": "Arbeitsbereich der Fachkraft ansehen",
+    "couldntEnterSupportView": "Support-Ansicht konnte nicht geöffnet werden"
+  },
+  "login": {
+    "platformSignIn": "Plattform-Anmeldung",
+    "fadeupPlatformStaffOnly": "Nur für FadeUp-Mitarbeitende.",
+    "signIn": "Anmelden"
+  },
+  "overview": {
+    "platformOverview": "Plattform-Überblick",
+    "signedInAs": "Angemeldet als"
+  },
+  "nav": {
+    "fadeupPlatform": "FadeUp-Plattform",
+    "overview": "Überblick",
+    "applications": "Bewerbungen",
+    "acquisition": "Akquise",
+    "outreach": "Ansprache",
+    "dataScience": "Data Science",
+    "auditLog": "Audit-Log",
+    "checkingPlatformAccess": "Plattformzugang wird geprüft",
+    "backToFadeup": "Zurück zu FadeUp",
+    "exitSupportView": "Support-Ansicht verlassen",
+    "exitedSupportView": "Support-Ansicht verlassen",
+    "couldntExitSupportView": "Support-Ansicht konnte nicht verlassen werden"
+  }
+}

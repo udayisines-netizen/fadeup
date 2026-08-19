@@ -1,6 +1,7 @@
 import { Container } from '@/components/ui/container'
 import { Badge } from '@/components/ui/badge'
 import { usePlatformRole } from '@/routes/require-platform-role'
+import { useTranslation } from 'react-i18next'
 
 const ROLE_LABELS: Record<string, string> = {
   platform_owner: 'Platform Owner',
@@ -15,13 +16,14 @@ const ROLE_LABELS: Record<string, string> = {
  * built on top of this same RequirePlatformRole shell.
  */
 export function PlatformOverviewPage() {
+  const { t } = useTranslation()
   const role = usePlatformRole()
 
   return (
     <Container size="lg" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">Platform overview</h1>
+      <h1 className="text-xl font-semibold text-ink-950">{t('platform:overview.platformOverview')}</h1>
       <p className="mt-1 text-sm text-ink-500">
-        Signed in as <Badge variant="accent">{ROLE_LABELS[role] ?? role}</Badge>
+        {t('platform:overview.signedInAs')} <Badge variant="accent">{ROLE_LABELS[role] ?? role}</Badge>
       </p>
     </Container>
   )

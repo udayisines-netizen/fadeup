@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTranslation } from 'react-i18next'
 
 function formatAddress(location: PublicLocation): string | null {
   const parts = [location.addressLine1, location.city, location.region].filter((part): part is string => Boolean(part))
@@ -37,6 +38,7 @@ function initialsOf(name: string): string {
  * nothing fabricated to fill the space.
  */
 export function ShopProfilePage() {
+  const { t } = useTranslation()
   const { slug } = useParams<{ slug: string }>()
   const organizationQuery = usePublicOrganization(slug)
   const locationsQuery = usePublicLocations(slug)
@@ -48,18 +50,18 @@ export function ShopProfilePage() {
   })
 
   if (organizationQuery.isPending) {
-    return <PageSpinner label="Loading profile…" />
+    return <PageSpinner label={t('booking:shop.loadingProfile')} />
   }
 
   if (organizationQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load this profile"
+          title={t('booking:shop.couldntLoadThisProfile')}
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -71,11 +73,11 @@ export function ShopProfilePage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="We couldn't find this shop"
-          description="This link may be out of date, or the web address may have changed. Check the link with the shop directly."
+          title={t('booking:shop.weCouldntFindThisShop')}
+          description={t('booking:shop.thisLinkMayBeOut')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('booking:shop.goToFadeup')}
             </Link>
           }
         />
@@ -113,14 +115,14 @@ export function ShopProfilePage() {
         ) : null}
 
         <Link to={`/s/${organization.slug}`} className={buttonVariants({ size: 'lg' }, 'mt-6 w-full')}>
-          Book now
+          {t('booking:shop.bookNow')}
         </Link>
       </Card>
 
       <div className="mt-8">
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink-500">
           <Users className="h-4 w-4" aria-hidden="true" />
-          Team
+          {t('common:entity.team')}
         </h2>
         {barbersQuery.isPending ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-hidden="true">
@@ -131,7 +133,7 @@ export function ShopProfilePage() {
         ) : barbersQuery.isError ? (
           <p className="text-sm text-danger-700">{barbersQuery.error.message}</p>
         ) : barbersQuery.data.length === 0 ? (
-          <EmptyState title="No public team members yet" description="This shop hasn't published any barber profiles." />
+          <EmptyState title={t('booking:shop.noPublicTeamMembersYet')} description={t('booking:shop.thisShopHasntPublishedAny')} />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {barbersQuery.data.map((barber) => (

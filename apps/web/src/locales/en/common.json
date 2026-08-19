@@ -4,7 +4,13 @@
     "forBusiness": "For business",
     "features": "Features",
     "pricing": "Pricing",
-    "myFadeUp": "My FadeUp"
+    "myFadeUp": "My FadeUp",
+    "loadingYourOrganizations": "Loading your organizations…",
+    "signOut": "Sign out",
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open menu",
+    "mobileNavigation": "Mobile navigation",
+    "menu": "Menu"
   },
   "auth": {
     "logIn": "Log in",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Language",
     "select": "Select language"
+  },
+  "field": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "status": "Status",
+    "role": "Role",
+    "date": "Date",
+    "time": "Time",
+    "type": "Type",
+    "notes": "Notes",
+    "price": "Price",
+    "title": "Title",
+    "reason": "Reason",
+    "country": "Country",
+    "timezone": "Timezone",
+    "locale": "Locale",
+    "category": "Category",
+    "source": "Source",
+    "score": "Score",
+    "target": "Target",
+    "template": "Template",
+    "scope": "Scope",
+    "state": "State",
+    "password": "Password",
+    "created": "Created",
+    "expires": "Expires",
+    "plan": "Plan",
+    "day": "Day",
+    "when": "When",
+    "customerName": "Customer name",
+    "description": "Description",
+    "phoneOptional": "Phone (optional)",
+    "emailOptional": "Email (optional)",
+    "notesOptional": "Notes (optional)",
+    "reasonOptional": "Reason (optional)"
+  },
+  "action": {
+    "actions": "Actions",
+    "tryAgain": "Try again",
+    "reload": "Reload",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "selected": "Selected",
+    "back": "Back",
+    "done": "Done",
+    "remove": "Remove"
+  },
+  "state": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "loading": "Loading",
+    "loadingEllipsis": "Loading…",
+    "blocked": "Blocked",
+    "sent": "Sent",
+    "paid": "Paid",
+    "replied": "Replied",
+    "activated": "Activated",
+    "noMatches": "No matches"
+  },
+  "entity": {
+    "customer": "Customer",
+    "customers": "Customers",
+    "service": "Service",
+    "services": "Services",
+    "team": "Team",
+    "member": "Member",
+    "members": "Members",
+    "professional": "Professional",
+    "barber": "Barber",
+    "location": "Location",
+    "locations": "Locations",
+    "chairs": "Chairs",
+    "memberships": "Memberships",
+    "organizations": "Organizations",
+    "waitlist": "Waitlist",
+    "availability": "Availability",
+    "schedule": "Schedule",
+    "queue": "Queue",
+    "calendar": "Calendar",
+    "requests": "Requests"
+  },
+  "access": {
+    "checkingYourAccess": "Checking your access",
+    "checkingYourSetup": "Checking your setup",
+    "checkingYourSession": "Checking your session"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "anUnexpectedErrorOccurredTry": "An unexpected error occurred. Try reloading the page.",
+    "goToMyWorkspace": "Go to my workspace"
+  },
+  "notifications": {
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "nothingYet": "Nothing yet."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Customer app navigation",
+    "appointments": "Appointments",
+    "discover": "Discover",
+    "passport": "Passport",
+    "profile": "Profile",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Dismiss notification"
+  },
+  "notFound": {
+    "pageNotFound": "Page not found",
+    "backHome": "Back home"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Loading your workspaces",
+    "fadeupPlatform": "FadeUp Platform",
+    "platformAdministration": "Platform administration",
+    "chooseAWorkspace": "Choose a workspace",
+    "youHaveAccessToMore": "You have access to more than one. Pick where to go."
   }
 }

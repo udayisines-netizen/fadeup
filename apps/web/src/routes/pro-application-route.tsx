@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { PageSpinner } from '@/components/ui/spinner'
+import { useTranslation } from 'react-i18next'
 
 // RequireAuth stays outside the dynamic import boundary — same reasoning as
 // onboarding-route.tsx and workspace-selector-route.tsx.
@@ -8,8 +9,9 @@ const ProApplicationPage = lazy(() =>
 )
 
 export function ProApplicationRoute() {
+  const { t } = useTranslation()
   return (
-    <Suspense fallback={<PageSpinner label="Loading" />}>
+    <Suspense fallback={<PageSpinner label={t('common:state.loading')} />}>
       <ProApplicationPage />
     </Suspense>
   )

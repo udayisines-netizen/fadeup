@@ -21,6 +21,7 @@ import { useRescheduleAppointment } from '@/lib/queries/booking-requests'
 import { calendarErrorMessage, type CalendarAppointment } from '@/lib/queries/calendar'
 import { zonedDateKey, todayInZone } from '@/lib/calendar/time'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Moving an appointment, from the shop's side.
@@ -53,6 +54,7 @@ export function MoveAppointmentDialog({
   professionals: CalendarProfessional[]
   onMoved?: () => void
 }) {
+  const { t } = useTranslation()
   const timeZone = appointment.locationTimezone
   const [date, setDate] = useState(() => zonedDateKey(appointment.startsAt, timeZone))
   const [barberId, setBarberId] = useState(appointment.barberId ?? '')
@@ -97,7 +99,7 @@ export function MoveAppointmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Move this appointment</DialogTitle>
+          <DialogTitle>{t('app:move.moveThisAppointment')}</DialogTitle>
           <DialogDescription>
             {appointment.customerName}
             {appointment.serviceName ? ` · ${appointment.serviceName}` : ''}
@@ -107,7 +109,7 @@ export function MoveAppointmentDialog({
         <div className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Date"
+              label={t('common:field.date')}
               type="date"
               value={date}
               min={todayInZone(timeZone)}
@@ -118,7 +120,7 @@ export function MoveAppointmentDialog({
             />
             {professionals.length > 1 ? (
               <SelectField
-                label="Professional"
+                label={t('common:entity.professional')}
                 value={barberId}
                 options={professionals.map((professional) => ({
                   value: professional.barberId,
@@ -148,13 +150,13 @@ export function MoveAppointmentDialog({
           ) : slots.length === 0 ? (
             <EmptyState
               icon={CalendarX}
-              title="Nothing free that day"
-              description="Opening hours, blocked time and existing bookings all rule times out. Try another date or professional."
+              title={t('app:move.nothingFreeThatDay')}
+              description={t('app:move.openingHoursBlockedTimeAnd')}
             />
           ) : (
             <div
               role="radiogroup"
-              aria-label="Available times"
+              aria-label={t('app:move.availableTimes')}
               // Three across even on a 375px screen keeps every target well
               // past 44px while still showing a useful number of times.
               className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4"
@@ -196,11 +198,11 @@ export function MoveAppointmentDialog({
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
-              Keep as it is
+              {t('app:move.keepAsItIs')}
             </Button>
           </DialogClose>
           <Button type="button" onClick={() => void submit()} disabled={!selected} isLoading={reschedule.isPending}>
-            Move appointment
+            {t('app:move.moveAppointment')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -41,6 +41,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { MEMBERSHIP_ROLES, type MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 const ROLE_LABELS: Record<MembershipRole, string> = {
   owner: 'Owner',
@@ -79,6 +80,7 @@ interface TeamRow {
 }
 
 export function AppTeamPage() {
+  const { t } = useTranslation()
   const { currentMembership } = useCurrentOrg()
 
   if (!currentMembership || !MANAGING_ROLES.has(currentMembership.role)) {
@@ -87,7 +89,7 @@ export function AppTeamPage() {
         <Alert variant="info">
           Team management is only available to shop owners and managers.{' '}
           <Link to="/app" className="font-medium underline underline-offset-2">
-            Back to home
+            {t('app:team.backToHome')}
           </Link>
         </Alert>
       </Container>
@@ -104,6 +106,7 @@ function TeamManagement({
   organizationId: string
   role: MembershipRole
 }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { toast } = useToast()
   const membersQuery = useOrgMembers(organizationId)
@@ -181,7 +184,7 @@ function TeamManagement({
         locationId: values.locationId || null,
       })
       setCreatedLink(`${window.location.origin}/invite/${token}`)
-      toast({ title: 'Invitation created', description: `Sent to ${values.email}.`, variant: 'success' })
+      toast({ title: t('app:team.invitationCreated'), description: `Sent to ${values.email}.`, variant: 'success' })
       reset({ email: '', role: values.role, locationId: values.locationId })
     } catch (error) {
       if (getErrorMessage(error)?.toLowerCase().includes('duplicate')) {
@@ -195,11 +198,11 @@ function TeamManagement({
   function handleRevoke(invitation: OrgInvitation) {
     revokeInvitation.mutate(invitation.id, {
       onSuccess: () => {
-        toast({ title: 'Invitation revoked', description: `${invitation.email} can no longer accept it.` })
+        toast({ title: t('app:team.invitationRevoked'), description: `${invitation.email} can no longer accept it.` })
       },
       onError: (error) => {
         toast({
-          title: 'Couldn’t revoke invitation',
+          title: t('app:team.couldnTRevokeInvitation'),
           description: getErrorMessage(error),
           variant: 'error',
         })
@@ -226,7 +229,7 @@ function TeamManagement({
         },
         onError: (error) => {
           toast({
-            title: "Couldn't update barber status",
+            title: t('app:team.couldntUpdateBarberStatus'),
             description: getErrorMessage(error),
             variant: 'error',
           })
@@ -237,33 +240,33 @@ function TeamManagement({
 
   return (
     <Container size="md" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">Team</h1>
-      <p className="mt-1 text-sm text-ink-500">Manage members and pending invitations.</p>
+      <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.team')}</h1>
+      <p className="mt-1 text-sm text-ink-500">{t('app:team.manageMembersAndPendingInvitations')}</p>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold text-ink-950">Members</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('common:entity.members')}</h2>
         <div className="mt-3">
           {isLoading ? (
             <MembersSkeleton />
           ) : isError ? (
-            <ErrorState title="Couldn't load members" description={loadError?.message} />
+            <ErrorState title={t('app:team.couldntLoadMembers')} description={loadError?.message} />
           ) : (
-            <Table label="Members">
+            <Table label={t('common:entity.members')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Barber</TableHead>
+                  <TableHead>{t('common:entity.member')}</TableHead>
+                  <TableHead>{t('common:field.role')}</TableHead>
+                  <TableHead>{t('common:field.title')}</TableHead>
+                  <TableHead>{t('common:entity.barber')}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('common:action.actions')}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {teamRows.length === 0 ? (
                   <TableStateRow colSpan={5}>
-                    <EmptyState title="No members yet" className="border-none" />
+                    <EmptyState title={t('app:team.noMembersYet')} className="border-none" />
                   </TableStateRow>
                 ) : (
                   teamRows.map((row) => {
@@ -299,7 +302,7 @@ function TeamManagement({
                                 to={`/app/team/${row.staffProfile.id}/workspace`}
                                 className={buttonVariants({ variant: 'secondary', size: 'sm' })}
                               >
-                                Workspace
+                                {t('app:team.workspace')}
                               </Link>
                             ) : null}
                             <Button
@@ -308,7 +311,7 @@ function TeamManagement({
                               disabled={!row.staffProfile}
                               onClick={() => setEditingRow(row)}
                             >
-                              Edit
+                              {t('common:action.edit')}
                             </Button>
                           </div>
                         </TableCell>
@@ -323,29 +326,29 @@ function TeamManagement({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold text-ink-950">Pending invitations</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('app:team.pendingInvitations')}</h2>
         <div className="mt-3">
           {invitationsQuery.isPending ? (
             <MembersSkeleton />
           ) : invitationsQuery.isError ? (
-            <ErrorState title="Couldn't load invitations" description={invitationsQuery.error.message} />
+            <ErrorState title={t('app:team.couldntLoadInvitations')} description={invitationsQuery.error.message} />
           ) : (
-            <Table label="Pending invitations">
+            <Table label={t('app:team.pendingInvitations')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Expires</TableHead>
+                  <TableHead>{t('common:field.email')}</TableHead>
+                  <TableHead>{t('common:field.role')}</TableHead>
+                  <TableHead>{t('common:entity.location')}</TableHead>
+                  <TableHead>{t('common:field.expires')}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('common:action.actions')}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {invitationsQuery.data.length === 0 ? (
                   <TableStateRow colSpan={5}>
-                    <EmptyState title="No pending invitations" className="border-none" />
+                    <EmptyState title={t('app:team.noPendingInvitations')} className="border-none" />
                   </TableStateRow>
                 ) : (
                   invitationsQuery.data.map((invitation) => (
@@ -365,7 +368,7 @@ function TeamManagement({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold text-ink-950">Invite someone</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('app:team.inviteSomeone')}</h2>
         <Card className="mt-3">
           <CardContent className="p-4 pt-4">
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
@@ -382,7 +385,7 @@ function TeamManagement({
               <div className="flex flex-col gap-4 sm:flex-row">
                 <div className="flex-1">
                   <TextField
-                    label="Email"
+                    label={t('common:field.email')}
                     type="email"
                     inputMode="email"
                     autoComplete="off"
@@ -393,7 +396,7 @@ function TeamManagement({
                 </div>
                 <div className="sm:w-48">
                   <SelectField
-                    label="Role"
+                    label={t('common:field.role')}
                     error={errors.role?.message}
                     options={assignableRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
                     {...register('role')}
@@ -401,7 +404,7 @@ function TeamManagement({
                 </div>
                 <div className="sm:w-56">
                   <SelectField
-                    label="Location (optional)"
+                    label={t('app:team.locationOptional')}
                     options={[
                       { value: NO_LOCATION_VALUE, label: 'No specific location' },
                       ...(locationsQuery.data ?? []).map((location) => ({ value: location.id, label: location.name })),
@@ -412,7 +415,7 @@ function TeamManagement({
               </div>
 
               <Button type="submit" isLoading={isSubmitting} className="sm:self-start">
-                Send invitation
+                {t('app:team.sendInvitation')}
               </Button>
             </form>
           </CardContent>
@@ -427,7 +430,7 @@ function TeamManagement({
           locations={locationsQuery.data ?? []}
           onClose={() => setEditingRow(null)}
           onSaved={() => {
-            toast({ title: 'Profile updated', variant: 'success' })
+            toast({ title: t('app:team.profileUpdated'), variant: 'success' })
             setEditingRow(null)
           }}
         />
@@ -449,6 +452,7 @@ function StaffProfileFormDialog({
   onClose: () => void
   onSaved: () => void
 }) {
+  const { t } = useTranslation()
   const updateStaffProfile = useUpdateStaffProfile()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -501,36 +505,36 @@ function StaffProfileFormDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit team member</DialogTitle>
+          <DialogTitle>{t('app:team.editTeamMember')}</DialogTitle>
           <DialogDescription>Update {staffProfile.displayName}&apos;s profile.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Display name" error={errors.displayName?.message} {...register('displayName')} />
-          <TextField label="Title" hint='e.g. "Master Barber"' {...register('title')} />
-          <Textarea label="Bio" rows={3} {...register('bio')} />
+          <TextField label={t('app:team.displayName')} error={errors.displayName?.message} {...register('displayName')} />
+          <TextField label={t('common:field.title')} hint={t('app:team.eGMasterBarber')} {...register('title')} />
+          <Textarea label={t('app:team.bio')} rows={3} {...register('bio')} />
           <TextField
-            label="Photo URL"
+            label={t('app:team.photoUrl')}
             type="url"
-            hint="A link to a square photo — shown on their public profile."
+            hint={t('app:team.aLinkToASquare')}
             {...register('avatarUrl')}
           />
-          <SelectField label="Primary location" options={locationOptions} {...register('locationId')} />
+          <SelectField label={t('app:team.primaryLocation')} options={locationOptions} {...register('locationId')} />
           <Switch
-            label="Public profile"
-            description="Visible in public booking and has a shareable Barber Passport page. Off by default."
+            label={t('app:team.publicProfile')}
+            description={t('app:team.visibleInPublicBookingAnd')}
             {...register('isPublic')}
           />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
-              Save changes
+              {t('app:team.saveChanges')}
             </Button>
           </DialogFooter>
         </form>
@@ -550,6 +554,7 @@ function PendingInvitationRow({
   onRevoke: () => void
   isRevoking: boolean
 }) {
+  const { t } = useTranslation()
   return (
     <TableRow>
       <TableCell className="max-w-[16rem] truncate">{invitation.email}</TableCell>
@@ -562,7 +567,7 @@ function PendingInvitationRow({
       </TableCell>
       <TableCell className="text-right">
         <Button variant="danger" size="sm" isLoading={isRevoking} onClick={onRevoke}>
-          Revoke
+          {t('app:team.revoke')}
         </Button>
       </TableCell>
     </TableRow>

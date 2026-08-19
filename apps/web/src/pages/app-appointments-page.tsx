@@ -48,6 +48,7 @@ import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/cn'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 // Distinct from the owner/manager MANAGING_ROLES used everywhere else in this
 // app — appointments RLS also allows receptionist to write (see
@@ -107,6 +108,7 @@ export function AppAppointmentsPage() {
 }
 
 function AppointmentsSchedule({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const { user } = useAuth()
   const canManage = MANAGING_ROLES.has(role)
@@ -231,12 +233,12 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
     <Container size="lg" className="py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-950">Schedule</h1>
+          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.schedule')}</h1>
           <p className="mt-1 text-sm text-ink-500">The day&apos;s appointments for each location.</p>
         </div>
         <div className="sm:w-48">
           <TextField
-            label="Date"
+            label={t('common:field.date')}
             type="date"
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
@@ -249,21 +251,21 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
           <ScheduleSkeleton />
         ) : isError ? (
           <ErrorState
-            title="Couldn't load the schedule"
+            title={t('app:appointments.couldntLoadTheSchedule')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : locations.length === 0 ? (
           <EmptyState
-            title="No locations yet"
-            description="Add a location before scheduling appointments."
+            title={t('app:appointments.noLocationsYet')}
+            description={t('app:appointments.addALocationBeforeScheduling')}
             action={
               <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to locations
+                {t('app:appointments.goToLocations')}
               </Link>
             }
           />
@@ -307,7 +309,7 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
           staffProfiles={staffProfilesQuery.data ?? []}
           onClose={() => setIsBookingOpen(false)}
           onBooked={() => {
-            toast({ title: 'Appointment booked', variant: 'success' })
+            toast({ title: t('app:appointments.appointmentBooked'), variant: 'success' })
             setIsBookingOpen(false)
           }}
         />
@@ -339,6 +341,7 @@ function LocationSchedule({
   chairById: Map<string, Chair>
   onNewAppointment: () => void
 }) {
+  const { t } = useTranslation()
   const showActionsColumn = canManage || appointments.some((appointment) => isOwnBarber(appointment.barberId))
   const columnCount = showActionsColumn ? 6 : 5
 
@@ -353,22 +356,22 @@ function LocationSchedule({
       <div className="flex items-center justify-end">
         {canManage ? (
           <Button size="sm" onClick={onNewAppointment}>
-            New appointment
+            {t('app:appointments.newAppointment')}
           </Button>
         ) : null}
       </div>
       <Table label={`Appointments at ${location.name}`}>
         <TableHeader>
           <TableRow>
-            <TableHead>Time</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Service</TableHead>
-            <TableHead>Barber</TableHead>
-            <TableHead>Chair</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('common:field.time')}</TableHead>
+            <TableHead>{t('common:entity.customer')}</TableHead>
+            <TableHead>{t('common:entity.service')}</TableHead>
+            <TableHead>{t('common:entity.barber')}</TableHead>
+            <TableHead>{t('app:appointments.chair')}</TableHead>
+            <TableHead>{t('common:field.status')}</TableHead>
             {showActionsColumn ? (
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t('common:action.actions')}</span>
               </TableHead>
             ) : null}
           </TableRow>
@@ -377,7 +380,7 @@ function LocationSchedule({
           {appointments.length === 0 ? (
             <TableStateRow colSpan={columnCount}>
               <EmptyState
-                title="No appointments"
+                title={t('app:appointments.noAppointments')}
                 description={
                   canManage
                     ? 'Nothing booked for this location on this date yet.'
@@ -386,7 +389,7 @@ function LocationSchedule({
                 action={
                   canManage ? (
                     <Button size="sm" onClick={onNewAppointment}>
-                      New appointment
+                      {t('app:appointments.newAppointment')}
                     </Button>
                   ) : undefined
                 }
@@ -430,6 +433,7 @@ function AppointmentRow({
   serviceName: string
   chairName: string
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateAppointmentStatus()
   const isTerminal = TERMINAL_STATUSES.has(appointment.status)
@@ -441,7 +445,7 @@ function AppointmentRow({
         onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't update status",
+            title: t('app:appointments.couldntUpdateStatus'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -473,7 +477,7 @@ function AppointmentRow({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>
-                  Update status
+                  {t('app:appointments.updateStatus')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -532,6 +536,7 @@ function NewAppointmentDialog({
   onClose: () => void
   onBooked: () => void
 }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const createAppointment = useCreateAppointment()
   const [formError, setFormError] = useState<string | null>(null)
@@ -609,11 +614,11 @@ function NewAppointmentDialog({
     setFormError(null)
 
     if (!selectedService) {
-      setFormError('Select a service.')
+      setFormError(t('app:appointments.selectAService'))
       return
     }
     if (!selectedSlot) {
-      setFormError('Pick an available time slot.')
+      setFormError(t('app:appointments.pickAnAvailableTimeSlot'))
       return
     }
 
@@ -638,7 +643,7 @@ function NewAppointmentDialog({
       onBooked()
     } catch (error) {
       if (isBookingConflictError(error)) {
-        setFormError('That time was just booked by someone else — pick another slot.')
+        setFormError(t('app:appointments.thatTimeWasJustBooked'))
         setSelectedSlot(null)
         void slotsQuery.refetch()
         return
@@ -679,7 +684,7 @@ function NewAppointmentDialog({
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>New appointment</DialogTitle>
+          <DialogTitle>{t('app:appointments.newAppointment')}</DialogTitle>
           <DialogDescription>
             Book a walk-in or phone request at {location.name}. It&apos;s created as confirmed.
           </DialogDescription>
@@ -697,32 +702,32 @@ function NewAppointmentDialog({
               <Alert variant="info">
                 No services are offered at {location.name} yet.{' '}
                 <Link to="/app/services" className="underline">
-                  Manage services
+                  {t('app:appointments.manageServices')}
                 </Link>
                 .
               </Alert>
             ) : (
               <>
-                <SelectField label="Service" options={serviceOptions} error={errors.serviceId?.message} {...register('serviceId')} />
+                <SelectField label={t('common:entity.service')} options={serviceOptions} error={errors.serviceId?.message} {...register('serviceId')} />
                 <SelectField
-                  label="Barber"
+                  label={t('common:entity.barber')}
                   options={barberOptions}
                   disabled={!serviceId}
                   error={errors.barberId?.message}
                   {...register('barberId')}
                 />
-                <TextField label="Date" type="date" error={errors.date?.message} {...register('date')} />
+                <TextField label={t('common:field.date')} type="date" error={errors.date?.message} {...register('date')} />
 
                 {serviceId && barberId && date ? (
                   <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-ink-950">Time</span>
+                    <span className="text-sm font-medium text-ink-950">{t('common:field.time')}</span>
                     {slotsQuery.isPending ? (
                       <Skeleton className="h-20 w-full" />
                     ) : slotsQuery.isError ? (
                       <Alert variant="error">{slotsQuery.error.message}</Alert>
                     ) : (slotsQuery.data ?? []).length === 0 ? (
                       <p className="rounded-md border border-dashed border-border-strong px-3 py-4 text-center text-sm text-ink-500">
-                        No open slots this day.
+                        {t('app:appointments.noOpenSlotsThisDay')}
                       </p>
                     ) : (
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -750,17 +755,17 @@ function NewAppointmentDialog({
                   </div>
                 ) : null}
 
-                <TextField label="Customer name" error={errors.customerName?.message} {...register('customerName')} />
+                <TextField label={t('common:field.customerName')} error={errors.customerName?.message} {...register('customerName')} />
                 <div className="grid grid-cols-2 gap-4">
                   <TextField
-                    label="Phone (optional)"
+                    label={t('common:field.phoneOptional')}
                     type="tel"
-                    hint="At least a phone or email is recommended."
+                    hint={t('app:appointments.atLeastAPhoneOr')}
                     {...register('customerPhone')}
                   />
-                  <TextField label="Email (optional)" type="email" {...register('customerEmail')} />
+                  <TextField label={t('common:field.emailOptional')} type="email" {...register('customerEmail')} />
                 </div>
-                <Textarea label="Notes (optional)" rows={2} {...register('notes')} />
+                <Textarea label={t('common:field.notesOptional')} rows={2} {...register('notes')} />
               </>
             )}
 
@@ -769,12 +774,12 @@ function NewAppointmentDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             {offeredServices.length > 0 ? (
               <Button type="submit" isLoading={isSubmitting}>
-                Book appointment
+                {t('app:appointments.bookAppointment')}
               </Button>
             ) : null}
           </DialogFooter>

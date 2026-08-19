@@ -52,9 +52,9 @@ export function PlatformApplicationDetailPage() {
           <Skeleton className="h-48 w-full" />
         </div>
       ) : query.isError ? (
-        <ErrorState className="mt-4" title="Couldn't load this application" description={query.error.message} />
+        <ErrorState className="mt-4" title={t('platform:applicationDetail.couldntLoadThisApplication')} description={query.error.message} />
       ) : !query.data ? (
-        <EmptyState className="mt-4" title="Application not found" />
+        <EmptyState className="mt-4" title={t('platform:applicationDetail.applicationNotFound')} />
       ) : (
         <ApplicationDetail application={query.data} />
       )}

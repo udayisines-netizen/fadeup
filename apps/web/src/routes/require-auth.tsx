@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import { PageSpinner } from '@/components/ui/spinner'
+import { useTranslation } from 'react-i18next'
 
 interface RequireAuthProps {
   children: ReactNode
@@ -15,11 +16,12 @@ interface RequireAuthProps {
 
 /** Redirects to loginPath?redirect=<here> when there is no authenticated session. */
 export function RequireAuth({ children, loginPath = '/login' }: RequireAuthProps) {
+  const { t } = useTranslation()
   const { session, loading } = useAuth()
   const location = useLocation()
 
   if (loading) {
-    return <PageSpinner label="Checking your session" />
+    return <PageSpinner label={t('common:access.checkingYourSession')} />
   }
 
   if (!session) {

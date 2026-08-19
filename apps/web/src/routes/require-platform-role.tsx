@@ -7,6 +7,7 @@ import { Container } from '@/components/ui/container'
 import { Alert } from '@/components/ui/alert'
 import { buttonVariants } from '@/components/ui/button'
 import type { PlatformRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const PlatformRoleContext = createContext<PlatformRole | null>(null)
 
@@ -27,12 +28,13 @@ export function usePlatformRole(): PlatformRole {
  * dropped into an unrelated part of the product.
  */
 export function RequirePlatformRole({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   const { session, user, loading: authLoading } = useAuth()
   const location = useLocation()
   const roleQuery = useOwnPlatformRole(user?.id)
 
   if (authLoading) {
-    return <PageSpinner label="Checking your session" />
+    return <PageSpinner label={t('common:access.checkingYourSession')} />
   }
 
   if (!session) {
@@ -41,7 +43,7 @@ export function RequirePlatformRole({ children }: { children: ReactNode }) {
   }
 
   if (roleQuery.isPending) {
-    return <PageSpinner label="Checking platform access" />
+    return <PageSpinner label={t('platform:nav.checkingPlatformAccess')} />
   }
 
   if (roleQuery.isError || !roleQuery.data) {
@@ -54,7 +56,7 @@ export function RequirePlatformRole({ children }: { children: ReactNode }) {
               : "This account doesn't have FadeUp platform access."}
           </Alert>
           <Link to="/" className={buttonVariants({ variant: 'secondary' }, 'mt-4 w-full')}>
-            Back to FadeUp
+            {t('platform:nav.backToFadeup')}
           </Link>
         </Container>
       </main>

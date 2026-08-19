@@ -38,11 +38,11 @@ export function CustomerFavoritesPage() {
     return (
       <Container size="sm" className="py-10">
         <ErrorState
-          title="Couldn't load your favorites"
+          title={t('customer-app:favorites.couldntLoadYourFavorites')}
           description={favoritesQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void favoritesQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />

@@ -24,6 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableSta
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
 import type { PlatformRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const ROLE_LABELS: Record<PlatformRole, string> = {
   platform_owner: 'Platform Owner',
@@ -56,6 +57,7 @@ type InviteFormValues = z.infer<typeof inviteSchema>
 
 /** /platform/team — platform staff roster + invitations. Only platform_owner/platform_admin can invite; every caller can view the full roster (RequirePlatformRole already gates entry to /platform to platform staff, so a platform_support caller landing here just sees no invite form). */
 export function PlatformTeamPage() {
+  const { t } = useTranslation()
   const role = usePlatformRole()
   const { toast } = useToast()
   const membersQuery = useAllPlatformMembers()
@@ -89,7 +91,7 @@ export function PlatformTeamPage() {
         invitedEmail: values.invitedEmail.trim() || null,
       })
       setCreatedLink(`${window.location.origin}/platform/invite/${rawToken}`)
-      toast({ title: 'Invitation created', variant: 'success' })
+      toast({ title: t('platform:team.invitationCreated'), variant: 'success' })
       reset({ role: values.role, invitedEmail: '' })
     } catch (error) {
       setCreateError(getErrorMessage(error) ?? 'Failed to create invitation.')
@@ -98,31 +100,31 @@ export function PlatformTeamPage() {
 
   function handleRevoke(invitation: PlatformInvitation) {
     revokeInvitation.mutate(invitation.id, {
-      onSuccess: () => toast({ title: 'Invitation revoked' }),
+      onSuccess: () => toast({ title: t('platform:team.invitationRevoked') }),
       onError: (error) =>
-        toast({ title: "Couldn't revoke invitation", description: getErrorMessage(error), variant: 'error' }),
+        toast({ title: t('platform:team.couldntRevokeInvitation'), description: getErrorMessage(error), variant: 'error' }),
     })
   }
 
   return (
     <Container size="md" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">Platform team</h1>
-      <p className="mt-1 text-sm text-ink-500">Who has FadeUp platform access, and pending invitations.</p>
+      <h1 className="text-xl font-semibold text-ink-950">{t('platform:team.platformTeam')}</h1>
+      <p className="mt-1 text-sm text-ink-500">{t('platform:team.whoHasFadeupPlatformAccess')}</p>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold text-ink-950">Members</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('common:entity.members')}</h2>
         <div className="mt-3">
           {membersQuery.isPending ? (
             <RosterSkeleton />
           ) : membersQuery.isError ? (
-            <ErrorState title="Couldn't load platform team" description={membersQuery.error.message} />
+            <ErrorState title={t('platform:team.couldntLoadPlatformTeam')} description={membersQuery.error.message} />
           ) : (
-            <Table label="Platform team members">
+            <Table label={t('platform:team.platformTeamMembers')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Since</TableHead>
+                  <TableHead>{t('platform:team.user')}</TableHead>
+                  <TableHead>{t('common:field.role')}</TableHead>
+                  <TableHead>{t('platform:team.since')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,22 +144,22 @@ export function PlatformTeamPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold text-ink-950">Pending invitations</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('platform:team.pendingInvitations')}</h2>
         <div className="mt-3">
           {invitationsQuery.isPending ? (
             <RosterSkeleton />
           ) : invitationsQuery.isError ? (
-            <ErrorState title="Couldn't load invitations" description={invitationsQuery.error.message} />
+            <ErrorState title={t('platform:team.couldntLoadInvitations')} description={invitationsQuery.error.message} />
           ) : (
-            <Table label="Pending platform invitations">
+            <Table label={t('platform:team.pendingPlatformInvitations')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
+                  <TableHead>{t('common:field.email')}</TableHead>
+                  <TableHead>{t('common:field.role')}</TableHead>
+                  <TableHead>{t('common:field.expires')}</TableHead>
                   {invitableRoles.length > 0 ? (
                     <TableHead>
-                      <span className="sr-only">Actions</span>
+                      <span className="sr-only">{t('common:action.actions')}</span>
                     </TableHead>
                   ) : null}
                 </TableRow>
@@ -165,7 +167,7 @@ export function PlatformTeamPage() {
               <TableBody>
                 {pendingInvitations.length === 0 ? (
                   <TableStateRow colSpan={invitableRoles.length > 0 ? 4 : 3}>
-                    <EmptyState title="No pending invitations" className="border-none" />
+                    <EmptyState title={t('platform:team.noPendingInvitations')} className="border-none" />
                   </TableStateRow>
                 ) : (
                   pendingInvitations.map((invitation) => (
@@ -185,7 +187,7 @@ export function PlatformTeamPage() {
                             isLoading={revokeInvitation.isPending && revokeInvitation.variables === invitation.id}
                             onClick={() => handleRevoke(invitation)}
                           >
-                            Revoke
+                            {t('platform:team.revoke')}
                           </Button>
                         </TableCell>
                       ) : null}
@@ -200,7 +202,7 @@ export function PlatformTeamPage() {
 
       {invitableRoles.length > 0 ? (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold text-ink-950">Invite someone</h2>
+          <h2 className="text-sm font-semibold text-ink-950">{t('platform:team.inviteSomeone')}</h2>
           <Card className="mt-3">
             <CardContent className="p-4 pt-4">
               <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
@@ -217,9 +219,9 @@ export function PlatformTeamPage() {
                 <div className="flex flex-col gap-4 sm:flex-row">
                   <div className="flex-1">
                     <TextField
-                      label="Email (optional)"
+                      label={t('common:field.emailOptional')}
                       type="email"
-                      hint="Leave blank to create a link anyone can use once."
+                      hint={t('platform:team.leaveBlankToCreateA')}
                       autoComplete="off"
                       spellCheck={false}
                       {...register('invitedEmail')}
@@ -227,7 +229,7 @@ export function PlatformTeamPage() {
                   </div>
                   <div className="sm:w-56">
                     <SelectField
-                      label="Role"
+                      label={t('common:field.role')}
                       error={errors.role?.message}
                       options={invitableRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
                       {...register('role')}
@@ -236,7 +238,7 @@ export function PlatformTeamPage() {
                 </div>
 
                 <Button type="submit" isLoading={isSubmitting} className="sm:self-start">
-                  Send invitation
+                  {t('platform:team.sendInvitation')}
                 </Button>
               </form>
             </CardContent>

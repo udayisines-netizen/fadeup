@@ -27,6 +27,7 @@ import { ErrorState } from '@/components/ui/error-state'
 import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/cn'
 import type { MembershipRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
@@ -67,6 +68,7 @@ export function AppHomePage() {
 }
 
 function Today({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
@@ -179,11 +181,11 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
     return (
       <Container size="lg" className="py-6">
         <ErrorState
-          title="Finish setting up your shop"
-          description="Add a location, your services and your hours, and this becomes your day."
+          title={t('app:today.finishSettingUpYourShop')}
+          description={t('app:today.addALocationYourServices')}
           action={
             <Link to="/app/locations" className={buttonVariants()}>
-              Add a location
+              {t('app:today.addALocation')}
             </Link>
           }
         />
@@ -195,9 +197,9 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
     return (
       <Container size="lg" className="py-6">
         <ErrorState
-          title="Couldn't load today"
-          description="Your appointments are safe — we just couldn't fetch them."
-          action={<Button onClick={calendar.refetch}>Try again</Button>}
+          title={t('app:today.couldntLoadToday')}
+          description={t('app:today.yourAppointmentsAreSafeWe')}
+          action={<Button onClick={calendar.refetch}>{t('common:action.tryAgain')}</Button>}
         />
       </Container>
     )
@@ -215,7 +217,7 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-semibold text-ink-950">Today</h1>
+            <h1 className="truncate text-xl font-semibold text-ink-950">{t('app:today.today')}</h1>
             <p className="truncate text-sm text-ink-500">
               {heading}
               {focusBarberId ? ' · your chair' : locations.length > 1 ? ` · ${location.name}` : ''}
@@ -224,12 +226,12 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
           {calendar.realtimeStatus !== 'live' ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
               <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
-              Reconnecting…
+              {t('app:today.reconnecting')}
             </span>
           ) : null}
           <Link to="/app/calendar" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
             <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            Calendar
+            {t('common:entity.calendar')}
           </Link>
         </div>
 
@@ -260,7 +262,7 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
                 {pendingCount === 1 ? '1 booking request' : `${pendingCount} booking requests`} waiting
               </span>
               <span className="block text-sm text-ink-700">
-                They hold a slot until you answer or they expire.
+                {t('app:today.theyHoldASlotUntil')}
               </span>
             </span>
             <ArrowRight className="h-4 w-4 shrink-0 text-ink-700" aria-hidden="true" />
@@ -268,9 +270,9 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
         ) : null}
 
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="Still to come" value={remaining} />
-          <Stat label="Done" value={doneCount} />
-          <Stat label="No-shows" value={noShowCount} muted={noShowCount === 0} />
+          <Stat label={t('app:today.stillToCome')} value={remaining} />
+          <Stat label={t('common:action.done')} value={doneCount} />
+          <Stat label={t('app:today.noshows')} value={noShowCount} muted={noShowCount === 0} />
         </div>
 
         {/* 3. THE REST OF THE DAY. */}
@@ -281,10 +283,10 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
                 above. Seeing the shape of the full day is the point, and a
                 list that silently omitted the next customer would read as a
                 bug. */}
-            <CardTitle className="text-sm">The whole day</CardTitle>
+            <CardTitle className="text-sm">{t('app:today.theWholeDay')}</CardTitle>
             <Button variant="secondary" size="sm" onClick={() => setBlockOpen(true)}>
               <Ban className="h-4 w-4" aria-hidden="true" />
-              Block time
+              {t('app:today.blockTime')}
             </Button>
           </CardHeader>
           <CardContent className="pt-0">
@@ -293,7 +295,7 @@ function Today({ organizationId, role }: { organizationId: string; role: Members
               timeZone={timeZone}
               onSelectAppointment={setSelectedAppointment}
               onSelectBlock={setSelectedBlock}
-              emptyTitle="Nothing booked today"
+              emptyTitle={t('app:today.nothingBookedToday')}
               emptyDescription={
                 canManage
                   ? 'A quiet day. Bookings appear here the moment they come in.'
@@ -366,6 +368,7 @@ function NowNext({
   canComplete: boolean
   isCompleting: boolean
 }) {
+  const { t } = useTranslation()
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
 
@@ -373,8 +376,8 @@ function NowNext({
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <p className="font-medium text-ink-950">Nothing else booked today</p>
-          <p className="mt-1 text-sm text-ink-500">Enjoy it.</p>
+          <p className="font-medium text-ink-950">{t('app:today.nothingElseBookedToday')}</p>
+          <p className="mt-1 text-sm text-ink-500">{t('app:today.enjoyIt')}</p>
         </CardContent>
       </Card>
     )
@@ -409,7 +412,7 @@ function NowNext({
           {featured.status === 'confirmed' && canComplete ? (
             <Button onClick={() => onComplete(featured)} isLoading={isCompleting}>
               <Check className="h-4 w-4" aria-hidden="true" />
-              Mark as done
+              {t('app:today.markAsDone')}
             </Button>
           ) : null}
           {featured.customerPhone ? (
@@ -418,11 +421,11 @@ function NowNext({
               className={buttonVariants({ variant: 'secondary' })}
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
-              Call
+              {t('app:today.call')}
             </a>
           ) : null}
           <Button variant="ghost" onClick={() => onOpen(featured)}>
-            Details
+            {t('app:today.details')}
           </Button>
         </div>
       </CardContent>

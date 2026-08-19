@@ -4,7 +4,13 @@
     "forBusiness": "Para profissionais",
     "features": "Funcionalidades",
     "pricing": "Preços",
-    "myFadeUp": "Meu FadeUp"
+    "myFadeUp": "Meu FadeUp",
+    "loadingYourOrganizations": "A carregar os seus negócios…",
+    "signOut": "Terminar sessão",
+    "mainNavigation": "Navegação principal",
+    "openMenu": "Abrir menu",
+    "mobileNavigation": "Navegação móvel",
+    "menu": "Menu"
   },
   "auth": {
     "logIn": "Entrar",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Idioma",
     "select": "Selecionar idioma"
+  },
+  "field": {
+    "name": "Nome",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "status": "Estado",
+    "role": "Função",
+    "date": "Data",
+    "time": "Hora",
+    "type": "Tipo",
+    "notes": "Notas",
+    "price": "Preço",
+    "title": "Título",
+    "reason": "Motivo",
+    "country": "País",
+    "timezone": "Fuso horário",
+    "locale": "Idioma",
+    "category": "Categoria",
+    "source": "Origem",
+    "score": "Pontuação",
+    "target": "Alvo",
+    "template": "Modelo",
+    "scope": "Âmbito",
+    "state": "Estado",
+    "password": "Palavra-passe",
+    "created": "Criado",
+    "expires": "Expira",
+    "plan": "Plano",
+    "day": "Dia",
+    "when": "Quando",
+    "customerName": "Nome do cliente",
+    "description": "Descrição",
+    "phoneOptional": "Telefone (opcional)",
+    "emailOptional": "E-mail (opcional)",
+    "notesOptional": "Notas (opcional)",
+    "reasonOptional": "Motivo (opcional)"
+  },
+  "action": {
+    "actions": "Ações",
+    "tryAgain": "Tentar novamente",
+    "reload": "Recarregar",
+    "close": "Fechar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Pesquisar",
+    "selected": "Selecionado",
+    "back": "Voltar",
+    "done": "Concluído",
+    "remove": "Remover"
+  },
+  "state": {
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "loading": "A carregar",
+    "loadingEllipsis": "A carregar…",
+    "blocked": "Bloqueado",
+    "sent": "Enviado",
+    "paid": "Pago",
+    "replied": "Respondido",
+    "activated": "Ativado",
+    "noMatches": "Sem resultados"
+  },
+  "entity": {
+    "customer": "Cliente",
+    "customers": "Clientes",
+    "service": "Serviço",
+    "services": "Serviços",
+    "team": "Equipa",
+    "member": "Membro",
+    "members": "Membros",
+    "professional": "Profissional",
+    "barber": "Profissional",
+    "location": "Espaço",
+    "locations": "Espaços",
+    "chairs": "Cadeiras",
+    "memberships": "Subscrições",
+    "organizations": "Negócios",
+    "waitlist": "Lista de espera",
+    "availability": "Disponibilidade",
+    "schedule": "Agenda",
+    "queue": "Fila",
+    "calendar": "Calendário",
+    "requests": "Pedidos"
+  },
+  "access": {
+    "checkingYourAccess": "A verificar o seu acesso",
+    "checkingYourSetup": "A verificar a sua configuração",
+    "checkingYourSession": "A verificar a sua sessão"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo correu mal",
+    "anUnexpectedErrorOccurredTry": "Ocorreu um erro inesperado. Tente recarregar a página.",
+    "goToMyWorkspace": "Ir para o meu espaço"
+  },
+  "notifications": {
+    "notifications": "Notificações",
+    "markAllRead": "Marcar tudo como lido",
+    "nothingYet": "Nada ainda."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Navegação da app de cliente",
+    "appointments": "Marcações",
+    "discover": "Descobrir",
+    "passport": "Passport",
+    "profile": "Perfil",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Dispensar notificação"
+  },
+  "notFound": {
+    "pageNotFound": "Página não encontrada",
+    "backHome": "Voltar ao início"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "A carregar os seus espaços",
+    "fadeupPlatform": "Plataforma FadeUp",
+    "platformAdministration": "Administração da plataforma",
+    "chooseAWorkspace": "Escolha um espaço",
+    "youHaveAccessToMore": "Tem acesso a mais do que um. Escolha para onde ir."
   }
 }

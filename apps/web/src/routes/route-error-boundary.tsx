@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
 import { Alert } from '@/components/ui/alert'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 /**
  * The router's errorElement.
@@ -25,6 +26,7 @@ import { getErrorMessage } from '@/lib/get-error-message'
  * offers a way forward, and logs.
  */
 export function RouteErrorBoundary() {
+  const { t } = useTranslation()
   const error = useRouteError()
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function RouteErrorBoundary() {
     <main className="flex min-h-svh flex-col items-center justify-center bg-paper-50 p-8">
       <Container size="sm" className="flex flex-col items-center gap-4 text-center">
         <Link to="/" className="text-lg font-semibold text-ink-950">
-          FadeUp
+          {t('common:customerNav.fadeup')}
         </Link>
 
         <h1 className="text-2xl font-semibold text-balance text-ink-950">
@@ -67,17 +69,17 @@ export function RouteErrorBoundary() {
         ) : null}
 
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={() => window.location.reload()}>Reload</Button>
+          <Button onClick={() => window.location.reload()}>{t('common:action.reload')}</Button>
           {/*
             A full navigation rather than a client-side <Link>: the router
             state that produced this error is exactly what we do not want to
             carry into the recovery destination.
           */}
           <a href="/workspace" className={buttonVariants({ variant: 'secondary' })}>
-            Go to my workspace
+            {t('common:errors.goToMyWorkspace')}
           </a>
           <a href="/" className={buttonVariants({ variant: 'ghost' })}>
-            Home
+            {t('common:nav.home')}
           </a>
         </div>
       </Container>

@@ -81,7 +81,9 @@
       "eyebrow": "为理发师与理发店",
       "primary": "加入 FadeUp",
       "secondary": "商家登录",
-      "scrollHint": "向下滚动，开店"
+      "scrollHint": "向下滚动，开店",
+      "headline": "用 FadeUp 管理店铺的全部运营。",
+      "support": "把预约、到店无预约的顾客、你的团队和客户跟进，集中到一个为理发店打造的工具里。"
     },
     "modes": {
       "groupLabel": "选择你经营的类型",
@@ -120,7 +122,6 @@
       }
     },
     "roadmapBadge": "开发中",
-    "demoLabel": "产品示意",
     "scenes": {
       "today": {
         "eyebrow": "今天",
@@ -237,36 +238,6 @@
         "body": "同一位理发师、同一个发型，一下就好。预约落进今天，一天重新开始。"
       }
     },
-    "loop": {
-      "eyebrow": "这个循环",
-      "title": "一套系统。从被找到，到下一次剪发。",
-      "body": "不是一个日历外面拧了几个附件。每一步都喂给下一步。",
-      "steps": [
-        "被找到",
-        "预约或排队",
-        "理发师",
-        "椅位",
-        "Passport",
-        "再次预约"
-      ]
-    },
-    "existing": {
-      "eyebrow": "已经在用预约软件了？",
-      "title": "很好。你的日历已经数字化了。",
-      "body": "那是容易的部分。大多数预约工具不碰的，是有人推门进来之后发生的一切。",
-      "keepLabel": "留下",
-      "keep": "预约",
-      "addLabel": "加上",
-      "add": [
-        "临时到店",
-        "实时排队",
-        "椅位",
-        "理发师",
-        "Fade Passport",
-        "商家目录"
-      ],
-      "note": "手动把预约搬过来，或者从头开始——今天没有自动导入，我们不会假装有。"
-    },
     "pricing": {
       "eyebrow": "价格",
       "title": "为你真正在跑的那家店付费。",
@@ -285,7 +256,22 @@
       "retentionComingToPlan": "包含在这个方案里。还没做出来——上线之前不会向你收费。",
       "retentionNotInPlan": "Pro 及以上。这个方案里没有。",
       "choose": "选择 {{name}}",
-      "applicationNote": "加入会提交一份申请，由人来审核——不用卡，不扣钱。"
+      "applicationNote": "加入会提交一份申请，由人来审核——不用卡，不扣钱。",
+      "typeLabel": "哪种经营形态更符合你的店铺？",
+      "types": {
+        "independent": {
+          "label": "个人",
+          "hint": "你独自经营。"
+        },
+        "barbershop": {
+          "label": "门店",
+          "hint": "一个门店中的团队。"
+        },
+        "multi_location": {
+          "label": "多门店",
+          "hint": "多个经营场所。"
+        }
+      }
     },
     "plans": {
       "solo": {
@@ -372,12 +358,6 @@
       "coming": "开发中",
       "plannedNote": "「开发中」表示该能力属于这个方案，但还没做出来。它不是你今天能拿到的东西。"
     },
-    "final": {
-      "together": "在同一个地方。",
-      "title": "用 FadeUp 跑你的店。",
-      "primary": "加入 FadeUp",
-      "secondary": "商家登录"
-    },
     "stage": {
       "today": "今天",
       "free": "空着",
@@ -440,6 +420,59 @@
     "register": {
       "planLabel": "已选方案",
       "planNote": "从价格页带过来的。不扣费、也不占名额——在计费上线之前都可以改。"
+    },
+    "film": {
+      "alt": "无声动画：一位顾客走过 FadeUp 店铺的一天，从预约到排队、从座椅到 Fade Passport，直到再次预约。"
+    },
+    "stages": {
+      "one": {
+        "title": "掌控你的一天",
+        "body": "预约、无预约到店的顾客以及团队动态，都集中在同一处。你清楚接下来有什么安排、谁会到店、由谁接待下一位顾客。"
+      },
+      "two": {
+        "title": "管理无预约顾客",
+        "body": "顾客加入排队并查看自己的位置。团队对叫号顺序、以及由哪位 barber 接待下一位顾客保持清晰掌握。"
+      },
+      "three": {
+        "title": "支持每一位 barber",
+        "body": "顾客落座时，barber 能看到已预约的服务以及往次到店的有用信息。服务结束后，下一位顾客也已经确定。"
+      },
+      "four": {
+        "title": "留住你的顾客",
+        "body": "Fade Passport 保存顾客发型与习惯的有用信息。团队更容易查到之前做过什么，也能在每次到店之间提供更连贯的跟进。",
+        "extra": "新顾客也可以在 FadeUp 上发现你的店铺和 barbers，然后预约或加入排队。"
+      },
+      "progressLabel": "内容进度"
+    },
+    "migration": {
+      "eyebrow": "迁移到 FadeUp",
+      "title": "已经在用预约软件了？",
+      "lead": "换到 FadeUp，并不意味着一切从零开始。",
+      "body": "FadeUp 在设计上就是为了让你从现有方案过渡得更顺畅，帮助你找回继续营业所需的信息。",
+      "steps": [
+        "你告诉我们目前使用的是哪套方案。",
+        "我们和你一起准备迁移到 FadeUp。",
+        "你的团队在 FadeUp 中恢复日常运营，继续工作。"
+      ],
+      "note": "迁移由我们团队协助完成。目前还没有从其他软件自动导入的功能。"
     }
+  },
+  "featuresPage": {
+    "everythingABarbershopRunsOn": "门店运转所需的一切，全部打通。",
+    "seeThePlanStructure": "查看方案结构",
+    "compareTiersByLocationCount": "按门店数量和功能对比各档位。",
+    "viewPricing": "查看价格"
+  },
+  "pricingPage": {
+    "featureComparisonByPlan": "各方案功能对比",
+    "included": "包含",
+    "notIncluded": "不包含",
+    "plansThatScaleWithYour": "随门店一起成长的方案。",
+    "fadeupIsInEarlyAccess": "FadeUp 目前处于早期访问阶段。以下档位描述的是计划中的方案结构（按门店数量和功能划分），并非最终定价。所有商家的起点相同：免费创建并开始设置你的门店。",
+    "mostCommon": "最常选择",
+    "comparePlanFeatures": "对比方案功能",
+    "feature": "功能",
+    "pricingQuestions": "价格相关问题",
+    "setUpYourShopOn": "今天就在 FadeUp 上设置你的门店"
   }
 }

@@ -81,7 +81,9 @@
       "eyebrow": "Für Barbiere und Barbershops",
       "primary": "FadeUp beitreten",
       "secondary": "Pro-Login",
-      "scrollHint": "Scrollen und den Laden öffnen"
+      "scrollHint": "Scrollen und den Laden öffnen",
+      "headline": "Führe deinen ganzen Barbershop mit FadeUp.",
+      "support": "Bündle Termine, Kundschaft ohne Termin, dein Team und die Kundenbetreuung in einem Werkzeug, das für Barbershops gemacht ist."
     },
     "modes": {
       "groupLabel": "Wählen Sie Ihre Art von Betrieb",
@@ -120,7 +122,6 @@
       }
     },
     "roadmapBadge": "In Arbeit",
-    "demoLabel": "Produktdarstellung",
     "scenes": {
       "today": {
         "eyebrow": "Heute",
@@ -237,36 +238,6 @@
         "body": "Gleicher Barbier, gleicher Schnitt, ein Tippen. Der Termin landet im heutigen Tag, und es geht von vorne los."
       }
     },
-    "loop": {
-      "eyebrow": "Der Kreislauf",
-      "title": "Ein System. Vom Finden bis zum nächsten Schnitt.",
-      "body": "Kein Kalender mit angeschraubten Extras. Jeder Schritt speist den nächsten.",
-      "steps": [
-        "Entdecken",
-        "Buchen oder anstellen",
-        "Barbier",
-        "Stuhl",
-        "Passport",
-        "Neu buchen"
-      ]
-    },
-    "existing": {
-      "eyebrow": "Schon eine Buchungssoftware?",
-      "title": "Gut. Ihr Kalender ist bereits digital.",
-      "body": "Das war der leichte Teil. Woran die meisten Buchungstools nicht rühren, ist alles, was passiert, nachdem jemand durch die Tür gekommen ist.",
-      "keepLabel": "Behalten",
-      "keep": "Termine",
-      "addLabel": "Dazu",
-      "add": [
-        "Laufkundschaft",
-        "Live-Warteschlange",
-        "Stühle",
-        "Barbiere",
-        "Fade Passport",
-        "Marktplatz"
-      ],
-      "note": "Übertragen Sie Ihre Termine von Hand oder fangen Sie neu an — einen automatischen Import gibt es heute nicht, und wir tun nicht so, als gäbe es ihn."
-    },
     "pricing": {
       "eyebrow": "Preise",
       "title": "Zahlen Sie für den Laden, den Sie wirklich führen.",
@@ -285,7 +256,22 @@
       "retentionComingToPlan": "Teil dieses Tarifs. Noch nicht gebaut — dafür wird nichts berechnet, bevor es da ist.",
       "retentionNotInPlan": "Ab Pro. Nicht in diesem Tarif.",
       "choose": "{{name}} wählen",
-      "applicationNote": "Beitreten heißt: Bewerbung senden. Ein Mensch prüft sie — keine Karte, keine Abbuchung."
+      "applicationNote": "Beitreten heißt: Bewerbung senden. Ein Mensch prüft sie — keine Karte, keine Abbuchung.",
+      "typeLabel": "Welche Art von Betrieb passt zu deinem Shop?",
+      "types": {
+        "independent": {
+          "label": "Einzeln",
+          "hint": "Du arbeitest allein."
+        },
+        "barbershop": {
+          "label": "Barbershop",
+          "hint": "Ein Team an einem Standort."
+        },
+        "multi_location": {
+          "label": "Mehrere Standorte",
+          "hint": "Mehrere Betriebe."
+        }
+      }
     },
     "plans": {
       "solo": {
@@ -372,12 +358,6 @@
       "coming": "In Arbeit",
       "plannedNote": "„In Arbeit“ heißt: Die Funktion gehört zum Tarif, ist aber noch nicht gebaut. Sie ist nicht Teil dessen, was Sie heute bekommen."
     },
-    "final": {
-      "together": "An einem Ort.",
-      "title": "Führen Sie Ihren Laden mit FadeUp.",
-      "primary": "FadeUp beitreten",
-      "secondary": "Pro-Login"
-    },
     "stage": {
       "today": "Heute",
       "free": "Frei",
@@ -440,6 +420,59 @@
     "register": {
       "planLabel": "Gewählter Tarif",
       "planNote": "Von der Preisseite übernommen. Nichts wird berechnet und nichts reserviert — Sie können ihn ändern, solange die Abrechnung nicht aktiv ist."
+    },
+    "film": {
+      "alt": "Stille Animation: Ein Kunde durchläuft einen Tag in einem FadeUp-Shop, vom Termin zur Warteschlange, vom Stuhl zum Fade Passport, bis zu einer neuen Buchung."
+    },
+    "stages": {
+      "one": {
+        "title": "Steuere deinen Tag",
+        "body": "Termine, Kundschaft ohne Reservierung und die Aktivität des Teams bleiben an einem Ort sichtbar. Du weißt, was geplant ist, wer kommt und wer den nächsten Kunden übernimmt."
+      },
+      "two": {
+        "title": "Kundschaft ohne Termin steuern",
+        "body": "Kunden reihen sich ein und sehen ihre Position. Dein Team behält den Überblick über die Reihenfolge und darüber, welcher Barber den nächsten Kunden übernimmt."
+      },
+      "three": {
+        "title": "Jeden Barber unterstützen",
+        "body": "Sitzt der Kunde im Stuhl, findet der Barber die gebuchte Leistung und die nützlichen Angaben aus früheren Besuchen. Nach dem Service steht der nächste Kunde bereits fest."
+      },
+      "four": {
+        "title": "Kunden langfristig binden",
+        "body": "Fade Passport bewahrt die nützlichen Angaben zu Schnitten und Gewohnheiten eines Kunden. Dein Team findet leichter wieder, was gemacht wurde, und kann von Besuch zu Besuch konsistenter betreuen.",
+        "extra": "Dein Shop und deine Barber können auf FadeUp auch von neuen Kunden gefunden werden, die anschließend buchen oder sich einreihen können."
+      },
+      "progressLabel": "Fortschritt der Story"
+    },
+    "migration": {
+      "eyebrow": "Wechsel zu FadeUp",
+      "title": "Nutzt du bereits eine Buchungssoftware?",
+      "lead": "Der Wechsel zu FadeUp bedeutet nicht, bei null anzufangen.",
+      "body": "FadeUp ist darauf ausgelegt, den Wechsel von deiner heutigen Lösung zu erleichtern und dir zu helfen, die nötigen Informationen wiederzufinden, um gut weiterarbeiten zu können.",
+      "steps": [
+        "Du sagst uns, welche Lösung du heute nutzt.",
+        "Wir bereiten den Wechsel zu FadeUp gemeinsam vor.",
+        "Dein Team findet seinen Betrieb in FadeUp wieder und arbeitet weiter."
+      ],
+      "note": "Die Begleitung erfolgt durch unser Team. Einen automatischen Import aus einer anderen Software gibt es heute nicht."
     }
+  },
+  "featuresPage": {
+    "everythingABarbershopRunsOn": "Alles, was einen Salon am Laufen hält — verbunden.",
+    "seeThePlanStructure": "Tarifstruktur ansehen",
+    "compareTiersByLocationCount": "Vergleiche Stufen nach Standortanzahl und Funktionsumfang.",
+    "viewPricing": "Preise ansehen"
+  },
+  "pricingPage": {
+    "featureComparisonByPlan": "Funktionsvergleich nach Tarif",
+    "included": "Enthalten",
+    "notIncluded": "Nicht enthalten",
+    "plansThatScaleWithYour": "Tarife, die mit deinem Salon wachsen.",
+    "fadeupIsInEarlyAccess": "FadeUp ist im Early Access. Die Stufen unten beschreiben die geplante Tarifstruktur — nach Standortanzahl und Funktionsumfang — keine endgültigen Preise. Jeder Betrieb startet gleich: kostenlos anlegen und den Salon einrichten.",
+    "mostCommon": "Am häufigsten",
+    "comparePlanFeatures": "Funktionen vergleichen",
+    "feature": "Funktion",
+    "pricingQuestions": "Fragen zu den Preisen",
+    "setUpYourShopOn": "Richte deinen Salon noch heute auf FadeUp ein"
   }
 }

@@ -4,7 +4,13 @@
     "forBusiness": "Per il tuo salone",
     "features": "Funzionalità",
     "pricing": "Prezzi",
-    "myFadeUp": "Il mio FadeUp"
+    "myFadeUp": "Il mio FadeUp",
+    "loadingYourOrganizations": "Caricamento delle tue attività…",
+    "signOut": "Esci",
+    "mainNavigation": "Navigazione principale",
+    "openMenu": "Apri il menu",
+    "mobileNavigation": "Navigazione mobile",
+    "menu": "Menu"
   },
   "auth": {
     "logIn": "Accedi",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Lingua",
     "select": "Seleziona lingua"
+  },
+  "field": {
+    "name": "Nome",
+    "email": "E-mail",
+    "phone": "Telefono",
+    "status": "Stato",
+    "role": "Ruolo",
+    "date": "Data",
+    "time": "Orario",
+    "type": "Tipo",
+    "notes": "Note",
+    "price": "Prezzo",
+    "title": "Titolo",
+    "reason": "Motivo",
+    "country": "Paese",
+    "timezone": "Fuso orario",
+    "locale": "Lingua",
+    "category": "Categoria",
+    "source": "Origine",
+    "score": "Punteggio",
+    "target": "Obiettivo",
+    "template": "Modello",
+    "scope": "Ambito",
+    "state": "Stato",
+    "password": "Password",
+    "created": "Creato",
+    "expires": "Scade",
+    "plan": "Piano",
+    "day": "Giorno",
+    "when": "Quando",
+    "customerName": "Nome del cliente",
+    "description": "Descrizione",
+    "phoneOptional": "Telefono (facoltativo)",
+    "emailOptional": "E-mail (facoltativo)",
+    "notesOptional": "Note (facoltativo)",
+    "reasonOptional": "Motivo (facoltativo)"
+  },
+  "action": {
+    "actions": "Azioni",
+    "tryAgain": "Riprova",
+    "reload": "Ricarica",
+    "close": "Chiudi",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "add": "Aggiungi",
+    "search": "Cerca",
+    "selected": "Selezionato",
+    "back": "Indietro",
+    "done": "Fatto",
+    "remove": "Rimuovi"
+  },
+  "state": {
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "loading": "Caricamento",
+    "loadingEllipsis": "Caricamento…",
+    "blocked": "Bloccato",
+    "sent": "Inviato",
+    "paid": "Pagato",
+    "replied": "Risposto",
+    "activated": "Attivato",
+    "noMatches": "Nessun risultato"
+  },
+  "entity": {
+    "customer": "Cliente",
+    "customers": "Clienti",
+    "service": "Servizio",
+    "services": "Servizi",
+    "team": "Team",
+    "member": "Membro",
+    "members": "Membri",
+    "professional": "Professionista",
+    "barber": "Professionista",
+    "location": "Sede",
+    "locations": "Sedi",
+    "chairs": "Postazioni",
+    "memberships": "Abbonamenti",
+    "organizations": "Attività",
+    "waitlist": "Lista d'attesa",
+    "availability": "Disponibilità",
+    "schedule": "Agenda",
+    "queue": "Coda",
+    "calendar": "Calendario",
+    "requests": "Richieste"
+  },
+  "access": {
+    "checkingYourAccess": "Verifica dei tuoi accessi",
+    "checkingYourSetup": "Verifica della configurazione",
+    "checkingYourSession": "Verifica della sessione"
+  },
+  "errors": {
+    "somethingWentWrong": "Qualcosa è andato storto",
+    "anUnexpectedErrorOccurredTry": "Si è verificato un errore imprevisto. Prova a ricaricare la pagina.",
+    "goToMyWorkspace": "Vai al mio spazio"
+  },
+  "notifications": {
+    "notifications": "Notifiche",
+    "markAllRead": "Segna tutto come letto",
+    "nothingYet": "Ancora nulla."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Navigazione dell'app cliente",
+    "appointments": "Appuntamenti",
+    "discover": "Scopri",
+    "passport": "Passport",
+    "profile": "Profilo",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Chiudi la notifica"
+  },
+  "notFound": {
+    "pageNotFound": "Pagina non trovata",
+    "backHome": "Torna alla home"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Caricamento dei tuoi spazi",
+    "fadeupPlatform": "Piattaforma FadeUp",
+    "platformAdministration": "Amministrazione della piattaforma",
+    "chooseAWorkspace": "Scegli uno spazio",
+    "youHaveAccessToMore": "Hai accesso a più di uno. Scegli dove andare."
   }
 }

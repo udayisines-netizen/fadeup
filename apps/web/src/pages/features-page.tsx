@@ -17,6 +17,7 @@ import {
   MultiLocationPreview,
   WalkInPreview,
 } from '@/components/marketing/product-previews'
+import { useTranslation } from 'react-i18next'
 
 interface FeatureSectionData {
   eyebrow: string
@@ -161,6 +162,7 @@ function FeatureSection({ data, reverse }: { data: FeatureSectionData; reverse: 
 }
 
 export function FeaturesPage() {
+  const { t } = useTranslation()
   useDocumentMeta({
     title: 'Features — FadeUp',
     description:
@@ -171,9 +173,9 @@ export function FeaturesPage() {
     <main>
       <section className="border-b border-border bg-paper-50">
         <Container size="xl" className="py-16 text-center sm:py-20">
-          <Badge variant="accent">Product</Badge>
+          <Badge variant="accent">{t('common:footer.product')}</Badge>
           <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-semibold text-balance text-ink-950 sm:text-5xl">
-            Everything a barbershop runs on, connected.
+            {t('landing:featuresPage.everythingABarbershopRunsOn')}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-ink-500">
             FadeUp is being built as one connected system for booking, the live queue, chair
@@ -190,10 +192,10 @@ export function FeaturesPage() {
 
       <section className="border-t border-border">
         <Container size="xl" className="flex flex-col items-center gap-4 py-16 text-center sm:py-20">
-          <h2 className="text-3xl font-semibold text-balance text-ink-950">See the plan structure</h2>
-          <p className="max-w-xl text-ink-500">Compare tiers by location count and feature set.</p>
+          <h2 className="text-3xl font-semibold text-balance text-ink-950">{t('landing:featuresPage.seeThePlanStructure')}</h2>
+          <p className="max-w-xl text-ink-500">{t('landing:featuresPage.compareTiersByLocationCount')}</p>
           <Link to="/pricing" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
-            View pricing
+            {t('landing:featuresPage.viewPricing')}
           </Link>
         </Container>
       </section>

@@ -81,7 +81,9 @@
       "eyebrow": "For barbers and barbershops",
       "primary": "Join FadeUp",
       "secondary": "Pro login",
-      "scrollHint": "Scroll to run the shop"
+      "scrollHint": "Scroll to run the shop",
+      "headline": "Run your whole barbershop with FadeUp.",
+      "support": "Bring your appointments, your walk-in customers, your team and your customer follow-up together in one tool built for barbershops."
     },
     "modes": {
       "groupLabel": "Choose the kind of business you run",
@@ -120,7 +122,6 @@
       }
     },
     "roadmapBadge": "On the roadmap",
-    "demoLabel": "Product illustration",
     "scenes": {
       "today": {
         "eyebrow": "Today",
@@ -237,36 +238,6 @@
         "body": "Same barber, same cut, one tap. The booking lands in today, and the day starts over."
       }
     },
-    "loop": {
-      "eyebrow": "The loop",
-      "title": "One system. From discovery to the next cut.",
-      "body": "Not a calendar with extras bolted on. Every step feeds the next one.",
-      "steps": [
-        "Discover",
-        "Book or queue",
-        "Barber",
-        "Chair",
-        "Passport",
-        "Rebook"
-      ]
-    },
-    "existing": {
-      "eyebrow": "Already using booking software?",
-      "title": "Good. Your calendar is already digital.",
-      "body": "That was the easy part. What most booking tools do not touch is everything that happens after someone walks through the door.",
-      "keepLabel": "Keep",
-      "keep": "Appointments",
-      "addLabel": "Add",
-      "add": [
-        "Walk-ins",
-        "Live queue",
-        "Chairs",
-        "Barbers",
-        "Fade Passport",
-        "Marketplace"
-      ],
-      "note": "Bring your appointments across by hand or start fresh — there is no automatic import today, and we will not pretend otherwise."
-    },
     "pricing": {
       "eyebrow": "Pricing",
       "title": "Pay for the shop you actually run.",
@@ -285,7 +256,22 @@
       "retentionComingToPlan": "Packaged with this plan. Not built yet — you will not be billed for it before it ships.",
       "retentionNotInPlan": "Pro and above. Not in this plan.",
       "choose": "Choose {{name}}",
-      "applicationNote": "Joining sends an application. A person reviews it — no card, no charge."
+      "applicationNote": "Joining sends an application. A person reviews it — no card, no charge.",
+      "typeLabel": "Which kind of business matches your shop?",
+      "types": {
+        "independent": {
+          "label": "Independent",
+          "hint": "You work on your own."
+        },
+        "barbershop": {
+          "label": "Barbershop",
+          "hint": "A team in one location."
+        },
+        "multi_location": {
+          "label": "Multi-location",
+          "hint": "Several locations."
+        }
+      }
     },
     "plans": {
       "solo": {
@@ -372,12 +358,6 @@
       "coming": "Coming",
       "plannedNote": "\"Coming\" means the capability is packaged with the plan but is not built yet. It is not part of what you get today."
     },
-    "final": {
-      "together": "One place.",
-      "title": "Run your shop on FadeUp.",
-      "primary": "Join FadeUp",
-      "secondary": "Pro login"
-    },
     "stage": {
       "today": "Today",
       "free": "Free",
@@ -440,6 +420,59 @@
     "register": {
       "planLabel": "Plan selected",
       "planNote": "Carried over from the pricing page. Nothing is charged and nothing is reserved — you can change it any time before billing exists."
+    },
+    "film": {
+      "alt": "Silent animation: a customer moves through a day in a FadeUp shop, from appointment to queue, from the chair to Fade Passport, through to a new booking."
+    },
+    "stages": {
+      "one": {
+        "title": "Run your day",
+        "body": "Appointments, customers arriving without a booking and your team's activity all stay visible in one place. You know what is scheduled, who is arriving and who takes the next customer."
+      },
+      "two": {
+        "title": "Handle customers without an appointment",
+        "body": "Customers join the queue and follow their position. Your team keeps a clear view of the order of service and of the barber who will take the next customer."
+      },
+      "three": {
+        "title": "Support every barber",
+        "body": "When the customer sits down, the barber finds the booked service and the useful details from previous visits. Once the service is finished, the next customer is already identified."
+      },
+      "four": {
+        "title": "Keep your customers coming back",
+        "body": "Fade Passport keeps the useful details about a customer's cuts and habits. Your team more easily finds what was done and can follow up more consistently from one visit to the next.",
+        "extra": "Your shop and your barbers can also be discovered on FadeUp by new customers, who can then book or join your queue."
+      },
+      "progressLabel": "Story progress"
+    },
+    "migration": {
+      "eyebrow": "Moving to FadeUp",
+      "title": "Already using booking software?",
+      "lead": "Moving to FadeUp does not mean starting from nothing.",
+      "body": "FadeUp is designed to make the move from your current solution easier and to help you find the information you need to keep working in good conditions.",
+      "steps": [
+        "You tell us which solution you use today.",
+        "We prepare the move to FadeUp with you.",
+        "Your team finds its activity in FadeUp and can keep working."
+      ],
+      "note": "The move is handled with our team. There is no automatic import from another product today."
     }
+  },
+  "featuresPage": {
+    "everythingABarbershopRunsOn": "Everything a barbershop runs on, connected.",
+    "seeThePlanStructure": "See the plan structure",
+    "compareTiersByLocationCount": "Compare tiers by location count and feature set.",
+    "viewPricing": "View pricing"
+  },
+  "pricingPage": {
+    "featureComparisonByPlan": "Feature comparison by plan",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "plansThatScaleWithYour": "Plans that scale with your shop.",
+    "fadeupIsInEarlyAccess": "FadeUp is in early access. The tiers below describe the intended plan structure — grouped by location count and feature set — not final, committed pricing. Every organization starts the same way: create it free and start setting up your shop.",
+    "mostCommon": "Most common",
+    "comparePlanFeatures": "Compare plan features",
+    "feature": "Feature",
+    "pricingQuestions": "Pricing questions",
+    "setUpYourShopOn": "Set up your shop on FadeUp today"
   }
 }

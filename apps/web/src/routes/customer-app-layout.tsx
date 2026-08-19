@@ -6,6 +6,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { usePendingClaimRedemption } from '@/lib/use-pending-claim'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Shell for the logged-in Customer App (/app/customer/*). Deliberately NOT
@@ -40,11 +41,12 @@ export function CustomerAppLayout() {
 }
 
 function TopStrip() {
+  const { t } = useTranslation()
   return (
     <header className="border-b border-border bg-paper-0">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
         <Link to="/app/customer" className="text-sm font-semibold tracking-tight text-ink-950">
-          FadeUp
+          {t('common:customerNav.fadeup')}
         </Link>
         <div className="flex items-center gap-1.5">
           {/*
@@ -62,17 +64,18 @@ function TopStrip() {
 }
 
 function BottomTabs() {
+  const { t } = useTranslation()
   return (
     <nav
-      aria-label="Customer app navigation"
+      aria-label={t('common:customerNav.customerAppNavigation')}
       className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-paper-0/95 backdrop-blur supports-[backdrop-filter]:bg-paper-0/80"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around">
-        <TabLink to="/app/customer" end icon={<House className="h-5 w-5" aria-hidden="true" />} label="Home" />
-        <TabLink to="/app/customer/appointments" icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />} label="Appointments" />
-        <TabLink to="/search" icon={<Compass className="h-5 w-5" aria-hidden="true" />} label="Discover" />
-        <TabLink to="/app/customer/passport" icon={<IdCard className="h-5 w-5" aria-hidden="true" />} label="Passport" />
-        <TabLink to="/app/customer/profile" icon={<CircleUserRound className="h-5 w-5" aria-hidden="true" />} label="Profile" />
+        <TabLink to="/app/customer" end icon={<House className="h-5 w-5" aria-hidden="true" />} label={t('common:nav.home')} />
+        <TabLink to="/app/customer/appointments" icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />} label={t('common:customerNav.appointments')} />
+        <TabLink to="/search" icon={<Compass className="h-5 w-5" aria-hidden="true" />} label={t('common:customerNav.discover')} />
+        <TabLink to="/app/customer/passport" icon={<IdCard className="h-5 w-5" aria-hidden="true" />} label={t('common:customerNav.passport')} />
+        <TabLink to="/app/customer/profile" icon={<CircleUserRound className="h-5 w-5" aria-hidden="true" />} label={t('common:customerNav.profile')} />
       </div>
     </nav>
   )

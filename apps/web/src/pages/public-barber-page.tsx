@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useMoney } from '@/lib/intl/use-intl'
+import { useTranslation } from 'react-i18next'
 
 
 function formatDuration(minutes: number): string {
@@ -43,6 +44,7 @@ function initialsOf(name: string): string {
  * the location step once the customer reaches a service that barber offers.
  */
 export function PublicBarberPage() {
+  const { t } = useTranslation()
   const { slug, barberId } = useParams<{ slug: string; barberId: string }>()
   const organizationQuery = usePublicOrganization(slug)
   const barberQuery = usePublicBarber(slug, barberId)
@@ -56,18 +58,18 @@ export function PublicBarberPage() {
   })
 
   if (organizationQuery.isPending || barberQuery.isPending) {
-    return <PageSpinner label="Loading profile…" />
+    return <PageSpinner label={t('booking:professional.loadingProfile')} />
   }
 
   if (organizationQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load this profile"
+          title={t('booking:professional.couldntLoadThisProfile')}
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -79,11 +81,11 @@ export function PublicBarberPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load this profile"
+          title={t('booking:professional.couldntLoadThisProfile')}
           description={barberQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void barberQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -95,11 +97,11 @@ export function PublicBarberPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="We couldn't find this profile"
-          description="This link may be out of date, or the profile may no longer be public. Check the link with the shop directly."
+          title={t('booking:professional.weCouldntFindThisProfile')}
+          description={t('booking:professional.thisLinkMayBeOut')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('booking:professional.goToFadeup')}
             </Link>
           }
         />
@@ -121,6 +123,7 @@ function BarberProfile({
   barber: { barberId: string; displayName: string; title: string | null; bio: string | null; avatarUrl: string | null; locationId: string | null }
   servicesQuery: ReturnType<typeof usePublicBarberServices>
 }) {
+  const { t } = useTranslation()
   const money = useMoney()
 
   const bookHref = `/s/${organization.slug}${
@@ -145,7 +148,7 @@ function BarberProfile({
       </Card>
 
       <div className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-500">Services</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.services')}</h2>
         {servicesQuery.isPending ? (
           <div className="flex flex-col gap-2" aria-hidden="true">
             <Skeleton className="h-14 w-full" />
@@ -154,7 +157,7 @@ function BarberProfile({
         ) : servicesQuery.isError ? (
           <p className="text-sm text-danger-700">{servicesQuery.error.message}</p>
         ) : servicesQuery.data.length === 0 ? (
-          <p className="text-sm text-ink-500">No services listed right now.</p>
+          <p className="text-sm text-ink-500">{t('booking:professional.noServicesListedRightNow')}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {servicesQuery.data.map((service) => (

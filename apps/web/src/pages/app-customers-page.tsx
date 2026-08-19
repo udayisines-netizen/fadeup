@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/toast'
 import type { AppointmentStatus } from '@/lib/queries/appointments'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 // Same broader role set as appointments/queue_entries — customers RLS
 // grants owner/manager/receptionist write access, any member read.
@@ -75,6 +76,7 @@ export function AppCustomersPage() {
 }
 
 function CustomersDirectory({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
   const [search, setSearch] = useState('')
@@ -96,10 +98,10 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
     <Container size="lg" className="py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-950">Customers</h1>
+          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.customers')}</h1>
           <p className="mt-1 text-sm text-ink-500">Everyone who&apos;s booked or walked in, in one place.</p>
         </div>
-        {canManage ? <Button onClick={() => setIsAddOpen(true)}>Add customer</Button> : null}
+        {canManage ? <Button onClick={() => setIsAddOpen(true)}>{t('app:customers.addCustomer')}</Button> : null}
       </div>
 
       <div className="mt-6">
@@ -107,46 +109,46 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
           <CustomersSkeleton />
         ) : customersQuery.isError ? (
           <ErrorState
-            title="Couldn't load customers"
+            title={t('app:customers.couldntLoadCustomers')}
             description={customersQuery.error.message}
             action={
               <Button variant="secondary" onClick={() => void customersQuery.refetch()}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : customers.length === 0 ? (
           <EmptyState
-            title="No customers yet"
-            description="Customers are added automatically the first time someone books or walks in with a phone or email — or add one directly."
-            action={canManage ? <Button onClick={() => setIsAddOpen(true)}>Add customer</Button> : undefined}
+            title={t('app:customers.noCustomersYet')}
+            description={t('app:customers.customersAreAddedAutomaticallyThe')}
+            action={canManage ? <Button onClick={() => setIsAddOpen(true)}>{t('app:customers.addCustomer')}</Button> : undefined}
           />
         ) : (
           <div className="flex flex-col gap-4">
             <div className="sm:max-w-xs">
               <TextField
-                label="Search"
-                placeholder="Name, phone, or email"
+                label={t('common:action.search')}
+                placeholder={t('app:customers.namePhoneOrEmail')}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
-            <Table label="Customers">
+            <Table label={t('common:entity.customers')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Last updated</TableHead>
+                  <TableHead>{t('common:field.name')}</TableHead>
+                  <TableHead>{t('common:field.phone')}</TableHead>
+                  <TableHead>{t('common:field.email')}</TableHead>
+                  <TableHead>{t('app:customers.lastUpdated')}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('common:action.actions')}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCustomers.length === 0 ? (
                   <TableStateRow colSpan={5}>
-                    <EmptyState title="No matches" description="Try a different search." className="border-none" />
+                    <EmptyState title={t('common:state.noMatches')} description={t('app:customers.tryADifferentSearch')} className="border-none" />
                   </TableStateRow>
                 ) : (
                   filteredCustomers.map((customer) => (
@@ -157,7 +159,7 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
                       <TableCell className="text-ink-500">{formatDate(customer.updatedAt)}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="secondary" size="sm" onClick={() => setSelectedCustomer(customer)}>
-                          View
+                          {t('app:customers.view')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -174,7 +176,7 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
           organizationId={organizationId}
           onClose={() => setIsAddOpen(false)}
           onSaved={() => {
-            toast({ title: 'Customer added', variant: 'success' })
+            toast({ title: t('app:customers.customerAdded'), variant: 'success' })
             setIsAddOpen(false)
           }}
         />
@@ -205,6 +207,7 @@ function CustomerDetailDialog({
   canManage: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
   const visitsQuery = useCustomerAppointments(customer.id)
 
@@ -227,29 +230,29 @@ function CustomerDetailDialog({
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-ink-500">Phone</p>
+                <p className="text-ink-500">{t('common:field.phone')}</p>
                 <p className="text-ink-950">{customer.phone || '—'}</p>
               </div>
               <div>
-                <p className="text-ink-500">Email</p>
+                <p className="text-ink-500">{t('common:field.email')}</p>
                 <p className="text-ink-950">{customer.email || '—'}</p>
               </div>
             </div>
             {customer.notes ? (
               <div className="text-sm">
-                <p className="text-ink-500">Notes</p>
+                <p className="text-ink-500">{t('common:field.notes')}</p>
                 <p className="whitespace-pre-wrap text-ink-950">{customer.notes}</p>
               </div>
             ) : null}
 
             <div>
-              <h3 className="mb-2 text-sm font-medium text-ink-950">Recent visits</h3>
+              <h3 className="mb-2 text-sm font-medium text-ink-950">{t('app:customers.recentVisits')}</h3>
               {visitsQuery.isPending ? (
                 <Skeleton className="h-16 w-full" />
               ) : visitsQuery.isError ? (
                 <p className="text-sm text-danger-700">{visitsQuery.error.message}</p>
               ) : visitsQuery.data.length === 0 ? (
-                <p className="text-sm text-ink-500">No appointments yet.</p>
+                <p className="text-sm text-ink-500">{t('app:customers.noAppointmentsYet')}</p>
               ) : (
                 <ul className="flex flex-col gap-2">
                   {visitsQuery.data.map((appointment) => (
@@ -268,10 +271,10 @@ function CustomerDetailDialog({
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="secondary">
-                  Close
+                  {t('common:action.close')}
                 </Button>
               </DialogClose>
-              {canManage ? <Button onClick={() => setIsEditing(true)}>Edit</Button> : null}
+              {canManage ? <Button onClick={() => setIsEditing(true)}>{t('common:action.edit')}</Button> : null}
             </DialogFooter>
           </div>
         )}
@@ -302,6 +305,7 @@ function CustomerFormFields({
   onDone: () => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
   const createCustomer = useCreateCustomer()
   const updateCustomer = useUpdateCustomer()
   const [formError, setFormError] = useState<string | null>(null)
@@ -346,13 +350,13 @@ function CustomerFormFields({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       {formError ? <Alert variant="error">{formError}</Alert> : null}
-      <TextField label="Name" error={errors.name?.message} {...register('name')} />
-      <TextField label="Phone (optional)" type="tel" {...register('phone')} />
-      <TextField label="Email (optional)" type="email" {...register('email')} />
-      <Textarea label="Notes (optional)" rows={3} {...register('notes')} />
+      <TextField label={t('common:field.name')} error={errors.name?.message} {...register('name')} />
+      <TextField label={t('common:field.phoneOptional')} type="tel" {...register('phone')} />
+      <TextField label={t('common:field.emailOptional')} type="email" {...register('email')} />
+      <Textarea label={t('common:field.notesOptional')} rows={3} {...register('notes')} />
       <DialogFooter>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t('common:action.cancel')}
         </Button>
         <Button type="submit" isLoading={isSubmitting || isPending}>
           {customer ? 'Save changes' : 'Add customer'}
@@ -371,12 +375,13 @@ function AddCustomerDialog({
   onClose: () => void
   onSaved: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add customer</DialogTitle>
-          <DialogDescription>Add a customer directly — most are created automatically from bookings.</DialogDescription>
+          <DialogTitle>{t('app:customers.addCustomer')}</DialogTitle>
+          <DialogDescription>{t('app:customers.addACustomerDirectlyMost')}</DialogDescription>
         </DialogHeader>
         <CustomerFormFields organizationId={organizationId} onDone={onSaved} onCancel={onClose} />
       </DialogContent>

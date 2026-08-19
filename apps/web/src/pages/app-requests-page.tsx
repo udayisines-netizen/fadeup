@@ -30,6 +30,7 @@ import {
   type BookingRequest,
 } from '@/lib/queries/booking-requests'
 import { useOrgLocations } from '@/lib/queries/locations'
+import { useTranslation } from 'react-i18next'
 
 /**
  * /app/requests — the shop's booking inbox.
@@ -56,6 +57,7 @@ import { useOrgLocations } from '@/lib/queries/locations'
  * dashboard and does not try to be.
  */
 export function AppRequestsPage() {
+  const { t } = useTranslation()
   const { currentMembership } = useCurrentOrg()
   const organizationId = currentMembership?.organizationId
   const canDecide =
@@ -74,8 +76,8 @@ export function AppRequestsPage() {
       <Container size="lg" className="py-8">
         <EmptyState
           icon={Inbox}
-          title="Booking requests"
-          description="Booking requests are handled by owners, managers and reception."
+          title={t('app:requests.bookingRequests')}
+          description={t('app:requests.bookingRequestsAreHandledBy')}
         />
       </Container>
     )
@@ -90,7 +92,7 @@ export function AppRequestsPage() {
             {requests.length > 0 ? <Badge variant="accent">{requests.length}</Badge> : null}
           </h1>
           <p className="mt-1 text-sm text-ink-500">
-            Each one is holding its slot until you answer or it expires.
+            {t('app:requests.eachOneIsHoldingIts')}
           </p>
         </div>
 
@@ -102,7 +104,7 @@ export function AppRequestsPage() {
         {requestsQuery.realtimeStatus === 'offline' ? (
           <span className="inline-flex items-center gap-1.5 text-sm text-ink-500">
             <WifiOff className="h-4 w-4" aria-hidden="true" />
-            Reconnecting — still checking for new requests
+            {t('app:requests.reconnectingStillCheckingForNew')}
           </span>
         ) : null}
       </header>
@@ -114,19 +116,19 @@ export function AppRequestsPage() {
         </div>
       ) : requestsQuery.isError ? (
         <ErrorState
-          title="Couldn't load booking requests"
+          title={t('app:requests.couldntLoadBookingRequests')}
           description={requestsQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void requestsQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
       ) : requests.length === 0 ? (
         <EmptyState
           icon={CalendarCheck2}
-          title="No requests waiting"
-          description="New booking requests appear here the moment a customer sends one."
+          title={t('app:requests.noRequestsWaiting')}
+          description={t('app:requests.newBookingRequestsAppearHere')}
         />
       ) : (
         <ul className="flex flex-col gap-3">
@@ -166,6 +168,7 @@ function RequestCard({
   organizationId: string | undefined
   timeZone: string
 }) {
+  const { t } = useTranslation()
   const reduced = useReducedMotion()
   const toast = useToast()
   const confirm = useConfirmBookingRequest(organizationId)
@@ -268,7 +271,7 @@ function RequestCard({
         */}
         <div className="mt-4 flex flex-col gap-2 sm:flex-row-reverse sm:justify-start">
           <Button size="lg" onClick={handleAccept} isLoading={confirm.isPending} disabled={busy} className="sm:min-w-32">
-            Accept
+            {t('app:requests.accept')}
           </Button>
           <Button
             size="lg"
@@ -277,7 +280,7 @@ function RequestCard({
             disabled={busy}
             className="sm:min-w-32"
           >
-            Decline
+            {t('app:requests.decline')}
           </Button>
         </div>
       </Card>
@@ -285,30 +288,30 @@ function RequestCard({
       <Dialog open={declineOpen} onOpenChange={(open) => !open && setDeclineOpen(false)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Decline this request?</DialogTitle>
+            <DialogTitle>{t('app:requests.declineThisRequest')}</DialogTitle>
             <DialogDescription>
               {request.customerName} will be told it was not accepted, and the slot becomes bookable again.
             </DialogDescription>
           </DialogHeader>
 
           <Textarea
-            label="Message to the customer"
-            hint="Optional. A sentence explaining why is kinder than silence."
+            label={t('app:requests.messageToTheCustomer')}
+            hint={t('app:requests.optionalASentenceExplainingWhy')}
             rows={3}
             value={note}
             onChange={(event) => setNote(event.target.value)}
           />
 
-          {decline.isError ? <Alert variant="error">Could not decline. Please try again.</Alert> : null}
+          {decline.isError ? <Alert variant="error">{t('app:requests.couldNotDeclinePleaseTry')}</Alert> : null}
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Keep it
+                {t('app:requests.keepIt')}
               </Button>
             </DialogClose>
             <Button type="button" variant="danger" onClick={handleDecline} isLoading={decline.isPending}>
-              Decline request
+              {t('app:requests.declineRequest')}
             </Button>
           </DialogFooter>
         </DialogContent>

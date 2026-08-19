@@ -20,7 +20,8 @@
     "lastCutDays_other": "Ça fait {{count}} jours depuis ta dernière coupe.",
     "rebookOverdueTitle": "L'heure d'une nouvelle coupe ?",
     "rebookTitle": "Même coupe que la dernière fois ?",
-    "rebookCta": "Reprendre rendez-vous avec {{barber}}"
+    "rebookCta": "Reprendre rendez-vous avec {{barber}}",
+    "couldntLoadYourHome": "Impossible de charger votre accueil"
   },
   "onboarding": {
     "title": "Quelques questions rapides",
@@ -56,7 +57,8 @@
     },
     "skip": "Passer pour l'instant",
     "save": "Enregistrer",
-    "saved": "Enregistré — merci !"
+    "saved": "Enregistré — merci !",
+    "couldntLoadYourProfile": "Impossible de charger votre profil"
   },
   "profile": {
     "title": "Profil",
@@ -68,7 +70,8 @@
     "habitsTitle": "Tes habitudes",
     "editHabits": "Modifier tes habitudes",
     "noHabitsYet": "Tu ne nous as pas encore parlé de tes habitudes.",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "couldntLoadYourProfile": "Impossible de charger votre profil"
   },
   "appointments": {
     "title": "Rendez-vous",
@@ -102,7 +105,8 @@
     "discoverCta": "Découvrir des barbers",
     "remove": "Retirer",
     "viewProfile": "Voir le profil",
-    "book": "Réserver"
+    "book": "Réserver",
+    "couldntLoadYourFavorites": "Impossible de charger vos favoris"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "Ce créneau vient d'être pris. Choisissez-en un autre.",
     "notAllowed": "Ce rendez-vous ne peut plus être déplacé.",
     "failed": "Impossible de déplacer le rendez-vous. Réessayez."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "Aller sur FadeUp"
   }
 }

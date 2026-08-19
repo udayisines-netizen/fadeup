@@ -47,6 +47,7 @@ import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useMoney, useOrganizationCurrency } from '@/lib/intl/use-intl'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -72,6 +73,7 @@ export function AppServicesPage() {
 }
 
 function ServicesManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const canManage = MANAGING_ROLES.has(role)
   const categoriesQuery = useOrgServiceCategories(organizationId)
   const servicesQuery = useOrgServices(organizationId)
@@ -121,8 +123,8 @@ function ServicesManagement({ organizationId, role }: { organizationId: string; 
   return (
     <Container size="lg" className="py-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink-950">Services</h1>
-        <p className="mt-1 text-sm text-ink-500">Your service catalog, pricing, and where/who offers each service.</p>
+        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.services')}</h1>
+        <p className="mt-1 text-sm text-ink-500">{t('app:services.yourServiceCatalogPricingAnd')}</p>
       </div>
 
       {isLoading ? (
@@ -132,11 +134,11 @@ function ServicesManagement({ organizationId, role }: { organizationId: string; 
       ) : isError ? (
         <div className="mt-6">
           <ErrorState
-            title="Couldn't load your service catalog"
+            title={t('app:services.couldntLoadYourServiceCatalog')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
@@ -182,6 +184,7 @@ function CategoriesSection({
   categories: ServiceCategory[]
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const deleteCategory = useDeleteServiceCategory()
   const [dialogState, setDialogState] = useState<CategoryDialogState>(null)
@@ -197,10 +200,10 @@ function CategoriesSection({
     deleteCategory.mutate(
       { id: category.id, organizationId },
       {
-        onSuccess: () => toast({ title: 'Category deleted', variant: 'success' }),
+        onSuccess: () => toast({ title: t('app:services.categoryDeleted'), variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't delete category",
+            title: t('app:services.couldntDeleteCategory'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -211,10 +214,10 @@ function CategoriesSection({
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-ink-950">Categories</h2>
+        <h2 className="text-sm font-semibold text-ink-950">{t('app:services.categories')}</h2>
         {canManage ? (
           <Button size="sm" variant="secondary" onClick={() => setDialogState({ mode: 'create' })}>
-            Add category
+            {t('app:services.addCategory')}
           </Button>
         ) : null}
       </div>
@@ -222,8 +225,8 @@ function CategoriesSection({
       <div className="mt-3">
         {categories.length === 0 ? (
           <EmptyState
-            title="No categories yet"
-            description="Categories are optional — group services like &ldquo;Haircuts&rdquo; or &ldquo;Beard&rdquo; to keep the catalog organized."
+            title={t('app:services.noCategoriesYet')}
+            description={t('app:services.categoriesAreOptionalGroupServices')}
           />
         ) : (
           <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
@@ -238,7 +241,7 @@ function CategoriesSection({
                 {canManage ? (
                   <div className="flex shrink-0 items-center gap-2">
                     <Button variant="secondary" size="sm" onClick={() => setDialogState({ mode: 'edit', category })}>
-                      Edit
+                      {t('common:action.edit')}
                     </Button>
                     <Button
                       variant="danger"
@@ -246,7 +249,7 @@ function CategoriesSection({
                       isLoading={deleteCategory.isPending && deleteCategory.variables?.id === category.id}
                       onClick={() => handleDelete(category)}
                     >
-                      Delete
+                      {t('common:action.delete')}
                     </Button>
                   </div>
                 ) : null}
@@ -280,6 +283,7 @@ function CategoryFormDialog({
   onClose: () => void
   onSaved: (message: string) => void
 }) {
+  const { t } = useTranslation()
   const isEdit = Boolean(category)
   const createCategory = useCreateServiceCategory()
   const updateCategory = useUpdateServiceCategory()
@@ -331,22 +335,22 @@ function CategoryFormDialog({
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Name" hint='e.g. "Haircuts"' error={errors.name?.message} {...register('name')} />
+          <TextField label={t('common:field.name')} hint={t('app:services.eGHaircuts')} error={errors.name?.message} {...register('name')} />
           <TextField
-            label="Display order"
+            label={t('app:services.displayOrder')}
             type="number"
             min={0}
             step={1}
-            hint="Lower numbers show first."
+            hint={t('app:services.lowerNumbersShowFirst')}
             error={errors.displayOrder?.message}
             {...register('displayOrder')}
           />
-          <Switch label="Active" description="Inactive categories are hidden from booking." {...register('isActive')} />
+          <Switch label={t('common:state.active')} description={t('app:services.inactiveCategoriesAreHiddenFrom')} {...register('isActive')} />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
@@ -384,6 +388,7 @@ function ServicesSection({
   barberServices: { serviceId: string; barberId: string }[]
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   // The SHOP's currency, not the viewer's. A price list is what a customer
   // will actually be charged, so it is denominated by the business alone.
   const currency = useOrganizationCurrency(organizationId)
@@ -439,26 +444,26 @@ function ServicesSection({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="sm:w-64">
           <SelectField
-            label="Filter by category"
+            label={t('app:services.filterByCategory')}
             options={filterOptions}
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
           />
         </div>
-        {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>Add service</Button> : null}
+        {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>{t('app:services.addService')}</Button> : null}
       </div>
 
       <div className="mt-4">
-        <Table label="Services">
+        <Table label={t('common:entity.services')}>
           <TableHeader>
             <TableRow>
-              <TableHead>Service</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Price</TableHead>
+              <TableHead>{t('common:entity.service')}</TableHead>
+              <TableHead>{t('common:field.category')}</TableHead>
+              <TableHead>{t('app:services.duration')}</TableHead>
+              <TableHead>{t('common:field.price')}</TableHead>
               {canManage ? (
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('common:action.actions')}</span>
                 </TableHead>
               ) : null}
             </TableRow>
@@ -472,7 +477,7 @@ function ServicesSection({
                   action={
                     canManage && services.length === 0 ? (
                       <Button size="sm" onClick={() => setDialogState({ mode: 'create' })}>
-                        Add service
+                        {t('app:services.addService')}
                       </Button>
                     ) : undefined
                   }
@@ -502,7 +507,7 @@ function ServicesSection({
                       {money(service.priceCents, currency)}
                       {!service.isActive ? (
                         <Badge variant="neutral" className="ml-2">
-                          Inactive
+                          {t('common:state.inactive')}
                         </Badge>
                       ) : null}
                     </TableCell>
@@ -513,7 +518,7 @@ function ServicesSection({
                           size="sm"
                           onClick={() => setDialogState({ mode: 'edit', service })}
                         >
-                          Edit
+                          {t('common:action.edit')}
                         </Button>
                       </TableCell>
                     ) : null}
@@ -583,6 +588,9 @@ function ServiceFormDialog({
   onClose: () => void
   onSaved: (message: string) => void
 }) {
+  // The shop's own currency: a price field must say which money it means.
+  const currency = useOrganizationCurrency(organizationId)
+  const { t } = useTranslation()
   const isEdit = Boolean(service)
   const createService = useCreateService()
   const updateService = useUpdateService()
@@ -644,13 +652,13 @@ function ServiceFormDialog({
     <div className="flex flex-col gap-4">
       {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-      <TextField label="Name" error={errors.name?.message} {...register('name')} />
-      <Textarea label="Description" rows={2} {...register('description')} />
-      <SelectField label="Category" options={categoryOptions} {...register('categoryId')} />
+      <TextField label={t('common:field.name')} error={errors.name?.message} {...register('name')} />
+      <Textarea label={t('common:field.description')} rows={2} {...register('description')} />
+      <SelectField label={t('common:field.category')} options={categoryOptions} {...register('categoryId')} />
 
       <div className="grid grid-cols-3 gap-4">
         <TextField
-          label="Duration (min)"
+          label={t('app:services.durationMin')}
           type="number"
           min={1}
           step={5}
@@ -658,7 +666,7 @@ function ServiceFormDialog({
           {...register('durationMinutes')}
         />
         <TextField
-          label="Buffer before (min)"
+          label={t('app:services.bufferBeforeMin')}
           type="number"
           min={0}
           step={5}
@@ -666,7 +674,7 @@ function ServiceFormDialog({
           {...register('bufferBeforeMinutes')}
         />
         <TextField
-          label="Buffer after (min)"
+          label={t('app:services.bufferAfterMin')}
           type="number"
           min={0}
           step={5}
@@ -676,16 +684,16 @@ function ServiceFormDialog({
       </div>
 
       <TextField
-        label="Price"
+        label={t('common:field.price')}
         type="number"
         min={0}
         step={0.01}
         inputMode="decimal"
-        hint="Dollar amount, e.g. 35.00"
+        hint={t('app:services.dollarAmountEG35', { currency })}
         error={errors.priceDollars?.message}
         {...register('priceDollars')}
       />
-      <Switch label="Active" description="Inactive services are hidden from booking." {...register('isActive')} />
+      <Switch label={t('common:state.active')} description={t('app:services.inactiveServicesAreHiddenFrom')} {...register('isActive')} />
     </div>
   )
 
@@ -709,9 +717,9 @@ function ServiceFormDialog({
           {isEdit && service ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="locations">Locations</TabsTrigger>
-                <TabsTrigger value="barbers">Barbers</TabsTrigger>
+                <TabsTrigger value="details">{t('app:services.details')}</TabsTrigger>
+                <TabsTrigger value="locations">{t('common:entity.locations')}</TabsTrigger>
+                <TabsTrigger value="barbers">{t('app:services.barbers')}</TabsTrigger>
               </TabsList>
               {/*
                 No inner viewport-height scroller: DialogContent is capped to
@@ -756,7 +764,7 @@ function ServiceFormDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Close
+                {t('common:action.close')}
               </Button>
             </DialogClose>
             {canManage ? (
@@ -784,6 +792,7 @@ function ServiceLocationsTab({
   assignedLocationIds: Set<string>
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const assign = useAssignServiceLocation()
   const unassign = useUnassignServiceLocation()
@@ -792,11 +801,11 @@ function ServiceLocationsTab({
   if (locations.length === 0) {
     return (
       <EmptyState
-        title="No locations yet"
-        description="Add a location before assigning this service to it."
+        title={t('app:services.noLocationsYet')}
+        description={t('app:services.addALocationBeforeAssigning')}
         action={
           <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-            Go to locations
+            {t('app:services.goToLocations')}
           </Link>
         }
       />
@@ -812,7 +821,7 @@ function ServiceLocationsTab({
         onSettled: () => setPendingLocationId(null),
         onError: (error) =>
           toast({
-            title: "Couldn't update location assignment",
+            title: t('app:services.couldntUpdateLocationAssignment'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -854,6 +863,7 @@ function ServiceBarbersTab({
   assignedBarberIds: Set<string>
   canManage: boolean
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const assign = useAssignBarberService()
   const unassign = useUnassignBarberService()
@@ -870,11 +880,11 @@ function ServiceBarbersTab({
   if (bookableBarbers.length === 0) {
     return (
       <EmptyState
-        title="No bookable barbers yet"
-        description="Mark a team member as a bookable barber before assigning them to services."
+        title={t('app:services.noBookableBarbersYet')}
+        description={t('app:services.markATeamMemberAs')}
         action={
           <Link to="/app/team" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-            Go to team
+            {t('app:services.goToTeam')}
           </Link>
         }
       />
@@ -890,7 +900,7 @@ function ServiceBarbersTab({
         onSettled: () => setPendingBarberId(null),
         onError: (error) =>
           toast({
-            title: "Couldn't update barber eligibility",
+            title: t('app:services.couldntUpdateBarberEligibility'),
             description: getErrorMessage(error),
             variant: 'error',
           }),

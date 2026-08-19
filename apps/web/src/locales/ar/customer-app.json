@@ -20,7 +20,8 @@
     "lastCutDays_other": "مرت {{count}} أيام منذ آخر قصة لك.",
     "rebookOverdueTitle": "حان وقت قصة جديدة؟",
     "rebookTitle": "نفس القصة كالمرة الماضية؟",
-    "rebookCta": "احجز مرة أخرى مع {{barber}}"
+    "rebookCta": "احجز مرة أخرى مع {{barber}}",
+    "couldntLoadYourHome": "تعذّر تحميل صفحتك الرئيسية"
   },
   "onboarding": {
     "title": "بضعة أسئلة سريعة",
@@ -56,7 +57,8 @@
     },
     "skip": "تخطَّ الآن",
     "save": "حفظ",
-    "saved": "تم الحفظ — شكرًا!"
+    "saved": "تم الحفظ — شكرًا!",
+    "couldntLoadYourProfile": "تعذّر تحميل ملفك الشخصي"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -68,7 +70,8 @@
     "habitsTitle": "عاداتك",
     "editHabits": "تعديل عاداتك",
     "noHabitsYet": "لم تخبرنا بعاداتك بعد.",
-    "signOut": "تسجيل الخروج"
+    "signOut": "تسجيل الخروج",
+    "couldntLoadYourProfile": "تعذّر تحميل ملفك الشخصي"
   },
   "appointments": {
     "title": "المواعيد",
@@ -102,7 +105,8 @@
     "discoverCta": "اكتشف الحلاقين",
     "remove": "إزالة",
     "viewProfile": "عرض الملف الشخصي",
-    "book": "احجز"
+    "book": "احجز",
+    "couldntLoadYourFavorites": "تعذّر تحميل مفضلاتك"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "تم حجز هذا الوقت للتو. اختر وقتًا آخر.",
     "notAllowed": "لم يعد بالإمكان تغيير هذا الموعد.",
     "failed": "تعذّر تغيير الموعد. حاول مرة أخرى."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "الانتقال إلى FadeUp"
   }
 }

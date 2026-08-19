@@ -81,7 +81,9 @@
       "eyebrow": "Per barbieri e barber shop",
       "primary": "Entra in FadeUp",
       "secondary": "Accesso Pro",
-      "scrollHint": "Scorri per aprire il negozio"
+      "scrollHint": "Scorri per aprire il negozio",
+      "headline": "Gestisci tutta l'attività del tuo barbershop con FadeUp.",
+      "support": "Riunisci appuntamenti, clienti senza prenotazione, squadra e follow-up dei clienti in un solo strumento pensato per i barbershop."
     },
     "modes": {
       "groupLabel": "Scegli il tipo di attività che gestisci",
@@ -120,7 +122,6 @@
       }
     },
     "roadmapBadge": "In arrivo",
-    "demoLabel": "Illustrazione del prodotto",
     "scenes": {
       "today": {
         "eyebrow": "Oggi",
@@ -237,36 +238,6 @@
         "body": "Stesso barbiere, stesso taglio, un tocco. L'appuntamento finisce nella giornata, e si riparte."
       }
     },
-    "loop": {
-      "eyebrow": "Il ciclo",
-      "title": "Un sistema. Dalla scoperta al taglio successivo.",
-      "body": "Non un'agenda con delle aggiunte avvitate sopra. Ogni passo alimenta il successivo.",
-      "steps": [
-        "Scoprire",
-        "Prenotare o coda",
-        "Barbiere",
-        "Poltrona",
-        "Passport",
-        "Riprenotare"
-      ]
-    },
-    "existing": {
-      "eyebrow": "Usi già un software di prenotazioni?",
-      "title": "Bene. La tua agenda è già digitale.",
-      "body": "Quella era la parte facile. Quello che quasi nessun sistema di prenotazione tocca è tutto ciò che succede dopo che qualcuno è entrato dalla porta.",
-      "keepLabel": "Tieni",
-      "keep": "Gli appuntamenti",
-      "addLabel": "Aggiungi",
-      "add": [
-        "Senza prenotazione",
-        "Coda in tempo reale",
-        "Poltrone",
-        "Barbieri",
-        "Fade Passport",
-        "Marketplace"
-      ],
-      "note": "Porta i tuoi appuntamenti a mano o riparti da zero: oggi non c'è un import automatico, e non facciamo finta del contrario."
-    },
     "pricing": {
       "eyebrow": "Prezzi",
       "title": "Paga per il negozio che gestisci davvero.",
@@ -285,7 +256,22 @@
       "retentionComingToPlan": "Compresa in questo piano. Non ancora costruita: non ti verrà addebitata prima che esca.",
       "retentionNotInPlan": "Da Pro in su. Non in questo piano.",
       "choose": "Scegli {{name}}",
-      "applicationNote": "Entrare invia una candidatura. La legge una persona: nessuna carta, nessun addebito."
+      "applicationNote": "Entrare invia una candidatura. La legge una persona: nessuna carta, nessun addebito.",
+      "typeLabel": "Quale tipo di attività corrisponde al tuo salone?",
+      "types": {
+        "independent": {
+          "label": "Indipendente",
+          "hint": "Lavori da solo."
+        },
+        "barbershop": {
+          "label": "Salone",
+          "hint": "Una squadra in una sede."
+        },
+        "multi_location": {
+          "label": "Multi-sede",
+          "hint": "Più sedi."
+        }
+      }
     },
     "plans": {
       "solo": {
@@ -372,12 +358,6 @@
       "coming": "In arrivo",
       "plannedNote": "«In arrivo» significa che la funzione fa parte del piano ma non è ancora costruita. Non fa parte di quello che ricevi oggi."
     },
-    "final": {
-      "together": "In un posto solo.",
-      "title": "Gestisci il tuo negozio con FadeUp.",
-      "primary": "Entra in FadeUp",
-      "secondary": "Accesso Pro"
-    },
     "stage": {
       "today": "Oggi",
       "free": "Libera",
@@ -440,6 +420,59 @@
     "register": {
       "planLabel": "Piano selezionato",
       "planNote": "Ripreso dalla pagina dei prezzi. Non viene addebitato né riservato nulla: puoi cambiarlo finché la fatturazione non è attiva."
+    },
+    "film": {
+      "alt": "Animazione silenziosa: un cliente attraversa una giornata in un barbershop FadeUp, dall'appuntamento alla coda, dalla poltrona al Fade Passport, fino a una nuova prenotazione."
+    },
+    "stages": {
+      "one": {
+        "title": "Guida la tua giornata",
+        "body": "Appuntamenti, clienti che arrivano senza prenotazione e attività della squadra restano visibili nello stesso posto. Sai cosa è previsto, chi arriva e chi prende il cliente successivo."
+      },
+      "two": {
+        "title": "Gestisci i clienti senza appuntamento",
+        "body": "I clienti entrano in coda e seguono la loro posizione. La squadra mantiene una visione chiara dell'ordine di passaggio e del barber che prenderà il cliente successivo."
+      },
+      "three": {
+        "title": "Supporta ogni barber",
+        "body": "Quando il cliente si siede, il barber ritrova il servizio previsto e le informazioni utili delle visite precedenti. Finito il servizio, il cliente successivo è già identificato."
+      },
+      "four": {
+        "title": "Fidelizza i tuoi clienti",
+        "body": "Fade Passport conserva le informazioni utili sui tagli e sulle abitudini del cliente. La squadra ritrova più facilmente ciò che è stato fatto e assicura un seguito più coerente da una visita all'altra.",
+        "extra": "Il tuo salone e i tuoi barber possono anche essere scoperti su FadeUp da nuovi clienti, che poi possono prenotare o mettersi in coda."
+      },
+      "progressLabel": "Avanzamento del racconto"
+    },
+    "migration": {
+      "eyebrow": "Passare a FadeUp",
+      "title": "Usi già un software di prenotazione?",
+      "lead": "Passare a FadeUp non significa ripartire da zero.",
+      "body": "FadeUp è pensato per facilitare il passaggio dalla tua soluzione attuale e aiutarti a ritrovare le informazioni necessarie per continuare a lavorare in buone condizioni.",
+      "steps": [
+        "Ci dici quale soluzione usi oggi.",
+        "Prepariamo con te il passaggio a FadeUp.",
+        "La tua squadra ritrova la propria attività in FadeUp e continua a lavorare."
+      ],
+      "note": "L'accompagnamento avviene con il nostro team. Oggi non esiste un import automatico da un altro software."
     }
+  },
+  "featuresPage": {
+    "everythingABarbershopRunsOn": "Tutto ciò che fa funzionare un salone, collegato.",
+    "seeThePlanStructure": "Guarda la struttura dei piani",
+    "compareTiersByLocationCount": "Confronta i livelli per numero di sedi e funzionalità.",
+    "viewPricing": "Vedi i prezzi"
+  },
+  "pricingPage": {
+    "featureComparisonByPlan": "Confronto funzionalità per piano",
+    "included": "Incluso",
+    "notIncluded": "Non incluso",
+    "plansThatScaleWithYour": "Piani che crescono con il tuo salone.",
+    "fadeupIsInEarlyAccess": "FadeUp è in accesso anticipato. I livelli qui sotto descrivono la struttura dei piani prevista — per numero di sedi e funzionalità — non prezzi definitivi. Ogni attività inizia allo stesso modo: creala gratis e configura il salone.",
+    "mostCommon": "Il più scelto",
+    "comparePlanFeatures": "Confronta le funzionalità",
+    "feature": "Funzionalità",
+    "pricingQuestions": "Domande sui prezzi",
+    "setUpYourShopOn": "Configura oggi il tuo salone su FadeUp"
   }
 }

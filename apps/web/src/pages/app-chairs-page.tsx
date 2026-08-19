@@ -29,6 +29,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -50,6 +51,7 @@ export function AppChairsPage() {
 }
 
 function ChairsManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
   const locationsQuery = useOrgLocations(organizationId)
@@ -82,8 +84,8 @@ function ChairsManagement({ organizationId, role }: { organizationId: string; ro
   return (
     <Container size="lg" className="py-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink-950">Chairs</h1>
-        <p className="mt-1 text-sm text-ink-500">Chair inventory for each location.</p>
+        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.chairs')}</h1>
+        <p className="mt-1 text-sm text-ink-500">{t('app:chairs.chairInventoryForEachLocation')}</p>
       </div>
 
       <div className="mt-6">
@@ -91,7 +93,7 @@ function ChairsManagement({ organizationId, role }: { organizationId: string; ro
           <ChairsSkeleton />
         ) : isError ? (
           <ErrorState
-            title="Couldn't load chairs"
+            title={t('app:chairs.couldntLoadChairs')}
             description={loadError?.message}
             action={
               <Button
@@ -101,17 +103,17 @@ function ChairsManagement({ organizationId, role }: { organizationId: string; ro
                   void chairsQuery.refetch()
                 }}
               >
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : locations.length === 0 ? (
           <EmptyState
-            title="No locations yet"
-            description="Add a location before adding chairs."
+            title={t('app:chairs.noLocationsYet')}
+            description={t('app:chairs.addALocationBeforeAdding')}
             action={
               <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to locations
+                {t('app:chairs.goToLocations')}
               </Link>
             }
           />
@@ -166,6 +168,7 @@ function LocationChairs({
   onAdd: () => void
   onEdit: (chair: Chair) => void
 }) {
+  const { t } = useTranslation()
   const columnCount = canManage ? 3 : 2
 
   return (
@@ -173,18 +176,18 @@ function LocationChairs({
       <div className="flex items-center justify-end">
         {canManage ? (
           <Button size="sm" onClick={onAdd}>
-            Add chair
+            {t('app:chairs.addChair')}
           </Button>
         ) : null}
       </div>
       <Table label={`Chairs at ${location.name}`}>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('common:field.name')}</TableHead>
+            <TableHead>{t('common:field.status')}</TableHead>
             {canManage ? (
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t('common:action.actions')}</span>
               </TableHead>
             ) : null}
           </TableRow>
@@ -193,7 +196,7 @@ function LocationChairs({
           {chairs.length === 0 ? (
             <TableStateRow colSpan={columnCount}>
               <EmptyState
-                title="No chairs yet"
+                title={t('app:chairs.noChairsYet')}
                 description={canManage ? 'Add a chair to this location.' : 'This location has no chairs yet.'}
                 className="border-none"
               />
@@ -210,7 +213,7 @@ function LocationChairs({
                 {canManage ? (
                   <TableCell className="text-right">
                     <Button variant="secondary" size="sm" onClick={() => onEdit(chair)}>
-                      Edit
+                      {t('common:action.edit')}
                     </Button>
                   </TableCell>
                 ) : null}
@@ -236,6 +239,7 @@ function ChairFormDialog({
   onClose: () => void
   onSaved: (message: string) => void
 }) {
+  const { t } = useTranslation()
   const isEdit = Boolean(chair)
   const createChair = useCreateChair()
   const updateChair = useUpdateChair()
@@ -293,13 +297,13 @@ function ChairFormDialog({
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Name" hint='e.g. "Chair 1"' error={errors.name?.message} {...register('name')} />
-          <Switch label="Active" description="Inactive chairs are hidden from scheduling." {...register('isActive')} />
+          <TextField label={t('common:field.name')} hint={t('app:chairs.eGChair1')} error={errors.name?.message} {...register('name')} />
+          <Switch label={t('common:state.active')} description={t('app:chairs.inactiveChairsAreHiddenFrom')} {...register('isActive')} />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>

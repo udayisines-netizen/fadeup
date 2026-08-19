@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableStateRow } from '@/components/ui/table'
+import { useTranslation } from 'react-i18next'
 
 const ACTION_LABELS: Record<string, string> = {
   platform_owner_bootstrap_claimed: 'Platform owner bootstrap claimed',
@@ -17,32 +18,33 @@ const ACTION_LABELS: Record<string, string> = {
 
 /** /platform/audit — platform_audit_log, most recent first. Read-only, platform_owner/platform_admin only (RLS). */
 export function PlatformAuditLogPage() {
+  const { t } = useTranslation()
   const auditQuery = usePlatformAuditLog()
 
   return (
     <Container size="lg" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">Audit log</h1>
-      <p className="mt-1 text-sm text-ink-500">Platform-level security events, most recent first.</p>
+      <h1 className="text-xl font-semibold text-ink-950">{t('platform:auditLog.auditLog')}</h1>
+      <p className="mt-1 text-sm text-ink-500">{t('platform:auditLog.platformlevelSecurityEventsMostRecent')}</p>
 
       <div className="mt-6">
         {auditQuery.isPending ? (
           <AuditSkeleton />
         ) : auditQuery.isError ? (
-          <ErrorState title="Couldn't load audit log" description={auditQuery.error.message} />
+          <ErrorState title={t('platform:auditLog.couldntLoadAuditLog')} description={auditQuery.error.message} />
         ) : (
-          <Table label="Audit log">
+          <Table label={t('platform:auditLog.auditLog')}>
             <TableHeader>
               <TableRow>
-                <TableHead>When</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Actor</TableHead>
-                <TableHead>Target</TableHead>
+                <TableHead>{t('common:field.when')}</TableHead>
+                <TableHead>{t('platform:auditLog.action')}</TableHead>
+                <TableHead>{t('platform:auditLog.actor')}</TableHead>
+                <TableHead>{t('common:field.target')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {auditQuery.data.length === 0 ? (
                 <TableStateRow colSpan={4}>
-                  <EmptyState title="No platform activity yet" className="border-none" />
+                  <EmptyState title={t('platform:auditLog.noPlatformActivityYet')} className="border-none" />
                 </TableStateRow>
               ) : (
                 auditQuery.data.map((entry) => (

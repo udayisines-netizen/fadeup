@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableSta
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
 import type { MembershipRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const ROLE_LABELS: Record<MembershipRole, string> = {
   owner: 'Owner',
@@ -27,6 +28,7 @@ const ROLE_LABELS: Record<MembershipRole, string> = {
 
 /** /platform/organizations/:organizationId — CLAUDE.md's tenant explorer: organization → locations → team → barber. */
 export function PlatformOrganizationDetailPage() {
+  const { t } = useTranslation()
   const { organizationId } = useParams<{ organizationId: string }>()
   const { toast } = useToast()
   const { activeSession, enterSupportView, isEntering } = useSupportView()
@@ -56,13 +58,13 @@ export function PlatformOrganizationDetailPage() {
     organizationQuery.isPending || locationsQuery.isPending || membersQuery.isPending || staffProfilesQuery.isPending
 
   if (isLoading) {
-    return <PageSpinner label="Loading organization" />
+    return <PageSpinner label={t('platform:organizationDetail.loadingOrganization')} />
   }
 
   if (organizationQuery.isError) {
     return (
       <Container size="lg" className="py-8">
-        <ErrorState title="Couldn't load organization" description={organizationQuery.error.message} />
+        <ErrorState title={t('platform:organizationDetail.couldntLoadOrganization')} description={organizationQuery.error.message} />
       </Container>
     )
   }
@@ -70,7 +72,7 @@ export function PlatformOrganizationDetailPage() {
   if (!organizationQuery.data) {
     return (
       <Container size="lg" className="py-8">
-        <ErrorState title="Organization not found" />
+        <ErrorState title={t('platform:organizationDetail.organizationNotFound')} />
       </Container>
     )
   }
@@ -83,7 +85,7 @@ export function PlatformOrganizationDetailPage() {
       await enterSupportView({ organizationId: organizationId!, targetType: 'organization' })
       toast({ title: `Entered support view for ${organization.name}` })
     } catch (error) {
-      toast({ title: "Couldn't enter support view", description: getErrorMessage(error), variant: 'error' })
+      toast({ title: t('platform:organizationDetail.couldntEnterSupportView'), description: getErrorMessage(error), variant: 'error' })
     }
   }
 
@@ -92,7 +94,7 @@ export function PlatformOrganizationDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link to="/platform/organizations" className="text-sm text-ink-500 hover:text-ink-950">
-            ← Organizations
+            {t('platform:organizationDetail.organizations')}
           </Link>
           <h1 className="mt-1 text-xl font-semibold text-ink-950">{organization.name}</h1>
           <p className="mt-1 text-sm text-ink-500">
@@ -105,12 +107,12 @@ export function PlatformOrganizationDetailPage() {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Locations</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.locations')}</h2>
         <div className="mt-3">
           {locationsQuery.isError ? (
-            <ErrorState title="Couldn't load locations" description={locationsQuery.error.message} />
+            <ErrorState title={t('platform:organizationDetail.couldntLoadLocations')} description={locationsQuery.error.message} />
           ) : (locationsQuery.data ?? []).length === 0 ? (
-            <EmptyState title="No locations yet" />
+            <EmptyState title={t('platform:organizationDetail.noLocationsYet')} />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {(locationsQuery.data ?? []).map((location) => (
@@ -118,7 +120,7 @@ export function PlatformOrganizationDetailPage() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-ink-950">{location.name}</span>
-                      {!location.isActive ? <Badge variant="neutral">Inactive</Badge> : null}
+                      {!location.isActive ? <Badge variant="neutral">{t('common:state.inactive')}</Badge> : null}
                     </div>
                     <p className="mt-1 text-sm text-ink-500">
                       {[location.city, location.region, location.country].filter(Boolean).join(', ') || 'No address on file'}
@@ -133,27 +135,27 @@ export function PlatformOrganizationDetailPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Team</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.team')}</h2>
         <div className="mt-3">
           {membersQuery.isError ? (
-            <ErrorState title="Couldn't load team" description={membersQuery.error.message} />
+            <ErrorState title={t('platform:organizationDetail.couldntLoadTeam')} description={membersQuery.error.message} />
           ) : (membersQuery.data ?? []).length === 0 ? (
-            <EmptyState title="No team members yet" />
+            <EmptyState title={t('platform:organizationDetail.noTeamMembersYet')} />
           ) : (
-            <Table label="Team">
+            <Table label={t('common:entity.team')}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>{t('common:entity.member')}</TableHead>
+                  <TableHead>{t('common:field.role')}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('common:action.actions')}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(membersQuery.data ?? []).length === 0 ? (
                   <TableStateRow colSpan={3}>
-                    <EmptyState title="No team members yet" className="border-none" />
+                    <EmptyState title={t('platform:organizationDetail.noTeamMembersYet')} className="border-none" />
                   </TableStateRow>
                 ) : (
                   (membersQuery.data ?? []).map((member) => {
@@ -173,7 +175,7 @@ export function PlatformOrganizationDetailPage() {
                               to={`/platform/organizations/${organizationId}/barbers/${member.userId}`}
                               className="text-sm font-medium text-accent-700 underline-offset-2 hover:underline"
                             >
-                              View Barber Workspace
+                              {t('platform:organizationDetail.viewBarberWorkspace')}
                             </Link>
                           ) : null}
                         </TableCell>

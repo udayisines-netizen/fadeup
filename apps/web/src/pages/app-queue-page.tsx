@@ -40,6 +40,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 // Same broader role set as appointments (LOT 8) — owner/manager/receptionist
 // run the front of house and can add/manage any walk-in. Distinct from a
@@ -86,6 +87,7 @@ export function AppQueuePage() {
 }
 
 function QueueBoard({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const { user } = useAuth()
   const canManage = MANAGING_ROLES.has(role)
@@ -172,7 +174,7 @@ function QueueBoard({ organizationId, role }: { organizationId: string; role: Me
     <Container size="lg" className="py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-950">Live queue</h1>
+          <h1 className="text-xl font-semibold text-ink-950">{t('app:queue.liveQueue')}</h1>
           <p className="mt-1 text-sm text-ink-500">Who&apos;s waiting, right now, at each location.</p>
         </div>
       </div>
@@ -182,21 +184,21 @@ function QueueBoard({ organizationId, role }: { organizationId: string; role: Me
           <QueueSkeleton />
         ) : isError ? (
           <ErrorState
-            title="Couldn't load the queue"
+            title={t('app:queue.couldntLoadTheQueue')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : locations.length === 0 ? (
           <EmptyState
-            title="No locations yet"
-            description="Add a location before managing a walk-in queue."
+            title={t('app:queue.noLocationsYet')}
+            description={t('app:queue.addALocationBeforeManaging')}
             action={
               <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to locations
+                {t('app:queue.goToLocations')}
               </Link>
             }
           />
@@ -235,7 +237,7 @@ function QueueBoard({ organizationId, role }: { organizationId: string; role: Me
           staffProfiles={staffProfilesQuery.data ?? []}
           onClose={() => setIsAddOpen(false)}
           onAdded={() => {
-            toast({ title: 'Added to queue', variant: 'success' })
+            toast({ title: t('app:queue.addedToQueue'), variant: 'success' })
             setIsAddOpen(false)
           }}
         />
@@ -267,6 +269,7 @@ function LocationQueue({
   serviceById: Map<string, Service>
   onAddWalkIn: () => void
 }) {
+  const { t } = useTranslation()
   // Position is derived client-side from arrival order among `waiting`
   // entries only — never stored. Entries already being called/serviced show
   // no position, they've left the line.
@@ -284,21 +287,21 @@ function LocationQueue({
       <div className="flex items-center justify-end">
         {canManage ? (
           <Button size="sm" onClick={onAddWalkIn}>
-            Add walk-in
+            {t('app:queue.addWalkin')}
           </Button>
         ) : null}
       </div>
       <Table label={`Queue at ${location.name}`}>
         <TableHeader>
           <TableRow>
-            <TableHead>Position</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Barber</TableHead>
-            <TableHead>Waited</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('app:queue.position')}</TableHead>
+            <TableHead>{t('common:entity.customer')}</TableHead>
+            <TableHead>{t('common:entity.barber')}</TableHead>
+            <TableHead>{t('app:queue.waited')}</TableHead>
+            <TableHead>{t('common:field.status')}</TableHead>
             {showActionsColumn ? (
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t('common:action.actions')}</span>
               </TableHead>
             ) : null}
           </TableRow>
@@ -307,12 +310,12 @@ function LocationQueue({
           {rows.length === 0 ? (
             <TableStateRow colSpan={columnCount}>
               <EmptyState
-                title="No one is waiting"
+                title={t('app:queue.noOneIsWaiting')}
                 description={canManage ? 'The queue at this location is empty right now.' : 'Nothing to do here right now.'}
                 action={
                   canManage ? (
                     <Button size="sm" onClick={onAddWalkIn}>
-                      Add walk-in
+                      {t('app:queue.addWalkin')}
                     </Button>
                   ) : undefined
                 }
@@ -350,6 +353,7 @@ function QueueRow({
   barberLabel: string
   serviceName: string
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateQueueEntryStatus()
 
@@ -360,7 +364,7 @@ function QueueRow({
         onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't update status",
+            title: t('app:queue.couldntUpdateStatus'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -391,7 +395,7 @@ function QueueRow({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>
-                  Update status
+                  {t('app:queue.updateStatus')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -441,6 +445,7 @@ function AddWalkInDialog({
   onClose: () => void
   onAdded: () => void
 }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const addToQueue = useAddToQueue()
   const [formError, setFormError] = useState<string | null>(null)
@@ -507,25 +512,25 @@ function AddWalkInDialog({
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add walk-in</DialogTitle>
+          <DialogTitle>{t('app:queue.addWalkin')}</DialogTitle>
           <DialogDescription>Add a customer to the line at {location.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Customer name" error={errors.customerName?.message} {...register('customerName')} />
-          <TextField label="Phone (optional)" type="tel" {...register('customerPhone')} />
-          <SelectField label="Barber (optional)" options={barberOptions} {...register('barberId')} />
-          <SelectField label="Service (optional)" options={serviceOptions} {...register('serviceId')} />
+          <TextField label={t('common:field.customerName')} error={errors.customerName?.message} {...register('customerName')} />
+          <TextField label={t('common:field.phoneOptional')} type="tel" {...register('customerPhone')} />
+          <SelectField label={t('app:queue.barberOptional')} options={barberOptions} {...register('barberId')} />
+          <SelectField label={t('app:queue.serviceOptional')} options={serviceOptions} {...register('serviceId')} />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
-              Add to queue
+              {t('app:queue.addToQueue')}
             </Button>
           </DialogFooter>
         </form>

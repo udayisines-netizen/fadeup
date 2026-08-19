@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { NotificationBell } from '@/components/platform/notification-bell'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Root shell for everything under /platform — this is FadeUp's OWN staff
@@ -29,6 +30,7 @@ export function PlatformLayout() {
 }
 
 function PlatformShell() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   async function handleSignOut() {
@@ -42,21 +44,21 @@ function PlatformShell() {
       <Navbar
         brand={
           <Link to="/platform" className="text-base font-semibold text-ink-950">
-            FadeUp Platform
+            {t('platform:nav.fadeupPlatform')}
           </Link>
         }
         links={
           <>
             <AppNavLink to="/platform" end>
-              Overview
+              {t('platform:nav.overview')}
             </AppNavLink>
-            <AppNavLink to="/platform/applications">Applications</AppNavLink>
-            <AppNavLink to="/platform/organizations">Organizations</AppNavLink>
-            <AppNavLink to="/platform/acquisition">Acquisition</AppNavLink>
-            <AppNavLink to="/platform/outreach">Outreach</AppNavLink>
-            <AppNavLink to="/platform/data-science">Data science</AppNavLink>
-            <AppNavLink to="/platform/team">Team</AppNavLink>
-            <AppNavLink to="/platform/audit">Audit log</AppNavLink>
+            <AppNavLink to="/platform/applications">{t('platform:nav.applications')}</AppNavLink>
+            <AppNavLink to="/platform/organizations">{t('common:entity.organizations')}</AppNavLink>
+            <AppNavLink to="/platform/acquisition">{t('platform:nav.acquisition')}</AppNavLink>
+            <AppNavLink to="/platform/outreach">{t('platform:nav.outreach')}</AppNavLink>
+            <AppNavLink to="/platform/data-science">{t('platform:nav.dataScience')}</AppNavLink>
+            <AppNavLink to="/platform/team">{t('common:entity.team')}</AppNavLink>
+            <AppNavLink to="/platform/audit">{t('platform:nav.auditLog')}</AppNavLink>
           </>
         }
         actions={
@@ -64,7 +66,7 @@ function PlatformShell() {
             <NotificationBell />
             <ThemeToggle />
             <Button variant="secondary" onClick={() => void handleSignOut()}>
-              Sign out
+              {t('common:nav.signOut')}
             </Button>
           </>
         }

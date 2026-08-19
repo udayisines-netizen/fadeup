@@ -12,6 +12,7 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { useBookingRequests } from '@/lib/queries/booking-requests'
 import { cn } from '@/lib/cn'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set(['owner', 'manager'])
 /** Front-of-house: the roles that may answer a booking request. Mirrors private.can_manage_appointments. */
@@ -27,6 +28,7 @@ export function AppLayout() {
 }
 
 function AppShell() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { membershipsQuery, memberships, currentMembership } = useCurrentOrg()
 
@@ -45,7 +47,7 @@ function AppShell() {
   const pendingCount = requestsQuery.data?.length ?? 0
 
   if (membershipsQuery.isPending) {
-    return <PageSpinner label="Loading your organizations…" />
+    return <PageSpinner label={t('common:nav.loadingYourOrganizations')} />
   }
 
   if (membershipsQuery.isError) {
@@ -56,7 +58,7 @@ function AppShell() {
             Couldn&apos;t load your organizations: {membershipsQuery.error.message}
           </Alert>
           <Button className="mt-4" onClick={() => void membershipsQuery.refetch()}>
-            Try again
+            {t('common:action.tryAgain')}
           </Button>
         </Container>
       </div>
@@ -81,13 +83,13 @@ function AppShell() {
       <Navbar
         brand={
           <Link to="/app" className="text-base font-semibold text-ink-950">
-            FadeUp
+            {t('common:customerNav.fadeup')}
           </Link>
         }
         links={
           <>
             <AppNavLink to="/app" end>
-              Home
+              {t('common:nav.home')}
             </AppNavLink>
             {/*
               Only when there is genuinely something to decide.
@@ -113,17 +115,17 @@ function AppShell() {
                 </span>
               </AppNavLink>
             ) : null}
-            <AppNavLink to="/app/calendar">Calendar</AppNavLink>
-            <AppNavLink to="/app/appointments">Schedule</AppNavLink>
-            <AppNavLink to="/app/queue">Queue</AppNavLink>
-            <AppNavLink to="/app/waitlist">Waitlist</AppNavLink>
-            <AppNavLink to="/app/customers">Customers</AppNavLink>
-            <AppNavLink to="/app/memberships">Memberships</AppNavLink>
-            <AppNavLink to="/app/locations">Locations</AppNavLink>
-            <AppNavLink to="/app/chairs">Chairs</AppNavLink>
-            <AppNavLink to="/app/services">Services</AppNavLink>
-            <AppNavLink to="/app/availability">Availability</AppNavLink>
-            {canManageTeam ? <AppNavLink to="/app/team">Team</AppNavLink> : null}
+            <AppNavLink to="/app/calendar">{t('common:entity.calendar')}</AppNavLink>
+            <AppNavLink to="/app/appointments">{t('common:entity.schedule')}</AppNavLink>
+            <AppNavLink to="/app/queue">{t('common:entity.queue')}</AppNavLink>
+            <AppNavLink to="/app/waitlist">{t('common:entity.waitlist')}</AppNavLink>
+            <AppNavLink to="/app/customers">{t('common:entity.customers')}</AppNavLink>
+            <AppNavLink to="/app/memberships">{t('common:entity.memberships')}</AppNavLink>
+            <AppNavLink to="/app/locations">{t('common:entity.locations')}</AppNavLink>
+            <AppNavLink to="/app/chairs">{t('common:entity.chairs')}</AppNavLink>
+            <AppNavLink to="/app/services">{t('common:entity.services')}</AppNavLink>
+            <AppNavLink to="/app/availability">{t('common:entity.availability')}</AppNavLink>
+            {canManageTeam ? <AppNavLink to="/app/team">{t('common:entity.team')}</AppNavLink> : null}
           </>
         }
         actions={
@@ -137,7 +139,7 @@ function AppShell() {
             <LanguageSwitcher />
             <ThemeToggle />
             <Button variant="secondary" onClick={() => void handleSignOut()}>
-              Sign out
+              {t('common:nav.signOut')}
             </Button>
           </>
         }

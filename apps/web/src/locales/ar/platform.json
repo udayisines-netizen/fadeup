@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "تعذّر تحميل هذا الطلب",
+    "applicationNotFound": "لم يتم العثور على الطلب"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "المطالبة بملكية منصة FadeUp",
+    "thisCanOnlyBeDone": "يمكن تنفيذ ذلك مرة واحدة فقط، من قِبل من يملك هذا الرابط.",
+    "logInOrCreateAn": "سجّل الدخول أو أنشئ حسابًا للمتابعة.",
+    "claimPlatformOwnership": "المطالبة بالملكية"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "انضم إلى فريق منصة FadeUp",
+    "acceptThisInvitationToGet": "اقبل هذه الدعوة للحصول على صلاحية الوصول إلى المنصة.",
+    "logInOrCreateAn": "سجّل الدخول أو أنشئ حسابًا للمتابعة.",
+    "acceptInvitation": "قبول الدعوة"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "جارٍ تحميل مساحة عمل المختص",
+    "barberNotFoundInThis": "لم يتم العثور على المختص في هذه المنشأة",
+    "noServicesAssigned": "لا توجد خدمات مسندة.",
+    "weeklyHours": "ساعات العمل الأسبوعية",
+    "noWorkingHoursSet": "لم يتم تحديد ساعات عمل.",
+    "upcomingExceptions": "الاستثناءات القادمة",
+    "noAvailabilityExceptionsOnFile": "لا توجد استثناءات توافر مسجّلة.",
+    "couldntEnterSupportView": "تعذّر الدخول إلى وضع الدعم"
+  },
+  "applications": {
+    "couldntLoadApplications": "تعذّر تحميل الطلبات"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "تعذّر تحميل فريق المنصة",
+    "platformTeamMembers": "أعضاء فريق المنصة",
+    "couldntLoadInvitations": "تعذّر تحميل الدعوات",
+    "pendingPlatformInvitations": "دعوات المنصة المعلّقة",
+    "noPendingInvitations": "لا توجد دعوات معلّقة",
+    "leaveBlankToCreateA": "اتركه فارغًا لإنشاء رابط يمكن استخدامه مرة واحدة من أي شخص.",
+    "platformTeam": "فريق المنصة",
+    "whoHasFadeupPlatformAccess": "من لديه صلاحية الوصول إلى منصة FadeUp، والدعوات المعلّقة.",
+    "user": "المستخدم",
+    "since": "منذ",
+    "pendingInvitations": "الدعوات المعلّقة",
+    "revoke": "إلغاء",
+    "inviteSomeone": "دعوة شخص",
+    "sendInvitation": "إرسال الدعوة",
+    "invitationCreated": "تم إنشاء الدعوة",
+    "invitationRevoked": "تم إلغاء الدعوة",
+    "couldntRevokeInvitation": "تعذّر إلغاء الدعوة"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "تعذّر تحميل المنشآت",
+    "noOrganizationsYet": "لا توجد منشآت بعد",
+    "everyBarbershopTenantOnFadeup": "جميع الصالونات الموجودة على FadeUp.",
+    "slug": "معرّف الرابط"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "تعذّر تحميل سجل التدقيق",
+    "auditLog": "سجل التدقيق",
+    "noPlatformActivityYet": "لا يوجد نشاط بعد",
+    "platformlevelSecurityEventsMostRecent": "أحداث الأمان على مستوى المنصة، الأحدث أولًا.",
+    "action": "الإجراء",
+    "actor": "المنفّذ"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "جارٍ تحميل المنشأة",
+    "couldntLoadOrganization": "تعذّر تحميل المنشأة",
+    "organizationNotFound": "لم يتم العثور على المنشأة",
+    "couldntLoadLocations": "تعذّر تحميل الفروع",
+    "noLocationsYet": "لا توجد فروع بعد",
+    "couldntLoadTeam": "تعذّر تحميل الفريق",
+    "noTeamMembersYet": "لا يوجد أعضاء بعد",
+    "organizations": "← المنشآت",
+    "viewBarberWorkspace": "عرض مساحة عمل المختص",
+    "couldntEnterSupportView": "تعذّر الدخول إلى وضع الدعم"
+  },
+  "login": {
+    "platformSignIn": "تسجيل الدخول إلى المنصة",
+    "fadeupPlatformStaffOnly": "لموظفي منصة FadeUp فقط.",
+    "signIn": "تسجيل الدخول"
+  },
+  "overview": {
+    "platformOverview": "نظرة عامة على المنصة",
+    "signedInAs": "تم تسجيل الدخول باسم"
+  },
+  "nav": {
+    "fadeupPlatform": "منصة FadeUp",
+    "overview": "نظرة عامة",
+    "applications": "الطلبات",
+    "acquisition": "الاستقطاب",
+    "outreach": "التواصل",
+    "dataScience": "علم البيانات",
+    "auditLog": "سجل التدقيق",
+    "checkingPlatformAccess": "جارٍ التحقق من صلاحية الوصول إلى المنصة",
+    "backToFadeup": "العودة إلى FadeUp",
+    "exitSupportView": "الخروج من وضع الدعم",
+    "exitedSupportView": "تم الخروج من وضع الدعم",
+    "couldntExitSupportView": "تعذّر الخروج من وضع الدعم"
+  }
+}

@@ -4,7 +4,13 @@
     "forBusiness": "Pour les pros",
     "features": "Fonctionnalités",
     "pricing": "Tarifs",
-    "myFadeUp": "Mon FadeUp"
+    "myFadeUp": "Mon FadeUp",
+    "loadingYourOrganizations": "Chargement de vos établissements…",
+    "signOut": "Se déconnecter",
+    "mainNavigation": "Navigation principale",
+    "openMenu": "Ouvrir le menu",
+    "mobileNavigation": "Navigation mobile",
+    "menu": "Menu"
   },
   "auth": {
     "logIn": "Connexion",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Langue",
     "select": "Choisir la langue"
+  },
+  "field": {
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "status": "Statut",
+    "role": "Rôle",
+    "date": "Date",
+    "time": "Horaire",
+    "type": "Type",
+    "notes": "Notes",
+    "price": "Prix",
+    "title": "Intitulé",
+    "reason": "Motif",
+    "country": "Pays",
+    "timezone": "Fuseau horaire",
+    "locale": "Langue",
+    "category": "Catégorie",
+    "source": "Source",
+    "score": "Score",
+    "target": "Cible",
+    "template": "Modèle",
+    "scope": "Portée",
+    "state": "État",
+    "password": "Mot de passe",
+    "created": "Créé le",
+    "expires": "Expire le",
+    "plan": "Formule",
+    "day": "Jour",
+    "when": "Quand",
+    "customerName": "Nom du client",
+    "description": "Description",
+    "phoneOptional": "Téléphone (facultatif)",
+    "emailOptional": "E-mail (facultatif)",
+    "notesOptional": "Notes (facultatif)",
+    "reasonOptional": "Motif (facultatif)"
+  },
+  "action": {
+    "actions": "Actions",
+    "tryAgain": "Réessayer",
+    "reload": "Recharger",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "selected": "Sélectionné",
+    "back": "Retour",
+    "done": "Terminé",
+    "remove": "Retirer"
+  },
+  "state": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "loading": "Chargement",
+    "loadingEllipsis": "Chargement…",
+    "blocked": "Bloqué",
+    "sent": "Envoyé",
+    "paid": "Payé",
+    "replied": "Répondu",
+    "activated": "Activé",
+    "noMatches": "Aucun résultat"
+  },
+  "entity": {
+    "customer": "Client",
+    "customers": "Clients",
+    "service": "Prestation",
+    "services": "Prestations",
+    "team": "Équipe",
+    "member": "Membre",
+    "members": "Membres",
+    "professional": "Professionnel",
+    "barber": "Coiffeur",
+    "location": "Adresse",
+    "locations": "Adresses",
+    "chairs": "Postes",
+    "memberships": "Abonnements",
+    "organizations": "Établissements",
+    "waitlist": "Liste d'attente",
+    "availability": "Disponibilités",
+    "schedule": "Planning",
+    "queue": "File d'attente",
+    "calendar": "Agenda",
+    "requests": "Demandes"
+  },
+  "access": {
+    "checkingYourAccess": "Vérification de vos accès",
+    "checkingYourSetup": "Vérification de votre configuration",
+    "checkingYourSession": "Vérification de votre session"
+  },
+  "errors": {
+    "somethingWentWrong": "Une erreur est survenue",
+    "anUnexpectedErrorOccurredTry": "Une erreur inattendue s'est produite. Essayez de recharger la page.",
+    "goToMyWorkspace": "Aller à mon espace"
+  },
+  "notifications": {
+    "notifications": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "nothingYet": "Rien pour le moment."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Navigation de l'espace client",
+    "appointments": "Rendez-vous",
+    "discover": "Découvrir",
+    "passport": "Passport",
+    "profile": "Profil",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Fermer la notification"
+  },
+  "notFound": {
+    "pageNotFound": "Page introuvable",
+    "backHome": "Retour à l'accueil"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Chargement de vos espaces",
+    "fadeupPlatform": "Plateforme FadeUp",
+    "platformAdministration": "Administration de la plateforme",
+    "chooseAWorkspace": "Choisissez un espace",
+    "youHaveAccessToMore": "Vous avez accès à plusieurs espaces. Choisissez où aller."
   }
 }

@@ -1,6 +1,7 @@
 import { Link, Outlet, useParams } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Minimal chrome for the public, anonymous booking flow at `/s/:slug` — no
@@ -15,6 +16,7 @@ import { usePublicOrganization } from '@/lib/queries/public-booking'
  * empty state and every other piece of booking-flow logic.
  */
 export function PublicBookingLayout() {
+  const { t } = useTranslation()
   const { slug } = useParams<{ slug: string }>()
   const organizationQuery = usePublicOrganization(slug)
 
@@ -23,7 +25,7 @@ export function PublicBookingLayout() {
       <header className="border-b border-border bg-paper-0">
         <Container size="md" className="flex h-14 items-center justify-between">
           <Link to="/" className="text-sm font-semibold tracking-tight text-ink-950">
-            FadeUp
+            {t('common:customerNav.fadeup')}
           </Link>
           {organizationQuery.data ? (
             <span className="truncate text-sm text-ink-500">{organizationQuery.data.name}</span>

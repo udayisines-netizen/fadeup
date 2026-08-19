@@ -162,6 +162,21 @@ describe('country table parity with the locale-detect Edge Function', () => {
     return table
   }
 
+  it('keeps the LEGACY country/locale fields in the response', () => {
+    // infra/supabase/volumes/functions is bind-mounted into the running
+    // container, so this file IS production the moment it is saved — there is
+    // no build step between the two. The web bundle is not: it ships in an
+    // image. So the function is routinely newer than its clients, and the
+    // deployed marketing bundle reads `country`/`locale`.
+    //
+    // Renaming those to countryCode/suggestedLocale without keeping the old
+    // pair silently broke regional pricing detection on the live site. This
+    // asserts the compatibility shim is still there.
+    const source = readFileSync(functionPath, 'utf8')
+    expect(source).toMatch(/country:\s*body\.countryCode/)
+    expect(source).toMatch(/locale:\s*body\.suggestedLocale/)
+  })
+
   it('parses the edge table at all (guards against this test silently passing)', () => {
     expect(Object.keys(edgeCountries()).length).toBeGreaterThan(20)
   })

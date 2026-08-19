@@ -337,8 +337,34 @@ Deno.serve(async (req: Request) => {
   })
 })
 
-function json(body: unknown): Response {
-  return new Response(JSON.stringify(body), {
+/**
+ * BACKWARD COMPATIBILITY, and why it is not optional.
+ *
+ * infra/supabase/volumes/functions is BIND-MOUNTED into the running
+ * edge-functions container, so editing this file changes production the moment
+ * it is saved — there is no build or deploy step to gate it. The web bundle,
+ * by contrast, is baked into an image and only changes when that image is
+ * rebuilt.
+ *
+ * That means this function is always potentially serving a client that is
+ * older than it is. The currently deployed bundle reads `country` and
+ * `locale`; LOT E renamed those to `countryCode` and `suggestedLocale`. Emitting
+ * only the new names silently broke regional pricing detection on the live
+ * marketing site until this was added.
+ *
+ * So the response carries BOTH shapes. The legacy pair costs a few bytes and
+ * removes a whole class of deploy-ordering bug.
+ */
+function withLegacyFields(body: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...body,
+    country: body.countryCode ?? null,
+    locale: body.suggestedLocale ?? 'en',
+  }
+}
+
+function json(body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(withLegacyFields(body)), {
     headers: {
       ...CORS,
       'Content-Type': 'application/json',

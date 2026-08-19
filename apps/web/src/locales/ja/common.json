@@ -4,7 +4,13 @@
     "forBusiness": "店舗様向け",
     "features": "機能",
     "pricing": "料金",
-    "myFadeUp": "マイ FadeUp"
+    "myFadeUp": "マイ FadeUp",
+    "loadingYourOrganizations": "事業者を読み込んでいます…",
+    "signOut": "ログアウト",
+    "mainNavigation": "メインナビゲーション",
+    "openMenu": "メニューを開く",
+    "mobileNavigation": "モバイルナビゲーション",
+    "menu": "メニュー"
   },
   "auth": {
     "logIn": "ログイン",
@@ -28,5 +34,128 @@
   "language": {
     "label": "言語",
     "select": "言語を選択"
+  },
+  "field": {
+    "name": "名前",
+    "email": "メールアドレス",
+    "phone": "電話番号",
+    "status": "ステータス",
+    "role": "役割",
+    "date": "日付",
+    "time": "時間",
+    "type": "種類",
+    "notes": "メモ",
+    "price": "料金",
+    "title": "肩書き",
+    "reason": "理由",
+    "country": "国",
+    "timezone": "タイムゾーン",
+    "locale": "言語",
+    "category": "カテゴリー",
+    "source": "ソース",
+    "score": "スコア",
+    "target": "対象",
+    "template": "テンプレート",
+    "scope": "適用範囲",
+    "state": "状態",
+    "password": "パスワード",
+    "created": "作成日",
+    "expires": "有効期限",
+    "plan": "プラン",
+    "day": "曜日",
+    "when": "日時",
+    "customerName": "お客様のお名前",
+    "description": "説明",
+    "phoneOptional": "電話番号（任意）",
+    "emailOptional": "メールアドレス（任意）",
+    "notesOptional": "メモ（任意）",
+    "reasonOptional": "理由（任意）"
+  },
+  "action": {
+    "actions": "操作",
+    "tryAgain": "再試行",
+    "reload": "再読み込み",
+    "close": "閉じる",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "search": "検索",
+    "selected": "選択中",
+    "back": "戻る",
+    "done": "完了",
+    "remove": "削除する"
+  },
+  "state": {
+    "active": "有効",
+    "inactive": "無効",
+    "loading": "読み込み中",
+    "loadingEllipsis": "読み込み中…",
+    "blocked": "ブロック済み",
+    "sent": "送信済み",
+    "paid": "支払い済み",
+    "replied": "返信あり",
+    "activated": "有効化済み",
+    "noMatches": "該当なし"
+  },
+  "entity": {
+    "customer": "お客様",
+    "customers": "顧客",
+    "service": "メニュー",
+    "services": "メニュー",
+    "team": "チーム",
+    "member": "メンバー",
+    "members": "メンバー",
+    "professional": "スタッフ",
+    "barber": "スタッフ",
+    "location": "店舗",
+    "locations": "店舗",
+    "chairs": "席",
+    "memberships": "会員",
+    "organizations": "事業者",
+    "waitlist": "キャンセル待ち",
+    "availability": "受付可能時間",
+    "schedule": "スケジュール",
+    "queue": "待ち行列",
+    "calendar": "カレンダー",
+    "requests": "リクエスト"
+  },
+  "access": {
+    "checkingYourAccess": "アクセス権を確認しています",
+    "checkingYourSetup": "設定を確認しています",
+    "checkingYourSession": "セッションを確認しています"
+  },
+  "errors": {
+    "somethingWentWrong": "問題が発生しました",
+    "anUnexpectedErrorOccurredTry": "予期しないエラーが発生しました。ページを再読み込みしてください。",
+    "goToMyWorkspace": "マイワークスペースへ"
+  },
+  "notifications": {
+    "notifications": "お知らせ",
+    "markAllRead": "すべて既読にする",
+    "nothingYet": "まだありません。"
+  },
+  "customerNav": {
+    "customerAppNavigation": "お客様向けアプリのナビゲーション",
+    "appointments": "予約",
+    "discover": "さがす",
+    "passport": "Passport",
+    "profile": "プロフィール",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "通知を閉じる"
+  },
+  "notFound": {
+    "pageNotFound": "ページが見つかりません",
+    "backHome": "ホームに戻る"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "ワークスペースを読み込んでいます",
+    "fadeupPlatform": "FadeUp プラットフォーム",
+    "platformAdministration": "プラットフォーム管理",
+    "chooseAWorkspace": "ワークスペースを選ぶ",
+    "youHaveAccessToMore": "複数にアクセスできます。移動先を選んでください。"
   }
 }

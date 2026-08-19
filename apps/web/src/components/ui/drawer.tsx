@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { forwardRef, type HTMLAttributes } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
@@ -27,6 +28,7 @@ export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(func
   { className, side = 'right', children, ...props },
   ref,
 ) {
+  const { t } = useTranslation()
   return (
     <DialogPrimitive.Portal>
       <DrawerOverlay />
@@ -50,7 +52,7 @@ export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(func
         {children}
         <DialogPrimitive.Close
           className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-paper-100 hover:text-ink-950"
-          aria-label="Close"
+          aria-label={t('common:action.close')}
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </DialogPrimitive.Close>

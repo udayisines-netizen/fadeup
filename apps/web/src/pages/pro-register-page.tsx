@@ -265,7 +265,7 @@ export function ProRegisterPage() {
     return (
       <AuthCard title={t('pro.registerTitle')} subtitle={t('pro.registerSubtitle')}>
         <Alert variant="success">
-          We sent a confirmation link to <strong>{confirmationEmail}</strong>. Follow it, then log in to finish
+          {t('auth:proRegister.weSentAConfirmationLink')} <strong>{confirmationEmail}</strong>. Follow it, then log in to finish
           sending your application.
         </Alert>
         <div className="mt-6">

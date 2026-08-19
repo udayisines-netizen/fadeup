@@ -3,6 +3,7 @@ import * as ToastPrimitive from '@radix-ui/react-toast'
 import { CheckCircle2, CircleAlert, Info, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { createUuid } from '@/lib/uuid'
+import { useTranslation } from 'react-i18next'
 
 type ToastVariant = 'default' | 'success' | 'error'
 
@@ -37,6 +38,7 @@ const VARIANT_ICON_CLASSES: Record<ToastVariant, string> = {
 
 /** Mounts the toast viewport once near the app root; children can call `useToast()` anywhere below it. */
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
   const dismiss = useCallback((id: string) => {
@@ -85,7 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ) : null}
               </div>
               <ToastPrimitive.Close
-                aria-label="Dismiss notification"
+                aria-label={t('common:ui.dismissNotification')}
                 className="shrink-0 rounded-sm text-ink-400 hover:text-ink-950"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

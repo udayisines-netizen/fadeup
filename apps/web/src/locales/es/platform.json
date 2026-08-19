@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "No se pudo cargar esta solicitud",
+    "applicationNotFound": "Solicitud no encontrada"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "Reclamar la propiedad de la plataforma FadeUp",
+    "thisCanOnlyBeDone": "Esto solo puede hacerse una vez, por quien tenga este enlace.",
+    "logInOrCreateAn": "Inicia sesión o crea una cuenta para continuar.",
+    "claimPlatformOwnership": "Reclamar la propiedad"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "Únete al equipo de la plataforma FadeUp",
+    "acceptThisInvitationToGet": "Acepta esta invitación para obtener acceso a la plataforma.",
+    "logInOrCreateAn": "Inicia sesión o crea una cuenta para continuar.",
+    "acceptInvitation": "Aceptar invitación"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "Cargando el espacio del profesional",
+    "barberNotFoundInThis": "Profesional no encontrado en este negocio",
+    "noServicesAssigned": "Sin servicios asignados.",
+    "weeklyHours": "Horario semanal",
+    "noWorkingHoursSet": "Sin horario de trabajo definido.",
+    "upcomingExceptions": "Excepciones próximas",
+    "noAvailabilityExceptionsOnFile": "No hay excepciones de disponibilidad registradas.",
+    "couldntEnterSupportView": "No se pudo entrar en la vista de soporte"
+  },
+  "applications": {
+    "couldntLoadApplications": "No se pudieron cargar las solicitudes"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "No se pudo cargar el equipo de la plataforma",
+    "platformTeamMembers": "Miembros del equipo de la plataforma",
+    "couldntLoadInvitations": "No se pudieron cargar las invitaciones",
+    "pendingPlatformInvitations": "Invitaciones de plataforma pendientes",
+    "noPendingInvitations": "Sin invitaciones pendientes",
+    "leaveBlankToCreateA": "Déjalo en blanco para crear un enlace de un solo uso.",
+    "platformTeam": "Equipo de la plataforma",
+    "whoHasFadeupPlatformAccess": "Quién tiene acceso a la plataforma FadeUp y las invitaciones pendientes.",
+    "user": "Usuario",
+    "since": "Desde",
+    "pendingInvitations": "Invitaciones pendientes",
+    "revoke": "Revocar",
+    "inviteSomeone": "Invitar a alguien",
+    "sendInvitation": "Enviar invitación",
+    "invitationCreated": "Invitación creada",
+    "invitationRevoked": "Invitación revocada",
+    "couldntRevokeInvitation": "No se pudo revocar la invitación"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "No se pudieron cargar los negocios",
+    "noOrganizationsYet": "Aún no hay negocios",
+    "everyBarbershopTenantOnFadeup": "Todos los negocios presentes en FadeUp.",
+    "slug": "Identificador de URL"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "No se pudo cargar el registro de auditoría",
+    "auditLog": "Registro de auditoría",
+    "noPlatformActivityYet": "Aún no hay actividad",
+    "platformlevelSecurityEventsMostRecent": "Eventos de seguridad de la plataforma, del más reciente al más antiguo.",
+    "action": "Acción",
+    "actor": "Autor"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "Cargando el negocio",
+    "couldntLoadOrganization": "No se pudo cargar el negocio",
+    "organizationNotFound": "Negocio no encontrado",
+    "couldntLoadLocations": "No se pudieron cargar los locales",
+    "noLocationsYet": "Aún no hay locales",
+    "couldntLoadTeam": "No se pudo cargar el equipo",
+    "noTeamMembersYet": "Aún no hay miembros",
+    "organizations": "← Negocios",
+    "viewBarberWorkspace": "Ver el espacio del profesional",
+    "couldntEnterSupportView": "No se pudo entrar en la vista de soporte"
+  },
+  "login": {
+    "platformSignIn": "Acceso a la plataforma",
+    "fadeupPlatformStaffOnly": "Solo para el personal de FadeUp.",
+    "signIn": "Iniciar sesión"
+  },
+  "overview": {
+    "platformOverview": "Resumen de la plataforma",
+    "signedInAs": "Sesión iniciada como"
+  },
+  "nav": {
+    "fadeupPlatform": "Plataforma FadeUp",
+    "overview": "Resumen",
+    "applications": "Solicitudes",
+    "acquisition": "Adquisición",
+    "outreach": "Prospección",
+    "dataScience": "Ciencia de datos",
+    "auditLog": "Registro de auditoría",
+    "checkingPlatformAccess": "Comprobando el acceso a la plataforma",
+    "backToFadeup": "Volver a FadeUp",
+    "exitSupportView": "Salir de la vista de soporte",
+    "exitedSupportView": "Has salido de la vista de soporte",
+    "couldntExitSupportView": "No se pudo salir de la vista de soporte"
+  }
+}

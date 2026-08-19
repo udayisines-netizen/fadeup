@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/ui/error-state'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -34,6 +35,7 @@ const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Fri
  * below does, explicitly.
  */
 export function PlatformBarberWorkspacePage() {
+  const { t } = useTranslation()
   const { organizationId, barberId: barberUserId } = useParams<{ organizationId: string; barberId: string }>()
   const { toast } = useToast()
   const { activeSession, enterSupportView, isEntering } = useSupportView()
@@ -64,13 +66,13 @@ export function PlatformBarberWorkspacePage() {
     organizationQuery.isPending || staffProfilesQuery.isPending || barbersQuery.isPending || workingHoursQuery.isPending
 
   if (isLoading) {
-    return <PageSpinner label="Loading barber workspace" />
+    return <PageSpinner label={t('platform:workspace.loadingBarberWorkspace')} />
   }
 
   if (!staffProfile || !barber) {
     return (
       <Container size="md" className="py-8">
-        <ErrorState title="Barber not found in this organization" />
+        <ErrorState title={t('platform:workspace.barberNotFoundInThis')} />
       </Container>
     )
   }
@@ -90,7 +92,7 @@ export function PlatformBarberWorkspacePage() {
       await enterSupportView({ organizationId: organizationId!, targetType: 'barber', targetUserId: barberUserId })
       toast({ title: `Entered support view for ${staffProfile!.displayName}` })
     } catch (error) {
-      toast({ title: "Couldn't enter support view", description: getErrorMessage(error), variant: 'error' })
+      toast({ title: t('platform:workspace.couldntEnterSupportView'), description: getErrorMessage(error), variant: 'error' })
     }
   }
 
@@ -118,10 +120,10 @@ export function PlatformBarberWorkspacePage() {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Services</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.services')}</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {myServices.length === 0 ? (
-            <p className="text-sm text-ink-500">No services assigned.</p>
+            <p className="text-sm text-ink-500">{t('platform:workspace.noServicesAssigned')}</p>
           ) : (
             myServices.map((name) => (
               <Badge key={name} variant="neutral">
@@ -133,10 +135,10 @@ export function PlatformBarberWorkspacePage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Weekly hours</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('platform:workspace.weeklyHours')}</h2>
         <div className="mt-3 flex flex-col gap-1">
           {myWorkingHours.length === 0 ? (
-            <p className="text-sm text-ink-500">No working hours set.</p>
+            <p className="text-sm text-ink-500">{t('platform:workspace.noWorkingHoursSet')}</p>
           ) : (
             myWorkingHours.map((wh) => (
               <div key={wh.id} className="flex items-center justify-between border-b border-border py-1.5 text-sm">
@@ -149,12 +151,12 @@ export function PlatformBarberWorkspacePage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Upcoming exceptions</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('platform:workspace.upcomingExceptions')}</h2>
         <div className="mt-3 flex flex-col gap-1">
           {exceptionsQuery.isPending ? (
-            <p className="text-sm text-ink-500">Loading…</p>
+            <p className="text-sm text-ink-500">{t('common:state.loadingEllipsis')}</p>
           ) : (exceptionsQuery.data ?? []).length === 0 ? (
-            <p className="text-sm text-ink-500">No availability exceptions on file.</p>
+            <p className="text-sm text-ink-500">{t('platform:workspace.noAvailabilityExceptionsOnFile')}</p>
           ) : (
             (exceptionsQuery.data ?? []).map((exception) => (
               <div key={exception.id} className="flex items-center justify-between border-b border-border py-1.5 text-sm">

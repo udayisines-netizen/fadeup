@@ -27,7 +27,9 @@ export function MarketingFooter() {
     <footer className="border-t border-border bg-paper-50">
       <Container size="xl" className="flex flex-col gap-10 py-12 sm:flex-row sm:justify-between">
         <div className="max-w-xs">
-          <p className="text-base font-semibold text-ink-950">FadeUp</p>
+          <p className="text-base font-semibold text-ink-950" translate="no">
+            FadeUp
+          </p>
           <p className="mt-2 text-sm text-ink-500">{t('footer.tagline')}</p>
         </div>
 

@@ -4,7 +4,13 @@
     "forBusiness": "Для бизнеса",
     "features": "Возможности",
     "pricing": "Тарифы",
-    "myFadeUp": "Мой FadeUp"
+    "myFadeUp": "Мой FadeUp",
+    "loadingYourOrganizations": "Загружаем ваши организации…",
+    "signOut": "Выйти",
+    "mainNavigation": "Основная навигация",
+    "openMenu": "Открыть меню",
+    "mobileNavigation": "Мобильная навигация",
+    "menu": "Меню"
   },
   "auth": {
     "logIn": "Войти",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Язык",
     "select": "Выбрать язык"
+  },
+  "field": {
+    "name": "Имя",
+    "email": "Эл. почта",
+    "phone": "Телефон",
+    "status": "Статус",
+    "role": "Роль",
+    "date": "Дата",
+    "time": "Время",
+    "type": "Тип",
+    "notes": "Заметки",
+    "price": "Цена",
+    "title": "Должность",
+    "reason": "Причина",
+    "country": "Страна",
+    "timezone": "Часовой пояс",
+    "locale": "Язык",
+    "category": "Категория",
+    "source": "Источник",
+    "score": "Оценка",
+    "target": "Цель",
+    "template": "Шаблон",
+    "scope": "Область",
+    "state": "Состояние",
+    "password": "Пароль",
+    "created": "Создано",
+    "expires": "Истекает",
+    "plan": "Тариф",
+    "day": "День",
+    "when": "Когда",
+    "customerName": "Имя клиента",
+    "description": "Описание",
+    "phoneOptional": "Телефон (необязательно)",
+    "emailOptional": "Эл. почта (необязательно)",
+    "notesOptional": "Заметки (необязательно)",
+    "reasonOptional": "Причина (необязательно)"
+  },
+  "action": {
+    "actions": "Действия",
+    "tryAgain": "Повторить",
+    "reload": "Обновить",
+    "close": "Закрыть",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Изменить",
+    "add": "Добавить",
+    "search": "Поиск",
+    "selected": "Выбрано",
+    "back": "Назад",
+    "done": "Готово",
+    "remove": "Убрать"
+  },
+  "state": {
+    "active": "Активен",
+    "inactive": "Неактивен",
+    "loading": "Загрузка",
+    "loadingEllipsis": "Загрузка…",
+    "blocked": "Заблокирован",
+    "sent": "Отправлено",
+    "paid": "Оплачено",
+    "replied": "Отвечено",
+    "activated": "Активировано",
+    "noMatches": "Совпадений нет"
+  },
+  "entity": {
+    "customer": "Клиент",
+    "customers": "Клиенты",
+    "service": "Услуга",
+    "services": "Услуги",
+    "team": "Команда",
+    "member": "Участник",
+    "members": "Участники",
+    "professional": "Специалист",
+    "barber": "Мастер",
+    "location": "Адрес",
+    "locations": "Адреса",
+    "chairs": "Кресла",
+    "memberships": "Абонементы",
+    "organizations": "Организации",
+    "waitlist": "Лист ожидания",
+    "availability": "Доступность",
+    "schedule": "Расписание",
+    "queue": "Очередь",
+    "calendar": "Календарь",
+    "requests": "Заявки"
+  },
+  "access": {
+    "checkingYourAccess": "Проверяем доступ",
+    "checkingYourSetup": "Проверяем настройку",
+    "checkingYourSession": "Проверяем сессию"
+  },
+  "errors": {
+    "somethingWentWrong": "Что-то пошло не так",
+    "anUnexpectedErrorOccurredTry": "Произошла непредвиденная ошибка. Попробуйте перезагрузить страницу.",
+    "goToMyWorkspace": "Перейти в рабочее место"
+  },
+  "notifications": {
+    "notifications": "Уведомления",
+    "markAllRead": "Отметить всё прочитанным",
+    "nothingYet": "Пока ничего."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Навигация клиентского приложения",
+    "appointments": "Записи",
+    "discover": "Найти",
+    "passport": "Passport",
+    "profile": "Профиль",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Закрыть уведомление"
+  },
+  "notFound": {
+    "pageNotFound": "Страница не найдена",
+    "backHome": "На главную"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Загружаем ваши рабочие места",
+    "fadeupPlatform": "Платформа FadeUp",
+    "platformAdministration": "Администрирование платформы",
+    "chooseAWorkspace": "Выберите рабочее место",
+    "youHaveAccessToMore": "У вас есть доступ к нескольким. Выберите, куда перейти."
   }
 }

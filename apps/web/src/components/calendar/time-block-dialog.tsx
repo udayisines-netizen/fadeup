@@ -22,6 +22,7 @@ import {
 import { zonedTimeToInstant } from '@/lib/calendar/time'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
 import { cn } from '@/lib/cn'
+import { useTranslation } from 'react-i18next'
 
 /** Quick reasons, because typing "Lunch" on a phone every day is not a workflow. */
 const QUICK_REASONS = ['Lunch', 'Break', 'Meeting', 'Training', 'Personal'] as const
@@ -65,6 +66,7 @@ export function TimeBlockDialog({
   /** Pre-filled when the block was started by clicking empty space on the grid. */
   defaultStartMinute?: number
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const createBlock = useCreateTimeBlock(organizationId)
   const [error, setError] = useState<string | null>(null)
@@ -83,11 +85,11 @@ export function TimeBlockDialog({
   async function submit() {
     setError(null)
     if (invalidRange) {
-      setError('The end time has to be after the start time.')
+      setError(t('app:timeBlock.theEndTimeHasTo'))
       return
     }
     if (!barberId) {
-      setError('Choose who this time is blocked for.')
+      setError(t('app:timeBlock.chooseWhoThisTimeIs'))
       return
     }
 
@@ -100,7 +102,7 @@ export function TimeBlockDialog({
         endsAt: zonedTimeToInstant(date, endMinutes, timeZone).toISOString(),
         reason: reason || null,
       })
-      toast({ title: 'Time blocked', variant: 'success' })
+      toast({ title: t('app:timeBlock.timeBlocked'), variant: 'success' })
       onOpenChange(false)
       setReason('')
     } catch (cause) {
@@ -112,9 +114,9 @@ export function TimeBlockDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Block time</DialogTitle>
+          <DialogTitle>{t('app:timeBlock.blockTime')}</DialogTitle>
           <DialogDescription>
-            Nobody can book this time online. Appointments already booked stay exactly where they are.
+            {t('app:timeBlock.nobodyCanBookThisTime')}
           </DialogDescription>
         </DialogHeader>
 
@@ -123,7 +125,7 @@ export function TimeBlockDialog({
 
           {professionals.length > 1 ? (
             <SelectField
-              label="Who"
+              label={t('app:timeBlock.who')}
               value={barberId}
               options={professionals.map((professional) => ({
                 value: professional.barberId,
@@ -133,11 +135,11 @@ export function TimeBlockDialog({
             />
           ) : null}
 
-          <TextField label="Date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          <TextField label={t('common:field.date')} type="date" value={date} onChange={(event) => setDate(event.target.value)} />
 
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              label="From"
+              label={t('app:timeBlock.from')}
               type="time"
               step={900}
               value={startTime}
@@ -154,7 +156,7 @@ export function TimeBlockDialog({
           </div>
 
           <div>
-            <span className="text-sm font-medium text-ink-950">Reason</span>
+            <span className="text-sm font-medium text-ink-950">{t('common:field.reason')}</span>
             <div className="mt-2 flex flex-wrap gap-2">
               {QUICK_REASONS.map((quick) => (
                 <button
@@ -175,11 +177,11 @@ export function TimeBlockDialog({
             </div>
             <div className="mt-3">
               <TextField
-                label="Or something else"
+                label={t('app:timeBlock.orSomethingElse')}
                 value={reason}
                 maxLength={200}
-                placeholder="Optional"
-                hint="Staff can see this. Customers never do."
+                placeholder={t('app:timeBlock.optional')}
+                hint={t('app:timeBlock.staffCanSeeThisCustomers')}
                 onChange={(event) => setReason(event.target.value)}
               />
             </div>
@@ -189,11 +191,11 @@ export function TimeBlockDialog({
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
-              Cancel
+              {t('common:action.cancel')}
             </Button>
           </DialogClose>
           <Button type="button" onClick={() => void submit()} isLoading={createBlock.isPending}>
-            Block this time
+            {t('app:timeBlock.blockThisTime')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -223,6 +225,7 @@ export function TimeBlockSheet({
   professionalName: string | undefined
   canRemove: boolean
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const deleteBlock = useDeleteTimeBlock(organizationId)
   const [error, setError] = useState<string | null>(null)
@@ -238,7 +241,7 @@ export function TimeBlockSheet({
     setError(null)
     try {
       await deleteBlock.mutateAsync(block!.id)
-      toast({ title: 'Time unblocked', variant: 'success' })
+      toast({ title: t('app:timeBlock.timeUnblocked'), variant: 'success' })
       onOpenChange(false)
     } catch (cause) {
       setError(calendarErrorMessage(cause))
@@ -259,18 +262,18 @@ export function TimeBlockSheet({
         {error ? <Alert variant="error">{error}</Alert> : null}
 
         <p className="text-sm text-ink-500">
-          This time is not offered for online booking.
+          {t('app:timeBlock.thisTimeIsNotOffered')}
         </p>
 
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
-              Close
+              {t('common:action.close')}
             </Button>
           </DialogClose>
           {canRemove ? (
             <Button type="button" variant="danger" onClick={() => void remove()} isLoading={deleteBlock.isPending}>
-              Unblock this time
+              {t('app:timeBlock.unblockThisTime')}
             </Button>
           ) : null}
         </DialogFooter>

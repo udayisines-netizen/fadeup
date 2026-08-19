@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "Impossible de charger cette candidature",
+    "applicationNotFound": "Candidature introuvable"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "Revendiquer la propriété de la plateforme FadeUp",
+    "thisCanOnlyBeDone": "Cette action n'est possible qu'une seule fois, par la personne qui détient ce lien.",
+    "logInOrCreateAn": "Connectez-vous ou créez un compte pour continuer.",
+    "claimPlatformOwnership": "Revendiquer la propriété"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "Rejoindre l'équipe plateforme FadeUp",
+    "acceptThisInvitationToGet": "Acceptez cette invitation pour obtenir l'accès à la plateforme.",
+    "logInOrCreateAn": "Connectez-vous ou créez un compte pour continuer.",
+    "acceptInvitation": "Accepter l'invitation"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "Chargement de l'espace du professionnel",
+    "barberNotFoundInThis": "Professionnel introuvable dans cet établissement",
+    "noServicesAssigned": "Aucune prestation attribuée.",
+    "weeklyHours": "Horaires hebdomadaires",
+    "noWorkingHoursSet": "Aucun horaire de travail défini.",
+    "upcomingExceptions": "Exceptions à venir",
+    "noAvailabilityExceptionsOnFile": "Aucune exception de disponibilité enregistrée.",
+    "couldntEnterSupportView": "Impossible d'activer le mode support"
+  },
+  "applications": {
+    "couldntLoadApplications": "Impossible de charger les candidatures"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "Impossible de charger l'équipe plateforme",
+    "platformTeamMembers": "Membres de l'équipe plateforme",
+    "couldntLoadInvitations": "Impossible de charger les invitations",
+    "pendingPlatformInvitations": "Invitations plateforme en attente",
+    "noPendingInvitations": "Aucune invitation en attente",
+    "leaveBlankToCreateA": "Laissez vide pour créer un lien utilisable une seule fois par n'importe qui.",
+    "platformTeam": "Équipe plateforme",
+    "whoHasFadeupPlatformAccess": "Qui a accès à la plateforme FadeUp, et les invitations en attente.",
+    "user": "Utilisateur",
+    "since": "Depuis",
+    "pendingInvitations": "Invitations en attente",
+    "revoke": "Révoquer",
+    "inviteSomeone": "Inviter quelqu'un",
+    "sendInvitation": "Envoyer l'invitation",
+    "invitationCreated": "Invitation créée",
+    "invitationRevoked": "Invitation révoquée",
+    "couldntRevokeInvitation": "Impossible de révoquer l'invitation"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "Impossible de charger les établissements",
+    "noOrganizationsYet": "Aucun établissement pour le moment",
+    "everyBarbershopTenantOnFadeup": "Tous les salons présents sur FadeUp.",
+    "slug": "Identifiant d'URL"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "Impossible de charger le journal d'audit",
+    "auditLog": "Journal d'audit",
+    "noPlatformActivityYet": "Aucune activité pour le moment",
+    "platformlevelSecurityEventsMostRecent": "Les événements de sécurité de la plateforme, du plus récent au plus ancien.",
+    "action": "Action",
+    "actor": "Auteur"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "Chargement de l'établissement",
+    "couldntLoadOrganization": "Impossible de charger l'établissement",
+    "organizationNotFound": "Établissement introuvable",
+    "couldntLoadLocations": "Impossible de charger les adresses",
+    "noLocationsYet": "Aucune adresse pour le moment",
+    "couldntLoadTeam": "Impossible de charger l'équipe",
+    "noTeamMembersYet": "Aucun membre pour le moment",
+    "organizations": "← Établissements",
+    "viewBarberWorkspace": "Voir l'espace du professionnel",
+    "couldntEnterSupportView": "Impossible d'activer le mode support"
+  },
+  "login": {
+    "platformSignIn": "Connexion plateforme",
+    "fadeupPlatformStaffOnly": "Réservé à l'équipe FadeUp.",
+    "signIn": "Se connecter"
+  },
+  "overview": {
+    "platformOverview": "Vue d'ensemble de la plateforme",
+    "signedInAs": "Connecté en tant que"
+  },
+  "nav": {
+    "fadeupPlatform": "Plateforme FadeUp",
+    "overview": "Vue d'ensemble",
+    "applications": "Candidatures",
+    "acquisition": "Acquisition",
+    "outreach": "Prospection",
+    "dataScience": "Data science",
+    "auditLog": "Journal d'audit",
+    "checkingPlatformAccess": "Vérification de l'accès plateforme",
+    "backToFadeup": "Retour à FadeUp",
+    "exitSupportView": "Quitter le mode support",
+    "exitedSupportView": "Mode support quitté",
+    "couldntExitSupportView": "Impossible de quitter le mode support"
+  }
+}

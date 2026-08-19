@@ -38,6 +38,7 @@ import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useMoney, useOrganizationCurrency } from '@/lib/intl/use-intl'
 import { toMajorUnits, toMinorUnits } from '@/lib/intl/money'
+import { useTranslation } from 'react-i18next'
 
 // Plan management (pricing) is owner/manager only, matching membership_plans
 // RLS — narrower than enrollment, which is owner/manager/receptionist,
@@ -89,6 +90,7 @@ export function AppMembershipsPage() {
 }
 
 function MembershipsManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const currency = useOrganizationCurrency(organizationId)
   const money = useMoney()
   const { toast } = useToast()
@@ -129,7 +131,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
   return (
     <Container size="lg" className="py-8">
       <div>
-        <h1 className="text-xl font-semibold text-ink-950">Memberships</h1>
+        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.memberships')}</h1>
         <p className="mt-1 text-sm text-ink-500">Recurring plans and who&apos;s enrolled.</p>
       </div>
 
@@ -140,11 +142,11 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
       ) : isError ? (
         <div className="mt-6">
           <ErrorState
-            title="Couldn't load memberships"
+            title={t('app:memberships.couldntLoadMemberships')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
@@ -153,19 +155,19 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
         <div className="mt-6 flex flex-col gap-10">
           <section>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Plans</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('app:memberships.plans')}</h2>
               {canManagePlans ? (
                 <Button size="sm" onClick={() => setIsPlanDialogOpen(true)}>
-                  New plan
+                  {t('app:memberships.newPlan')}
                 </Button>
               ) : null}
             </div>
             <div className="mt-3">
               {(plansQuery.data ?? []).length === 0 ? (
                 <EmptyState
-                  title="No plans yet"
-                  description="Create a recurring plan customers can enroll in."
-                  action={canManagePlans ? <Button onClick={() => setIsPlanDialogOpen(true)}>New plan</Button> : undefined}
+                  title={t('app:memberships.noPlansYet')}
+                  description={t('app:memberships.createARecurringPlanCustomers')}
+                  action={canManagePlans ? <Button onClick={() => setIsPlanDialogOpen(true)}>{t('app:memberships.newPlan')}</Button> : undefined}
                 />
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -179,7 +181,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-medium text-ink-950">{plan.name}</span>
-                        {!plan.isActive ? <Badge variant="neutral">Inactive</Badge> : null}
+                        {!plan.isActive ? <Badge variant="neutral">{t('common:state.inactive')}</Badge> : null}
                       </div>
                       <span className="text-sm text-ink-500">
                         {money(plan.priceCents, currency)} {BILLING_INTERVAL_LABELS[plan.billingInterval]}
@@ -194,17 +196,17 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
 
           <section>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Members</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.members')}</h2>
               {canManageEnrollments && (plansQuery.data ?? []).length > 0 ? (
                 <Button size="sm" onClick={() => setIsEnrollOpen(true)}>
-                  Enroll customer
+                  {t('app:memberships.enrollCustomer')}
                 </Button>
               ) : null}
             </div>
             <div className="mt-3">
               {(enrollmentsQuery.data ?? []).length === 0 ? (
                 <EmptyState
-                  title="No one enrolled yet"
+                  title={t('app:memberships.noOneEnrolledYet')}
                   description={
                     (plansQuery.data ?? []).length === 0
                       ? 'Create a plan first, then enroll a customer.'
@@ -212,16 +214,16 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
                   }
                 />
               ) : (
-                <Table label="Enrolled customers">
+                <Table label={t('app:memberships.enrolledCustomers')}>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Current period ends</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('common:entity.customer')}</TableHead>
+                      <TableHead>{t('common:field.plan')}</TableHead>
+                      <TableHead>{t('app:memberships.currentPeriodEnds')}</TableHead>
+                      <TableHead>{t('common:field.status')}</TableHead>
                       {canManageEnrollments ? (
                         <TableHead>
-                          <span className="sr-only">Actions</span>
+                          <span className="sr-only">{t('common:action.actions')}</span>
                         </TableHead>
                       ) : null}
                     </TableRow>
@@ -269,7 +271,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
           createdBy={user?.id ?? null}
           onClose={() => setIsEnrollOpen(false)}
           onEnrolled={() => {
-            toast({ title: 'Customer enrolled', variant: 'success' })
+            toast({ title: t('app:memberships.customerEnrolled'), variant: 'success' })
             setIsEnrollOpen(false)
           }}
         />
@@ -291,6 +293,7 @@ function EnrollmentRow({
   customerName: string
   planName: string
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateCustomerMembershipStatus()
 
@@ -301,7 +304,7 @@ function EnrollmentRow({
         onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't update status",
+            title: t('app:memberships.couldntUpdateStatus'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -322,7 +325,7 @@ function EnrollmentRow({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>
-                Update status
+                {t('app:memberships.updateStatus')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -375,6 +378,7 @@ function PlanFormDialog({
   onClose: () => void
   onSaved: () => void
 }) {
+  const { t } = useTranslation()
   const createPlan = useCreateMembershipPlan()
   const updatePlan = useUpdateMembershipPlan()
   const [formError, setFormError] = useState<string | null>(null)
@@ -399,7 +403,7 @@ function PlanFormDialog({
     // Minor units for THIS currency: 25 -> 2500 in EUR, but 25 -> 25 in JPY.
     const priceCents = toMinorUnits(Number.parseFloat(values.priceMajor), currency)
     if (!Number.isFinite(priceCents) || priceCents < 0) {
-      setFormError('Enter a valid price.')
+      setFormError(t('app:memberships.enterAValidPrice'))
       return
     }
     const payload = {
@@ -433,23 +437,23 @@ function PlanFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
-          <TextField label="Name" hint='e.g. "Unlimited Fades Monthly"' error={errors.name?.message} {...register('name')} />
-          <Textarea label="Description (optional)" rows={2} {...register('description')} />
+          <TextField label={t('common:field.name')} hint={t('app:memberships.eGUnlimitedFadesMonthly')} error={errors.name?.message} {...register('name')} />
+          <Textarea label={t('app:memberships.descriptionOptional')} rows={2} {...register('description')} />
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              label="Price"
+              label={t('common:field.price')}
               inputMode="decimal"
-              hint="In dollars"
+              hint={t('app:memberships.inDollars', { currency })}
               error={errors.priceMajor?.message}
               {...register('priceMajor')}
             />
-            <SelectField label="Billing interval" options={BILLING_INTERVAL_OPTIONS} {...register('billingInterval')} />
+            <SelectField label={t('app:memberships.billingInterval')} options={BILLING_INTERVAL_OPTIONS} {...register('billingInterval')} />
           </div>
-          <Switch label="Active" description="Inactive plans are hidden from new enrollment." {...register('isActive')} />
+          <Switch label={t('common:state.active')} description={t('app:memberships.inactivePlansAreHiddenFrom')} {...register('isActive')} />
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
@@ -495,6 +499,7 @@ function EnrollDialog({
   onClose: () => void
   onEnrolled: () => void
 }) {
+  const { t } = useTranslation()
   const enroll = useEnrollCustomerMembership()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -521,7 +526,7 @@ function EnrollDialog({
     setFormError(null)
     const plan = plans.find((p) => p.id === values.planId)
     if (!plan) {
-      setFormError('Select a plan.')
+      setFormError(t('app:memberships.selectAPlan'))
       return
     }
     try {
@@ -544,22 +549,22 @@ function EnrollDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Enroll customer</DialogTitle>
-          <DialogDescription>Start a customer on a recurring plan.</DialogDescription>
+          <DialogTitle>{t('app:memberships.enrollCustomer')}</DialogTitle>
+          <DialogDescription>{t('app:memberships.startACustomerOnA')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
-          <SelectField label="Customer" options={customerOptions} error={errors.customerId?.message} {...register('customerId')} />
-          <SelectField label="Plan" options={planOptions} error={errors.planId?.message} {...register('planId')} />
-          <Textarea label="Notes (optional)" rows={2} {...register('notes')} />
+          <SelectField label={t('common:entity.customer')} options={customerOptions} error={errors.customerId?.message} {...register('customerId')} />
+          <SelectField label={t('common:field.plan')} options={planOptions} error={errors.planId?.message} {...register('planId')} />
+          <Textarea label={t('common:field.notesOptional')} rows={2} {...register('notes')} />
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
-              Enroll
+              {t('app:memberships.enroll')}
             </Button>
           </DialogFooter>
         </form>

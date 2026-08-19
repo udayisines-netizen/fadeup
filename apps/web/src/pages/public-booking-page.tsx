@@ -136,7 +136,7 @@ export function PublicBookingPage() {
   })
 
   if (organizationQuery.isPending) {
-    return <PageSpinner label="Loading booking page…" />
+    return <PageSpinner label={t('booking:flow.loadingBookingPage')} />
   }
 
   if (organizationQuery.isError) {
@@ -147,7 +147,7 @@ export function PublicBookingPage() {
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -160,10 +160,10 @@ export function PublicBookingPage() {
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
           title={t('booking:errors.shopNotFound')}
-          description="This booking link may be out of date, or the web address may have changed. Check the link with the shop directly."
+          description={t('booking:flow.thisBookingLinkMayBe')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('booking:flow.goToFadeup')}
             </Link>
           }
         />
@@ -206,6 +206,7 @@ interface SlotSelection {
 }
 
 function BookingWizard({ organization }: { organization: PublicOrganization }) {
+  const { t } = useTranslation()
   const locationsQuery = usePublicLocations(organization.slug)
   const { preselectedBarberId, preselectedLocationId, preselectedServiceId } = usePreselection()
 
@@ -335,7 +336,7 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
   return (
     <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
       <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-accent-600">Book an appointment</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-accent-600">{t('booking:flow.bookAnAppointment')}</p>
         <h1 className="mt-1 text-2xl font-semibold text-balance text-ink-950">{organization.name}</h1>
       </div>
 
@@ -346,7 +347,7 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
           className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-700 hover:text-ink-950"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back
+          {t('common:action.back')}
         </button>
       ) : null}
 
@@ -411,7 +412,7 @@ function LocationStep({
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -471,7 +472,7 @@ function ServiceStep({
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -524,7 +525,7 @@ function BarberStep({
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -590,9 +591,9 @@ function DateTimeStep({
 }) {
   const { t } = useTranslation('booking')
   return (
-    <StepShell title="Choose a date & time">
+    <StepShell title={t('booking:flow.chooseADateTime')}>
       <TextField
-        label="Date"
+        label={t('common:field.date')}
         type="date"
         min={todayIsoDate()}
         value={date}
@@ -608,12 +609,12 @@ function DateTimeStep({
             description={query.error.message}
             action={
               <Button variant="secondary" onClick={() => void query.refetch()}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : query.data.length === 0 ? (
-          <EmptyState title={t('booking:empty.times')} description="Try a different date — this barber has no open slots on the selected day." />
+          <EmptyState title={t('booking:empty.times')} description={t('booking:flow.tryADifferentDateThis')} />
         ) : (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {query.data.map((availableSlot) => {
@@ -745,32 +746,32 @@ function DetailsStep({
     <StepShell title={t('booking:summary.details')}>
       <Card className="mb-5 p-4">
         <dl className="flex flex-col gap-1.5 text-sm">
-          <SummaryRow label="Shop" value={organization.name} />
-          {location ? <SummaryRow label="Location" value={location.name} /> : null}
-          <SummaryRow label="Service" value={`${service.name} · ${formatDuration(service.durationMinutes)}`} />
-          <SummaryRow label="Barber" value={barber.displayName} />
-          <SummaryRow label="When" value={formatSlotDateTime(slot.slotStart, location?.timezone ?? 'UTC')} />
-          <SummaryRow label="Price" value={money(service.priceCents, currency)} />
+          <SummaryRow label={t('booking:flow.shop')} value={organization.name} />
+          {location ? <SummaryRow label={t('common:entity.location')} value={location.name} /> : null}
+          <SummaryRow label={t('common:entity.service')} value={`${service.name} · ${formatDuration(service.durationMinutes)}`} />
+          <SummaryRow label={t('common:entity.barber')} value={barber.displayName} />
+          <SummaryRow label={t('common:field.when')} value={formatSlotDateTime(slot.slotStart, location?.timezone ?? 'UTC')} />
+          <SummaryRow label={t('common:field.price')} value={money(service.priceCents, currency)} />
         </dl>
       </Card>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
         {submitError ? <Alert variant="error">{submitError}</Alert> : null}
 
-        <TextField label="Full name" autoComplete="name" error={errors.customerName?.message} {...register('customerName')} />
+        <TextField label={t('booking:flow.fullName')} autoComplete="name" error={errors.customerName?.message} {...register('customerName')} />
         <TextField
-          label="Phone number"
+          label={t('booking:flow.phoneNumber')}
           type="tel"
           autoComplete="tel"
-          hint="Provide a phone number or email so the shop can reach you"
+          hint={t('booking:flow.provideAPhoneNumberOr')}
           error={errors.customerPhone?.message}
           {...register('customerPhone')}
         />
-        <TextField label="Email" type="email" autoComplete="email" error={errors.customerEmail?.message} {...register('customerEmail')} />
-        <Textarea label="Notes (optional)" rows={3} {...register('notes')} />
+        <TextField label={t('common:field.email')} type="email" autoComplete="email" error={errors.customerEmail?.message} {...register('customerEmail')} />
+        <Textarea label={t('common:field.notesOptional')} rows={3} {...register('notes')} />
 
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-2">
-          Request appointment
+          {t('booking:flow.requestAppointment')}
         </Button>
         <p className="text-xs text-ink-500">
           This sends a request — the shop will confirm your appointment shortly, it isn&apos;t booked instantly.
@@ -887,16 +888,17 @@ function SuccessScreen({
  * step, creating an account here would be an empty promise.
  */
 function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
 
   if (user) {
     return (
       <div className="mt-6 flex flex-col gap-2">
         <Link to="/app/customer/appointments" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
-          View my appointments
+          {t('booking:flow.viewMyAppointments')}
         </Link>
         <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-          Done
+          {t('common:action.done')}
         </Link>
       </div>
     )
@@ -907,24 +909,24 @@ function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
       {hasClaimToken ? (
         <>
           <p className="text-sm text-ink-500">
-            Create an account to manage this appointment, rebook in one tap, and keep your Fade Passport.
+            {t('booking:flow.createAnAccountToManage')}
           </p>
           <Link
             to="/register?redirect=%2Fapp%2Fcustomer"
             className={buttonVariants({ variant: 'primary' }, 'w-full')}
           >
-            Create an account
+            {t('booking:flow.createAnAccount')}
           </Link>
           <Link
             to="/login?redirect=%2Fapp%2Fcustomer"
             className={buttonVariants({ variant: 'secondary' }, 'w-full')}
           >
-            I already have an account
+            {t('booking:flow.iAlreadyHaveAnAccount')}
           </Link>
         </>
       ) : null}
       <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-        Done
+        {t('common:action.done')}
       </Link>
     </div>
   )

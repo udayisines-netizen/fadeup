@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { PageSpinner } from '@/components/ui/spinner'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 const resetPasswordSchema = z
   .object({
@@ -32,6 +33,7 @@ type RecoveryStatus = 'checking' | 'ready' | 'unavailable'
  * password" form; if neither shows up, the link was missing/expired.
  */
 export function ResetPasswordPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [status, setStatus] = useState<RecoveryStatus>('checking')
   const [formError, setFormError] = useState<string | null>(null)
@@ -83,21 +85,21 @@ export function ResetPasswordPage() {
   }
 
   if (status === 'checking') {
-    return <PageSpinner label="Checking your reset link" />
+    return <PageSpinner label={t('auth:resetPassword.checkingYourResetLink')} />
   }
 
   if (status === 'unavailable') {
     return (
-      <AuthCard title="Reset link not found">
+      <AuthCard title={t('auth:resetPassword.resetLinkNotFound')}>
         <Alert variant="error">
-          This password reset link is invalid or has expired. Request a new one to continue.
+          {t('auth:resetPassword.thisPasswordResetLinkIs')}
         </Alert>
         <div className="mt-6">
           <Link
             to="/forgot-password"
             className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
           >
-            Request a new link
+            {t('auth:resetPassword.requestANewLink')}
           </Link>
         </div>
       </AuthCard>
@@ -106,30 +108,30 @@ export function ResetPasswordPage() {
 
   if (success) {
     return (
-      <AuthCard title="Password updated">
-        <Alert variant="success">Your password has been changed.</Alert>
+      <AuthCard title={t('auth:resetPassword.passwordUpdated')}>
+        <Alert variant="success">{t('auth:resetPassword.yourPasswordHasBeenChanged')}</Alert>
         <Button className="mt-6 w-full" onClick={() => navigate('/app', { replace: true })}>
-          Continue to FadeUp
+          {t('auth:resetPassword.continueToFadeup')}
         </Button>
       </AuthCard>
     )
   }
 
   return (
-    <AuthCard title="Set a new password">
+    <AuthCard title={t('auth:resetPassword.setANewPassword')}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
         <TextField
-          label="New password"
+          label={t('auth:resetPassword.newPassword')}
           type="password"
           autoComplete="new-password"
-          hint="At least 8 characters."
+          hint={t('auth:resetPassword.atLeast8Characters')}
           error={errors.password?.message}
           {...register('password')}
         />
         <TextField
-          label="Confirm new password"
+          label={t('auth:resetPassword.confirmNewPassword')}
           type="password"
           autoComplete="new-password"
           error={errors.confirmPassword?.message}
@@ -137,7 +139,7 @@ export function ResetPasswordPage() {
         />
 
         <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Update password
+          {t('auth:resetPassword.updatePassword')}
         </Button>
       </form>
     </AuthCard>

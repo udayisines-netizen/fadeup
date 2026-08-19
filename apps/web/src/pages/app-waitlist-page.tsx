@@ -41,6 +41,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 // Same broader role set as appointments/queue_entries/customers — waitlist
 // RLS grants owner/manager/receptionist write access, any member read.
@@ -78,6 +79,7 @@ export function AppWaitlistPage() {
 }
 
 function WaitlistBoard({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const { user } = useAuth()
   const canManage = MANAGING_ROLES.has(role)
@@ -149,8 +151,8 @@ function WaitlistBoard({ organizationId, role }: { organizationId: string; role:
     <Container size="lg" className="py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink-950">Waitlist</h1>
-          <p className="mt-1 text-sm text-ink-500">Customers waiting for an opening, per location.</p>
+          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.waitlist')}</h1>
+          <p className="mt-1 text-sm text-ink-500">{t('app:waitlist.customersWaitingForAnOpening')}</p>
         </div>
       </div>
 
@@ -159,21 +161,21 @@ function WaitlistBoard({ organizationId, role }: { organizationId: string; role:
           <WaitlistSkeleton />
         ) : isError ? (
           <ErrorState
-            title="Couldn't load the waitlist"
+            title={t('app:waitlist.couldntLoadTheWaitlist')}
             description={loadError?.message}
             action={
               <Button variant="secondary" onClick={refetchAll}>
-                Try again
+                {t('common:action.tryAgain')}
               </Button>
             }
           />
         ) : locations.length === 0 ? (
           <EmptyState
-            title="No locations yet"
-            description="Add a location before managing a waitlist."
+            title={t('app:waitlist.noLocationsYet')}
+            description={t('app:waitlist.addALocationBeforeManaging')}
             action={
               <Link to="/app/locations" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-                Go to locations
+                {t('app:waitlist.goToLocations')}
               </Link>
             }
           />
@@ -212,7 +214,7 @@ function WaitlistBoard({ organizationId, role }: { organizationId: string; role:
           createdBy={user?.id ?? null}
           onClose={() => setIsAddOpen(false)}
           onAdded={() => {
-            toast({ title: 'Added to waitlist', variant: 'success' })
+            toast({ title: t('app:waitlist.addedToWaitlist'), variant: 'success' })
             setIsAddOpen(false)
           }}
         />
@@ -238,6 +240,7 @@ function LocationWaitlist({
   serviceById: Map<string, Service>
   onAddEntry: () => void
 }) {
+  const { t } = useTranslation()
   const columnCount = canManage ? 6 : 5
 
   return (
@@ -245,21 +248,21 @@ function LocationWaitlist({
       <div className="flex items-center justify-end">
         {canManage ? (
           <Button size="sm" onClick={onAddEntry}>
-            Add to waitlist
+            {t('app:waitlist.addToWaitlist')}
           </Button>
         ) : null}
       </div>
       <Table label={`Waitlist at ${location.name}`}>
         <TableHeader>
           <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>Wants</TableHead>
-            <TableHead>Preferred barber</TableHead>
-            <TableHead>Waiting since</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t('common:entity.customer')}</TableHead>
+            <TableHead>{t('app:waitlist.wants')}</TableHead>
+            <TableHead>{t('app:waitlist.preferredBarber')}</TableHead>
+            <TableHead>{t('app:waitlist.waitingSince')}</TableHead>
+            <TableHead>{t('common:field.status')}</TableHead>
             {canManage ? (
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t('common:action.actions')}</span>
               </TableHead>
             ) : null}
           </TableRow>
@@ -268,12 +271,12 @@ function LocationWaitlist({
           {entries.length === 0 ? (
             <TableStateRow colSpan={columnCount}>
               <EmptyState
-                title="No one is waiting"
+                title={t('app:waitlist.noOneIsWaiting')}
                 description={canManage ? 'The waitlist at this location is empty right now.' : 'Nothing to do here right now.'}
                 action={
                   canManage ? (
                     <Button size="sm" onClick={onAddEntry}>
-                      Add to waitlist
+                      {t('app:waitlist.addToWaitlist')}
                     </Button>
                   ) : undefined
                 }
@@ -308,6 +311,7 @@ function WaitlistRow({
   barberLabel: string
   serviceName: string
 }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateWaitlistEntryStatus()
 
@@ -318,7 +322,7 @@ function WaitlistRow({
         onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
         onError: (error) =>
           toast({
-            title: "Couldn't update status",
+            title: t('app:waitlist.couldntUpdateStatus'),
             description: getErrorMessage(error),
             variant: 'error',
           }),
@@ -345,7 +349,7 @@ function WaitlistRow({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>
-                Update status
+                {t('app:waitlist.updateStatus')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -398,6 +402,7 @@ function AddToWaitlistDialog({
   onClose: () => void
   onAdded: () => void
 }) {
+  const { t } = useTranslation()
   const addToWaitlist = useAddToWaitlist()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -468,29 +473,29 @@ function AddToWaitlistDialog({
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add to waitlist</DialogTitle>
+          <DialogTitle>{t('app:waitlist.addToWaitlist')}</DialogTitle>
           <DialogDescription>Add a customer waiting for an opening at {location.name}.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-          <TextField label="Customer name" error={errors.customerName?.message} {...register('customerName')} />
+          <TextField label={t('common:field.customerName')} error={errors.customerName?.message} {...register('customerName')} />
           <div className="grid grid-cols-2 gap-4">
-            <TextField label="Phone (optional)" type="tel" {...register('customerPhone')} />
-            <TextField label="Email (optional)" type="email" {...register('customerEmail')} />
+            <TextField label={t('common:field.phoneOptional')} type="tel" {...register('customerPhone')} />
+            <TextField label={t('common:field.emailOptional')} type="email" {...register('customerEmail')} />
           </div>
-          <SelectField label="Wants (optional)" options={serviceOptions} {...register('desiredServiceId')} />
-          <SelectField label="Preferred barber (optional)" options={barberOptions} {...register('desiredBarberId')} />
-          <Textarea label="Notes (optional)" rows={2} {...register('notes')} />
+          <SelectField label={t('app:waitlist.wantsOptional')} options={serviceOptions} {...register('desiredServiceId')} />
+          <SelectField label={t('app:waitlist.preferredBarberOptional')} options={barberOptions} {...register('desiredBarberId')} />
+          <Textarea label={t('common:field.notesOptional')} rows={2} {...register('notes')} />
 
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                Cancel
+                {t('common:action.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" isLoading={isSubmitting}>
-              Add to waitlist
+              {t('app:waitlist.addToWaitlist')}
             </Button>
           </DialogFooter>
         </form>

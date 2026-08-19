@@ -129,7 +129,7 @@ export function SignupForm({
     return (
       <div>
         <Alert variant="success">
-          We sent a confirmation link to <strong>{confirmationEmail}</strong>. Follow it to finish
+          {t('auth:signupForm.weSentAConfirmationLink')} <strong>{confirmationEmail}</strong>. Follow it to finish
           creating your account, then log in.
         </Alert>
         <div className="mt-6">
@@ -137,7 +137,7 @@ export function SignupForm({
             to={loginPath}
             className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800"
           >
-            Back to log in
+            {t('auth:signupForm.backToLogIn')}
           </Link>
         </div>
       </div>
@@ -161,9 +161,9 @@ export function SignupForm({
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
-        <TextField label="Full name" autoComplete="name" error={errors.fullName?.message} {...register('fullName')} />
+        <TextField label={t('auth:signupForm.fullName')} autoComplete="name" error={errors.fullName?.message} {...register('fullName')} />
         <TextField
-          label="Email"
+          label={t('common:field.email')}
           type="email"
           inputMode="email"
           autoComplete="email"
@@ -172,16 +172,16 @@ export function SignupForm({
           {...register('email')}
         />
         <TextField
-          label="Password"
+          label={t('common:field.password')}
           type="password"
           autoComplete="new-password"
-          hint="At least 8 characters."
+          hint={t('auth:signupForm.atLeast8Characters')}
           error={errors.password?.message}
           {...register('password')}
         />
 
         <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Sign up
+          {t('common:auth.signUp')}
         </Button>
       </form>
     </div>

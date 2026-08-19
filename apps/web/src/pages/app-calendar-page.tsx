@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ui/error-state'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { MembershipRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
@@ -57,6 +58,7 @@ export function AppCalendarPage() {
 }
 
 function CalendarWorkspace({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const canManage = MANAGING_ROLES.has(role)
 
@@ -168,7 +170,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
         <div className="flex flex-wrap items-end gap-3">
           {locations.length > 1 ? (
             <SelectField
-              label="Location"
+              label={t('common:entity.location')}
               value={activeLocation?.id ?? ''}
               options={locations.map((location) => ({ value: location.id, label: location.name }))}
               onChange={(event) => {
@@ -180,7 +182,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
 
           {columnsSource.length > 1 ? (
             <SelectField
-              label="Professional"
+              label={t('common:entity.professional')}
               value={barberFilter ?? ''}
               options={[
                 { value: '', label: 'Everyone' },
@@ -204,16 +206,16 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
               }
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Block time
+              {t('app:calendar.blockTime')}
             </Button>
           </div>
         </div>
 
         {calendar.isError ? (
           <ErrorState
-            title="Couldn't load the calendar"
-            description="The day is still there — we just couldn't fetch it."
-            action={<Button onClick={calendar.refetch}>Try again</Button>}
+            title={t('app:calendar.couldntLoadTheCalendar')}
+            description={t('app:calendar.theDayIsStillThere')}
+            action={<Button onClick={calendar.refetch}>{t('common:action.tryAgain')}</Button>}
           />
         ) : calendar.isPending ? (
           <Skeleton className="h-[32rem] w-full" />
@@ -241,7 +243,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
                 onSelectAppointment={setSelectedAppointment}
                 onSelectBlock={setSelectedBlock}
                 emptyTitle={view === 'week' ? 'Nothing booked this week' : 'Nothing booked'}
-                emptyDescription="Bookings and blocked time show up here as they come in."
+                emptyDescription={t('app:calendar.bookingsAndBlockedTimeShow')}
               />
             </div>
 
@@ -336,6 +338,7 @@ function Header({
   onToday: () => void
   realtimeStatus: 'connecting' | 'live' | 'offline'
 }) {
+  const { t } = useTranslation()
   const title = useMemo(() => {
     const asDate = (key: string) => new Date(`${key}T12:00:00Z`)
     if (view === 'day') {
@@ -359,10 +362,10 @@ function Header({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="sm" aria-label="Previous" onClick={() => onShift(-1)}>
+        <Button variant="ghost" size="sm" aria-label={t('app:calendar.previous')} onClick={() => onShift(-1)}>
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <Button variant="ghost" size="sm" aria-label="Next" onClick={() => onShift(1)}>
+        <Button variant="ghost" size="sm" aria-label={t('app:calendar.next')} onClick={() => onShift(1)}>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
@@ -371,7 +374,7 @@ function Header({
 
       {!isToday ? (
         <Button variant="secondary" size="sm" onClick={onToday}>
-          Today
+          {t('app:calendar.today')}
         </Button>
       ) : null}
 
@@ -380,15 +383,15 @@ function Header({
       {realtimeStatus !== 'live' ? (
         <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
           <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
-          Reconnecting…
+          {t('app:calendar.reconnecting')}
         </span>
       ) : null}
 
       <Tabs value={view} onValueChange={(value) => onViewChange(value as CalendarView)}>
         <TabsList>
-          <TabsTrigger value="day">Day</TabsTrigger>
-          <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
+          <TabsTrigger value="day">{t('common:field.day')}</TabsTrigger>
+          <TabsTrigger value="week">{t('app:calendar.week')}</TabsTrigger>
+          <TabsTrigger value="month">{t('app:calendar.month')}</TabsTrigger>
         </TabsList>
       </Tabs>
     </div>
@@ -428,6 +431,7 @@ function GridView({
   onSelectBlock: (block: TimeBlock) => void
   onBlockTime?: (columnKey: string, minute: number) => void
 }) {
+  const { t } = useTranslation()
   const { columns, window } = useMemo(() => {
     const built: TimeGridColumn<CalendarEntry>[] = []
 
@@ -502,8 +506,8 @@ function GridView({
     return (
       <div className="p-8">
         <ErrorState
-          title="No professionals yet"
-          description="Add a bookable professional and their column appears here."
+          title={t('app:calendar.noProfessionalsYet')}
+          description={t('app:calendar.addABookableProfessionalAnd')}
         />
       </div>
     )

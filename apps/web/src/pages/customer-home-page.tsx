@@ -41,13 +41,13 @@ export function CustomerHomePage() {
   }, [appointmentsQuery.data])
 
   if (isPending) {
-    return <PageSpinner label="Loading…" />
+    return <PageSpinner label={t('common:state.loadingEllipsis')} />
   }
 
   if (firstError) {
     return (
       <Container size="sm" className="py-10">
-        <ErrorState title="Couldn't load your home" description={firstError.message} />
+        <ErrorState title={t('customer-app:home.couldntLoadYourHome')} description={firstError.message} />
       </Container>
     )
   }

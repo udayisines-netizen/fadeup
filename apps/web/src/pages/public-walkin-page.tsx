@@ -25,6 +25,7 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Turns `join_public_queue`'s raw Postgres error message into user-facing
@@ -50,6 +51,7 @@ function friendlyWalkinError(rawMessage: string): string {
 }
 
 export function PublicWalkinPage() {
+  const { t } = useTranslation()
   const { slug } = useParams<{ slug: string }>()
   const organizationQuery = usePublicOrganization(slug)
 
@@ -61,18 +63,18 @@ export function PublicWalkinPage() {
   })
 
   if (organizationQuery.isPending) {
-    return <PageSpinner label="Loading check-in…" />
+    return <PageSpinner label={t('booking:walkin.loadingCheckin')} />
   }
 
   if (organizationQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load check-in"
+          title={t('booking:walkin.couldntLoadCheckin')}
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -84,11 +86,11 @@ export function PublicWalkinPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="We couldn't find this shop"
-          description="This check-in link may be out of date, or the web address may have changed. Check the link with the shop directly."
+          title={t('booking:walkin.weCouldntFindThisShop')}
+          description={t('booking:walkin.thisCheckinLinkMayBe')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('booking:walkin.goToFadeup')}
             </Link>
           }
         />
@@ -109,6 +111,7 @@ const walkinSchema = z.object({
 type WalkinFormValues = z.infer<typeof walkinSchema>
 
 function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
+  const { t } = useTranslation()
   const locationsQuery = usePublicLocations(organization.slug)
   const joinQueue = useJoinPublicQueue()
 
@@ -180,11 +183,11 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load locations"
+          title={t('booking:walkin.couldntLoadLocations')}
           description={locationsQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void locationsQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />
@@ -195,7 +198,7 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
   if (locationsQuery.data.length === 0) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
-        <EmptyState title="No locations available" description="This shop doesn't have any locations accepting walk-ins right now." />
+        <EmptyState title={t('booking:walkin.noLocationsAvailable')} description={t('booking:walkin.thisShopDoesntHaveAny')} />
       </Container>
     )
   }
@@ -215,7 +218,7 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
     return (
       <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
         <Header organization={organization} />
-        <h2 className="mb-4 text-lg font-semibold text-ink-950">Choose a location</h2>
+        <h2 className="mb-4 text-lg font-semibold text-ink-950">{t('booking:walkin.chooseALocation')}</h2>
         <div className="flex flex-col gap-3">
           {locationsQuery.data.map((location) => (
             <button
@@ -252,14 +255,14 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
         {submitError ? <Alert variant="error">{submitError}</Alert> : null}
 
         <TextField
-          label="Full name"
+          label={t('booking:walkin.fullName')}
           autoComplete="name"
           autoFocus
           error={errors.customerName?.message}
           {...register('customerName')}
         />
         <TextField
-          label="Phone number (optional)"
+          label={t('booking:walkin.phoneNumberOptional')}
           type="tel"
           autoComplete="tel"
           error={errors.customerPhone?.message}
@@ -267,7 +270,7 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
         />
 
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-2">
-          Check in
+          {t('booking:walkin.checkIn')}
         </Button>
         <p className="text-xs text-ink-500">You&apos;ll join the walk-in line right away — no appointment needed.</p>
       </form>
@@ -276,9 +279,10 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
 }
 
 function Header({ organization }: { organization: PublicOrganization }) {
+  const { t } = useTranslation()
   return (
     <div className="mb-6">
-      <p className="text-xs font-medium uppercase tracking-wide text-accent-600">Walk-in check-in</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-accent-600">{t('booking:walkin.walkinCheckin')}</p>
       <h1 className="mt-1 text-2xl font-semibold text-balance text-ink-950">{organization.name}</h1>
     </div>
   )
@@ -295,6 +299,7 @@ function SuccessScreen({
   location: PublicLocation | null
   onCheckInAnother: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <Card elevated className="w-full p-6 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-100">
@@ -308,11 +313,11 @@ function SuccessScreen({
 
       <div className="mt-6 flex items-center justify-center gap-2 text-sm text-ink-500">
         <Users className="h-4 w-4" aria-hidden="true" />
-        Thanks for your patience
+        {t('booking:walkin.thanksForYourPatience')}
       </div>
 
       <Button size="lg" onClick={onCheckInAnother} className="mt-6 w-full">
-        Check in another customer
+        {t('booking:walkin.checkInAnotherCustomer')}
       </Button>
     </Card>
   )

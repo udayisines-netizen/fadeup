@@ -74,7 +74,7 @@ export function CustomerAppointmentsPage() {
   }
 
   if (appointmentsQuery.isPending) {
-    return <PageSpinner label="Loading…" />
+    return <PageSpinner label={t('common:state.loadingEllipsis')} />
   }
 
   if (appointmentsQuery.isError) {
@@ -85,7 +85,7 @@ export function CustomerAppointmentsPage() {
           description={appointmentsQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void appointmentsQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />

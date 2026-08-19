@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useTranslation } from 'react-i18next'
 
 interface AuthCardProps {
   title: string
@@ -21,6 +22,7 @@ interface AuthCardProps {
 
 /** Shared centered-card shell for the unauthenticated auth screens. */
 export function AuthCard({ title, subtitle, children, footer, size = 'sm', badge }: AuthCardProps) {
+  const { t } = useTranslation()
   return (
     <main className="flex min-h-svh items-center justify-center bg-paper-50 py-12">
       <Container size={size === 'lg' ? 'md' : 'sm'}>
@@ -29,7 +31,7 @@ export function AuthCard({ title, subtitle, children, footer, size = 'sm', badge
             to="/"
             className="inline-flex min-h-11 items-center text-lg font-semibold text-ink-950"
           >
-            FadeUp
+            {t('common:customerNav.fadeup')}
           </Link>
         </div>
         <Card elevated className="p-6 sm:p-8">

@@ -5,6 +5,7 @@ import { useResolvedOrganization } from '@/lib/queries/memberships'
 import { useMyProfessionalApplication } from '@/lib/queries/professional-applications'
 import { useOrganizationReadiness } from '@/lib/queries/onboarding'
 import { PageSpinner } from '@/components/ui/spinner'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Keeps an applicant out of the professional application while their request
@@ -22,6 +23,7 @@ import { PageSpinner } from '@/components/ui/spinner'
  * for their own, and the membership is what grants access.
  */
 export function RequireProAccess({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth()
   const location = useLocation()
   // This guard runs OUTSIDE CurrentOrgProvider — that provider is mounted by
@@ -33,7 +35,7 @@ export function RequireProAccess({ children }: { children: ReactNode }) {
   const readinessQuery = useOrganizationReadiness(organizationId ?? undefined)
 
   if (authLoading || membershipsQuery.isPending || applicationQuery.isPending) {
-    return <PageSpinner label="Checking your access" />
+    return <PageSpinner label={t('common:access.checkingYourAccess')} />
   }
 
   const hasMembership = memberships.length > 0
@@ -51,7 +53,7 @@ export function RequireProAccess({ children }: { children: ReactNode }) {
     // never a local flag.
     const isAppIndex = location.pathname === '/app' || location.pathname === '/app/'
     if (isAppIndex && readinessQuery.isPending) {
-      return <PageSpinner label="Checking your setup" />
+      return <PageSpinner label={t('common:access.checkingYourSetup')} />
     }
     if (isAppIndex && readinessQuery.data && !readinessQuery.data.readyToBook) {
       return <Navigate to="/onboarding" replace />

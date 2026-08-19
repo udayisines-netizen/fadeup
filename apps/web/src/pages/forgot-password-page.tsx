@@ -8,6 +8,7 @@ import { TextField } from '@/components/ui/text-field'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -16,6 +17,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation()
   const [formError, setFormError] = useState<string | null>(null)
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
 
@@ -47,14 +49,14 @@ export function ForgotPasswordPage() {
 
   if (submittedEmail) {
     return (
-      <AuthCard title="Check your email">
+      <AuthCard title={t('auth:forgotPassword.checkYourEmail')}>
         <Alert variant="success">
-          If an account exists for <strong>{submittedEmail}</strong>, we&apos;ve sent a link to reset
+          {t('auth:forgotPassword.ifAnAccountExistsFor')} <strong>{submittedEmail}</strong>, we&apos;ve sent a link to reset
           your password.
         </Alert>
         <div className="mt-6">
           <Link to="/login" className="text-sm font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
-            Back to log in
+            {t('auth:forgotPassword.backToLogIn')}
           </Link>
         </div>
       </AuthCard>
@@ -63,11 +65,11 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthCard
-      title="Reset your password"
-      subtitle="We'll email you a link to set a new password."
+      title={t('auth:forgotPassword.resetYourPassword')}
+      subtitle={t('auth:forgotPassword.wellEmailYouALink')}
       footer={
         <Link to="/login" className="font-medium text-accent-700 underline underline-offset-2 hover:text-accent-800">
-          Back to log in
+          {t('auth:forgotPassword.backToLogIn')}
         </Link>
       }
     >
@@ -75,7 +77,7 @@ export function ForgotPasswordPage() {
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
         <TextField
-          label="Email"
+          label={t('common:field.email')}
           type="email"
           inputMode="email"
           autoComplete="email"
@@ -85,7 +87,7 @@ export function ForgotPasswordPage() {
         />
 
         <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Send reset link
+          {t('auth:forgotPassword.sendResetLink')}
         </Button>
       </form>
     </AuthCard>

@@ -13,6 +13,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { ErrorState } from '@/components/ui/error-state'
 import { PageSpinner } from '@/components/ui/spinner'
 import type { MembershipRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
@@ -29,6 +30,7 @@ const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
  * the existing per-org RLS scoping, not an extra check in this file.
  */
 export function AppBarberWorkspacePage() {
+  const { t } = useTranslation()
   const { staffProfileId } = useParams<{ staffProfileId: string }>()
   const { currentMembership } = useCurrentOrg()
   const organizationId = currentMembership?.organizationId
@@ -53,7 +55,7 @@ export function AppBarberWorkspacePage() {
   if (!currentMembership || !MANAGING_ROLES.has(currentMembership.role)) {
     return (
       <Container size="md" className="py-8">
-        <ErrorState title="Only shop owners and managers can view a barber's workspace" />
+        <ErrorState title={t('app:workspace.onlyShopOwnersAndManagers')} />
       </Container>
     )
   }
@@ -65,13 +67,13 @@ export function AppBarberWorkspacePage() {
   const isLoading = staffProfilesQuery.isPending || barbersQuery.isPending || workingHoursQuery.isPending
 
   if (isLoading) {
-    return <PageSpinner label="Loading barber workspace" />
+    return <PageSpinner label={t('app:workspace.loadingBarberWorkspace')} />
   }
 
   if (!staffProfile || !barber) {
     return (
       <Container size="md" className="py-8">
-        <ErrorState title="Barber not found" />
+        <ErrorState title={t('app:workspace.barberNotFound')} />
       </Container>
     )
   }
@@ -92,7 +94,7 @@ export function AppBarberWorkspacePage() {
             Viewing {staffProfile.displayName}&apos;s workspace as Shop Owner
           </span>
           <Link to="/app/team" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
-            Return to Owner Dashboard
+            {t('app:workspace.returnToOwnerDashboard')}
           </Link>
         </Container>
       </div>
@@ -102,10 +104,10 @@ export function AppBarberWorkspacePage() {
         {staffProfile.title ? <p className="mt-1 text-sm text-ink-500">{staffProfile.title}</p> : null}
 
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Services</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.services')}</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {myServices.length === 0 ? (
-              <p className="text-sm text-ink-500">No services assigned.</p>
+              <p className="text-sm text-ink-500">{t('app:workspace.noServicesAssigned')}</p>
             ) : (
               myServices.map((name) => (
                 <Badge key={name} variant="neutral">
@@ -117,10 +119,10 @@ export function AppBarberWorkspacePage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Weekly hours</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('app:workspace.weeklyHours')}</h2>
           <div className="mt-3 flex flex-col gap-1">
             {myWorkingHours.length === 0 ? (
-              <p className="text-sm text-ink-500">No working hours set.</p>
+              <p className="text-sm text-ink-500">{t('app:workspace.noWorkingHoursSet')}</p>
             ) : (
               myWorkingHours.map((wh) => (
                 <div key={wh.id} className="flex items-center justify-between border-b border-border py-1.5 text-sm">
@@ -133,12 +135,12 @@ export function AppBarberWorkspacePage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Upcoming exceptions</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('app:workspace.upcomingExceptions')}</h2>
           <div className="mt-3 flex flex-col gap-1">
             {exceptionsQuery.isPending ? (
-              <p className="text-sm text-ink-500">Loading…</p>
+              <p className="text-sm text-ink-500">{t('common:state.loadingEllipsis')}</p>
             ) : (exceptionsQuery.data ?? []).length === 0 ? (
-              <p className="text-sm text-ink-500">No availability exceptions on file.</p>
+              <p className="text-sm text-ink-500">{t('app:workspace.noAvailabilityExceptionsOnFile')}</p>
             ) : (
               (exceptionsQuery.data ?? []).map((exception) => (
                 <div key={exception.id} className="flex items-center justify-between border-b border-border py-1.5 text-sm">

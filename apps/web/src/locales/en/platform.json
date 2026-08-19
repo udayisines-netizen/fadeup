@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "Couldn't load this application",
+    "applicationNotFound": "Application not found"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "Claim FadeUp platform ownership",
+    "thisCanOnlyBeDone": "This can only be done once, by whoever holds this link.",
+    "logInOrCreateAn": "Log in or create an account to continue.",
+    "claimPlatformOwnership": "Claim platform ownership"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "Join the FadeUp platform team",
+    "acceptThisInvitationToGet": "Accept this invitation to get platform access.",
+    "logInOrCreateAn": "Log in or create an account to continue.",
+    "acceptInvitation": "Accept invitation"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "Loading barber workspace",
+    "barberNotFoundInThis": "Barber not found in this organization",
+    "noServicesAssigned": "No services assigned.",
+    "weeklyHours": "Weekly hours",
+    "noWorkingHoursSet": "No working hours set.",
+    "upcomingExceptions": "Upcoming exceptions",
+    "noAvailabilityExceptionsOnFile": "No availability exceptions on file.",
+    "couldntEnterSupportView": "Couldn't enter support view"
+  },
+  "applications": {
+    "couldntLoadApplications": "Couldn't load applications"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "Couldn't load platform team",
+    "platformTeamMembers": "Platform team members",
+    "couldntLoadInvitations": "Couldn't load invitations",
+    "pendingPlatformInvitations": "Pending platform invitations",
+    "noPendingInvitations": "No pending invitations",
+    "leaveBlankToCreateA": "Leave blank to create a link anyone can use once.",
+    "platformTeam": "Platform team",
+    "whoHasFadeupPlatformAccess": "Who has FadeUp platform access, and pending invitations.",
+    "user": "User",
+    "since": "Since",
+    "pendingInvitations": "Pending invitations",
+    "revoke": "Revoke",
+    "inviteSomeone": "Invite someone",
+    "sendInvitation": "Send invitation",
+    "invitationCreated": "Invitation created",
+    "invitationRevoked": "Invitation revoked",
+    "couldntRevokeInvitation": "Couldn't revoke invitation"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "Couldn't load organizations",
+    "noOrganizationsYet": "No organizations yet",
+    "everyBarbershopTenantOnFadeup": "Every barbershop tenant on FadeUp.",
+    "slug": "Slug"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "Couldn't load audit log",
+    "auditLog": "Audit log",
+    "noPlatformActivityYet": "No platform activity yet",
+    "platformlevelSecurityEventsMostRecent": "Platform-level security events, most recent first.",
+    "action": "Action",
+    "actor": "Actor"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "Loading organization",
+    "couldntLoadOrganization": "Couldn't load organization",
+    "organizationNotFound": "Organization not found",
+    "couldntLoadLocations": "Couldn't load locations",
+    "noLocationsYet": "No locations yet",
+    "couldntLoadTeam": "Couldn't load team",
+    "noTeamMembersYet": "No team members yet",
+    "organizations": "← Organizations",
+    "viewBarberWorkspace": "View Barber Workspace",
+    "couldntEnterSupportView": "Couldn't enter support view"
+  },
+  "login": {
+    "platformSignIn": "Platform sign in",
+    "fadeupPlatformStaffOnly": "FadeUp platform staff only.",
+    "signIn": "Sign in"
+  },
+  "overview": {
+    "platformOverview": "Platform overview",
+    "signedInAs": "Signed in as"
+  },
+  "nav": {
+    "fadeupPlatform": "FadeUp Platform",
+    "overview": "Overview",
+    "applications": "Applications",
+    "acquisition": "Acquisition",
+    "outreach": "Outreach",
+    "dataScience": "Data science",
+    "auditLog": "Audit log",
+    "checkingPlatformAccess": "Checking platform access",
+    "backToFadeup": "Back to FadeUp",
+    "exitSupportView": "Exit Support View",
+    "exitedSupportView": "Exited support view",
+    "couldntExitSupportView": "Couldn't exit support view"
+  }
+}

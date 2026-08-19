@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Persistent banner shown for the whole time a support-view session is
@@ -13,6 +14,7 @@ import { getErrorMessage } from '@/lib/get-error-message'
  * no active session.
  */
 export function PlatformSupportViewBanner() {
+  const { t } = useTranslation()
   const { activeSession, exitSupportView, isExiting } = useSupportView()
   const { toast } = useToast()
   const organizationQuery = useOrganization(activeSession?.organizationId)
@@ -31,9 +33,9 @@ export function PlatformSupportViewBanner() {
   async function handleExit() {
     try {
       await exitSupportView()
-      toast({ title: 'Exited support view' })
+      toast({ title: t('platform:nav.exitedSupportView') })
     } catch (error) {
-      toast({ title: "Couldn't exit support view", description: getErrorMessage(error), variant: 'error' })
+      toast({ title: t('platform:nav.couldntExitSupportView'), description: getErrorMessage(error), variant: 'error' })
     }
   }
 
@@ -44,7 +46,7 @@ export function PlatformSupportViewBanner() {
           Platform Support View — Viewing {workspaceLabel}
         </span>
         <Button variant="secondary" size="sm" isLoading={isExiting} onClick={() => void handleExit()}>
-          Exit Support View
+          {t('platform:nav.exitSupportView')}
         </Button>
       </Container>
     </div>

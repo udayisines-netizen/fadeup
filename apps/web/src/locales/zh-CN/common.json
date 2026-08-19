@@ -4,7 +4,13 @@
     "forBusiness": "商家入驻",
     "features": "功能",
     "pricing": "定价",
-    "myFadeUp": "我的 FadeUp"
+    "myFadeUp": "我的 FadeUp",
+    "loadingYourOrganizations": "正在加载你的商家…",
+    "signOut": "退出登录",
+    "mainNavigation": "主导航",
+    "openMenu": "打开菜单",
+    "mobileNavigation": "移动端导航",
+    "menu": "菜单"
   },
   "auth": {
     "logIn": "登录",
@@ -28,5 +34,128 @@
   "language": {
     "label": "语言",
     "select": "选择语言"
+  },
+  "field": {
+    "name": "姓名",
+    "email": "电子邮箱",
+    "phone": "电话",
+    "status": "状态",
+    "role": "角色",
+    "date": "日期",
+    "time": "时间",
+    "type": "类型",
+    "notes": "备注",
+    "price": "价格",
+    "title": "职称",
+    "reason": "原因",
+    "country": "国家/地区",
+    "timezone": "时区",
+    "locale": "语言",
+    "category": "分类",
+    "source": "来源",
+    "score": "评分",
+    "target": "目标",
+    "template": "模板",
+    "scope": "范围",
+    "state": "状态",
+    "password": "密码",
+    "created": "创建时间",
+    "expires": "到期",
+    "plan": "套餐",
+    "day": "日期",
+    "when": "时间",
+    "customerName": "客户姓名",
+    "description": "说明",
+    "phoneOptional": "电话（选填）",
+    "emailOptional": "邮箱（选填）",
+    "notesOptional": "备注（选填）",
+    "reasonOptional": "原因（选填）"
+  },
+  "action": {
+    "actions": "操作",
+    "tryAgain": "重试",
+    "reload": "重新加载",
+    "close": "关闭",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "search": "搜索",
+    "selected": "已选择",
+    "back": "返回",
+    "done": "完成",
+    "remove": "移除"
+  },
+  "state": {
+    "active": "启用",
+    "inactive": "停用",
+    "loading": "加载中",
+    "loadingEllipsis": "加载中…",
+    "blocked": "已屏蔽",
+    "sent": "已发送",
+    "paid": "已付款",
+    "replied": "已回复",
+    "activated": "已激活",
+    "noMatches": "无匹配结果"
+  },
+  "entity": {
+    "customer": "客户",
+    "customers": "客户",
+    "service": "服务",
+    "services": "服务",
+    "team": "团队",
+    "member": "成员",
+    "members": "成员",
+    "professional": "专业人员",
+    "barber": "理发师",
+    "location": "门店",
+    "locations": "门店",
+    "chairs": "工位",
+    "memberships": "会员",
+    "organizations": "商家",
+    "waitlist": "候补名单",
+    "availability": "可预约时间",
+    "schedule": "排程",
+    "queue": "排队",
+    "calendar": "日历",
+    "requests": "预约请求"
+  },
+  "access": {
+    "checkingYourAccess": "正在检查你的权限",
+    "checkingYourSetup": "正在检查你的设置",
+    "checkingYourSession": "正在检查登录状态"
+  },
+  "errors": {
+    "somethingWentWrong": "出了点问题",
+    "anUnexpectedErrorOccurredTry": "发生了意外错误，请尝试重新加载页面。",
+    "goToMyWorkspace": "前往我的工作台"
+  },
+  "notifications": {
+    "notifications": "通知",
+    "markAllRead": "全部标为已读",
+    "nothingYet": "暂无内容。"
+  },
+  "customerNav": {
+    "customerAppNavigation": "客户端导航",
+    "appointments": "预约",
+    "discover": "发现",
+    "passport": "Passport",
+    "profile": "个人资料",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "关闭通知"
+  },
+  "notFound": {
+    "pageNotFound": "页面未找到",
+    "backHome": "返回首页"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "正在加载你的工作台",
+    "fadeupPlatform": "FadeUp 平台",
+    "platformAdministration": "平台管理",
+    "chooseAWorkspace": "选择工作台",
+    "youHaveAccessToMore": "你有多个可访问的工作台，请选择要前往的一个。"
   }
 }

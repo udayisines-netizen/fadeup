@@ -7,6 +7,7 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth-context'
 import { useAcceptPlatformInvitation, useOwnPlatformRole } from '@/lib/queries/platform'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
 
 /**
  * /platform/invite/:token — accepts a platform_admin/platform_support
@@ -18,6 +19,7 @@ import { getErrorMessage } from '@/lib/get-error-message'
  * accept, not by looking the token up first.
  */
 export function PlatformInvitePage() {
+  const { t } = useTranslation()
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuth()
@@ -30,7 +32,7 @@ export function PlatformInvitePage() {
   }
 
   if (authLoading || (user && roleQuery.isPending)) {
-    return <PageSpinner label="Loading" />
+    return <PageSpinner label={t('common:state.loading')} />
   }
 
   if (roleQuery.data) {
@@ -50,31 +52,31 @@ export function PlatformInvitePage() {
   }
 
   return (
-    <AuthCard title="Join the FadeUp platform team" subtitle="Accept this invitation to get platform access.">
+    <AuthCard title={t('platform:invite.joinTheFadeupPlatformTeam')} subtitle={t('platform:invite.acceptThisInvitationToGet')}>
       <div className="flex flex-col gap-4">
         {acceptError ? <Alert variant="error">{acceptError}</Alert> : null}
 
         {!user ? (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-ink-500">Log in or create an account to continue.</p>
+            <p className="text-sm text-ink-500">{t('platform:invite.logInOrCreateAn')}</p>
             <div className="flex gap-2">
               <Link
                 to={`/login?redirect=${encodeURIComponent(redirectPath)}`}
                 className={buttonVariants({ variant: 'secondary' }, 'flex-1')}
               >
-                Log in
+                {t('common:auth.logIn')}
               </Link>
               <Link
                 to={`/register?redirect=${encodeURIComponent(redirectPath)}`}
                 className={buttonVariants({ variant: 'primary' }, 'flex-1')}
               >
-                Sign up
+                {t('common:auth.signUp')}
               </Link>
             </div>
           </div>
         ) : (
           <Button className="w-full" isLoading={acceptMutation.isPending} onClick={() => void handleAccept()}>
-            Accept invitation
+            {t('platform:invite.acceptInvitation')}
           </Button>
         )}
       </div>

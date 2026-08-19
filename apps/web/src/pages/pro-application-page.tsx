@@ -39,13 +39,13 @@ export function ProApplicationPage() {
   useDocumentMeta({ title: 'FadeUp Pro', description: 'Your FadeUp professional application status.', noIndex: true })
 
   if (authLoading || applicationQuery.isPending) {
-    return <PageSpinner label="Loading" />
+    return <PageSpinner label={t('common:state.loading')} />
   }
 
   if (applicationQuery.isError) {
     return (
       <Container size="sm" className="py-16">
-        <ErrorState title="Couldn't load your application" description={applicationQuery.error.message} />
+        <ErrorState title={t('auth:proApplication.couldntLoadYourApplication')} description={applicationQuery.error.message} />
       </Container>
     )
   }
@@ -90,7 +90,7 @@ function ApplicationShell({ children }: { children: React.ReactNode }) {
       <Container size="sm">
         <div className="mb-8 flex items-center justify-between">
           <Link to="/" className="inline-flex min-h-11 items-center text-lg font-semibold text-ink-950">
-            FadeUp
+            {t('common:customerNav.fadeup')}
           </Link>
           <button
             type="button"

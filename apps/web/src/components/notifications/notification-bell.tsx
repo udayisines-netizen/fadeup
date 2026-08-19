@@ -14,6 +14,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from '@/lib/queries/notifications'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Product notifications for customers and professionals.
@@ -35,6 +36,7 @@ export function NotificationBell({
   /** Extra query keys to refetch when a notification arrives — e.g. the caller's booking list. */
   extraInvalidation?: string[][]
 }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const reduced = useReducedMotion()
   const [open, setOpen] = useState(false)
@@ -82,20 +84,20 @@ export function NotificationBell({
 
       <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)]">
         <div className="flex items-center justify-between px-3 py-2">
-          <span className="text-sm font-semibold text-ink-950">Notifications</span>
+          <span className="text-sm font-semibold text-ink-950">{t('common:notifications.notifications')}</span>
           {unreadCount > 0 ? (
             <button
               type="button"
               onClick={() => markAllRead.mutate()}
               className="text-xs font-medium text-accent-700 underline underline-offset-2"
             >
-              Mark all read
+              {t('common:notifications.markAllRead')}
             </button>
           ) : null}
         </div>
 
         {notifications.length === 0 ? (
-          <p className="px-3 pb-3 pt-1 text-sm text-ink-500">Nothing yet.</p>
+          <p className="px-3 pb-3 pt-1 text-sm text-ink-500">{t('common:notifications.nothingYet')}</p>
         ) : (
           <ul className="max-h-96 overflow-y-auto">
             {notifications.map((notification) => (

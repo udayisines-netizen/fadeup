@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { Spinner } from '@/components/ui/spinner'
@@ -65,6 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref,
 ) {
+  const { t } = useTranslation()
   return (
     <button
       ref={ref}
@@ -75,7 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...props}
     >
       {isLoading ? (
-        <Spinner label="Loading" />
+        <Spinner label={t('common:state.loading')} />
       ) : leftIcon ? (
         <span className="shrink-0" aria-hidden="true">
           {leftIcon}

@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "Не удалось загрузить эту заявку",
+    "applicationNotFound": "Заявка не найдена"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "Получить права владельца платформы FadeUp",
+    "thisCanOnlyBeDone": "Это можно сделать только один раз — тем, у кого есть эта ссылка.",
+    "logInOrCreateAn": "Войдите или создайте аккаунт, чтобы продолжить.",
+    "claimPlatformOwnership": "Получить права владельца"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "Присоединиться к команде платформы FadeUp",
+    "acceptThisInvitationToGet": "Примите приглашение, чтобы получить доступ к платформе.",
+    "logInOrCreateAn": "Войдите или создайте аккаунт, чтобы продолжить.",
+    "acceptInvitation": "Принять приглашение"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "Загружаем рабочее место специалиста",
+    "barberNotFoundInThis": "Специалист не найден в этой организации",
+    "noServicesAssigned": "Услуги не назначены.",
+    "weeklyHours": "Рабочее время на неделю",
+    "noWorkingHoursSet": "Рабочее время не задано.",
+    "upcomingExceptions": "Ближайшие исключения",
+    "noAvailabilityExceptionsOnFile": "Исключений в расписании нет.",
+    "couldntEnterSupportView": "Не удалось открыть режим поддержки"
+  },
+  "applications": {
+    "couldntLoadApplications": "Не удалось загрузить заявки"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "Не удалось загрузить команду платформы",
+    "platformTeamMembers": "Участники команды платформы",
+    "couldntLoadInvitations": "Не удалось загрузить приглашения",
+    "pendingPlatformInvitations": "Ожидающие приглашения на платформу",
+    "noPendingInvitations": "Ожидающих приглашений нет",
+    "leaveBlankToCreateA": "Оставьте пустым, чтобы создать одноразовую ссылку.",
+    "platformTeam": "Команда платформы",
+    "whoHasFadeupPlatformAccess": "У кого есть доступ к платформе FadeUp и ожидающие приглашения.",
+    "user": "Пользователь",
+    "since": "С",
+    "pendingInvitations": "Ожидающие приглашения",
+    "revoke": "Отозвать",
+    "inviteSomeone": "Пригласить",
+    "sendInvitation": "Отправить приглашение",
+    "invitationCreated": "Приглашение создано",
+    "invitationRevoked": "Приглашение отозвано",
+    "couldntRevokeInvitation": "Не удалось отозвать приглашение"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "Не удалось загрузить организации",
+    "noOrganizationsYet": "Организаций пока нет",
+    "everyBarbershopTenantOnFadeup": "Все салоны на платформе FadeUp.",
+    "slug": "URL-идентификатор"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "Не удалось загрузить журнал аудита",
+    "auditLog": "Журнал аудита",
+    "noPlatformActivityYet": "Активности пока нет",
+    "platformlevelSecurityEventsMostRecent": "События безопасности платформы, начиная с самых свежих.",
+    "action": "Действие",
+    "actor": "Инициатор"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "Загружаем организацию",
+    "couldntLoadOrganization": "Не удалось загрузить организацию",
+    "organizationNotFound": "Организация не найдена",
+    "couldntLoadLocations": "Не удалось загрузить адреса",
+    "noLocationsYet": "Адресов пока нет",
+    "couldntLoadTeam": "Не удалось загрузить команду",
+    "noTeamMembersYet": "Участников пока нет",
+    "organizations": "← Организации",
+    "viewBarberWorkspace": "Открыть рабочее место специалиста",
+    "couldntEnterSupportView": "Не удалось открыть режим поддержки"
+  },
+  "login": {
+    "platformSignIn": "Вход на платформу",
+    "fadeupPlatformStaffOnly": "Только для сотрудников FadeUp.",
+    "signIn": "Войти"
+  },
+  "overview": {
+    "platformOverview": "Обзор платформы",
+    "signedInAs": "Вы вошли как"
+  },
+  "nav": {
+    "fadeupPlatform": "Платформа FadeUp",
+    "overview": "Обзор",
+    "applications": "Заявки",
+    "acquisition": "Привлечение",
+    "outreach": "Аутрич",
+    "dataScience": "Data science",
+    "auditLog": "Журнал аудита",
+    "checkingPlatformAccess": "Проверяем доступ к платформе",
+    "backToFadeup": "Назад в FadeUp",
+    "exitSupportView": "Выйти из режима поддержки",
+    "exitedSupportView": "Вы вышли из режима поддержки",
+    "couldntExitSupportView": "Не удалось выйти из режима поддержки"
+  }
+}

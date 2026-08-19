@@ -20,7 +20,8 @@
     "lastCutDays_other": "It's been {{count}} days since your last cut.",
     "rebookOverdueTitle": "Time for a fresh cut?",
     "rebookTitle": "Same cut as last time?",
-    "rebookCta": "Rebook with {{barber}}"
+    "rebookCta": "Rebook with {{barber}}",
+    "couldntLoadYourHome": "Couldn't load your home"
   },
   "onboarding": {
     "title": "A couple of quick questions",
@@ -56,7 +57,8 @@
     },
     "skip": "Skip for now",
     "save": "Save",
-    "saved": "Saved — thanks!"
+    "saved": "Saved — thanks!",
+    "couldntLoadYourProfile": "Couldn't load your profile"
   },
   "profile": {
     "title": "Profile",
@@ -68,7 +70,8 @@
     "habitsTitle": "Your habits",
     "editHabits": "Edit your habits",
     "noHabitsYet": "You haven't told us your habits yet.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "couldntLoadYourProfile": "Couldn't load your profile"
   },
   "appointments": {
     "title": "Appointments",
@@ -102,7 +105,8 @@
     "discoverCta": "Discover barbers",
     "remove": "Remove",
     "viewProfile": "View profile",
-    "book": "Book"
+    "book": "Book",
+    "couldntLoadYourFavorites": "Couldn't load your favorites"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "That time was just taken. Pick another.",
     "notAllowed": "This appointment can no longer be moved.",
     "failed": "Could not move the appointment. Please try again."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "Go to FadeUp"
   }
 }

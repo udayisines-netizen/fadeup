@@ -10,6 +10,7 @@ import { Alert } from '@/components/ui/alert'
 import { getSupabaseClient } from '@/lib/supabase'
 import { safeInternalPathWithin } from '@/lib/safe-redirect'
 import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
+import { useTranslation } from 'react-i18next'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -42,6 +43,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
  * security lot and is not replaced by anything here.
  */
 export function PlatformLoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [formError, setFormError] = useState<string | null>(null)
@@ -75,7 +77,7 @@ export function PlatformLoginPage() {
   }
 
   return (
-    <AuthCard title="Platform sign in" subtitle="FadeUp platform staff only.">
+    <AuthCard title={t('platform:login.platformSignIn')} subtitle={t('platform:login.fadeupPlatformStaffOnly')}>
       {/*
         intent="platform" is a routing preference for /auth/callback, never a
         grant. The callback sends anyone without a platform_members row to
@@ -88,7 +90,7 @@ export function PlatformLoginPage() {
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
         <TextField
-          label="Email"
+          label={t('common:field.email')}
           type="email"
           inputMode="email"
           autoComplete="email"
@@ -97,7 +99,7 @@ export function PlatformLoginPage() {
           {...register('email')}
         />
         <TextField
-          label="Password"
+          label={t('common:field.password')}
           type="password"
           autoComplete="current-password"
           error={errors.password?.message}
@@ -105,7 +107,7 @@ export function PlatformLoginPage() {
         />
 
         <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Sign in
+          {t('platform:login.signIn')}
         </Button>
       </form>
     </AuthCard>

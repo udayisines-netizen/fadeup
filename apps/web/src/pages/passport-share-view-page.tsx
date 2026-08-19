@@ -32,7 +32,7 @@ export function PassportShareViewPage() {
   })
 
   if (sharedQuery.isPending) {
-    return <PageSpinner label="Loading…" />
+    return <PageSpinner label={t('common:state.loadingEllipsis')} />
   }
 
   if (sharedQuery.isError) {
@@ -60,7 +60,7 @@ export function PassportShareViewPage() {
           description={copy.description}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              Go to FadeUp
+              {t('customer-app:shareView.goToFadeup')}
             </Link>
           }
         />

@@ -20,7 +20,8 @@
     "lastCutDays_other": "Já passaram {{count}} dias desde o teu último corte.",
     "rebookOverdueTitle": "Hora de um novo corte?",
     "rebookTitle": "O mesmo corte de sempre?",
-    "rebookCta": "Marcar de novo com {{barber}}"
+    "rebookCta": "Marcar de novo com {{barber}}",
+    "couldntLoadYourHome": "Não foi possível carregar o seu início"
   },
   "onboarding": {
     "title": "Algumas perguntas rápidas",
@@ -56,7 +57,8 @@
     },
     "skip": "Saltar por agora",
     "save": "Guardar",
-    "saved": "Guardado — obrigado!"
+    "saved": "Guardado — obrigado!",
+    "couldntLoadYourProfile": "Não foi possível carregar o seu perfil"
   },
   "profile": {
     "title": "Perfil",
@@ -68,7 +70,8 @@
     "habitsTitle": "Os teus hábitos",
     "editHabits": "Editar os teus hábitos",
     "noHabitsYet": "Ainda não nos contaste os teus hábitos.",
-    "signOut": "Terminar sessão"
+    "signOut": "Terminar sessão",
+    "couldntLoadYourProfile": "Não foi possível carregar o seu perfil"
   },
   "appointments": {
     "title": "Marcações",
@@ -102,7 +105,8 @@
     "discoverCta": "Descobrir barbeiros",
     "remove": "Remover",
     "viewProfile": "Ver perfil",
-    "book": "Marcar"
+    "book": "Marcar",
+    "couldntLoadYourFavorites": "Não foi possível carregar os seus favoritos"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "Esse horário acabou de ser ocupado. Escolha outro.",
     "notAllowed": "Esta marcação já não pode ser alterada.",
     "failed": "Não foi possível alterar a marcação. Tente novamente."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "Ir para a FadeUp"
   }
 }

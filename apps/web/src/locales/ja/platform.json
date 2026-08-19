@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "この申請を読み込めませんでした",
+    "applicationNotFound": "申請が見つかりません"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "FadeUp プラットフォームの所有権を取得",
+    "thisCanOnlyBeDone": "この操作は、このリンクを持つ人が一度だけ実行できます。",
+    "logInOrCreateAn": "続けるにはログインするかアカウントを作成してください。",
+    "claimPlatformOwnership": "所有権を取得する"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "FadeUp プラットフォームチームに参加",
+    "acceptThisInvitationToGet": "この招待を承諾するとプラットフォームにアクセスできます。",
+    "logInOrCreateAn": "続けるにはログインするかアカウントを作成してください。",
+    "acceptInvitation": "招待を承諾"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "スタッフのワークスペースを読み込んでいます",
+    "barberNotFoundInThis": "この事業者にそのスタッフは見つかりません",
+    "noServicesAssigned": "担当メニューがありません。",
+    "weeklyHours": "週間の勤務時間",
+    "noWorkingHoursSet": "勤務時間が設定されていません。",
+    "upcomingExceptions": "今後の例外設定",
+    "noAvailabilityExceptionsOnFile": "受付可能時間の例外は登録されていません。",
+    "couldntEnterSupportView": "サポートビューに入れませんでした"
+  },
+  "applications": {
+    "couldntLoadApplications": "申請を読み込めませんでした"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "プラットフォームチームを読み込めませんでした",
+    "platformTeamMembers": "プラットフォームチームのメンバー",
+    "couldntLoadInvitations": "招待を読み込めませんでした",
+    "pendingPlatformInvitations": "保留中のプラットフォーム招待",
+    "noPendingInvitations": "保留中の招待はありません",
+    "leaveBlankToCreateA": "空欄にすると、誰でも一度だけ使えるリンクを作成します。",
+    "platformTeam": "プラットフォームチーム",
+    "whoHasFadeupPlatformAccess": "FadeUp プラットフォームへのアクセス権を持つ人と、保留中の招待。",
+    "user": "ユーザー",
+    "since": "登録日",
+    "pendingInvitations": "保留中の招待",
+    "revoke": "取り消す",
+    "inviteSomeone": "メンバーを招待",
+    "sendInvitation": "招待を送る",
+    "invitationCreated": "招待を作成しました",
+    "invitationRevoked": "招待を取り消しました",
+    "couldntRevokeInvitation": "招待を取り消せませんでした"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "事業者を読み込めませんでした",
+    "noOrganizationsYet": "事業者はまだありません",
+    "everyBarbershopTenantOnFadeup": "FadeUp 上のすべての事業者。",
+    "slug": "URL 識別子"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "監査ログを読み込めませんでした",
+    "auditLog": "監査ログ",
+    "noPlatformActivityYet": "プラットフォームの操作履歴はまだありません",
+    "platformlevelSecurityEventsMostRecent": "プラットフォーム全体のセキュリティイベント（新しい順）。",
+    "action": "操作内容",
+    "actor": "実行者"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "事業者を読み込んでいます",
+    "couldntLoadOrganization": "事業者を読み込めませんでした",
+    "organizationNotFound": "事業者が見つかりません",
+    "couldntLoadLocations": "店舗を読み込めませんでした",
+    "noLocationsYet": "店舗がまだありません",
+    "couldntLoadTeam": "チームを読み込めませんでした",
+    "noTeamMembersYet": "メンバーはまだいません",
+    "organizations": "← 事業者",
+    "viewBarberWorkspace": "スタッフのワークスペースを見る",
+    "couldntEnterSupportView": "サポートビューに入れませんでした"
+  },
+  "login": {
+    "platformSignIn": "プラットフォームにログイン",
+    "fadeupPlatformStaffOnly": "FadeUp プラットフォームのスタッフ専用です。",
+    "signIn": "ログイン"
+  },
+  "overview": {
+    "platformOverview": "プラットフォーム概要",
+    "signedInAs": "ログイン中"
+  },
+  "nav": {
+    "fadeupPlatform": "FadeUp プラットフォーム",
+    "overview": "概要",
+    "applications": "申請",
+    "acquisition": "獲得",
+    "outreach": "アウトリーチ",
+    "dataScience": "データサイエンス",
+    "auditLog": "監査ログ",
+    "checkingPlatformAccess": "プラットフォームのアクセス権を確認しています",
+    "backToFadeup": "FadeUp に戻る",
+    "exitSupportView": "サポートビューを終了",
+    "exitedSupportView": "サポートビューを終了しました",
+    "couldntExitSupportView": "サポートビューを終了できませんでした"
+  }
+}

@@ -70,7 +70,7 @@ export function CustomerPassportPage() {
   if (!user) return null
 
   if (passportQuery.isPending) {
-    return <PageSpinner label="Loading…" />
+    return <PageSpinner label={t('common:state.loadingEllipsis')} />
   }
 
   if (passportQuery.isError) {
@@ -81,7 +81,7 @@ export function CustomerPassportPage() {
           description={passportQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void passportQuery.refetch()}>
-              Try again
+              {t('common:action.tryAgain')}
             </Button>
           }
         />

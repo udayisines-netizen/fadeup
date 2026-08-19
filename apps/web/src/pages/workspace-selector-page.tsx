@@ -9,6 +9,7 @@ import { Container } from '@/components/ui/container'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { MembershipRole } from '@/lib/types'
+import { useTranslation } from 'react-i18next'
 
 const ROLE_LABELS: Record<MembershipRole, string> = {
   owner: 'Owner',
@@ -29,13 +30,14 @@ const ROLE_LABELS: Record<MembershipRole, string> = {
  * single-context case so most users never see it at all.
  */
 export function WorkspaceSelectorPage() {
+  const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth()
   const platformRoleQuery = useOwnPlatformRole(user?.id)
   const membershipsQuery = useMyMemberships(user?.id)
   const applicationQuery = useMyProfessionalApplication(Boolean(user))
 
   if (authLoading || platformRoleQuery.isPending || membershipsQuery.isPending || applicationQuery.isPending) {
-    return <PageSpinner label="Loading your workspaces" />
+    return <PageSpinner label={t('common:workspaceSelector.loadingYourWorkspaces')} />
   }
 
   const platformRole = platformRoleQuery.data
@@ -69,14 +71,14 @@ export function WorkspaceSelectorPage() {
 
   return (
     <Container size="sm" className="py-16">
-      <h1 className="text-xl font-semibold text-ink-950">Choose a workspace</h1>
-      <p className="mt-1 text-sm text-ink-500">You have access to more than one. Pick where to go.</p>
+      <h1 className="text-xl font-semibold text-ink-950">{t('common:workspaceSelector.chooseAWorkspace')}</h1>
+      <p className="mt-1 text-sm text-ink-500">{t('common:workspaceSelector.youHaveAccessToMore')}</p>
 
       <div className="mt-6 flex flex-col gap-3">
         {platformRole ? (
           <WorkspaceCard
-            title="FadeUp Platform"
-            subtitle="Platform administration"
+            title={t('common:workspaceSelector.fadeupPlatform')}
+            subtitle={t('common:workspaceSelector.platformAdministration')}
             badge="Platform"
             href="/platform"
           />

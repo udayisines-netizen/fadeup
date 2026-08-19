@@ -4,7 +4,13 @@
     "forBusiness": "Para negocios",
     "features": "Funciones",
     "pricing": "Precios",
-    "myFadeUp": "Mi FadeUp"
+    "myFadeUp": "Mi FadeUp",
+    "loadingYourOrganizations": "Cargando tus negocios…",
+    "signOut": "Cerrar sesión",
+    "mainNavigation": "Navegación principal",
+    "openMenu": "Abrir menú",
+    "mobileNavigation": "Navegación móvil",
+    "menu": "Menú"
   },
   "auth": {
     "logIn": "Iniciar sesión",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Idioma",
     "select": "Seleccionar idioma"
+  },
+  "field": {
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "status": "Estado",
+    "role": "Rol",
+    "date": "Fecha",
+    "time": "Hora",
+    "type": "Tipo",
+    "notes": "Notas",
+    "price": "Precio",
+    "title": "Título",
+    "reason": "Motivo",
+    "country": "País",
+    "timezone": "Zona horaria",
+    "locale": "Idioma",
+    "category": "Categoría",
+    "source": "Origen",
+    "score": "Puntuación",
+    "target": "Objetivo",
+    "template": "Plantilla",
+    "scope": "Alcance",
+    "state": "Estado",
+    "password": "Contraseña",
+    "created": "Creado",
+    "expires": "Caduca",
+    "plan": "Plan",
+    "day": "Día",
+    "when": "Cuándo",
+    "customerName": "Nombre del cliente",
+    "description": "Descripción",
+    "phoneOptional": "Teléfono (opcional)",
+    "emailOptional": "Correo (opcional)",
+    "notesOptional": "Notas (opcional)",
+    "reasonOptional": "Motivo (opcional)"
+  },
+  "action": {
+    "actions": "Acciones",
+    "tryAgain": "Reintentar",
+    "reload": "Recargar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "search": "Buscar",
+    "selected": "Seleccionado",
+    "back": "Atrás",
+    "done": "Listo",
+    "remove": "Quitar"
+  },
+  "state": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "loading": "Cargando",
+    "loadingEllipsis": "Cargando…",
+    "blocked": "Bloqueado",
+    "sent": "Enviado",
+    "paid": "Pagado",
+    "replied": "Respondido",
+    "activated": "Activado",
+    "noMatches": "Sin resultados"
+  },
+  "entity": {
+    "customer": "Cliente",
+    "customers": "Clientes",
+    "service": "Servicio",
+    "services": "Servicios",
+    "team": "Equipo",
+    "member": "Miembro",
+    "members": "Miembros",
+    "professional": "Profesional",
+    "barber": "Profesional",
+    "location": "Local",
+    "locations": "Locales",
+    "chairs": "Sillones",
+    "memberships": "Membresías",
+    "organizations": "Negocios",
+    "waitlist": "Lista de espera",
+    "availability": "Disponibilidad",
+    "schedule": "Agenda",
+    "queue": "Cola",
+    "calendar": "Calendario",
+    "requests": "Solicitudes"
+  },
+  "access": {
+    "checkingYourAccess": "Comprobando tu acceso",
+    "checkingYourSetup": "Comprobando tu configuración",
+    "checkingYourSession": "Comprobando tu sesión"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salió mal",
+    "anUnexpectedErrorOccurredTry": "Se produjo un error inesperado. Prueba a recargar la página.",
+    "goToMyWorkspace": "Ir a mi espacio"
+  },
+  "notifications": {
+    "notifications": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "nothingYet": "Nada por ahora."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Navegación de la app de cliente",
+    "appointments": "Citas",
+    "discover": "Descubrir",
+    "passport": "Passport",
+    "profile": "Perfil",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Descartar notificación"
+  },
+  "notFound": {
+    "pageNotFound": "Página no encontrada",
+    "backHome": "Volver al inicio"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Cargando tus espacios",
+    "fadeupPlatform": "Plataforma FadeUp",
+    "platformAdministration": "Administración de la plataforma",
+    "chooseAWorkspace": "Elige un espacio",
+    "youHaveAccessToMore": "Tienes acceso a más de uno. Elige a dónde ir."
   }
 }

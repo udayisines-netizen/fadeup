@@ -81,7 +81,9 @@
       "eyebrow": "Para barberos y barberías",
       "primary": "Únete a FadeUp",
       "secondary": "Acceso Pro",
-      "scrollHint": "Desplázate para abrir la barbería"
+      "scrollHint": "Desplázate para abrir la barbería",
+      "headline": "Gestiona toda la actividad de tu barbería con FadeUp.",
+      "support": "Centraliza tus citas, los clientes sin cita, tu equipo y el seguimiento de clientes en una sola herramienta pensada para barberías."
     },
     "modes": {
       "groupLabel": "Elige el tipo de negocio que llevas",
@@ -120,7 +122,6 @@
       }
     },
     "roadmapBadge": "En camino",
-    "demoLabel": "Ilustración del producto",
     "scenes": {
       "today": {
         "eyebrow": "Hoy",
@@ -237,36 +238,6 @@
         "body": "Mismo barbero, mismo corte, un toque. La cita cae en el día y todo vuelve a empezar."
       }
     },
-    "loop": {
-      "eyebrow": "El ciclo",
-      "title": "Un sistema. Del descubrimiento al siguiente corte.",
-      "body": "No es una agenda con extras pegados. Cada paso alimenta al siguiente.",
-      "steps": [
-        "Descubrir",
-        "Reservar o cola",
-        "Barbero",
-        "Sillón",
-        "Passport",
-        "Repetir cita"
-      ]
-    },
-    "existing": {
-      "eyebrow": "¿Ya usas software de reservas?",
-      "title": "Bien. Tu agenda ya es digital.",
-      "body": "Esa era la parte fácil. Lo que casi ningún sistema de reservas toca es todo lo que pasa después de cruzar la puerta.",
-      "keepLabel": "Conservas",
-      "keep": "Las citas",
-      "addLabel": "Añades",
-      "add": [
-        "Sin cita",
-        "Cola en directo",
-        "Sillones",
-        "Barberos",
-        "Fade Passport",
-        "Marketplace"
-      ],
-      "note": "Pasa tus citas a mano o empieza de cero: hoy no hay importación automática, y no vamos a fingir lo contrario."
-    },
     "pricing": {
       "eyebrow": "Precios",
       "title": "Paga por la barbería que llevas de verdad.",
@@ -285,7 +256,22 @@
       "retentionComingToPlan": "Incluida en este plan. Todavía sin construir: no se te cobrará antes de que salga.",
       "retentionNotInPlan": "Desde Pro. No está en este plan.",
       "choose": "Elegir {{name}}",
-      "applicationNote": "Unirte envía una solicitud. La revisa una persona: sin tarjeta, sin cobro."
+      "applicationNote": "Unirte envía una solicitud. La revisa una persona: sin tarjeta, sin cobro.",
+      "typeLabel": "¿Qué tipo de actividad corresponde a tu barbería?",
+      "types": {
+        "independent": {
+          "label": "Independiente",
+          "hint": "Trabajas solo."
+        },
+        "barbershop": {
+          "label": "Barbería",
+          "hint": "Un equipo en un local."
+        },
+        "multi_location": {
+          "label": "Multi-local",
+          "hint": "Varios locales."
+        }
+      }
     },
     "plans": {
       "solo": {
@@ -372,12 +358,6 @@
       "coming": "En camino",
       "plannedNote": "«En camino» significa que la función forma parte del plan pero todavía no está construida. No es parte de lo que recibes hoy."
     },
-    "final": {
-      "together": "En un mismo sitio.",
-      "title": "Lleva tu barbería con FadeUp.",
-      "primary": "Únete a FadeUp",
-      "secondary": "Acceso Pro"
-    },
     "stage": {
       "today": "Hoy",
       "free": "Libre",
@@ -440,6 +420,59 @@
     "register": {
       "planLabel": "Plan seleccionado",
       "planNote": "Viene de la página de precios. No se cobra ni se reserva nada: puedes cambiarlo mientras la facturación no esté activa."
+    },
+    "film": {
+      "alt": "Animación silenciosa: un cliente atraviesa un día en una barbería FadeUp, de la cita a la cola, del sillón al Fade Passport, hasta una nueva reserva."
+    },
+    "stages": {
+      "one": {
+        "title": "Dirige tu jornada",
+        "body": "Las citas, los clientes que llegan sin reserva y la actividad del equipo se ven en un mismo sitio. Sabes qué está previsto, quién llega y quién atiende al siguiente cliente."
+      },
+      "two": {
+        "title": "Gestiona los clientes sin cita",
+        "body": "Los clientes se unen a la cola y siguen su posición. Tu equipo mantiene una visión clara del orden de paso y del barber que atenderá al siguiente cliente."
+      },
+      "three": {
+        "title": "Acompaña a cada barber",
+        "body": "Cuando el cliente pasa al sillón, el barber encuentra el servicio previsto y la información útil de sus visitas anteriores. Al terminar, el siguiente cliente ya está identificado."
+      },
+      "four": {
+        "title": "Fideliza a tus clientes",
+        "body": "Fade Passport conserva la información útil sobre los cortes y los hábitos del cliente. Tu equipo encuentra más fácilmente lo que se hizo y puede dar un seguimiento más coherente de una visita a otra.",
+        "extra": "Tu barbería y tus barbers también pueden ser descubiertos en FadeUp por nuevos clientes, que después pueden reservar o unirse a tu cola."
+      },
+      "progressLabel": "Progreso del relato"
+    },
+    "migration": {
+      "eyebrow": "Pasar a FadeUp",
+      "title": "¿Ya usas un software de reservas?",
+      "lead": "Pasar a FadeUp no significa empezar de cero.",
+      "body": "FadeUp está pensado para facilitar el paso desde tu solución actual y ayudarte a recuperar la información necesaria para seguir trabajando en buenas condiciones.",
+      "steps": [
+        "Nos dices qué solución usas hoy.",
+        "Preparamos contigo el paso a FadeUp.",
+        "Tu equipo recupera su actividad en FadeUp y puede seguir trabajando."
+      ],
+      "note": "El acompañamiento se hace con nuestro equipo. Hoy no existe una importación automática desde otro software."
     }
+  },
+  "featuresPage": {
+    "everythingABarbershopRunsOn": "Todo lo que mueve un negocio, conectado.",
+    "seeThePlanStructure": "Ver la estructura de planes",
+    "compareTiersByLocationCount": "Compara niveles por número de locales y funciones.",
+    "viewPricing": "Ver precios"
+  },
+  "pricingPage": {
+    "featureComparisonByPlan": "Comparativa de funciones por plan",
+    "included": "Incluido",
+    "notIncluded": "No incluido",
+    "plansThatScaleWithYour": "Planes que crecen con tu negocio.",
+    "fadeupIsInEarlyAccess": "FadeUp está en acceso anticipado. Los niveles siguientes describen la estructura de planes prevista —agrupada por número de locales y funciones—, no precios definitivos. Todo negocio empieza igual: créalo gratis y configura tu local.",
+    "mostCommon": "El más elegido",
+    "comparePlanFeatures": "Comparar funciones",
+    "feature": "Función",
+    "pricingQuestions": "Preguntas sobre precios",
+    "setUpYourShopOn": "Configura tu negocio en FadeUp hoy"
   }
 }

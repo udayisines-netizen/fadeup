@@ -135,7 +135,7 @@ describe('PublicBookingPage', () => {
     fireEvent.click(slot)
     fireEvent.change(await screen.findByLabelText('Full name'), { target: { value: name } })
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+15551230000' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Request appointment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }))
   }
 
   it('an anonymous booking keeps its claim token and offers the account that makes it useful', async () => {

@@ -4,7 +4,13 @@
     "forBusiness": "للمحترفين",
     "features": "المزايا",
     "pricing": "الأسعار",
-    "myFadeUp": "FadeUp الخاص بي"
+    "myFadeUp": "FadeUp الخاص بي",
+    "loadingYourOrganizations": "جارٍ تحميل منشآتك…",
+    "signOut": "تسجيل الخروج",
+    "mainNavigation": "التنقل الرئيسي",
+    "openMenu": "فتح القائمة",
+    "mobileNavigation": "التنقل على الجوال",
+    "menu": "القائمة"
   },
   "auth": {
     "logIn": "تسجيل الدخول",
@@ -28,5 +34,128 @@
   "language": {
     "label": "اللغة",
     "select": "اختر اللغة"
+  },
+  "field": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "status": "الحالة",
+    "role": "الدور",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "type": "النوع",
+    "notes": "ملاحظات",
+    "price": "السعر",
+    "title": "المسمى",
+    "reason": "السبب",
+    "country": "الدولة",
+    "timezone": "المنطقة الزمنية",
+    "locale": "اللغة",
+    "category": "الفئة",
+    "source": "المصدر",
+    "score": "النتيجة",
+    "target": "الهدف",
+    "template": "القالب",
+    "scope": "النطاق",
+    "state": "الحالة",
+    "password": "كلمة المرور",
+    "created": "تاريخ الإنشاء",
+    "expires": "تنتهي في",
+    "plan": "الباقة",
+    "day": "اليوم",
+    "when": "الموعد",
+    "customerName": "اسم العميل",
+    "description": "الوصف",
+    "phoneOptional": "الهاتف (اختياري)",
+    "emailOptional": "البريد الإلكتروني (اختياري)",
+    "notesOptional": "ملاحظات (اختياري)",
+    "reasonOptional": "السبب (اختياري)"
+  },
+  "action": {
+    "actions": "إجراءات",
+    "tryAgain": "إعادة المحاولة",
+    "reload": "إعادة التحميل",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "selected": "محدد",
+    "back": "رجوع",
+    "done": "تم",
+    "remove": "إزالة"
+  },
+  "state": {
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "loading": "جارٍ التحميل",
+    "loadingEllipsis": "جارٍ التحميل…",
+    "blocked": "محظور",
+    "sent": "أُرسل",
+    "paid": "مدفوع",
+    "replied": "تم الرد",
+    "activated": "مُفعّل",
+    "noMatches": "لا توجد نتائج"
+  },
+  "entity": {
+    "customer": "العميل",
+    "customers": "العملاء",
+    "service": "الخدمة",
+    "services": "الخدمات",
+    "team": "الفريق",
+    "member": "عضو",
+    "members": "الأعضاء",
+    "professional": "المختص",
+    "barber": "المختص",
+    "location": "الفرع",
+    "locations": "الفروع",
+    "chairs": "الكراسي",
+    "memberships": "الاشتراكات",
+    "organizations": "المنشآت",
+    "waitlist": "قائمة الانتظار",
+    "availability": "التوافر",
+    "schedule": "الجدول",
+    "queue": "الطابور",
+    "calendar": "التقويم",
+    "requests": "الطلبات"
+  },
+  "access": {
+    "checkingYourAccess": "جارٍ التحقق من صلاحياتك",
+    "checkingYourSetup": "جارٍ التحقق من إعدادك",
+    "checkingYourSession": "جارٍ التحقق من جلستك"
+  },
+  "errors": {
+    "somethingWentWrong": "حدث خطأ ما",
+    "anUnexpectedErrorOccurredTry": "حدث خطأ غير متوقع. جرّب إعادة تحميل الصفحة.",
+    "goToMyWorkspace": "الانتقال إلى مساحتي"
+  },
+  "notifications": {
+    "notifications": "الإشعارات",
+    "markAllRead": "تعليم الكل كمقروء",
+    "nothingYet": "لا شيء بعد."
+  },
+  "customerNav": {
+    "customerAppNavigation": "التنقل في تطبيق العميل",
+    "appointments": "المواعيد",
+    "discover": "استكشاف",
+    "passport": "Passport",
+    "profile": "الملف الشخصي",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "إغلاق الإشعار"
+  },
+  "notFound": {
+    "pageNotFound": "الصفحة غير موجودة",
+    "backHome": "العودة إلى الرئيسية"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "جارٍ تحميل مساحاتك",
+    "fadeupPlatform": "منصة FadeUp",
+    "platformAdministration": "إدارة المنصة",
+    "chooseAWorkspace": "اختر مساحة عمل",
+    "youHaveAccessToMore": "لديك صلاحية الوصول إلى أكثر من مساحة. اختر وجهتك."
   }
 }

@@ -10,6 +10,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { safeRedirectOr } from '@/lib/safe-redirect'
 import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons'
 import type { AuthIntent } from '@/lib/oauth'
+import { useTranslation } from 'react-i18next'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -36,6 +37,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
  * '//evil.example' and follow off-site.
  */
 export function LoginForm({ defaultRedirect, intent }: { defaultRedirect: string; intent: AuthIntent }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [formError, setFormError] = useState<string | null>(null)
@@ -73,7 +75,7 @@ export function LoginForm({ defaultRedirect, intent }: { defaultRedirect: string
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
         <TextField
-          label="Email"
+          label={t('common:field.email')}
           type="email"
           inputMode="email"
           autoComplete="email"
@@ -82,7 +84,7 @@ export function LoginForm({ defaultRedirect, intent }: { defaultRedirect: string
           {...register('email')}
         />
         <TextField
-          label="Password"
+          label={t('common:field.password')}
           type="password"
           autoComplete="current-password"
           error={errors.password?.message}
@@ -94,12 +96,12 @@ export function LoginForm({ defaultRedirect, intent }: { defaultRedirect: string
             to="/forgot-password"
             className="inline-flex min-h-11 items-center text-sm font-medium text-ink-500 underline underline-offset-2 hover:text-ink-950"
           >
-            Forgot password?
+            {t('auth:loginForm.forgotPassword')}
           </Link>
         </div>
 
         <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Log in
+          {t('common:auth.logIn')}
         </Button>
       </form>
     </div>

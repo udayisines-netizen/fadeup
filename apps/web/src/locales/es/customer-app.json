@@ -20,7 +20,8 @@
     "lastCutDays_other": "Han pasado {{count}} días desde tu último corte.",
     "rebookOverdueTitle": "¿Hora de un nuevo corte?",
     "rebookTitle": "¿El mismo corte que la última vez?",
-    "rebookCta": "Reservar de nuevo con {{barber}}"
+    "rebookCta": "Reservar de nuevo con {{barber}}",
+    "couldntLoadYourHome": "No se pudo cargar tu inicio"
   },
   "onboarding": {
     "title": "Un par de preguntas rápidas",
@@ -56,7 +57,8 @@
     },
     "skip": "Omitir por ahora",
     "save": "Guardar",
-    "saved": "Guardado — ¡gracias!"
+    "saved": "Guardado — ¡gracias!",
+    "couldntLoadYourProfile": "No se pudo cargar tu perfil"
   },
   "profile": {
     "title": "Perfil",
@@ -68,7 +70,8 @@
     "habitsTitle": "Tus hábitos",
     "editHabits": "Editar tus hábitos",
     "noHabitsYet": "Aún no nos has contado tus hábitos.",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "couldntLoadYourProfile": "No se pudo cargar tu perfil"
   },
   "appointments": {
     "title": "Citas",
@@ -102,7 +105,8 @@
     "discoverCta": "Descubrir barberos",
     "remove": "Quitar",
     "viewProfile": "Ver perfil",
-    "book": "Reservar"
+    "book": "Reservar",
+    "couldntLoadYourFavorites": "No se pudieron cargar tus favoritos"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "Esa hora acaba de ocuparse. Elige otra.",
     "notAllowed": "Esta cita ya no se puede cambiar.",
     "failed": "No se pudo cambiar la cita. Inténtalo de nuevo."
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "Ir a FadeUp"
   }
 }

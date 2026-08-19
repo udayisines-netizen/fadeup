@@ -4,7 +4,13 @@
     "forBusiness": "Für Unternehmen",
     "features": "Funktionen",
     "pricing": "Preise",
-    "myFadeUp": "Mein FadeUp"
+    "myFadeUp": "Mein FadeUp",
+    "loadingYourOrganizations": "Deine Betriebe werden geladen…",
+    "signOut": "Abmelden",
+    "mainNavigation": "Hauptnavigation",
+    "openMenu": "Menü öffnen",
+    "mobileNavigation": "Mobile Navigation",
+    "menu": "Menü"
   },
   "auth": {
     "logIn": "Anmelden",
@@ -28,5 +34,128 @@
   "language": {
     "label": "Sprache",
     "select": "Sprache auswählen"
+  },
+  "field": {
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "status": "Status",
+    "role": "Rolle",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "type": "Typ",
+    "notes": "Notizen",
+    "price": "Preis",
+    "title": "Titel",
+    "reason": "Grund",
+    "country": "Land",
+    "timezone": "Zeitzone",
+    "locale": "Sprache",
+    "category": "Kategorie",
+    "source": "Quelle",
+    "score": "Score",
+    "target": "Ziel",
+    "template": "Vorlage",
+    "scope": "Geltungsbereich",
+    "state": "Zustand",
+    "password": "Passwort",
+    "created": "Erstellt",
+    "expires": "Läuft ab",
+    "plan": "Tarif",
+    "day": "Tag",
+    "when": "Wann",
+    "customerName": "Name des Kunden",
+    "description": "Beschreibung",
+    "phoneOptional": "Telefon (optional)",
+    "emailOptional": "E-Mail (optional)",
+    "notesOptional": "Notizen (optional)",
+    "reasonOptional": "Grund (optional)"
+  },
+  "action": {
+    "actions": "Aktionen",
+    "tryAgain": "Erneut versuchen",
+    "reload": "Neu laden",
+    "close": "Schließen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "search": "Suchen",
+    "selected": "Ausgewählt",
+    "back": "Zurück",
+    "done": "Fertig",
+    "remove": "Entfernen"
+  },
+  "state": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "loading": "Wird geladen",
+    "loadingEllipsis": "Wird geladen…",
+    "blocked": "Blockiert",
+    "sent": "Gesendet",
+    "paid": "Bezahlt",
+    "replied": "Beantwortet",
+    "activated": "Aktiviert",
+    "noMatches": "Keine Treffer"
+  },
+  "entity": {
+    "customer": "Kunde",
+    "customers": "Kunden",
+    "service": "Leistung",
+    "services": "Leistungen",
+    "team": "Team",
+    "member": "Mitglied",
+    "members": "Mitglieder",
+    "professional": "Fachkraft",
+    "barber": "Fachkraft",
+    "location": "Standort",
+    "locations": "Standorte",
+    "chairs": "Plätze",
+    "memberships": "Mitgliedschaften",
+    "organizations": "Betriebe",
+    "waitlist": "Warteliste",
+    "availability": "Verfügbarkeit",
+    "schedule": "Terminplan",
+    "queue": "Warteschlange",
+    "calendar": "Kalender",
+    "requests": "Anfragen"
+  },
+  "access": {
+    "checkingYourAccess": "Zugang wird geprüft",
+    "checkingYourSetup": "Einrichtung wird geprüft",
+    "checkingYourSession": "Sitzung wird geprüft"
+  },
+  "errors": {
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "anUnexpectedErrorOccurredTry": "Ein unerwarteter Fehler ist aufgetreten. Lade die Seite neu.",
+    "goToMyWorkspace": "Zu meinem Arbeitsbereich"
+  },
+  "notifications": {
+    "notifications": "Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren",
+    "nothingYet": "Noch nichts."
+  },
+  "customerNav": {
+    "customerAppNavigation": "Navigation der Kunden-App",
+    "appointments": "Termine",
+    "discover": "Entdecken",
+    "passport": "Passport",
+    "profile": "Profil",
+    "fadeup": "FadeUp"
+  },
+  "ui": {
+    "dismissNotification": "Benachrichtigung schließen"
+  },
+  "notFound": {
+    "pageNotFound": "Seite nicht gefunden",
+    "backHome": "Zurück zur Startseite"
+  },
+  "workspaceSelector": {
+    "loadingYourWorkspaces": "Deine Arbeitsbereiche werden geladen",
+    "fadeupPlatform": "FadeUp-Plattform",
+    "platformAdministration": "Plattformverwaltung",
+    "chooseAWorkspace": "Arbeitsbereich wählen",
+    "youHaveAccessToMore": "Du hast Zugang zu mehreren. Wähle, wohin du möchtest."
   }
 }

@@ -67,7 +67,7 @@ function ApplicationsTable({ status }: { status: ProfessionalApplicationStatus }
   }
 
   if (query.isError) {
-    return <ErrorState className="mt-4" title="Couldn't load applications" description={query.error.message} />
+    return <ErrorState className="mt-4" title={t('platform:applications.couldntLoadApplications')} description={query.error.message} />
   }
 
   const emptyTitle =

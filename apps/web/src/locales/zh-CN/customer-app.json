@@ -20,7 +20,8 @@
     "lastCutDays_other": "距离你上次理发已经 {{count}} 天了。",
     "rebookOverdueTitle": "是时候剪个新发型了吗？",
     "rebookTitle": "和上次一样的发型？",
-    "rebookCta": "与 {{barber}} 再次预约"
+    "rebookCta": "与 {{barber}} 再次预约",
+    "couldntLoadYourHome": "无法加载你的首页"
   },
   "onboarding": {
     "title": "几个简单问题",
@@ -56,7 +57,8 @@
     },
     "skip": "暂时跳过",
     "save": "保存",
-    "saved": "已保存，谢谢！"
+    "saved": "已保存，谢谢！",
+    "couldntLoadYourProfile": "无法加载你的资料"
   },
   "profile": {
     "title": "个人资料",
@@ -68,7 +70,8 @@
     "habitsTitle": "你的习惯",
     "editHabits": "编辑你的习惯",
     "noHabitsYet": "你还没有告诉我们你的习惯。",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "couldntLoadYourProfile": "无法加载你的资料"
   },
   "appointments": {
     "title": "预约",
@@ -102,7 +105,8 @@
     "discoverCta": "发现理发师",
     "remove": "移除",
     "viewProfile": "查看资料",
-    "book": "预约"
+    "book": "预约",
+    "couldntLoadYourFavorites": "无法加载你的收藏"
   },
   "booking": {
     "stage": {
@@ -140,5 +144,9 @@
     "slotTaken": "该时间刚被预约。请另选一个。",
     "notAllowed": "此预约已无法更改。",
     "failed": "无法更改预约，请重试。"
+  },
+  "passportPage": {},
+  "shareView": {
+    "goToFadeup": "前往 FadeUp"
   }
 }

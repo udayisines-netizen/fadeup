@@ -1,0 +1,99 @@
+{
+  "applicationDetail": {
+    "couldntLoadThisApplication": "无法加载该申请",
+    "applicationNotFound": "未找到该申请"
+  },
+  "claim": {
+    "claimFadeupPlatformOwnership": "认领 FadeUp 平台所有权",
+    "thisCanOnlyBeDone": "此操作只能由持有该链接的人执行一次。",
+    "logInOrCreateAn": "请登录或创建账户以继续。",
+    "claimPlatformOwnership": "认领平台所有权"
+  },
+  "invite": {
+    "joinTheFadeupPlatformTeam": "加入 FadeUp 平台团队",
+    "acceptThisInvitationToGet": "接受此邀请以获得平台访问权限。",
+    "logInOrCreateAn": "请登录或创建账户以继续。",
+    "acceptInvitation": "接受邀请"
+  },
+  "workspace": {
+    "loadingBarberWorkspace": "正在加载专业人员工作台",
+    "barberNotFoundInThis": "在该商家中未找到该专业人员",
+    "noServicesAssigned": "未分配服务。",
+    "weeklyHours": "每周工作时间",
+    "noWorkingHoursSet": "尚未设置工作时间。",
+    "upcomingExceptions": "即将到来的例外",
+    "noAvailabilityExceptionsOnFile": "没有记录任何可预约时间的例外。",
+    "couldntEnterSupportView": "无法进入支持视图"
+  },
+  "applications": {
+    "couldntLoadApplications": "无法加载申请"
+  },
+  "team": {
+    "couldntLoadPlatformTeam": "无法加载平台团队",
+    "platformTeamMembers": "平台团队成员",
+    "couldntLoadInvitations": "无法加载邀请",
+    "pendingPlatformInvitations": "待接受的平台邀请",
+    "noPendingInvitations": "没有待接受的邀请",
+    "leaveBlankToCreateA": "留空可创建一个任何人只能使用一次的链接。",
+    "platformTeam": "平台团队",
+    "whoHasFadeupPlatformAccess": "谁拥有 FadeUp 平台访问权限，以及待接受的邀请。",
+    "user": "用户",
+    "since": "起始于",
+    "pendingInvitations": "待接受的邀请",
+    "revoke": "撤销",
+    "inviteSomeone": "邀请成员",
+    "sendInvitation": "发送邀请",
+    "invitationCreated": "邀请已创建",
+    "invitationRevoked": "邀请已撤销",
+    "couldntRevokeInvitation": "无法撤销邀请"
+  },
+  "organizations": {
+    "couldntLoadOrganizations": "无法加载商家",
+    "noOrganizationsYet": "暂无商家",
+    "everyBarbershopTenantOnFadeup": "FadeUp 上的所有商家。",
+    "slug": "网址标识"
+  },
+  "auditLog": {
+    "couldntLoadAuditLog": "无法加载审计日志",
+    "auditLog": "审计日志",
+    "noPlatformActivityYet": "暂无平台活动",
+    "platformlevelSecurityEventsMostRecent": "平台级安全事件，最新的排在前面。",
+    "action": "操作",
+    "actor": "操作者"
+  },
+  "organizationDetail": {
+    "loadingOrganization": "正在加载商家",
+    "couldntLoadOrganization": "无法加载商家",
+    "organizationNotFound": "未找到该商家",
+    "couldntLoadLocations": "无法加载门店",
+    "noLocationsYet": "暂无门店",
+    "couldntLoadTeam": "无法加载团队",
+    "noTeamMembersYet": "暂无团队成员",
+    "organizations": "← 商家",
+    "viewBarberWorkspace": "查看专业人员工作台",
+    "couldntEnterSupportView": "无法进入支持视图"
+  },
+  "login": {
+    "platformSignIn": "平台登录",
+    "fadeupPlatformStaffOnly": "仅限 FadeUp 平台员工。",
+    "signIn": "登录"
+  },
+  "overview": {
+    "platformOverview": "平台总览",
+    "signedInAs": "已登录为"
+  },
+  "nav": {
+    "fadeupPlatform": "FadeUp 平台",
+    "overview": "总览",
+    "applications": "申请",
+    "acquisition": "获客",
+    "outreach": "外联",
+    "dataScience": "数据科学",
+    "auditLog": "审计日志",
+    "checkingPlatformAccess": "正在检查平台访问权限",
+    "backToFadeup": "返回 FadeUp",
+    "exitSupportView": "退出支持视图",
+    "exitedSupportView": "已退出支持视图",
+    "couldntExitSupportView": "无法退出支持视图"
+  }
+}
