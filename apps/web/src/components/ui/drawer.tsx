@@ -15,7 +15,12 @@ function DrawerOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
 }
 
 interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
-  side?: 'right' | 'left'
+  /**
+   * `bottom` is the phone default for anything the user acts on: it opens
+   * inside the thumb's reach, where a side drawer puts its primary buttons
+   * at the top of a 6-inch screen.
+   */
+  side?: 'right' | 'left' | 'bottom'
 }
 
 export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(function DrawerContent(
@@ -30,8 +35,14 @@ export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(func
         data-fu-drawer-content
         data-side={side}
         className={cn(
-          'fixed inset-y-0 z-50 flex w-[calc(100vw-3rem)] max-w-sm flex-col overscroll-contain border-border bg-paper-0 p-6 shadow-lg',
-          side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
+          'fixed z-50 flex flex-col overscroll-contain border-border bg-paper-0 shadow-lg',
+          side === 'bottom'
+            ? // Capped so the sheet never covers the whole screen: seeing what
+              // is behind it is how the user keeps their place in the day.
+              'inset-x-0 bottom-0 max-h-[85svh] rounded-t-xl border-t p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]'
+            : 'inset-y-0 w-[calc(100vw-3rem)] max-w-sm p-6',
+          side === 'right' && 'right-0 border-l',
+          side === 'left' && 'left-0 border-r',
           className,
         )}
         {...props}

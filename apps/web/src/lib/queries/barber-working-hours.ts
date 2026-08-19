@@ -15,6 +15,9 @@ export interface BarberWorkingHours {
   isOff: boolean
   startTime: string | null
   endTime: string | null
+  /** Optional afternoon interval, for a day split by a midday break. Null means one continuous window. */
+  secondStartTime: string | null
+  secondEndTime: string | null
   createdAt: string
   updatedAt: string
 }
@@ -27,12 +30,14 @@ interface BarberWorkingHoursRow {
   is_off: boolean
   start_time: string | null
   end_time: string | null
+  second_start_time: string | null
+  second_end_time: string | null
   created_at: string
   updated_at: string
 }
 
 const BARBER_WORKING_HOURS_COLUMNS =
-  'id, organization_id, barber_id, day_of_week, is_off, start_time, end_time, created_at, updated_at'
+  'id, organization_id, barber_id, day_of_week, is_off, start_time, end_time, second_start_time, second_end_time, created_at, updated_at'
 
 function mapBarberWorkingHours(row: BarberWorkingHoursRow): BarberWorkingHours {
   return {
@@ -43,6 +48,8 @@ function mapBarberWorkingHours(row: BarberWorkingHoursRow): BarberWorkingHours {
     isOff: row.is_off,
     startTime: row.start_time,
     endTime: row.end_time,
+    secondStartTime: row.second_start_time,
+    secondEndTime: row.second_end_time,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -75,6 +82,8 @@ export interface UpsertBarberWorkingHoursInput {
   isOff: boolean
   startTime: string | null
   endTime: string | null
+  secondStartTime?: string | null
+  secondEndTime?: string | null
 }
 
 /**
@@ -97,6 +106,10 @@ export function useUpsertBarberWorkingHours() {
           is_off: input.isOff,
           start_time: input.startTime,
           end_time: input.endTime,
+          // Always sent, so clearing a split shift genuinely clears it rather
+          // than leaving yesterday's afternoon behind on the row.
+          second_start_time: input.secondStartTime ?? null,
+          second_end_time: input.secondEndTime ?? null,
         },
         { onConflict: 'barber_id,day_of_week' },
       )
@@ -104,6 +117,9 @@ export function useUpsertBarberWorkingHours() {
     },
     onSuccess: (_result, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['barber-working-hours', variables.organizationId] })
+      // Hours are an input to every slot calculation.
+      void queryClient.invalidateQueries({ queryKey: ['available-slots'] })
+      void queryClient.invalidateQueries({ queryKey: ['public-available-slots'] })
     },
   })
 }

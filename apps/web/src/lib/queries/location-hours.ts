@@ -15,6 +15,9 @@ export interface LocationHours {
   isClosed: boolean
   openTime: string | null
   closeTime: string | null
+  /** Optional afternoon interval, for a shop that closes over lunch. Null means one continuous window. */
+  secondOpenTime: string | null
+  secondCloseTime: string | null
   createdAt: string
   updatedAt: string
 }
@@ -27,12 +30,14 @@ interface LocationHoursRow {
   is_closed: boolean
   open_time: string | null
   close_time: string | null
+  second_open_time: string | null
+  second_close_time: string | null
   created_at: string
   updated_at: string
 }
 
 const LOCATION_HOURS_COLUMNS =
-  'id, organization_id, location_id, day_of_week, is_closed, open_time, close_time, created_at, updated_at'
+  'id, organization_id, location_id, day_of_week, is_closed, open_time, close_time, second_open_time, second_close_time, created_at, updated_at'
 
 function mapLocationHours(row: LocationHoursRow): LocationHours {
   return {
@@ -43,6 +48,8 @@ function mapLocationHours(row: LocationHoursRow): LocationHours {
     isClosed: row.is_closed,
     openTime: row.open_time,
     closeTime: row.close_time,
+    secondOpenTime: row.second_open_time,
+    secondCloseTime: row.second_close_time,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -75,6 +82,8 @@ export interface UpsertLocationHoursInput {
   isClosed: boolean
   openTime: string | null
   closeTime: string | null
+  secondOpenTime?: string | null
+  secondCloseTime?: string | null
 }
 
 /**
@@ -97,6 +106,8 @@ export function useUpsertLocationHours() {
           is_closed: input.isClosed,
           open_time: input.openTime,
           close_time: input.closeTime,
+          second_open_time: input.secondOpenTime ?? null,
+          second_close_time: input.secondCloseTime ?? null,
         },
         { onConflict: 'location_id,day_of_week' },
       )

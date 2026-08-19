@@ -56,6 +56,13 @@ interface WeeklyDayValue {
   closed: boolean
   startTime: string | null
   endTime: string | null
+  /**
+   * The afternoon half of a split shift. Both null means one continuous
+   * window, which is how every day behaved before LOT D and still does unless
+   * someone turns the break on.
+   */
+  secondStartTime: string | null
+  secondEndTime: string | null
 }
 
 function toTimeInputValue(value: string | null): string {
@@ -64,7 +71,16 @@ function toTimeInputValue(value: string | null): string {
 
 /** Every day of the week 0..6, defaulting to closed for days with no stored row (the DB's own convention). */
 function buildWeek(byDay: Map<number, WeeklyDayValue>): WeeklyDayValue[] {
-  return Array.from({ length: 7 }, (_, dayOfWeek) => byDay.get(dayOfWeek) ?? { dayOfWeek, closed: true, startTime: null, endTime: null })
+  return Array.from({ length: 7 }, (_, dayOfWeek) =>
+    byDay.get(dayOfWeek) ?? {
+      dayOfWeek,
+      closed: true,
+      startTime: null,
+      endTime: null,
+      secondStartTime: null,
+      secondEndTime: null,
+    },
+  )
 }
 
 function todayIsoDate(): string {
@@ -183,6 +199,8 @@ function LocationHoursSection({
         closed: row.isClosed,
         startTime: row.openTime,
         endTime: row.closeTime,
+        secondStartTime: row.secondOpenTime,
+        secondEndTime: row.secondCloseTime,
       })
       map.set(row.locationId, dayMap)
     }
@@ -226,6 +244,8 @@ function LocationHoursSection({
                       isClosed: value.closed,
                       openTime: value.startTime,
                       closeTime: value.endTime,
+                      secondOpenTime: value.secondStartTime,
+                      secondCloseTime: value.secondEndTime,
                     })
                   }
                 />
@@ -275,6 +295,8 @@ function BarberAvailabilitySection({
         closed: row.isOff,
         startTime: row.startTime,
         endTime: row.endTime,
+        secondStartTime: row.secondStartTime,
+        secondEndTime: row.secondEndTime,
       })
       map.set(row.barberId, dayMap)
     }
@@ -326,6 +348,8 @@ function BarberAvailabilitySection({
                       isOff: value.closed,
                       startTime: value.startTime,
                       endTime: value.endTime,
+                      secondStartTime: value.secondStartTime,
+                      secondEndTime: value.secondEndTime,
                     })
                   }
                 />
@@ -363,6 +387,7 @@ function WeeklyHoursTable({
         <TableRow>
           <TableHead>Day</TableHead>
           <TableHead>{closedLabel}</TableHead>
+          <TableHead>Break</TableHead>
           <TableHead>Start</TableHead>
           <TableHead>End</TableHead>
           {canManage ? (
@@ -401,14 +426,33 @@ function WeeklyHoursRow({
   const dayLabel = DAY_LABELS[day.dayOfWeek] ?? `Day ${day.dayOfWeek}`
   const initialStart = toTimeInputValue(day.startTime)
   const initialEnd = toTimeInputValue(day.endTime)
+  const initialSecondStart = toTimeInputValue(day.secondStartTime)
+  const initialSecondEnd = toTimeInputValue(day.secondEndTime)
+  const initialSplit = Boolean(day.secondStartTime && day.secondEndTime)
 
   const [closed, setClosed] = useState(day.closed)
   const [startTime, setStartTime] = useState(initialStart)
   const [endTime, setEndTime] = useState(initialEnd)
+  const [split, setSplit] = useState(initialSplit)
+  const [secondStartTime, setSecondStartTime] = useState(initialSecondStart)
+  const [secondEndTime, setSecondEndTime] = useState(initialSecondEnd)
   const [isSaving, setIsSaving] = useState(false)
 
-  const isDirty = closed !== day.closed || startTime !== initialStart || endTime !== initialEnd
-  const isInvalid = !closed && (!startTime || !endTime || startTime >= endTime)
+  const isDirty =
+    closed !== day.closed ||
+    startTime !== initialStart ||
+    endTime !== initialEnd ||
+    split !== initialSplit ||
+    (split && (secondStartTime !== initialSecondStart || secondEndTime !== initialSecondEnd))
+
+  // Mirrors the CHECK constraint and apply_weekly_hours' own validation, so
+  // the person gets a sentence here instead of a constraint name from Postgres.
+  const firstInvalid = !closed && (!startTime || !endTime || startTime >= endTime)
+  const secondInvalid =
+    !closed &&
+    split &&
+    (!secondStartTime || !secondEndTime || secondStartTime >= secondEndTime || secondStartTime < endTime)
+  const isInvalid = firstInvalid || secondInvalid
 
   async function handleSave() {
     setIsSaving(true)
@@ -418,6 +462,10 @@ function WeeklyHoursRow({
         closed,
         startTime: closed ? null : startTime,
         endTime: closed ? null : endTime,
+        // A closed day, or one without a break, carries no second interval —
+        // sent explicitly as null so turning the break off actually clears it.
+        secondStartTime: closed || !split ? null : secondStartTime,
+        secondEndTime: closed || !split ? null : secondEndTime,
       })
       toast({ title: `${dayLabel} updated`, variant: 'success' })
     } catch (error) {
@@ -444,25 +492,73 @@ function WeeklyHoursRow({
         />
       </TableCell>
       <TableCell>
-        <input
-          type="time"
-          aria-label={`${dayLabel} start time`}
-          className={TIME_INPUT_CLASSES}
-          value={startTime}
+        {/* A midday closure is how most salons actually work, and until LOT D
+            the schema could not express it at all — one interval per day. */}
+        <Switch
+          label={`${dayLabel} has a midday break`}
+          hideLabel
+          checked={split}
           disabled={closed || !canManage}
-          onChange={(event) => setStartTime(event.target.value)}
+          onChange={(event) => {
+            const next = event.target.checked
+            setSplit(next)
+            if (next && !secondStartTime && !secondEndTime) {
+              // Sensible opening guess, so nobody types four times from scratch.
+              setSecondStartTime(endTime || '14:00')
+              setSecondEndTime('19:00')
+            }
+          }}
         />
       </TableCell>
       <TableCell>
-        <input
-          type="time"
-          aria-label={`${dayLabel} end time`}
-          className={TIME_INPUT_CLASSES}
-          value={endTime}
-          disabled={closed || !canManage}
-          onChange={(event) => setEndTime(event.target.value)}
-        />
-        {isInvalid ? <p className="mt-1 text-xs text-danger-600">End must be after start.</p> : null}
+        <div className="flex flex-col gap-1">
+          <input
+            type="time"
+            aria-label={`${dayLabel} start time`}
+            className={TIME_INPUT_CLASSES}
+            value={startTime}
+            disabled={closed || !canManage}
+            onChange={(event) => setStartTime(event.target.value)}
+          />
+          {split && !closed ? (
+            <input
+              type="time"
+              aria-label={`${dayLabel} afternoon start time`}
+              className={TIME_INPUT_CLASSES}
+              value={secondStartTime}
+              disabled={!canManage}
+              onChange={(event) => setSecondStartTime(event.target.value)}
+            />
+          ) : null}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <input
+            type="time"
+            aria-label={`${dayLabel} end time`}
+            className={TIME_INPUT_CLASSES}
+            value={endTime}
+            disabled={closed || !canManage}
+            onChange={(event) => setEndTime(event.target.value)}
+          />
+          {split && !closed ? (
+            <input
+              type="time"
+              aria-label={`${dayLabel} afternoon end time`}
+              className={TIME_INPUT_CLASSES}
+              value={secondEndTime}
+              disabled={!canManage}
+              onChange={(event) => setSecondEndTime(event.target.value)}
+            />
+          ) : null}
+        </div>
+        {firstInvalid ? <p className="mt-1 text-xs text-danger-600">End must be after start.</p> : null}
+        {secondInvalid ? (
+          <p className="mt-1 text-xs text-danger-600">
+            The afternoon must start after the morning ends, and end after it starts.
+          </p>
+        ) : null}
       </TableCell>
       {canManage ? (
         <TableCell className="text-right">

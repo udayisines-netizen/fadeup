@@ -30,6 +30,20 @@ function AppShell() {
   const navigate = useNavigate()
   const { membershipsQuery, memberships, currentMembership } = useCurrentOrg()
 
+  const canManageTeam = currentMembership ? MANAGING_ROLES.has(currentMembership.role) : false
+  const canDecideBookings = currentMembership ? DECIDING_ROLES.has(currentMembership.role) : false
+
+  // Subscribed at the LAYOUT, so a request arriving while staff are on the
+  // queue or the services screen still lights the badge. This is the only
+  // reason anyone would know to open the inbox.
+  //
+  // Called BEFORE the early returns below. It used to sit after them, which
+  // meant React saw a different number of hooks once memberships finished
+  // loading — the "rendered more hooks than during the previous render" crash,
+  // reached on every cold load that actually showed the pending state.
+  const requestsQuery = useBookingRequests(canDecideBookings ? currentMembership?.organizationId : undefined)
+  const pendingCount = requestsQuery.data?.length ?? 0
+
   if (membershipsQuery.isPending) {
     return <PageSpinner label="Loading your organizations…" />
   }
@@ -62,15 +76,6 @@ function AppShell() {
     navigate('/login', { replace: true })
   }
 
-  const canManageTeam = currentMembership ? MANAGING_ROLES.has(currentMembership.role) : false
-  const canDecideBookings = currentMembership ? DECIDING_ROLES.has(currentMembership.role) : false
-
-  // Subscribed at the LAYOUT, so a request arriving while staff are on the
-  // queue or the services screen still lights the badge. This is the only
-  // reason anyone would know to open the inbox.
-  const requestsQuery = useBookingRequests(canDecideBookings ? currentMembership?.organizationId : undefined)
-  const pendingCount = requestsQuery.data?.length ?? 0
-
   return (
     <div className="min-h-svh bg-paper-50">
       <Navbar
@@ -101,6 +106,7 @@ function AppShell() {
                 </span>
               </AppNavLink>
             ) : null}
+            <AppNavLink to="/app/calendar">Calendar</AppNavLink>
             <AppNavLink to="/app/appointments">Schedule</AppNavLink>
             <AppNavLink to="/app/queue">Queue</AppNavLink>
             <AppNavLink to="/app/waitlist">Waitlist</AppNavLink>

@@ -655,6 +655,17 @@ export const router = createBrowserRouter([
             },
           },
           {
+            // The calendar. Separate from 'appointments', which is the
+            // table-and-booking-form view: one is for READING a day or a week,
+            // the other for entering a booking by hand. Collapsing them would
+            // make both worse.
+            path: 'calendar',
+            lazy: async () => {
+              const { AppCalendarPage } = await import('@/pages/app-calendar-page')
+              return { Component: AppCalendarPage }
+            },
+          },
+          {
             path: 'appointments',
             lazy: async () => {
               const { AppAppointmentsPage } = await import('@/pages/app-appointments-page')

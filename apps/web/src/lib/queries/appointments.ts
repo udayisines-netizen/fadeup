@@ -221,18 +221,47 @@ export interface UpdateAppointmentStatusInput {
   status: AppointmentStatus
 }
 
-/** Change just an appointment's status (confirm/cancel/complete/no-show). RLS restricts this to owner/manager/receptionist. */
+/**
+ * Change just an appointment's status.
+ *
+ * `completed` and `no_show` go through their LOT D RPCs rather than a status
+ * PATCH. The PATCH is what RLS allows, not what the business rules allow: it
+ * happily wrote `completed` over a `pending` row, or back again, and recorded
+ * nobody as having decided. The RPCs lock the row, refuse a transition that
+ * does not start from `confirmed`, stamp who decided, and are idempotent.
+ *
+ * The other transitions keep the PATCH deliberately. `confirmed` from the
+ * staff booking form is a plain edit rather than answering a public request
+ * (that is confirm_booking_request, in booking-requests.ts), and `cancelled`
+ * from this surface predates LOT C's resolution model — routing it through
+ * cancel_appointment_as_business is a change to what the CUSTOMER is told, and
+ * belongs with the surface that says so, not smuggled in here.
+ */
 export function useUpdateAppointmentStatus() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (input: UpdateAppointmentStatusInput) => {
       const supabase = getSupabaseClient()
+
+      if (input.status === 'completed') {
+        const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: input.id })
+        if (error) throw error
+        return
+      }
+
+      if (input.status === 'no_show') {
+        const { error } = await supabase.rpc('mark_appointment_no_show', { p_appointment_id: input.id })
+        if (error) throw error
+        return
+      }
+
       const { error } = await supabase.from('appointments').update({ status: input.status }).eq('id', input.id)
       if (error) throw error
     },
     onSuccess: (_result, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['appointments', variables.organizationId] })
+      void queryClient.invalidateQueries({ queryKey: ['calendar-appointments', variables.organizationId] })
       // Cancelling/no-showing an appointment can free up a slot again.
       void queryClient.invalidateQueries({ queryKey: ['available-slots'] })
     },
