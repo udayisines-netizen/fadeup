@@ -19,16 +19,31 @@ export interface PublicOrganization {
   id: string
   name: string
   slug: string
+  /**
+   * The shop's OWN currency (ISO 4217). Prices are quoted in this and only
+   * this — FadeUp performs no conversion, so a London salon shows GBP to a
+   * visitor browsing from Paris.
+   */
+  currency: string
+  countryCode: string | null
 }
 
 interface PublicOrganizationRow {
   id: string
   name: string
   slug: string
+  currency: string | null
+  country_code: string | null
 }
 
 function mapPublicOrganization(row: PublicOrganizationRow): PublicOrganization {
-  return { id: row.id, name: row.name, slug: row.slug }
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    currency: row.currency ?? 'EUR',
+    countryCode: row.country_code,
+  }
 }
 
 /**

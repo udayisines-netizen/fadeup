@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Marcar horário — FadeUp",
+    "description": "Marque o seu horário em poucos minutos."
+  },
+  "heading": "Marcar horário",
+  "loading": "A carregar a marcação…",
+  "choose": {
+    "service": "Escolha um serviço",
+    "location": "Escolha um espaço",
+    "barber": "Escolha um profissional"
+  },
+  "fields": {
+    "fullName": "Nome completo",
+    "phone": "Telemóvel",
+    "email": "E-mail",
+    "notes": "Observações (opcional)",
+    "date": "Data",
+    "contactHint": "Deixe um telemóvel ou e-mail para o espaço poder contactá-lo"
+  },
+  "validation": {
+    "nameRequired": "Indique o seu nome.",
+    "contactRequired": "Deixe um telemóvel ou e-mail para o espaço poder contactá-lo.",
+    "emailInvalid": "Introduza um e-mail válido"
+  },
+  "summary": {
+    "shop": "Espaço",
+    "service": "Serviço",
+    "barber": "Profissional",
+    "when": "Quando",
+    "location": "Morada",
+    "price": "Preço",
+    "details": "Os seus dados"
+  },
+  "empty": {
+    "services": "Sem serviços disponíveis",
+    "servicesHint": "Este espaço não tem nada disponível para marcação neste momento.",
+    "locations": "Sem espaços disponíveis",
+    "locationsHint": "Este negócio não tem espaços abertos a marcações neste momento.",
+    "barbers": "Sem profissionais disponíveis",
+    "barbersHint": "Ninguém faz este serviço. Experimente outro.",
+    "times": "Sem horários disponíveis neste dia"
+  },
+  "errors": {
+    "services": "Não foi possível carregar os serviços",
+    "locations": "Não foi possível carregar os espaços",
+    "barbers": "Não foi possível carregar os profissionais",
+    "times": "Não foi possível carregar os horários",
+    "page": "Não foi possível carregar esta página de marcação",
+    "shopNotFound": "Não encontrámos este espaço",
+    "locationUnavailable": "Este espaço não aceita marcações neste momento.",
+    "serviceUnavailable": "Este serviço não existe neste espaço.",
+    "barberUnavailable": "Não está disponível nesse dia — escolha outro horário.",
+    "slotTaken": "Esse horário acabou de ser marcado — escolha outro.",
+    "slotPast": "Esse horário já passou — escolha outro.",
+    "generic": "Algo correu mal. Tente novamente."
+  },
+  "success": {
+    "title": "Marcação confirmada",
+    "subtitle": "Está marcado em {{organization}}. Aqui ficam os detalhes.",
+    "service": "Serviço",
+    "professional": "Profissional",
+    "date": "Data",
+    "time": "Hora",
+    "location": "Morada",
+    "price": "Preço",
+    "addToCalendar": "Adicionar ao calendário",
+    "calendarTitle": "{{service}} em {{organization}}",
+    "calendarDescription": "Com {{professional}}. Marcado através da FadeUp.",
+    "viewAppointment": "Ver as minhas marcações",
+    "createAccount": "Criar conta",
+    "haveAccount": "Já tenho conta",
+    "accountPrompt": "Crie uma conta para gerir esta marcação, remarcar num toque e manter o seu Fade Passport.",
+    "done": "Concluído"
+  }
+}

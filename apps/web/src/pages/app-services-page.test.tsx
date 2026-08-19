@@ -109,7 +109,8 @@ describe('AppServicesPage', () => {
     renderPage()
 
     expect(await screen.findByText('Classic Haircut')).toBeInTheDocument()
-    expect(screen.getByText('$35.00')).toBeInTheDocument()
+    // The SHOP's currency (EUR by default), not a hardcoded dollar sign.
+    expect(screen.getByText('€35.00')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add service' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add category' })).toBeInTheDocument()
   })

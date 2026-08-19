@@ -36,6 +36,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useMoney, useOrganizationCurrency } from '@/lib/intl/use-intl'
+import { toMajorUnits, toMinorUnits } from '@/lib/intl/money'
 
 // Plan management (pricing) is owner/manager only, matching membership_plans
 // RLS — narrower than enrollment, which is owner/manager/receptionist,
@@ -74,10 +76,6 @@ function friendlyMembershipError(rawMessage: string): string {
   return rawMessage
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
-
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(iso))
 }
@@ -91,6 +89,8 @@ export function AppMembershipsPage() {
 }
 
 function MembershipsManagement({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
+  const currency = useOrganizationCurrency(organizationId)
+  const money = useMoney()
   const { toast } = useToast()
   const { user } = useAuth()
   const canManagePlans = PLAN_MANAGING_ROLES.has(role)
@@ -182,7 +182,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
                         {!plan.isActive ? <Badge variant="neutral">Inactive</Badge> : null}
                       </div>
                       <span className="text-sm text-ink-500">
-                        {formatPrice(plan.priceCents)} {BILLING_INTERVAL_LABELS[plan.billingInterval]}
+                        {money(plan.priceCents, currency)} {BILLING_INTERVAL_LABELS[plan.billingInterval]}
                       </span>
                       {plan.description ? <span className="mt-1 text-sm text-ink-700">{plan.description}</span> : null}
                     </button>
@@ -247,6 +247,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
       {isPlanDialogOpen || editingPlan ? (
         <PlanFormDialog
           organizationId={organizationId}
+          currency={currency}
           plan={editingPlan ?? undefined}
           onClose={() => {
             setIsPlanDialogOpen(false)
@@ -347,7 +348,7 @@ function EnrollmentRow({
 const planSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
-  priceDollars: z.string().min(1, 'Price is required'),
+  priceMajor: z.string().min(1, 'Price is required'),
   billingInterval: z.enum(['weekly', 'monthly', 'yearly']),
   isActive: z.boolean(),
 })
@@ -362,11 +363,14 @@ const BILLING_INTERVAL_OPTIONS = [
 
 function PlanFormDialog({
   organizationId,
+  currency,
   plan,
   onClose,
   onSaved,
 }: {
   organizationId: string
+  /** The shop's currency — decides how many decimals the typed amount has. */
+  currency: string
   plan?: MembershipPlan
   onClose: () => void
   onSaved: () => void
@@ -384,7 +388,7 @@ function PlanFormDialog({
     defaultValues: {
       name: plan?.name ?? '',
       description: plan?.description ?? '',
-      priceDollars: plan ? (plan.priceCents / 100).toFixed(2) : '',
+      priceMajor: plan ? String(toMajorUnits(plan.priceCents, currency)) : '',
       billingInterval: plan?.billingInterval ?? 'monthly',
       isActive: plan?.isActive ?? true,
     },
@@ -392,7 +396,8 @@ function PlanFormDialog({
 
   async function onSubmit(values: PlanFormValues) {
     setFormError(null)
-    const priceCents = Math.round(Number.parseFloat(values.priceDollars) * 100)
+    // Minor units for THIS currency: 25 -> 2500 in EUR, but 25 -> 25 in JPY.
+    const priceCents = toMinorUnits(Number.parseFloat(values.priceMajor), currency)
     if (!Number.isFinite(priceCents) || priceCents < 0) {
       setFormError('Enter a valid price.')
       return
@@ -435,8 +440,8 @@ function PlanFormDialog({
               label="Price"
               inputMode="decimal"
               hint="In dollars"
-              error={errors.priceDollars?.message}
-              {...register('priceDollars')}
+              error={errors.priceMajor?.message}
+              {...register('priceMajor')}
             />
             <SelectField label="Billing interval" options={BILLING_INTERVAL_OPTIONS} {...register('billingInterval')} />
           </div>

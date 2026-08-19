@@ -52,6 +52,8 @@ export interface CalendarAppointment {
   serviceId: string | null
   serviceName: string | null
   priceCents: number | null
+  /** The organization's currency. Never the viewer's — see lib/intl/money.ts. */
+  currency: string
   customerName: string
   customerPhone: string | null
   notes: string | null
@@ -73,6 +75,7 @@ interface CalendarAppointmentRow {
   service_id: string | null
   service_name: string | null
   price_cents: number | null
+  currency: string | null
   customer_name: string
   customer_phone: string | null
   notes: string | null
@@ -95,6 +98,7 @@ function mapAppointment(row: CalendarAppointmentRow): CalendarAppointment {
     serviceId: row.service_id,
     serviceName: row.service_name,
     priceCents: row.price_cents,
+    currency: row.currency ?? 'EUR',
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     notes: row.notes,

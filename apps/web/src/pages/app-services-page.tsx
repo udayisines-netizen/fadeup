@@ -46,6 +46,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import type { MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useMoney, useOrganizationCurrency } from '@/lib/intl/use-intl'
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -61,9 +62,6 @@ function dollarsToCents(dollars: number): number {
   return Math.round(dollars * 100)
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
 
 export function AppServicesPage() {
   const { currentMembership } = useCurrentOrg()
@@ -386,6 +384,11 @@ function ServicesSection({
   barberServices: { serviceId: string; barberId: string }[]
   canManage: boolean
 }) {
+  // The SHOP's currency, not the viewer's. A price list is what a customer
+  // will actually be charged, so it is denominated by the business alone.
+  const currency = useOrganizationCurrency(organizationId)
+  const money = useMoney()
+
   const { toast } = useToast()
   const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES_VALUE)
   const [dialogState, setDialogState] = useState<ServiceDialogState>(null)
@@ -496,7 +499,7 @@ function ServicesSection({
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{service.durationMinutes} min</TableCell>
                     <TableCell className="whitespace-nowrap">
-                      {formatPrice(service.priceCents)}
+                      {money(service.priceCents, currency)}
                       {!service.isActive ? (
                         <Badge variant="neutral" className="ml-2">
                           Inactive

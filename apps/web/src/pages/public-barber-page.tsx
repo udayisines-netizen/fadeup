@@ -11,10 +11,8 @@ import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useMoney } from '@/lib/intl/use-intl'
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} min`
@@ -119,10 +117,12 @@ function BarberProfile({
   barber,
   servicesQuery,
 }: {
-  organization: { id: string; slug: string; name: string }
+  organization: { id: string; slug: string; name: string; currency: string }
   barber: { barberId: string; displayName: string; title: string | null; bio: string | null; avatarUrl: string | null; locationId: string | null }
   servicesQuery: ReturnType<typeof usePublicBarberServices>
 }) {
+  const money = useMoney()
+
   const bookHref = `/s/${organization.slug}${
     barber.locationId
       ? `?barber=${barber.barberId}&location=${barber.locationId}`
@@ -169,7 +169,7 @@ function BarberProfile({
                     <p className="text-xs text-ink-500">{formatDuration(service.durationMinutes)}</p>
                   </div>
                 </div>
-                <span className="shrink-0 font-medium text-ink-950">{formatPrice(service.priceCents)}</span>
+                <span className="shrink-0 font-medium text-ink-950">{money(service.priceCents, organization.currency)}</span>
               </li>
             ))}
           </ul>

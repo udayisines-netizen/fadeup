@@ -79,7 +79,7 @@ describe('PublicBarberPage', () => {
     expect(screen.getByText('Master Barber')).toBeInTheDocument()
     expect(screen.getByText('Fades and tapers.')).toBeInTheDocument()
     expect(screen.getByText('Classic Fade')).toBeInTheDocument()
-    expect(screen.getByText('$35.00')).toBeInTheDocument()
+    expect(screen.getByText('€35.00')).toBeInTheDocument()
     const bookLink = screen.getByRole('link', { name: 'Book with Sam' })
     expect(bookLink).toHaveAttribute('href', '/s/jacks-barbers?barber=barber-1&location=loc-1')
   })

@@ -6,10 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { FavoriteButton } from '@/components/customer/favorite-button'
 import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
+import { useMoney } from '@/lib/intl/use-intl'
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
 
 /**
  * A single marketplace result — either a shop or an individual barber
@@ -19,7 +17,15 @@ function formatPrice(cents: number): string {
  * shops — organizations have no image column in this schema yet — so a
  * monogram stands in rather than a stock/fabricated photo.
  */
-export function ProfessionalResultCard({ result }: { result: MarketplaceProfessionalResult }) {
+export function ProfessionalResultCard({
+  result,
+  currency,
+}: {
+  result: MarketplaceProfessionalResult
+  /** The SHOP's currency. A marketplace spans countries; one currency per page would be wrong for most of it. */
+  currency: string | undefined
+}) {
+  const money = useMoney()
   const { t } = useTranslation('marketplace')
   const isBarber = result.entityType === 'barber'
   const title = isBarber ? (result.barberDisplayName ?? result.organizationName) : result.organizationName
@@ -93,7 +99,7 @@ export function ProfessionalResultCard({ result }: { result: MarketplaceProfessi
           {result.startingPriceCents !== null ? (
             <span className="flex items-center gap-1">
               <Scissors className="h-3.5 w-3.5 text-ink-400" aria-hidden="true" />
-              {t('card.startingFrom', { price: formatPrice(result.startingPriceCents) })}
+              {t('card.startingFrom', { price: money(result.startingPriceCents, currency) })}
             </span>
           ) : null}
           {result.queueWaitingCount > 0 ? (

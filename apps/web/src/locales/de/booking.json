@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Termin buchen — FadeUp",
+    "description": "Buche deinen Termin in wenigen Minuten."
+  },
+  "heading": "Termin buchen",
+  "loading": "Buchung wird geladen…",
+  "choose": {
+    "service": "Leistung wählen",
+    "location": "Standort wählen",
+    "barber": "Fachkraft wählen"
+  },
+  "fields": {
+    "fullName": "Vollständiger Name",
+    "phone": "Telefonnummer",
+    "email": "E-Mail",
+    "notes": "Anmerkungen (optional)",
+    "date": "Datum",
+    "contactHint": "Hinterlasse Telefon oder E-Mail, damit der Salon dich erreichen kann"
+  },
+  "validation": {
+    "nameRequired": "Bitte gib deinen Namen an.",
+    "contactRequired": "Bitte hinterlasse Telefon oder E-Mail, damit der Salon dich erreichen kann.",
+    "emailInvalid": "Gib eine gültige E-Mail-Adresse ein"
+  },
+  "summary": {
+    "shop": "Salon",
+    "service": "Leistung",
+    "barber": "Fachkraft",
+    "when": "Wann",
+    "location": "Adresse",
+    "price": "Preis",
+    "details": "Deine Daten"
+  },
+  "empty": {
+    "services": "Keine Leistungen verfügbar",
+    "servicesHint": "Dieser Standort hat derzeit nichts Buchbares.",
+    "locations": "Keine Standorte verfügbar",
+    "locationsHint": "Dieser Salon hat derzeit keinen Standort zur Buchung geöffnet.",
+    "barbers": "Keine Fachkräfte verfügbar",
+    "barbersHint": "Diese Leistung bietet gerade niemand an. Probiere eine andere.",
+    "times": "An diesem Tag sind keine Zeiten frei"
+  },
+  "errors": {
+    "services": "Leistungen konnten nicht geladen werden",
+    "locations": "Standorte konnten nicht geladen werden",
+    "barbers": "Fachkräfte konnten nicht geladen werden",
+    "times": "Verfügbare Zeiten konnten nicht geladen werden",
+    "page": "Diese Buchungsseite konnte nicht geladen werden",
+    "shopNotFound": "Wir konnten diesen Salon nicht finden",
+    "locationUnavailable": "Dieser Standort nimmt derzeit keine Buchungen an.",
+    "serviceUnavailable": "Diese Leistung gibt es an diesem Standort nicht.",
+    "barberUnavailable": "An diesem Tag nicht verfügbar — bitte wähle eine andere Zeit.",
+    "slotTaken": "Diese Zeit wurde gerade vergeben — bitte wähle eine andere.",
+    "slotPast": "Diese Zeit ist bereits vorbei — bitte wähle eine andere.",
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  },
+  "success": {
+    "title": "Buchung bestätigt",
+    "subtitle": "Dein Termin bei {{organization}} steht. Hier sind die Details.",
+    "service": "Leistung",
+    "professional": "Fachkraft",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "location": "Adresse",
+    "price": "Preis",
+    "addToCalendar": "Zum Kalender hinzufügen",
+    "calendarTitle": "{{service}} bei {{organization}}",
+    "calendarDescription": "Mit {{professional}}. Gebucht über FadeUp.",
+    "viewAppointment": "Meine Termine ansehen",
+    "createAccount": "Konto erstellen",
+    "haveAccount": "Ich habe bereits ein Konto",
+    "accountPrompt": "Erstelle ein Konto, um diesen Termin zu verwalten, mit einem Tipp neu zu buchen und deinen Fade Passport zu behalten.",
+    "done": "Fertig"
+  }
+}

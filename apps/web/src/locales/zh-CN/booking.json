@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "预约 — FadeUp",
+    "description": "几分钟即可完成预约。"
+  },
+  "heading": "预约",
+  "loading": "正在加载预约页面…",
+  "choose": {
+    "service": "选择服务",
+    "location": "选择门店",
+    "barber": "选择专业人员"
+  },
+  "fields": {
+    "fullName": "姓名",
+    "phone": "手机号",
+    "email": "电子邮箱",
+    "notes": "备注（选填）",
+    "date": "日期",
+    "contactHint": "请留下手机号或邮箱，方便门店联系你"
+  },
+  "validation": {
+    "nameRequired": "请填写姓名。",
+    "contactRequired": "请留下手机号或邮箱，方便门店联系你。",
+    "emailInvalid": "请输入有效的电子邮箱"
+  },
+  "summary": {
+    "shop": "门店",
+    "service": "服务",
+    "barber": "专业人员",
+    "when": "时间",
+    "location": "地址",
+    "price": "价格",
+    "details": "你的信息"
+  },
+  "empty": {
+    "services": "暂无可预约的服务",
+    "servicesHint": "该门店目前没有可预约的项目。",
+    "locations": "暂无可预约的门店",
+    "locationsHint": "该商家目前没有开放预约的门店。",
+    "barbers": "暂无可预约的专业人员",
+    "barbersHint": "目前无人提供该服务，请换一项试试。",
+    "times": "当天没有可预约的时间"
+  },
+  "errors": {
+    "services": "无法加载服务",
+    "locations": "无法加载门店",
+    "barbers": "无法加载专业人员",
+    "times": "无法加载可预约时间",
+    "page": "无法加载该预约页面",
+    "shopNotFound": "未找到该商家",
+    "locationUnavailable": "该门店暂不接受预约。",
+    "serviceUnavailable": "该门店不提供此服务。",
+    "barberUnavailable": "当天没有空档，请换个时间。",
+    "slotTaken": "该时段刚被预约，请另选时间。",
+    "slotPast": "该时段已过，请另选时间。",
+    "generic": "出了点问题，请重试。"
+  },
+  "success": {
+    "title": "预约已确认",
+    "subtitle": "已在 {{organization}} 预约成功，详情如下。",
+    "service": "服务",
+    "professional": "专业人员",
+    "date": "日期",
+    "time": "时间",
+    "location": "地址",
+    "price": "价格",
+    "addToCalendar": "添加到日历",
+    "calendarTitle": "{{organization}}的{{service}}",
+    "calendarDescription": "由 {{professional}} 服务。通过 FadeUp 预约。",
+    "viewAppointment": "查看我的预约",
+    "createAccount": "创建账户",
+    "haveAccount": "我已有账户",
+    "accountPrompt": "创建账户即可管理此预约、一键再次预约，并保留你的 Fade Passport。",
+    "done": "完成"
+  }
+}

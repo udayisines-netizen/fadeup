@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "予約する — FadeUp",
+    "description": "数分で予約が完了します。"
+  },
+  "heading": "予約する",
+  "loading": "予約ページを読み込んでいます…",
+  "choose": {
+    "service": "メニューを選ぶ",
+    "location": "店舗を選ぶ",
+    "barber": "スタッフを選ぶ"
+  },
+  "fields": {
+    "fullName": "お名前",
+    "phone": "電話番号",
+    "email": "メールアドレス",
+    "notes": "ご要望（任意）",
+    "date": "日付",
+    "contactHint": "店舗から連絡できるよう、電話番号かメールアドレスをご記入ください"
+  },
+  "validation": {
+    "nameRequired": "お名前をご記入ください。",
+    "contactRequired": "店舗から連絡できるよう、電話番号かメールアドレスをご記入ください。",
+    "emailInvalid": "有効なメールアドレスを入力してください"
+  },
+  "summary": {
+    "shop": "店舗",
+    "service": "メニュー",
+    "barber": "スタッフ",
+    "when": "日時",
+    "location": "住所",
+    "price": "料金",
+    "details": "お客様情報"
+  },
+  "empty": {
+    "services": "ご利用可能なメニューがありません",
+    "servicesHint": "この店舗では現在予約できるメニューがありません。",
+    "locations": "ご利用可能な店舗がありません",
+    "locationsHint": "現在、予約を受け付けている店舗がありません。",
+    "barbers": "対応できるスタッフがいません",
+    "barbersHint": "このメニューに対応できるスタッフがいません。別のメニューをお試しください。",
+    "times": "この日に空き時間はありません"
+  },
+  "errors": {
+    "services": "メニューを読み込めませんでした",
+    "locations": "店舗を読み込めませんでした",
+    "barbers": "スタッフを読み込めませんでした",
+    "times": "空き時間を読み込めませんでした",
+    "page": "この予約ページを読み込めませんでした",
+    "shopNotFound": "この店舗が見つかりませんでした",
+    "locationUnavailable": "この店舗は現在予約を受け付けていません。",
+    "serviceUnavailable": "このメニューはこの店舗では取り扱っていません。",
+    "barberUnavailable": "その日は空きがありません。別の時間をお選びください。",
+    "slotTaken": "その時間はたった今予約されました。別の時間をお選びください。",
+    "slotPast": "その時間はすでに過ぎています。別の時間をお選びください。",
+    "generic": "問題が発生しました。もう一度お試しください。"
+  },
+  "success": {
+    "title": "予約が確定しました",
+    "subtitle": "{{organization}} のご予約が完了しました。内容は以下のとおりです。",
+    "service": "メニュー",
+    "professional": "スタッフ",
+    "date": "日付",
+    "time": "時間",
+    "location": "住所",
+    "price": "料金",
+    "addToCalendar": "カレンダーに追加",
+    "calendarTitle": "{{organization}} の{{service}}",
+    "calendarDescription": "担当：{{professional}}。FadeUp で予約。",
+    "viewAppointment": "予約を見る",
+    "createAccount": "アカウントを作成",
+    "haveAccount": "すでにアカウントをお持ちの方",
+    "accountPrompt": "アカウントを作成すると、この予約の管理、ワンタップでの再予約、Fade Passport の保存ができます。",
+    "done": "完了"
+  }
+}

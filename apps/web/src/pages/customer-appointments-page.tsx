@@ -23,14 +23,12 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useMoney } from '@/lib/intl/use-intl'
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
 
 /** /app/customer/appointments — upcoming/past, cancel (reuses the existing pending/confirmed status machine), and rebook. */
 export function CustomerAppointmentsPage() {
@@ -157,6 +155,7 @@ export function CustomerAppointmentsPage() {
 }
 
 function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment; onCancel?: () => void }) {
+  const money = useMoney()
   const { t } = useTranslation('customer-app')
   const reduced = useReducedMotion()
   const [moveOpen, setMoveOpen] = useState(false)
@@ -193,25 +192,28 @@ function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment
           <div className="flex flex-col items-end gap-2">
             <BookingStatusBadge stage={stage} />
             {appointment.priceCents !== null ? (
-              <span className="text-sm font-medium text-ink-950">{formatPrice(appointment.priceCents)}</span>
+              <span className="text-sm font-medium text-ink-950">{money(appointment.priceCents, appointment.currency)}</span>
             ) : null}
           </div>
         </div>
 
         {/*
-          The progress rail only appears while a request is actually in flight
-          or has just been answered. On a booking from four months ago it would
-          be noise.
+          The rail now appears ONLY while a request is genuinely in flight.
+          Since LOT E a normal booking is confirmed the moment it is made, so
+          drawing a three-step journey next to it would narrate a wait that
+          never happened — the same fake-progress problem the success screen
+          had. A confirmed appointment says so with its badge and stops there.
+
+          `waiting` still occurs: legacy pending rows created before LOT E, and
+          any future workflow that genuinely requires approval.
         */}
-        {stage === 'waiting' || stage === 'confirmed' ? (
+        {stage === 'waiting' ? (
           <div className="mt-4 border-t border-border pt-4">
             <BookingProgress stage={stage} />
-            {stage === 'waiting' ? (
-              <p className="mt-3 text-sm text-ink-500">
-                {t('booking.waitingExplainer')}{' '}
-                <ExpiryCountdown expiresAt={appointment.expiresAt} prefix={t('booking.expiresPrefix')} />
-              </p>
-            ) : null}
+            <p className="mt-3 text-sm text-ink-500">
+              {t('booking.waitingExplainer')}{' '}
+              <ExpiryCountdown expiresAt={appointment.expiresAt} prefix={t('booking.expiresPrefix')} />
+            </p>
           </div>
         ) : null}
 

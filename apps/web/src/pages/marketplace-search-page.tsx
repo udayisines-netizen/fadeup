@@ -9,7 +9,7 @@ import { ErrorState } from '@/components/ui/error-state'
 import { Switch } from '@/components/ui/switch'
 import { TextField } from '@/components/ui/text-field'
 import { useDocumentMeta } from '@/lib/use-document-meta'
-import { useSearchPublicProfessionals } from '@/lib/queries/marketplace'
+import { useSearchPublicProfessionals, usePublicCurrencies } from '@/lib/queries/marketplace'
 import { ProfessionalResultCard } from '@/components/marketplace/professional-result-card'
 import { MarketplaceSearchForm, type MarketplaceSearchValues } from '@/components/marketplace/search-form'
 
@@ -58,6 +58,9 @@ export function MarketplaceSearchPage() {
   })
 
   const results = useMemo(() => resultsQuery.data ?? [], [resultsQuery.data])
+  // One batch lookup for every shop on the page: a marketplace spans
+  // countries, so each card is priced in its OWN shop's currency.
+  const currencies = usePublicCurrencies(useMemo(() => results.map((r) => r.organizationId), [results]))
 
   function updateParams(mutate: (params: URLSearchParams) => void, options?: { replace?: boolean }) {
     const params = new URLSearchParams(searchParams)
@@ -180,7 +183,11 @@ export function MarketplaceSearchPage() {
             )
           ) : (
             results.map((result) => (
-              <ProfessionalResultCard key={`${result.entityType}-${result.organizationId}-${result.barberId ?? result.locationId}`} result={result} />
+              <ProfessionalResultCard
+                key={`${result.entityType}-${result.organizationId}-${result.barberId ?? result.locationId}`}
+                result={result}
+                currency={currencies[result.organizationId]}
+              />
             ))
           )}
         </div>

@@ -1,20 +1,20 @@
 {
   "meta": {
-    "title": "FadeUp — Trouvez votre prochain barbier",
-    "description": "Recherchez des salons de coiffure et des barbiers indépendants près de chez vous, consultez les disponibilités réelles, et réservez ou rejoignez la file d'attente en quelques minutes.",
-    "searchTitle": "Rechercher un barbier — FadeUp",
-    "searchTitleWithLocation": "Barbiers près de {{location}} — FadeUp",
-    "searchDescription": "Parcourez de vrais barbiers et salons FadeUp, filtrés par lieu et disponibilité."
+    "title": "FadeUp — Trouvez votre prochain coiffeur",
+    "description": "Recherchez des salons et des coiffeurs indépendants près de chez vous, consultez les disponibilités réelles, et réservez ou rejoignez la file d'attente en quelques minutes.",
+    "searchTitle": "Rechercher un coiffeur — FadeUp",
+    "searchTitleWithLocation": "Coiffeurs près de {{location}} — FadeUp",
+    "searchDescription": "Parcourez de vrais salons et coiffeurs FadeUp, filtrés par lieu et disponibilité."
   },
   "hero": {
-    "eyebrow": "Marketplace des barbiers",
-    "title": "Trouvez votre prochain barbier.",
-    "subtitle": "Recherchez des salons et des barbiers indépendants près de chez vous, consultez les disponibilités réelles, et réservez ou rejoignez la file d'attente en quelques minutes."
+    "eyebrow": "Le réseau FadeUp",
+    "title": "Trouvez votre prochain coiffeur.",
+    "subtitle": "Recherchez des salons et des coiffeurs indépendants près de chez vous, consultez les disponibilités réelles, et réservez ou rejoignez la file d'attente en quelques minutes."
   },
   "steps": {
     "discover": {
       "title": "Découvrez",
-      "description": "Recherchez par ville, service ou nom de barbier pour voir qui est vraiment à proximité."
+      "description": "Recherchez par ville, prestation ou nom de salon pour voir qui est vraiment à proximité."
     },
     "book": {
       "title": "Réservez ou rejoignez la file",
@@ -27,14 +27,14 @@
   },
   "searchForm": {
     "whatLabel": "De quoi avez-vous besoin ?",
-    "whatPlaceholder": "Barbier, salon ou service",
+    "whatPlaceholder": "Salon, coiffeur ou prestation",
     "whereLabel": "Où ?",
     "wherePlaceholder": "Ville ou code postal",
     "currentLocation": "Position actuelle",
     "useLocation": "Utiliser ma position",
     "locating": "Localisation…",
     "locationUnavailable": "Impossible d'obtenir votre position — essayez de saisir une ville.",
-    "submit": "Trouver un barbier",
+    "submit": "Trouver un coiffeur",
     "popularLabel": "Populaire",
     "popularFade": "Dégradé",
     "popularHaircut": "Coupe",
@@ -42,8 +42,8 @@
     "popularHaircutBeard": "Coupe + Barbe"
   },
   "results": {
-    "headingWithLocation": "Barbiers près de {{location}}",
-    "headingGeneric": "Tous les barbiers",
+    "headingWithLocation": "Coiffeurs près de {{location}}",
+    "headingGeneric": "Tous les professionnels",
     "resultCount_one": "{{count}} résultat",
     "resultCount_other": "{{count}} résultats",
     "filters": {
@@ -55,10 +55,10 @@
       "typeShops": "Salons",
       "typeBarbers": "Barbers"
     },
-    "emptyTitle": "Aucun barbier ne correspond à vos filtres",
+    "emptyTitle": "Aucun professionnel ne correspond à vos filtres",
     "emptyDescription": "Essayez de réinitialiser les filtres pour voir plus de résultats.",
-    "emptyNoneAtAllTitle": "Aucun barbier FadeUp ici pour le moment",
-    "emptyNoneAtAllDescription": "Il n'y a actuellement aucun barbier FadeUp public dans cette zone. Essayez une ville voisine.",
+    "emptyNoneAtAllTitle": "Aucun professionnel FadeUp ici pour le moment",
+    "emptyNoneAtAllDescription": "Il n'y a pour l'instant aucun professionnel FadeUp public dans cette zone. Essayez une ville voisine.",
     "clearFilters": "Réinitialiser les filtres",
     "errorTitle": "Impossible de charger les résultats"
   },

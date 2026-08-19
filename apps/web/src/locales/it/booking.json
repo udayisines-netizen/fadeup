@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Prenota un appuntamento — FadeUp",
+    "description": "Prenota il tuo appuntamento in pochi minuti."
+  },
+  "heading": "Prenota un appuntamento",
+  "loading": "Caricamento della prenotazione…",
+  "choose": {
+    "service": "Scegli un servizio",
+    "location": "Scegli una sede",
+    "barber": "Scegli un professionista"
+  },
+  "fields": {
+    "fullName": "Nome e cognome",
+    "phone": "Numero di telefono",
+    "email": "E-mail",
+    "notes": "Note (facoltativo)",
+    "date": "Data",
+    "contactHint": "Lascia un telefono o un'e-mail per farti contattare dal salone"
+  },
+  "validation": {
+    "nameRequired": "Inserisci il tuo nome.",
+    "contactRequired": "Lascia un telefono o un'e-mail per farti contattare dal salone.",
+    "emailInvalid": "Inserisci un indirizzo e-mail valido"
+  },
+  "summary": {
+    "shop": "Salone",
+    "service": "Servizio",
+    "barber": "Professionista",
+    "when": "Quando",
+    "location": "Indirizzo",
+    "price": "Prezzo",
+    "details": "I tuoi dati"
+  },
+  "empty": {
+    "services": "Nessun servizio disponibile",
+    "servicesHint": "Questa sede al momento non ha nulla di prenotabile.",
+    "locations": "Nessuna sede disponibile",
+    "locationsHint": "Questo salone al momento non ha sedi aperte alle prenotazioni.",
+    "barbers": "Nessun professionista disponibile",
+    "barbersHint": "Nessuno offre questo servizio. Provane un altro.",
+    "times": "Nessun orario disponibile in questo giorno"
+  },
+  "errors": {
+    "services": "Impossibile caricare i servizi",
+    "locations": "Impossibile caricare le sedi",
+    "barbers": "Impossibile caricare i professionisti",
+    "times": "Impossibile caricare gli orari disponibili",
+    "page": "Impossibile caricare questa pagina di prenotazione",
+    "shopNotFound": "Non abbiamo trovato questo salone",
+    "locationUnavailable": "Questa sede al momento non accetta prenotazioni.",
+    "serviceUnavailable": "Questo servizio non è disponibile in questa sede.",
+    "barberUnavailable": "Non è disponibile quel giorno: scegli un altro orario.",
+    "slotTaken": "Quell'orario è appena stato prenotato: scegline un altro.",
+    "slotPast": "Quell'orario è già passato: scegline un altro.",
+    "generic": "Qualcosa è andato storto. Riprova."
+  },
+  "success": {
+    "title": "Prenotazione confermata",
+    "subtitle": "Sei prenotato da {{organization}}. Ecco il riepilogo.",
+    "service": "Servizio",
+    "professional": "Professionista",
+    "date": "Data",
+    "time": "Orario",
+    "location": "Indirizzo",
+    "price": "Prezzo",
+    "addToCalendar": "Aggiungi al calendario",
+    "calendarTitle": "{{service}} da {{organization}}",
+    "calendarDescription": "Con {{professional}}. Prenotato su FadeUp.",
+    "viewAppointment": "Vedi i miei appuntamenti",
+    "createAccount": "Crea un account",
+    "haveAccount": "Ho già un account",
+    "accountPrompt": "Crea un account per gestire questo appuntamento, riprenotare con un tocco e conservare il tuo Fade Passport.",
+    "done": "Fatto"
+  }
+}

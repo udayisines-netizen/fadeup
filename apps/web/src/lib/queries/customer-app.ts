@@ -68,6 +68,9 @@ export interface MyAppointment {
   endsAt: string
   status: AppointmentStatus
   priceCents: number | null
+  /** The SHOP's currency and timezone — a customer's list genuinely spans countries. */
+  currency: string
+  locationTimezone: string
   resolution: AppointmentResolution | null
   resolutionNote: string | null
   /** Server-derived decision deadline while waiting. Displayed, never computed. */
@@ -90,6 +93,8 @@ interface MyAppointmentRow {
   ends_at: string
   status: AppointmentStatus
   price_cents: number | null
+  currency: string | null
+  location_timezone: string | null
   resolution: AppointmentResolution | null
   resolution_note: string | null
   expires_at: string | null
@@ -112,6 +117,8 @@ function mapAppointment(row: MyAppointmentRow): MyAppointment {
     endsAt: row.ends_at,
     status: row.status,
     priceCents: row.price_cents,
+    currency: row.currency ?? 'EUR',
+    locationTimezone: row.location_timezone ?? 'UTC',
     resolution: row.resolution,
     resolutionNote: row.resolution_note,
     expiresAt: row.expires_at,

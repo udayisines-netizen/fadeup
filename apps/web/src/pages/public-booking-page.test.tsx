@@ -79,7 +79,7 @@ describe('PublicBookingPage', () => {
 
   it('auto-skips a single location and lists services grouped by category', async () => {
     mockUsePublicOrganization.mockReturnValue(
-      successQuery({ id: 'org-1', name: "Jack's Barbers", slug: 'jacks-barbers' }),
+      successQuery({ id: 'org-1', name: "Jack's Barbers", slug: 'jacks-barbers', currency: 'GBP', countryCode: 'GB' }),
     )
     mockUsePublicLocations.mockReturnValue(
       successQuery([{ id: 'loc-1', name: 'Main Shop', addressLine1: null, addressLine2: null, city: 'Austin', region: 'TX', postalCode: null, country: 'US', timezone: 'America/Chicago' }]),
@@ -97,7 +97,9 @@ describe('PublicBookingPage', () => {
 
     expect(await screen.findByText('Classic Fade')).toBeInTheDocument()
     expect(screen.getByText('Haircuts')).toBeInTheDocument()
-    expect(screen.getByText('$35.00')).toBeInTheDocument()
+    // The SHOP's currency, not the viewer's. Before LOT E every price in
+    // FadeUp was formatted as hardcoded USD, so this shop's £35 read "$35.00".
+    expect(screen.getByText('£35.00')).toBeInTheDocument()
     // The single location was auto-selected — "Choose a location" should never appear.
     expect(screen.queryByText('Choose a location')).not.toBeInTheDocument()
   })
@@ -106,7 +108,7 @@ describe('PublicBookingPage', () => {
 
   function mockBookableShop(mutateAsync: ReturnType<typeof vi.fn>) {
     mockUsePublicOrganization.mockReturnValue(
-      successQuery({ id: 'org-1', name: "Jack's Barbers", slug: 'jacks-barbers' }),
+      successQuery({ id: 'org-1', name: "Jack's Barbers", slug: 'jacks-barbers', currency: 'GBP', countryCode: 'GB' }),
     )
     mockUsePublicLocations.mockReturnValue(
       successQuery([{ id: 'loc-1', name: 'Main Shop', addressLine1: null, addressLine2: null, city: 'Austin', region: 'TX', postalCode: null, country: 'US', timezone: 'America/Chicago' }]),
@@ -141,7 +143,7 @@ describe('PublicBookingPage', () => {
       id: 'appt-1',
       startsAt: '2099-01-01T15:00:00Z',
       endsAt: '2099-01-01T15:30:00Z',
-      status: 'pending',
+      status: 'confirmed',
       claimToken: 'tok-xyz',
     })
     mockBookableShop(mutateAsync)
@@ -149,10 +151,14 @@ describe('PublicBookingPage', () => {
     renderAtSlug('jacks-barbers')
     await bookThrough('Sam Rivera')
 
-    // The success screen names the shop rather than repeating the progress
-    // rail's own "Request sent" step, and never implies the slot is confirmed.
-    expect(await screen.findByText("Sent to Jack's Barbers")).toBeInTheDocument()
-    expect(screen.getByText('Waiting for confirmation')).toBeInTheDocument()
+    // CONFIRMED, immediately. The shop answered by publishing the slot, so
+    // there is nothing left to wait for.
+    expect(await screen.findByText('Booking confirmed')).toBeInTheDocument()
+    // And the LOT C waiting-room language is genuinely gone, not merely
+    // reworded — showing progress for a finished state invents a wait.
+    expect(screen.queryByText(/Waiting for confirmation/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sent to/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/confirm it shortly/i)).not.toBeInTheDocument()
     // The token is what lets the account they are being offered actually
     // contain this appointment — without it the CTA would be an empty promise.
     expect(mockStorePendingClaimToken).toHaveBeenCalledWith('tok-xyz')
@@ -169,7 +175,7 @@ describe('PublicBookingPage', () => {
       id: 'appt-2',
       startsAt: '2099-01-01T15:00:00Z',
       endsAt: '2099-01-01T15:30:00Z',
-      status: 'pending',
+      status: 'confirmed',
       claimToken: null,
     })
     mockBookableShop(mutateAsync)
@@ -177,10 +183,8 @@ describe('PublicBookingPage', () => {
     renderAtSlug('jacks-barbers')
     await bookThrough('Sam Rivera')
 
-    // The success screen names the shop rather than repeating the progress
-    // rail's own "Request sent" step, and never implies the slot is confirmed.
-    expect(await screen.findByText("Sent to Jack's Barbers")).toBeInTheDocument()
-    expect(screen.getByText('Waiting for confirmation')).toBeInTheDocument()
+    expect(await screen.findByText('Booking confirmed')).toBeInTheDocument()
+    expect(screen.queryByText(/Waiting for confirmation/i)).not.toBeInTheDocument()
     expect(mockStorePendingClaimToken).not.toHaveBeenCalled()
     expect(screen.getByRole('link', { name: 'View my appointments' })).toHaveAttribute('href', '/app/customer/appointments')
     expect(screen.queryByRole('link', { name: 'Create an account' })).not.toBeInTheDocument()

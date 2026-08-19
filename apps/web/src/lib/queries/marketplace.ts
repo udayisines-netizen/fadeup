@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
 
@@ -127,4 +128,40 @@ export function useSearchPublicProfessionals(params: MarketplaceProfessionalSear
       return ((data ?? []) as MarketplaceProfessionalRow[]).map(mapProfessionalResult)
     },
   })
+}
+
+
+/**
+ * Currencies for the organizations in a result list.
+ *
+ * A marketplace spans countries, so one currency for the page would be wrong
+ * for most of it. The search RPCs deliberately do NOT carry currency — they
+ * are large, geo-ranked functions and appending a column to them would mean
+ * reproducing that logic — so this resolves the visible set in one extra call.
+ *
+ * See db/migrations/20260819220000_currency_exposure.sql.
+ */
+export function usePublicCurrencies(organizationIds: string[]) {
+  // Sorted + deduped so paging through results that share shops reuses the
+  // cache entry instead of missing it on ordering alone.
+  const key = useMemo(() => [...new Set(organizationIds)].sort(), [organizationIds])
+
+  const query = useQuery({
+    queryKey: ['public-currencies', key],
+    queryFn: async (): Promise<Record<string, string>> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('get_public_currencies', { p_organization_ids: key })
+      if (error) throw error
+      const map: Record<string, string> = {}
+      for (const row of (data ?? []) as Array<{ organization_id: string; currency: string }>) {
+        map[row.organization_id] = row.currency
+      }
+      return map
+    },
+    enabled: key.length > 0,
+    staleTime: 30 * 60_000,
+    retry: false,
+  })
+
+  return query.data ?? {}
 }

@@ -89,7 +89,14 @@ function AppShell() {
             <AppNavLink to="/app" end>
               Home
             </AppNavLink>
-            {canDecideBookings ? (
+            {/*
+              Only when there is genuinely something to decide.
+              Since LOT E a normal booking is confirmed on the spot, so this
+              inbox exists for legacy pending rows and any future
+              approval-required workflow. A permanent nav entry to an empty
+              screen would advertise a workflow the product no longer has.
+            */}
+            {canDecideBookings && pendingCount > 0 ? (
               <AppNavLink to="/app/requests">
                 <span className="inline-flex items-center gap-1.5">
                   Requests

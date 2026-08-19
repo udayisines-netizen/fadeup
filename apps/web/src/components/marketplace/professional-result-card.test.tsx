@@ -14,7 +14,7 @@ function renderCard(result: MarketplaceProfessionalResult) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <ProfessionalResultCard result={result} />
+        <ProfessionalResultCard currency="EUR" result={result} />
       </MemoryRouter>
     </QueryClientProvider>,
   )

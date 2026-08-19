@@ -67,6 +67,7 @@ function appointment(overrides: Partial<CalendarAppointment> = {}): CalendarAppo
     serviceId: 'svc-1',
     serviceName: 'Fade',
     priceCents: 2500,
+    currency: 'EUR',
     customerName: 'Alex Martin',
     customerPhone: '+33612345678',
     notes: null,

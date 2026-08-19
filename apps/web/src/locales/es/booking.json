@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Reservar cita — FadeUp",
+    "description": "Reserva tu cita en unos minutos."
+  },
+  "heading": "Reservar cita",
+  "loading": "Cargando la reserva…",
+  "choose": {
+    "service": "Elige un servicio",
+    "location": "Elige un local",
+    "barber": "Elige un profesional"
+  },
+  "fields": {
+    "fullName": "Nombre completo",
+    "phone": "Teléfono",
+    "email": "Correo electrónico",
+    "notes": "Comentarios (opcional)",
+    "date": "Fecha",
+    "contactHint": "Deja un teléfono o correo para que el local pueda contactarte"
+  },
+  "validation": {
+    "nameRequired": "Escribe tu nombre.",
+    "contactRequired": "Deja un teléfono o correo para que el local pueda contactarte.",
+    "emailInvalid": "Introduce un correo electrónico válido"
+  },
+  "summary": {
+    "shop": "Local",
+    "service": "Servicio",
+    "barber": "Profesional",
+    "when": "Cuándo",
+    "location": "Dirección",
+    "price": "Precio",
+    "details": "Tus datos"
+  },
+  "empty": {
+    "services": "No hay servicios disponibles",
+    "servicesHint": "Este local no tiene nada reservable ahora mismo.",
+    "locations": "No hay locales disponibles",
+    "locationsHint": "Este negocio no tiene locales abiertos a reservas ahora mismo.",
+    "barbers": "No hay profesionales disponibles",
+    "barbersHint": "Nadie ofrece este servicio. Prueba con otro.",
+    "times": "No hay horas disponibles ese día"
+  },
+  "errors": {
+    "services": "No se pudieron cargar los servicios",
+    "locations": "No se pudieron cargar los locales",
+    "barbers": "No se pudieron cargar los profesionales",
+    "times": "No se pudieron cargar las horas",
+    "page": "No se pudo cargar esta página de reserva",
+    "shopNotFound": "No encontramos este negocio",
+    "locationUnavailable": "Este local no acepta reservas ahora mismo.",
+    "serviceUnavailable": "Este servicio no está disponible en este local.",
+    "barberUnavailable": "No está disponible ese día: elige otra hora.",
+    "slotTaken": "Acaban de reservar esa hora: elige otra.",
+    "slotPast": "Esa hora ya pasó: elige otra.",
+    "generic": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "success": {
+    "title": "Reserva confirmada",
+    "subtitle": "Tienes cita en {{organization}}. Aquí tienes los detalles.",
+    "service": "Servicio",
+    "professional": "Profesional",
+    "date": "Fecha",
+    "time": "Hora",
+    "location": "Dirección",
+    "price": "Precio",
+    "addToCalendar": "Añadir al calendario",
+    "calendarTitle": "{{service}} en {{organization}}",
+    "calendarDescription": "Con {{professional}}. Reservado en FadeUp.",
+    "viewAppointment": "Ver mis citas",
+    "createAccount": "Crear una cuenta",
+    "haveAccount": "Ya tengo cuenta",
+    "accountPrompt": "Crea una cuenta para gestionar esta cita, reservar de nuevo con un toque y conservar tu Fade Passport.",
+    "done": "Listo"
+  }
+}

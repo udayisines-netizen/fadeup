@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useOwnProfilePreferences } from '@/lib/queries/profile'
 import { useTheme } from '@/lib/theme'
 import { changeLocale } from '@/i18n'
-import { getExplicitLocale, normalizeLocale } from '@/lib/locale'
+import { detectLocale, getDetectedLocale, getExplicitLocale, normalizeLocale } from '@/lib/locale'
 
 /**
  * Applies an authenticated user's stored locale/theme preference once it
@@ -41,6 +41,38 @@ export function PreferencesSync() {
     if (getExplicitLocale()) return
     if (profileLocale === i18n.language) return
     void changeLocale(profileLocale)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences?.locale])
+
+  /**
+   * GeoIP, once, on a genuinely first visit.
+   *
+   * Runs only when nothing better exists: no explicit choice, no cached
+   * detection from a previous visit, and no account preference. That makes it
+   * at most one request in a device's lifetime per 24h cache window — the
+   * detection endpoint was previously never called at all, so "GeoIP" was a
+   * label on a browser-language read.
+   *
+   * The explicit check is repeated INSIDE the callback on purpose. The lookup
+   * is a network round trip, and a visitor can reach for the language switcher
+   * while it is in flight; applying a stale suggestion over a choice they just
+   * made is the single most annoying thing an i18n system can do.
+   */
+  useEffect(() => {
+    if (getExplicitLocale() || getDetectedLocale()) return
+    if (normalizeLocale(preferences?.locale)) return
+
+    let cancelled = false
+    void detectLocale().then((locale) => {
+      if (cancelled) return
+      if (getExplicitLocale()) return
+      if (locale === i18n.language) return
+      void changeLocale(locale)
+    })
+
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences?.locale])
 

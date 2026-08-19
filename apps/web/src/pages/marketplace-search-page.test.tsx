@@ -7,6 +7,9 @@ import { useSearchPublicProfessionals } from '@/lib/queries/marketplace'
 
 vi.mock('@/lib/queries/marketplace', () => ({
   useSearchPublicProfessionals: vi.fn(),
+  // A marketplace spans countries, so each card is priced in its own shop's
+  // currency — resolved in one batch call beside the search itself.
+  usePublicCurrencies: () => ({ 'org-1': 'GBP', 'org-2': 'EUR' }),
 }))
 
 // ProfessionalResultCard renders a FavoriteButton, which needs both an

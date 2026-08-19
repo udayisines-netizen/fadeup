@@ -26,6 +26,7 @@ import {
   useDeclineBookingRequest,
 } from '@/lib/queries/booking-requests'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
+import { useMoney } from '@/lib/intl/use-intl'
 import { cn } from '@/lib/cn'
 
 /**
@@ -66,6 +67,7 @@ export function AppointmentSheet({
   professionals: CalendarProfessional[]
 }) {
   const { toast } = useToast()
+  const money = useMoney()
   const [error, setError] = useState<string | null>(null)
   const [confirmingAction, setConfirmingAction] = useState<'decline' | 'cancel' | 'noShow' | null>(null)
   const [note, setNote] = useState('')
@@ -120,7 +122,7 @@ export function AppointmentSheet({
   return (
     <>
       <Drawer open={open} onOpenChange={(next) => (next ? onOpenChange(true) : close())}>
-        <DrawerContent side="bottom" className="sm:inset-y-0 sm:right-0 sm:max-h-none sm:max-w-md sm:rounded-none">
+        <DrawerContent side="bottom" className="sm:inset-y-0 sm:end-0 sm:max-h-none sm:max-w-md sm:rounded-none">
           <DrawerHeader>
             <div className="flex flex-wrap items-center gap-2">
               <AppointmentStatusBadge status={appointment.status} resolution={appointment.resolution} />
@@ -141,7 +143,7 @@ export function AppointmentSheet({
               <DetailRow icon={Scissors} label="Service">
                 {appointment.serviceName ?? 'No service recorded'}
                 {appointment.priceCents !== null ? (
-                  <span className="text-ink-500"> · {(appointment.priceCents / 100).toFixed(2)}</span>
+                  <span className="text-ink-500"> · {money(appointment.priceCents, appointment.currency)}</span>
                 ) : null}
               </DetailRow>
               <DetailRow icon={User} label="Professional">

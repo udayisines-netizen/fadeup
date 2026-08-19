@@ -1,0 +1,76 @@
+{
+  "meta": {
+    "title": "Book an appointment — FadeUp",
+    "description": "Book an appointment in minutes."
+  },
+  "heading": "Book an appointment",
+  "loading": "Loading booking page…",
+  "choose": {
+    "service": "Choose a service",
+    "location": "Choose a location",
+    "barber": "Choose a professional"
+  },
+  "fields": {
+    "fullName": "Full name",
+    "phone": "Phone number",
+    "email": "Email",
+    "notes": "Notes (optional)",
+    "date": "Date",
+    "contactHint": "Add a phone number or email so the shop can reach you"
+  },
+  "validation": {
+    "nameRequired": "Please enter your name.",
+    "contactRequired": "Please add a phone number or email so the shop can reach you.",
+    "emailInvalid": "Enter a valid email address"
+  },
+  "summary": {
+    "shop": "Shop",
+    "service": "Service",
+    "barber": "Professional",
+    "when": "When",
+    "location": "Location",
+    "price": "Price",
+    "details": "Your details"
+  },
+  "empty": {
+    "services": "No services available",
+    "servicesHint": "This location doesn't have anything bookable right now.",
+    "locations": "No locations available",
+    "locationsHint": "This shop has no locations open for booking right now.",
+    "barbers": "No professionals available",
+    "barbersHint": "Nobody is bookable for this service. Try a different service.",
+    "times": "No times available on this day"
+  },
+  "errors": {
+    "services": "Couldn't load services",
+    "locations": "Couldn't load locations",
+    "barbers": "Couldn't load professionals",
+    "times": "Couldn't load available times",
+    "page": "Couldn't load this booking page",
+    "shopNotFound": "We couldn't find this shop",
+    "locationUnavailable": "This location isn't available for booking right now.",
+    "serviceUnavailable": "This service isn't available at this location.",
+    "barberUnavailable": "They aren't available on that date — please choose another time.",
+    "slotTaken": "That time was just booked by someone else — please pick another time.",
+    "slotPast": "That time has already passed — please choose another time.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "success": {
+    "title": "Booking confirmed",
+    "subtitle": "You're booked at {{organization}}. We've saved the details below.",
+    "service": "Service",
+    "professional": "Professional",
+    "date": "Date",
+    "time": "Time",
+    "location": "Location",
+    "price": "Price",
+    "addToCalendar": "Add to calendar",
+    "calendarTitle": "{{service}} at {{organization}}",
+    "calendarDescription": "With {{professional}}. Booked through FadeUp.",
+    "viewAppointment": "View my appointments",
+    "createAccount": "Create an account",
+    "haveAccount": "I already have an account",
+    "accountPrompt": "Create an account to manage this appointment, rebook in one tap, and keep your Fade Passport.",
+    "done": "Done"
+  }
+}

@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, CalendarCheck2, CircleUserRound, MapPin } from 'lucide-react'
+import { ArrowLeft, CalendarCheck2, CalendarPlus, CircleUserRound, MapPin } from 'lucide-react'
 import {
   usePublicAvailableSlots,
   usePublicBarbers,
@@ -30,8 +30,11 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
 import { useDocumentMeta } from '@/lib/use-document-meta'
-import { BookingProgress, BookingStatusBadge } from '@/components/booking/booking-status'
 import { getErrorMessage } from '@/lib/get-error-message'
+import { useTranslation } from 'react-i18next'
+import { motion, useReducedMotion } from 'motion/react'
+import { useMoney, useDateTime } from '@/lib/intl/use-intl'
+import { downloadIcs } from '@/lib/calendar/ics'
 
 // --- small formatting helpers (page-local, mirrors the convention in app-services-page.tsx) ---
 
@@ -39,9 +42,6 @@ function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-}
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} min`
@@ -124,6 +124,7 @@ function friendlyBookingError(rawMessage: string): string {
 // --- top-level route component --------------------------------------------------------
 
 export function PublicBookingPage() {
+  const { t } = useTranslation('booking')
   const { slug } = useParams<{ slug: string }>()
   const organizationQuery = usePublicOrganization(slug)
 
@@ -142,7 +143,7 @@ export function PublicBookingPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="Couldn't load this booking page"
+          title={t('booking:errors.page')}
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
@@ -158,7 +159,7 @@ export function PublicBookingPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title="We couldn't find this shop"
+          title={t('booking:errors.shopNotFound')}
           description="This booking link may be out of date, or the web address may have changed. Check the link with the shop directly."
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
@@ -354,7 +355,7 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
       ) : null}
 
       {phase === 'service' ? (
-        <ServiceStep query={servicesQuery} onSelect={handleSelectService} />
+        <ServiceStep query={servicesQuery} currency={organization.currency} onSelect={handleSelectService} />
       ) : null}
 
       {phase === 'barber' ? <BarberStep query={barbersQuery} onSelect={handleSelectBarber} /> : null}
@@ -399,13 +400,14 @@ function LocationStep({
   query: ReturnType<typeof usePublicLocations>
   onSelect: (id: string) => void
 }) {
+  const { t } = useTranslation('booking')
   return (
-    <StepShell title="Choose a location">
+    <StepShell title={t('booking:choose.location')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
         <ErrorState
-          title="Couldn't load locations"
+          title={t('booking:errors.locations')}
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
@@ -414,7 +416,7 @@ function LocationStep({
           }
         />
       ) : query.data.length === 0 ? (
-        <EmptyState title="No locations available" description="This shop doesn't have any locations open for booking right now." />
+        <EmptyState title={t('booking:empty.locations')} description={t('booking:empty.locationsHint')} />
       ) : (
         <div className="flex flex-col gap-3">
           {query.data.map((location) => (
@@ -438,11 +440,16 @@ function LocationStep({
 
 function ServiceStep({
   query,
+  currency,
   onSelect,
 }: {
   query: ReturnType<typeof usePublicServices>
+  /** The shop's currency — every price on this screen is what they will be charged. */
+  currency: string
   onSelect: (id: string) => void
 }) {
+  const { t } = useTranslation('booking')
+  const money = useMoney()
   const grouped = useMemo(() => {
     const groups = new Map<string, PublicService[]>()
     for (const service of query.data ?? []) {
@@ -455,12 +462,12 @@ function ServiceStep({
   }, [query.data])
 
   return (
-    <StepShell title="Choose a service">
+    <StepShell title={t('booking:choose.service')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
         <ErrorState
-          title="Couldn't load services"
+          title={t('booking:errors.services')}
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
@@ -469,7 +476,7 @@ function ServiceStep({
           }
         />
       ) : (query.data?.length ?? 0) === 0 ? (
-        <EmptyState title="No services available" description="This location doesn't have any bookable services right now." />
+        <EmptyState title={t('booking:empty.services')} description={t('booking:empty.servicesHint')} />
       ) : (
         <div className="flex flex-col gap-6">
           {Array.from(grouped.entries()).map(([categoryName, services]) => (
@@ -484,7 +491,7 @@ function ServiceStep({
                         {service.description ? <p className="mt-0.5 text-sm text-ink-500">{service.description}</p> : null}
                         <p className="mt-1 text-xs text-ink-500">{formatDuration(service.durationMinutes)}</p>
                       </div>
-                      <span className="shrink-0 font-medium text-ink-950">{formatPrice(service.priceCents)}</span>
+                      <span className="shrink-0 font-medium text-ink-950">{money(service.priceCents, currency)}</span>
                     </div>
                   </SelectableCard>
                 ))}
@@ -506,13 +513,14 @@ function BarberStep({
   query: ReturnType<typeof usePublicBarbers>
   onSelect: (id: string) => void
 }) {
+  const { t } = useTranslation('booking')
   return (
-    <StepShell title="Choose a barber">
+    <StepShell title={t('booking:choose.barber')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
         <ErrorState
-          title="Couldn't load barbers"
+          title={t('booking:errors.barbers')}
           description={query.error.message}
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
@@ -521,7 +529,7 @@ function BarberStep({
           }
         />
       ) : query.data.length === 0 ? (
-        <EmptyState title="No barbers available" description="No one is currently bookable for this service. Try a different service." />
+        <EmptyState title={t('booking:empty.barbers')} description={t('booking:empty.barbersHint')} />
       ) : (
         <div className="flex flex-col gap-3">
           {query.data.map((barber) => (
@@ -580,6 +588,7 @@ function DateTimeStep({
   onChangeDate: (date: string) => void
   onSelectSlot: (slot: SlotSelection) => void
 }) {
+  const { t } = useTranslation('booking')
   return (
     <StepShell title="Choose a date & time">
       <TextField
@@ -595,7 +604,7 @@ function DateTimeStep({
           <StepSkeleton />
         ) : query.isError ? (
           <ErrorState
-            title="Couldn't load available times"
+            title={t('booking:errors.times')}
             description={query.error.message}
             action={
               <Button variant="secondary" onClick={() => void query.refetch()}>
@@ -604,7 +613,7 @@ function DateTimeStep({
             }
           />
         ) : query.data.length === 0 ? (
-          <EmptyState title="No times available on this day" description="Try a different date — this barber has no open slots on the selected day." />
+          <EmptyState title={t('booking:empty.times')} description="Try a different date — this barber has no open slots on the selected day." />
         ) : (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {query.data.map((availableSlot) => {
@@ -668,6 +677,10 @@ function DetailsStep({
   slot: SlotSelection
   onSuccess: (appointment: BookedAppointment) => void
 }) {
+  const { t } = useTranslation('booking')
+  const money = useMoney()
+  const currency = organization.currency
+
   const bookAppointment = useBookPublicAppointment()
   const { user } = useAuth()
   const myProfile = useMyCustomerProfile(user?.id)
@@ -729,7 +742,7 @@ function DetailsStep({
   }
 
   return (
-    <StepShell title="Your details">
+    <StepShell title={t('booking:summary.details')}>
       <Card className="mb-5 p-4">
         <dl className="flex flex-col gap-1.5 text-sm">
           <SummaryRow label="Shop" value={organization.name} />
@@ -737,7 +750,7 @@ function DetailsStep({
           <SummaryRow label="Service" value={`${service.name} · ${formatDuration(service.durationMinutes)}`} />
           <SummaryRow label="Barber" value={barber.displayName} />
           <SummaryRow label="When" value={formatSlotDateTime(slot.slotStart, location?.timezone ?? 'UTC')} />
-          <SummaryRow label="Price" value={formatPrice(service.priceCents)} />
+          <SummaryRow label="Price" value={money(service.priceCents, currency)} />
         </dl>
       </Card>
 
@@ -791,37 +804,75 @@ function SuccessScreen({
   location: PublicLocation | null
   appointment: BookedAppointment
 }) {
+  const { t } = useTranslation('booking')
+  const money = useMoney()
+  const dt = useDateTime()
+  const reduced = useReducedMotion()
+  const timeZone = location?.timezone ?? 'UTC'
+
+  /*
+   * CONFIRMED, not "sent".
+   *
+   * The old screen said "Sent to <shop>. They'll confirm it shortly" and drew
+   * a three-step progress rail — an accurate description of LOT C, and now a
+   * lie. The appointment is already booked; the server said so before this
+   * component rendered. Showing progress for a finished state is the most
+   * corrosive kind of fake affordance: it invents a wait that does not exist
+   * and trains the customer to expect a message that will never come.
+   */
   return (
     <Card elevated className="w-full p-6 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-100">
-        <CalendarCheck2 className="h-6 w-6 text-success-700" aria-hidden="true" />
-      </div>
-      {/*
-        Named for the shop rather than repeating "Request sent", which the
-        progress rail below already says as its first step. Two identical
-        headings on one screen is a hierarchy problem, not a reinforcement.
-      */}
-      <h1 className="mt-4 text-xl font-semibold text-ink-950">Sent to {organization.name}</h1>
-      <p className="mt-1 text-sm text-ink-500">
-        They&apos;ll confirm it shortly. You&apos;ll be told as soon as they do.
+      <motion.div
+        // Meaningful, once, on the one screen in the flow that has earned it.
+        // Transform and opacity only, so it composites; skipped entirely under
+        // prefers-reduced-motion rather than merely shortened.
+        initial={reduced ? false : { scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-100"
+      >
+        <CalendarCheck2 className="h-7 w-7 text-success-700" aria-hidden="true" />
+      </motion.div>
+
+      {/* role=status so a screen reader announces the outcome without the
+          user having to go looking for it. */}
+      <h1 className="mt-4 text-balance text-xl font-semibold text-ink-950" role="status">
+        {t('success.title')}
+      </h1>
+      <p className="mt-1 text-pretty text-sm text-ink-500">
+        {t('success.subtitle', { organization: organization.name })}
       </p>
 
-      {/*
-        The same progress rail the customer will see on their appointments
-        screen, so the story a booking tells starts here and continues there
-        rather than restarting in different words.
-      */}
-      <div className="mt-6 flex flex-col items-center gap-3">
-        <BookingStatusBadge stage="waiting" />
-        <BookingProgress stage="waiting" className="w-full max-w-sm" />
-      </div>
-
-      <dl className="mt-6 flex flex-col gap-1.5 text-left text-sm">
-        <SummaryRow label="Service" value={service.name} />
-        <SummaryRow label="Barber" value={barber.displayName} />
-        <SummaryRow label="When" value={formatSlotDateTime(appointment.startsAt, location?.timezone ?? 'UTC')} />
-        {location ? <SummaryRow label="Location" value={location.name} /> : null}
+      <dl className="mt-6 flex flex-col gap-1.5 text-start text-sm">
+        <SummaryRow label={t('success.service')} value={service.name} />
+        <SummaryRow label={t('success.professional')} value={barber.displayName} />
+        <SummaryRow label={t('success.date')} value={dt.longDate(appointment.startsAt, timeZone)} />
+        <SummaryRow
+          label={t('success.time')}
+          value={dt.timeRange(appointment.startsAt, appointment.endsAt, timeZone)}
+        />
+        {location ? <SummaryRow label={t('success.location')} value={location.name} /> : null}
+        <SummaryRow label={t('success.price')} value={money(service.priceCents, organization.currency)} />
       </dl>
+
+      <Button
+        type="button"
+        variant="secondary"
+        className="mt-4 w-full"
+        onClick={() =>
+          downloadIcs({
+            uid: appointment.id,
+            title: t('success.calendarTitle', { service: service.name, organization: organization.name }),
+            description: t('success.calendarDescription', { professional: barber.displayName }),
+            location: location?.name,
+            startsAt: appointment.startsAt,
+            endsAt: appointment.endsAt,
+          })
+        }
+      >
+        <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+        {t('success.addToCalendar')}
+      </Button>
 
       <SuccessNextStep hasClaimToken={Boolean(appointment.claimToken)} />
     </Card>
@@ -856,7 +907,7 @@ function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
       {hasClaimToken ? (
         <>
           <p className="text-sm text-ink-500">
-            Create an account to track this appointment, rebook in one tap, and keep your Fade Passport.
+            Create an account to manage this appointment, rebook in one tap, and keep your Fade Passport.
           </p>
           <Link
             to="/register?redirect=%2Fapp%2Fcustomer"

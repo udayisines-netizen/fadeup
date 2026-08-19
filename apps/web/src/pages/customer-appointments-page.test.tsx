@@ -37,6 +37,8 @@ function appointment(overrides: Partial<MyAppointment> = {}): MyAppointment {
     endsAt: '2099-01-01T10:30:00Z',
     status: 'confirmed',
     priceCents: 2000,
+    currency: 'EUR',
+    locationTimezone: 'Europe/Paris',
     // LOT C lifecycle fields. `resolution` is what lets the UI say "not
     // accepted" or "expired" rather than the blunt "cancelled" the database
     // uses for all three.
