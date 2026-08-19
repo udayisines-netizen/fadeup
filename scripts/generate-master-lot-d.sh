@@ -151,10 +151,10 @@ FOOTER
 
 if [[ "$CHECK_ONLY" -eq 1 ]]; then
   if diff -q "$TMP" "$OUTPUT" >/dev/null 2>&1; then
-    echo "MASTER (LOT C) is in sync with db/migrations."
+    echo "MASTER (LOT D) is in sync with db/migrations."
     exit 0
   fi
-  echo "MASTER (LOT C) is OUT OF SYNC. Run scripts/generate-master-lot-d.sh" >&2
+  echo "MASTER (LOT D) is OUT OF SYNC. Run scripts/generate-master-lot-d.sh" >&2
   diff "$OUTPUT" "$TMP" | head -40 >&2
   exit 1
 fi
