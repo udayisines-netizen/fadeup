@@ -277,7 +277,7 @@ function TeamManagement({
                       <TableRow key={row.member.membershipId}>
                         <TableCell>
                           <span className="min-w-0 truncate">{displayName}</span>
-                          {isSelf ? <span className="ml-2 text-xs text-ink-300">(you)</span> : null}
+                          {isSelf ? <span className="ms-2 text-xs text-ink-300">(you)</span> : null}
                         </TableCell>
                         <TableCell>
                           <Badge variant="neutral">{t(`app:roles.${row.member.role}`)}</Badge>
@@ -292,7 +292,7 @@ function TeamManagement({
                             onChange={(event) => handleToggleBarber(row, event.target.checked)}
                           />
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-end">
                           <div className="flex justify-end gap-2">
                             {isBookable && row.staffProfile ? (
                               <Link
@@ -562,7 +562,7 @@ function PendingInvitationRow({
       <TableCell className="whitespace-nowrap text-ink-500">
         {new Date(invitation.expiresAt).toLocaleDateString()}
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-end">
         <Button variant="danger" size="sm" isLoading={isRevoking} onClick={onRevoke}>
           {t('app:team.revoke')}
         </Button>

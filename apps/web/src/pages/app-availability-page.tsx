@@ -564,7 +564,7 @@ function WeeklyHoursRow({
         ) : null}
       </TableCell>
       {canManage ? (
-        <TableCell className="text-right">
+        <TableCell className="text-end">
           <Button size="sm" variant="secondary" disabled={!isDirty || isInvalid} isLoading={isSaving} onClick={() => void handleSave()}>
             {t('common:action.save')}
           </Button>

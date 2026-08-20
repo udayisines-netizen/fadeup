@@ -146,7 +146,7 @@ export function TodayFlow({
               <button
                 type="button"
                 onClick={() => onSelectBlock(entry.block)}
-                className="flex flex-1 items-center gap-3 rounded-md py-2.5 pe-2 text-start hover:bg-paper-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-700"
+                className="flex min-h-11 flex-1 items-center gap-3 rounded-md py-2.5 pe-2 text-start hover:bg-paper-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-700"
               >
                 <StatusDot tone="neutral" />
                 <Ban className="h-4 w-4 shrink-0 text-ink-500" aria-hidden="true" />
@@ -170,7 +170,9 @@ export function TodayFlow({
               type="button"
               onClick={() => onSelectAppointment(appointment)}
               className={cn(
-                'flex flex-1 items-center gap-3 rounded-lg py-2.5 pe-2 text-start',
+                // 44px floor: this is a timeline row a barber taps on a
+                // tablet at the chair, not a desktop list item.
+                'flex min-h-11 flex-1 items-center gap-3 rounded-lg py-2.5 pe-2 text-start',
                 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-700',
                 isActive
                   ? 'bg-accent-100/60 px-2 ring-1 ring-accent-200'

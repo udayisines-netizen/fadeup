@@ -470,7 +470,7 @@ function AppointmentRow({
         <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{t(`app:appointmentStatusShort.${appointment.status}`)}</Badge>
       </TableCell>
       {showActionsColumn ? (
-        <TableCell className="text-right">
+        <TableCell className="text-end">
           {canAct && !isTerminal ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

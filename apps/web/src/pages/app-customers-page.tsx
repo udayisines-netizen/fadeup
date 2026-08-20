@@ -153,7 +153,7 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
                       <TableCell className="text-ink-500">{customer.phone || '—'}</TableCell>
                       <TableCell className="text-ink-500">{customer.email || '—'}</TableCell>
                       <TableCell className="text-ink-500">{formatDate(customer.updatedAt, i18n.language)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button variant="secondary" size="sm" onClick={() => setSelectedCustomer(customer)}>
                           {t('app:customers.view')}
                         </Button>

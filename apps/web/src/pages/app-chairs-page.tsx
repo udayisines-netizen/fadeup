@@ -208,7 +208,7 @@ function LocationChairs({
                   </Badge>
                 </TableCell>
                 {canManage ? (
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <Button variant="secondary" size="sm" onClick={() => onEdit(chair)}>
                       {t('common:action.edit')}
                     </Button>

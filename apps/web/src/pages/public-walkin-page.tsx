@@ -225,7 +225,7 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
               key={location.id}
               type="button"
               onClick={() => setLocationId(location.id)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg border border-border-strong bg-paper-0 p-4 text-left transition-colors hover:border-accent-600 hover:bg-accent-100/30 focus-visible:outline-2 focus-visible:outline-accent-600"
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg border border-border-strong bg-paper-0 p-4 text-start transition-colors hover:border-accent-600 hover:bg-accent-100/30 focus-visible:outline-2 focus-visible:outline-accent-600"
             >
               <MapPin className="h-5 w-5 shrink-0 text-accent-600" aria-hidden="true" />
               <span className="font-medium text-ink-950">{location.name}</span>

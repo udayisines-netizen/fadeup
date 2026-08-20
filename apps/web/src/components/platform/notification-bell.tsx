@@ -55,7 +55,7 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 ? (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger-600 px-1 text-[10px] font-semibold text-paper-0">
+          <span className="absolute end-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger-600 px-1 text-[10px] font-semibold text-paper-0">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         ) : null}
@@ -71,7 +71,7 @@ export function NotificationBell() {
             tabIndex={-1}
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-30 mt-1 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border bg-paper-0 shadow-lg">
+          <div className="absolute end-0 z-30 mt-1 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border bg-paper-0 shadow-lg">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold text-ink-950">{t('platform.notificationsTitle')}</p>
               {unreadCount > 0 ? (
@@ -95,7 +95,7 @@ export function NotificationBell() {
                       type="button"
                       onClick={() => handleOpen(notification)}
                       className={cn(
-                        'flex w-full flex-col items-start gap-0.5 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-paper-50',
+                        'flex w-full flex-col items-start gap-0.5 border-b border-border px-4 py-3 text-start transition-colors last:border-b-0 hover:bg-paper-50',
                         !notification.readAt && 'bg-accent-100/30',
                       )}
                     >

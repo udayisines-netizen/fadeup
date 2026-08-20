@@ -145,7 +145,7 @@ function CommandRow({ children, onSelect }: { children: ReactNode; onSelect: () 
         type="button"
         onClick={onSelect}
         className={cn(
-          'flex min-h-10 w-full items-center gap-2.5 rounded-md px-3 text-start text-sm text-ink-950',
+          'flex min-h-11 w-full items-center gap-2.5 rounded-md px-3 text-start text-sm text-ink-950',
           'hover:bg-paper-100 focus-visible:bg-paper-100 focus-visible:outline-none',
         )}
       >

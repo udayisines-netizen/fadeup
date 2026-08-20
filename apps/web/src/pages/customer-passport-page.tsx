@@ -168,7 +168,7 @@ function PassportRow({ label, value, notSet }: { label: string; value: string | 
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className="shrink-0 text-ink-500">{label}</dt>
-      <dd className={value ? 'text-right font-medium text-ink-950' : 'text-right text-ink-300'}>{value || notSet}</dd>
+      <dd className={value ? 'text-end font-medium text-ink-950' : 'text-end text-ink-300'}>{value || notSet}</dd>
     </div>
   )
 }
@@ -210,7 +210,7 @@ function PhotosSection({ userId }: { userId: string }) {
                 type="button"
                 aria-label={t('removePhoto')}
                 onClick={() => deletePhoto.mutate({ userId, photoId: photo.id, storagePath: photo.storagePath })}
-                className="absolute right-1 top-1 rounded-full bg-ink-950/60 p-1.5 text-paper-0 hover:bg-ink-950/80"
+                className="absolute end-1 top-1 rounded-full bg-ink-950/60 p-1.5 text-paper-0 hover:bg-ink-950/80"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </button>

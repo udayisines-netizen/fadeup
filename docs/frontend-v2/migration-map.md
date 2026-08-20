@@ -14,21 +14,34 @@ file is removed; `RESHELL` means the page keeps its logic but is recomposed.
 
 | Route | V1 page | Data hooks / RPC | Realtime | RBAC | V2 | Status |
 |---|---|---|---|---|---|---|
-| `/app` | `app-home-page` | `useCalendarRange`, `useBookingRequests`, `useCalendarProfessionals`, `useOrgLocations`, `useCompleteAppointment` | appointments + time_blocks | all members; barber sees own chair | `pro/dashboard-page` | REPLACE |
-| `/app/calendar` | `app-calendar-page` | `useCalendarRange`, `useCalendarProfessionals` | appointments + time_blocks | all members | `pro/calendar-page` | RESHELL |
-| `/app/appointments` | `app-appointments-page` | `useOrgAppointmentsForDate`, `useAvailableSlots`, `useCreateAppointment` | — | manage roles write | folded into calendar + booking drawer | REPLACE |
-| `/app/requests` | `app-requests-page` | `useBookingRequests`, confirm/decline | appointments | front-of-house | `pro/requests-page` | RESHELL |
-| `/app/queue` | `app-queue-page` | `useOrgQueue`, status mutations | queue_entries | all members | `pro/queue-page` | REPLACE |
-| `/app/waitlist` | `app-waitlist-page` | `useOrgWaitlist` | — | all members | `pro/waitlist-page` | RESHELL |
-| `/app/customers` | `app-customers-page` | `useOrgCustomers` | — | all members | `pro/customers-page` | REPLACE |
-| `/app/services` | `app-services-page` | `useOrgServices`, categories, service_locations, barber_services | — | owner/manager write | `pro/services-page` | RESHELL |
-| `/app/team` | `app-team-page` | `useOrgMemberships`, `useOrgStaffProfiles`, invitations | — | owner/manager | `pro/team-page` | RESHELL |
-| `/app/availability` | `app-availability-page` | location_hours, barber_working_hours, exceptions | — | owner/manager | `pro/availability-page` | RESHELL |
-| `/app/locations` | `app-locations-page` | `useOrgLocations` | — | owner/manager | `pro/locations-page` | REPLACE |
-| `/app/chairs` | `app-chairs-page` | `useOrgChairs` | — | owner/manager | folded into Locations | REPLACE |
-| `/app/memberships` | `app-memberships-page` | membership plans + customer memberships | — | owner/manager | `pro/memberships-page` | RESHELL |
-| `/app/settings` | *(did not exist)* | profile, preferences, org | — | self / owner | `pro/settings-page` | NEW |
-| shell | `routes/app-layout` — 12 horizontal nav links | `useCurrentOrg`, `useBookingRequests` | — | role gating | `pro/pro-shell` (sidebar + top bar + mobile tab bar) | REPLACE |
+| `/app` | `app-home-page` | `useCalendarRange`, `useBookingRequests`, `useCalendarProfessionals`, `useOrgLocations`, `useCompleteAppointment` | appointments + time_blocks | all members; barber sees own chair | `pro/dashboard-page` | ✅ DONE — V1 deleted |
+| `/app/calendar` | `app-calendar-page` | `useCalendarRange`, `useCalendarProfessionals` | appointments + time_blocks | all members | rebuilt in place | ✅ DONE |
+| `/app/queue` | `app-queue-page` | `useOrgQueue`, status mutations | queue_entries | all members | rebuilt in place + `pro/queue-entry-card` | ✅ DONE |
+| `/app/requests` | `app-requests-page` | `useBookingRequests`, confirm/decline | appointments | front-of-house | reshelled | ✅ DONE |
+| `/app/appointments` | `app-appointments-page` | `useOrgAppointmentsForDate`, `useAvailableSlots`, `useCreateAppointment` | — | manage roles write | reshelled | ✅ DONE |
+| `/app/waitlist` | `app-waitlist-page` | `useOrgWaitlist` | — | all members | reshelled | ✅ DONE |
+| `/app/customers` | `app-customers-page` | `useOrgCustomers` | — | all members | reshelled | ✅ DONE |
+| `/app/services` | `app-services-page` | `useOrgServices`, categories, service_locations, barber_services | — | owner/manager write | reshelled | ✅ DONE |
+| `/app/team` | `app-team-page` | `useOrgMemberships`, `useOrgStaffProfiles`, invitations | — | owner/manager | reshelled | ✅ DONE |
+| `/app/availability` | `app-availability-page` | location_hours, barber_working_hours, exceptions | — | owner/manager | reshelled | ✅ DONE |
+| `/app/locations` | `app-locations-page` | `useOrgLocations` | — | owner/manager | reshelled | ✅ DONE |
+| `/app/chairs` | `app-chairs-page` | `useOrgChairs` | — | owner/manager | reshelled | ✅ DONE |
+| `/app/memberships` | `app-memberships-page` | membership plans + customer memberships | — | owner/manager | reshelled | ✅ DONE |
+| `/app/settings` | *(does not exist)* | — | — | — | — | ⛔ NOT BUILT — see below |
+| shell | `routes/app-layout` — 12 horizontal nav links | `useCurrentOrg`, `useBookingRequests` | — | role gating | `routes/pro-shell` (sidebar + top bar + mobile tab bar) | ✅ DONE — V1 deleted |
+
+### Professional changes beyond the shell
+
+- **The shell owns the measure.** Every page wrapped itself in its own
+  `Container` at its own size — `lg` here, `md` there, `xl` on the calendar —
+  producing a different text column, a different left edge and doubled padding
+  at 375px on each screen. That is most of why V1 read as a set of screens.
+- **The queue stopped being a table.** Six columns do not fit 375px, and every
+  status change cost two taps through a menu of six options. It is now cards
+  split by position in the line, with the one obvious next move as a button.
+- **`/app/settings` was scoped but not built.** Rather than ship a half-page,
+  it is recorded as not built. Profile, preferences and organization settings
+  remain reachable where they already were.
 
 ## Customer — `/app/customer/*` and public
 
@@ -88,8 +101,26 @@ the one-tap "Book" route it proved).
 | `navbar`, `nav-link` | RETIRE once both shells ship |
 | `empty-state`, `error-state` | KEEP — restyled |
 | `table` | KEEP for Platform only; the product stops using it |
-| `marketplace/professional-result-card` | REPLACE by `BusinessListingCard` |
+| `marketplace/professional-result-card` | ✅ REPLACED by `BusinessListingCard`, then deleted |
+| `marketplace/search-form` | ✅ REPLACED by `customer/discovery-search`, then deleted |
 | `booking/booking-status` | KEEP — legacy pending is still a real state |
+| `ui/tooltip` | KEPT but currently unused — a working primitive, not a superseded composition |
+| `ui/table` | still used by Platform and by three pro pages that are genuinely tabular |
+
+## Gates added by this rebuild
+
+These exist because each failure is invisible in review and each one had
+already happened:
+
+| Gate | Catches |
+|---|---|
+| `i18n/no-hardcoded-strings.test.ts` | untranslated text in JSX (LOT E) |
+| `i18n/terminology.test.ts` | "barbier" in French, brand-name drift (LOT E) |
+| `i18n/direction.test.ts` | `<html lang>`/`<html dir>` not following the language (LOT E) |
+| `i18n/no-browser-locale.test.ts` | `toLocale*`/`new Intl.*Format` with `undefined` — the browser's locale instead of the app's; and appointment times formatted with no timezone |
+| `i18n/no-untranslated-status-maps.test.ts` | user-facing prose inside a `Record<…, string>` constant, which cannot be translated |
+| `i18n/logical-properties.test.ts` | physical direction utilities (`ml-`, `right-4`, `text-left`) that do not mirror under `dir="rtl"` |
+| `components/ui/direction.test.tsx` | `translateX` motion that does not carry `--fu-dir`, so it slides the wrong way in Arabic |
 
 ## Deliberately out of scope
 

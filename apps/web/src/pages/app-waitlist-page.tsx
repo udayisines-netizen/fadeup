@@ -343,7 +343,7 @@ function WaitlistRow({
         <Badge variant={STATUS_BADGE_VARIANT[entry.status]}>{t(`app:waitlistStatus.${entry.status}`)}</Badge>
       </TableCell>
       {canManage ? (
-        <TableCell className="text-right">
+        <TableCell className="text-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>

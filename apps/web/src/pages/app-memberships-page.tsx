@@ -167,7 +167,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
                       type="button"
                       disabled={!canManagePlans}
                       onClick={() => canManagePlans && setEditingPlan(plan)}
-                      className="flex flex-col gap-1 rounded-lg border border-border bg-paper-0 p-4 text-left disabled:cursor-default enabled:hover:border-accent-600"
+                      className="flex flex-col gap-1 rounded-lg border border-border bg-paper-0 p-4 text-start disabled:cursor-default enabled:hover:border-accent-600"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-medium text-ink-950">{plan.name}</span>
@@ -312,7 +312,7 @@ function EnrollmentRow({
         <Badge variant={STATUS_BADGE_VARIANT[enrollment.status]}>{t(`app:membershipStatus.${enrollment.status}`)}</Badge>
       </TableCell>
       {canManage ? (
-        <TableCell className="text-right">
+        <TableCell className="text-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" isLoading={updateStatus.isPending}>

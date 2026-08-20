@@ -97,7 +97,7 @@ function SharedRow({ label, value, notSet }: { label: string; value: string | nu
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className="shrink-0 text-ink-500">{label}</dt>
-      <dd className={value ? 'text-right font-medium text-ink-950' : 'text-right text-ink-300'}>{value || notSet}</dd>
+      <dd className={value ? 'text-end font-medium text-ink-950' : 'text-end text-ink-300'}>{value || notSet}</dd>
     </div>
   )
 }

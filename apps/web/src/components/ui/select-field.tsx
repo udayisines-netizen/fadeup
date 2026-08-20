@@ -33,7 +33,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
           className={cn(
-            'min-h-11 w-full appearance-none rounded-md border border-border-strong bg-paper-0 px-3 py-2 pr-9 text-sm text-ink-950',
+            'min-h-11 w-full appearance-none rounded-md border border-border-strong bg-paper-0 px-3 py-2 pe-9 text-sm text-ink-950',
             'disabled:cursor-not-allowed disabled:border-border disabled:bg-paper-100 disabled:text-ink-300',
             error && 'border-danger-600',
             className,
@@ -47,7 +47,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
           ))}
         </select>
         <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500"
+          className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500"
           aria-hidden="true"
         />
       </div>

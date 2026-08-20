@@ -19,7 +19,7 @@ export const Table = forwardRef<HTMLTableElement, HTMLAttributes<HTMLTableElemen
 )
 
 export function TableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('bg-paper-50 text-left text-xs font-medium text-ink-500', className)} {...props} />
+  return <thead className={cn('bg-paper-50 text-start text-xs font-medium text-ink-500', className)} {...props} />
 }
 
 export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {

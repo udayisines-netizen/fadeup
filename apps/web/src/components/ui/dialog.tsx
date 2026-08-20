@@ -43,6 +43,10 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogPrimitive.DialogCo
           ref={ref}
           data-fu-content
           className={cn(
+            // left-1/2 + -translate-x-1/2 is SYMMETRIC centring, not a direction.
+            // Its logical twin (start-1/2) would flip the offset under RTL
+            // while the transform kept moving left, landing the dialog
+            // off-centre — the one case where the physical property is right.
             'fixed left-1/2 top-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col',
             'max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)]',
             // Dialogs that don't opt into DialogBody still scroll as a whole
@@ -54,7 +58,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogPrimitive.DialogCo
         >
           {children}
           <DialogPrimitive.Close
-            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-paper-100 hover:text-ink-950"
+            className="absolute end-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-500 hover:bg-paper-100 hover:text-ink-950"
             aria-label={t('common:action.close')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -80,7 +84,7 @@ export function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElemen
 }
 
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-4 flex shrink-0 flex-col gap-1 pr-8', className)} {...props} />
+  return <div className={cn('mb-4 flex shrink-0 flex-col gap-1 pe-8', className)} {...props} />
 }
 
 export function DialogTitle({ className, ...props }: DialogPrimitive.DialogTitleProps) {

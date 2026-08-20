@@ -961,3 +961,32 @@ body {
 .fu-scroll-x::-webkit-scrollbar {
   display: none;
 }
+
+/*
+ * ============================================================================
+ * DIRECTION AS A NUMBER
+ * ============================================================================
+ *
+ * A handful of V2 components move an element with `translateX` — the
+ * segmented control's sliding indicator, the switch's thumb. Those cannot use
+ * a logical property, because a transform has no logical form: `translateX`
+ * always means "toward the physical right".
+ *
+ * So direction becomes a multiplier. `calc(var(--fu-dir) * <distance>)` moves
+ * the element toward the END of the reading direction in both, and the whole
+ * app keeps working from one stylesheet.
+ *
+ * `dir` is set on <html> from the language itself, by a single listener on
+ * i18next's `languageChanged` — see i18n/index.ts and i18n/direction.test.ts.
+ * Defining the fallback here rather than relying on `var(--fu-dir, 1)` at each
+ * call site matters: a missing definition silently makes every one of those
+ * animations slide the wrong way in Arabic, and nothing in a left-to-right
+ * language would ever reveal it.
+ */
+:root {
+  --fu-dir: 1;
+}
+
+[dir='rtl'] {
+  --fu-dir: -1;
+}

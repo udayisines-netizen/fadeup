@@ -47,7 +47,15 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-paper-0 shadow-sm transition-transform peer-checked:translate-x-5"
+          // The thumb sits at the inline START and travels toward the inline
+          // END. `translateX` has no logical form, so the distance carries the
+          // direction as a multiplier (--fu-dir, see index.css) — otherwise
+          // the thumb starts on the right in Arabic and then slides further
+          // right, straight off the track.
+          className={cn(
+            'pointer-events-none absolute start-0.5 top-0.5 h-5 w-5 rounded-full bg-paper-0 shadow-sm',
+            'transition-transform peer-checked:translate-x-[calc(var(--fu-dir)*1.25rem)] motion-reduce:transition-none',
+          )}
         />
       </span>
     </label>

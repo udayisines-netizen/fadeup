@@ -145,7 +145,7 @@ export function CustomerTimelinePreview() {
 
   return (
     <PreviewFrame label="Customer timeline">
-      <ol className="flex flex-col gap-2.5 border-l border-border pl-4">
+      <ol className="flex flex-col gap-2.5 border-s border-border ps-4">
         {visits.map((visit) => (
           <li key={visit.date} className="relative text-sm text-ink-700">
             <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-accent-600" />

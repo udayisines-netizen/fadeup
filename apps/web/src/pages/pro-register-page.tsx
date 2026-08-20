@@ -380,7 +380,7 @@ export function ProRegisterPage() {
                     aria-checked={isSelected}
                     onClick={() => setValue('professionalType', type, { shouldValidate: true })}
                     className={cn(
-                      'flex min-h-16 items-start gap-3 rounded-lg border p-3 text-left transition-colors',
+                      'flex min-h-16 items-start gap-3 rounded-lg border p-3 text-start transition-colors',
                       isSelected
                         ? 'border-accent-600 bg-accent-100/40 ring-1 ring-accent-600'
                         : 'border-border-strong bg-paper-0 hover:border-accent-600/60',

@@ -503,13 +503,13 @@ function ServicesSection({
                     <TableCell className="whitespace-nowrap">
                       {money(service.priceCents, currency)}
                       {!service.isActive ? (
-                        <Badge variant="neutral" className="ml-2">
+                        <Badge variant="neutral" className="ms-2">
                           {t('common:state.inactive')}
                         </Badge>
                       ) : null}
                     </TableCell>
                     {canManage ? (
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           variant="secondary"
                           size="sm"

@@ -63,7 +63,7 @@ export function RouteErrorBoundary() {
           us what it said, and it is the same string console.error logged.
         */}
         {detail ? (
-          <Alert variant="error" className="w-full text-left">
+          <Alert variant="error" className="w-full text-start">
             {detail}
           </Alert>
         ) : null}

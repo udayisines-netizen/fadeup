@@ -64,8 +64,11 @@ export function SegmentedControl<T extends string>({
           width: `calc((100% - 0.5rem) / ${options.length})`,
           // insetInlineStart + translate keeps this correct under RTL, where a
           // left-based offset would slide the indicator the wrong way.
+          // `--fu-dir` is defined in index.css (1 / -1); no inline fallback,
+          // because a fallback here would silently hide the token going
+          // missing and every RTL slide would go the wrong way unnoticed.
           insetInlineStart: '0.25rem',
-          transform: `translateX(calc(var(--fu-dir, 1) * ${index * 100}%))`,
+          transform: `translateX(calc(var(--fu-dir) * ${index * 100}%))`,
         }}
       />
       {options.map((option) => {

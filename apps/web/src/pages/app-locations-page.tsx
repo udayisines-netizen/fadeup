@@ -228,7 +228,7 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
                       </Badge>
                     </TableCell>
                     {canManage ? (
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           variant="secondary"
                           size="sm"
