@@ -143,7 +143,9 @@
     "cancel": "Mantener la hora actual",
     "slotTaken": "Esa hora acaba de ocuparse. Elige otra.",
     "notAllowed": "Esta cita ya no se puede cambiar.",
-    "failed": "No se pudo cambiar la cita. Inténtalo de nuevo."
+    "failed": "No se pudo cambiar la cita. Inténtalo de nuevo.",
+    "staysConfirmed": "Tu cita sigue confirmada a la nueva hora.",
+    "submitConfirmed": "Mover la cita"
   },
   "passportPage": {},
   "shareView": {

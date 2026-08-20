@@ -143,7 +143,9 @@
     "cancel": "Garder l'horaire actuel",
     "slotTaken": "Ce créneau vient d'être pris. Choisissez-en un autre.",
     "notAllowed": "Ce rendez-vous ne peut plus être déplacé.",
-    "failed": "Impossible de déplacer le rendez-vous. Réessayez."
+    "failed": "Impossible de déplacer le rendez-vous. Réessayez.",
+    "staysConfirmed": "Votre rendez-vous reste confirmé au nouvel horaire.",
+    "submitConfirmed": "Déplacer le rendez-vous"
   },
   "passportPage": {},
   "shareView": {

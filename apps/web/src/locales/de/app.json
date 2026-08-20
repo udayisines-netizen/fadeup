@@ -8,7 +8,8 @@
     "weeklyHours": "Wochenarbeitszeit",
     "noWorkingHoursSet": "Keine Arbeitszeiten hinterlegt.",
     "upcomingExceptions": "Kommende Ausnahmen",
-    "noAvailabilityExceptionsOnFile": "Keine Verfügbarkeitsausnahmen hinterlegt."
+    "noAvailabilityExceptionsOnFile": "Keine Verfügbarkeitsausnahmen hinterlegt.",
+    "viewingAsOwner": "Du siehst den Arbeitsbereich von {{professional}} als Inhaberin oder Inhaber"
   },
   "memberships": {
     "couldntLoadMemberships": "Mitgliedschaften konnten nicht geladen werden",
@@ -31,7 +32,8 @@
     "customerEnrolled": "Kunde angemeldet",
     "couldntUpdateStatus": "Status konnte nicht geändert werden",
     "enterAValidPrice": "Gib einen gültigen Preis ein.",
-    "selectAPlan": "Wähle einen Tarif."
+    "selectAPlan": "Wähle einen Tarif.",
+    "recurringPlansAndWhoIsEnrolled": "Wiederkehrende Pakete und wer angemeldet ist."
   },
   "chairs": {
     "couldntLoadChairs": "Plätze konnten nicht geladen werden",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "Status konnte nicht geändert werden",
     "selectAService": "Wähle eine Leistung.",
     "pickAnAvailableTimeSlot": "Wähle eine freie Zeit.",
-    "thatTimeWasJustBooked": "Diese Zeit wurde gerade vergeben — bitte wähle eine andere."
+    "thatTimeWasJustBooked": "Diese Zeit wurde gerade vergeben — bitte wähle eine andere.",
+    "theDaysAppointmentsForEachLocation": "Die Termine des Tages je Standort."
   },
   "availability": {
     "couldntLoadAvailability": "Verfügbarkeit konnte nicht geladen werden",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "Niemand wartet",
     "nobodyWaitingBody": "Laufkundschaft erscheint hier beim Einchecken.",
     "anyProfessional": "Nächste frei",
-    "manage": "Warteschlange verwalten"
+    "manage": "Warteschlange verwalten",
+    "status": {
+      "waiting": "Wartet",
+      "called": "Aufgerufen",
+      "in_service": "In Bearbeitung",
+      "completed": "Fertig",
+      "cancelled": "Storniert",
+      "no_show": "Nicht erschienen"
+    },
+    "action": {
+      "called": "Aufrufen",
+      "in_service": "Starten",
+      "completed": "Abschließen",
+      "cancelled": "Stornieren",
+      "no_show": "Als nicht erschienen markieren"
+    },
+    "markedAs": "Als {{status}} markiert",
+    "positionNumber": "Position {{position}}",
+    "justNow": "Gerade eben",
+    "waitedMinutes_one": "{{count}} Min.",
+    "waitedMinutes_other": "{{count}} Min.",
+    "whoIsWaitingAt": "Wer gerade bei {{location}} wartet.",
+    "inProgress": "Im Stuhl",
+    "waitingSection": "Wartend",
+    "doneToday_one": "Heute {{count}} abgeschlossen",
+    "doneToday_other": "Heute {{count}} abgeschlossen",
+    "unassigned": "Nicht zugewiesen",
+    "unnamedProfessional": "Fachkraft ohne Namen",
+    "noServiceSpecified": "Keine Leistung angegeben",
+    "addWalkinAt": "Füge jemanden zur Warteschlange bei {{location}} hinzu."
   },
   "locations": {
     "listedPublicly": "Öffentlich sichtbar",
@@ -165,7 +197,14 @@
     "waitingSince": "Wartet seit",
     "updateStatus": "Status ändern",
     "addedToWaitlist": "Zur Warteliste hinzugefügt",
-    "couldntUpdateStatus": "Status konnte nicht geändert werden"
+    "couldntUpdateStatus": "Status konnte nicht geändert werden",
+    "markedAs": "Als {{status}} markiert",
+    "markAs": "Als {{status}} markieren",
+    "anyProfessional": "Wer frei ist",
+    "unassigned": "Nicht zugewiesen",
+    "unnamedProfessional": "Fachkraft ohne Namen",
+    "unknownService": "Unbekannte Leistung",
+    "anything": "Egal was"
   },
   "customers": {
     "couldntLoadCustomers": "Kunden konnten nicht geladen werden",
@@ -179,7 +218,9 @@
     "recentVisits": "Letzte Besuche",
     "noAppointmentsYet": "Noch keine Termine.",
     "addACustomerDirectlyMost": "Füge direkt einen Kunden hinzu — die meisten entstehen automatisch aus Buchungen.",
-    "customerAdded": "Kunde hinzugefügt"
+    "customerAdded": "Kunde hinzugefügt",
+    "everyoneWhoHasBooked": "Alle, die gebucht haben oder hereingekommen sind, an einem Ort.",
+    "customerSince": "Kundin oder Kunde seit {{date}}"
   },
   "calendar": {
     "couldntLoadTheCalendar": "Kalender konnte nicht geladen werden",
@@ -193,7 +234,19 @@
     "today": "Heute",
     "reconnecting": "Verbindung wird wiederhergestellt…",
     "week": "Woche",
-    "month": "Monat"
+    "month": "Monat",
+    "noLocationsYet": "Noch keine Standorte",
+    "couldntLoadLocations": "Standorte konnten nicht geladen werden",
+    "aCalendarNeedsALocation": "Ein Kalender braucht einen Ort. Lege zuerst einen Standort an.",
+    "theCalendarNeedsALocation": "Der Kalender braucht einen Standort, um Öffnungszeiten und Zeitzone zu kennen.",
+    "everyone": "Alle",
+    "nothingBooked": "Nichts gebucht",
+    "nothingBookedThisWeek": "Diese Woche nichts gebucht",
+    "unassigned": "Nicht zugewiesen",
+    "noProfessionalYet": "Noch keine Fachkraft",
+    "appointmentCount_one": "{{count}} Termin",
+    "appointmentCount_other": "{{count}} Termine",
+    "noService": "keine Leistung"
   },
   "team": {
     "couldntLoadMembers": "Mitglieder konnten nicht geladen werden",
@@ -222,7 +275,8 @@
     "invitationRevoked": "Einladung zurückgezogen",
     "couldnTRevokeInvitation": "Einladung konnte nicht zurückgezogen werden",
     "couldntUpdateBarberStatus": "Status der Fachkraft konnte nicht geändert werden",
-    "profileUpdated": "Profil aktualisiert"
+    "profileUpdated": "Profil aktualisiert",
+    "onlyOwnersAndManagers": "Die Teamverwaltung steht nur Inhaberinnen, Inhabern und Managern offen."
   },
   "services": {
     "couldntLoadYourServiceCatalog": "Leistungskatalog konnte nicht geladen werden",
@@ -391,5 +445,47 @@
     "addWalkIn": "Laufkundschaft hinzufügen",
     "blockTime": "Zeit blockieren",
     "newCustomer": "Neuer Kunde"
+  },
+  "validation": {
+    "customerNameRequired": "Gib den Namen der Kundin oder des Kunden ein."
+  },
+  "appointmentStatus": {
+    "pending": "Wartet auf deine Antwort",
+    "confirmed": "Bestätigt",
+    "completed": "Erledigt",
+    "cancelled": "Storniert",
+    "no_show": "Nicht erschienen"
+  },
+  "appointmentStatusShort": {
+    "pending": "Offen",
+    "confirmed": "Bestätigt",
+    "completed": "Erledigt",
+    "cancelled": "Storniert",
+    "no_show": "Nicht da"
+  },
+  "appointmentResolution": {
+    "declined": "Abgelehnt",
+    "expired": "Ohne Antwort abgelaufen",
+    "cancelled_by_customer": "Von der Kundschaft storniert",
+    "cancelled_by_business": "Vom Salon storniert",
+    "rescheduled": "Auf eine andere Zeit verschoben"
+  },
+  "waitlistStatus": {
+    "waiting": "Wartet",
+    "notified": "Benachrichtigt",
+    "booked": "Gebucht",
+    "cancelled": "Storniert",
+    "expired": "Abgelaufen"
+  },
+  "membershipStatus": {
+    "active": "Aktiv",
+    "paused": "Pausiert",
+    "cancelled": "Gekündigt",
+    "expired": "Abgelaufen"
+  },
+  "billingInterval": {
+    "weekly": "/ Woche",
+    "monthly": "/ Monat",
+    "yearly": "/ Jahr"
   }
 }

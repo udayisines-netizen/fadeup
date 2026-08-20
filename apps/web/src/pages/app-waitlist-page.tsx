@@ -22,7 +22,7 @@ import { SelectField } from '@/components/ui/select-field'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -47,13 +47,12 @@ import { useTranslation } from 'react-i18next'
 // RLS grants owner/manager/receptionist write access, any member read.
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
-const STATUS_LABELS: Record<WaitlistStatus, string> = {
-  waiting: 'Waiting',
-  notified: 'Notified',
-  booked: 'Booked',
-  cancelled: 'Cancelled',
-  expired: 'Expired',
-}
+/**
+ * Only the COLOUR lives in a constant. The words are translated at render —
+ * a `Record<Status, string>` of English sentences cannot be, which is exactly
+ * how the whole status vocabulary of this page stayed English while every
+ * label around it was translated.
+ */
 
 const STATUS_BADGE_VARIANT: Record<WaitlistStatus, BadgeVariant> = {
   waiting: 'warning',
@@ -66,8 +65,8 @@ const STATUS_BADGE_VARIANT: Record<WaitlistStatus, BadgeVariant> = {
 /** Valid staff-initiated status targets — 'waiting' is never a target, nothing moves back onto the waitlist. */
 const STATUS_TRANSITIONS: WaitlistStatus[] = ['notified', 'booked', 'cancelled', 'expired']
 
-function formatWaitingSince(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(iso))
+function formatWaitingSince(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(iso))
 }
 
 export function AppWaitlistPage() {
@@ -141,22 +140,17 @@ function WaitlistBoard({ organizationId, role }: { organizationId: string; role:
   }, [waitlistQuery.data])
 
   function barberName(barberId: string | null): string {
-    if (!barberId) return 'Any barber'
+    if (!barberId) return t('app:waitlist.anyProfessional')
     const staffProfileId = barberById.get(barberId)?.staffProfileId
-    if (!staffProfileId) return 'Unassigned'
-    return staffProfileById.get(staffProfileId)?.displayName ?? 'Unnamed barber'
+    if (!staffProfileId) return t('app:waitlist.unassigned')
+    return staffProfileById.get(staffProfileId)?.displayName ?? t('app:waitlist.unnamedProfessional')
   }
 
   return (
-    <Container size="lg" className="py-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.waitlist')}</h1>
-          <p className="mt-1 text-sm text-ink-500">{t('app:waitlist.customersWaitingForAnOpening')}</p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('common:entity.waitlist')} subtitle={t('app:waitlist.customersWaitingForAnOpening')} />
 
-      <div className="mt-6">
+      <div>
         {isLoading ? (
           <WaitlistSkeleton />
         ) : isError ? (
@@ -219,7 +213,7 @@ function WaitlistBoard({ organizationId, role }: { organizationId: string; role:
           }}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 
@@ -290,7 +284,11 @@ function LocationWaitlist({
                 entry={entry}
                 canManage={canManage}
                 barberLabel={barberName(entry.desiredBarberId)}
-                serviceName={entry.desiredServiceId ? (serviceById.get(entry.desiredServiceId)?.name ?? 'Unknown service') : 'Anything'}
+                serviceName={
+                  entry.desiredServiceId
+                    ? (serviceById.get(entry.desiredServiceId)?.name ?? t('app:waitlist.unknownService'))
+                    : t('app:waitlist.anything')
+                }
               />
             ))
           )}
@@ -311,7 +309,7 @@ function WaitlistRow({
   barberLabel: string
   serviceName: string
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateWaitlistEntryStatus()
 
@@ -319,7 +317,7 @@ function WaitlistRow({
     updateStatus.mutate(
       { id: entry.id, organizationId: entry.organizationId, status },
       {
-        onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
+        onSuccess: () => toast({ title: t('app:waitlist.markedAs', { status: t(`app:waitlistStatus.${status}`) }), variant: 'success' }),
         onError: (error) =>
           toast({
             title: t('app:waitlist.couldntUpdateStatus'),
@@ -340,9 +338,9 @@ function WaitlistRow({
       </TableCell>
       <TableCell className="text-ink-500">{serviceName}</TableCell>
       <TableCell className="text-ink-500">{barberLabel}</TableCell>
-      <TableCell className="text-ink-500">{formatWaitingSince(entry.createdAt)}</TableCell>
+      <TableCell className="text-ink-500">{formatWaitingSince(entry.createdAt, i18n.language)}</TableCell>
       <TableCell>
-        <Badge variant={STATUS_BADGE_VARIANT[entry.status]}>{STATUS_LABELS[entry.status]}</Badge>
+        <Badge variant={STATUS_BADGE_VARIANT[entry.status]}>{t(`app:waitlistStatus.${entry.status}`)}</Badge>
       </TableCell>
       {canManage ? (
         <TableCell className="text-right">
@@ -359,7 +357,7 @@ function WaitlistRow({
                   variant={status === 'cancelled' || status === 'expired' ? 'danger' : 'default'}
                   onSelect={() => handleStatusChange(status)}
                 >
-                  Mark {STATUS_LABELS[status].toLowerCase()}
+                  {t('app:waitlist.markAs', { status: t(`app:waitlistStatus.${status}`) })}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -460,7 +458,7 @@ function AddToWaitlistDialog({
     { value: '', label: 'No preference' },
     ...bookableBarbers.map((barber) => ({
       value: barber.id,
-      label: staffProfileById.get(barber.staffProfileId)?.displayName ?? 'Unnamed barber',
+      label: staffProfileById.get(barber.staffProfileId)?.displayName ?? t('app:waitlist.unnamedProfessional'),
     })),
   ]
 

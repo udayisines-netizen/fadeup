@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CalendarCheck2, Inbox, WifiOff } from 'lucide-react'
 import { useCurrentOrg } from '@/lib/current-org-context'
-import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
@@ -73,22 +72,20 @@ export function AppRequestsPage() {
 
   if (!canDecide) {
     return (
-      <Container size="lg" className="py-8">
-        <EmptyState
-          icon={Inbox}
-          title={t('app:requests.bookingRequests')}
-          description={t('app:requests.bookingRequestsAreHandledBy')}
-        />
-      </Container>
+      <EmptyState
+        icon={Inbox}
+        title={t('app:requests.bookingRequests')}
+        description={t('app:requests.bookingRequestsAreHandledBy')}
+      />
     )
   }
 
   return (
-    <Container size="lg" className="py-6 sm:py-8">
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <div className="flex flex-col gap-5">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-semibold text-ink-950">
-            Booking requests
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink-950">
+            {t('app:requests.bookingRequests')}
             {requests.length > 0 ? <Badge variant="accent">{requests.length}</Badge> : null}
           </h1>
           <p className="mt-1 text-sm text-ink-500">
@@ -144,12 +141,12 @@ export function AppRequestsPage() {
           </AnimatePresence>
         </ul>
       )}
-    </Container>
+    </div>
   )
 }
 
-function formatWhen(iso: string, timeZone: string): string {
-  return new Date(iso).toLocaleString(undefined, {
+function formatWhen(iso: string, timeZone: string, locale: string): string {
+  return new Date(iso).toLocaleString(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -168,7 +165,7 @@ function RequestCard({
   organizationId: string | undefined
   timeZone: string
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const reduced = useReducedMotion()
   const toast = useToast()
   const confirm = useConfirmBookingRequest(organizationId)
@@ -243,7 +240,7 @@ function RequestCard({
           <ExpiryCountdown expiresAt={request.expiresAt} prefix="Expires in" />
         </div>
 
-        <p className="mt-3 text-sm font-medium text-ink-950">{formatWhen(request.startsAt, timeZone)}</p>
+        <p className="mt-3 text-sm font-medium text-ink-950">{formatWhen(request.startsAt, timeZone, i18n.language)}</p>
         <p className="text-sm text-ink-500">{request.locationName}</p>
 
         {request.notes ? (

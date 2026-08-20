@@ -143,7 +143,9 @@
     "cancel": "Keep current time",
     "slotTaken": "That time was just taken. Pick another.",
     "notAllowed": "This appointment can no longer be moved.",
-    "failed": "Could not move the appointment. Please try again."
+    "failed": "Could not move the appointment. Please try again.",
+    "staysConfirmed": "Your appointment stays confirmed at the new time.",
+    "submitConfirmed": "Move appointment"
   },
   "passportPage": {},
   "shareView": {

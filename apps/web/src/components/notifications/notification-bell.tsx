@@ -36,7 +36,7 @@ export function NotificationBell({
   /** Extra query keys to refetch when a notification arrives — e.g. the caller's booking list. */
   extraInvalidation?: string[][]
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const reduced = useReducedMotion()
   const [open, setOpen] = useState(false)
@@ -128,7 +128,10 @@ export function NotificationBell({
                     <span className="ps-3.5 text-xs text-ink-500">{notification.body}</span>
                   ) : null}
                   <span className="ps-3.5 text-xs text-ink-500">
-                    {new Date(notification.createdAt).toLocaleString(undefined, {
+                    {/* A notification's timestamp is about the READER, not a
+                        shop, so the device's zone is right here — the locale
+                        is not, and was the browser's. */}
+                    {new Date(notification.createdAt).toLocaleString(i18n.language, {
                       day: 'numeric',
                       month: 'short',
                       hour: 'numeric',

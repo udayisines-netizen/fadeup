@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -82,13 +82,10 @@ function ChairsManagement({ organizationId, role }: { organizationId: string; ro
   }
 
   return (
-    <Container size="lg" className="py-8">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.chairs')}</h1>
-        <p className="mt-1 text-sm text-ink-500">{t('app:chairs.chairInventoryForEachLocation')}</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('common:entity.chairs')} subtitle={t('app:chairs.chairInventoryForEachLocation')} />
 
-      <div className="mt-6">
+      <div>
         {isLoading ? (
           <ChairsSkeleton />
         ) : isError ? (
@@ -151,7 +148,7 @@ function ChairsManagement({ organizationId, role }: { organizationId: string; ro
           onSaved={handleSaved}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 

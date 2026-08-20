@@ -23,6 +23,7 @@ import { zonedTimeToInstant } from '@/lib/calendar/time'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
 import { cn } from '@/lib/cn'
 import { useTranslation } from 'react-i18next'
+import { useDateTime } from '@/lib/intl/use-intl'
 
 /** Quick reasons, because typing "Lunch" on a phone every day is not a workflow. */
 const QUICK_REASONS = ['Lunch', 'Break', 'Meeting', 'Training', 'Personal'] as const
@@ -226,16 +227,15 @@ export function TimeBlockSheet({
   canRemove: boolean
 }) {
   const { t } = useTranslation()
+  const dateTime = useDateTime()
   const { toast } = useToast()
   const deleteBlock = useDeleteTimeBlock(organizationId)
   const [error, setError] = useState<string | null>(null)
 
   if (!block) return null
 
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
-  const formatDay = (iso: string) =>
-    new Date(iso).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone })
+  const formatTime = (iso: string) => dateTime.time(iso, timeZone)
+  const formatDay = (iso: string) => dateTime.longDate(iso, timeZone)
 
   async function remove() {
     setError(null)

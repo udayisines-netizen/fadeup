@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import { addDays, dayOfWeek, startOfMonth, startOfWeek, todayInZone } from '@/lib/calendar/time'
 import { groupByDay } from '@/lib/calendar/layout'
@@ -28,6 +29,8 @@ export function MonthGrid({
   weekStartsOn: number
   onSelectDay: (dateKey: string) => void
 }) {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language
   const today = todayInZone(timeZone)
   const monthKey = monthAnchor.slice(0, 7)
 
@@ -50,17 +53,17 @@ export function MonthGrid({
   }, [days, byDay])
 
   const weekdayLabels = useMemo(() => {
-    // Built from a real week so the labels follow the viewer's locale and the
+    // Built from a real week so the labels follow the APP's locale and the
     // shop's chosen first day, rather than a hardcoded English array.
     const reference = startOfWeek('2026-06-03', weekStartsOn)
     return Array.from({ length: 7 }, (_, index) => {
       const [year, month, day] = addDays(reference, index).split('-').map(Number)
-      return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(undefined, {
+      return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(locale, {
         weekday: 'short',
         timeZone: 'UTC',
       })
     })
-  }, [weekStartsOn])
+  }, [weekStartsOn, locale])
 
   return (
     <div>
@@ -86,12 +89,15 @@ export function MonthGrid({
               key={dayKey}
               type="button"
               onClick={() => onSelectDay(dayKey)}
-              aria-label={`${new Date(`${dayKey}T12:00:00Z`).toLocaleDateString(undefined, {
+              // Translated AND pluralised: this was a hardcoded English
+              // "3 appointments", which is the only thing a screen-reader user
+              // hears for a cell whose visible content is just a number.
+              aria-label={`${new Date(`${dayKey}T12:00:00Z`).toLocaleDateString(locale, {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
                 timeZone: 'UTC',
-              })}, ${appointmentCount} appointments`}
+              })}, ${t('app:calendar.appointmentCount', { count: appointmentCount })}`}
               aria-current={isToday ? 'date' : undefined}
               className={cn(
                 // 44px floor: every cell in a month grid is a touch target.

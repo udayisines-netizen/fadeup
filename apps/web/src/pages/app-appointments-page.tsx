@@ -27,7 +27,7 @@ import { SelectField } from '@/components/ui/select-field'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -58,13 +58,11 @@ import { useTranslation } from 'react-i18next'
 // `isOwnBarber` below and the same pattern in app-queue-page.tsx.
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  no_show: 'No-show',
-}
+/**
+ * Only the COLOUR lives in a constant. The words are translated at render —
+ * a `Record<Status, string>` of English cannot be, which is how this page's
+ * status vocabulary stayed English while every label around it was translated.
+ */
 
 const STATUS_BADGE_VARIANT: Record<AppointmentStatus, BadgeVariant> = {
   pending: 'warning',
@@ -90,13 +88,13 @@ function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function formatTimeRange(startsAt: string, endsAt: string, timeZone: string): string {
-  const formatter = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
+function formatTimeRange(startsAt: string, endsAt: string, timeZone: string, locale: string): string {
+  const formatter = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', timeZone })
   return `${formatter.format(new Date(startsAt))}–${formatter.format(new Date(endsAt))}`
 }
 
-function formatTime(iso: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(iso))
+function formatTime(iso: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(iso))
 }
 
 export function AppAppointmentsPage() {
@@ -230,23 +228,23 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
   }, [appointmentsQuery.data])
 
   return (
-    <Container size="lg" className="py-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.schedule')}</h1>
-          <p className="mt-1 text-sm text-ink-500">The day&apos;s appointments for each location.</p>
-        </div>
-        <div className="sm:w-48">
-          <TextField
-            label={t('common:field.date')}
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-          />
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title={t('common:entity.schedule')}
+        subtitle={t('app:appointments.theDaysAppointmentsForEachLocation')}
+        actions={
+          <div className="w-full sm:w-48">
+            <TextField
+              label={t('common:field.date')}
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+            />
+          </div>
+        }
+      />
 
-      <div className="mt-6">
+      <div>
         {isLoading ? (
           <ScheduleSkeleton />
         ) : isError ? (
@@ -314,7 +312,7 @@ function AppointmentsSchedule({ organizationId, role }: { organizationId: string
           }}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 
@@ -347,8 +345,8 @@ function LocationSchedule({
 
   function barberName(barberId: string): string {
     const staffProfileId = barberById.get(barberId)?.staffProfileId
-    if (!staffProfileId) return 'Unassigned'
-    return staffProfileById.get(staffProfileId)?.displayName ?? 'Unnamed barber'
+    if (!staffProfileId) return t('app:waitlist.unassigned')
+    return staffProfileById.get(staffProfileId)?.displayName ?? t('app:waitlist.unnamedProfessional')
   }
 
   return (
@@ -405,7 +403,7 @@ function LocationSchedule({
                 canAct={canManage || isOwnBarber(appointment.barberId)}
                 showActionsColumn={showActionsColumn}
                 barberName={barberName(appointment.barberId)}
-                serviceName={serviceById.get(appointment.serviceId)?.name ?? 'Unknown service'}
+                serviceName={serviceById.get(appointment.serviceId)?.name ?? t('app:waitlist.unknownService')}
                 chairName={appointment.chairId ? (chairById.get(appointment.chairId)?.name ?? '—') : '—'}
               />
             ))
@@ -433,7 +431,7 @@ function AppointmentRow({
   serviceName: string
   chairName: string
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateAppointmentStatus()
   const isTerminal = TERMINAL_STATUSES.has(appointment.status)
@@ -442,7 +440,7 @@ function AppointmentRow({
     updateStatus.mutate(
       { id: appointment.id, organizationId: appointment.organizationId, status },
       {
-        onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
+        onSuccess: () => toast({ title: t('app:waitlist.markedAs', { status: t(`app:appointmentStatusShort.${status}`) }), variant: 'success' }),
         onError: (error) =>
           toast({
             title: t('app:appointments.couldntUpdateStatus'),
@@ -456,7 +454,7 @@ function AppointmentRow({
   return (
     <TableRow>
       <TableCell className="whitespace-nowrap font-medium text-ink-950">
-        {formatTimeRange(appointment.startsAt, appointment.endsAt, location.timezone)}
+        {formatTimeRange(appointment.startsAt, appointment.endsAt, location.timezone, i18n.language)}
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
@@ -469,7 +467,7 @@ function AppointmentRow({
       <TableCell className="text-ink-500">{barberName}</TableCell>
       <TableCell className="text-ink-500">{chairName}</TableCell>
       <TableCell>
-        <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{STATUS_LABELS[appointment.status]}</Badge>
+        <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{t(`app:appointmentStatusShort.${appointment.status}`)}</Badge>
       </TableCell>
       {showActionsColumn ? (
         <TableCell className="text-right">
@@ -487,7 +485,7 @@ function AppointmentRow({
                     variant={status === 'cancelled' || status === 'no_show' ? 'danger' : 'default'}
                     onSelect={() => handleStatusChange(status)}
                   >
-                    Mark {STATUS_LABELS[status].toLowerCase()}
+                    {t('app:waitlist.markAs', { status: t(`app:appointmentStatusShort.${status}`) })}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -536,7 +534,7 @@ function NewAppointmentDialog({
   onClose: () => void
   onBooked: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const createAppointment = useCreateAppointment()
   const [formError, setFormError] = useState<string | null>(null)
@@ -671,7 +669,7 @@ function NewAppointmentDialog({
     },
     ...eligibleBarbers.map((barber) => ({
       value: barber.id,
-      label: staffProfileById.get(barber.staffProfileId)?.displayName ?? 'Unnamed barber',
+      label: staffProfileById.get(barber.staffProfileId)?.displayName ?? t('app:waitlist.unnamedProfessional'),
     })),
   ]
 
@@ -746,7 +744,7 @@ function NewAppointmentDialog({
                                   : 'border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100',
                               )}
                             >
-                              {formatTime(slot.slotStart, location.timezone)}
+                              {formatTime(slot.slotStart, location.timezone, i18n.language)}
                             </button>
                           )
                         })}

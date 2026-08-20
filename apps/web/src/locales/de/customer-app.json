@@ -143,7 +143,9 @@
     "cancel": "Zeit behalten",
     "slotTaken": "Diese Zeit wurde gerade vergeben. Wähle eine andere.",
     "notAllowed": "Dieser Termin kann nicht mehr verschoben werden.",
-    "failed": "Termin konnte nicht verschoben werden. Bitte erneut versuchen."
+    "failed": "Termin konnte nicht verschoben werden. Bitte erneut versuchen.",
+    "staysConfirmed": "Dein Termin bleibt zur neuen Zeit bestätigt.",
+    "submitConfirmed": "Termin verschieben"
   },
   "passportPage": {},
   "shareView": {

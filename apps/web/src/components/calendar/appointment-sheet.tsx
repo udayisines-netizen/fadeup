@@ -26,7 +26,7 @@ import {
   useDeclineBookingRequest,
 } from '@/lib/queries/booking-requests'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
-import { useMoney } from '@/lib/intl/use-intl'
+import { useMoney, useDateTime } from '@/lib/intl/use-intl'
 import { cn } from '@/lib/cn'
 import { useTranslation } from 'react-i18next'
 
@@ -68,6 +68,7 @@ export function AppointmentSheet({
   professionals: CalendarProfessional[]
 }) {
   const { t } = useTranslation()
+  const dateTime = useDateTime()
   const { toast } = useToast()
   const money = useMoney()
   const [error, setError] = useState<string | null>(null)
@@ -91,10 +92,10 @@ export function AppointmentSheet({
   const canRunService = canManage || isOwnChair
 
   const timeZone = appointment.locationTimezone
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
-  const formatDay = (iso: string) =>
-    new Date(iso).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', timeZone })
+  // The APP's locale, not the browser's — an owner who chose Japanese should
+  // not read a French date because their laptop is French.
+  const formatTime = (iso: string) => dateTime.time(iso, timeZone)
+  const formatDay = (iso: string) => dateTime.longDate(iso, timeZone)
 
   function close() {
     setError(null)

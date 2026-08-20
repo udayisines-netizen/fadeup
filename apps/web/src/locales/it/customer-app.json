@@ -143,7 +143,9 @@
     "cancel": "Mantieni l'orario",
     "slotTaken": "Quell'orario è appena stato preso. Scegline un altro.",
     "notAllowed": "Questo appuntamento non può più essere spostato.",
-    "failed": "Impossibile spostare l'appuntamento. Riprova."
+    "failed": "Impossibile spostare l'appuntamento. Riprova.",
+    "staysConfirmed": "Il tuo appuntamento resta confermato al nuovo orario.",
+    "submitConfirmed": "Sposta appuntamento"
   },
   "passportPage": {},
   "shareView": {

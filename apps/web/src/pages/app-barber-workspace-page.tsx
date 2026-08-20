@@ -7,7 +7,6 @@ import { useOrgBarberWorkingHours } from '@/lib/queries/barber-working-hours'
 import { useOrgBarberServices } from '@/lib/queries/barber-services'
 import { useBarberAvailabilityExceptions } from '@/lib/queries/barber-availability-exceptions'
 import { useOrgServices } from '@/lib/queries/services'
-import { Container } from '@/components/ui/container'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { ErrorState } from '@/components/ui/error-state'
@@ -54,9 +53,7 @@ export function AppBarberWorkspacePage() {
 
   if (!currentMembership || !MANAGING_ROLES.has(currentMembership.role)) {
     return (
-      <Container size="md" className="py-8">
-        <ErrorState title={t('app:workspace.onlyShopOwnersAndManagers')} />
-      </Container>
+      <ErrorState title={t('app:workspace.onlyShopOwnersAndManagers')} />
     )
   }
 
@@ -72,9 +69,7 @@ export function AppBarberWorkspacePage() {
 
   if (!staffProfile || !barber) {
     return (
-      <Container size="md" className="py-8">
-        <ErrorState title={t('app:workspace.barberNotFound')} />
-      </Container>
+      <ErrorState title={t('app:workspace.barberNotFound')} />
     )
   }
 
@@ -89,17 +84,17 @@ export function AppBarberWorkspacePage() {
   return (
     <div>
       <div className="border-b border-warning-600 bg-warning-100">
-        <Container size="md" className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
+        <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 py-2 text-sm">
           <span className="font-medium text-warning-700">
-            Viewing {staffProfile.displayName}&apos;s workspace as Shop Owner
+            {t('app:workspace.viewingAsOwner', { professional: staffProfile.displayName })}
           </span>
           <Link to="/app/team" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
             {t('app:workspace.returnToOwnerDashboard')}
           </Link>
-        </Container>
+        </div>
       </div>
 
-      <Container size="md" className="py-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
         <h1 className="text-xl font-semibold text-ink-950">{staffProfile.displayName}</h1>
         {staffProfile.title ? <p className="mt-1 text-sm text-ink-500">{staffProfile.title}</p> : null}
 
@@ -154,7 +149,7 @@ export function AppBarberWorkspacePage() {
             )}
           </div>
         </section>
-      </Container>
+      </div>
     </div>
   )
 }

@@ -143,7 +143,9 @@
     "cancel": "現在の時間のまま",
     "slotTaken": "その時間はたった今埋まりました。別の時間をお選びください。",
     "notAllowed": "この予約はもう変更できません。",
-    "failed": "予約を変更できませんでした。もう一度お試しください。"
+    "failed": "予約を変更できませんでした。もう一度お試しください。",
+    "staysConfirmed": "新しい時間でも予約は確定のままです。",
+    "submitConfirmed": "予約を変更する"
   },
   "passportPage": {},
   "shareView": {

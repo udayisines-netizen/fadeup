@@ -275,6 +275,9 @@ function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment
               locationId: appointment.locationId,
               barberId: appointment.barberId,
               serviceId: appointment.serviceId,
+              locationTimezone: appointment.locationTimezone,
+              // Only a legacy pending row is genuinely waiting on the shop.
+              isAwaitingApproval: stage === 'waiting',
             }}
           />
         ) : null}

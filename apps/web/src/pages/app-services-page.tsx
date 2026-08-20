@@ -28,7 +28,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -121,11 +121,8 @@ function ServicesManagement({ organizationId, role }: { organizationId: string; 
   }
 
   return (
-    <Container size="lg" className="py-8">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.services')}</h1>
-        <p className="mt-1 text-sm text-ink-500">{t('app:services.yourServiceCatalogPricingAnd')}</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('common:entity.services')} subtitle={t('app:services.yourServiceCatalogPricingAnd')} />
 
       {isLoading ? (
         <div className="mt-6">
@@ -159,7 +156,7 @@ function ServicesManagement({ organizationId, role }: { organizationId: string; 
           />
         </>
       )}
-    </Container>
+    </div>
   )
 }
 

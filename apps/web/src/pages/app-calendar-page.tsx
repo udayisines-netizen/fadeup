@@ -21,7 +21,6 @@ import { AgendaList } from '@/components/calendar/agenda-list'
 import { MonthGrid } from '@/components/calendar/month-grid'
 import { AppointmentSheet } from '@/components/calendar/appointment-sheet'
 import { TimeBlockDialog, TimeBlockSheet } from '@/components/calendar/time-block-dialog'
-import { Container } from '@/components/ui/container'
 import { Button } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/select-field'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -125,35 +124,27 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
   }
 
   if (locationsQuery.isPending) {
-    return (
-      <Container size="xl" className="py-6">
-        <Skeleton className="h-96 w-full" />
-      </Container>
-    )
+    return <Skeleton className="h-96 w-full rounded-xl" />
   }
 
   if (locationsQuery.isError || locations.length === 0) {
     return (
-      <Container size="xl" className="py-6">
-        <ErrorState
-          title={locations.length === 0 ? 'No locations yet' : "Couldn't load your locations"}
-          description={
-            locations.length === 0
-              ? 'A calendar needs somewhere to be. Add a location first.'
-              : 'The calendar needs a location to know its opening hours and timezone.'
-          }
-          action={
-            <Button onClick={() => void locationsQuery.refetch()}>
-              {locations.length === 0 ? 'Reload' : 'Try again'}
-            </Button>
-          }
-        />
-      </Container>
+      <ErrorState
+        title={locations.length === 0 ? t('app:calendar.noLocationsYet') : t('app:calendar.couldntLoadLocations')}
+        description={
+          locations.length === 0
+            ? t('app:calendar.aCalendarNeedsALocation')
+            : t('app:calendar.theCalendarNeedsALocation')
+        }
+        action={
+          <Button onClick={() => void locationsQuery.refetch()}>{t('common:action.tryAgain')}</Button>
+        }
+      />
     )
   }
 
   return (
-    <Container size="xl" className="py-6">
+    <>
       <div className="flex flex-col gap-4">
         <Header
           view={view}
@@ -185,7 +176,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
               label={t('common:entity.professional')}
               value={barberFilter ?? ''}
               options={[
-                { value: '', label: 'Everyone' },
+                { value: '', label: t('app:calendar.everyone') },
                 ...columnsSource.map((professional) => ({
                   value: professional.barberId,
                   label: professional.displayName,
@@ -242,7 +233,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
                 showDayHeadings={view === 'week'}
                 onSelectAppointment={setSelectedAppointment}
                 onSelectBlock={setSelectedBlock}
-                emptyTitle={view === 'week' ? 'Nothing booked this week' : 'Nothing booked'}
+                emptyTitle={view === 'week' ? t('app:calendar.nothingBookedThisWeek') : t('app:calendar.nothingBooked')}
                 emptyDescription={t('app:calendar.bookingsAndBlockedTimeShow')}
               />
             </div>
@@ -313,7 +304,7 @@ function CalendarWorkspace({ organizationId, role }: { organizationId: string; r
           defaultStartMinute={blockDraft.startMinute}
         />
       ) : null}
-    </Container>
+    </>
   )
 }
 
@@ -338,11 +329,16 @@ function Header({
   onToday: () => void
   realtimeStatus: 'connecting' | 'live' | 'offline'
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  // `i18n.language`, never `undefined`. Passing undefined asks the BROWSER
+  // which language it is, which is not the question — the app has already
+  // resolved a locale, and an owner who chose Japanese should not read a
+  // French date because their laptop is French.
+  const locale = i18n.language
   const title = useMemo(() => {
     const asDate = (key: string) => new Date(`${key}T12:00:00Z`)
     if (view === 'day') {
-      return asDate(anchor).toLocaleDateString(undefined, {
+      return asDate(anchor).toLocaleDateString(locale, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -354,10 +350,10 @@ function Header({
       const from = asDate(rangeStart)
       const to = asDate(end)
       const sameMonth = rangeStart.slice(0, 7) === end.slice(0, 7)
-      return `${from.toLocaleDateString(undefined, { day: 'numeric', month: sameMonth ? undefined : 'short', timeZone: 'UTC' })} – ${to.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}`
+      return `${from.toLocaleDateString(locale, { day: 'numeric', month: sameMonth ? undefined : 'short', timeZone: 'UTC' })} – ${to.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}`
     }
-    return asDate(anchor).toLocaleDateString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' })
-  }, [view, anchor, rangeStart, dayCount])
+    return asDate(anchor).toLocaleDateString(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  }, [view, anchor, rangeStart, dayCount, locale])
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -431,7 +427,8 @@ function GridView({
   onSelectBlock: (block: TimeBlock) => void
   onBlockTime?: (columnKey: string, minute: number) => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language
   const { columns, window } = useMemo(() => {
     const built: TimeGridColumn<CalendarEntry>[] = []
 
@@ -467,8 +464,8 @@ function GridView({
       if (unassigned.length > 0 && !barberFilter) {
         built.push({
           key: 'unassigned',
-          label: 'Unassigned',
-          sublabel: 'No professional yet',
+          label: t('app:calendar.unassigned'),
+          sublabel: t('app:calendar.noProfessionalYet'),
           events: layoutDay(unassigned, rangeStart, timeZone),
         })
       }
@@ -478,8 +475,8 @@ function GridView({
         const asDate = new Date(`${dayKey}T12:00:00Z`)
         built.push({
           key: dayKey,
-          label: asDate.toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' }),
-          sublabel: asDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+          label: asDate.toLocaleDateString(locale, { weekday: 'short', timeZone: 'UTC' }),
+          sublabel: asDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
           emphasised: dayKey === today,
           events: layoutDay(
             entries.filter((entry) => zonedDateKey(entry.startsAt, timeZone) === dayKey),
@@ -500,7 +497,7 @@ function GridView({
     )
 
     return { columns: built, window: visibleWindow(segments) }
-  }, [view, entries, rangeStart, dayCount, timeZone, today, professionals, barberFilter])
+  }, [view, entries, rangeStart, dayCount, timeZone, today, professionals, barberFilter, locale, t])
 
   if (columns.length === 0) {
     return (

@@ -26,7 +26,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -46,18 +46,11 @@ import { useTranslation } from 'react-i18next'
 const PLAN_MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 const ENROLLMENT_MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
-const BILLING_INTERVAL_LABELS: Record<BillingInterval, string> = {
-  weekly: '/ week',
-  monthly: '/ month',
-  yearly: '/ year',
-}
+/*
+ * Translated at render. A billing interval suffix and a membership status are
+ * both user-facing prose, and a constant map of them can only ever be English.
+ */
 
-const STATUS_LABELS: Record<CustomerMembershipStatus, string> = {
-  active: 'Active',
-  paused: 'Paused',
-  cancelled: 'Cancelled',
-  expired: 'Expired',
-}
 
 const STATUS_BADGE_VARIANT: Record<CustomerMembershipStatus, BadgeVariant> = {
   active: 'success',
@@ -77,8 +70,8 @@ function friendlyMembershipError(rawMessage: string): string {
   return rawMessage
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(iso))
+function formatDate(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(iso))
 }
 
 export function AppMembershipsPage() {
@@ -129,11 +122,8 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
   }, [plansQuery.data])
 
   return (
-    <Container size="lg" className="py-8">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.memberships')}</h1>
-        <p className="mt-1 text-sm text-ink-500">Recurring plans and who&apos;s enrolled.</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('common:entity.memberships')} subtitle={t('app:memberships.recurringPlansAndWhoIsEnrolled')} />
 
       {isLoading ? (
         <div className="mt-6">
@@ -184,7 +174,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
                         {!plan.isActive ? <Badge variant="neutral">{t('common:state.inactive')}</Badge> : null}
                       </div>
                       <span className="text-sm text-ink-500">
-                        {money(plan.priceCents, currency)} {BILLING_INTERVAL_LABELS[plan.billingInterval]}
+                        {money(plan.priceCents, currency)} {t(`app:billingInterval.${plan.billingInterval}`)}
                       </span>
                       {plan.description ? <span className="mt-1 text-sm text-ink-700">{plan.description}</span> : null}
                     </button>
@@ -276,7 +266,7 @@ function MembershipsManagement({ organizationId, role }: { organizationId: strin
           }}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 
@@ -293,7 +283,7 @@ function EnrollmentRow({
   customerName: string
   planName: string
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { toast } = useToast()
   const updateStatus = useUpdateCustomerMembershipStatus()
 
@@ -301,7 +291,8 @@ function EnrollmentRow({
     updateStatus.mutate(
       { id: enrollment.id, organizationId: enrollment.organizationId, status },
       {
-        onSuccess: () => toast({ title: `Marked ${STATUS_LABELS[status].toLowerCase()}`, variant: 'success' }),
+        onSuccess: () =>
+          toast({ title: t('app:waitlist.markedAs', { status: t(`app:membershipStatus.${status}`) }), variant: 'success' }),
         onError: (error) =>
           toast({
             title: t('app:memberships.couldntUpdateStatus'),
@@ -316,9 +307,9 @@ function EnrollmentRow({
     <TableRow>
       <TableCell className="font-medium text-ink-950">{customerName}</TableCell>
       <TableCell className="text-ink-500">{planName}</TableCell>
-      <TableCell className="text-ink-500">{formatDate(enrollment.currentPeriodEnd)}</TableCell>
+      <TableCell className="text-ink-500">{formatDate(enrollment.currentPeriodEnd, i18n.language)}</TableCell>
       <TableCell>
-        <Badge variant={STATUS_BADGE_VARIANT[enrollment.status]}>{STATUS_LABELS[enrollment.status]}</Badge>
+        <Badge variant={STATUS_BADGE_VARIANT[enrollment.status]}>{t(`app:membershipStatus.${enrollment.status}`)}</Badge>
       </TableCell>
       {canManage ? (
         <TableCell className="text-right">
@@ -335,7 +326,7 @@ function EnrollmentRow({
                   variant={status === 'cancelled' || status === 'expired' ? 'danger' : 'default'}
                   onSelect={() => handleStatusChange(status)}
                 >
-                  Mark {STATUS_LABELS[status].toLowerCase()}
+                  {t('app:waitlist.markAs', { status: t(`app:membershipStatus.${status}`) })}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

@@ -22,6 +22,7 @@ import { calendarErrorMessage, type CalendarAppointment } from '@/lib/queries/ca
 import { zonedDateKey, todayInZone } from '@/lib/calendar/time'
 import type { CalendarProfessional } from '@/lib/calendar/professionals'
 import { useTranslation } from 'react-i18next'
+import { useDateTime } from '@/lib/intl/use-intl'
 
 /**
  * Moving an appointment, from the shop's side.
@@ -55,6 +56,7 @@ export function MoveAppointmentDialog({
   onMoved?: () => void
 }) {
   const { t } = useTranslation()
+  const dateTime = useDateTime()
   const timeZone = appointment.locationTimezone
   const [date, setDate] = useState(() => zonedDateKey(appointment.startsAt, timeZone))
   const [barberId, setBarberId] = useState(appointment.barberId ?? '')
@@ -177,11 +179,7 @@ export function MoveAppointmentDialog({
                         : 'border-border text-ink-950 hover:bg-paper-100',
                     )}
                   >
-                    {new Date(slot.slotStart).toLocaleTimeString(undefined, {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      timeZone,
-                    })}
+                    {dateTime.time(slot.slotStart, timeZone)}
                   </button>
                 )
               })}

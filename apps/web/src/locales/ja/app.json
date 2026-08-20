@@ -8,7 +8,8 @@
     "weeklyHours": "週間の勤務時間",
     "noWorkingHoursSet": "勤務時間が設定されていません。",
     "upcomingExceptions": "今後の例外設定",
-    "noAvailabilityExceptionsOnFile": "受付可能時間の例外は登録されていません。"
+    "noAvailabilityExceptionsOnFile": "受付可能時間の例外は登録されていません。",
+    "viewingAsOwner": "オーナーとして {{professional}} のワークスペースを表示しています"
   },
   "memberships": {
     "couldntLoadMemberships": "会員プランを読み込めませんでした",
@@ -31,7 +32,8 @@
     "customerEnrolled": "お客様が加入しました",
     "couldntUpdateStatus": "ステータスを変更できませんでした",
     "enterAValidPrice": "有効な金額を入力してください。",
-    "selectAPlan": "プランを選択してください。"
+    "selectAPlan": "プランを選択してください。",
+    "recurringPlansAndWhoIsEnrolled": "継続プランと加入者。"
   },
   "chairs": {
     "couldntLoadChairs": "席を読み込めませんでした",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "ステータスを変更できませんでした",
     "selectAService": "メニューを選択してください。",
     "pickAnAvailableTimeSlot": "空いている時間を選択してください。",
-    "thatTimeWasJustBooked": "その時間はたった今予約されました。別の時間をお選びください。"
+    "thatTimeWasJustBooked": "その時間はたった今予約されました。別の時間をお選びください。",
+    "theDaysAppointmentsForEachLocation": "各店舗の当日の予約。"
   },
   "availability": {
     "couldntLoadAvailability": "受付可能時間を読み込めませんでした",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "お待ちの方はいません",
     "nobodyWaitingBody": "当日受付のお客様は受付と同時にここに表示されます。",
     "anyProfessional": "指名なし",
-    "manage": "待ち行列を管理"
+    "manage": "待ち行列を管理",
+    "status": {
+      "waiting": "待機中",
+      "called": "呼び出し済み",
+      "in_service": "施術中",
+      "completed": "完了",
+      "cancelled": "キャンセル",
+      "no_show": "来店なし"
+    },
+    "action": {
+      "called": "呼び出す",
+      "in_service": "開始",
+      "completed": "完了",
+      "cancelled": "キャンセル",
+      "no_show": "来店なしにする"
+    },
+    "markedAs": "{{status}} にしました",
+    "positionNumber": "{{position}} 番目",
+    "justNow": "たった今",
+    "waitedMinutes_one": "{{count}} 分",
+    "waitedMinutes_other": "{{count}} 分",
+    "whoIsWaitingAt": "{{location}} で今待っている人。",
+    "inProgress": "施術中",
+    "waitingSection": "待機中",
+    "doneToday_one": "本日 {{count}} 件完了",
+    "doneToday_other": "本日 {{count}} 件完了",
+    "unassigned": "未割り当て",
+    "unnamedProfessional": "名前未設定のスタッフ",
+    "noServiceSpecified": "メニュー指定なし",
+    "addWalkinAt": "{{location}} の待ち列に追加します。"
   },
   "locations": {
     "listedPublicly": "一般公開中",
@@ -165,7 +197,14 @@
     "waitingSince": "待機開始",
     "updateStatus": "ステータスを変更",
     "addedToWaitlist": "キャンセル待ちに追加しました",
-    "couldntUpdateStatus": "ステータスを変更できませんでした"
+    "couldntUpdateStatus": "ステータスを変更できませんでした",
+    "markedAs": "{{status}} にしました",
+    "markAs": "{{status}} にする",
+    "anyProfessional": "指名なし",
+    "unassigned": "未割り当て",
+    "unnamedProfessional": "名前未設定のスタッフ",
+    "unknownService": "不明なメニュー",
+    "anything": "なんでも"
   },
   "customers": {
     "couldntLoadCustomers": "顧客を読み込めませんでした",
@@ -179,7 +218,9 @@
     "recentVisits": "最近のご来店",
     "noAppointmentsYet": "予約履歴はまだありません。",
     "addACustomerDirectlyMost": "顧客を直接追加できます。多くは予約から自動で作成されます。",
-    "customerAdded": "顧客を追加しました"
+    "customerAdded": "顧客を追加しました",
+    "everyoneWhoHasBooked": "予約した人も飛び込みで来た人も、まとめて一覧に。",
+    "customerSince": "{{date}} からのお客様"
   },
   "calendar": {
     "couldntLoadTheCalendar": "カレンダーを読み込めませんでした",
@@ -193,7 +234,19 @@
     "today": "今日",
     "reconnecting": "再接続中…",
     "week": "週",
-    "month": "月"
+    "month": "月",
+    "noLocationsYet": "店舗がまだありません",
+    "couldntLoadLocations": "店舗を読み込めませんでした",
+    "aCalendarNeedsALocation": "カレンダーには場所が必要です。まず店舗を追加してください。",
+    "theCalendarNeedsALocation": "カレンダーは営業時間とタイムゾーンを知るために店舗が必要です。",
+    "everyone": "全員",
+    "nothingBooked": "予約はありません",
+    "nothingBookedThisWeek": "今週の予約はありません",
+    "unassigned": "未割り当て",
+    "noProfessionalYet": "担当者未定",
+    "appointmentCount_one": "{{count}} 件の予約",
+    "appointmentCount_other": "{{count}} 件の予約",
+    "noService": "メニューなし"
   },
   "team": {
     "couldntLoadMembers": "メンバーを読み込めませんでした",
@@ -222,7 +275,8 @@
     "invitationRevoked": "招待を取り消しました",
     "couldnTRevokeInvitation": "招待を取り消せませんでした",
     "couldntUpdateBarberStatus": "スタッフのステータスを変更できませんでした",
-    "profileUpdated": "プロフィールを更新しました"
+    "profileUpdated": "プロフィールを更新しました",
+    "onlyOwnersAndManagers": "チーム管理はオーナーとマネージャーのみが利用できます。"
   },
   "services": {
     "couldntLoadYourServiceCatalog": "メニュー一覧を読み込めませんでした",
@@ -391,5 +445,47 @@
     "addWalkIn": "当日受付を追加",
     "blockTime": "時間をブロック",
     "newCustomer": "新規顧客"
+  },
+  "validation": {
+    "customerNameRequired": "お客様のお名前を入力してください。"
+  },
+  "appointmentStatus": {
+    "pending": "返答待ち",
+    "confirmed": "確定",
+    "completed": "完了",
+    "cancelled": "キャンセル",
+    "no_show": "来店なし"
+  },
+  "appointmentStatusShort": {
+    "pending": "保留",
+    "confirmed": "確定",
+    "completed": "完了",
+    "cancelled": "キャンセル",
+    "no_show": "来店なし"
+  },
+  "appointmentResolution": {
+    "declined": "辞退",
+    "expired": "未回答のまま期限切れ",
+    "cancelled_by_customer": "お客様によるキャンセル",
+    "cancelled_by_business": "店舗によるキャンセル",
+    "rescheduled": "別の時間へ変更"
+  },
+  "waitlistStatus": {
+    "waiting": "待機中",
+    "notified": "連絡済み",
+    "booked": "予約済み",
+    "cancelled": "キャンセル",
+    "expired": "期限切れ"
+  },
+  "membershipStatus": {
+    "active": "有効",
+    "paused": "一時停止",
+    "cancelled": "解約",
+    "expired": "期限切れ"
+  },
+  "billingInterval": {
+    "weekly": "/ 週",
+    "monthly": "/ 月",
+    "yearly": "/ 年"
   }
 }

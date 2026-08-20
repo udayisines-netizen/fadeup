@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import { minutesSinceMidnight } from '@/lib/calendar/time'
 import type { PositionedEvent, PlaceableEvent } from '@/lib/calendar/layout'
@@ -52,6 +53,7 @@ export function TimeGrid<T extends PlaceableEvent>({
   onEmptyClick?: (columnKey: string, minute: number) => void
   emptyClickLabel?: string
 }) {
+  const { i18n } = useTranslation()
   const totalMinutes = Math.max(1, window.endMinute - window.startMinute)
   const height = totalMinutes * pixelsPerMinute
 
@@ -75,7 +77,7 @@ export function TimeGrid<T extends PlaceableEvent>({
               className="absolute -translate-y-1/2 pe-2 text-end text-xs tabular-nums text-ink-500"
               style={{ top: (minute - window.startMinute) * pixelsPerMinute, insetInlineEnd: 0 }}
             >
-              {formatHour(minute)}
+              {formatHour(minute, i18n.language)}
             </div>
           ))}
         </div>
@@ -163,11 +165,16 @@ export function TimeGrid<T extends PlaceableEvent>({
   )
 }
 
-function formatHour(minute: number): string {
+/**
+ * The hour rail's labels.
+ *
+ * Fixed reference date; only the hour is being formatted. The LOCALE decides
+ * whether that reads "9 AM" or "09" — passed in rather than left to the
+ * browser, because the app has already resolved which language it is in.
+ */
+function formatHour(minute: number, locale: string): string {
   const hour = Math.floor(minute / 60) % 24
-  // Fixed reference date; only the hour is being formatted, and this respects
-  // the viewer's 12/24-hour convention.
-  return new Date(Date.UTC(2020, 0, 1, hour)).toLocaleTimeString(undefined, {
+  return new Date(Date.UTC(2020, 0, 1, hour)).toLocaleTimeString(locale, {
     hour: 'numeric',
     timeZone: 'UTC',
   })

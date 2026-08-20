@@ -23,7 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { Card, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
@@ -43,12 +43,12 @@ import { MEMBERSHIP_ROLES, type MembershipRole } from '@/lib/types'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useTranslation } from 'react-i18next'
 
-const ROLE_LABELS: Record<MembershipRole, string> = {
-  owner: 'Owner',
-  manager: 'Manager',
-  receptionist: 'Receptionist',
-  barber: 'Barber',
-}
+/*
+ * The words come from i18n, not a constant: a `Record<Role, string>` is built
+ * before any language is known, so it can only ever be English. `app:roles.*`
+ * already existed and was already translated — this map was a duplicate that
+ * quietly bypassed it.
+ */
 
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager'])
 
@@ -85,14 +85,12 @@ export function AppTeamPage() {
 
   if (!currentMembership || !MANAGING_ROLES.has(currentMembership.role)) {
     return (
-      <Container size="md" className="py-8">
-        <Alert variant="info">
-          Team management is only available to shop owners and managers.{' '}
-          <Link to="/app" className="font-medium underline underline-offset-2">
-            {t('app:team.backToHome')}
-          </Link>
-        </Alert>
-      </Container>
+      <Alert variant="info">
+        {t('app:team.onlyOwnersAndManagers')}{' '}
+        <Link to="/app" className="font-medium underline underline-offset-2">
+          {t('app:team.backToHome')}
+        </Link>
+      </Alert>
     )
   }
 
@@ -239,9 +237,8 @@ function TeamManagement({
   }
 
   return (
-    <Container size="md" className="py-8">
-      <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.team')}</h1>
-      <p className="mt-1 text-sm text-ink-500">{t('app:team.manageMembersAndPendingInvitations')}</p>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
+      <PageHeader title={t('common:entity.team')} subtitle={t('app:team.manageMembersAndPendingInvitations')} />
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-ink-950">{t('common:entity.members')}</h2>
@@ -283,7 +280,7 @@ function TeamManagement({
                           {isSelf ? <span className="ml-2 text-xs text-ink-300">(you)</span> : null}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="neutral">{ROLE_LABELS[row.member.role]}</Badge>
+                          <Badge variant="neutral">{t(`app:roles.${row.member.role}`)}</Badge>
                         </TableCell>
                         <TableCell className="text-ink-500">{row.staffProfile?.title || '—'}</TableCell>
                         <TableCell>
@@ -398,7 +395,7 @@ function TeamManagement({
                   <SelectField
                     label={t('common:field.role')}
                     error={errors.role?.message}
-                    options={assignableRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+                    options={assignableRoles.map((role) => ({ value: role, label: t(`app:roles.${role}`) }))}
                     {...register('role')}
                   />
                 </div>
@@ -435,7 +432,7 @@ function TeamManagement({
           }}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 
@@ -559,7 +556,7 @@ function PendingInvitationRow({
     <TableRow>
       <TableCell className="max-w-[16rem] truncate">{invitation.email}</TableCell>
       <TableCell>
-        <Badge variant="neutral">{ROLE_LABELS[invitation.role]}</Badge>
+        <Badge variant="neutral">{t(`app:roles.${invitation.role}`)}</Badge>
       </TableCell>
       <TableCell className="text-ink-500">{locationName ?? '—'}</TableCell>
       <TableCell className="whitespace-nowrap text-ink-500">

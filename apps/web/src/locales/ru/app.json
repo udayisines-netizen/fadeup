@@ -8,7 +8,8 @@
     "weeklyHours": "Рабочее время на неделю",
     "noWorkingHoursSet": "Рабочее время не задано.",
     "upcomingExceptions": "Ближайшие исключения",
-    "noAvailabilityExceptionsOnFile": "Исключений в расписании нет."
+    "noAvailabilityExceptionsOnFile": "Исключений в расписании нет.",
+    "viewingAsOwner": "Вы просматриваете рабочее пространство {{professional}} как владелец"
   },
   "memberships": {
     "couldntLoadMemberships": "Не удалось загрузить абонементы",
@@ -31,7 +32,8 @@
     "customerEnrolled": "Клиент подписан",
     "couldntUpdateStatus": "Не удалось изменить статус",
     "enterAValidPrice": "Укажите корректную цену.",
-    "selectAPlan": "Выберите тариф."
+    "selectAPlan": "Выберите тариф.",
+    "recurringPlansAndWhoIsEnrolled": "Регулярные планы и кто на них подписан."
   },
   "chairs": {
     "couldntLoadChairs": "Не удалось загрузить кресла",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "Не удалось изменить статус",
     "selectAService": "Выберите услугу.",
     "pickAnAvailableTimeSlot": "Выберите свободное время.",
-    "thatTimeWasJustBooked": "Это время только что заняли — выберите другое."
+    "thatTimeWasJustBooked": "Это время только что заняли — выберите другое.",
+    "theDaysAppointmentsForEachLocation": "Записи на день по каждому салону."
   },
   "availability": {
     "couldntLoadAvailability": "Не удалось загрузить расписание",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "Никто не ждёт",
     "nobodyWaitingBody": "Клиенты без записи появляются здесь сразу после регистрации.",
     "anyProfessional": "Любой свободный",
-    "manage": "Управлять очередью"
+    "manage": "Управлять очередью",
+    "status": {
+      "waiting": "Ожидает",
+      "called": "Приглашён",
+      "in_service": "Обслуживается",
+      "completed": "Завершено",
+      "cancelled": "Отменено",
+      "no_show": "Не пришёл"
+    },
+    "action": {
+      "called": "Пригласить",
+      "in_service": "Начать",
+      "completed": "Завершить",
+      "cancelled": "Отменить",
+      "no_show": "Отметить как не пришёл"
+    },
+    "markedAs": "Отмечено: {{status}}",
+    "positionNumber": "Позиция {{position}}",
+    "justNow": "Только что",
+    "waitedMinutes_one": "{{count}} мин",
+    "waitedMinutes_other": "{{count}} мин",
+    "whoIsWaitingAt": "Кто сейчас ждёт в {{location}}.",
+    "inProgress": "В кресле",
+    "waitingSection": "В очереди",
+    "doneToday_one": "Сегодня завершено: {{count}}",
+    "doneToday_other": "Сегодня завершено: {{count}}",
+    "unassigned": "Не назначен",
+    "unnamedProfessional": "Мастер без имени",
+    "noServiceSpecified": "Услуга не указана",
+    "addWalkinAt": "Добавьте человека в очередь в {{location}}."
   },
   "locations": {
     "listedPublicly": "Виден всем",
@@ -165,7 +197,14 @@
     "waitingSince": "Ожидает с",
     "updateStatus": "Изменить статус",
     "addedToWaitlist": "Добавлено в лист ожидания",
-    "couldntUpdateStatus": "Не удалось изменить статус"
+    "couldntUpdateStatus": "Не удалось изменить статус",
+    "markedAs": "Отмечено: {{status}}",
+    "markAs": "Отметить: {{status}}",
+    "anyProfessional": "Первый свободный",
+    "unassigned": "Не назначен",
+    "unnamedProfessional": "Мастер без имени",
+    "unknownService": "Неизвестная услуга",
+    "anything": "Что угодно"
   },
   "customers": {
     "couldntLoadCustomers": "Не удалось загрузить клиентов",
@@ -179,7 +218,9 @@
     "recentVisits": "Последние визиты",
     "noAppointmentsYet": "Записей пока нет.",
     "addACustomerDirectlyMost": "Добавьте клиента вручную — большинство создаётся автоматически из записей.",
-    "customerAdded": "Клиент добавлен"
+    "customerAdded": "Клиент добавлен",
+    "everyoneWhoHasBooked": "Все, кто записывался или заходил, в одном месте.",
+    "customerSince": "Клиент с {{date}}"
   },
   "calendar": {
     "couldntLoadTheCalendar": "Не удалось загрузить календарь",
@@ -193,7 +234,19 @@
     "today": "Сегодня",
     "reconnecting": "Переподключение…",
     "week": "Неделя",
-    "month": "Месяц"
+    "month": "Месяц",
+    "noLocationsYet": "Пока нет салонов",
+    "couldntLoadLocations": "Не удалось загрузить салоны",
+    "aCalendarNeedsALocation": "Календарю нужно место. Сначала добавьте салон.",
+    "theCalendarNeedsALocation": "Календарю нужен салон, чтобы знать часы работы и часовой пояс.",
+    "everyone": "Вся команда",
+    "nothingBooked": "Нет записей",
+    "nothingBookedThisWeek": "На этой неделе записей нет",
+    "unassigned": "Без мастера",
+    "noProfessionalYet": "Мастер не назначен",
+    "appointmentCount_one": "{{count}} запись",
+    "appointmentCount_other": "{{count}} записей",
+    "noService": "без услуги"
   },
   "team": {
     "couldntLoadMembers": "Не удалось загрузить участников",
@@ -222,7 +275,8 @@
     "invitationRevoked": "Приглашение отозвано",
     "couldnTRevokeInvitation": "Не удалось отозвать приглашение",
     "couldntUpdateBarberStatus": "Не удалось изменить статус специалиста",
-    "profileUpdated": "Профиль обновлён"
+    "profileUpdated": "Профиль обновлён",
+    "onlyOwnersAndManagers": "Управление командой доступно только владельцам и менеджерам."
   },
   "services": {
     "couldntLoadYourServiceCatalog": "Не удалось загрузить каталог услуг",
@@ -391,5 +445,47 @@
     "addWalkIn": "Добавить без записи",
     "blockTime": "Заблокировать время",
     "newCustomer": "Новый клиент"
+  },
+  "validation": {
+    "customerNameRequired": "Введите имя клиента."
+  },
+  "appointmentStatus": {
+    "pending": "Ожидает вашего ответа",
+    "confirmed": "Подтверждено",
+    "completed": "Завершено",
+    "cancelled": "Отменено",
+    "no_show": "Не пришёл"
+  },
+  "appointmentStatusShort": {
+    "pending": "Ожидает",
+    "confirmed": "Подтверждено",
+    "completed": "Готово",
+    "cancelled": "Отменено",
+    "no_show": "Не пришёл"
+  },
+  "appointmentResolution": {
+    "declined": "Отклонено",
+    "expired": "Истекло без ответа",
+    "cancelled_by_customer": "Отменено клиентом",
+    "cancelled_by_business": "Отменено салоном",
+    "rescheduled": "Перенесено на другое время"
+  },
+  "waitlistStatus": {
+    "waiting": "Ожидает",
+    "notified": "Уведомлён",
+    "booked": "Записан",
+    "cancelled": "Отменено",
+    "expired": "Истекло"
+  },
+  "membershipStatus": {
+    "active": "Активен",
+    "paused": "Приостановлен",
+    "cancelled": "Отменён",
+    "expired": "Истёк"
+  },
+  "billingInterval": {
+    "weekly": "/ неделя",
+    "monthly": "/ месяц",
+    "yearly": "/ год"
   }
 }

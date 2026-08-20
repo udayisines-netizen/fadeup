@@ -8,15 +8,14 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { Container } from '@/components/ui/container'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import type { MembershipRole } from '@/lib/types'
 import { useTranslation } from 'react-i18next'
 
-const ROLE_LABELS: Record<MembershipRole, string> = {
-  owner: 'Owner',
-  manager: 'Manager',
-  receptionist: 'Receptionist',
-  barber: 'Barber',
-}
+/*
+ * The words come from i18n, not a constant: a `Record<Role, string>` is built
+ * before any language is known, so it can only ever be English. `app:roles.*`
+ * already existed and was already translated — this map was a duplicate that
+ * quietly bypassed it.
+ */
 
 /**
  * /workspace — the single, central post-login landing every login/signup
@@ -87,8 +86,8 @@ export function WorkspaceSelectorPage() {
           <WorkspaceCard
             key={membership.id}
             title={membership.organizationName}
-            subtitle={ROLE_LABELS[membership.role]}
-            badge={ROLE_LABELS[membership.role]}
+            subtitle={t(`app:roles.${membership.role}`)}
+            badge={t(`app:roles.${membership.role}`)}
             href="/app"
             onSelect={() => setStoredOrganizationId(membership.organizationId)}
           />

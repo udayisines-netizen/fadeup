@@ -236,7 +236,10 @@ describe('AppCalendarPage', () => {
 
     // 42 cells: six whole weeks, always, so the page does not jump height
     // between a five-week month and a six-week one.
-    const dayCells = screen.getAllByRole('button', { name: /\d+ appointments/ })
+    // Pluralised: a cell with one booking says "1 appointment", not
+    // "1 appointments". That label is all a screen-reader user hears for a
+    // cell whose visible content is a bare number.
+    const dayCells = screen.getAllByRole('button', { name: /\d+ appointments?/ })
     expect(dayCells).toHaveLength(42)
   })
 
@@ -244,7 +247,7 @@ describe('AppCalendarPage', () => {
     renderPage()
     selectView('Month')
 
-    const busyDay = screen.getAllByRole('button', { name: /1 appointments/ })[0]
+    const busyDay = screen.getAllByRole('button', { name: /\b1 appointment\b/ })[0]
     fireEvent.click(busyDay)
 
     expect(screen.getByRole('tab', { name: 'Day', selected: true })).toBeInTheDocument()

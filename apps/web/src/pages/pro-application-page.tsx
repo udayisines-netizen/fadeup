@@ -106,13 +106,13 @@ function ApplicationShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
+function formatDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 /** Business name / submission date / status — shown in every state. */
 function ApplicationFacts({ application }: { application: MyProfessionalApplication }) {
-  const { t } = useTranslation('auth')
+  const { t, i18n } = useTranslation('auth')
   const statusLabel =
     application.status === 'approved'
       ? t('application.statusApproved')
@@ -135,7 +135,7 @@ function ApplicationFacts({ application }: { application: MyProfessionalApplicat
           <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
           {t('application.submittedOn')}
         </dt>
-        <dd className="mt-1 text-sm font-medium text-ink-950">{formatDate(application.submittedAt)}</dd>
+        <dd className="mt-1 text-sm font-medium text-ink-950">{formatDate(application.submittedAt, i18n.language)}</dd>
       </div>
       <div>
         <dt className="text-xs font-medium uppercase tracking-wide text-ink-500">{t('application.status')}</dt>

@@ -26,7 +26,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -131,11 +131,8 @@ function AvailabilityManagement({ organizationId, role }: { organizationId: stri
   }
 
   return (
-    <Container size="lg" className="py-8">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.availability')}</h1>
-        <p className="mt-1 text-sm text-ink-500">{t('app:availability.weeklyHoursForEachLocation')}</p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('common:entity.availability')} subtitle={t('app:availability.weeklyHoursForEachLocation')} />
 
       {isLoading ? (
         <div className="mt-6">
@@ -170,7 +167,7 @@ function AvailabilityManagement({ organizationId, role }: { organizationId: stri
           />
         </>
       )}
-    </Container>
+    </div>
   )
 }
 
@@ -603,7 +600,7 @@ function ExceptionsSection({
   barberId: string
   canManage: boolean
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { toast } = useToast()
   const exceptionsQuery = useBarberAvailabilityExceptions(organizationId, barberId)
   const deleteException = useDeleteBarberAvailabilityException()
@@ -662,7 +659,7 @@ function ExceptionsSection({
                 <div className="flex min-w-0 flex-col">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-ink-950">
-                      {new Date(`${exception.exceptionDate}T00:00:00`).toLocaleDateString(undefined, {
+                      {new Date(`${exception.exceptionDate}T00:00:00`).toLocaleDateString(i18n.language, {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',

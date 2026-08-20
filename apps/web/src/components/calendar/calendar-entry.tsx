@@ -1,8 +1,9 @@
 import { Ban, ArrowUp, ArrowDown } from 'lucide-react'
+import { useDateTime } from '@/lib/intl/use-intl'
 import { cn } from '@/lib/cn'
 import type { CalendarAppointment, TimeBlock } from '@/lib/queries/calendar'
 import type { PositionedEvent } from '@/lib/calendar/layout'
-import { STATUS_SHORT_LABELS } from '@/components/calendar/appointment-status'
+import { useAppointmentStatus } from '@/components/calendar/appointment-status'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -66,12 +67,11 @@ export function CalendarEntryBlock({
   /** Week view: less room, so the service line is dropped rather than clipped. */
   compact?: boolean
 }) {
+  const { t } = useTranslation()
+  const dateTime = useDateTime()
+  const appointmentStatus = useAppointmentStatus()
   const { event, continuesFromPreviousDay, continuesIntoNextDay } = positioned
-  const startTime = new Date(event.startsAt).toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone,
-  })
+  const startTime = dateTime.time(event.startsAt, timeZone)
 
   if (event.kind === 'block') {
     return (
@@ -108,7 +108,8 @@ export function CalendarEntryBlock({
         STATUS_BLOCK_CLASSES[appointment.status],
       )}
       // The visual is dense by necessity; the accessible name is not.
-      aria-label={`${startTime} ${appointment.customerName}, ${appointment.serviceName ?? 'no service'}, ${STATUS_SHORT_LABELS[appointment.status]}`}
+      // The whole meaning of this rectangle, for anyone who cannot see it.
+      aria-label={`${startTime} ${appointment.customerName}, ${appointment.serviceName ?? t('app:calendar.noService')}, ${appointmentStatus.shortLabel(appointment.status)}`}
     >
       <ContinuationMarks from={continuesFromPreviousDay} into={continuesIntoNextDay} />
       <span className="truncate text-xs font-semibold">{appointment.customerName}</span>

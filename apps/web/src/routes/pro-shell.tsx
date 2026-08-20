@@ -129,9 +129,23 @@ function ProShellInner() {
             userName={user?.email ?? currentMembership.organizationName}
           />
 
-          {/* Bottom padding clears the mobile tab bar; removed once the
-              sidebar takes over at lg. */}
-          <main className={cn('min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8')}>
+          {/*
+            THE SHELL OWNS THE MEASURE.
+            Every page used to wrap itself in its own Container at its own
+            size — lg here, md there, xl on the calendar — which produced a
+            different text column and a different left edge on every screen,
+            plus doubled padding at 375px. That inconsistency is most of why
+            V1 read as a set of screens rather than one application.
+
+            The cap is generous rather than a reading measure: this is an
+            operations console with tables and a calendar grid, and the pages
+            that genuinely want a narrower column (Team, a barber's own
+            workspace) constrain themselves inside it.
+
+            Bottom padding clears the mobile tab bar; removed once the sidebar
+            takes over at lg.
+          */}
+          <main className={cn('mx-auto w-full min-w-0 max-w-[100rem] flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-8')}>
             <Outlet />
           </main>
         </div>

@@ -8,7 +8,8 @@
     "weeklyHours": "Weekly hours",
     "noWorkingHoursSet": "No working hours set.",
     "upcomingExceptions": "Upcoming exceptions",
-    "noAvailabilityExceptionsOnFile": "No availability exceptions on file."
+    "noAvailabilityExceptionsOnFile": "No availability exceptions on file.",
+    "viewingAsOwner": "Viewing {{professional}}’s workspace as shop owner"
   },
   "memberships": {
     "couldntLoadMemberships": "Couldn't load memberships",
@@ -31,7 +32,8 @@
     "customerEnrolled": "Customer enrolled",
     "couldntUpdateStatus": "Couldn't update status",
     "enterAValidPrice": "Enter a valid price.",
-    "selectAPlan": "Select a plan."
+    "selectAPlan": "Select a plan.",
+    "recurringPlansAndWhoIsEnrolled": "Recurring plans and who is enrolled."
   },
   "chairs": {
     "couldntLoadChairs": "Couldn't load chairs",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "Couldn't update status",
     "selectAService": "Select a service.",
     "pickAnAvailableTimeSlot": "Pick an available time slot.",
-    "thatTimeWasJustBooked": "That time was just booked by someone else — pick another slot."
+    "thatTimeWasJustBooked": "That time was just booked by someone else — pick another slot.",
+    "theDaysAppointmentsForEachLocation": "The day’s appointments for each location."
   },
   "availability": {
     "couldntLoadAvailability": "Couldn't load availability",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "Nobody waiting",
     "nobodyWaitingBody": "Walk-ins appear here the moment they check in.",
     "anyProfessional": "First available",
-    "manage": "Manage the queue"
+    "manage": "Manage the queue",
+    "status": {
+      "waiting": "Waiting",
+      "called": "Called",
+      "in_service": "In service",
+      "completed": "Done",
+      "cancelled": "Cancelled",
+      "no_show": "No-show"
+    },
+    "action": {
+      "called": "Call",
+      "in_service": "Start",
+      "completed": "Finish",
+      "cancelled": "Cancel",
+      "no_show": "Mark no-show"
+    },
+    "markedAs": "Marked {{status}}",
+    "positionNumber": "Position {{position}}",
+    "justNow": "Just now",
+    "waitedMinutes_one": "{{count}} min",
+    "waitedMinutes_other": "{{count}} min",
+    "whoIsWaitingAt": "Who's waiting right now at {{location}}.",
+    "inProgress": "In the chair",
+    "waitingSection": "Waiting",
+    "doneToday_one": "{{count}} finished today",
+    "doneToday_other": "{{count}} finished today",
+    "unassigned": "Unassigned",
+    "unnamedProfessional": "Unnamed professional",
+    "noServiceSpecified": "No service specified",
+    "addWalkinAt": "Add someone to the line at {{location}}."
   },
   "locations": {
     "listedPublicly": "Listed publicly",
@@ -165,7 +197,14 @@
     "waitingSince": "Waiting since",
     "updateStatus": "Update status",
     "addedToWaitlist": "Added to waitlist",
-    "couldntUpdateStatus": "Couldn't update status"
+    "couldntUpdateStatus": "Couldn't update status",
+    "markedAs": "Marked {{status}}",
+    "markAs": "Mark {{status}}",
+    "anyProfessional": "First available",
+    "unassigned": "Unassigned",
+    "unnamedProfessional": "Unnamed professional",
+    "unknownService": "Unknown service",
+    "anything": "Anything"
   },
   "customers": {
     "couldntLoadCustomers": "Couldn't load customers",
@@ -179,7 +218,9 @@
     "recentVisits": "Recent visits",
     "noAppointmentsYet": "No appointments yet.",
     "addACustomerDirectlyMost": "Add a customer directly — most are created automatically from bookings.",
-    "customerAdded": "Customer added"
+    "customerAdded": "Customer added",
+    "everyoneWhoHasBooked": "Everyone who has booked or walked in, in one place.",
+    "customerSince": "Customer since {{date}}"
   },
   "calendar": {
     "couldntLoadTheCalendar": "Couldn't load the calendar",
@@ -193,7 +234,19 @@
     "today": "Today",
     "reconnecting": "Reconnecting…",
     "week": "Week",
-    "month": "Month"
+    "month": "Month",
+    "noLocationsYet": "No locations yet",
+    "couldntLoadLocations": "Couldn't load your locations",
+    "aCalendarNeedsALocation": "A calendar needs somewhere to be. Add a location first.",
+    "theCalendarNeedsALocation": "The calendar needs a location to know its opening hours and timezone.",
+    "everyone": "Everyone",
+    "nothingBooked": "Nothing booked",
+    "nothingBookedThisWeek": "Nothing booked this week",
+    "unassigned": "Unassigned",
+    "noProfessionalYet": "No professional yet",
+    "appointmentCount_one": "{{count}} appointment",
+    "appointmentCount_other": "{{count}} appointments",
+    "noService": "no service"
   },
   "team": {
     "couldntLoadMembers": "Couldn't load members",
@@ -222,7 +275,8 @@
     "invitationRevoked": "Invitation revoked",
     "couldnTRevokeInvitation": "Couldn’t revoke invitation",
     "couldntUpdateBarberStatus": "Couldn't update barber status",
-    "profileUpdated": "Profile updated"
+    "profileUpdated": "Profile updated",
+    "onlyOwnersAndManagers": "Team management is only available to shop owners and managers."
   },
   "services": {
     "couldntLoadYourServiceCatalog": "Couldn't load your service catalog",
@@ -391,5 +445,47 @@
     "addWalkIn": "Add a walk-in",
     "blockTime": "Block time",
     "newCustomer": "New customer"
+  },
+  "validation": {
+    "customerNameRequired": "Enter the customer’s name."
+  },
+  "appointmentStatus": {
+    "pending": "Awaiting your answer",
+    "confirmed": "Confirmed",
+    "completed": "Done",
+    "cancelled": "Cancelled",
+    "no_show": "No-show"
+  },
+  "appointmentStatusShort": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "completed": "Done",
+    "cancelled": "Cancelled",
+    "no_show": "No-show"
+  },
+  "appointmentResolution": {
+    "declined": "Declined",
+    "expired": "Expired unanswered",
+    "cancelled_by_customer": "Cancelled by customer",
+    "cancelled_by_business": "Cancelled by the shop",
+    "rescheduled": "Moved to another time"
+  },
+  "waitlistStatus": {
+    "waiting": "Waiting",
+    "notified": "Notified",
+    "booked": "Booked",
+    "cancelled": "Cancelled",
+    "expired": "Expired"
+  },
+  "membershipStatus": {
+    "active": "Active",
+    "paused": "Paused",
+    "cancelled": "Cancelled",
+    "expired": "Expired"
+  },
+  "billingInterval": {
+    "weekly": "/ week",
+    "monthly": "/ month",
+    "yearly": "/ year"
   }
 }

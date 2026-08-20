@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarX } from 'lucide-react'
 import {
@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
-import { TextField } from '@/components/ui/text-field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
-import { cn } from '@/lib/cn'
+import { DateStrip } from '@/components/ui/date-strip'
+import { TimeSlotGrid, firstPopulatedPart, type PartOfDay } from '@/components/ui/time-slot-grid'
+import { todayInZone, addDays } from '@/lib/calendar/time'
 import { usePublicAvailableSlots } from '@/lib/queries/public-booking'
 import { bookingErrorKey, useRescheduleAppointment } from '@/lib/queries/booking-requests'
 
@@ -34,9 +35,18 @@ import { bookingErrorKey, useRescheduleAppointment } from '@/lib/queries/booking
  * appointment is untouched. That failure is surfaced here as "just taken",
  * because it is a normal thing to happen and not an error the person caused.
  *
- * A CUSTOMER's move returns the appointment to pending — the shop is the
- * authority on its own diary, exactly as it is for the original booking — and
- * the copy says so rather than implying the new time is agreed.
+ * SINCE LOT E, A MOVE PRESERVES THE STATUS. `reschedule_appointment` keeps a
+ * confirmed appointment confirmed and a legacy pending one pending — it does
+ * not send a confirmed booking back for re-approval. The copy here used to say
+ * "The shop confirms the new time, just like the original booking" and the
+ * button said "Request new time"; both described LOT C and are now false, in
+ * the same way the booking success screen was. They now say what the database
+ * actually does.
+ *
+ * The date and time controls are the SAME ones the booking flow uses — a date
+ * strip and slots grouped by part of day — because moving an appointment is
+ * the same act as making one, and it was previously a bare `<input type=date>`
+ * over a flat grid of every slot in the day.
  */
 export function RescheduleDialog({
   open,
@@ -52,14 +62,22 @@ export function RescheduleDialog({
     locationId: string
     barberId: string | null
     serviceId: string | null
+    /** The SHOP's zone. Every time shown here is wall-clock in it. */
+    locationTimezone: string
+    /** Legacy pending rows still exist and DO await the shop's answer. */
+    isAwaitingApproval?: boolean
   }
   onDone?: () => void
 }) {
   const { t } = useTranslation('customer-app')
   const reschedule = useRescheduleAppointment(undefined)
 
-  const [date, setDate] = useState(() => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10))
+  const timeZone = appointment.locationTimezone
+  // Tomorrow, in the shop's zone — not in the device's, where "tomorrow" can
+  // be a different date.
+  const [date, setDate] = useState(() => addDays(todayInZone(timeZone), 1))
   const [selected, setSelected] = useState<string | null>(null)
+  const [part, setPart] = useState<PartOfDay>('morning')
   const [error, setError] = useState<string | null>(null)
 
   const slotsQuery = usePublicAvailableSlots(
@@ -70,7 +88,17 @@ export function RescheduleDialog({
     date,
   )
 
-  const slots = slotsQuery.data ?? []
+  const slots = useMemo(() => slotsQuery.data ?? [], [slotsQuery.data])
+
+  // Open on a period that actually has something in it, once per day chosen —
+  // not on every background refetch, which would move the customer's tab
+  // underneath them mid-choice.
+  const settledFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (slots.length === 0 || settledFor.current === date) return
+    settledFor.current = date
+    setPart(firstPopulatedPart(slots, timeZone))
+  }, [slots, date, timeZone])
 
   async function submit() {
     if (!selected) return
@@ -103,13 +131,11 @@ export function RescheduleDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          <TextField
-            label={t('reschedule.dateLabel')}
-            type="date"
+          <DateStrip
             value={date}
-            min={new Date().toISOString().slice(0, 10)}
-            onChange={(event) => {
-              setDate(event.target.value)
+            timeZone={timeZone}
+            onChange={(next) => {
+              setDate(next)
               setSelected(null)
             }}
           />
@@ -117,48 +143,28 @@ export function RescheduleDialog({
           {error ? <Alert variant="error">{error}</Alert> : null}
 
           {slotsQuery.isPending ? (
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-11 w-full" />
-              ))}
+            <div className="flex flex-col gap-3" aria-hidden="true">
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Skeleton className="h-28 w-full rounded-lg" />
             </div>
           ) : slots.length === 0 ? (
             <EmptyState icon={CalendarX} title={t('reschedule.noSlotsTitle')} description={t('reschedule.noSlotsBody')} />
           ) : (
-            <div
-              role="radiogroup"
-              aria-label={t('reschedule.slotsLabel')}
-              // Three across on the narrowest phone keeps every target well
-              // past 44px while still showing a usable number of times.
-              className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-            >
-              {slots.map((slot) => {
-                const isSelected = selected === slot.slotStart
-                return (
-                  <button
-                    key={slot.slotStart}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    onClick={() => setSelected(slot.slotStart)}
-                    className={cn(
-                      'min-h-11 rounded-md border px-2 text-sm transition-colors',
-                      isSelected
-                        ? 'border-ink-950 bg-ink-950 text-on-accent'
-                        : 'border-border text-ink-950 hover:bg-paper-100',
-                    )}
-                  >
-                    {new Date(slot.slotStart).toLocaleTimeString(undefined, {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </button>
-                )
-              })}
-            </div>
+            <TimeSlotGrid
+              slots={slots}
+              value={selected}
+              onChange={setSelected}
+              timeZone={timeZone}
+              part={part}
+              onPartChange={setPart}
+            />
           )}
 
-          <p className="text-sm text-ink-500">{t('reschedule.needsConfirmation')}</p>
+          {/* True either way: a confirmed appointment stays confirmed, and a
+              legacy pending one is still waiting on the shop. */}
+          <p className="text-sm text-ink-500">
+            {appointment.isAwaitingApproval ? t('reschedule.needsConfirmation') : t('reschedule.staysConfirmed')}
+          </p>
         </div>
 
         <DialogFooter>
@@ -168,7 +174,7 @@ export function RescheduleDialog({
             </Button>
           </DialogClose>
           <Button type="button" onClick={submit} disabled={!selected} isLoading={reschedule.isPending}>
-            {t('reschedule.submit')}
+            {appointment.isAwaitingApproval ? t('reschedule.submit') : t('reschedule.submitConfirmed')}
           </Button>
         </DialogFooter>
       </DialogContent>

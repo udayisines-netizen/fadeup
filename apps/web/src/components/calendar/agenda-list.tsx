@@ -1,4 +1,5 @@
 import { Ban, CalendarCheck, ChevronRight } from 'lucide-react'
+import { useDateTime } from '@/lib/intl/use-intl'
 import { cn } from '@/lib/cn'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AppointmentStatusBadge } from '@/components/calendar/appointment-status'
@@ -37,6 +38,8 @@ export function AgendaList({
   emptyTitle?: string
   emptyDescription?: string
 }) {
+  const dateTime = useDateTime()
+
   if (entries.length === 0) {
     return <EmptyState icon={CalendarCheck} title={emptyTitle} description={emptyDescription} />
   }
@@ -56,12 +59,7 @@ export function AgendaList({
           <li key={entry.id}>
             {needsHeading ? (
               <h3 className="sticky top-0 z-10 -mx-1 bg-paper-50/95 px-1 py-2 text-sm font-semibold text-ink-950 backdrop-blur">
-                {new Date(entry.startsAt).toLocaleDateString(undefined, {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  timeZone,
-                })}
+                {dateTime.longDate(entry.startsAt, timeZone)}
               </h3>
             ) : null}
             <AgendaRow
@@ -88,8 +86,8 @@ function AgendaRow({
   onSelectAppointment: (appointment: CalendarAppointment) => void
   onSelectBlock: (block: TimeBlock) => void
 }) {
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
+  const dateTime = useDateTime()
+  const formatTime = (iso: string) => dateTime.time(iso, timeZone)
 
   if (entry.kind === 'block') {
     return (

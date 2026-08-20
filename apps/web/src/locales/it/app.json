@@ -8,7 +8,8 @@
     "weeklyHours": "Orario settimanale",
     "noWorkingHoursSet": "Nessun orario di lavoro impostato.",
     "upcomingExceptions": "Eccezioni in arrivo",
-    "noAvailabilityExceptionsOnFile": "Nessuna eccezione di disponibilità registrata."
+    "noAvailabilityExceptionsOnFile": "Nessuna eccezione di disponibilità registrata.",
+    "viewingAsOwner": "Stai vedendo lo spazio di {{professional}} come titolare"
   },
   "memberships": {
     "couldntLoadMemberships": "Impossibile caricare gli abbonamenti",
@@ -31,7 +32,8 @@
     "customerEnrolled": "Cliente iscritto",
     "couldntUpdateStatus": "Impossibile cambiare lo stato",
     "enterAValidPrice": "Inserisci un prezzo valido.",
-    "selectAPlan": "Scegli un piano."
+    "selectAPlan": "Scegli un piano.",
+    "recurringPlansAndWhoIsEnrolled": "Piani ricorrenti e chi è iscritto."
   },
   "chairs": {
     "couldntLoadChairs": "Impossibile caricare le postazioni",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "Impossibile cambiare lo stato",
     "selectAService": "Scegli un servizio.",
     "pickAnAvailableTimeSlot": "Scegli un orario disponibile.",
-    "thatTimeWasJustBooked": "Quell'orario è appena stato prenotato: scegline un altro."
+    "thatTimeWasJustBooked": "Quell'orario è appena stato prenotato: scegline un altro.",
+    "theDaysAppointmentsForEachLocation": "Gli appuntamenti del giorno per ogni sede."
   },
   "availability": {
     "couldntLoadAvailability": "Impossibile caricare le disponibilità",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "Nessuno in attesa",
     "nobodyWaitingBody": "I clienti senza appuntamento compaiono qui al check-in.",
     "anyProfessional": "Primo disponibile",
-    "manage": "Gestisci la coda"
+    "manage": "Gestisci la coda",
+    "status": {
+      "waiting": "In attesa",
+      "called": "Chiamato",
+      "in_service": "In corso",
+      "completed": "Completato",
+      "cancelled": "Annullato",
+      "no_show": "Assente"
+    },
+    "action": {
+      "called": "Chiama",
+      "in_service": "Inizia",
+      "completed": "Concludi",
+      "cancelled": "Annulla",
+      "no_show": "Segna come assente"
+    },
+    "markedAs": "Segnato come {{status}}",
+    "positionNumber": "Posizione {{position}}",
+    "justNow": "Adesso",
+    "waitedMinutes_one": "{{count}} min",
+    "waitedMinutes_other": "{{count}} min",
+    "whoIsWaitingAt": "Chi sta aspettando adesso da {{location}}.",
+    "inProgress": "In poltrona",
+    "waitingSection": "In attesa",
+    "doneToday_one": "{{count}} completato oggi",
+    "doneToday_other": "{{count}} completati oggi",
+    "unassigned": "Non assegnato",
+    "unnamedProfessional": "Professionista senza nome",
+    "noServiceSpecified": "Nessun servizio indicato",
+    "addWalkinAt": "Aggiungi qualcuno alla coda di {{location}}."
   },
   "locations": {
     "listedPublicly": "Visibile pubblicamente",
@@ -165,7 +197,14 @@
     "waitingSince": "In attesa dal",
     "updateStatus": "Cambia stato",
     "addedToWaitlist": "Aggiunto alla lista d'attesa",
-    "couldntUpdateStatus": "Impossibile cambiare lo stato"
+    "couldntUpdateStatus": "Impossibile cambiare lo stato",
+    "markedAs": "Segnato come {{status}}",
+    "markAs": "Segna come {{status}}",
+    "anyProfessional": "Il primo disponibile",
+    "unassigned": "Non assegnato",
+    "unnamedProfessional": "Professionista senza nome",
+    "unknownService": "Servizio sconosciuto",
+    "anything": "Qualsiasi cosa"
   },
   "customers": {
     "couldntLoadCustomers": "Impossibile caricare i clienti",
@@ -179,7 +218,9 @@
     "recentVisits": "Visite recenti",
     "noAppointmentsYet": "Ancora nessun appuntamento.",
     "addACustomerDirectlyMost": "Aggiungi un cliente direttamente — la maggior parte nasce automaticamente dalle prenotazioni.",
-    "customerAdded": "Cliente aggiunto"
+    "customerAdded": "Cliente aggiunto",
+    "everyoneWhoHasBooked": "Tutte le persone che hanno prenotato o sono passate, in un unico posto.",
+    "customerSince": "Cliente dal {{date}}"
   },
   "calendar": {
     "couldntLoadTheCalendar": "Impossibile caricare il calendario",
@@ -193,7 +234,19 @@
     "today": "Oggi",
     "reconnecting": "Riconnessione…",
     "week": "Settimana",
-    "month": "Mese"
+    "month": "Mese",
+    "noLocationsYet": "Ancora nessuna sede",
+    "couldntLoadLocations": "Impossibile caricare le tue sedi",
+    "aCalendarNeedsALocation": "Un calendario ha bisogno di un luogo. Aggiungi prima una sede.",
+    "theCalendarNeedsALocation": "Il calendario ha bisogno di una sede per conoscere orari e fuso.",
+    "everyone": "Tutti",
+    "nothingBooked": "Niente in agenda",
+    "nothingBookedThisWeek": "Niente in agenda questa settimana",
+    "unassigned": "Non assegnato",
+    "noProfessionalYet": "Ancora nessun professionista",
+    "appointmentCount_one": "{{count}} appuntamento",
+    "appointmentCount_other": "{{count}} appuntamenti",
+    "noService": "nessun servizio"
   },
   "team": {
     "couldntLoadMembers": "Impossibile caricare i membri",
@@ -222,7 +275,8 @@
     "invitationRevoked": "Invito revocato",
     "couldnTRevokeInvitation": "Impossibile revocare l'invito",
     "couldntUpdateBarberStatus": "Impossibile cambiare lo stato del professionista",
-    "profileUpdated": "Profilo aggiornato"
+    "profileUpdated": "Profilo aggiornato",
+    "onlyOwnersAndManagers": "La gestione del team è riservata a titolari e manager."
   },
   "services": {
     "couldntLoadYourServiceCatalog": "Impossibile caricare il tuo catalogo servizi",
@@ -391,5 +445,47 @@
     "addWalkIn": "Aggiungi cliente senza appuntamento",
     "blockTime": "Blocca del tempo",
     "newCustomer": "Nuovo cliente"
+  },
+  "validation": {
+    "customerNameRequired": "Inserisci il nome del cliente."
+  },
+  "appointmentStatus": {
+    "pending": "In attesa della tua risposta",
+    "confirmed": "Confermato",
+    "completed": "Completato",
+    "cancelled": "Annullato",
+    "no_show": "Assente"
+  },
+  "appointmentStatusShort": {
+    "pending": "In attesa",
+    "confirmed": "Confermato",
+    "completed": "Fatto",
+    "cancelled": "Annullato",
+    "no_show": "Assente"
+  },
+  "appointmentResolution": {
+    "declined": "Rifiutato",
+    "expired": "Scaduto senza risposta",
+    "cancelled_by_customer": "Annullato dal cliente",
+    "cancelled_by_business": "Annullato dal salone",
+    "rescheduled": "Spostato a un altro orario"
+  },
+  "waitlistStatus": {
+    "waiting": "In attesa",
+    "notified": "Avvisato",
+    "booked": "Prenotato",
+    "cancelled": "Annullato",
+    "expired": "Scaduto"
+  },
+  "membershipStatus": {
+    "active": "Attivo",
+    "paused": "In pausa",
+    "cancelled": "Annullato",
+    "expired": "Scaduto"
+  },
+  "billingInterval": {
+    "weekly": "/ settimana",
+    "monthly": "/ mese",
+    "yearly": "/ anno"
   }
 }

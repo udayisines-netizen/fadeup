@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,13 +26,11 @@ import { useTranslation } from 'react-i18next'
 // grants owner/manager/receptionist write access, any member read.
 const MANAGING_ROLES = new Set<MembershipRole>(['owner', 'manager', 'receptionist'])
 
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  no_show: 'No-show',
-}
+/**
+ * Only the COLOUR lives in a constant. The words are translated at render —
+ * a `Record<Status, string>` of English cannot be, which is how this page's
+ * status vocabulary stayed English while every label around it was translated.
+ */
 
 const STATUS_BADGE_VARIANT: Record<AppointmentStatus, BadgeVariant> = {
   pending: 'warning',
@@ -59,12 +57,12 @@ function friendlyCustomerError(rawMessage: string): string {
   return rawMessage
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(iso))
+function formatDate(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(iso))
 }
 
-function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
+function formatDateTime(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
 }
 
 export function AppCustomersPage() {
@@ -76,7 +74,7 @@ export function AppCustomersPage() {
 }
 
 function CustomersDirectory({ organizationId, role }: { organizationId: string; role: MembershipRole }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { toast } = useToast()
   const canManage = MANAGING_ROLES.has(role)
   const [search, setSearch] = useState('')
@@ -95,16 +93,14 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
   }, [customersQuery.data, search])
 
   return (
-    <Container size="lg" className="py-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.customers')}</h1>
-          <p className="mt-1 text-sm text-ink-500">Everyone who&apos;s booked or walked in, in one place.</p>
-        </div>
-        {canManage ? <Button onClick={() => setIsAddOpen(true)}>{t('app:customers.addCustomer')}</Button> : null}
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title={t('common:entity.customers')}
+        subtitle={t('app:customers.everyoneWhoHasBooked')}
+        actions={canManage ? <Button onClick={() => setIsAddOpen(true)}>{t('app:customers.addCustomer')}</Button> : undefined}
+      />
 
-      <div className="mt-6">
+      <div>
         {customersQuery.isPending ? (
           <CustomersSkeleton />
         ) : customersQuery.isError ? (
@@ -156,7 +152,7 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
                       <TableCell className="font-medium text-ink-950">{customer.name}</TableCell>
                       <TableCell className="text-ink-500">{customer.phone || '—'}</TableCell>
                       <TableCell className="text-ink-500">{customer.email || '—'}</TableCell>
-                      <TableCell className="text-ink-500">{formatDate(customer.updatedAt)}</TableCell>
+                      <TableCell className="text-ink-500">{formatDate(customer.updatedAt, i18n.language)}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="secondary" size="sm" onClick={() => setSelectedCustomer(customer)}>
                           {t('app:customers.view')}
@@ -190,7 +186,7 @@ function CustomersDirectory({ organizationId, role }: { organizationId: string; 
           onClose={() => setSelectedCustomer(null)}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 
@@ -207,7 +203,7 @@ function CustomerDetailDialog({
   canManage: boolean
   onClose: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
   const visitsQuery = useCustomerAppointments(customer.id)
 
@@ -216,7 +212,7 @@ function CustomerDetailDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{customer.name}</DialogTitle>
-          <DialogDescription>Customer since {formatDate(customer.createdAt)}</DialogDescription>
+          <DialogDescription>{t('app:customers.customerSince', { date: formatDate(customer.createdAt, i18n.language) })}</DialogDescription>
         </DialogHeader>
 
         {isEditing ? (
@@ -260,8 +256,8 @@ function CustomerDetailDialog({
                       key={appointment.id}
                       className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
                     >
-                      <span className="text-ink-700">{formatDateTime(appointment.startsAt)}</span>
-                      <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{STATUS_LABELS[appointment.status]}</Badge>
+                      <span className="text-ink-700">{formatDateTime(appointment.startsAt, i18n.language)}</span>
+                      <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>{t(`app:appointmentStatusShort.${appointment.status}`)}</Badge>
                     </li>
                   ))}
                 </ul>

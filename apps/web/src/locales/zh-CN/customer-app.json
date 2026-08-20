@@ -143,7 +143,9 @@
     "cancel": "保留原时间",
     "slotTaken": "该时间刚被预约。请另选一个。",
     "notAllowed": "此预约已无法更改。",
-    "failed": "无法更改预约，请重试。"
+    "failed": "无法更改预约，请重试。",
+    "staysConfirmed": "您的预约在新时间仍为已确认。",
+    "submitConfirmed": "改期"
   },
   "passportPage": {},
   "shareView": {

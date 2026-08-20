@@ -8,7 +8,8 @@
     "weeklyHours": "每周工作时间",
     "noWorkingHoursSet": "尚未设置工作时间。",
     "upcomingExceptions": "即将到来的例外",
-    "noAvailabilityExceptionsOnFile": "没有记录任何可预约时间的例外。"
+    "noAvailabilityExceptionsOnFile": "没有记录任何可预约时间的例外。",
+    "viewingAsOwner": "您正以店主身份查看 {{professional}} 的工作区"
   },
   "memberships": {
     "couldntLoadMemberships": "无法加载会员方案",
@@ -31,7 +32,8 @@
     "customerEnrolled": "客户已订阅",
     "couldntUpdateStatus": "无法更改状态",
     "enterAValidPrice": "请输入有效的价格。",
-    "selectAPlan": "请选择一个方案。"
+    "selectAPlan": "请选择一个方案。",
+    "recurringPlansAndWhoIsEnrolled": "周期性套餐及其成员。"
   },
   "chairs": {
     "couldntLoadChairs": "无法加载工位",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "无法更改状态",
     "selectAService": "请选择一项服务。",
     "pickAnAvailableTimeSlot": "请选择一个可用时段。",
-    "thatTimeWasJustBooked": "该时段刚被他人预约，请另选时间。"
+    "thatTimeWasJustBooked": "该时段刚被他人预约，请另选时间。",
+    "theDaysAppointmentsForEachLocation": "各门店当天的预约。"
   },
   "availability": {
     "couldntLoadAvailability": "无法加载可预约时间",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "当前无人等候",
     "nobodyWaitingBody": "免预约客户登记后会立即出现在这里。",
     "anyProfessional": "任意可用人员",
-    "manage": "管理排队"
+    "manage": "管理排队",
+    "status": {
+      "waiting": "等待中",
+      "called": "已叫号",
+      "in_service": "服务中",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "no_show": "未到"
+    },
+    "action": {
+      "called": "叫号",
+      "in_service": "开始",
+      "completed": "完成",
+      "cancelled": "取消",
+      "no_show": "标记为未到"
+    },
+    "markedAs": "已标记为{{status}}",
+    "positionNumber": "第 {{position}} 位",
+    "justNow": "刚刚",
+    "waitedMinutes_one": "{{count}} 分钟",
+    "waitedMinutes_other": "{{count}} 分钟",
+    "whoIsWaitingAt": "{{location}} 现在正在等待的顾客。",
+    "inProgress": "服务中",
+    "waitingSection": "等待中",
+    "doneToday_one": "今日已完成 {{count}} 位",
+    "doneToday_other": "今日已完成 {{count}} 位",
+    "unassigned": "未分配",
+    "unnamedProfessional": "未命名理发师",
+    "noServiceSpecified": "未指定服务",
+    "addWalkinAt": "将顾客加入 {{location}} 的排队。"
   },
   "locations": {
     "listedPublicly": "已公开展示",
@@ -165,7 +197,14 @@
     "waitingSince": "等候始于",
     "updateStatus": "更改状态",
     "addedToWaitlist": "已加入候补名单",
-    "couldntUpdateStatus": "无法更改状态"
+    "couldntUpdateStatus": "无法更改状态",
+    "markedAs": "已标记为{{status}}",
+    "markAs": "标记为{{status}}",
+    "anyProfessional": "不指定",
+    "unassigned": "未分配",
+    "unnamedProfessional": "未命名理发师",
+    "unknownService": "未知服务",
+    "anything": "均可"
   },
   "customers": {
     "couldntLoadCustomers": "无法加载客户",
@@ -179,7 +218,9 @@
     "recentVisits": "最近到店",
     "noAppointmentsYet": "暂无预约记录。",
     "addACustomerDirectlyMost": "直接添加客户 — 大多数客户会从预约中自动创建。",
-    "customerAdded": "客户已添加"
+    "customerAdded": "客户已添加",
+    "everyoneWhoHasBooked": "所有预约过或到店的顾客，集中在一处。",
+    "customerSince": "自 {{date}} 起的顾客"
   },
   "calendar": {
     "couldntLoadTheCalendar": "无法加载日历",
@@ -193,7 +234,19 @@
     "today": "今天",
     "reconnecting": "正在重新连接…",
     "week": "周",
-    "month": "月"
+    "month": "月",
+    "noLocationsYet": "尚无门店",
+    "couldntLoadLocations": "无法加载您的门店",
+    "aCalendarNeedsALocation": "日历需要一个地点。请先添加门店。",
+    "theCalendarNeedsALocation": "日历需要门店才能知道营业时间和时区。",
+    "everyone": "全部人员",
+    "nothingBooked": "暂无预约",
+    "nothingBookedThisWeek": "本周暂无预约",
+    "unassigned": "未分配",
+    "noProfessionalYet": "尚未指定理发师",
+    "appointmentCount_one": "{{count}} 个预约",
+    "appointmentCount_other": "{{count}} 个预约",
+    "noService": "未指定服务"
   },
   "team": {
     "couldntLoadMembers": "无法加载成员",
@@ -222,7 +275,8 @@
     "invitationRevoked": "邀请已撤销",
     "couldnTRevokeInvitation": "无法撤销邀请",
     "couldntUpdateBarberStatus": "无法更改该专业人员的状态",
-    "profileUpdated": "资料已更新"
+    "profileUpdated": "资料已更新",
+    "onlyOwnersAndManagers": "团队管理仅对店主和管理者开放。"
   },
   "services": {
     "couldntLoadYourServiceCatalog": "无法加载你的服务目录",
@@ -391,5 +445,47 @@
     "addWalkIn": "添加免预约客户",
     "blockTime": "占用时间",
     "newCustomer": "新建客户"
+  },
+  "validation": {
+    "customerNameRequired": "请输入顾客姓名。"
+  },
+  "appointmentStatus": {
+    "pending": "等待您的回复",
+    "confirmed": "已确认",
+    "completed": "已完成",
+    "cancelled": "已取消",
+    "no_show": "未到"
+  },
+  "appointmentStatusShort": {
+    "pending": "待处理",
+    "confirmed": "已确认",
+    "completed": "已完成",
+    "cancelled": "已取消",
+    "no_show": "未到"
+  },
+  "appointmentResolution": {
+    "declined": "已拒绝",
+    "expired": "超时未回复",
+    "cancelled_by_customer": "顾客取消",
+    "cancelled_by_business": "门店取消",
+    "rescheduled": "已改期"
+  },
+  "waitlistStatus": {
+    "waiting": "等待中",
+    "notified": "已通知",
+    "booked": "已预约",
+    "cancelled": "已取消",
+    "expired": "已过期"
+  },
+  "membershipStatus": {
+    "active": "有效",
+    "paused": "已暂停",
+    "cancelled": "已取消",
+    "expired": "已过期"
+  },
+  "billingInterval": {
+    "weekly": "/ 周",
+    "monthly": "/ 月",
+    "yearly": "/ 年"
   }
 }

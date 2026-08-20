@@ -8,7 +8,8 @@
     "weeklyHours": "ساعات العمل الأسبوعية",
     "noWorkingHoursSet": "لم يتم تحديد ساعات عمل.",
     "upcomingExceptions": "الاستثناءات القادمة",
-    "noAvailabilityExceptionsOnFile": "لا توجد استثناءات توافر مسجّلة."
+    "noAvailabilityExceptionsOnFile": "لا توجد استثناءات توافر مسجّلة.",
+    "viewingAsOwner": "تعرض مساحة عمل {{professional}} بصفتك صاحب الصالون"
   },
   "memberships": {
     "couldntLoadMemberships": "تعذّر تحميل الاشتراكات",
@@ -31,7 +32,8 @@
     "customerEnrolled": "تم اشتراك العميل",
     "couldntUpdateStatus": "تعذّر تغيير الحالة",
     "enterAValidPrice": "أدخل سعرًا صحيحًا.",
-    "selectAPlan": "اختر باقة."
+    "selectAPlan": "اختر باقة.",
+    "recurringPlansAndWhoIsEnrolled": "الباقات المتكرّرة ومن اشترك فيها."
   },
   "chairs": {
     "couldntLoadChairs": "تعذّر تحميل الكراسي",
@@ -61,7 +63,8 @@
     "couldntUpdateStatus": "تعذّر تغيير الحالة",
     "selectAService": "اختر خدمة.",
     "pickAnAvailableTimeSlot": "اختر وقتًا متاحًا.",
-    "thatTimeWasJustBooked": "تم حجز هذا الوقت للتو — اختر وقتًا آخر."
+    "thatTimeWasJustBooked": "تم حجز هذا الوقت للتو — اختر وقتًا آخر.",
+    "theDaysAppointmentsForEachLocation": "مواعيد اليوم لكل فرع."
   },
   "availability": {
     "couldntLoadAvailability": "تعذّر تحميل التوافر",
@@ -114,7 +117,36 @@
     "nobodyWaiting": "لا أحد في الانتظار",
     "nobodyWaitingBody": "يظهر العملاء بدون موعد هنا فور تسجيل وصولهم.",
     "anyProfessional": "أول متاح",
-    "manage": "إدارة الطابور"
+    "manage": "إدارة الطابور",
+    "status": {
+      "waiting": "في الانتظار",
+      "called": "تم النداء",
+      "in_service": "قيد الخدمة",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "no_show": "لم يحضر"
+    },
+    "action": {
+      "called": "نادِ",
+      "in_service": "ابدأ",
+      "completed": "إنهاء",
+      "cancelled": "إلغاء",
+      "no_show": "وسم كغير حاضر"
+    },
+    "markedAs": "تم الوسم بـ {{status}}",
+    "positionNumber": "المركز {{position}}",
+    "justNow": "الآن",
+    "waitedMinutes_one": "دقيقة واحدة",
+    "waitedMinutes_other": "{{count}} دقيقة",
+    "whoIsWaitingAt": "من ينتظر الآن في {{location}}.",
+    "inProgress": "على الكرسي",
+    "waitingSection": "في الانتظار",
+    "doneToday_one": "اكتمل اليوم {{count}}",
+    "doneToday_other": "اكتمل اليوم {{count}}",
+    "unassigned": "غير مُسند",
+    "unnamedProfessional": "محترف بدون اسم",
+    "noServiceSpecified": "لم تُحدَّد خدمة",
+    "addWalkinAt": "أضف شخصاً إلى قائمة الانتظار في {{location}}."
   },
   "locations": {
     "listedPublicly": "ظاهر للعموم",
@@ -165,7 +197,14 @@
     "waitingSince": "في الانتظار منذ",
     "updateStatus": "تغيير الحالة",
     "addedToWaitlist": "تمت الإضافة إلى قائمة الانتظار",
-    "couldntUpdateStatus": "تعذّر تغيير الحالة"
+    "couldntUpdateStatus": "تعذّر تغيير الحالة",
+    "markedAs": "تم الوسم بـ {{status}}",
+    "markAs": "وسم كـ {{status}}",
+    "anyProfessional": "أول متاح",
+    "unassigned": "غير مُسند",
+    "unnamedProfessional": "محترف بدون اسم",
+    "unknownService": "خدمة غير معروفة",
+    "anything": "أي شيء"
   },
   "customers": {
     "couldntLoadCustomers": "تعذّر تحميل العملاء",
@@ -179,7 +218,9 @@
     "recentVisits": "الزيارات الأخيرة",
     "noAppointmentsYet": "لا توجد مواعيد بعد.",
     "addACustomerDirectlyMost": "أضف عميلًا مباشرة — معظم العملاء يُنشأون تلقائيًا من الحجوزات.",
-    "customerAdded": "تمت إضافة العميل"
+    "customerAdded": "تمت إضافة العميل",
+    "everyoneWhoHasBooked": "كل من حجز أو دخل، في مكان واحد.",
+    "customerSince": "عميل منذ {{date}}"
   },
   "calendar": {
     "couldntLoadTheCalendar": "تعذّر تحميل التقويم",
@@ -193,7 +234,19 @@
     "today": "اليوم",
     "reconnecting": "جارٍ إعادة الاتصال…",
     "week": "أسبوع",
-    "month": "شهر"
+    "month": "شهر",
+    "noLocationsYet": "لا توجد فروع بعد",
+    "couldntLoadLocations": "تعذّر تحميل فروعك",
+    "aCalendarNeedsALocation": "التقويم يحتاج إلى مكان. أضف فرعاً أولاً.",
+    "theCalendarNeedsALocation": "يحتاج التقويم إلى فرع لمعرفة ساعات العمل والمنطقة الزمنية.",
+    "everyone": "الجميع",
+    "nothingBooked": "لا توجد حجوزات",
+    "nothingBookedThisWeek": "لا توجد حجوزات هذا الأسبوع",
+    "unassigned": "غير مُسند",
+    "noProfessionalYet": "لم يُحدَّد محترف بعد",
+    "appointmentCount_one": "موعد واحد",
+    "appointmentCount_other": "{{count}} مواعيد",
+    "noService": "بدون خدمة"
   },
   "team": {
     "couldntLoadMembers": "تعذّر تحميل الأعضاء",
@@ -222,7 +275,8 @@
     "invitationRevoked": "تم إلغاء الدعوة",
     "couldnTRevokeInvitation": "تعذّر إلغاء الدعوة",
     "couldntUpdateBarberStatus": "تعذّر تغيير حالة المختص",
-    "profileUpdated": "تم تحديث الملف الشخصي"
+    "profileUpdated": "تم تحديث الملف الشخصي",
+    "onlyOwnersAndManagers": "إدارة الفريق متاحة لأصحاب الصالون والمديرين فقط."
   },
   "services": {
     "couldntLoadYourServiceCatalog": "تعذّر تحميل قائمة خدماتك",
@@ -391,5 +445,47 @@
     "addWalkIn": "إضافة عميل بدون موعد",
     "blockTime": "حجز وقت",
     "newCustomer": "عميل جديد"
+  },
+  "validation": {
+    "customerNameRequired": "أدخل اسم العميل."
+  },
+  "appointmentStatus": {
+    "pending": "بانتظار ردّك",
+    "confirmed": "مؤكد",
+    "completed": "مكتمل",
+    "cancelled": "ملغى",
+    "no_show": "لم يحضر"
+  },
+  "appointmentStatusShort": {
+    "pending": "معلّق",
+    "confirmed": "مؤكد",
+    "completed": "تم",
+    "cancelled": "ملغى",
+    "no_show": "لم يحضر"
+  },
+  "appointmentResolution": {
+    "declined": "مرفوض",
+    "expired": "انتهت المدة دون ردّ",
+    "cancelled_by_customer": "ألغاه العميل",
+    "cancelled_by_business": "ألغاه الصالون",
+    "rescheduled": "نُقل إلى وقت آخر"
+  },
+  "waitlistStatus": {
+    "waiting": "في الانتظار",
+    "notified": "تم إبلاغه",
+    "booked": "تم الحجز",
+    "cancelled": "ملغى",
+    "expired": "منتهٍ"
+  },
+  "membershipStatus": {
+    "active": "نشط",
+    "paused": "موقوف مؤقتاً",
+    "cancelled": "ملغى",
+    "expired": "منتهٍ"
+  },
+  "billingInterval": {
+    "weekly": "/ أسبوع",
+    "monthly": "/ شهر",
+    "yearly": "/ سنة"
   }
 }

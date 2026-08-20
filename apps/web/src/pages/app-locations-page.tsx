@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Container } from '@/components/ui/container'
+import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -159,18 +159,16 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
   }
 
   return (
-    <Container size="lg" className="py-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-ink-950">{t('common:entity.locations')}</h1>
-          <p className="mt-1 text-sm text-ink-500">{t('app:locations.shopsAndAddressesForYour')}</p>
-        </div>
-        {canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>{t('app:locations.addLocation')}</Button> : null}
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title={t('common:entity.locations')}
+        subtitle={t('app:locations.shopsAndAddressesForYour')}
+        actions={canManage ? <Button onClick={() => setDialogState({ mode: 'create' })}>{t('app:locations.addLocation')}</Button> : undefined}
+      />
 
       {canManage ? <MarketplaceVisibilityCard organizationId={organizationId} /> : null}
 
-      <div className="mt-6">
+      <div>
         {locationsQuery.isPending ? (
           <LocationsSkeleton />
         ) : locationsQuery.isError ? (
@@ -257,7 +255,7 @@ function LocationsManagement({ organizationId, role }: { organizationId: string;
           onSaved={handleSaved}
         />
       ) : null}
-    </Container>
+    </div>
   )
 }
 

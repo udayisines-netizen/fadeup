@@ -143,7 +143,9 @@
     "cancel": "Manter o horário",
     "slotTaken": "Esse horário acabou de ser ocupado. Escolha outro.",
     "notAllowed": "Esta marcação já não pode ser alterada.",
-    "failed": "Não foi possível alterar a marcação. Tente novamente."
+    "failed": "Não foi possível alterar a marcação. Tente novamente.",
+    "staysConfirmed": "A sua marcação continua confirmada na nova hora.",
+    "submitConfirmed": "Mover marcação"
   },
   "passportPage": {},
   "shareView": {
