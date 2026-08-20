@@ -14,7 +14,6 @@ import {
   useCreatePassportShare,
   useRevokePassportShare,
 } from '@/lib/queries/passport'
-import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/ui/text-field'
@@ -75,7 +74,7 @@ export function CustomerPassportPage() {
 
   if (passportQuery.isError) {
     return (
-      <Container size="sm" className="py-10">
+      <div className="mx-auto w-full max-w-xl py-6">
         <ErrorState
           title={t('errorTitle')}
           description={passportQuery.error.message}
@@ -85,7 +84,7 @@ export function CustomerPassportPage() {
             </Button>
           }
         />
-      </Container>
+      </div>
     )
   }
 
@@ -110,7 +109,7 @@ export function CustomerPassportPage() {
   const passport = passportQuery.data
 
   return (
-    <Container size="sm" className="flex flex-col gap-6 py-6">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-ink-950">{t('title')}</h1>
         <p className="mt-1 text-sm text-ink-500">{t('subtitle')}</p>
@@ -161,7 +160,7 @@ export function CustomerPassportPage() {
 
       {passport ? <PhotosSection userId={user.id} /> : null}
       {passport ? <SharesSection /> : null}
-    </Container>
+    </div>
   )
 }
 

@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "予約する — FadeUp",
-    "description": "数分で予約が完了します。"
+    "description": "数分で予約が完了します。",
+    "titleWith": "{{organization}} を予約 — FadeUp",
+    "descriptionWith": "{{organization}} の予約を数分で完了できます。"
   },
   "heading": "予約する",
   "loading": "予約ページを読み込んでいます…",
@@ -53,7 +55,9 @@
     "barberUnavailable": "その日は空きがありません。別の時間をお選びください。",
     "slotTaken": "その時間はたった今予約されました。別の時間をお選びください。",
     "slotPast": "その時間はすでに過ぎています。別の時間をお選びください。",
-    "generic": "問題が発生しました。もう一度お試しください。"
+    "generic": "問題が発生しました。もう一度お試しください。",
+    "outsideHours": "その時間は空きがなくなりました。別の時間をお選びください。",
+    "barberServiceMismatch": "この担当者はこのメニューを提供していません。別の担当者をお選びください。"
   },
   "success": {
     "title": "予約が確定しました",
@@ -122,7 +126,9 @@
     "viewMyAppointments": "予約を見る",
     "createAnAccountToManage": "アカウントを作成すると、この予約の管理、ワンタップでの再予約、Fade Passport の保存ができます。",
     "createAnAccount": "アカウントを作成",
-    "iAlreadyHaveAnAccount": "すでにアカウントをお持ちの方"
+    "iAlreadyHaveAnAccount": "すでにアカウントをお持ちの方",
+    "confirmBooking": "予約を確定する",
+    "instantConfirmation": "すぐに確定します。承認待ちはありません。"
   },
   "professional": {
     "loadingProfile": "プロフィールを読み込んでいます…",
@@ -130,7 +136,13 @@
     "weCouldntFindThisProfile": "このプロフィールが見つかりませんでした",
     "thisLinkMayBeOut": "このリンクは古いか、プロフィールが非公開になった可能性があります。店舗にご確認ください。",
     "goToFadeup": "FadeUp へ",
-    "noServicesListedRightNow": "現在、掲載中のメニューはありません。"
+    "noServicesListedRightNow": "現在、掲載中のメニューはありません。",
+    "metaTitle": "{{organization}} の {{professional}} — FadeUp",
+    "metaTitleSolo": "{{professional}} — FadeUp",
+    "profileTitle": "スタッフプロフィール — FadeUp",
+    "profileDescription": "FadeUp のスタッフプロフィールです。",
+    "atOrganization": "{{organization}} 所属",
+    "bookWith": "{{professional}} を予約する"
   },
   "shop": {
     "loadingProfile": "プロフィールを読み込んでいます…",
@@ -140,7 +152,14 @@
     "noPublicTeamMembersYet": "公開中のスタッフはまだいません",
     "thisShopHasntPublishedAny": "この店舗はまだスタッフのプロフィールを公開していません。",
     "goToFadeup": "FadeUp へ",
-    "bookNow": "今すぐ予約"
+    "bookNow": "今すぐ予約",
+    "metaTitle": "{{organization}} — FadeUp",
+    "metaDescription": "{{organization}} のスタッフを見て、FadeUp で予約できます。",
+    "profileTitle": "店舗プロフィール — FadeUp",
+    "profileDescription": "FadeUp の店舗プロフィールです。",
+    "directions": "経路を見る",
+    "locationCount_one": "{{count}} 店舗",
+    "locationCount_other": "{{count}} 店舗"
   },
   "slots": {
     "morning": "午前",
@@ -150,5 +169,16 @@
     "available": "空き時間",
     "nonePart": "この時間帯に空きはありません。",
     "dayFull": "満席"
+  },
+  "steps": {
+    "location": "店舗",
+    "service": "メニュー",
+    "barber": "スタッフ",
+    "datetime": "日時",
+    "details": "お客様情報",
+    "stepOf": "ステップ {{current}}/{{total}} · {{label}}"
+  },
+  "crumbs": {
+    "change": "変更"
   }
 }

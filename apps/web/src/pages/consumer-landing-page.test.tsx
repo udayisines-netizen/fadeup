@@ -81,7 +81,10 @@ describe('ConsumerLandingPage — "/" helps someone find a barber', () => {
   it('carries a free-text query through to the results page', () => {
     renderPage()
 
-    const [whatInput] = screen.getAllByPlaceholderText('Barber, shop or service')
+    // The placeholder no longer offers "service": `p_query` matches shop,
+    // professional and city names only — service names are a separate
+    // parameter, reached through the service chips on the results page.
+    const [whatInput] = screen.getAllByPlaceholderText('Shop, professional or city')
     fireEvent.change(whatInput!, { target: { value: 'skin fade' } })
     fireEvent.click(screen.getAllByRole('button', { name: 'Find a barber' })[0]!)
 

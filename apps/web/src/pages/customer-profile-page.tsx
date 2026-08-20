@@ -4,11 +4,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import { ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useMyCustomerProfile, useUpsertMyCustomerProfile } from '@/lib/queries/customer-profile'
-import { Container } from '@/components/ui/container'
-import { Card } from '@/components/ui/card'
+import { PageHeader } from '@/components/ui/page-header'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { TextField } from '@/components/ui/text-field'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +24,14 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
-/** /app/customer/profile — the customer's own editable identity + a summary of their onboarding "habits," plus sign out. */
+/**
+ * `/app/customer/profile` — editable identity, a summary of the onboarding
+ * "habits", the way through to Favorites, and sign out.
+ *
+ * Favorites lives here rather than in the tab bar on purpose: it is a place
+ * you go occasionally, and a permanent tab for it would cost a fifth of the
+ * phone's primary navigation.
+ */
 export function CustomerProfilePage() {
   const { t } = useTranslation('customer-app')
   const { user } = useAuth()
@@ -61,17 +68,15 @@ export function CustomerProfilePage() {
 
   if (profileQuery.isError) {
     return (
-      <Container size="sm" className="py-10">
-        <ErrorState
-          title={t('customer-app:profile.couldntLoadYourProfile')}
-          description={profileQuery.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void profileQuery.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
-      </Container>
+      <ErrorState
+        title={t('customer-app:profile.couldntLoadYourProfile')}
+        description={profileQuery.error.message}
+        action={
+          <Button variant="secondary" onClick={() => void profileQuery.refetch()}>
+            {t('common:action.tryAgain')}
+          </Button>
+        }
+      />
     )
   }
 
@@ -101,10 +106,10 @@ export function CustomerProfilePage() {
   const hasHabits = Boolean(profile?.haircutFrequency || profile?.stylePreference || profile?.appointmentPreference)
 
   return (
-    <Container size="sm" className="flex flex-col gap-6 py-6">
-      <h1 className="text-2xl font-semibold text-ink-950">{t('profile.title')}</h1>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('profile.title')} />
 
-      <Card className="p-5">
+      <section className="rounded-xl border border-border bg-paper-0 p-5">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <TextField label={t('profile.nameLabel')} autoComplete="name" {...register('displayName')} />
           <TextField label={t('profile.phoneLabel')} type="tel" autoComplete="tel" {...register('phone')} />
@@ -113,9 +118,9 @@ export function CustomerProfilePage() {
             {t('profile.save')}
           </Button>
         </form>
-      </Card>
+      </section>
 
-      <Card className="p-5">
+      <section className="rounded-xl border border-border bg-paper-0 p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-ink-950">{t('profile.habitsTitle')}</h2>
           <Link to="/app/customer/onboarding" className="text-sm font-medium text-accent-700 hover:text-accent-800">
@@ -133,14 +138,17 @@ export function CustomerProfilePage() {
         ) : (
           <p className="mt-2 text-sm text-ink-500">{t('profile.noHabitsYet')}</p>
         )}
-      </Card>
+      </section>
 
       <Link
         to="/app/customer/favorites"
-        className="flex items-center justify-between rounded-xl border border-border bg-paper-0 p-4 text-sm font-medium text-ink-950 hover:bg-paper-100"
+        className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-paper-0 p-4 text-sm font-medium text-ink-950 hover:bg-paper-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
       >
+        <Heart className="h-4 w-4 text-accent-600" aria-hidden="true" />
         {t('favorites.title')}
-        <span aria-hidden="true">→</span>
+        {/* A literal "→" points the wrong way in Arabic. */}
+        <ChevronRight className="ms-auto h-4 w-4 text-ink-300 rtl:hidden" aria-hidden="true" />
+        <ChevronLeft className="ms-auto hidden h-4 w-4 text-ink-300 rtl:block" aria-hidden="true" />
       </Link>
 
       <button
@@ -150,6 +158,6 @@ export function CustomerProfilePage() {
       >
         {t('profile.signOut')}
       </button>
-    </Container>
+    </div>
   )
 }

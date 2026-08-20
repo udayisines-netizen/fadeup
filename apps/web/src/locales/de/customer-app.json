@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "Zu FadeUp"
+  },
+  "discover": {
+    "title": "Finde deinen nächsten Schnitt",
+    "subtitle": "Suche Salons und selbstständige Fachkräfte in deiner Nähe und sieh, wer gerade geöffnet hat.",
+    "metaTitle": "Entdecken — FadeUp",
+    "metaDescription": "Suche Salons und selbstständige Fachkräfte und buche deinen nächsten Termin."
   }
 }

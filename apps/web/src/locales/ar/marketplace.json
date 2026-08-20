@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "ما الذي تحتاجه؟",
-    "whatPlaceholder": "حلاق أو صالون أو خدمة",
+    "whatPlaceholder": "صالون أو محترف أو مدينة",
     "whereLabel": "أين؟",
     "wherePlaceholder": "المدينة أو الرمز البريدي",
     "currentLocation": "الموقع الحالي",
@@ -39,7 +39,8 @@
     "popularFade": "فيد",
     "popularHaircut": "قصة شعر",
     "popularBeard": "لحية",
-    "popularHaircutBeard": "قصة + لحية"
+    "popularHaircutBeard": "قصة + لحية",
+    "clearLocation": "مسح الموقع"
   },
   "results": {
     "headingWithLocation": "حلاقون بالقرب من {{location}}",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "لا يوجد حلاقو FadeUp هنا بعد",
     "emptyNoneAtAllDescription": "لا يوجد حاليًا حلاقو FadeUp عامون في هذه المنطقة. جرّب مدينة قريبة.",
     "clearFilters": "مسح عوامل التصفية",
-    "errorTitle": "تعذّر تحميل النتائج"
+    "errorTitle": "تعذّر تحميل النتائج",
+    "searchEverywhere": "البحث في كل مكان"
   },
   "card": {
     "openNow": "مفتوح الآن",
@@ -75,5 +77,8 @@
     "book": "احجز",
     "addFavorite": "أضف إلى المفضلة",
     "removeFavorite": "إزالة من المفضلة"
+  },
+  "filters": {
+    "label": "تصفية النتائج"
   }
 }

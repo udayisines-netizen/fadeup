@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "何をお探しですか?",
-    "whatPlaceholder": "理容師、店舗、サービス",
+    "whatPlaceholder": "店舗、スタッフ、都市名",
     "whereLabel": "場所は?",
     "wherePlaceholder": "都市または郵便番号",
     "currentLocation": "現在地",
@@ -39,7 +39,8 @@
     "popularFade": "フェード",
     "popularHaircut": "ヘアカット",
     "popularBeard": "ひげ",
-    "popularHaircutBeard": "ヘアカット+ひげ"
+    "popularHaircutBeard": "ヘアカット+ひげ",
+    "clearLocation": "現在地を解除"
   },
   "results": {
     "headingWithLocation": "{{location}}周辺の理容師",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "この地域にはまだ FadeUp 理容師がいません",
     "emptyNoneAtAllDescription": "現在、この地域に公開されている FadeUp 理容師はいません。近くの都市を試してみてください。",
     "clearFilters": "フィルターをクリア",
-    "errorTitle": "結果を読み込めませんでした"
+    "errorTitle": "結果を読み込めませんでした",
+    "searchEverywhere": "すべての地域で検索"
   },
   "card": {
     "openNow": "現在営業中",
@@ -75,5 +77,8 @@
     "book": "予約する",
     "addFavorite": "お気に入りに追加",
     "removeFavorite": "お気に入りから削除"
+  },
+  "filters": {
+    "label": "検索結果を絞り込む"
   }
 }

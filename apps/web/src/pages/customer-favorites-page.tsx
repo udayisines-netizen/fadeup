@@ -3,22 +3,20 @@ import { useTranslation } from 'react-i18next'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useMyFavorites, useRemoveFavorite, type MyFavorite } from '@/lib/queries/customer-app'
-import { Container } from '@/components/ui/container'
-import { Card } from '@/components/ui/card'
+import { Avatar } from '@/components/ui/avatar'
+import { PageHeader } from '@/components/ui/page-header'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  const first = parts[0]?.[0] ?? ''
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : ''
-  return `${first}${last}`.toUpperCase()
-}
-
-/** /app/customer/favorites — saved shops/barbers, quick links to profile/booking, and remove. */
+/**
+ * `/app/customer/favorites` — saved shops and professionals, with the two
+ * things a saved entry is for: look again, or book again.
+ *
+ * No Container of its own — the customer shell owns the page width, and a
+ * second one here made this tab narrower than the others.
+ */
 export function CustomerFavoritesPage() {
   const { t } = useTranslation('customer-app')
   const { user } = useAuth()
@@ -27,34 +25,32 @@ export function CustomerFavoritesPage() {
 
   if (favoritesQuery.isPending) {
     return (
-      <Container size="sm" className="flex flex-col gap-3 py-6" aria-hidden="true">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-      </Container>
+      <div className="flex flex-col gap-3" aria-hidden="true">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+      </div>
     )
   }
 
   if (favoritesQuery.isError) {
     return (
-      <Container size="sm" className="py-10">
-        <ErrorState
-          title={t('customer-app:favorites.couldntLoadYourFavorites')}
-          description={favoritesQuery.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void favoritesQuery.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
-      </Container>
+      <ErrorState
+        title={t('customer-app:favorites.couldntLoadYourFavorites')}
+        description={favoritesQuery.error.message}
+        action={
+          <Button variant="secondary" onClick={() => void favoritesQuery.refetch()}>
+            {t('common:action.tryAgain')}
+          </Button>
+        }
+      />
     )
   }
 
   const favorites = favoritesQuery.data ?? []
 
   return (
-    <Container size="sm" className="flex flex-col gap-4 py-6">
-      <h1 className="text-2xl font-semibold text-ink-950">{t('favorites.title')}</h1>
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('favorites.title')} />
 
       {favorites.length === 0 ? (
         <EmptyState
@@ -74,7 +70,7 @@ export function CustomerFavoritesPage() {
           ))}
         </div>
       )}
-    </Container>
+    </div>
   )
 }
 
@@ -86,14 +82,8 @@ function FavoriteCard({ favorite, onRemove }: { favorite: MyFavorite; onRemove: 
   const bookHref = isBarber ? `/s/${favorite.organizationSlug}?barber=${favorite.barberId}` : `/s/${favorite.organizationSlug}`
 
   return (
-    <Card className="flex items-center gap-3 p-4">
-      {isBarber && favorite.barberAvatarUrl ? (
-        <img src={favorite.barberAvatarUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
-      ) : (
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-100 text-sm font-semibold text-accent-800">
-          {initialsOf(title)}
-        </div>
-      )}
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-paper-0 p-4">
+      <Avatar name={title} src={isBarber ? favorite.barberAvatarUrl : null} size="md" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-ink-950">{title}</p>
@@ -116,6 +106,6 @@ function FavoriteCard({ favorite, onRemove }: { favorite: MyFavorite; onRemove: 
       >
         <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
       </button>
-    </Card>
+    </div>
   )
 }

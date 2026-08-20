@@ -80,7 +80,10 @@ describe('PublicBarberPage', () => {
     expect(screen.getByText('Fades and tapers.')).toBeInTheDocument()
     expect(screen.getByText('Classic Fade')).toBeInTheDocument()
     expect(screen.getByText('€35.00')).toBeInTheDocument()
-    const bookLink = screen.getByRole('link', { name: 'Book with Sam' })
+    // The FULL published name. Splitting on the first space to get a friendly
+    // "Book with Sam" takes the family name in Japanese and Chinese and
+    // mangles a two-part Arabic given name.
+    const bookLink = screen.getByRole('link', { name: 'Book with Sam Barber' })
     expect(bookLink).toHaveAttribute('href', '/s/jacks-barbers?barber=barber-1&location=loc-1')
   })
 })

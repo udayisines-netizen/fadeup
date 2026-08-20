@@ -9,7 +9,6 @@ import {
   type HaircutFrequency,
   type StylePreference,
 } from '@/lib/queries/customer-profile'
-import { Container } from '@/components/ui/container'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -63,7 +62,7 @@ export function CustomerOnboardingPage() {
 
   if (profileQuery.isError) {
     return (
-      <Container size="sm" className="py-10">
+      <div className="mx-auto w-full max-w-xl py-6">
         <ErrorState
           title={t('customer-app:onboarding.couldntLoadYourProfile')}
           description={profileQuery.error.message}
@@ -73,7 +72,7 @@ export function CustomerOnboardingPage() {
             </Button>
           }
         />
-      </Container>
+      </div>
     )
   }
 
@@ -95,7 +94,7 @@ export function CustomerOnboardingPage() {
   }
 
   return (
-    <Container size="sm" className="flex flex-col gap-6 py-6 sm:py-10">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-balance text-ink-950">{t('onboarding.title')}</h1>
         <p className="mt-1 text-sm text-ink-500">{t('onboarding.subtitle')}</p>
@@ -156,7 +155,7 @@ export function CustomerOnboardingPage() {
           {t('onboarding.save')}
         </Button>
       </div>
-    </Container>
+    </div>
   )
 }
 

@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "Что вам нужно?",
-    "whatPlaceholder": "Барбер, заведение или услуга",
+    "whatPlaceholder": "Салон, мастер или город",
     "whereLabel": "Где?",
     "wherePlaceholder": "Город или почтовый индекс",
     "currentLocation": "Текущее местоположение",
@@ -39,7 +39,8 @@
     "popularFade": "Фейд",
     "popularHaircut": "Стрижка",
     "popularBeard": "Борода",
-    "popularHaircutBeard": "Стрижка + борода"
+    "popularHaircutBeard": "Стрижка + борода",
+    "clearLocation": "Сбросить местоположение"
   },
   "results": {
     "headingWithLocation": "Барберы рядом с {{location}}",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "Здесь пока нет барберов FadeUp",
     "emptyNoneAtAllDescription": "В этом районе пока нет публичных барберов FadeUp. Попробуйте соседний город.",
     "clearFilters": "Сбросить фильтры",
-    "errorTitle": "Не удалось загрузить результаты"
+    "errorTitle": "Не удалось загрузить результаты",
+    "searchEverywhere": "Искать везде"
   },
   "card": {
     "openNow": "Открыто сейчас",
@@ -75,5 +77,8 @@
     "book": "Забронировать",
     "addFavorite": "Добавить в избранное",
     "removeFavorite": "Убрать из избранного"
+  },
+  "filters": {
+    "label": "Фильтр результатов"
   }
 }

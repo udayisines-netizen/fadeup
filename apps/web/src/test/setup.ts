@@ -17,6 +17,13 @@ if (!window.matchMedia) {
     }) as unknown as MediaQueryList
 }
 
+// jsdom defines Element.scrollIntoView as a stub-less property, so calling it
+// throws. The DateStrip uses it to keep the chosen day on screen; the scroll
+// itself is untestable in jsdom, but its absence must not fail a render.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 // jsdom has no IntersectionObserver, which Motion's `whileInView` requires.
 // The stub reports every observed element as immediately intersecting, so
 // scroll-revealed marketing content is present and assertable in tests — the

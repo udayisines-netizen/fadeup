@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "Aller sur FadeUp"
+  },
+  "discover": {
+    "title": "Trouvez votre prochaine coupe",
+    "subtitle": "Cherchez des salons et des coiffeurs indépendants près de chez vous, et voyez qui est ouvert maintenant.",
+    "metaTitle": "Découvrir — FadeUp",
+    "metaDescription": "Cherchez des salons et des coiffeurs indépendants, et réservez votre prochain rendez-vous."
   }
 }

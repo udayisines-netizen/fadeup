@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "Marcar horário — FadeUp",
-    "description": "Marque o seu horário em poucos minutos."
+    "description": "Marque o seu horário em poucos minutos.",
+    "titleWith": "Marcar em {{organization}} — FadeUp",
+    "descriptionWith": "Marque uma hora em {{organization}} em minutos."
   },
   "heading": "Marcar horário",
   "loading": "A carregar a marcação…",
@@ -53,7 +55,9 @@
     "barberUnavailable": "Não está disponível nesse dia — escolha outro horário.",
     "slotTaken": "Esse horário acabou de ser marcado — escolha outro.",
     "slotPast": "Esse horário já passou — escolha outro.",
-    "generic": "Algo correu mal. Tente novamente."
+    "generic": "Algo correu mal. Tente novamente.",
+    "outsideHours": "Esse horário já não está disponível — escolha outro.",
+    "barberServiceMismatch": "Esta pessoa não oferece este serviço — escolha outra."
   },
   "success": {
     "title": "Marcação confirmada",
@@ -122,7 +126,9 @@
     "viewMyAppointments": "Ver as minhas marcações",
     "createAnAccountToManage": "Crie uma conta para gerir esta marcação, remarcar num toque e manter o seu Fade Passport.",
     "createAnAccount": "Criar conta",
-    "iAlreadyHaveAnAccount": "Já tenho conta"
+    "iAlreadyHaveAnAccount": "Já tenho conta",
+    "confirmBooking": "Confirmar marcação",
+    "instantConfirmation": "Confirmação imediata — sem esperar aprovação."
   },
   "professional": {
     "loadingProfile": "A carregar o perfil…",
@@ -130,7 +136,13 @@
     "weCouldntFindThisProfile": "Não encontrámos este perfil",
     "thisLinkMayBeOut": "Esta ligação pode estar desatualizada, ou o perfil já não é público. Confirme a ligação com o espaço.",
     "goToFadeup": "Ir para a FadeUp",
-    "noServicesListedRightNow": "Sem serviços listados neste momento."
+    "noServicesListedRightNow": "Sem serviços listados neste momento.",
+    "metaTitle": "{{professional}} em {{organization}} — FadeUp",
+    "metaTitleSolo": "{{professional}} — FadeUp",
+    "profileTitle": "Perfil profissional — FadeUp",
+    "profileDescription": "Um perfil profissional na FadeUp.",
+    "atOrganization": "em {{organization}}",
+    "bookWith": "Marcar com {{professional}}"
   },
   "shop": {
     "loadingProfile": "A carregar o perfil…",
@@ -140,7 +152,14 @@
     "noPublicTeamMembersYet": "Ainda sem perfis públicos",
     "thisShopHasntPublishedAny": "Este espaço ainda não publicou perfis de profissionais.",
     "goToFadeup": "Ir para a FadeUp",
-    "bookNow": "Marcar agora"
+    "bookNow": "Marcar agora",
+    "metaTitle": "{{organization}} — FadeUp",
+    "metaDescription": "Conheça a equipa e marque em {{organization}} na FadeUp.",
+    "profileTitle": "Perfil do salão — FadeUp",
+    "profileDescription": "Um perfil de salão na FadeUp.",
+    "directions": "Como chegar",
+    "locationCount_one": "{{count}} local",
+    "locationCount_other": "{{count}} locais"
   },
   "slots": {
     "morning": "Manhã",
@@ -150,5 +169,16 @@
     "available": "Horários disponíveis",
     "nonePart": "Sem disponibilidade nesta altura do dia.",
     "dayFull": "Esgotado"
+  },
+  "steps": {
+    "location": "Local",
+    "service": "Serviço",
+    "barber": "Profissional",
+    "datetime": "Horário",
+    "details": "Dados",
+    "stepOf": "Passo {{current}} de {{total}} · {{label}}"
+  },
+  "crumbs": {
+    "change": "Alterar"
   }
 }

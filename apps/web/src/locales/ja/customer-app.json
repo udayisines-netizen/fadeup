@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "FadeUp へ"
+  },
+  "discover": {
+    "title": "次のヘアカットを探す",
+    "subtitle": "近くの店舗や独立したスタッフを検索して、今営業中のところを確認できます。",
+    "metaTitle": "探す — FadeUp",
+    "metaDescription": "店舗や独立したスタッフを検索して、次の予約を取りましょう。"
   }
 }

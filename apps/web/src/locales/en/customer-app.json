@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "Go to FadeUp"
+  },
+  "discover": {
+    "title": "Find your next cut",
+    "subtitle": "Search shops and independent professionals near you, and see who's open right now.",
+    "metaTitle": "Discover — FadeUp",
+    "metaDescription": "Search shops and independent professionals, and book your next appointment."
   }
 }

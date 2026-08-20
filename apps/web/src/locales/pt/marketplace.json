@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "Do que precisa?",
-    "whatPlaceholder": "Barbeiro, barbearia ou serviço",
+    "whatPlaceholder": "Salão, profissional ou cidade",
     "whereLabel": "Onde?",
     "wherePlaceholder": "Cidade ou código postal",
     "currentLocation": "Localização atual",
@@ -39,7 +39,8 @@
     "popularFade": "Fade",
     "popularHaircut": "Corte",
     "popularBeard": "Barba",
-    "popularHaircutBeard": "Corte + Barba"
+    "popularHaircutBeard": "Corte + Barba",
+    "clearLocation": "Limpar localização"
   },
   "results": {
     "headingWithLocation": "Barbeiros perto de {{location}}",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "Ainda não há barbeiros FadeUp aqui",
     "emptyNoneAtAllDescription": "Atualmente não há barbeiros FadeUp públicos nesta área. Experimente uma cidade próxima.",
     "clearFilters": "Limpar filtros",
-    "errorTitle": "Não foi possível carregar os resultados"
+    "errorTitle": "Não foi possível carregar os resultados",
+    "searchEverywhere": "Procurar em todo o lado"
   },
   "card": {
     "openNow": "Aberto agora",
@@ -75,5 +77,8 @@
     "book": "Reservar",
     "addFavorite": "Adicionar aos favoritos",
     "removeFavorite": "Remover dos favoritos"
+  },
+  "filters": {
+    "label": "Filtrar resultados"
   }
 }

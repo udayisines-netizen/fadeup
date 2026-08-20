@@ -34,15 +34,43 @@ file is removed; `RESHELL` means the page keeps its logic but is recomposed.
 
 | Route | V1 page | Data hooks | V2 | Status |
 |---|---|---|---|---|
-| `/search` | `marketplace-search-page` | `useSearchPublicProfessionals`, `usePublicCurrencies` | `customer/discover-page` | REPLACE |
-| `/app/customer` | `customer-home-page` | `useMyAppointments`, favourites | RESHELL under new customer shell | RESHELL |
-| `/app/customer/appointments` | `customer-appointments-page` | `useMyAppointments`, cancel, reschedule | `customer/appointments-page` | RESHELL |
-| `/app/customer/favorites` | `customer-favorites-page` | favourites | RESHELL | RESHELL |
-| `/app/customer/profile` | `customer-profile-page` | `useOwnProfilePreferences` | RESHELL | RESHELL |
-| `/s/:slug/profile` | `shop-profile-page` | `usePublicOrganization`, services, barbers | `customer/business-profile-page` | REPLACE |
-| `/s/:slug/barbers/:id` | `public-barber-page` | `usePublicBarber`, `usePublicBarberServices` | `customer/professional-profile-page` | REPLACE |
-| `/s/:slug` | `public-booking-page` | `usePublicServices/Locations/Barbers/AvailableSlots`, `useBookPublicAppointment` | `booking/booking-page` + step components | REPLACE |
-| shell | `customer-app-layout` | — | `customer/customer-shell` (bottom tabs + desktop header) | REPLACE |
+| `/search` | `marketplace-search-page` | `useSearchPublicProfessionals`, `usePublicCurrencies` | same page, now a thin wrapper around `customer/discovery-search` | ✅ DONE |
+| `/app/customer` | `customer-home-page` | `useMyAppointments`, `useMyQueueStatus`, `useMyCustomerProfile` | `customer/discover-page` — context row + the same `discovery-search` | ✅ DONE — V1 deleted |
+| `/app/customer/appointments` | `customer-appointments-page` | `useMyAppointments`, cancel, reschedule | same page, reshelled; times now in the SHOP's timezone | ✅ DONE |
+| `/app/customer/favorites` | `customer-favorites-page` | favourites | same page, reshelled | ✅ DONE |
+| `/app/customer/profile` | `customer-profile-page` | `useMyCustomerProfile` | same page, reshelled | ✅ DONE |
+| `/app/customer/passport` | `customer-passport-page` | passport + shares | reshelled (padding only) | ✅ DONE |
+| `/app/customer/onboarding` | `customer-onboarding-page` | `useUpsertMyCustomerProfile` | reshelled (padding only) | ✅ DONE |
+| `/s/:slug/profile` | `shop-profile-page` | `usePublicOrganization`, locations, barbers | rebuilt in place | ✅ DONE |
+| `/s/:slug/barbers/:id` | `public-barber-page` | `usePublicBarber`, `usePublicBarberServices` | rebuilt in place | ✅ DONE |
+| `/s/:slug` | `public-booking-page` | `usePublicServices/Locations/Barbers/AvailableSlots`, `useBookPublicAppointment` | rebuilt in place + `booking/booking-steps`, `ui/date-strip`, `ui/time-slot-grid` | ✅ DONE |
+| shell | `customer-app-layout` | — | `routes/customer-shell` (4 tabs + desktop header) | ✅ DONE — V1 deleted |
+| public shell | `routes/public-booking-layout` | — | same file, + language switcher and shop link | ✅ DONE |
+
+### Customer IA changes
+
+- **Home and Discover merged.** V1 had both as tabs, where Home's discovery
+  section was a card containing a button to Discover. The signed-in home now
+  IS the search; the tab that existed to reach it is gone. Five tabs → four.
+- **One shared search.** `components/customer/discovery-search` powers both
+  `/search` and `/app/customer`. Two implementations of the same search was the
+  largest source of drift in V1 — filters, empty states and cards differed
+  depending on whether you were signed in.
+- **Category chips are real filters.** They send `p_service_query`,
+  `p_entity_type` and `p_open_now_only` to `search_public_professionals`. There
+  is no cross-shop service taxonomy, so a chip's translated label IS the query —
+  which is correct: a French shop names the service "Dégradé".
+- **GeoIP country is a visible, removable filter**, never a silent one.
+- Favorites stays inside Profile and Queue stays contextual — both were right
+  in V1 and neither changed.
+
+### Deleted (replacements proven by tests first)
+
+`pages/customer-home-page.tsx` · `pages/customer-home-page.test.tsx` ·
+`routes/customer-app-layout.tsx` · `components/marketplace/search-form.tsx` ·
+`components/marketplace/professional-result-card.tsx` (+ test — its assertions
+were ported into `components/customer/business-listing-card.test.tsx`, including
+the one-tap "Book" route it proved).
 
 ## Retained wholesale (logic, not composition)
 

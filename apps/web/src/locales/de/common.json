@@ -23,7 +23,8 @@
     "tagline": "Das Betriebssystem für moderne Barbershops — Buchungen, Live-Warteschlange, Stuhlverwaltung und Kundenbeziehungen in einem verbundenen System.",
     "product": "Produkt",
     "account": "Konto",
-    "copyright": "© {{year}} FadeUp. Alle Rechte vorbehalten."
+    "copyright": "© {{year}} FadeUp. Alle Rechte vorbehalten.",
+    "poweredBy": "Bereitgestellt von FadeUp"
   },
   "theme": {
     "light": "Hell",

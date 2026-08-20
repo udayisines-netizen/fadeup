@@ -100,7 +100,13 @@ export function TimeSlotGrid({
         </p>
       ) : (
         <div
-          role="radiogroup"
+          // A group of toggle buttons rather than a radiogroup: a real
+          // radiogroup owes the user roving tabindex and arrow-key movement,
+          // and one that skips them is worse for a keyboard user than an
+          // honest set of buttons. `aria-pressed` is also what the date strip
+          // and the marketplace filters use, so the whole product answers
+          // "which one is chosen?" the same way.
+          role="group"
           aria-label={t('booking:slots.available')}
           // Three across at 375px keeps every target well past 44px; four from
           // the small breakpoint up, where there is room for it.
@@ -112,8 +118,7 @@ export function TimeSlotGrid({
               <button
                 key={slot.slotStart}
                 type="button"
-                role="radio"
-                aria-checked={selected}
+                aria-pressed={selected}
                 onClick={() => onChange(slot.slotStart)}
                 className={cn(
                   'min-h-11 rounded-lg border text-sm font-medium tabular-nums',

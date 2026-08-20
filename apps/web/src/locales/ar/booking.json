@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "حجز موعد — FadeUp",
-    "description": "احجز موعدك في دقائق."
+    "description": "احجز موعدك في دقائق.",
+    "titleWith": "احجز لدى {{organization}} — FadeUp",
+    "descriptionWith": "احجز موعدك لدى {{organization}} في دقائق."
   },
   "heading": "حجز موعد",
   "loading": "جارٍ تحميل صفحة الحجز…",
@@ -53,7 +55,9 @@
     "barberUnavailable": "غير متاح في ذلك اليوم — اختر وقتًا آخر.",
     "slotTaken": "تم حجز هذا الوقت للتو — اختر وقتًا آخر.",
     "slotPast": "هذا الوقت مضى بالفعل — اختر وقتًا آخر.",
-    "generic": "حدث خطأ ما. حاول مرة أخرى."
+    "generic": "حدث خطأ ما. حاول مرة أخرى.",
+    "outsideHours": "لم يعد هذا الوقت متاحاً — يرجى اختيار وقت آخر.",
+    "barberServiceMismatch": "هذا المحترف لا يقدّم هذه الخدمة — يرجى اختيار شخص آخر."
   },
   "success": {
     "title": "تم تأكيد الحجز",
@@ -122,7 +126,9 @@
     "viewMyAppointments": "عرض مواعيدي",
     "createAnAccountToManage": "أنشئ حسابًا لإدارة هذا الموعد وإعادة الحجز بلمسة والاحتفاظ بـ Fade Passport الخاص بك.",
     "createAnAccount": "إنشاء حساب",
-    "iAlreadyHaveAnAccount": "لديّ حساب بالفعل"
+    "iAlreadyHaveAnAccount": "لديّ حساب بالفعل",
+    "confirmBooking": "تأكيد الحجز",
+    "instantConfirmation": "تأكيد فوري — دون انتظار الموافقة."
   },
   "professional": {
     "loadingProfile": "جارٍ تحميل الملف…",
@@ -130,7 +136,13 @@
     "weCouldntFindThisProfile": "لم نعثر على هذا الملف",
     "thisLinkMayBeOut": "قد يكون هذا الرابط قديمًا أو لم يعد الملف عامًا. تحقّق من الرابط مع الصالون مباشرة.",
     "goToFadeup": "الانتقال إلى FadeUp",
-    "noServicesListedRightNow": "لا توجد خدمات معروضة حاليًا."
+    "noServicesListedRightNow": "لا توجد خدمات معروضة حاليًا.",
+    "metaTitle": "{{professional}} في {{organization}} — FadeUp",
+    "metaTitleSolo": "{{professional}} — FadeUp",
+    "profileTitle": "الملف المهني — FadeUp",
+    "profileDescription": "ملف مهني على FadeUp.",
+    "atOrganization": "في {{organization}}",
+    "bookWith": "احجز مع {{professional}}"
   },
   "shop": {
     "loadingProfile": "جارٍ تحميل الملف…",
@@ -140,7 +152,14 @@
     "noPublicTeamMembersYet": "لا توجد ملفات عامة بعد",
     "thisShopHasntPublishedAny": "لم ينشر هذا الصالون أي ملف لمختص بعد.",
     "goToFadeup": "الانتقال إلى FadeUp",
-    "bookNow": "احجز الآن"
+    "bookNow": "احجز الآن",
+    "metaTitle": "{{organization}} — FadeUp",
+    "metaDescription": "تعرّف على الفريق واحجز لدى {{organization}} عبر FadeUp.",
+    "profileTitle": "ملف الصالون — FadeUp",
+    "profileDescription": "ملف صالون على FadeUp.",
+    "directions": "الاتجاهات",
+    "locationCount_one": "فرع واحد",
+    "locationCount_other": "{{count}} فروع"
   },
   "slots": {
     "morning": "صباحًا",
@@ -150,5 +169,16 @@
     "available": "الأوقات المتاحة",
     "nonePart": "لا يوجد وقت متاح في هذه الفترة.",
     "dayFull": "محجوز بالكامل"
+  },
+  "steps": {
+    "location": "الفرع",
+    "service": "الخدمة",
+    "barber": "المحترف",
+    "datetime": "الموعد",
+    "details": "البيانات",
+    "stepOf": "الخطوة {{current}} من {{total}} · {{label}}"
+  },
+  "crumbs": {
+    "change": "تغيير"
   }
 }

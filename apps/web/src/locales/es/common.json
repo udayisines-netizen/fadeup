@@ -23,7 +23,8 @@
     "tagline": "El sistema operativo para barberías modernas: reservas, cola en vivo, gestión de sillones y relación con el cliente en un solo sistema conectado.",
     "product": "Producto",
     "account": "Cuenta",
-    "copyright": "© {{year}} FadeUp. Todos los derechos reservados."
+    "copyright": "© {{year}} FadeUp. Todos los derechos reservados.",
+    "poweredBy": "Con tecnología de FadeUp"
   },
   "theme": {
     "light": "Claro",

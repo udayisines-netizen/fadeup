@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "Termin buchen — FadeUp",
-    "description": "Buche deinen Termin in wenigen Minuten."
+    "description": "Buche deinen Termin in wenigen Minuten.",
+    "titleWith": "Termin bei {{organization}} buchen — FadeUp",
+    "descriptionWith": "Buche in wenigen Minuten einen Termin bei {{organization}}."
   },
   "heading": "Termin buchen",
   "loading": "Buchung wird geladen…",
@@ -53,7 +55,9 @@
     "barberUnavailable": "An diesem Tag nicht verfügbar — bitte wähle eine andere Zeit.",
     "slotTaken": "Diese Zeit wurde gerade vergeben — bitte wähle eine andere.",
     "slotPast": "Diese Zeit ist bereits vorbei — bitte wähle eine andere.",
-    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    "generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "outsideHours": "Dieser Termin ist nicht mehr verfügbar — bitte wähle eine andere Zeit.",
+    "barberServiceMismatch": "Diese Person bietet diese Leistung nicht an — bitte wähle jemand anderen."
   },
   "success": {
     "title": "Buchung bestätigt",
@@ -122,7 +126,9 @@
     "viewMyAppointments": "Meine Termine ansehen",
     "createAnAccountToManage": "Erstelle ein Konto, um diesen Termin zu verwalten, mit einem Tipp neu zu buchen und deinen Fade Passport zu behalten.",
     "createAnAccount": "Konto erstellen",
-    "iAlreadyHaveAnAccount": "Ich habe bereits ein Konto"
+    "iAlreadyHaveAnAccount": "Ich habe bereits ein Konto",
+    "confirmBooking": "Buchung bestätigen",
+    "instantConfirmation": "Sofort bestätigt — keine Freigabe nötig."
   },
   "professional": {
     "loadingProfile": "Profil wird geladen…",
@@ -130,7 +136,13 @@
     "weCouldntFindThisProfile": "Wir konnten dieses Profil nicht finden",
     "thisLinkMayBeOut": "Dieser Link ist womöglich veraltet oder das Profil ist nicht mehr öffentlich. Prüfe den Link direkt beim Salon.",
     "goToFadeup": "Zu FadeUp",
-    "noServicesListedRightNow": "Derzeit sind keine Leistungen aufgeführt."
+    "noServicesListedRightNow": "Derzeit sind keine Leistungen aufgeführt.",
+    "metaTitle": "{{professional}} bei {{organization}} — FadeUp",
+    "metaTitleSolo": "{{professional}} — FadeUp",
+    "profileTitle": "Profil der Fachkraft — FadeUp",
+    "profileDescription": "Ein Profil einer Fachkraft auf FadeUp.",
+    "atOrganization": "bei {{organization}}",
+    "bookWith": "Termin bei {{professional}} buchen"
   },
   "shop": {
     "loadingProfile": "Profil wird geladen…",
@@ -140,7 +152,14 @@
     "noPublicTeamMembersYet": "Noch keine öffentlichen Profile",
     "thisShopHasntPublishedAny": "Dieser Salon hat noch keine Profile veröffentlicht.",
     "goToFadeup": "Zu FadeUp",
-    "bookNow": "Jetzt buchen"
+    "bookNow": "Jetzt buchen",
+    "metaTitle": "{{organization}} — FadeUp",
+    "metaDescription": "Lerne das Team kennen und buche bei {{organization}} über FadeUp.",
+    "profileTitle": "Salonprofil — FadeUp",
+    "profileDescription": "Ein Salonprofil auf FadeUp.",
+    "directions": "Route anzeigen",
+    "locationCount_one": "{{count}} Standort",
+    "locationCount_other": "{{count}} Standorte"
   },
   "slots": {
     "morning": "Vormittag",
@@ -150,5 +169,16 @@
     "available": "Freie Zeiten",
     "nonePart": "Zu dieser Tageszeit ist nichts frei.",
     "dayFull": "Ausgebucht"
+  },
+  "steps": {
+    "location": "Standort",
+    "service": "Leistung",
+    "barber": "Fachkraft",
+    "datetime": "Termin",
+    "details": "Angaben",
+    "stepOf": "Schritt {{current}} von {{total}} · {{label}}"
+  },
+  "crumbs": {
+    "change": "Ändern"
   }
 }

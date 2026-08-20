@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "What do you need?",
-    "whatPlaceholder": "Barber, shop or service",
+    "whatPlaceholder": "Shop, professional or city",
     "whereLabel": "Where?",
     "wherePlaceholder": "City or postal code",
     "currentLocation": "Current location",
@@ -39,7 +39,8 @@
     "popularFade": "Fade",
     "popularHaircut": "Haircut",
     "popularBeard": "Beard",
-    "popularHaircutBeard": "Haircut + Beard"
+    "popularHaircutBeard": "Haircut + Beard",
+    "clearLocation": "Clear location"
   },
   "results": {
     "headingWithLocation": "Barbers near {{location}}",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "No FadeUp barbers here yet",
     "emptyNoneAtAllDescription": "There are currently no public FadeUp barbers in this area. Try a nearby city.",
     "clearFilters": "Clear filters",
-    "errorTitle": "Couldn't load results"
+    "errorTitle": "Couldn't load results",
+    "searchEverywhere": "Search everywhere"
   },
   "card": {
     "openNow": "Open now",
@@ -75,5 +77,8 @@
     "book": "Book",
     "addFavorite": "Add to favorites",
     "removeFavorite": "Remove from favorites"
+  },
+  "filters": {
+    "label": "Filter results"
   }
 }

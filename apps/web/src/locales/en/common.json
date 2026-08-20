@@ -23,7 +23,8 @@
     "tagline": "The operating system for modern barbershops — booking, live queue, chair operations and customer relationships in one connected system.",
     "product": "Product",
     "account": "Account",
-    "copyright": "© {{year}} FadeUp. All rights reserved."
+    "copyright": "© {{year}} FadeUp. All rights reserved.",
+    "poweredBy": "Powered by FadeUp"
   },
   "theme": {
     "light": "Light",

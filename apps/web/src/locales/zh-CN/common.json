@@ -23,7 +23,8 @@
     "tagline": "现代理发店的操作系统——预约、实时排队、椅位管理和客户关系,全部整合在一个系统中。",
     "product": "产品",
     "account": "账户",
-    "copyright": "© {{year}} FadeUp。保留所有权利。"
+    "copyright": "© {{year}} FadeUp。保留所有权利。",
+    "poweredBy": "由 FadeUp 提供支持"
   },
   "theme": {
     "light": "浅色",

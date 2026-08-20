@@ -12,10 +12,21 @@ vi.mock('@/lib/queries/marketplace', () => ({
   usePublicCurrencies: () => ({ 'org-1': 'GBP', 'org-2': 'EUR' }),
 }))
 
-// ProfessionalResultCard renders a FavoriteButton, which needs both an
+// BusinessListingCard renders a FavoriteButton, which needs both an
 // auth context (logged-out here) and a QueryClient ancestor.
 vi.mock('@/lib/auth-context', () => ({
   useAuth: vi.fn(() => ({ session: null, user: null, loading: false })),
+}))
+
+// GeoIP is a network call. The suggestion it produces is exercised in its own
+// tests; here it must simply not reach out.
+vi.mock('@/lib/intl/geo', () => ({
+  useGeoSuggestion: () => ({
+    countryCode: null,
+    suggestedLocale: null,
+    suggestedCurrency: null,
+    suggestedTimezone: null,
+  }),
 }))
 
 const mockUseSearchPublicProfessionals = vi.mocked(useSearchPublicProfessionals)
@@ -79,11 +90,29 @@ describe('MarketplaceSearchPage', () => {
 
     renderPage()
 
-    expect(screen.getByText('Le Fade Parisien')).toBeInTheDocument()
+    // The shop appears as its own card AND as the shop a barber belongs to.
+    expect(screen.getAllByText('Le Fade Parisien').length).toBe(2)
     expect(screen.getByText('Karim Belhadj')).toBeInTheDocument()
     expect(screen.getAllByText('2 people waiting').length).toBe(2)
-    // "Open now" appears three times: once per result card's status badge, plus the filter switch's own label.
+    // "Open now": one status badge per open card, plus the filter chip.
     expect(screen.getAllByText('Open now').length).toBe(3)
+  })
+
+  it('never renders a rating or a photo it does not have', () => {
+    mockUseSearchPublicProfessionals.mockReturnValue({
+      data: [shopResult()],
+      isPending: false,
+      isSuccess: true,
+      isError: false,
+    } as never)
+
+    const { container } = renderPage()
+
+    // No reviews table exists. A star on a listing card is the single most
+    // consequential thing this product could fabricate.
+    expect(screen.queryByText(/\d[.,]\d\s*(★|\/5)/)).not.toBeInTheDocument()
+    // A shop has no image column; a barber's avatar is the only real image.
+    expect(container.querySelector('img')).toBeNull()
   })
 
   it('shows the "nothing here yet" empty state when zero professionals exist in the area — never a fake listing', () => {
@@ -123,12 +152,12 @@ describe('MarketplaceSearchPage', () => {
 
     renderPage()
 
-    fireEvent.click(screen.getByLabelText('Open now'))
+    fireEvent.click(screen.getByRole('button', { name: 'Open now', pressed: false }))
 
     expect(mockUseSearchPublicProfessionals).toHaveBeenLastCalledWith(expect.objectContaining({ openNowOnly: true }))
   })
 
-  it('the shop/barber segmented filter calls the search hook with the right entityType', () => {
+  it('the shop/barber chips call the search hook with the right entityType', () => {
     mockUseSearchPublicProfessionals.mockReturnValue({
       data: [barberResult()],
       isPending: false,
@@ -141,6 +170,45 @@ describe('MarketplaceSearchPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Barbers' }))
 
     expect(mockUseSearchPublicProfessionals).toHaveBeenLastCalledWith(expect.objectContaining({ entityType: 'barber' }))
+  })
+
+  it('sends a service chip to the SERVICE parameter, not the free-text query', () => {
+    // p_query matches shop/professional/city names; service names are a
+    // separate parameter. Collapsing the two would silently stop matching.
+    mockUseSearchPublicProfessionals.mockReturnValue({
+      data: [shopResult()],
+      isPending: false,
+      isSuccess: true,
+      isError: false,
+    } as never)
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fade' }))
+
+    expect(mockUseSearchPublicProfessionals).toHaveBeenLastCalledWith(
+      expect.objectContaining({ serviceQuery: 'Fade', query: null }),
+    )
+  })
+
+  it('keeps search state in the URL so a result page can be shared', () => {
+    mockUseSearchPublicProfessionals.mockReturnValue({
+      data: [shopResult()],
+      isPending: false,
+      isSuccess: true,
+      isError: false,
+    } as never)
+
+    renderPage('/search?city=Paris&type=barber&openNow=1&service=Beard')
+
+    expect(mockUseSearchPublicProfessionals).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        city: 'Paris',
+        entityType: 'barber',
+        openNowOnly: true,
+        serviceQuery: 'Beard',
+      }),
+    )
   })
 
   it('shows an error state, not a raw error message, when the search RPC fails', () => {

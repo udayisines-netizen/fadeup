@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "前往 FadeUp"
+  },
+  "discover": {
+    "title": "寻找您的下一次理发",
+    "subtitle": "搜索附近的店铺和独立理发师，查看现在哪些正在营业。",
+    "metaTitle": "发现 — FadeUp",
+    "metaDescription": "搜索店铺和独立理发师，预约您的下一次服务。"
   }
 }

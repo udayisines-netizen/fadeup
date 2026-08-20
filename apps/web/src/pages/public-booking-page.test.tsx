@@ -135,7 +135,7 @@ describe('PublicBookingPage', () => {
     fireEvent.click(slot)
     fireEvent.change(await screen.findByLabelText('Full name'), { target: { value: name } })
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+15551230000' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm booking' }))
   }
 
   it('an anonymous booking keeps its claim token and offers the account that makes it useful', async () => {
@@ -207,5 +207,91 @@ describe('PublicBookingPage', () => {
     await waitFor(() => expect(screen.getByLabelText('Full name')).toHaveValue('Sam Rivera'))
     expect(screen.getByLabelText('Phone number')).toHaveValue('+15551239999')
     expect(screen.getByLabelText('Email')).toHaveValue('sam@example.test')
+  })
+
+  // --- V2 flow behaviour ----------------------------------------------------
+
+  it('says the booking is instant, because since LOT E it is', async () => {
+    mockBookableShop(vi.fn())
+
+    renderAtSlug('jacks-barbers')
+    fireEvent.click(await screen.findByText('Classic Fade'))
+    fireEvent.click(await screen.findByRole('button', { name: /:\d\d\s?(AM|PM)/i }))
+
+    expect(await screen.findByText(/Confirmed instantly/)).toBeInTheDocument()
+    // The old copy promised a wait that no longer exists.
+    expect(screen.queryByText(/isn't booked instantly/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Request appointment' })).not.toBeInTheDocument()
+  })
+
+  it('counts only the steps this booking actually has', async () => {
+    // One location and one eligible professional: a four-step flow shown as
+    // three, because two of them are auto-resolved and never displayed.
+    mockBookableShop(vi.fn())
+
+    renderAtSlug('jacks-barbers')
+
+    expect(await screen.findByText(/Step 1 of 3 · Service/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Classic Fade'))
+    expect(await screen.findByText(/Step 2 of 3 · Time/)).toBeInTheDocument()
+  })
+
+  it('lets a decided choice be changed without walking back through the flow', async () => {
+    mockBookableShop(vi.fn())
+
+    renderAtSlug('jacks-barbers')
+    fireEvent.click(await screen.findByText('Classic Fade'))
+
+    // The chosen service is a chip, and the chip is the way back to it.
+    const crumb = await screen.findByRole('button', { name: /Classic Fade/ })
+    fireEvent.click(crumb)
+
+    expect(await screen.findByText('Choose a service')).toBeInTheDocument()
+  })
+
+  it('groups times by part of day rather than showing one wall of buttons', async () => {
+    mockBookableShop(vi.fn())
+    // Overrides the single slot the shared fixture sets up.
+    mockUsePublicAvailableSlots.mockReturnValue(
+      successQuery([
+        { slotStart: '2099-01-01T15:00:00Z', slotEnd: '2099-01-01T15:30:00Z' }, // 09:00 Chicago
+        { slotStart: '2099-01-01T21:00:00Z', slotEnd: '2099-01-01T21:30:00Z' }, // 15:00 Chicago
+      ]),
+    )
+
+    renderAtSlug('jacks-barbers')
+    fireEvent.click(await screen.findByText('Classic Fade'))
+
+    // Opens on morning — the first period that actually has something.
+    expect(await screen.findByRole('button', { name: '9:00 AM' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '3:00 PM' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Afternoon'))
+    expect(screen.getByRole('button', { name: '3:00 PM' })).toBeInTheDocument()
+  })
+
+  it('sends the customer back to fresh times when the slot was taken mid-form', async () => {
+    const mutateAsync = vi.fn().mockRejectedValue(
+      new Error('conflicting key value violates exclusion constraint "appointments_no_overlap"'),
+    )
+    mockBookableShop(mutateAsync)
+
+    renderAtSlug('jacks-barbers')
+    await bookThrough('Sam Rivera')
+
+    // Not an error banner on a form whose submit can never succeed again.
+    await waitFor(() => expect(screen.getByText('Choose a date & time')).toBeInTheDocument())
+  })
+
+  it('never shows a raw Postgres message to a customer', async () => {
+    const mutateAsync = vi.fn().mockRejectedValue(new Error('P0001: null value in column "x" violates not-null'))
+    mockBookableShop(mutateAsync)
+
+    renderAtSlug('jacks-barbers')
+    await bookThrough('Sam Rivera')
+
+    expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
+    expect(screen.queryByText(/violates not-null/)).not.toBeInTheDocument()
   })
 })

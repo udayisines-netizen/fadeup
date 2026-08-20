@@ -23,7 +23,8 @@
     "tagline": "O sistema operativo para barbearias modernas — marcações, fila em tempo real, gestão de cadeiras e relacionamento com clientes num único sistema conectado.",
     "product": "Produto",
     "account": "Conta",
-    "copyright": "© {{year}} FadeUp. Todos os direitos reservados."
+    "copyright": "© {{year}} FadeUp. Todos os direitos reservados.",
+    "poweredBy": "Com tecnologia FadeUp"
   },
   "theme": {
     "light": "Claro",

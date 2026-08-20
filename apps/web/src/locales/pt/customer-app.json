@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "Ir para a FadeUp"
+  },
+  "discover": {
+    "title": "Encontre o seu próximo corte",
+    "subtitle": "Procure salões e profissionais independentes perto de si e veja quem está aberto agora.",
+    "metaTitle": "Descobrir — FadeUp",
+    "metaDescription": "Procure salões e profissionais independentes e marque a sua próxima marcação."
   }
 }

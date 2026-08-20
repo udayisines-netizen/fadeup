@@ -1,7 +1,9 @@
 {
   "meta": {
     "title": "预约 — FadeUp",
-    "description": "几分钟即可完成预约。"
+    "description": "几分钟即可完成预约。",
+    "titleWith": "预约 {{organization}} — FadeUp",
+    "descriptionWith": "几分钟内预约 {{organization}}。"
   },
   "heading": "预约",
   "loading": "正在加载预约页面…",
@@ -53,7 +55,9 @@
     "barberUnavailable": "当天没有空档，请换个时间。",
     "slotTaken": "该时段刚被预约，请另选时间。",
     "slotPast": "该时段已过，请另选时间。",
-    "generic": "出了点问题，请重试。"
+    "generic": "出了点问题，请重试。",
+    "outsideHours": "该时间已不可预约，请另选时间。",
+    "barberServiceMismatch": "该理发师不提供此服务，请另选一位。"
   },
   "success": {
     "title": "预约已确认",
@@ -122,7 +126,9 @@
     "viewMyAppointments": "查看我的预约",
     "createAnAccountToManage": "创建账户即可管理此预约、一键再次预约，并保留你的 Fade Passport。",
     "createAnAccount": "创建账户",
-    "iAlreadyHaveAnAccount": "我已有账户"
+    "iAlreadyHaveAnAccount": "我已有账户",
+    "confirmBooking": "确认预约",
+    "instantConfirmation": "即时确认，无需等待审核。"
   },
   "professional": {
     "loadingProfile": "正在加载资料…",
@@ -130,7 +136,13 @@
     "weCouldntFindThisProfile": "未找到该资料",
     "thisLinkMayBeOut": "该链接可能已过期，或该资料不再公开。请直接向商家确认链接。",
     "goToFadeup": "前往 FadeUp",
-    "noServicesListedRightNow": "当前未列出任何服务。"
+    "noServicesListedRightNow": "当前未列出任何服务。",
+    "metaTitle": "{{organization}} 的 {{professional}} — FadeUp",
+    "metaTitleSolo": "{{professional}} — FadeUp",
+    "profileTitle": "理发师主页 — FadeUp",
+    "profileDescription": "FadeUp 上的理发师主页。",
+    "atOrganization": "任职于 {{organization}}",
+    "bookWith": "预约 {{professional}}"
   },
   "shop": {
     "loadingProfile": "正在加载资料…",
@@ -140,7 +152,14 @@
     "noPublicTeamMembersYet": "暂无公开的团队成员",
     "thisShopHasntPublishedAny": "该商家尚未发布任何专业人员资料。",
     "goToFadeup": "前往 FadeUp",
-    "bookNow": "立即预约"
+    "bookNow": "立即预约",
+    "metaTitle": "{{organization}} — FadeUp",
+    "metaDescription": "了解 {{organization}} 的团队，并通过 FadeUp 预约。",
+    "profileTitle": "门店主页 — FadeUp",
+    "profileDescription": "FadeUp 上的门店主页。",
+    "directions": "查看路线",
+    "locationCount_one": "{{count}} 家门店",
+    "locationCount_other": "{{count}} 家门店"
   },
   "slots": {
     "morning": "上午",
@@ -150,5 +169,16 @@
     "available": "可选时间",
     "nonePart": "该时间段没有空档。",
     "dayFull": "已约满"
+  },
+  "steps": {
+    "location": "门店",
+    "service": "服务",
+    "barber": "理发师",
+    "datetime": "时间",
+    "details": "信息",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步 · {{label}}"
+  },
+  "crumbs": {
+    "change": "修改"
   }
 }

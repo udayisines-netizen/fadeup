@@ -148,5 +148,11 @@
   "passportPage": {},
   "shareView": {
     "goToFadeup": "Ir a FadeUp"
+  },
+  "discover": {
+    "title": "Encuentra tu próximo corte",
+    "subtitle": "Busca locales y profesionales independientes cerca de ti, y mira quién está abierto ahora.",
+    "metaTitle": "Descubrir — FadeUp",
+    "metaDescription": "Busca locales y profesionales independientes, y reserva tu próxima cita."
   }
 }

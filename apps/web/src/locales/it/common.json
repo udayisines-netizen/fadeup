@@ -23,7 +23,8 @@
     "tagline": "Il sistema operativo per i barbershop moderni: prenotazioni, coda in tempo reale, gestione delle postazioni e relazioni con i clienti in un unico sistema connesso.",
     "product": "Prodotto",
     "account": "Account",
-    "copyright": "© {{year}} FadeUp. Tutti i diritti riservati."
+    "copyright": "© {{year}} FadeUp. Tutti i diritti riservati.",
+    "poweredBy": "Con tecnologia FadeUp"
   },
   "theme": {
     "light": "Chiaro",

@@ -27,7 +27,7 @@
   },
   "searchForm": {
     "whatLabel": "Was brauchst du?",
-    "whatPlaceholder": "Barbier, Laden oder Service",
+    "whatPlaceholder": "Salon, Fachkraft oder Stadt",
     "whereLabel": "Wo?",
     "wherePlaceholder": "Stadt oder Postleitzahl",
     "currentLocation": "Aktueller Standort",
@@ -39,7 +39,8 @@
     "popularFade": "Fade",
     "popularHaircut": "Haarschnitt",
     "popularBeard": "Bart",
-    "popularHaircutBeard": "Haarschnitt + Bart"
+    "popularHaircutBeard": "Haarschnitt + Bart",
+    "clearLocation": "Standort entfernen"
   },
   "results": {
     "headingWithLocation": "Barbiere in der Nähe von {{location}}",
@@ -60,7 +61,8 @@
     "emptyNoneAtAllTitle": "Noch keine FadeUp-Barbiere hier",
     "emptyNoneAtAllDescription": "Derzeit gibt es keine öffentlichen FadeUp-Barbiere in dieser Gegend. Versuche es mit einer Stadt in der Nähe.",
     "clearFilters": "Filter zurücksetzen",
-    "errorTitle": "Ergebnisse konnten nicht geladen werden"
+    "errorTitle": "Ergebnisse konnten nicht geladen werden",
+    "searchEverywhere": "Überall suchen"
   },
   "card": {
     "openNow": "Jetzt geöffnet",
@@ -75,5 +77,8 @@
     "book": "Buchen",
     "addFavorite": "Zu Favoriten hinzufügen",
     "removeFavorite": "Aus Favoriten entfernen"
+  },
+  "filters": {
+    "label": "Ergebnisse filtern"
   }
 }

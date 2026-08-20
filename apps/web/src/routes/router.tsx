@@ -4,7 +4,7 @@ import { RequireAuth } from '@/routes/require-auth'
 import { ProShell } from '@/routes/pro-shell'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { WorkspaceSelectorRoute } from '@/routes/workspace-selector-route'
-import { CustomerAppLayout } from '@/routes/customer-app-layout'
+import { CustomerShell } from '@/routes/customer-shell'
 import { RequireProAccess } from '@/routes/require-pro-access'
 import { ProApplicationRoute } from '@/routes/pro-application-route'
 import { MarketingLayout } from '@/routes/marketing-layout'
@@ -177,15 +177,15 @@ export const router = createBrowserRouter([
         path: 'app/customer',
         element: (
           <RequireAuth loginPath="/login">
-            <CustomerAppLayout />
+            <CustomerShell />
           </RequireAuth>
         ),
         children: [
           {
             index: true,
             lazy: async () => {
-              const { CustomerHomePage } = await import('@/pages/customer-home-page')
-              return { Component: CustomerHomePage }
+              const { CustomerDiscoverPage } = await import('@/pages/customer/discover-page')
+              return { Component: CustomerDiscoverPage }
             },
           },
           {

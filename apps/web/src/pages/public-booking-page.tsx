@@ -3,7 +3,9 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, CalendarCheck2, CalendarPlus, CircleUserRound, MapPin } from 'lucide-react'
+import { ArrowLeft, CalendarCheck2, CalendarPlus, Clock, MapPin, ShieldCheck } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
+import { useTranslation } from 'react-i18next'
 import {
   usePublicAvailableSlots,
   usePublicBarbers,
@@ -20,108 +22,67 @@ import {
 import { useMyCustomerProfile, storePendingClaimToken } from '@/lib/queries/customer-profile'
 import { useAuth } from '@/lib/auth-context'
 import { Container } from '@/components/ui/container'
-import { Card } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
+import { Avatar } from '@/components/ui/avatar'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
+import { DateStrip } from '@/components/ui/date-strip'
+import { TimeSlotGrid, firstPopulatedPart, type PartOfDay } from '@/components/ui/time-slot-grid'
+import { BookingCrumbs, BookingStepRail, type BookingCrumb, type BookingStep } from '@/components/booking/booking-steps'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { getErrorMessage } from '@/lib/get-error-message'
-import { useTranslation } from 'react-i18next'
-import { motion, useReducedMotion } from 'motion/react'
+import { bookingErrorKey, isSlotUnavailable } from '@/lib/booking/booking-error'
 import { useMoney, useDateTime } from '@/lib/intl/use-intl'
+import { todayInZone } from '@/lib/calendar/time'
 import { downloadIcs } from '@/lib/calendar/ics'
-
-// --- small formatting helpers (page-local, mirrors the convention in app-services-page.tsx) ---
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-  return rest === 0 ? `${hours} hr${hours > 1 ? 's' : ''}` : `${hours} hr ${rest} min`
-}
-
-function formatSlotTime(iso: string, timeZone: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone })
-}
-
-function formatSlotDateTime(iso: string, timeZone: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone,
-  })
-}
-
-function formatAddress(location: PublicLocation): string | null {
-  const parts = [location.addressLine1, location.addressLine2, location.city, location.region, location.postalCode].filter(
-    (part): part is string => Boolean(part),
-  )
-  return parts.length > 0 ? parts.join(', ') : null
-}
-
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  const first = parts[0]?.[0] ?? ''
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : ''
-  return `${first}${last}`.toUpperCase()
-}
+import { cn } from '@/lib/cn'
 
 /**
- * Turns the RPC's raw Postgres error message into user-facing copy.
- * Pattern-matches known substrings from `book_public_appointment`'s
- * `raise exception` calls and the GiST exclusion-constraint race message;
- * falls back to the raw message for anything unrecognized so a failure is
- * never silently swallowed.
+ * ============================================================================
+ * PUBLIC BOOKING — the most important screen FadeUp has
+ * ============================================================================
+ *
+ * Everything else in the product exists so that this flow can happen. It is
+ * also the only surface reached by people who have never seen FadeUp before,
+ * usually on a phone, usually once.
+ *
+ * What V2 changes:
+ *
+ *   DATE       A native `<input type="date">` became a DateStrip. Picking
+ *              "tomorrow" cost a date-picker dialog and three taps; it now
+ *              costs one, and the customer can see the next three weeks
+ *              without opening anything.
+ *
+ *   TIME       Forty buttons became three periods of the day. "Is there
+ *              anything after work?" is now answerable without scrolling.
+ *
+ *   PROGRESS   The flow now says where you are, and the choices you have
+ *              already made are editable chips rather than a Back chain.
+ *
+ *   LANGUAGE   Times were formatted with the BROWSER's locale and durations
+ *              were hardcoded English ("1 hr 30 min"), inside a flow that is
+ *              otherwise translated into ten languages. Both now go through
+ *              the app's resolved locale.
+ *
+ *   TRUTH      The final button said "Request appointment" and the fine print
+ *              said the shop would confirm it later. Since LOT E that is
+ *              false — the appointment is confirmed the moment it is created.
+ *              The copy now matches what the database actually does.
+ *
+ *   FAILURE    Booking errors were hardcoded English sentences. They are now
+ *              translated, and a lost slot returns the customer to the time
+ *              step with fresh availability instead of stranding them on a
+ *              form whose submit can no longer succeed.
+ *
+ * The step machine itself is unchanged, deliberately: location → service →
+ * professional → time → details is ordered by what the next query needs, and
+ * it was already right.
  */
-function friendlyBookingError(rawMessage: string): string {
-  const message = rawMessage.toLowerCase()
-
-  if (message.includes('exclusion') || message.includes('conflicting key value') || message.includes('duplicate key')) {
-    return 'That time was just booked by someone else — please pick another time.'
-  }
-  if (message.includes('starts_at must be in the future')) {
-    return 'That time has already passed — please choose another time.'
-  }
-  if (message.includes('outside available hours') || message.includes('closed at the requested time')) {
-    return 'That time is no longer available — please choose another time.'
-  }
-  if (message.includes('unavailable on the requested date') || message.includes('does not work on the requested date')) {
-    return "This barber isn't available on that date — please choose another time."
-  }
-  if (message.includes('at least one of customer_phone or customer_email')) {
-    return 'Please provide a phone number or email so the shop can reach you.'
-  }
-  if (message.includes('customer_name is required')) {
-    return 'Please enter your name.'
-  }
-  if (message.includes('location is not available for booking')) {
-    return "This location isn't available for booking right now."
-  }
-  if (message.includes('service is not available for booking')) {
-    return "This service isn't available for booking at this location."
-  }
-  if (message.includes('barber is not available for this service')) {
-    return "This barber isn't available for this service — please choose another barber."
-  }
-
-  return rawMessage
-}
-
-// --- top-level route component --------------------------------------------------------
 
 export function PublicBookingPage() {
   const { t } = useTranslation('booking')
@@ -129,21 +90,23 @@ export function PublicBookingPage() {
   const organizationQuery = usePublicOrganization(slug)
 
   useDocumentMeta({
-    title: organizationQuery.data ? `Book with ${organizationQuery.data.name} — FadeUp` : 'Book an appointment — FadeUp',
+    title: organizationQuery.data
+      ? t('meta.titleWith', { organization: organizationQuery.data.name })
+      : t('meta.title'),
     description: organizationQuery.data
-      ? `Book an appointment with ${organizationQuery.data.name} in minutes.`
-      : 'Book a barbershop appointment in minutes.',
+      ? t('meta.descriptionWith', { organization: organizationQuery.data.name })
+      : t('meta.description'),
   })
 
   if (organizationQuery.isPending) {
-    return <PageSpinner label={t('booking:flow.loadingBookingPage')} />
+    return <PageSpinner label={t('loading')} />
   }
 
   if (organizationQuery.isError) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title={t('booking:errors.page')}
+          title={t('errors.page')}
           description={organizationQuery.error.message}
           action={
             <Button variant="secondary" onClick={() => void organizationQuery.refetch()}>
@@ -159,11 +122,11 @@ export function PublicBookingPage() {
     return (
       <Container size="sm" className="flex flex-1 items-center py-16">
         <ErrorState
-          title={t('booking:errors.shopNotFound')}
-          description={t('booking:flow.thisBookingLinkMayBe')}
+          title={t('errors.shopNotFound')}
+          description={t('flow.thisBookingLinkMayBe')}
           action={
             <Link to="/" className={buttonVariants({ variant: 'secondary' })}>
-              {t('booking:flow.goToFadeup')}
+              {t('flow.goToFadeup')}
             </Link>
           }
         />
@@ -175,17 +138,9 @@ export function PublicBookingPage() {
 }
 
 /**
- * Reads `?barber=<id>` (optionally `&location=<id>`) — set by marketplace
- * result cards and the Barber Passport page's "Book with <name>" link — so
- * arriving with a specific barber already in mind preserves that choice
- * instead of making the customer re-pick from scratch (spec: "entering
- * booking from a barber preserves barber selection"). Best-effort by
- * design: the wizard's step order is location -> service -> barber (barber
- * eligibility depends on the chosen service), so a barber can only be
- * pre-applied once the customer reaches the barber step for a service that
- * barber actually offers — see BookingWizard's effects below. This
- * preserves the existing, working step machine rather than restructuring
- * it around a barber-first flow.
+ * Reads `?barber=<id>` (optionally `&location=<id>`, `&service=<id>`) — set by
+ * marketplace cards, a professional's own profile, and "Rebook" links — so
+ * arriving with a choice already made preserves it instead of asking again.
  */
 function usePreselection() {
   const [searchParams] = useSearchParams()
@@ -196,9 +151,9 @@ function usePreselection() {
   }
 }
 
-// --- step model ------------------------------------------------------------------------
+type Phase = 'location' | 'service' | 'barber' | 'datetime' | 'details'
 
-type Phase = 'location' | 'service' | 'barber' | 'datetime' | 'details' | 'success'
+const PHASE_ORDER: Phase[] = ['location', 'service', 'barber', 'datetime', 'details']
 
 interface SlotSelection {
   slotStart: string
@@ -206,28 +161,48 @@ interface SlotSelection {
 }
 
 function BookingWizard({ organization }: { organization: PublicOrganization }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('booking')
+  const dateTime = useDateTime()
   const locationsQuery = usePublicLocations(organization.slug)
   const { preselectedBarberId, preselectedLocationId, preselectedServiceId } = usePreselection()
 
   const [phase, setPhase] = useState<Phase>('location')
-  const [history, setHistory] = useState<Phase[]>([])
   const [locationId, setLocationId] = useState<string | null>(null)
   const [serviceId, setServiceId] = useState<string | null>(null)
   const [barberId, setBarberId] = useState<string | null>(null)
-  const [date, setDate] = useState<string>(todayIsoDate())
+  const [date, setDate] = useState<string | null>(null)
   const [slot, setSlot] = useState<SlotSelection | null>(null)
   const [bookingResult, setBookingResult] = useState<BookedAppointment | null>(null)
+  /**
+   * Steps the customer deliberately re-opened. Editing a choice that arrived
+   * preselected has to also switch OFF the effect that applied it, or the
+   * flow would bounce straight back out of the step they just asked for.
+   */
+  const [forced, setForced] = useState<Phase[]>([])
 
   const servicesQuery = usePublicServices(organization.slug, locationId ?? undefined)
   const barbersQuery = usePublicBarbers(organization.slug, locationId ?? undefined, serviceId ?? undefined)
-  const slotsQuery = usePublicAvailableSlots(organization.slug, locationId ?? undefined, barberId ?? undefined, serviceId ?? undefined, date)
 
-  // Skip the location step when a specific location was preselected (from a
-  // barber's own profile) or the shop has just one — don't make a customer
-  // tap through a step with only one possible/already-decided answer.
+  const selectedLocation = useMemo(
+    () => locationsQuery.data?.find((location) => location.id === locationId) ?? null,
+    [locationsQuery.data, locationId],
+  )
+  const timeZone = selectedLocation?.timezone ?? 'UTC'
+  const dateKey = date ?? todayInZone(timeZone)
+
+  const slotsQuery = usePublicAvailableSlots(
+    organization.slug,
+    locationId ?? undefined,
+    barberId ?? undefined,
+    serviceId ?? undefined,
+    dateKey,
+  )
+
+  // Skip the location step when one was preselected (arriving from a
+  // professional's profile) or the shop has exactly one — never make someone
+  // tap through a question with a single possible answer.
   useEffect(() => {
-    if (locationId || !locationsQuery.data) return
+    if (locationId || !locationsQuery.data || forced.includes('location')) return
     if (preselectedLocationId && locationsQuery.data.some((location) => location.id === preselectedLocationId)) {
       setLocationId(preselectedLocationId)
       setPhase('service')
@@ -237,23 +212,23 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
       setLocationId(locationsQuery.data[0]!.id)
       setPhase('service')
     }
-  }, [locationsQuery.data, locationId, preselectedLocationId])
+  }, [locationsQuery.data, locationId, preselectedLocationId, forced])
 
-  // Same idea for a preselected service (from a "Rebook" link) — skip
-  // straight to the barber step once it's confirmed to actually be offered
-  // at the (now-known) location.
+  // Same for a preselected service, once it is confirmed to be offered at the
+  // now-known location.
   useEffect(() => {
     if (!locationId || serviceId || phase !== 'service' || !preselectedServiceId || !servicesQuery.data) return
+    if (forced.includes('service')) return
     if (servicesQuery.data.some((service) => service.id === preselectedServiceId)) {
       setServiceId(preselectedServiceId)
       setPhase('barber')
     }
-  }, [servicesQuery.data, locationId, serviceId, phase, preselectedServiceId])
+  }, [servicesQuery.data, locationId, serviceId, phase, preselectedServiceId, forced])
 
-  // Same idea for a service with exactly one eligible barber, OR the
-  // preselected barber turns out to be eligible for the chosen service.
+  // Same for a preselected professional who turns out to be eligible, or a
+  // service only one person offers.
   useEffect(() => {
-    if (!serviceId || barberId || phase !== 'barber' || !barbersQuery.data) return
+    if (!serviceId || barberId || phase !== 'barber' || !barbersQuery.data || forced.includes('barber')) return
     if (preselectedBarberId && barbersQuery.data.some((barber) => barber.barberId === preselectedBarberId)) {
       setBarberId(preselectedBarberId)
       setPhase('datetime')
@@ -263,25 +238,8 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
       setBarberId(barbersQuery.data[0]!.barberId)
       setPhase('datetime')
     }
-  }, [barbersQuery.data, serviceId, barberId, phase, preselectedBarberId])
+  }, [barbersQuery.data, serviceId, barberId, phase, preselectedBarberId, forced])
 
-  function goTo(next: Phase) {
-    setHistory((prev) => [...prev, phase])
-    setPhase(next)
-  }
-
-  function goBack() {
-    setHistory((prev) => {
-      if (prev.length === 0) return prev
-      setPhase(prev[prev.length - 1]!)
-      return prev.slice(0, -1)
-    })
-  }
-
-  const selectedLocation = useMemo(
-    () => locationsQuery.data?.find((location) => location.id === locationId) ?? null,
-    [locationsQuery.data, locationId],
-  )
   const selectedService = useMemo(
     () => servicesQuery.data?.find((service) => service.id === serviceId) ?? null,
     [servicesQuery.data, serviceId],
@@ -291,35 +249,96 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
     [barbersQuery.data, barberId],
   )
 
-  function handleSelectLocation(id: string) {
-    setLocationId(id)
-    setServiceId(null)
-    setBarberId(null)
+  /**
+   * Which steps this particular booking is made of.
+   *
+   * Location and professional are CONDITIONAL: a one-location shop, or a
+   * service only one person offers, genuinely has a shorter booking, and a
+   * rail that counted screens the customer will never see would be lying.
+   *
+   * The rule for a step whose data has not loaded yet is "not counted". That
+   * is deliberate: a counter can then only ever GROW ("step 2 of 3" becoming
+   * "step 2 of 4" when a real choice appears), never shrink. Shrinking reads
+   * as the flow having quietly dropped something.
+   */
+  function stepIsInFlow(step: Phase): boolean {
+    if (step === phase || forced.includes(step)) return true
+    switch (step) {
+      case 'location':
+        return Boolean(
+          locationsQuery.data &&
+            locationsQuery.data.length > 1 &&
+            !(preselectedLocationId && locationsQuery.data.some((l) => l.id === preselectedLocationId)),
+        )
+      case 'service':
+        // A preselected service is assumed to apply until proven otherwise:
+        // the link expressed an intent, and honouring it optimistically keeps
+        // the count stable through the load.
+        return !(preselectedServiceId && (!servicesQuery.data || servicesQuery.data.some((s) => s.id === preselectedServiceId)))
+      case 'barber':
+        return Boolean(
+          barbersQuery.data &&
+            barbersQuery.data.length > 1 &&
+            !(preselectedBarberId && barbersQuery.data.some((b) => b.barberId === preselectedBarberId)),
+        )
+      default:
+        return true
+    }
+  }
+
+  const steps: BookingStep[] = PHASE_ORDER.filter(stepIsInFlow).map((step) => ({
+    key: step,
+    label: t(`steps.${step}`),
+  }))
+  const currentIndex = Math.max(0, steps.findIndex((step) => step.key === phase))
+
+  /**
+   * Going back to an earlier decision clears everything downstream of it.
+   * Changing the service while keeping a professional who may not offer it —
+   * or a slot priced for the old service — is how a booking flow ends up
+   * submitting something the customer never agreed to.
+   */
+  function editStep(target: Phase) {
+    const targetIndex = PHASE_ORDER.indexOf(target)
+    if (targetIndex <= PHASE_ORDER.indexOf('location')) {
+      setLocationId(null)
+    }
+    if (targetIndex <= PHASE_ORDER.indexOf('service')) {
+      setServiceId(null)
+    }
+    if (targetIndex <= PHASE_ORDER.indexOf('barber')) {
+      setBarberId(null)
+    }
     setSlot(null)
-    goTo('service')
+    // The step is being visited after all — which also switches off the
+    // preselection effect that would otherwise bounce straight back out.
+    setForced((current) => (current.includes(target) ? current : [...current, target]))
+    setPhase(target)
   }
 
-  function handleSelectService(id: string) {
-    setServiceId(id)
-    setBarberId(null)
-    setSlot(null)
-    goTo('barber')
+  const previousStep = steps[currentIndex - 1]
+
+  // A crumb is only offered for a choice the customer could actually make
+  // differently. A shop with one location has nothing to change.
+  const crumbs: BookingCrumb[] = []
+  if (selectedLocation && phase !== 'location' && stepIsInFlow('location')) {
+    crumbs.push({ key: 'location', label: selectedLocation.name, onEdit: () => editStep('location') })
+  }
+  if (selectedService && phase !== 'service') {
+    crumbs.push({ key: 'service', label: selectedService.name, onEdit: () => editStep('service') })
+  }
+  if (selectedBarber && phase !== 'barber' && stepIsInFlow('barber')) {
+    crumbs.push({ key: 'barber', label: selectedBarber.displayName, onEdit: () => editStep('barber') })
+  }
+  if (slot && phase !== 'datetime') {
+    crumbs.push({
+      key: 'datetime',
+      label: dateTime.dateTime(slot.slotStart, timeZone),
+      onEdit: () => editStep('datetime'),
+    })
   }
 
-  function handleSelectBarber(id: string) {
-    setBarberId(id)
-    setSlot(null)
-    goTo('datetime')
-  }
-
-  function handleSelectSlot(next: SlotSelection) {
-    setSlot(next)
-    goTo('details')
-  }
-
-  const canGoBack = history.length > 0
-
-  if (phase === 'success' && bookingResult && selectedService && selectedBarber) {
+  if (bookingResult && selectedService && selectedBarber) {
     return (
       <Container size="sm" className="flex flex-1 items-center py-10">
         <SuccessScreen
@@ -334,44 +353,83 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
   }
 
   return (
-    <Container size="sm" className="flex flex-1 flex-col py-6 sm:py-10">
-      <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-accent-600">{t('booking:flow.bookAnAppointment')}</p>
-        <h1 className="mt-1 text-2xl font-semibold text-balance text-ink-950">{organization.name}</h1>
-      </div>
+    <Container size="sm" className="flex flex-1 flex-col gap-5 py-6 sm:py-10">
+      <header className="flex flex-col gap-3">
+        <div className="flex items-start gap-3">
+          {previousStep ? (
+            <button
+              type="button"
+              onClick={() => editStep(previousStep.key as Phase)}
+              aria-label={t('common:action.back')}
+              className="-ms-2 mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-700 hover:bg-paper-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
+            >
+              <ArrowLeft className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
+            </button>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-accent-600">
+              {t('flow.bookAnAppointment')}
+            </p>
+            <h1 className="mt-0.5 text-balance text-2xl font-semibold text-ink-950">{organization.name}</h1>
+          </div>
+        </div>
 
-      {canGoBack ? (
-        <button
-          type="button"
-          onClick={goBack}
-          className="mb-4 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-700 hover:text-ink-950"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {t('common:action.back')}
-        </button>
-      ) : null}
+        <BookingStepRail steps={steps} currentIndex={currentIndex} />
+      </header>
+
+      <BookingCrumbs crumbs={crumbs} />
 
       {phase === 'location' ? (
-        <LocationStep query={locationsQuery} onSelect={handleSelectLocation} />
+        <LocationStep
+          query={locationsQuery}
+          onSelect={(id) => {
+            setLocationId(id)
+            setServiceId(null)
+            setBarberId(null)
+            setSlot(null)
+            setPhase('service')
+          }}
+        />
       ) : null}
 
       {phase === 'service' ? (
-        <ServiceStep query={servicesQuery} currency={organization.currency} onSelect={handleSelectService} />
+        <ServiceStep
+          query={servicesQuery}
+          currency={organization.currency}
+          onSelect={(id) => {
+            setServiceId(id)
+            setBarberId(null)
+            setSlot(null)
+            setPhase('barber')
+          }}
+        />
       ) : null}
 
-      {phase === 'barber' ? <BarberStep query={barbersQuery} onSelect={handleSelectBarber} /> : null}
+      {phase === 'barber' ? (
+        <BarberStep
+          query={barbersQuery}
+          onSelect={(id) => {
+            setBarberId(id)
+            setSlot(null)
+            setPhase('datetime')
+          }}
+        />
+      ) : null}
 
-      {phase === 'datetime' && selectedLocation ? (
+      {phase === 'datetime' ? (
         <DateTimeStep
           query={slotsQuery}
-          location={selectedLocation}
-          date={date}
+          timeZone={timeZone}
+          dateKey={dateKey}
           selectedSlot={slot}
           onChangeDate={(next) => {
             setDate(next)
             setSlot(null)
           }}
-          onSelectSlot={handleSelectSlot}
+          onSelectSlot={(next) => {
+            setSlot(next)
+            setPhase('details')
+          }}
         />
       ) : null}
 
@@ -382,17 +440,20 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
           service={selectedService}
           barber={selectedBarber}
           slot={slot}
-          onSuccess={(appointment) => {
-            setBookingResult(appointment)
-            setPhase('success')
+          timeZone={timeZone}
+          onSlotLost={() => {
+            setSlot(null)
+            setPhase('datetime')
+            void slotsQuery.refetch()
           }}
+          onSuccess={setBookingResult}
         />
       ) : null}
     </Container>
   )
 }
 
-// --- step: location ----------------------------------------------------------------
+// --- step: location ---------------------------------------------------------
 
 function LocationStep({
   query,
@@ -402,34 +463,27 @@ function LocationStep({
   onSelect: (id: string) => void
 }) {
   const { t } = useTranslation('booking')
+
   return (
-    <StepShell title={t('booking:choose.location')}>
+    <StepShell title={t('choose.location')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
-        <ErrorState
-          title={t('booking:errors.locations')}
-          description={query.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void query.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
+        <StepError title={t('errors.locations')} query={query} />
       ) : query.data.length === 0 ? (
-        <EmptyState title={t('booking:empty.locations')} description={t('booking:empty.locationsHint')} />
+        <EmptyState title={t('empty.locations')} description={t('empty.locationsHint')} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {query.data.map((location) => (
-            <SelectableCard key={location.id} onClick={() => onSelect(location.id)}>
-              <div className="flex items-start gap-3">
-                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" aria-hidden="true" />
-                <div className="min-w-0">
-                  <p className="font-medium text-ink-950">{location.name}</p>
-                  {formatAddress(location) ? <p className="mt-0.5 text-sm text-ink-500">{formatAddress(location)}</p> : null}
-                </div>
+            <SelectableRow key={location.id} onClick={() => onSelect(location.id)}>
+              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="font-medium text-ink-950">{location.name}</p>
+                {formatAddress(location) ? (
+                  <p className="mt-0.5 text-sm text-ink-500">{formatAddress(location)}</p>
+                ) : null}
               </div>
-            </SelectableCard>
+            </SelectableRow>
           ))}
         </div>
       )}
@@ -437,7 +491,13 @@ function LocationStep({
   )
 }
 
-// --- step: service -------------------------------------------------------------------
+function formatAddress(location: PublicLocation): string | null {
+  const parts = [location.addressLine1, location.addressLine2, location.city, location.region, location.postalCode]
+  const present = parts.filter((part): part is string => Boolean(part))
+  return present.length > 0 ? present.join(', ') : null
+}
+
+// --- step: service ----------------------------------------------------------
 
 function ServiceStep({
   query,
@@ -445,16 +505,18 @@ function ServiceStep({
   onSelect,
 }: {
   query: ReturnType<typeof usePublicServices>
-  /** The shop's currency — every price on this screen is what they will be charged. */
+  /** The SHOP's currency — this is what the customer will actually be charged. */
   currency: string
   onSelect: (id: string) => void
 }) {
   const { t } = useTranslation('booking')
   const money = useMoney()
+  const dateTime = useDateTime()
+
   const grouped = useMemo(() => {
-    const groups = new Map<string, PublicService[]>()
+    const groups = new Map<string | null, PublicService[]>()
     for (const service of query.data ?? []) {
-      const key = service.categoryName ?? 'Services'
+      const key = service.categoryName
       const bucket = groups.get(key) ?? []
       bucket.push(service)
       groups.set(key, bucket)
@@ -463,38 +525,37 @@ function ServiceStep({
   }, [query.data])
 
   return (
-    <StepShell title={t('booking:choose.service')}>
+    <StepShell title={t('choose.service')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
-        <ErrorState
-          title={t('booking:errors.services')}
-          description={query.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void query.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
+        <StepError title={t('errors.services')} query={query} />
       ) : (query.data?.length ?? 0) === 0 ? (
-        <EmptyState title={t('booking:empty.services')} description={t('booking:empty.servicesHint')} />
+        <EmptyState title={t('empty.services')} description={t('empty.servicesHint')} />
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {Array.from(grouped.entries()).map(([categoryName, services]) => (
-            <div key={categoryName}>
-              <h2 className="mb-2 text-sm font-semibold text-ink-950">{categoryName}</h2>
-              <div className="flex flex-col gap-3">
+            <div key={categoryName ?? '__uncategorised'}>
+              {/* No invented "Services" heading for uncategorised items — a
+                  shop that did not categorise gets a plain list. */}
+              {categoryName ? (
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-500">{categoryName}</h3>
+              ) : null}
+              <div className="flex flex-col gap-2">
                 {services.map((service) => (
-                  <SelectableCard key={service.id} onClick={() => onSelect(service.id)}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-ink-950">{service.name}</p>
-                        {service.description ? <p className="mt-0.5 text-sm text-ink-500">{service.description}</p> : null}
-                        <p className="mt-1 text-xs text-ink-500">{formatDuration(service.durationMinutes)}</p>
-                      </div>
-                      <span className="shrink-0 font-medium text-ink-950">{money(service.priceCents, currency)}</span>
+                  <SelectableRow key={service.id} onClick={() => onSelect(service.id)}>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-ink-950">{service.name}</p>
+                      {service.description ? (
+                        <p className="mt-0.5 text-sm text-ink-500">{service.description}</p>
+                      ) : null}
+                      <p className="mt-1 flex items-center gap-1 text-xs text-ink-500">
+                        <Clock className="h-3 w-3" aria-hidden="true" />
+                        {dateTime.duration(service.durationMinutes)}
+                      </p>
                     </div>
-                  </SelectableCard>
+                    <span className="shrink-0 font-semibold text-ink-950">{money(service.priceCents, currency)}</span>
+                  </SelectableRow>
                 ))}
               </div>
             </div>
@@ -505,7 +566,7 @@ function ServiceStep({
   )
 }
 
-// --- step: barber ---------------------------------------------------------------------
+// --- step: professional -----------------------------------------------------
 
 function BarberStep({
   query,
@@ -515,35 +576,26 @@ function BarberStep({
   onSelect: (id: string) => void
 }) {
   const { t } = useTranslation('booking')
+
   return (
-    <StepShell title={t('booking:choose.barber')}>
+    <StepShell title={t('choose.barber')}>
       {query.isPending ? (
         <StepSkeleton />
       ) : query.isError ? (
-        <ErrorState
-          title={t('booking:errors.barbers')}
-          description={query.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void query.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
+        <StepError title={t('errors.barbers')} query={query} />
       ) : query.data.length === 0 ? (
-        <EmptyState title={t('booking:empty.barbers')} description={t('booking:empty.barbersHint')} />
+        <EmptyState title={t('empty.barbers')} description={t('empty.barbersHint')} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {query.data.map((barber) => (
-            <SelectableCard key={barber.barberId} onClick={() => onSelect(barber.barberId)}>
-              <div className="flex items-start gap-3">
-                <BarberAvatar name={barber.displayName} avatarUrl={barber.avatarUrl} />
-                <div className="min-w-0">
-                  <p className="font-medium text-ink-950">{barber.displayName}</p>
-                  {barber.title ? <p className="text-sm text-ink-500">{barber.title}</p> : null}
-                  {barber.bio ? <p className="mt-1 text-sm text-ink-500">{barber.bio}</p> : null}
-                </div>
+            <SelectableRow key={barber.barberId} onClick={() => onSelect(barber.barberId)}>
+              <Avatar name={barber.displayName} src={barber.avatarUrl} size="md" />
+              <div className="min-w-0">
+                <p className="font-medium text-ink-950">{barber.displayName}</p>
+                {barber.title ? <p className="text-sm text-ink-500">{barber.title}</p> : null}
+                {barber.bio ? <p className="mt-1 text-sm text-pretty text-ink-500">{barber.bio}</p> : null}
               </div>
-            </SelectableCard>
+            </SelectableRow>
           ))}
         </div>
       )}
@@ -551,113 +603,91 @@ function BarberStep({
   )
 }
 
-function BarberAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
-  const [failed, setFailed] = useState(false)
-
-  if (avatarUrl && !failed) {
-    return (
-      <img
-        src={avatarUrl}
-        alt=""
-        className="h-11 w-11 shrink-0 rounded-full object-cover"
-        onError={() => setFailed(true)}
-      />
-    )
-  }
-
-  return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-100 text-sm font-semibold text-accent-800">
-      {initialsOf(name)}
-    </span>
-  )
-}
-
-// --- step: date + time ------------------------------------------------------------------
+// --- step: date + time ------------------------------------------------------
 
 function DateTimeStep({
   query,
-  location,
-  date,
+  timeZone,
+  dateKey,
   selectedSlot,
   onChangeDate,
   onSelectSlot,
 }: {
   query: ReturnType<typeof usePublicAvailableSlots>
-  location: PublicLocation
-  date: string
+  timeZone: string
+  dateKey: string
   selectedSlot: SlotSelection | null
-  onChangeDate: (date: string) => void
+  onChangeDate: (dateKey: string) => void
   onSelectSlot: (slot: SlotSelection) => void
 }) {
   const { t } = useTranslation('booking')
-  return (
-    <StepShell title={t('booking:flow.chooseADateTime')}>
-      <TextField
-        label={t('common:field.date')}
-        type="date"
-        min={todayIsoDate()}
-        value={date}
-        onChange={(event) => onChangeDate(event.target.value)}
-      />
+  const slots = useMemo(() => query.data ?? [], [query.data])
 
-      <div className="mt-4">
+  const [part, setPart] = useState<PartOfDay>('morning')
+  // Open on a period that actually has something in it. Keyed on the day
+  // rather than on the slots array so that a background refetch returning an
+  // equivalent list does not yank the customer to a different tab mid-choice.
+  const settledFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (slots.length === 0 || settledFor.current === dateKey) return
+    settledFor.current = dateKey
+    setPart(firstPopulatedPart(slots, timeZone))
+  }, [slots, dateKey, timeZone])
+
+  return (
+    <StepShell title={t('flow.chooseADateTime')}>
+      <div className="flex flex-col gap-4">
+        <DateStrip value={dateKey} onChange={onChangeDate} timeZone={timeZone} />
+
         {query.isPending ? (
-          <StepSkeleton />
-        ) : query.isError ? (
-          <ErrorState
-            title={t('booking:errors.times')}
-            description={query.error.message}
-            action={
-              <Button variant="secondary" onClick={() => void query.refetch()}>
-                {t('common:action.tryAgain')}
-              </Button>
-            }
-          />
-        ) : query.data.length === 0 ? (
-          <EmptyState title={t('booking:empty.times')} description={t('booking:flow.tryADifferentDateThis')} />
-        ) : (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {query.data.map((availableSlot) => {
-              const isSelected = selectedSlot?.slotStart === availableSlot.slotStart
-              return (
-                <button
-                  key={availableSlot.slotStart}
-                  type="button"
-                  onClick={() => onSelectSlot({ slotStart: availableSlot.slotStart, slotEnd: availableSlot.slotEnd })}
-                  className={
-                    isSelected
-                      ? 'min-h-11 rounded-md border border-accent-600 bg-accent-100 px-2 py-2 text-sm font-medium text-accent-800'
-                      : 'min-h-11 rounded-md border border-border-strong bg-paper-0 px-2 py-2 text-sm font-medium text-ink-800 hover:bg-paper-100'
-                  }
-                >
-                  {formatSlotTime(availableSlot.slotStart, location.timezone)}
-                </button>
-              )
-            })}
+          <div className="flex flex-col gap-3" aria-hidden="true">
+            <Skeleton className="h-11 w-full rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
           </div>
+        ) : query.isError ? (
+          <StepError title={t('errors.times')} query={query} />
+        ) : slots.length === 0 ? (
+          <EmptyState title={t('empty.times')} description={t('flow.tryADifferentDateThis')} />
+        ) : (
+          <TimeSlotGrid
+            slots={slots}
+            value={selectedSlot?.slotStart ?? null}
+            onChange={(slotStart) => {
+              const chosen = slots.find((candidate) => candidate.slotStart === slotStart)
+              if (chosen) onSelectSlot({ slotStart: chosen.slotStart, slotEnd: chosen.slotEnd })
+            }}
+            timeZone={timeZone}
+            part={part}
+            onPartChange={setPart}
+          />
         )}
       </div>
     </StepShell>
   )
 }
 
-// --- step: details + confirm ------------------------------------------------------------
+// --- step: details + confirm ------------------------------------------------
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * Validation messages are translation KEYS, resolved at render. Building the
+ * schema with `t` instead would rebuild it on every language change and would
+ * still leave already-rendered errors in the old language.
+ */
 const detailsSchema = z
   .object({
-    customerName: z.string().trim().min(1, 'Name is required'),
+    customerName: z.string().trim().min(1, 'validation.nameRequired'),
     customerPhone: z.string().trim(),
     customerEmail: z.string().trim(),
     notes: z.string().trim(),
   })
   .refine((values) => values.customerPhone !== '' || values.customerEmail !== '', {
-    message: 'Enter a phone number or email so the shop can reach you',
+    message: 'validation.contactRequired',
     path: ['customerPhone'],
   })
   .refine((values) => values.customerEmail === '' || EMAIL_PATTERN.test(values.customerEmail), {
-    message: 'Enter a valid email address',
+    message: 'validation.emailInvalid',
     path: ['customerEmail'],
   })
 
@@ -669,6 +699,8 @@ function DetailsStep({
   service,
   barber,
   slot,
+  timeZone,
+  onSlotLost,
   onSuccess,
 }: {
   organization: PublicOrganization
@@ -676,16 +708,18 @@ function DetailsStep({
   service: PublicService
   barber: PublicBarber
   slot: SlotSelection
+  timeZone: string
+  onSlotLost: () => void
   onSuccess: (appointment: BookedAppointment) => void
 }) {
   const { t } = useTranslation('booking')
   const money = useMoney()
-  const currency = organization.currency
+  const dateTime = useDateTime()
 
   const bookAppointment = useBookPublicAppointment()
   const { user } = useAuth()
   const myProfile = useMyCustomerProfile(user?.id)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitErrorKey, setSubmitErrorKey] = useState<string | null>(null)
 
   const {
     register,
@@ -698,9 +732,8 @@ function DetailsStep({
   })
 
   // A signed-in customer should not retype what they already told us. Fills
-  // in once, from their own saved profile, and only fields that profile
-  // actually has — never invents a value, and never clobbers typing (the
-  // ref makes this strictly first-arrival).
+  // once, from their own saved profile, and only fields that profile actually
+  // has — never invents a value, and never clobbers typing.
   const prefilledRef = useRef(false)
   const profile = myProfile.data
   useEffect(() => {
@@ -715,7 +748,7 @@ function DetailsStep({
   }, [user, profile, reset])
 
   async function onSubmit(values: DetailsFormValues) {
-    setSubmitError(null)
+    setSubmitErrorKey(null)
     try {
       const appointment = await bookAppointment.mutateAsync({
         organizationSlug: organization.slug,
@@ -728,69 +761,110 @@ function DetailsStep({
         customerEmail: values.customerEmail || null,
         notes: values.notes || null,
       })
-      // Anonymous booking: hold on to the one-time claim token so that, if
-      // the customer creates an account from the success screen, this
-      // booking follows them into it. A signed-in booking returns no token
-      // — the server already linked it (see the migration).
+      // Anonymous booking: hold on to the one-time claim token so that, if the
+      // customer creates an account from the success screen, this booking
+      // follows them into it. A signed-in booking returns no token — the
+      // server already linked it.
       if (!user && appointment.claimToken) {
         storePendingClaimToken(appointment.claimToken)
       }
       onSuccess(appointment)
     } catch (error) {
-      const rawMessage = getErrorMessage(error) ?? 'Something went wrong. Please try again.'
-      setSubmitError(friendlyBookingError(rawMessage))
+      const rawMessage = getErrorMessage(error) ?? ''
+      const key = bookingErrorKey(rawMessage)
+      // Not swallowed — just not shown as raw Postgres text to a customer.
+      if (key === 'errors.generic') console.error('Booking failed:', rawMessage)
+      if (isSlotUnavailable(key)) {
+        // The form can no longer succeed. Send them back to a fresh list of
+        // times rather than leaving them to press a dead button.
+        onSlotLost()
+        return
+      }
+      setSubmitErrorKey(key)
     }
   }
 
   return (
-    <StepShell title={t('booking:summary.details')}>
-      <Card className="mb-5 p-4">
-        <dl className="flex flex-col gap-1.5 text-sm">
-          <SummaryRow label={t('booking:flow.shop')} value={organization.name} />
-          {location ? <SummaryRow label={t('common:entity.location')} value={location.name} /> : null}
-          <SummaryRow label={t('common:entity.service')} value={`${service.name} · ${formatDuration(service.durationMinutes)}`} />
-          <SummaryRow label={t('common:entity.barber')} value={barber.displayName} />
-          <SummaryRow label={t('common:field.when')} value={formatSlotDateTime(slot.slotStart, location?.timezone ?? 'UTC')} />
-          <SummaryRow label={t('common:field.price')} value={money(service.priceCents, currency)} />
-        </dl>
-      </Card>
+    <StepShell title={t('summary.details')}>
+      <div className="flex flex-col gap-5">
+        <div className="rounded-xl border border-border bg-paper-0 p-4">
+          <dl className="flex flex-col gap-1.5 text-sm">
+            <SummaryRow label={t('summary.shop')} value={organization.name} />
+            {location ? <SummaryRow label={t('summary.location')} value={location.name} /> : null}
+            <SummaryRow
+              label={t('summary.service')}
+              value={`${service.name} · ${dateTime.duration(service.durationMinutes)}`}
+            />
+            <SummaryRow label={t('summary.barber')} value={barber.displayName} />
+            <SummaryRow label={t('summary.when')} value={dateTime.dateTime(slot.slotStart, timeZone)} />
+            <SummaryRow label={t('summary.price')} value={money(service.priceCents, organization.currency)} />
+          </dl>
+        </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-        {submitError ? <Alert variant="error">{submitError}</Alert> : null}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          {submitErrorKey ? <Alert variant="error">{t(submitErrorKey)}</Alert> : null}
 
-        <TextField label={t('booking:flow.fullName')} autoComplete="name" error={errors.customerName?.message} {...register('customerName')} />
-        <TextField
-          label={t('booking:flow.phoneNumber')}
-          type="tel"
-          autoComplete="tel"
-          hint={t('booking:flow.provideAPhoneNumberOr')}
-          error={errors.customerPhone?.message}
-          {...register('customerPhone')}
-        />
-        <TextField label={t('common:field.email')} type="email" autoComplete="email" error={errors.customerEmail?.message} {...register('customerEmail')} />
-        <Textarea label={t('common:field.notesOptional')} rows={3} {...register('notes')} />
+          <TextField
+            label={t('fields.fullName')}
+            autoComplete="name"
+            error={errors.customerName?.message ? t(errors.customerName.message) : undefined}
+            {...register('customerName')}
+          />
+          <TextField
+            label={t('fields.phone')}
+            type="tel"
+            autoComplete="tel"
+            hint={t('fields.contactHint')}
+            error={errors.customerPhone?.message ? t(errors.customerPhone.message) : undefined}
+            {...register('customerPhone')}
+          />
+          <TextField
+            label={t('fields.email')}
+            type="email"
+            autoComplete="email"
+            error={errors.customerEmail?.message ? t(errors.customerEmail.message) : undefined}
+            {...register('customerEmail')}
+          />
+          <Textarea label={t('fields.notes')} rows={3} {...register('notes')} />
 
-        <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-2">
-          {t('booking:flow.requestAppointment')}
-        </Button>
-        <p className="text-xs text-ink-500">
-          This sends a request — the shop will confirm your appointment shortly, it isn&apos;t booked instantly.
-        </p>
-      </form>
+          {/*
+            Sticky on a phone. The form is long enough that the submit button
+            leaves the screen while the customer fills it in, and the last
+            action of the most important flow in the product should never
+            require scrolling to find.
+          */}
+          <div
+            className={cn(
+              'sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-border bg-paper-0/95 px-4 py-3 backdrop-blur',
+              'pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:backdrop-blur-none',
+            )}
+          >
+            <Button type="submit" size="lg" isLoading={isSubmitting} className="w-full">
+              {t('flow.confirmBooking')}
+            </Button>
+            {/* Since LOT E this is true: the appointment is confirmed on
+                creation. It used to say the opposite. */}
+            <p className="flex items-center justify-center gap-1.5 text-xs text-ink-500">
+              <ShieldCheck className="h-3.5 w-3.5 text-success-600" aria-hidden="true" />
+              {t('flow.instantConfirmation')}
+            </p>
+          </div>
+        </form>
+      </div>
     </StepShell>
   )
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-ink-500">{label}</dt>
-      <dd className="text-right font-medium text-ink-950">{value}</dd>
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="shrink-0 text-ink-500">{label}</dt>
+      <dd className="text-end font-medium text-ink-950">{value}</dd>
     </div>
   )
 }
 
-// --- success screen ----------------------------------------------------------------------
+// --- success ----------------------------------------------------------------
 
 function SuccessScreen({
   organization,
@@ -822,7 +896,7 @@ function SuccessScreen({
    * and trains the customer to expect a message that will never come.
    */
   return (
-    <Card elevated className="w-full p-6 text-center">
+    <div className="w-full rounded-2xl border border-border bg-paper-0 p-6 text-center shadow-xs">
       <motion.div
         // Meaningful, once, on the one screen in the flow that has earned it.
         // Transform and opacity only, so it composites; skipped entirely under
@@ -848,10 +922,7 @@ function SuccessScreen({
         <SummaryRow label={t('success.service')} value={service.name} />
         <SummaryRow label={t('success.professional')} value={barber.displayName} />
         <SummaryRow label={t('success.date')} value={dt.longDate(appointment.startsAt, timeZone)} />
-        <SummaryRow
-          label={t('success.time')}
-          value={dt.timeRange(appointment.startsAt, appointment.endsAt, timeZone)}
-        />
+        <SummaryRow label={t('success.time')} value={dt.timeRange(appointment.startsAt, appointment.endsAt, timeZone)} />
         {location ? <SummaryRow label={t('success.location')} value={location.name} /> : null}
         <SummaryRow label={t('success.price')} value={money(service.priceCents, organization.currency)} />
       </dl>
@@ -876,29 +947,29 @@ function SuccessScreen({
       </Button>
 
       <SuccessNextStep hasClaimToken={Boolean(appointment.claimToken)} />
-    </Card>
+    </div>
   )
 }
 
 /**
- * The booking -> account seam. A signed-in customer's appointment is
- * already linked server-side, so they just go look at it. An anonymous
- * booker is offered an account, and the claim token stashed at booking
- * time is what makes THIS appointment show up inside it — without that
- * step, creating an account here would be an empty promise.
+ * The booking → account seam. A signed-in customer's appointment is already
+ * linked server-side, so they just go look at it. An anonymous booker is
+ * offered an account, and the claim token stashed at booking time is what
+ * makes THIS appointment show up inside it — without that, creating an
+ * account here would be an empty promise.
  */
 function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('booking')
   const { user } = useAuth()
 
   if (user) {
     return (
       <div className="mt-6 flex flex-col gap-2">
         <Link to="/app/customer/appointments" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
-          {t('booking:flow.viewMyAppointments')}
+          {t('success.viewAppointment')}
         </Link>
         <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-          {t('common:action.done')}
+          {t('success.done')}
         </Link>
       </div>
     )
@@ -908,51 +979,64 @@ function SuccessNextStep({ hasClaimToken }: { hasClaimToken: boolean }) {
     <div className="mt-6 flex flex-col gap-2">
       {hasClaimToken ? (
         <>
-          <p className="text-sm text-ink-500">
-            {t('booking:flow.createAnAccountToManage')}
-          </p>
-          <Link
-            to="/register?redirect=%2Fapp%2Fcustomer"
-            className={buttonVariants({ variant: 'primary' }, 'w-full')}
-          >
-            {t('booking:flow.createAnAccount')}
+          <p className="text-pretty text-sm text-ink-500">{t('success.accountPrompt')}</p>
+          <Link to="/register?redirect=%2Fapp%2Fcustomer" className={buttonVariants({ variant: 'primary' }, 'w-full')}>
+            {t('success.createAccount')}
           </Link>
-          <Link
-            to="/login?redirect=%2Fapp%2Fcustomer"
-            className={buttonVariants({ variant: 'secondary' }, 'w-full')}
-          >
-            {t('booking:flow.iAlreadyHaveAnAccount')}
+          <Link to="/login?redirect=%2Fapp%2Fcustomer" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+            {t('success.haveAccount')}
           </Link>
         </>
       ) : null}
       <Link to="/" className={buttonVariants({ variant: 'ghost' }, 'w-full')}>
-        {t('common:action.done')}
+        {t('success.done')}
       </Link>
     </div>
   )
 }
 
-// --- shared step chrome ------------------------------------------------------------------
+// --- shared step chrome -----------------------------------------------------
 
 function StepShell({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div>
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-ink-950">
-        <CircleUserRound className="hidden h-5 w-5 text-accent-600" aria-hidden="true" />
-        {title}
-      </h2>
+    <section>
+      <h2 className="mb-3 text-lg font-semibold text-ink-950">{title}</h2>
       {children}
-    </div>
+    </section>
   )
 }
 
-/** Card-styled, fully native `<button>` (never nest interactive elements inside `Card`, which renders a `<div>`). */
-function SelectableCard({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+function StepError({ title, query }: { title: string; query: { error: Error | null; refetch: () => unknown } }) {
+  const { t } = useTranslation('booking')
+  return (
+    <ErrorState
+      title={title}
+      description={query.error?.message ?? ''}
+      action={
+        <Button variant="secondary" onClick={() => void query.refetch()}>
+          {t('common:action.tryAgain')}
+        </Button>
+      }
+    />
+  )
+}
+
+/**
+ * A real `<button>` styled as a row. Never a `Card` with an onClick — a div
+ * that responds to a mouse and not to a keyboard is the most common way an
+ * otherwise careful flow becomes unusable without one.
+ */
+function SelectableRow({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="min-h-11 w-full rounded-lg border border-border-strong bg-paper-0 p-4 text-left transition-colors hover:border-accent-600 hover:bg-accent-100/30 focus-visible:outline-2 focus-visible:outline-accent-600"
+      className={cn(
+        'flex min-h-16 w-full items-start gap-3 rounded-xl border border-border bg-paper-0 p-4 text-start',
+        'transition-colors duration-[--fu-duration-quick] motion-reduce:transition-none',
+        'hover:border-accent-300 hover:bg-accent-100/40',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
+      )}
     >
       {children}
     </button>
@@ -961,10 +1045,10 @@ function SelectableCard({ children, onClick }: { children: ReactNode; onClick: (
 
 function StepSkeleton() {
   return (
-    <div className="flex flex-col gap-3" aria-hidden="true">
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-20 w-3/4" />
+    <div className="flex flex-col gap-2" aria-hidden="true">
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <Skeleton className="h-20 w-full rounded-xl" />
+      <Skeleton className="h-20 w-3/4 rounded-xl" />
     </div>
   )
 }

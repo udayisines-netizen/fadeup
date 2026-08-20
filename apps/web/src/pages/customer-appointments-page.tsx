@@ -13,8 +13,7 @@ import {
 import { BookingProgress, BookingStatusBadge, ExpiryCountdown } from '@/components/booking/booking-status'
 import { RescheduleDialog } from '@/components/booking/reschedule-dialog'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Container } from '@/components/ui/container'
-import { Card } from '@/components/ui/card'
+import { PageHeader } from '@/components/ui/page-header'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -23,14 +22,18 @@ import { PageSpinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
-import { useMoney } from '@/lib/intl/use-intl'
+import { useMoney, useDateTime } from '@/lib/intl/use-intl'
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-}
-
-
-/** /app/customer/appointments — upcoming/past, cancel (reuses the existing pending/confirmed status machine), and rebook. */
+/**
+ * `/app/customer/appointments` — upcoming and past, cancel, move, rebook.
+ *
+ * Every time on this screen is rendered in the SHOP's timezone, from
+ * `locationTimezone`. It used to use the device's, which is wrong in the one
+ * situation a customer list is most likely to contain: an appointment made in
+ * one country and read in another. A 14:00 cut in Paris is at 14:00 in Paris
+ * whether or not the customer has since flown to London, and showing 13:00
+ * there is how somebody misses it.
+ */
 export function CustomerAppointmentsPage() {
   const { t } = useTranslation('customer-app')
   const { user } = useAuth()
@@ -79,23 +82,24 @@ export function CustomerAppointmentsPage() {
 
   if (appointmentsQuery.isError) {
     return (
-      <Container size="sm" className="py-10">
-        <ErrorState
-          title={t('appointments.errorTitle')}
-          description={appointmentsQuery.error.message}
-          action={
-            <Button variant="secondary" onClick={() => void appointmentsQuery.refetch()}>
-              {t('common:action.tryAgain')}
-            </Button>
-          }
-        />
-      </Container>
+      <ErrorState
+        title={t('appointments.errorTitle')}
+        description={appointmentsQuery.error.message}
+        action={
+          <Button variant="secondary" onClick={() => void appointmentsQuery.refetch()}>
+            {t('common:action.tryAgain')}
+          </Button>
+        }
+      />
     )
   }
 
   return (
-    <Container size="sm" className="flex flex-col gap-4 py-6">
-      <h1 className="text-2xl font-semibold text-ink-950">{t('appointments.title')}</h1>
+    // No Container: the customer shell already owns the page's width and
+    // padding. Nesting a second one gave this page a narrower measure than
+    // every other tab, which is why the app read as a set of screens.
+    <div className="flex flex-col gap-5">
+      <PageHeader title={t('appointments.title')} />
 
       <Tabs defaultValue="upcoming">
         <TabsList>
@@ -150,12 +154,13 @@ export function CustomerAppointmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Container>
+    </div>
   )
 }
 
 function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment; onCancel?: () => void }) {
   const money = useMoney()
+  const dateTime = useDateTime()
   const { t } = useTranslation('customer-app')
   const reduced = useReducedMotion()
   const [moveOpen, setMoveOpen] = useState(false)
@@ -179,7 +184,7 @@ function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment
       layout={!reduced}
       transition={{ duration: reduced ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Card className="p-4">
+      <div className="rounded-xl border border-border bg-paper-0 p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="font-medium text-ink-950">{appointment.organizationName}</p>
@@ -187,7 +192,10 @@ function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment
               {appointment.serviceName ?? ''}
               {appointment.barberDisplayName ? ` · ${appointment.barberDisplayName}` : ''}
             </p>
-            <p className="mt-1 text-sm text-ink-700">{formatDateTime(appointment.startsAt)}</p>
+            {/* The shop's clock, not the phone's. */}
+            <p className="mt-1 text-sm font-medium text-ink-700">
+              {dateTime.dateTime(appointment.startsAt, appointment.locationTimezone)}
+            </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <BookingStatusBadge stage={stage} />
@@ -270,7 +278,7 @@ function AppointmentCard({ appointment, onCancel }: { appointment: MyAppointment
             }}
           />
         ) : null}
-      </Card>
+      </div>
     </motion.div>
   )
 }

@@ -23,7 +23,8 @@
     "tagline": "Le système d'exploitation des salons de coiffure modernes — réservations, file d'attente en direct, gestion des postes et relation client dans un seul système connecté.",
     "product": "Produit",
     "account": "Compte",
-    "copyright": "© {{year}} FadeUp. Tous droits réservés."
+    "copyright": "© {{year}} FadeUp. Tous droits réservés.",
+    "poweredBy": "Propulsé par FadeUp"
   },
   "theme": {
     "light": "Clair",
