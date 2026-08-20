@@ -1,13 +1,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AppHomePage } from '@/pages/app-home-page'
+import { ProDashboardPage } from '@/pages/pro/dashboard-page'
 import { ToastProvider } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth-context'
 import { useCurrentOrg } from '@/lib/current-org-context'
 import { useOrgLocations } from '@/lib/queries/locations'
 import { useOrgBarbers } from '@/lib/queries/barbers'
 import { useOrgStaffProfiles } from '@/lib/queries/staff-profiles'
+import { useOrgQueue } from '@/lib/queries/queue'
 import { useBookingRequests } from '@/lib/queries/booking-requests'
 import { useCalendarRange, useCompleteAppointment, type CalendarAppointment } from '@/lib/queries/calendar'
 
@@ -16,6 +17,7 @@ vi.mock('@/lib/current-org-context', () => ({ useCurrentOrg: vi.fn() }))
 vi.mock('@/lib/queries/locations', () => ({ useOrgLocations: vi.fn() }))
 vi.mock('@/lib/queries/barbers', () => ({ useOrgBarbers: vi.fn() }))
 vi.mock('@/lib/queries/staff-profiles', () => ({ useOrgStaffProfiles: vi.fn() }))
+vi.mock('@/lib/queries/queue', () => ({ useOrgQueue: vi.fn() }))
 vi.mock('@/lib/queries/booking-requests', () => ({
   useBookingRequests: vi.fn(),
   useConfirmBookingRequest: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -34,19 +36,23 @@ vi.mock('@/lib/queries/calendar', async () => {
     useDeleteTimeBlock: () => ({ mutateAsync: vi.fn(), isPending: false }),
   }
 })
+vi.mock('@/lib/intl/use-intl', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/intl/use-intl')>('@/lib/intl/use-intl')
+  return { ...actual, useOrganizationCurrency: () => 'EUR' }
+})
 
 const mockAuth = vi.mocked(useAuth)
 const mockOrg = vi.mocked(useCurrentOrg)
 const mockLocations = vi.mocked(useOrgLocations)
 const mockBarbers = vi.mocked(useOrgBarbers)
 const mockStaff = vi.mocked(useOrgStaffProfiles)
+const mockQueue = vi.mocked(useOrgQueue)
 const mockRequests = vi.mocked(useBookingRequests)
 const mockCalendar = vi.mocked(useCalendarRange)
 const mockComplete = vi.mocked(useCompleteAppointment)
 
 const completeMutate = vi.fn()
 
-/** An instant N minutes from now, so "next up" logic is exercised against a real clock. */
 function fromNow(minutes: number): string {
   return new Date(Date.now() + minutes * 60_000).toISOString()
 }
@@ -77,7 +83,7 @@ function appointment(overrides: Partial<CalendarAppointment> = {}): CalendarAppo
 }
 
 function withRole(role: string, userId = 'user-owner') {
-  mockAuth.mockReturnValue({ user: { id: userId } } as never)
+  mockAuth.mockReturnValue({ user: { id: userId, email: 'alex@shop.test' } } as never)
   mockOrg.mockReturnValue({
     currentMembership: { id: 'm-1', organizationId: 'org-1', role, organizationName: 'Shop', organizationSlug: 'shop' },
     memberships: [],
@@ -103,24 +109,24 @@ function renderPage() {
   return render(
     <MemoryRouter>
       <ToastProvider>
-        <AppHomePage />
+        <ProDashboardPage />
       </ToastProvider>
     </MemoryRouter>,
   )
 }
 
 /**
- * The screen that replaced a placeholder reading "dashboards land in later
- * lots". Its job is to answer three questions in order: who is next, is
- * anything waiting on me, what does the rest of the day look like.
+ * The flagship screen. These tests are as much about what it must NOT show —
+ * the reference is full of numbers FadeUp cannot compute, and the dashboard's
+ * value depends on every figure on it being true.
  */
-describe('AppHomePage — Today', () => {
+describe('ProDashboardPage', () => {
   beforeEach(() => {
     completeMutate.mockReset().mockResolvedValue(undefined)
     withRole('owner')
     withCalendar([appointment()])
     mockLocations.mockReturnValue({
-      data: [{ id: 'loc-1', name: 'Bastille', timezone: 'Europe/Paris' }],
+      data: [{ id: 'loc-1', name: 'Bastille', timezone: 'Europe/Paris', city: 'Paris', country: 'FR' }],
       isPending: false,
       isError: false,
       refetch: vi.fn(),
@@ -145,25 +151,19 @@ describe('AppHomePage — Today', () => {
       isPending: false,
       isError: false,
     } as never)
+    mockQueue.mockReturnValue({ data: [], isPending: false, isError: false } as never)
     mockRequests.mockReturnValue({ data: [], isPending: false, isError: false } as never)
     mockComplete.mockReturnValue({ mutateAsync: completeMutate, isPending: false } as never)
   })
 
-  /** The hero card. Scoped, because the day list below deliberately shows the same appointment again. */
-  function hero() {
-    return screen.getByText(/Next up|In the chair now/).closest('div[class*="rounded-lg"]') as HTMLElement
-  }
-
-  it('leads with who is next', () => {
+  it('leads with who is next when nobody is in the chair', () => {
     renderPage()
 
-    expect(screen.getByText('Next up')).toBeInTheDocument()
-    expect(within(hero()).getByText('Alex Martin')).toBeInTheDocument()
+    expect(screen.getByText('Up next')).toBeInTheDocument()
+    expect(screen.getByText('Nobody in the chair')).toBeInTheDocument()
   })
 
-  it('prefers the person in the chair over the one after them', () => {
-    // An appointment that started 10 minutes ago and has not finished outranks
-    // whatever comes next — that is the one being worked on right now.
+  it('promotes the person in the chair over the one after them', () => {
     withCalendar([
       appointment({ id: 'now', customerName: 'In Chair', startsAt: fromNow(-10), endsAt: fromNow(20) }),
       appointment({ id: 'later', customerName: 'Later Person', startsAt: fromNow(60), endsAt: fromNow(90) }),
@@ -171,57 +171,79 @@ describe('AppHomePage — Today', () => {
 
     renderPage()
 
-    expect(screen.getByText('In the chair now')).toBeInTheDocument()
-    expect(within(hero()).getByText('In Chair')).toBeInTheDocument()
-    // The later one is still on the day list, just not the headline.
-    expect(within(hero()).queryByText('Later Person')).not.toBeInTheDocument()
+    expect(screen.getByText('In progress')).toBeInTheDocument()
+    // The NOW card is the dominant object; the next person is beside it, not in it.
+    const now = screen.getByText('In progress').closest('section') as HTMLElement
+    expect(within(now).getByText('In Chair')).toBeInTheDocument()
+    expect(within(now).queryByText('Later Person')).not.toBeInTheDocument()
   })
 
-  it('completes from the hero in one tap, without opening anything', async () => {
+  it('finishes the current appointment in one tap', async () => {
+    withCalendar([appointment({ id: 'now', startsAt: fromNow(-10), endsAt: fromNow(20) })])
+
     renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /Finish/ }))
 
-    fireEvent.click(screen.getByRole('button', { name: /Mark as done/ }))
-
-    await waitFor(() => expect(completeMutate).toHaveBeenCalledWith('appt-1'))
+    await waitFor(() => expect(completeMutate).toHaveBeenCalledWith('now'))
   })
 
-  it('offers the customer as a tap-to-call link', () => {
+  it('shows booked VALUE and labels it as not being payments', () => {
+    // FadeUp takes no payments. The figure is real; calling it revenue is not.
     renderPage()
 
-    const links = screen.getAllByRole('link', { name: /Call/ })
-    expect(links[0]).toHaveAttribute('href', 'tel:+33612345678')
+    expect(screen.getByText('Booked value')).toBeInTheDocument()
+    expect(screen.getByText('Not payments')).toBeInTheDocument()
+    expect(screen.queryByText(/Revenue/i)).not.toBeInTheDocument()
+  })
+
+  it('never invents a comparison against yesterday', () => {
+    renderPage()
+
+    // The reference shows "+18% vs hier" on every tile. Nothing queries
+    // yesterday, so nothing may claim it.
+    expect(screen.queryByText(/vs (hier|yesterday)/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/%\s*vs/i)).not.toBeInTheDocument()
+  })
+
+  it('shows a dash rather than 0% occupancy on an empty day', () => {
+    withCalendar([])
+
+    renderPage()
+
+    const occupancy = screen.getByText('Occupancy').previousSibling
+    expect(occupancy).toHaveTextContent('—')
+  })
+
+  it('keeps a zero no-show count quiet rather than alarming', () => {
+    renderPage()
+
+    const noShows = screen.getByText('No-shows').previousSibling
+    expect(noShows).toHaveTextContent('0')
+    expect(noShows).toHaveClass('text-ink-300')
   })
 
   it('surfaces waiting requests, because nothing else would', () => {
-    mockRequests.mockReturnValue({
-      data: [{ id: 'r1' }, { id: 'r2' }],
-      isPending: false,
-      isError: false,
-    } as never)
+    mockRequests.mockReturnValue({ data: [{ id: 'r1' }, { id: 'r2' }], isPending: false, isError: false } as never)
 
     renderPage()
 
     expect(screen.getByText('2 booking requests waiting')).toBeInTheDocument()
   })
 
-  it('does not nag a barber about requests they cannot answer', () => {
+  it('does not nag a professional about requests they cannot answer', () => {
     withRole('barber', 'user-karim')
-    mockRequests.mockReturnValue({ data: [], isPending: false, isError: false } as never)
 
     renderPage()
 
-    expect(screen.queryByText(/booking requests? waiting/)).not.toBeInTheDocument()
-    // Mirrors private.can_manage_appointments: the query is never even made.
+    expect(screen.queryByText(/booking requests waiting/)).not.toBeInTheDocument()
     expect(mockRequests).toHaveBeenCalledWith(undefined)
   })
 
-  it('shows a barber THEIR chair, not the whole shop', () => {
+  it('scopes a professional to their own chair, server-side', () => {
     withRole('barber', 'user-karim')
 
     renderPage()
 
-    expect(screen.getByText(/your chair/)).toBeInTheDocument()
-    // The range query is scoped to that professional server-side.
     expect(mockCalendar).toHaveBeenCalledWith(
       'org-1',
       expect.anything(),
@@ -229,7 +251,7 @@ describe('AppHomePage — Today', () => {
     )
   })
 
-  it('shows an owner the whole shop', () => {
+  it('gives front-of-house the whole floor', () => {
     renderPage()
 
     expect(mockCalendar).toHaveBeenCalledWith(
@@ -239,33 +261,31 @@ describe('AppHomePage — Today', () => {
     )
   })
 
-  it('counts the day honestly', () => {
+  it('marks a usable gap between two appointments', () => {
     withCalendar([
-      appointment({ id: 'a', status: 'completed' }),
-      appointment({ id: 'b', status: 'no_show' }),
-      appointment({ id: 'c', startsAt: fromNow(120), endsAt: fromNow(150) }),
+      appointment({ id: 'a', startsAt: fromNow(60), endsAt: fromNow(90) }),
+      appointment({ id: 'b', customerName: 'Second', startsAt: fromNow(150), endsAt: fromNow(180) }),
     ])
 
     renderPage()
 
-    // Scoped to the stats row: "Done" is also a status badge in the day list.
-    const stat = (label: string) => screen.getByText(label).previousSibling
-    expect(stat('Still to come')).toHaveTextContent('1')
-    expect(screen.getAllByText('Done').map((node) => node.previousSibling).find((node) => node?.textContent === '1'))
-      .toBeTruthy()
-    expect(stat('No-shows')).toHaveTextContent('1')
+    // 60 minutes between them — a real walk-in opportunity, and the most
+    // valuable row on the timeline.
+    expect(screen.getByText(/1 h free/)).toBeInTheDocument()
   })
 
-  it('says something human when the day is over', () => {
-    withCalendar([appointment({ status: 'completed' })])
+  it('does not call a short turnaround an opportunity', () => {
+    withCalendar([
+      appointment({ id: 'a', startsAt: fromNow(60), endsAt: fromNow(90) }),
+      appointment({ id: 'b', customerName: 'Second', startsAt: fromNow(100), endsAt: fromNow(130) }),
+    ])
 
     renderPage()
 
-    expect(screen.getByText('Nothing else booked today')).toBeInTheDocument()
+    expect(screen.queryByText(/free/)).not.toBeInTheDocument()
   })
 
-  it('admits when it is not actually live', () => {
-    // A screen that silently stopped updating looks exactly like a quiet one.
+  it('says so when it is not actually live', () => {
     withCalendar([appointment()], { realtimeStatus: 'offline' })
 
     renderPage()

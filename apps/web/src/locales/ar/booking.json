@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "لم ينشر هذا الصالون أي ملف لمختص بعد.",
     "goToFadeup": "الانتقال إلى FadeUp",
     "bookNow": "احجز الآن"
+  },
+  "slots": {
+    "morning": "صباحًا",
+    "afternoon": "بعد الظهر",
+    "evening": "مساءً",
+    "partOfDay": "وقت اليوم",
+    "available": "الأوقات المتاحة",
+    "nonePart": "لا يوجد وقت متاح في هذه الفترة.",
+    "dayFull": "محجوز بالكامل"
   }
 }

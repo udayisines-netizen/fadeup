@@ -157,5 +157,9 @@
     "platformAdministration": "平台管理",
     "chooseAWorkspace": "选择工作台",
     "youHaveAccessToMore": "你有多个可访问的工作台，请选择要前往的一个。"
+  },
+  "date": {
+    "today": "今天",
+    "tomorrow": "明天"
   }
 }

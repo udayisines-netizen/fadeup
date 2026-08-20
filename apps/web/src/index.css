@@ -274,6 +274,13 @@ body {
   .animate-pulse {
     animation: none;
   }
+
+  /* The live-status pulse (StatusBadge/StatusDot) is the only looping
+     animation in the product. It stops here entirely — the dot and its label
+     still carry the state, so nothing is lost. */
+  .animate-ping {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -291,6 +298,10 @@ body {
 
   [data-fu-drawer-content][data-side='left'][data-state='open'] {
     animation: fu-drawer-in-left 200ms ease-out both;
+  }
+
+  [data-fu-drawer-content][data-side='bottom'][data-state='open'] {
+    animation: fu-drawer-in-bottom 200ms ease-out both;
   }
 
   [data-fu-popover][data-state='open'] {
@@ -357,6 +368,15 @@ body {
   }
 }
 
+@keyframes fu-drawer-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @keyframes fu-popover-in {
   from {
     opacity: 0;
@@ -405,4 +425,539 @@ body {
     40px 100%,
     16px 100%,
     16px 100%;
+}
+
+/* ==========================================================================
+ * FadeUp professional marketing theme — /for-business only.
+ *
+ * Scoped to [data-pro-marketing] on purpose. The product design tokens above
+ * (ink/paper/ivory/accent) drive the customer app, the Pro app and the
+ * Platform; this page needs a dark, premium environment that those surfaces
+ * must NOT inherit. Defining a parallel token set under one attribute keeps
+ * the two worlds separate — nothing here can leak into /app or /app/customer.
+ *
+ * Values are the official FadeUp brand charter, not sampled approximations:
+ *   #0B1320 Night Navy · #17A36A Emerald · #3DDAA2 Mint
+ *   #B6CDBE Sage       · #F4F6F8 Off White
+ *
+ * Charter direction honoured here: dark layered surfaces, thin subtle
+ * borders, restrained radius, minimal shadows, very subtle emerald/mint glow.
+ * Explicitly avoided: purple, generic SaaS blue, heavy gradients,
+ * excessive glassmorphism.
+ * ========================================================================== */
+
+[data-pro-marketing] {
+  /* Brand constants */
+  --pro-navy: #0b1320;
+  --pro-emerald: #17a36a;
+  --pro-mint: #3ddaa2;
+  --pro-sage: #b6cdbe;
+  --pro-offwhite: #f4f6f8;
+
+  /* Semantic layers — depth comes from these four, not from gradients. */
+  --pro-bg: var(--pro-navy);
+  --pro-surface: #101a29;
+  --pro-elevated: #16233a;
+  --pro-sunken: #070d16;
+
+  /* Thin, low-opacity sage borders per the charter. */
+  --pro-border: color-mix(in srgb, var(--pro-sage) 14%, transparent);
+  --pro-border-strong: color-mix(in srgb, var(--pro-sage) 26%, transparent);
+
+  --pro-text: var(--pro-offwhite);
+  --pro-muted: color-mix(in srgb, var(--pro-sage) 82%, transparent);
+  --pro-faint: color-mix(in srgb, var(--pro-sage) 52%, transparent);
+
+  --pro-accent: var(--pro-emerald);
+  --pro-accent-hover: #1cb877;
+  --pro-highlight: var(--pro-mint);
+  --pro-on-accent: #04120b;
+
+  --pro-radius: 0.625rem;
+
+  background-color: var(--pro-bg);
+  color: var(--pro-text);
+  /*
+   * The professional page leads with the modern sans identity, not the
+   * editorial serif used on the consumer side. Satoshi is the charter face;
+   * it is not licensed in this repository, so the project sans stack stands
+   * in until a licensed asset is added. See docs note in the film README.
+   */
+  font-family: var(--font-sans);
+}
+
+/* Surfaces ---------------------------------------------------------------- */
+.pro-surface {
+  background-color: var(--pro-surface);
+  border: 1px solid var(--pro-border);
+  border-radius: var(--pro-radius);
+}
+.pro-elevated {
+  background-color: var(--pro-elevated);
+  border: 1px solid var(--pro-border);
+  border-radius: var(--pro-radius);
+}
+
+/* Type -------------------------------------------------------------------- */
+.pro-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--pro-highlight);
+}
+.pro-title {
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--pro-text);
+  text-wrap: balance;
+}
+.pro-body {
+  color: var(--pro-muted);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/*
+ * The single glow in the system. One soft emerald bloom behind a product
+ * frame reads as depth; the same effect repeated on every card reads as a
+ * crypto landing page, which the charter explicitly rejects. Used sparingly.
+ */
+.pro-glow {
+  position: relative;
+}
+.pro-glow::before {
+  content: '';
+  position: absolute;
+  inset: -18% -8% auto;
+  height: 60%;
+  background: radial-gradient(
+    55% 50% at 50% 0%,
+    color-mix(in srgb, var(--pro-emerald) 22%, transparent),
+    transparent 72%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/*
+ * Hairline that fades at both ends — used to separate major chapters without
+ * drawing a hard full-width rule across a dark page, which looks like a seam.
+ */
+.pro-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(to right, transparent, var(--pro-border-strong) 18%, var(--pro-border-strong) 82%, transparent);
+}
+
+/*
+ * Token remapping inside the professional scope.
+ *
+ * The shared MarketingHeader and MarketingFooter are used by "/", "/search",
+ * "/features" and "/pricing" as well as this page, and they are built from the
+ * product tokens (bg-paper-0, text-ink-950, border-border...). Rather than fork
+ * those components or add per-page props to them, the professional wrapper
+ * simply redefines what those tokens MEAN inside itself.
+ *
+ * Because Tailwind v4 utilities compile to `var(--color-*)`, the header and
+ * footer resolve to dark values here and to their normal light values
+ * everywhere else — with zero changes to their markup and zero risk to the
+ * consumer landing page.
+ */
+[data-pro-marketing] {
+  --color-paper-0: var(--pro-bg);
+  --color-paper-50: var(--pro-surface);
+  --color-paper-100: var(--pro-elevated);
+  --color-paper-200: var(--pro-elevated);
+  --color-ivory: var(--pro-bg);
+  --color-ivory-deep: var(--pro-sunken);
+
+  --color-border: var(--pro-border);
+  --color-border-strong: var(--pro-border-strong);
+
+  --color-ink-950: var(--pro-text);
+  --color-ink-800: var(--pro-text);
+  --color-ink-700: var(--pro-muted);
+  --color-ink-500: var(--pro-faint);
+  --color-ink-300: var(--pro-faint);
+
+  --color-accent-600: var(--pro-accent);
+  --color-accent-700: var(--pro-accent-hover);
+  --color-accent-800: var(--pro-accent-hover);
+  --color-accent-200: var(--pro-highlight);
+  --color-accent-100: color-mix(in srgb, var(--pro-emerald) 20%, transparent);
+  --color-on-accent: var(--pro-on-accent);
+
+  /* The forest surfaces the old page used for its dark sections resolve into
+     the charter's navy layers, so no section keeps the previous green ground. */
+  --color-forest: var(--pro-sunken);
+  --color-forest-soft: var(--pro-surface);
+  --color-on-forest: var(--pro-text);
+  --color-on-forest-dim: var(--pro-muted);
+}
+
+/*
+ * The one light section on the professional page.
+ *
+ * The page is dark from navigation to footer except here. Migration is the
+ * moment a shop owner has to feel reassured rather than impressed, and a
+ * single bright, generously spaced interruption does more for that than any
+ * amount of copy. It is also the page's breathing point: dark, dark, dark,
+ * light, dark reads as deliberate rhythm, where dark-all-the-way reads as a
+ * long tunnel.
+ *
+ * Scoped inside [data-pro-marketing] and applied by opting in with
+ * `.pro-light`, so the surrounding dark tokens are untouched.
+ */
+[data-pro-marketing] .pro-light {
+  --pro-bg: var(--pro-offwhite);
+  --pro-surface: #ffffff;
+  --pro-elevated: #ffffff;
+  --pro-sunken: #e9edf1;
+
+  --pro-border: color-mix(in srgb, var(--pro-navy) 12%, transparent);
+  --pro-border-strong: color-mix(in srgb, var(--pro-navy) 22%, transparent);
+
+  --pro-text: var(--pro-navy);
+  --pro-muted: color-mix(in srgb, var(--pro-navy) 68%, transparent);
+  --pro-faint: color-mix(in srgb, var(--pro-navy) 46%, transparent);
+
+  /* Emerald stays the accent; mint is too pale to carry meaning on white. */
+  --pro-highlight: var(--pro-emerald);
+
+  background-color: var(--pro-bg);
+  color: var(--pro-text);
+}
+
+/* ==========================================================================
+ * Professional glass + radius system — /for-business only.
+ *
+ * One vocabulary, four surfaces. The alternative (a bespoke rgba/blur/border
+ * triple written inline at every call site) is how a page ends up with nine
+ * slightly different pieces of glass, which reads as sloppiness rather than
+ * as depth.
+ *
+ * Restraint is the rule the charter actually asks for: glass is used where it
+ * creates hierarchy (a product canvas, a plan card, the video frame), never
+ * as a default background. Anything that is simply "a dark area" stays a
+ * solid surface.
+ * ========================================================================== */
+
+[data-pro-marketing] {
+  /* Radius scale. Every rounded thing on the page picks one of these. */
+  --pro-r-control: 0.875rem; /* 14px — segmented options, small controls */
+  --pro-r-button: 1rem; /* 16px — buttons */
+  --pro-r-card: 1.375rem; /* 22px — small cards, list surfaces */
+  --pro-r-panel: 2rem; /* 32px — product panels, plan cards */
+  --pro-r-showcase: 2.5rem; /* 40px — the video showcase */
+
+  /*
+   * The editorial serif is the consumer site's voice, not the professional
+   * one. Rebinding the token inside this scope removes it from every heading
+   * on the page, including the shared pricing and product components, without
+   * editing them and without touching "/" where the serif still belongs.
+   */
+  --font-display: var(--font-sans);
+}
+
+/* Glass surfaces ---------------------------------------------------------- */
+
+/*
+ * Shared behaviour: a low-opacity fill, a hairline that catches light at the
+ * top, a real blur, and a shadow that sits under rather than around. The
+ * variants differ only in how much of each.
+ */
+.pro-glass,
+.pro-glass-card,
+.pro-glass-elevated,
+.pro-glass-product {
+  position: relative;
+  /*
+   * No stroke. A 1px white outline around every rectangle is what made the
+   * page read as a wireframe: the eye follows the borders instead of the
+   * content, and twelve outlined boxes look like twelve boxes rather than one
+   * composition. Definition comes from fill, blur, shadow and the light behind
+   * the surface. Where a boundary genuinely has to be legible, it is a tonal
+   * edge close to the background, never a bright one.
+   */
+  border: 0;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+/* Subtle: barely there. For grouping, not for emphasis. */
+.pro-glass {
+  background: color-mix(in srgb, var(--pro-offwhite) 4%, transparent);
+  border-radius: var(--pro-r-card);
+}
+
+/* Card: the default. Plan cards, stage cards, migration steps. */
+.pro-glass-card {
+  background: color-mix(in srgb, var(--pro-offwhite) 6%, transparent);
+  border-radius: var(--pro-r-panel);
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.7);
+}
+
+/* Elevated: the one card that should read as chosen. */
+.pro-glass-elevated {
+  background: color-mix(in srgb, var(--pro-offwhite) 9%, transparent);
+  border-radius: var(--pro-r-panel);
+  /* The chosen surface is marked by its own emerald light, not by an outline. */
+  box-shadow:
+    0 24px 60px -30px rgb(0 0 0 / 0.85),
+    0 0 60px -18px color-mix(in srgb, var(--pro-emerald) 45%, transparent);
+}
+
+/* Product: the big canvas the interface lives on. */
+.pro-glass-product {
+  background: color-mix(in srgb, var(--pro-offwhite) 5%, transparent);
+  border-radius: var(--pro-r-panel);
+  box-shadow: 0 40px 90px -50px rgb(0 0 0 / 0.9);
+}
+
+/*
+ * The inner highlight. A 1px gradient along the top edge, which is what makes
+ * a translucent surface read as glass rather than as flat grey. Applied as a
+ * pseudo-element so it never interferes with content or with focus rings.
+ */
+.pro-glass::after,
+.pro-glass-card::after,
+.pro-glass-elevated::after,
+.pro-glass-product::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--pro-offwhite) 6%, transparent),
+    transparent 55%
+  );
+}
+
+/*
+ * Glass in the light section. Same vocabulary, inverted: the highlight comes
+ * from white fill over off-white rather than from a light edge on dark.
+ */
+[data-pro-marketing] .pro-light .pro-glass-card,
+[data-pro-marketing] .pro-light .pro-glass {
+  background: color-mix(in srgb, #ffffff 76%, transparent);
+  box-shadow: 0 20px 44px -30px color-mix(in srgb, var(--pro-navy) 40%, transparent);
+}
+
+/*
+ * Ambient light. One soft emerald pool placed behind a composition to give it
+ * a light source. Sized by the caller; never stacked two deep.
+ */
+.pro-ambient {
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    color-mix(in srgb, var(--pro-emerald) 26%, transparent),
+    transparent 70%
+  );
+}
+
+/* Blur is expensive and, for some people, unpleasant. Both get a flat fill. */
+@media (prefers-reduced-motion: reduce) {
+  .pro-glass,
+  .pro-glass-card,
+  .pro-glass-elevated,
+  .pro-glass-product {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--pro-surface);
+  }
+}
+
+/* ============================================================================
+ * FRONTEND V2 — the Professional operating-system surface
+ * ============================================================================
+ *
+ * FadeUp now has two products with genuinely different jobs, and they should
+ * not look the same:
+ *
+ *   PROFESSIONAL   a dark, dense operational OS. Someone stands in front of it
+ *                  all day, in a room with mirrors and strong lighting, and
+ *                  needs to read state at a glance from a metre away.
+ *
+ *   CUSTOMER       a light consumer marketplace. Someone opens it for ninety
+ *                  seconds to find a haircut. It must feel inviting, visual
+ *                  and fast, not administrative.
+ *
+ * Rather than fork every component, the Professional scope REDEFINES what the
+ * existing tokens mean inside itself — the same mechanism `[data-pro-marketing]`
+ * already uses successfully for the marketing pages. A Button, a Card or a
+ * Dialog written once against `bg-paper-0 / text-ink-950 / border-border`
+ * renders light in the customer product and dark in the Professional one, with
+ * no per-component branching and no duplicate primitives.
+ *
+ * That is the whole reason V2 does not ship a parallel component library.
+ */
+
+[data-fu-pro] {
+  /* Ground: near-black with a faint green undertone. Pure #000 is harsh under
+     shop lighting and makes every border either invisible or heavy. */
+  --fu-pro-canvas: #070b09;
+  --fu-pro-surface: #0e1512;
+  --fu-pro-raised: #141d19;
+  --fu-pro-overlay: #18211d;
+
+  --fu-pro-line: #1c2622;
+  --fu-pro-line-strong: #2a3833;
+
+  --fu-pro-text: #e9f1ec;
+  --fu-pro-text-muted: #93a79c;
+  --fu-pro-text-faint: #64796e;
+
+  /* The accent has to be brighter here than in the light product: emerald at
+     #0d9b5f is a confident green on white and nearly unreadable on near-black. */
+  --fu-pro-accent: #24cd82;
+  --fu-pro-accent-hover: #3ddc94;
+  --fu-pro-accent-dim: #148f5a;
+  --fu-pro-accent-tint: color-mix(in srgb, #24cd82 12%, transparent);
+  --fu-pro-accent-line: color-mix(in srgb, #24cd82 32%, transparent);
+
+  /* Token remapping — everything below is what makes shared components work. */
+  --color-paper-0: var(--fu-pro-surface);
+  --color-paper-50: var(--fu-pro-canvas);
+  --color-paper-100: var(--fu-pro-raised);
+  --color-paper-200: var(--fu-pro-overlay);
+
+  --color-border: var(--fu-pro-line);
+  --color-border-strong: var(--fu-pro-line-strong);
+
+  --color-ink-950: var(--fu-pro-text);
+  --color-ink-800: var(--fu-pro-text);
+  --color-ink-700: var(--fu-pro-text-muted);
+  --color-ink-500: var(--fu-pro-text-muted);
+  --color-ink-300: var(--fu-pro-text-faint);
+
+  --color-accent-600: var(--fu-pro-accent);
+  --color-accent-700: var(--fu-pro-accent-hover);
+  --color-accent-800: var(--fu-pro-accent-hover);
+  --color-accent-200: var(--fu-pro-accent-line);
+  --color-accent-100: var(--fu-pro-accent-tint);
+  --color-on-accent: #06120c;
+
+  /* Status colours need lifting too — the light-mode 600s disappear on black. */
+  --color-success-600: #34d399;
+  --color-success-100: color-mix(in srgb, #34d399 14%, transparent);
+  --color-warning-600: #e0a02f;
+  --color-warning-100: color-mix(in srgb, #e0a02f 14%, transparent);
+  --color-danger-600: #f0715f;
+  --color-danger-100: color-mix(in srgb, #f0715f 14%, transparent);
+  --color-info-600: #5aa2e8;
+  --color-info-100: color-mix(in srgb, #5aa2e8 14%, transparent);
+
+  background-color: var(--fu-pro-canvas);
+  color: var(--fu-pro-text);
+  color-scheme: dark;
+}
+
+/*
+ * The customer product is the default light theme, so it needs no remapping —
+ * only its own ground. The mint wash at the top of discovery is the one place
+ * the customer app uses a gradient, and it is doing real work: it separates the
+ * search header from the scrolling content without drawing a line.
+ */
+[data-fu-customer] {
+  --fu-customer-wash: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent-100) 55%, var(--color-paper-50)) 0%,
+    var(--color-paper-50) 220px
+  );
+  background: var(--fu-customer-wash);
+  background-repeat: no-repeat;
+  background-color: var(--color-paper-50);
+}
+
+/* ============================================================================
+ * MOTION SYSTEM
+ * ============================================================================
+ *
+ * Three durations and two curves, and nothing else. A motion system with a
+ * dozen options is not a system — every component picks a different value and
+ * the product ends up feeling assembled rather than designed.
+ *
+ *   instant   state feedback that must not be perceived as animation
+ *   quick     the default: hovers, chips, slot selection, tab changes
+ *   settle    things that ENTER or LEAVE and need to be understood
+ *
+ * `--fu-ease-out` is the standard decelerating curve for anything arriving.
+ * `--fu-ease-spring` overshoots slightly and is reserved for confirmation —
+ * the one moment in FadeUp that has earned a flourish.
+ */
+@theme {
+  --fu-duration-instant: 90ms;
+  --fu-duration-quick: 160ms;
+  --fu-duration-settle: 280ms;
+  --fu-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fu-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A row arriving from realtime: it must be noticeable without being a
+     distraction on a screen that stays open for eight hours. */
+  [data-fu-enter] {
+    animation: fu-enter var(--fu-duration-settle) var(--fu-ease-out) both;
+  }
+
+  [data-fu-sheet][data-state='open'] {
+    animation: fu-sheet-in var(--fu-duration-settle) var(--fu-ease-out) both;
+  }
+
+  [data-fu-confirm] {
+    animation: fu-confirm 420ms var(--fu-ease-spring) both;
+  }
+}
+
+@keyframes fu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fu-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fu-confirm {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/*
+ * Hides scrollbars on the deliberately-scrollable strips (date strip, category
+ * chips, professional columns) where a visible bar would break the composition.
+ * The content stays keyboard- and wheel-scrollable; only the bar is hidden.
+ */
+.fu-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+.fu-scroll-x::-webkit-scrollbar {
+  display: none;
 }

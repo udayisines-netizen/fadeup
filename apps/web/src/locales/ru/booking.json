@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "Салон пока не опубликовал профили специалистов.",
     "goToFadeup": "Перейти в FadeUp",
     "bookNow": "Записаться"
+  },
+  "slots": {
+    "morning": "Утро",
+    "afternoon": "День",
+    "evening": "Вечер",
+    "partOfDay": "Время суток",
+    "available": "Свободное время",
+    "nonePart": "В это время суток свободных мест нет.",
+    "dayFull": "Всё занято"
   }
 }

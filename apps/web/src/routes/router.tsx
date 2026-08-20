@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/routes/root-layout'
 import { RequireAuth } from '@/routes/require-auth'
-import { AppLayout } from '@/routes/app-layout'
+import { ProShell } from '@/routes/pro-shell'
 import { OnboardingRoute } from '@/routes/onboarding-route'
 import { WorkspaceSelectorRoute } from '@/routes/workspace-selector-route'
 import { CustomerAppLayout } from '@/routes/customer-app-layout'
@@ -590,7 +590,7 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <RequireProAccess>
-              <AppLayout />
+              <ProShell />
             </RequireProAccess>
           </RequireAuth>
         ),
@@ -598,8 +598,8 @@ export const router = createBrowserRouter([
           {
             index: true,
             lazy: async () => {
-              const { AppHomePage } = await import('@/pages/app-home-page')
-              return { Component: AppHomePage }
+              const { ProDashboardPage } = await import('@/pages/pro/dashboard-page')
+              return { Component: ProDashboardPage }
             },
           },
           {

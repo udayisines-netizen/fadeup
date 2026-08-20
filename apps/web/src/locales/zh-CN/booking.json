@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "该商家尚未发布任何专业人员资料。",
     "goToFadeup": "前往 FadeUp",
     "bookNow": "立即预约"
+  },
+  "slots": {
+    "morning": "上午",
+    "afternoon": "下午",
+    "evening": "晚上",
+    "partOfDay": "时间段",
+    "available": "可选时间",
+    "nonePart": "该时间段没有空档。",
+    "dayFull": "已约满"
   }
 }

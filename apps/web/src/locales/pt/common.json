@@ -157,5 +157,9 @@
     "platformAdministration": "Administração da plataforma",
     "chooseAWorkspace": "Escolha um espaço",
     "youHaveAccessToMore": "Tem acesso a mais do que um. Escolha para onde ir."
+  },
+  "date": {
+    "today": "Hoje",
+    "tomorrow": "Amanhã"
   }
 }

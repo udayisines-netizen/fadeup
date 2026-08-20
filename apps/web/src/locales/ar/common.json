@@ -157,5 +157,9 @@
     "platformAdministration": "إدارة المنصة",
     "chooseAWorkspace": "اختر مساحة عمل",
     "youHaveAccessToMore": "لديك صلاحية الوصول إلى أكثر من مساحة. اختر وجهتك."
+  },
+  "date": {
+    "today": "اليوم",
+    "tomorrow": "غدًا"
   }
 }

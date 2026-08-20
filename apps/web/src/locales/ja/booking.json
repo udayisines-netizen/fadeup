@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "この店舗はまだスタッフのプロフィールを公開していません。",
     "goToFadeup": "FadeUp へ",
     "bookNow": "今すぐ予約"
+  },
+  "slots": {
+    "morning": "午前",
+    "afternoon": "午後",
+    "evening": "夜",
+    "partOfDay": "時間帯",
+    "available": "空き時間",
+    "nonePart": "この時間帯に空きはありません。",
+    "dayFull": "満席"
   }
 }

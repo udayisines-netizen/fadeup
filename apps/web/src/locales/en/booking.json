@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "This shop hasn't published any barber profiles.",
     "goToFadeup": "Go to FadeUp",
     "bookNow": "Book now"
+  },
+  "slots": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "partOfDay": "Time of day",
+    "available": "Available times",
+    "nonePart": "Nothing free at this time of day.",
+    "dayFull": "Fully booked"
   }
 }

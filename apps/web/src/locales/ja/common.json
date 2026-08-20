@@ -157,5 +157,9 @@
     "platformAdministration": "プラットフォーム管理",
     "chooseAWorkspace": "ワークスペースを選ぶ",
     "youHaveAccessToMore": "複数にアクセスできます。移動先を選んでください。"
+  },
+  "date": {
+    "today": "今日",
+    "tomorrow": "明日"
   }
 }

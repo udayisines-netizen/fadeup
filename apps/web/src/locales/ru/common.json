@@ -157,5 +157,9 @@
     "platformAdministration": "Администрирование платформы",
     "chooseAWorkspace": "Выберите рабочее место",
     "youHaveAccessToMore": "У вас есть доступ к нескольким. Выберите, куда перейти."
+  },
+  "date": {
+    "today": "Сегодня",
+    "tomorrow": "Завтра"
   }
 }

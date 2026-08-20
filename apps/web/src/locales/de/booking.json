@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "Dieser Salon hat noch keine Profile veröffentlicht.",
     "goToFadeup": "Zu FadeUp",
     "bookNow": "Jetzt buchen"
+  },
+  "slots": {
+    "morning": "Vormittag",
+    "afternoon": "Nachmittag",
+    "evening": "Abend",
+    "partOfDay": "Tageszeit",
+    "available": "Freie Zeiten",
+    "nonePart": "Zu dieser Tageszeit ist nichts frei.",
+    "dayFull": "Ausgebucht"
   }
 }

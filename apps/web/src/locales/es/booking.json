@@ -141,5 +141,14 @@
     "thisShopHasntPublishedAny": "Este negocio aún no ha publicado perfiles de profesionales.",
     "goToFadeup": "Ir a FadeUp",
     "bookNow": "Reservar"
+  },
+  "slots": {
+    "morning": "Mañana",
+    "afternoon": "Tarde",
+    "evening": "Noche",
+    "partOfDay": "Momento del día",
+    "available": "Horas disponibles",
+    "nonePart": "No hay huecos en ese momento del día.",
+    "dayFull": "Completo"
   }
 }
