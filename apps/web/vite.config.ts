@@ -7,11 +7,19 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+
+  preview: {
+    host: '127.0.0.1',
+    port: 15180,
+    allowedHosts: ['fadeup.jasmean.com'],
+  },
+
   test: {
     globals: true,
     environment: 'jsdom',

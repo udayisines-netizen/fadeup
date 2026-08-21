@@ -30,3 +30,17 @@ infra/web/.env
 
 # Scheduler DB credentials (see .env.scheduler.example).
 infra/scheduler/.env.scheduler
+
+# Local backups / secrets
+backups/
+*.bak.*
+infra/supabase/.env.old
+infra/supabase/docker-compose.yml.old
+
+# Never commit private keys
+*.pem
+*.key
+id_ed25519
+id_ed25519.pub
+id_ed25519_github_fadeup
+id_ed25519_github_fadeup.pub

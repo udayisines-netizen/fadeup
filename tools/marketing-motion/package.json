@@ -1,0 +1,24 @@
+{
+  "name": "@fadeup/marketing-motion",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Isolated render-only tooling for the /for-business product film. NOT a dependency of apps/web.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:webm": "remotion render src/index.ts ProductFilm ../../apps/web/public/marketing/for-business/fadeup-product-film.webm --codec=vp8 --image-format=png",
+    "render:mp4": "remotion render src/index.ts ProductFilm ../../apps/web/public/marketing/for-business/fadeup-product-film.mp4 --codec=h264",
+    "render:poster": "remotion still src/index.ts ProductFilm ../../apps/web/public/marketing/for-business/fadeup-product-film-poster.png --frame=210"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.443",
+    "@remotion/google-fonts": "^4.0.443",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.443"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "typescript": "5.9.3"
+  }
+}
