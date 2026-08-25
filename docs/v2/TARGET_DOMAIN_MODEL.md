@@ -141,10 +141,20 @@ squatting (D-1) and direct staff UPDATE (D-8).
 log, not two tables.
 
 ```
-state                  following | unfollowed      -- current edge
-source                 manual | auto              -- how the CURRENT state arose
-has_explicit_unfollow  boolean                    -- sticky intent, survives state
+state           following | unfollowed   -- current edge
+source          manual | auto            -- how the CURRENT state arose
+followed_at     timestamptz
+unfollowed_at   timestamptz              -- set on manual unfollow; IS the intent
 ```
+
+> **Corrected after independent review.** An earlier revision carried a sticky
+> `has_explicit_unfollow` boolean. It is **provably redundant**: given the
+> table below, the flag is set exactly when `state='unfollowed'` and cleared
+> exactly when state returns to following-by-manual, and auto never touches
+> either — no reachable row can disagree. `unfollowed_at` carries the same
+> information plus the timestamp `ANALYTICS_DRAFT.md` §5 will want.
+> **`state='unfollowed'` IS explicit unfollow**, because auto-follow can only
+> ever create a row, never transition one.
 
 | Action | state | source | sticky flag |
 | --- | --- | --- | --- |
@@ -220,15 +230,39 @@ is correct; a destructive merge is not.
 
 ### L. How should external/unclaimed profiles map to canonical claimed identities?
 
-**Same table, different state.** An external profile is a professional identity
-row with **no owner**:
+**Same table, different state — with claim state made EXPLICIT.**
+
+> **Corrected after independent review.** An earlier revision used
+> `user_id IS NULL` as the claim-state discriminator, and `MIGRATION_STRATEGY`
+> §4 simultaneously assumed a `claim_state` column existed. The lot's most
+> important table was specified two different ways. **Canonical decision:**
 
 ```
-user_id      NULL            -- unclaimed
-prospect_id  set             -- Worker provenance
-source       'worker'
-is_public    false           -- opt-in, never inherited
+claim_state  'unclaimed' | 'claimed'   NOT NULL      -- the discriminator
+user_id      NULL when unclaimed                     -- consequence, not source
+prospect_id  NOT stored here -- see below
+is_public    false                                   -- opt-in, never inherited
+check ((claim_state = 'claimed') = (user_id is not null))
 ```
+
+Four amendments, all from the independent architecture review:
+
+1. **Do not encode state as NULL.** This schema already carries one overloaded
+   nullable identity FK — `customers.user_id` — and D-1 and D-8 are exactly what
+   happens when such a column becomes a predicate every query must remember. An
+   explicit, indexable, constrained `claim_state` removes the single strongest
+   objection to the one-table design.
+2. **Reverse the acquisition link.** The FK lives on the **acquisition side**
+   (`prospects` → professional identity, or a link table carrying match
+   evidence), never from the tenant-readable identity table into the 51
+   structurally-disjoint `prospect_*` tables. A FK from a platform-only table
+   into a tenant-readable one leaks nothing; the reverse depends on column
+   grants holding forever.
+3. **Two public projections, not one.** Claimed and unclaimed get separate RPCs
+   with different `RETURNS TABLE` shapes, so the unclaimed projection
+   *physically cannot* carry bookability, queue state or counts.
+4. **Publish nothing unclaimed in R1.** `check (not (claim_state = 'unclaimed'
+   and is_public))`, removed deliberately by R10.
 
 Claiming sets `user_id`. No second identity is minted, so no merge is required
 for the ordinary path.
@@ -292,7 +326,7 @@ Answered in `MIGRATION_STRATEGY.md`: exact migrations (P), RLS per structure
 | Customer identity | display name, username, avatar, persona, verified flag — **only** when opted in | `customer_profiles`: email, phone, preferences | the per-org `customers` row incl. `notes` | verification rationale in `platform_audit_log` | — |
 | Fade Passport | nothing | whole passport + photos; curated subset via share token | — | passport identifier (never an authenticator) | — |
 | Social graph | follower **count** only | own edges + own intent flag | — | all | — |
-| Customer↔professional relationship | **existence only, as a count** | own rows | rows for **that organization only** | all | — |
+| Customer↔professional relationship | **nothing in R1B.** A per-relationship *badge* may ship later; a public **count must not** — see note below | own rows | rows for **that organization only** | all | — |
 | Social proof | display name, username, avatar, live verified flag — nothing else | consent state | — | all | — |
 | Booking / queue | availability only | own appointments via RPC | full operational rows | read-only | — |
 | Acquisition | **nothing** | — | — | full | full |
@@ -339,3 +373,34 @@ explicit:
    are browser-written. Verified Client rests on this.
 3. **D-1 / D-8** — `customers.user_id` is squattable and staff-settable, so it
    cannot be the attribution predicate.
+
+
+---
+
+## 6. Two constraints added by the independent review
+
+### 6.1 Showcase consent is scoped to the shop, and does not survive a move
+
+A showcase renders on a professional's public profile — a page that names their
+**shop and location**. So "Already cutting X ✓" tells the internet where a
+public figure habitually gets their hair cut. Constitution §4.3 forbids exposing
+*live* location and is silent on *habitual* location; the reviewer is right that
+this is the most likely way the feature harms a real person.
+
+**Requirement:** consent must record which professional **and which
+organization** it covers, and approval must **not** travel with the
+professional to a new shop. A shop move requires fresh consent.
+
+### 6.2 The public verified-client COUNT is deferred
+
+An earlier revision placed a verified-client count in the ANONYMOUS PUBLIC
+column. **Withdrawn.** Given that verified-client evidence is restricted to
+self-booked appointments (§F), the counter measures *customer signup behaviour*,
+not craft: it would show a professional who has served thousands a double-digit
+number, and creates a direct incentive to push customers into the app to inflate
+it.
+
+The per-relationship **badge** is meaningful at n=1 — one consented, verified
+relationship with a public figure *is* the feature. The **count** is not. Ship
+the badge when R1B/R6 arrive; keep the count private to the professional and the
+platform until coverage and semantics are meaningful.

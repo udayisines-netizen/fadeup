@@ -1,6 +1,6 @@
 # FadeUp Social-First V2 — Roadmap
 
-Status: **R0 reconstructed. R1 not started, awaiting approval.**
+Status: **R0 reconstructed and corrected after independent adversarial review. R1A approved, not yet implemented. R1B blocked.**
 
 > **Provenance.** No `docs/v2/` directory existed in any commit reachable from
 > `git log --all` before this reconstruction. The R0 artifacts named in the R1
@@ -15,7 +15,8 @@ Status: **R0 reconstructed. R1 not started, awaiting approval.**
 | Lot | Scope | Status |
 | --- | --- | --- |
 | **R0** | Architecture baseline, product constitution, target model, migration strategy | **Complete (reconstructed 2026-08-25)** |
-| **R1** | Domain model, database foundation, acquisition foundation | **Blocked on human approval.** Design complete; nothing implemented. |
+| **R1A** | Data integrity & security foundation | **Approved. Not yet implemented.** |
+| **R1B** | Social + acquisition domain foundation | **BLOCKED** until R1A is landed *and observed*. |
 | R2 | Pricing, plans, capability catalogue, entitlement gating | Not started — see `ENTITLEMENTS_DRAFT.md` |
 | R3 | Product analytics and event architecture | Not started — see `ANALYTICS_DRAFT.md` |
 | R4 | Worker engine foundations | Not started |
@@ -43,9 +44,10 @@ Status: **R0 reconstructed. R1 not started, awaiting approval.**
 
 ## What R0 changed about R1
 
-R0 was reconstructed *after* an R1 implementation had been attempted and then
-rewound to `wip/r1-first-attempt`. The audit found defects that attempt missed,
-which is the justification for the gate existing at all:
+R0 was reconstructed from the repository as it stands. Three independent audits
+and a three-specialist adversarial review found the following, each verified
+against the live schema — several by executing the exploit, not merely reading
+constraints:
 
 1. **`appointments.barber_id` is `ON DELETE CASCADE`** — deleting a barber
    destroys their appointment history. A durable identity table over deletable
@@ -61,9 +63,13 @@ which is the justification for the gate existing at all:
 5. **A professional has no shop-independent public address**, and cannot edit
    their own public profile.
 
-Consequence: R1 gains a **Phase 0 hardening block**, and Verified Client is
-scoped to the one attribution path that is forgery-resistant, with the
-limitation stated in the product rather than hidden.
+Consequence: **R1 is split.** R1A hardens integrity first; R1B builds the social
+domain on top, only after R1A has landed and been observed. Verified Client is
+scoped to the one attribution path that is forgery-resistant, and the coverage
+limitation is stated in the product rather than hidden — early coverage is
+plausibly a single-digit percentage of served customers, because staff-created
+bookings, anonymous walk-ins and unredeemed anonymous bookings all fail to
+qualify.
 
 ---
 
@@ -98,22 +104,28 @@ R18's to resolve.
 
 ## Findings with no owner yet
 
-These are **pre-existing**, unrelated to the social work, and none is fixed by
-R1. Recorded so they are not lost:
+These are **pre-existing** and unrelated to the social work. **R1A takes
+ownership of D-1, D-2, D-3, D-8, SEC-1, SEC-2 and APP-1.** SEC-3 is a one-line
+infrastructure change needing no lot. The rest are recorded so they are not
+lost:
 
 | | Finding | Severity |
 | --- | --- | --- |
 | D-1 | Contact-detail squatting — an attacker reads and cancels a victim's bookings | **CRITICAL, proven** |
-| SEC-3 | Supabase Kong (Studio + pg-meta) published on `0.0.0.0:18100` in plaintext | **HIGH** |
+| D-2 | Deleting a barber cascades away completed appointment history — **exploitable today over REST by any owner/manager** | **CRITICAL, proven** |
+| D-3 | Completion + queue state forgeable by any `barber`-role member: status PATCH, causally-impossible backdated timestamps, and `customer_id` reassignment | **HIGH, proven** |
+| D-8 | `customers.user_id` settable to any account by staff — **raised to HIGH**: composes with D-1/D-3 into a complete fabricated "verified client" about a real victim | **HIGH, proven** |
 | SEC-2 | The cold-outreach worker can read every tenant's transactional email stream | **HIGH** |
-| SEC-1 | `professional_applications.internal_note` readable by the applicant | **HIGH** |
+| SEC-1 | `professional_applications.internal_note` readable by the applicant | **MEDIUM** |
 | APP-1 | Booking emails render as application rejections once SMTP is enabled | **HIGH** |
-| SEC-4 | Three acquisition RPCs granted to all authenticated users; one mutates jobs | MEDIUM |
+| SEC-3 | Kong on `0.0.0.0:18100` — **downgraded to MEDIUM**: credential-gated (basic-auth; key-auth+ACL), real `.env` not the placeholder; the loss is nginx's TLS/rate-limit boundary, not open data | MEDIUM |
+| SEC-4 | **WITHDRAWN — disproved.** Every acquisition RPC re-derives `is_platform_admin()` in-body. Replacement: `prospect_effective_locale(uuid)` has no role check | LOW |
 | SEC-5 | `customers.notes` readable by role `barber` | MEDIUM |
 | APP-2 | Platform notification bell is inert — table not in the realtime publication | MEDIUM |
 | — | Chair Mode is sold on `/pricing` and `/features` but marked `planned` in code | MEDIUM |
 | — | No CI anywhere; Playwright installed but unconfigured | MEDIUM |
 
-**D-1 and SEC-3 deserve attention independently of the V2 rebuild** — one is a
-proven account-takeover-adjacent vector, the other puts a schema-mutation API on
-the public internet.
+**Two items need no lot and should be done immediately:** bind Kong to
+`127.0.0.1`, and fix the Worker email-template ternary before SMTP is ever
+enabled — today six booking templates route through a two-branch boolean, so a
+customer whose booking is *confirmed* would receive application-rejection copy.

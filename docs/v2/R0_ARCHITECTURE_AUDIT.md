@@ -89,9 +89,20 @@ owns; the victim's later anonymous booking is matched to it by
 `lower(email)`. The attacker then reads the victim's booking via
 `get_my_appointments()` and cancels it via `cancel_my_appointment()`.
 
-Proven through `book_public_appointment`, `join_public_queue` and
-`waitlist_entries`; via phone and, case-insensitively, via email. No rate
-limiting exists anywhere in nginx or the database.
+Proven through `book_public_appointment` and `join_public_queue`; via phone
+and, case-insensitively, via email. No rate limiting exists anywhere in nginx
+or the database.
+
+> **Correction (independent review).** An earlier revision of this document
+> also claimed the vector through `waitlist_entries`. **That is false and has
+> been withdrawn.** `waitlist_entries_insert` requires
+> `has_org_role(owner/manager/receptionist)`, there is no `anon` policy, and no
+> public RPC reaches it — `apps/web/src/lib/queries/waitlist.ts` runs only
+> under `/app/*` as staff tooling. A customer or anonymous visitor cannot reach
+> the linking trigger through waitlist at all. The same trigger firing on a
+> staff-created waitlist row is a data-hygiene footgun, not a customer-facing
+> takeover vector, because staff already hold full CRM read/write in their own
+> org. **R1A must not change waitlist on the strength of this finding.**
 
 `20260813160000` closed the *other* direction — an attacker adopting a victim's
 existing row. It did not close this one.
@@ -187,13 +198,21 @@ Recorded so they have owners; none is introduced by the social work.
 | --- | --- |
 | SEC-1 | `professional_applications.internal_note` is readable by the applicant it describes. The RPC omits it, but a row-level SELECT policy plus table-wide grants means one `.select('internal_note')` returns it. |
 | SEC-2 | The cold-outreach worker can read **every tenant's** transactional email stream. `email_outbox` has no tenant anchor and carries `grant select … to prospect_worker` + `using (true)`. `private.claim_next_email()` already returns the claimed rows, so the grant is pure over-grant. |
-| SEC-3 | Supabase Kong is published on `0.0.0.0:18100` in plaintext (`infra/supabase/docker-compose.yml:84-86`), exposing Studio and the pg-meta schema-mutation API and bypassing nginx's path allow-list. One-line fix. |
-| SEC-4 | Three acquisition RPCs are granted to every authenticated user with no in-body role check; one of them **mutates `prospect_jobs`**. |
+| SEC-3 | **MEDIUM (downgraded).** Kong is published on `0.0.0.0:18100` (confirmed on the live container), so Studio and pg-meta are reachable directly, bypassing nginx's TLS, path allow-list and rate limiting. It is **not** an unauthenticated data exposure: Studio carries `basic-auth`, pg-meta `key-auth` + an `admin` ACL, `/mcp` is terminated, and the real `.env` is git-ignored and not the default placeholder. The risk is lost defence-in-depth and credential-stuffing surface. One-line fix: bind to `127.0.0.1`. |
+| SEC-4 | **WITHDRAWN — disproved by independent review.** Every acquisition RPC examined (`create_prospect_discovery_job`, `cancel_prospect_job`, `set_prospect_source_enabled`, `approve_outreach_template`, `promote_ml_model`, `set_outreach_campaign_status`, `classify_outreach_reply`, `override_prospect_locale`, `override_prospect_booking_provider`) opens with `if not (select private.is_platform_admin()) then raise exception`. The coarse `GRANT EXECUTE … TO authenticated` is a style issue, not a vulnerability. **Replacement finding (LOW):** `prospect_effective_locale(uuid)` is `SECURITY DEFINER`, granted to `authenticated`, and has **no** role check — any signed-in user can confirm whether a UUID is a valid prospect and read its locale. No PII, no mutation. Fix: add the gate or drop the grant. |
 | SEC-5 | `customers.notes` — shop-internal — is readable by role `barber`, because `customers_select` uses `is_org_member` rather than `has_org_role`. |
 | APP-1 | The worker renders six booking email templates through a two-branch boolean. The moment SMTP is enabled, a customer whose booking is **confirmed** receives *"About your FadeUp application — Unfortunately we are not able to approve it."* |
 | APP-2 | `platform_notifications` was never added to the realtime publication and its query has no polling fallback, so the staff bell is inert. |
 
-### D-8 · MEDIUM · PROVEN — identity-forgery primitive
+### D-8 · HIGH · PROVEN — identity-forgery primitive
+
+*(Raised from MEDIUM after independent review. The database reviewer's
+compositional argument is decisive and I accept it: chained with D-1 and D-3,
+this gives a single dishonest owner/manager a low-effort path to fabricate a
+complete, internally consistent "verified client" record about a real, named
+victim who was never served. The security reviewer's cap still holds —
+cross-tenant **row** relocation is correctly blocked by `WITH CHECK` — but
+cross-tenant **identity** assertion is not.)*
 
 `customers_update`'s `WITH CHECK` constrains only `organization_id`. Any
 owner/manager/receptionist can set `customers.user_id` to any `auth.users` id,

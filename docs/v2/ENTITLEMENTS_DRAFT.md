@@ -85,7 +85,7 @@ enforcement.
 | --- | --- |
 | Billing unit is the location | R1 changes nothing about `organizations`/`locations` and adds no per-seat concept. |
 | INDEPENDENT cap is expressible | The professional identity is org-independent, so "how many professionals does this subscription cover" is a countable relationship rather than a property of the shop. |
-| **Claim state ≠ subscription state** | R1 contains **no** plan, price, tier, subscription or entitlement column. `claim_state` answers *who controls this identity*, never *what they paid for*. A claimed profile is Free. The MASTER generator asserts this mechanically by refusing any file containing `stripe`/`subscription`/`entitlement`. |
+| **Claim state ≠ subscription state** | R1 contains **no** plan, price, tier, subscription or entitlement column. `claim_state` answers *who controls this identity*, never *what they paid for*. A claimed profile is Free. **This is a design constraint enforced by review, not by tooling** — an earlier revision of this document claimed a MASTER generator refuses files containing `stripe`/`subscription`/`entitlement`. **No such control exists** (`grep` over `scripts/` returns nothing), and as described it would be a poor control anyway, since it would reject a migration whose *comment* says "no subscription state here". |
 | An unclaimed profile implies no subscription | An external profile has no `barbers` row and no commercial state of any kind. Constitution §5.5. |
 | Entitlements can gate social features later | Follow, relationship and showcase tables carry no plan coupling, so gating can be added at the RPC/RLS layer without schema change. |
 

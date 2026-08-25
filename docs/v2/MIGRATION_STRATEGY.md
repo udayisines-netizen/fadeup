@@ -20,23 +20,35 @@ it stands, that claim is forgeable by a shop and squattable by a stranger.
 Constitution §3.3 is explicit: *if the platform cannot reliably establish that a
 service was completed, it must not pretend that it can.*
 
-So R1 has two honest shapes, and this is the decision to make at the gate:
+**SUPERSEDED — R1 is split into R1A and R1B.**
 
-| | **Option A — harden first (recommended)** | **Option B — identity only** |
+An earlier revision offered exactly two shapes (A: one 15-migration lot; B:
+identity only) and recommended A. The independent architecture review found
+this framing to be the clearest structural rationalisation in the document set:
+the rejected option was strictly dominated, and the obvious third option was
+never tabled even though *this same section* conceded "Phase 0 is separable."
+
+**Approved decision — Option C:**
+
+| Lot | Scope | Character |
 | --- | --- | --- |
-| Scope | Phase 0 hardening + identity + social + passport + Worker claim | identity + follow + passport + Worker claim |
-| Verified Client | ships, and is trustworthy | **deferred** to a later lot |
-| Migrations | 15 | 10 |
-| Touches hot tables | yes — `appointments`, `queue_entries` | barely |
-| Risk | higher blast radius, fully testable | lower, but leaves the product without its central social-proof claim |
+| **R1A** — Data Integrity & Security Foundation | contact-squatting fix, appointment history durability, authoritative `completed_at` + transition guard, queue integrity, `customers.user_id` freeze, `booked_by_user_id` privileges, indexes, search LEFT JOIN, Passport DELETE policy, Worker/internal least privilege | touches **hot, revenue-bearing tables**; changes behaviour that previously succeeded silently |
+| **R1B** — Social + Acquisition Domain | durable professional identity, follow, relationship aggregate, passport issuance, external profile, claim lifecycle, projections | **purely additive** — new tables, RLS at creation, definer-only writes |
 
-**Recommendation: Option A.** Option B ships a durable identity that still
-evaporates when a barber row is deleted, and defers the one feature the
-social-first product is *for*. The hardening is small, additive and
-independently valuable — it fixes real defects whether or not the social layer
-ever ships.
+Why the seam is here: R1A is the only work that changes existing behaviour — a
+delete that used to succeed now raises, a status PATCH that used to succeed now
+raises, a client timestamp is now overwritten. Everything in R1B is new tables
+nothing yet depends on, trivially revertible. Bundling them means one rollback
+decision covers both, and the operator cannot tell which half caused a symptom.
 
-Everything below specifies Option A. Phase 0 is separable if you choose B.
+**R1B does not start until R1A has landed *and been observed*.** Not merely
+applied — observed, because R1A changes behaviour that previously failed
+silently. R1B's migrations must additionally **assert their preconditions at
+migration time** (`completed_at` and the transition guard must exist) rather
+than relying on file-ordering discipline.
+
+The section below still describes the full R1 content; read "Phase 0 + Phase 2"
+as R1A and "Phases 1, 3, 4, 5" as R1B.
 
 ---
 
@@ -66,7 +78,7 @@ Everything below specifies Option A. Phase 0 is separable if you choose B.
 | # | File | Purpose |
 | --- | --- | --- |
 | 1 | `..._appointment_history_durability.sql` | `appointments.barber_id` FK `CASCADE` → **`RESTRICT`**, added `NOT VALID` then validated. Configuration children (`barber_services`, `barber_working_hours`, `time_blocks`) keep `CASCADE` — only the *service record* is protected. Verified safe: no frontend path deletes a `barbers` row (`queries/barbers.ts` has INSERT/UPDATE only). |
-| 2 | `..._appointment_completion_state.sql` | add `appointments.completed_at timestamptz`; backfill from `decided_at` where `status='completed'`; add a `BEFORE UPDATE` **transition guard** rejecting illegal `appointment_status` moves regardless of caller; extend `restrict_appointment_self_update` to freeze `customer_id`. |
+| 2 | `..._appointment_completion_state.sql` | add `appointments.completed_at timestamptz`; backfill **only** from `decided_at` where that value semantically proves completion — **never fabricate from `starts_at`** (see §3); add a **separate** `BEFORE UPDATE` transition guard enforcing the matrix in `R1A_TRANSITION_MATRIX.md`. **It must NOT be folded into `restrict_appointment_self_update`**, which exempts owner/manager/receptionist entirely and would silently inherit that exemption, leaving the manager-side forgery path open. Separately extend the existing self-update guard to freeze `customer_id`. |
 | 3 | `..._queue_completion_state.sql` | stamp `called_at`/`service_started_at`/`completed_at` **server-side** in a `BEFORE UPDATE` trigger; add a CHECK tying each timestamp to its status; leave the client columns writable for compatibility but overwrite them. |
 | 4 | `..._customer_link_integrity.sql` | `guard_customers_update()` freezing `customers.user_id` against client sessions; **do not** change `link_customer_from_contact_info` (see §6). |
 
@@ -115,7 +127,7 @@ Everything below specifies Option A. Phase 0 is separable if you choose B.
 
 | Backfill | Rule | Verification |
 | --- | --- | --- |
-| `appointments.completed_at` | `= decided_at where status='completed' and completed_at is null` | count of completed rows with NULL `completed_at` = 0, **except** auto-confirmed rows where `decided_at` was always NULL — those get `starts_at` and are counted separately and reported, not silently filled |
+| `appointments.completed_at` | `= decided_at` **only** where `status='completed'` AND `decided_at is not null` — `complete_appointment()` is the sole writer of both, so that value genuinely proves completion time. Rows completed by a raw PATCH have `decided_at` NULL and **stay NULL**. | completed rows with NULL `completed_at` reported as a **count, not an error** — unknown completion time remains unknown. **Fabricating from `starts_at` is forbidden** (independent review): it would invent historical evidence in the exact column verified-client will read. |
 | professional identity | one row per **distinct** `staff_profiles.user_id` having a `barbers` row; deterministic tie-break `order by user_id, created_at, id` | distinct barber accounts = `fadeup`-sourced identities; `barbers` with NULL `professional_id` = 0; **`is_public` must NOT be inherited** from `staff_profiles` |
 | passport issuance | one per `customer_profiles.user_id` lacking one; number every unnumbered passport | customers without a passport = 0; passports without a number = 0; duplicate numbers = 0; legacy passport content unchanged |
 
@@ -183,16 +195,32 @@ insert zero, so the predicate is always true).
 
 ## 6. What R1 must NOT do
 
-**Do not "fix" `link_customer_from_contact_info()` by filtering on
-`user_id is null`.** Two reasons, both verified in source: the function's
-`on conflict do nothing` is followed by an *unfiltered* re-select fallback that
-lands straight back on the matched row, so the filter is ineffective; and
-filtering the fallback too would stop a legitimate customer booking anonymously
-from linking to their own CRM row, breaking `get_my_appointments`. That is a
-booking regression, which the Constitution forbids.
+**CORRECTED after independent review — the earlier text here was wrong.**
 
-R1 instead **stops depending on that edge** via `booked_by_user_id`. The
-underlying defect (D-1) is a booking-lot problem and is logged with an owner.
+This section previously argued that filtering
+`link_customer_from_contact_info()` on `user_id is null` was *ineffective*,
+because the function's `on conflict do nothing` is followed by an unfiltered
+re-select fallback. The premise is true; the conclusion does not follow. The
+fallback is unfiltered **as written** — filtering it is one line. Two
+independent reviewers identified this as a non-sequitur used to defer a
+CRITICAL, proven vector, and they are right.
+
+**The fix is viable and belongs in R1A.** There are **four** relevant SELECT
+paths — the initial phone lookup, the initial email lookup, and the two
+re-select fallbacks after `on conflict do nothing`. **All four** must exclude
+rows already owned by an authenticated account (`user_id is not null`). If the
+only contact match is an account-owned row, the anonymous booking or queue
+entry is left **safely unlinked** rather than attached to a stranger.
+
+**UX trade-off, stated explicitly:** a customer who already has an account but
+books *anonymously* using their own phone will no longer be auto-linked. Their
+booking is recoverable through the existing single-use 72-hour claim token
+(`redeem_appointment_claim`), which is exactly the mechanism that path was built
+for. That is a real cost and it is the correct trade: the alternative is leaving
+a live takeover primitive in place beneath every future social feature.
+
+`booked_by_user_id` remains the attribution source for anything social — but it
+is now defence in depth rather than the sole mitigation.
 
 Also out of scope: multi-location coherence (R18), reviews, entitlements (R2),
 analytics (R3), scrapers/outreach (R4/R10/R17), wallet, SMS, search
@@ -239,9 +267,15 @@ Mandatory cases:
 * **Regression** — booking still confirms; a barber can still mark a queue
   client done **through the real PostgREST `PATCH`**; ordinary staff-created
   appointments still insert.
-* **Column privileges** — assert the exact granted/withheld set per table. This
-  is what catches a broken customer feature, and its absence is what let the
-  passport upsert break in the first attempt.
+* **Column privileges** — assert the exact granted/withheld set per table, for
+  each role, using `has_column_privilege()`. This is not optional: a
+  table-level revoke plus selective re-grant is the only mechanism that
+  protects a column against `SELECT`, and it silently changes what PostgREST
+  can write. In particular `customer_passports.user_id` **must remain
+  UPDATE-grantable**, because `apps/web/src/lib/queries/passport.ts:82-84`
+  saves via `.upsert({ user_id, … }, { onConflict: 'user_id' })`, and
+  `ON CONFLICT DO UPDATE` requires UPDATE privilege on every column in its SET
+  list. Tests must exercise a PostgREST-shaped upsert, not only direct SQL.
 
 Migration matrix: **TEST A** fresh database, **TEST B** pre-R1 base + seeded
 realistic rows + generated MASTER + VERIFY. Both via
