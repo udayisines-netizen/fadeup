@@ -12,6 +12,12 @@
 #   scripts/disposable-db-test.sh                       # migrations only
 #   scripts/disposable-db-test.sh --master FILE         # + apply MASTER on a base built WITHOUT the new migrations
 #   scripts/disposable-db-test.sh --verify FILE         # + run VERIFY
+#   scripts/disposable-db-test.sh --seed FILE           # + load fixtures AFTER the base replay, BEFORE MASTER
+#
+# --seed exists so an upgrade can be tested against a database that already
+# contains the messy rows the fix is meant to cope with. A MASTER applied only
+# to an empty schema proves the DDL parses; it proves nothing about a backfill,
+# a NOT VALID constraint, or a FK being validated against real data.
 #   scripts/disposable-db-test.sh --keep                # leave the container running for inspection
 
 set -euo pipefail
@@ -23,6 +29,7 @@ PGPASSWORD_VALUE="disposable_$(date +%s)"
 
 MASTER_FILE=""
 VERIFY_FILE=""
+SEED_FILE=""
 KEEP=0
 # When set, migrations dated on/after this prefix are SKIPPED during the
 # base replay — used to prove MASTER can upgrade the CURRENT production
@@ -33,6 +40,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --master) MASTER_FILE="$2"; shift 2 ;;
     --verify) VERIFY_FILE="$2"; shift 2 ;;
+    --seed) SEED_FILE="$2"; shift 2 ;;
     --skip-from) SKIP_FROM="$2"; shift 2 ;;
     --keep) KEEP=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -169,6 +177,16 @@ for migration in "$REPO_ROOT"/db/migrations/*.sql; do
   applied=$((applied + 1))
 done
 echo "==> applied $applied migrations (skipped $skipped)"
+
+if [[ -n "$SEED_FILE" ]]; then
+  echo "==> loading SEED: $SEED_FILE"
+  if ! docker exec -i -e PGOPTIONS='--client-min-messages=warning' "$CONTAINER" \
+      psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q < "$REPO_ROOT/$SEED_FILE"; then
+    echo "!! SEED FAILED" >&2
+    exit 1
+  fi
+  echo "==> SEED loaded"
+fi
 
 if [[ -n "$MASTER_FILE" ]]; then
   echo "==> applying MASTER: $MASTER_FILE"

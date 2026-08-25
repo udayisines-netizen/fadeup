@@ -11,7 +11,22 @@
  * an email.
  */
 
-export type EmailTemplate = 'professional_application_approved' | 'professional_application_rejected'
+export const EMAIL_TEMPLATES = [
+  'professional_application_approved',
+  'professional_application_rejected',
+  'booking_request_created',
+  'booking_confirmed',
+  'booking_declined',
+  'booking_expired',
+  'booking_cancelled',
+  'booking_rescheduled',
+] as const
+
+export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number]
+
+type RenderableEmailTemplate =
+  | 'professional_application_approved'
+  | 'professional_application_rejected'
 
 export interface RenderedEmail {
   subject: string
@@ -77,12 +92,48 @@ function escapeHtml(value: string): string {
 }
 
 export function renderEmail(
-  template: EmailTemplate,
+  template: string,
   locale: string,
   payload: Record<string, unknown>,
   appBaseUrl: string,
 ): RenderedEmail {
-  const table = template === 'professional_application_approved' ? APPROVED : REJECTED
+  // Exhaustive lookup, not a two-branch ternary.
+  //
+  // private.claim_next_email filters on status and next_attempt_at only — never
+  // on template — and the dispatcher passes whatever it claimed straight in.
+  // The booking loop (20260819100000) enqueues six further templates:
+  // booking_request_created, booking_confirmed, booking_declined,
+  // booking_expired, booking_cancelled, booking_rescheduled. Under a ternary
+  // every one of them fell through to REJECTED, so the moment SMTP is
+  // configured a customer whose booking was CONFIRMED would receive
+  // "About your FadeUp application — Unfortunately we are not able to approve
+  // it at this time." No error, no failure: it rendered and sent.
+  //
+  // Throwing routes the row into the dispatcher's existing failure path, so it
+  // stays visible rather than being delivered as the wrong message.
+  //
+  // EmailTemplate mirrors every template currently emitted by the database,
+  // while RenderableEmailTemplate deliberately lists only templates for which
+  // application copy exists. Unknown/future database values also fail closed
+  // because this function validates the runtime string before indexing TABLES.
+  const TABLES: Record<RenderableEmailTemplate, Record<string, Copy> & { en: Copy }> = {
+    professional_application_approved: APPROVED,
+    professional_application_rejected: REJECTED,
+  }
+
+  const isRenderable = (
+    value: string,
+  ): value is RenderableEmailTemplate =>
+    Object.prototype.hasOwnProperty.call(TABLES, value)
+
+  if (!isRenderable(template)) {
+    throw new Error(
+      `renderEmail: no copy for template "${template}" — refusing to send. ` +
+        'Delivering the wrong message is worse than not delivering this one.',
+    )
+  }
+
+  const table = TABLES[template]
   const copy = table[locale] ?? table.en
   const firstName = typeof payload.first_name === 'string' && payload.first_name ? payload.first_name : 'there'
   const businessName = typeof payload.business_name === 'string' ? payload.business_name : ''

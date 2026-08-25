@@ -82,7 +82,19 @@ services:
       studio:
         condition: service_healthy
     ports:
-      - "18100:8000/tcp"
+      # Loopback only. Every external request reaches Kong through host nginx,
+      # which terminates TLS and allows only the API paths (/auth/v1/, /rest/v1/,
+      # /storage/v1/, /functions/v1/, /realtime/v1/). Publishing on 0.0.0.0
+      # bypassed that allow-list entirely and put the Studio dashboard and the
+      # pg-meta schema API directly on the public interface — credential-gated
+      # (basic-auth, and key-auth+ACL) but with no TLS, no rate limiting and no
+      # path restriction in front of them. The other three ports in this stack
+      # were already loopback-bound; this one was the exception.
+      #
+      # DEPLOYMENT ACTION REQUIRED: this takes effect only when the kong
+      # container is recreated (`docker compose up -d kong`). Until then the
+      # running container keeps its 0.0.0.0 binding.
+      - "127.0.0.1:18100:8000/tcp"
       - "127.0.0.1:18443:8443/tcp"
     volumes:
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro,z

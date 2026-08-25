@@ -3,7 +3,7 @@ import type { Transporter } from 'nodemailer'
 import type { DbPool } from '../db.js'
 import type { Config } from '../config.js'
 import { logger } from '../logger.js'
-import { renderEmail, type EmailTemplate } from './templates.js'
+import { renderEmail } from './templates.js'
 
 /**
  * Delivers rows from public.email_outbox.
@@ -24,7 +24,7 @@ import { renderEmail, type EmailTemplate } from './templates.js'
 interface OutboxRow {
   id: string
   to_email: string
-  template: EmailTemplate
+  template: string
   locale: string
   payload: Record<string, unknown>
   attempts: number
