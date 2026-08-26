@@ -172,6 +172,41 @@ begin
   values ((select id from v where k = 'org3'), 'R1B Claimant Shop', 'r1b-shop-three', true);
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- FIXTURE ACCOMMODATION FOR R2 — no assertion in this file is changed by it.
+--
+-- R2 gives every new organization commercial state, defaulting to `free`, which
+-- covers ONE operational professional. This suite deliberately rosters three
+-- barbers into shop one and two into shop two, because the case R1B exists to
+-- prove is ONE human cutting hair at TWO shops. After R2 that fixture is a
+-- commercial impossibility on the default plan, so the roster inserts below
+-- would be refused — aborting the transaction and making the whole suite report
+-- PASS=0 FAIL=0, which looks like success and is not.
+--
+-- So the fixtures are put on a plan whose team is unlimited. This weakens
+-- nothing: every R1B property below is asserted exactly as it was, and R2's own
+-- suite is what proves the cap actually bites.
+--
+-- Guarded on the table existing, so this file still runs unchanged against a
+-- pre-R2 database.
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if to_regclass('public.organization_commercial_state') is null then
+    return;
+  end if;
+
+  execute format(
+    'update public.organization_commercial_state
+     set plan_key = %L, status = %L, entitlement_source = %L
+     where organization_id in (%L, %L, %L)',
+    'multi_scale', 'active', 'platform_grant',
+    (select id from v where k = 'org1'),
+    (select id from v where k = 'org2'),
+    (select id from v where k = 'org3'));
+end $$;
+
 insert into public.locations (organization_id, name, city, country, timezone, is_active)
 values ((select id from v where k = 'org1'), 'One Main', 'Lyon', 'FR', 'UTC', true),
        ((select id from v where k = 'org2'), 'Two Main', 'Paris', 'FR', 'UTC', true);
