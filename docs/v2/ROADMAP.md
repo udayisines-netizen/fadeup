@@ -1,6 +1,6 @@
 # FadeUp Social-First V2 — Roadmap
 
-Status: **R0 reconstructed and corrected after independent adversarial review. R1A implemented and validated. R1B implemented and validated. R2 not started.**
+Status: **R0 reconstructed and corrected after independent adversarial review. R1A implemented and validated. R1B implemented and validated. R2 implemented and validated.**
 
 > **Provenance.** No `docs/v2/` directory existed in any commit reachable from
 > `git log --all` before this reconstruction. The R0 artifacts named in the R1
@@ -17,7 +17,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | **R0** | Architecture baseline, product constitution, target model, migration strategy | **Complete (reconstructed 2026-08-25)** |
 | **R1A** | Data integrity & security foundation | **Complete (2026-08-25)** — see `R1A_IMPLEMENTATION_REPORT.md` |
 | **R1B** | Social + acquisition domain foundation | **Complete (2026-08-26)** — see `R1B_IMPLEMENTATION_REPORT.md` |
-| R2 | Pricing, plans, capability catalogue, entitlement gating | Not started — see `ENTITLEMENTS_DRAFT.md` |
+| **R2** | Pricing, plans, capability catalogue, entitlement gating | **Complete (2026-08-26)** — see `R2_IMPLEMENTATION_REPORT.md`. Supersedes `ENTITLEMENTS_DRAFT.md`, whose per-location billing unit R2 reverses. |
 | R3 | Product analytics and event architecture | Not started — see `ANALYTICS_DRAFT.md` |
 | R4 | Worker engine foundations | Not started |
 | R6 / R7 | Social UI — Follow, verified customers, social proof | Not started |
@@ -36,11 +36,12 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | `R0_ARCHITECTURE_AUDIT.md` | What exists, measured. Nine defects (D-1…D-9) and the KEEP/EXTEND/REFACTOR/REPLACE/REMOVE matrix for 26 subsystems. |
 | `TARGET_DOMAIN_MODEL.md` | Concept-by-concept: reusable / extend / new / derived. Answers A–O. Public/private data map. |
 | `MIGRATION_STRATEGY.md` | Answers P–T. Exact migrations, backfills, RLS, indexes, tests, bridges, rollback. |
-| `ENTITLEMENTS_DRAFT.md` | R2 sketch. Constrains R1 only by what it must not preclude. |
+| `ENTITLEMENTS_DRAFT.md` | R2 sketch, **superseded**. Its per-location billing unit and `subscription_seat` table were reversed by R2; the banner at its top says which parts survived. |
 | `ANALYTICS_DRAFT.md` | R3 sketch. Lists the facts R1 must leave recoverable. |
 | `ROADMAP.md` | This file. |
 | `R1A_IMPLEMENTATION_REPORT.md` | What R1A actually did, and its validation results. |
 | `R1B_IMPLEMENTATION_REPORT.md` | What R1B actually did, its validation results, and the two places it deliberately departs from `MIGRATION_STRATEGY` §2 Phase 3 (public customer profiles and showcases deferred to R6/R7). |
+| `R2_IMPLEMENTATION_REPORT.md` | What R2 actually did: the commercial model, the eight canonical plans, the capacity enforcement, its validation results, and the Constitution §6 amendment it required. |
 
 ---
 
@@ -77,9 +78,23 @@ qualify.
 
 ## Cross-lot notes
 
-**R2** — `barbers.professional_id` → `NOT NULL` (recipe in `MIGRATION_STRATEGY`
-§8); DB type codegen + `Database` generic; the pre-existing write-authorization
-gaps R1 logs but does not fix.
+**R2 — done, with three items deliberately NOT done.** R2 built the commercial
+model (see `R2_IMPLEMENTATION_REPORT.md`). Three things this section had
+assigned to it were reassessed and left alone, each for a stated reason:
+
+* `barbers.professional_id` → `NOT NULL` is **not** done. R1B's
+  `assign_barber_professional()` deliberately leaves the column NULL for a
+  roster row whose staff profile is an account-erasure tombstone, because
+  inventing a claimed identity for a deleted account would be fabrication.
+  Making the column NOT NULL therefore requires deciding what such an insert
+  should do — refuse it, or mint an unclaimed identity — which is an identity
+  decision, not a pricing one. It belongs with the lot that owns identity.
+* DB type codegen + the `Database` generic is **not** done. It is a
+  cross-cutting change to every query in the app and would have made R2's diff
+  unreviewable; it remains open and is still worth doing.
+* The pre-existing write-authorization gaps R1 logged are **not** fixed. R2
+  added no bypass around them and asserts the R1A/R1B column protections still
+  hold, but closing them was never R2's scope.
 
 **R3** — auto-follow is best-effort and lossy by design; if it ever needs an
 at-least-once guarantee, that is an outbox, and R3 owns event architecture.
