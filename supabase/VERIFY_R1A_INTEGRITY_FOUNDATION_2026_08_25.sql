@@ -635,8 +635,20 @@ end $$;
 
 insert into public.customer_profiles (user_id, display_name)
 values ((select id from v where k = 'cust'), 'Cust');
+-- FIXTURE ADJUSTED BY R1B — the assertions below are unchanged.
+--
+-- Before R1B a Fade Passport existed only if the customer created one, so this
+-- fixture had to create it. R1B implements Constitution §2.2 ("every registered
+-- customer owns exactly one Fade Passport, and it exists automatically"), so
+-- the customer_profiles insert above ALREADY issued it and a bare INSERT here
+-- now collides on customer_passports_user_id_key.
+--
+-- This is an invariant that legitimately changed, not an expectation relaxed to
+-- make a later lot pass: 8.1-8.5 below still assert exactly what they asserted
+-- before. The upsert form is correct on both schemas.
 insert into public.customer_passports (user_id, usual_haircut)
-values ((select id from v where k = 'cust'), 'Fade');
+values ((select id from v where k = 'cust'), 'Fade')
+on conflict (user_id) do update set usual_haircut = excluded.usual_haircut;
 
 select pg_temp.expect('8.1 a customer cannot discard their Fade Passport',
   pg_temp.sqlstate_as((select id from v where k = 'cust'),
@@ -709,10 +721,27 @@ select pg_temp.expect('10.6 both R1A indexes exist',
   (select count(*) = 2 from pg_indexes where schemaname = 'public'
    and indexname in ('staff_profiles_user_id_idx', 'appointments_barber_customer_completed_idx')));
 
+-- RESTATED BY R1B, and deliberately made STRONGER rather than relaxed.
+--
+-- The property this check exists to defend is "R1A itself creates no table".
+-- It was written as an absolute count of 89, which expresses that property
+-- only for as long as R1A is the newest lot — R1B legitimately adds exactly
+-- five tables, so the literal would fail for the right reason and hide any
+-- wrong one behind it.
+--
+-- The form below allows the 89 baseline PLUS however many of the five named
+-- R1B tables are present, and nothing else. It passes at 89 on a pre-R1B
+-- database, passes at 94 after R1B, and still FAILS if any unexpected
+-- ninety-fifth table appears — which the bare literal could no longer detect.
 select pg_temp.expect('10.7 R1A introduced no new table',
-  (select count(*) = 89 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-   where n.nspname = 'public' and c.relkind = 'r'),
-  'R1A is integrity only — social tables belong to R1B');
+  (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r')
+  = 89 + (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
+          where n.nspname = 'public' and c.relkind = 'r'
+            and c.relname in ('professionals', 'professional_follows',
+                              'customer_professional_relationships',
+                              'professional_claims', 'prospect_professionals')),
+  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds');
 
 select pg_temp.record('10.8 public tables', 'INFO',
   (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace

@@ -1,6 +1,6 @@
 # FadeUp Social-First V2 — Roadmap
 
-Status: **R0 reconstructed and corrected after independent adversarial review. R1A approved, not yet implemented. R1B blocked.**
+Status: **R0 reconstructed and corrected after independent adversarial review. R1A implemented and validated. R1B implemented and validated. R2 not started.**
 
 > **Provenance.** No `docs/v2/` directory existed in any commit reachable from
 > `git log --all` before this reconstruction. The R0 artifacts named in the R1
@@ -15,8 +15,8 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | Lot | Scope | Status |
 | --- | --- | --- |
 | **R0** | Architecture baseline, product constitution, target model, migration strategy | **Complete (reconstructed 2026-08-25)** |
-| **R1A** | Data integrity & security foundation | **Approved. Not yet implemented.** |
-| **R1B** | Social + acquisition domain foundation | **BLOCKED** until R1A is landed *and observed*. |
+| **R1A** | Data integrity & security foundation | **Complete (2026-08-25)** — see `R1A_IMPLEMENTATION_REPORT.md` |
+| **R1B** | Social + acquisition domain foundation | **Complete (2026-08-26)** — see `R1B_IMPLEMENTATION_REPORT.md` |
 | R2 | Pricing, plans, capability catalogue, entitlement gating | Not started — see `ENTITLEMENTS_DRAFT.md` |
 | R3 | Product analytics and event architecture | Not started — see `ANALYTICS_DRAFT.md` |
 | R4 | Worker engine foundations | Not started |
@@ -39,6 +39,8 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | `ENTITLEMENTS_DRAFT.md` | R2 sketch. Constrains R1 only by what it must not preclude. |
 | `ANALYTICS_DRAFT.md` | R3 sketch. Lists the facts R1 must leave recoverable. |
 | `ROADMAP.md` | This file. |
+| `R1A_IMPLEMENTATION_REPORT.md` | What R1A actually did, and its validation results. |
+| `R1B_IMPLEMENTATION_REPORT.md` | What R1B actually did, its validation results, and the two places it deliberately departs from `MIGRATION_STRATEGY` §2 Phase 3 (public customer profiles and showcases deferred to R6/R7). |
 
 ---
 
