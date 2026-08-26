@@ -1,10 +1,41 @@
 # R0 — Entitlements Draft
 
-Status: **draft for R2**. R1 implements none of this.
-Its only job is to ensure R1 does not make it impossible.
+Status: **SUPERSEDED by R2 (2026-08-26).** Kept as the historical R0 sketch and
+as an honest record of what R2 was reasoning against. Read
+`R2_IMPLEMENTATION_REPORT.md` for what was actually built.
 
-Pricing is frozen in `PRODUCT_CONSTITUTION.md` §6 and is not restated here as
-anything other than a constraint on the model.
+**Two things below are now WRONG and must not be implemented:**
+
+1. **§2 rule 1, and the `subscription_seat` table in §3.** This draft says
+   "Shop pricing is per LOCATION, not per barber seat … The billing unit is the
+   location", and proposes one seat row per billed location so that
+   per-location billing is "real rather than a number in a marketing table".
+   R2 **reverses** that. FadeUp charges neither per barber nor per location: a
+   Multi-salons price is the TOTAL for the whole group (€99 covers up to two
+   establishments, not €99 each), and `max_establishments` is a **capacity
+   cap**, never a billed quantity. No seat table exists, and
+   `20260826110700_r2_privilege_hardening.sql` asserts that no seat, quantity
+   or per-unit column exists anywhere on a commercial table — so the multiplier
+   has no operand it could be reintroduced with.
+
+2. **§1's "What exists today: Nothing."** Accurate when written. R2 built it.
+
+What this draft got right, and R2 kept: the `status: live | planned` discipline
+and the per-capability `evidence` strings; entitlement resolution as a
+`SECURITY DEFINER` helper in `private`, the sibling of `is_org_member`; and
+§5's closing recommendation to mirror any provider into the database and treat
+the local row as authoritative for access decisions — which is exactly what
+`organization_commercial_state` does.
+
+Its §5 open questions are answered in `R2_IMPLEMENTATION_REPORT.md`.
+
+---
+
+Original text follows, unedited except for this banner.
+
+---
+
+Pricing was frozen in `PRODUCT_CONSTITUTION.md` §6, which R2 amended to v1.1.
 
 ---
 

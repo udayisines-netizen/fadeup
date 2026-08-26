@@ -256,25 +256,46 @@ encoded in one field.
 
 ## 6. Pricing
 
-Canonical, frozen:
+Canonical, frozen. **Amended by R2 — see the amendment record.** Version 1.0 of
+this section priced shops **per location** (€35 / €49 / €69) and Independent at
+€20. That model is withdrawn: it is not what FadeUp sells, and the per-location
+multiplier in particular is now explicitly forbidden below.
 
-| Plan | Price | Unit |
-| --- | --- | --- |
-| **FREE NETWORK** | €0 | — |
-| **INDEPENDENT** | €20 / month | exactly **one** professional |
-| **SHOP ESSENTIAL** | €35 / month | **per location** |
-| **SHOP PRO** | €49 / month | **per location** — *primary / recommended plan* |
-| **SHOP SCALE** | €69 / month | **per location** |
+There are **four commercial families** and **eight plans**. The plan key is the
+durable identity; the display name is not, because "Pro" names two different
+products at two different prices.
 
-Two rules that constrain the data model:
+| Family | Plan key | Display | Price / month | Establishments | Team |
+| --- | --- | --- | --- | --- | --- |
+| **FREE NETWORK** | `free` | Free | €0 | 1 (presence) | 1 professional |
+| **INDEPENDENT** | `solo` | Solo | €19 | 1 | exactly **one** professional |
+| **SALON** | `salon_essential` | Essential | €29 | exactly 1 | included |
+| **SALON** | `salon_pro` | Pro | €49 — *recommended* | exactly 1 | included |
+| **SALON** | `salon_business` | Business | €79 | exactly 1 | included |
+| **MULTI-SALONS** | `multi_growth` | Growth | €99 **total** | up to 2 | included |
+| **MULTI-SALONS** | `multi_pro` | Pro | €149 **total** — *recommended* | up to 5 | included |
+| **MULTI-SALONS** | `multi_scale` | Scale | €249 **total** | up to 10 | included |
 
-* **Shop pricing is per LOCATION, not per barber seat.** Adding a barber to a
-  location must never change the price of that location. The billing unit is
-  the location.
+Four rules that constrain the data model:
+
+* **There is NO per-barber, per-seat or per-user pricing.** A salon with one
+  barber and a salon with ten pay the same. Staff count is never a billing
+  multiplier, and the schema must contain no quantity for a price to be
+  multiplied by.
+* **There is NO generic per-location pricing.** A Multi-salons price is the
+  TOTAL for the whole group: Growth is €99 for up to two establishments, not
+  €99 each. A single-salon plan covers exactly one operating salon, and a
+  second establishment requires moving into the Multi-salons family — it is
+  never "another €29".
 * **INDEPENDENT is capped at exactly one professional.** That cap is a real
-  constraint the model must be able to express and enforce.
+  constraint the model must express and enforce, not a sentence on a page.
+* **FREE is a legitimate state, not an error state.** Not an expiry, not a
+  failed trial, not a lapsed subscription. It is network presence, and it must
+  never be reachable only as the consequence of a failure.
 
-**PRO is the primary, recommended plan.** Presentation should reflect that.
+**`salon_pro` is the primary recommended plan for a single salon, and
+`multi_pro` for a group.** Presentation should reflect that. Neither may be
+identified by its display name in code, because both read "Pro".
 
 No architecture may make these rules impossible or expensive to implement
 later.
@@ -356,3 +377,4 @@ here:
 | Version | Date | Change |
 | --- | --- | --- |
 | 1.0 | 2026-08-25 (R0 reconstruction) | Initial constitution. Rules consolidated from the product direction frozen for the Social-First V2 rebuild. |
+| 1.1 | 2026-08-26 (R2) | **§6 Pricing replaced.** The v1.0 table (Independent €20; Shop Essential/Pro/Scale €35/€49/€69 **per location**) is withdrawn and superseded by four commercial families and eight canonical plan keys at €0/19/29/49/79/99/149/249. The "billing unit is the location" rule is **reversed**: per-location pricing is now forbidden, and a Multi-salons price is the total for the whole group. Per-barber and per-seat pricing were already forbidden and remain so. The one-professional Independent cap is unchanged and is now enforced by the database rather than displayed. Free is restated as a legitimate state rather than a residual row. Rationale and implementation: `R2_IMPLEMENTATION_REPORT.md`. |
