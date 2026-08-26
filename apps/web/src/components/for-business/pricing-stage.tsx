@@ -101,10 +101,37 @@ function PlanCard({ plan, price }: { plan: Plan; price: string | null }) {
         </span>
       </div>
 
-      {plan.locationLimit !== null && plan.locationLimit > 1 ? (
+      {/*
+        The supporting sentence sits directly under the price, which is where a
+        visitor is already looking and where the plan has to answer "what does
+        that actually get me". It is the one line of commercial copy per plan.
+      */}
+      <p className="mt-3 text-sm leading-relaxed text-[var(--pro-muted)]">
+        {t(`business.plans.${plan.id}.body`)}
+      </p>
+
+      {/*
+        The establishment cap, shown only where it is the point of the plan.
+        A single-salon plan saying "up to 1 location" reads as a restriction on
+        a product that was never about several; the Multi family is where the
+        number IS the offer. Since R2 this is a cap the database enforces, not
+        a number on a page.
+      */}
+      {plan.maxEstablishments > 1 ? (
         <p className="mt-2 text-sm text-[var(--pro-faint)]">
-          {t('business.pricing.locationLimit', { count: plan.locationLimit })}
+          {t('business.pricing.locationLimit', { count: plan.maxEstablishments })}
         </p>
+      ) : null}
+
+      {/*
+        Team is included wherever there can be one. `null` means unlimited in
+        the catalog — the same null the database stores — so this line is
+        driven by the commercial fact rather than by a hardcoded plan list.
+        FadeUp never charges per barber, and there is no seat count anywhere for
+        a price to be multiplied by.
+      */}
+      {plan.maxOperationalProfessionals === null ? (
+        <p className="mt-1 text-sm text-[var(--pro-faint)]">{t('business.pricing.teamIncluded')}</p>
       ) : null}
 
       <Link

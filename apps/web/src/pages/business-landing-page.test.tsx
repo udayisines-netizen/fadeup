@@ -252,7 +252,7 @@ describe('BusinessLandingPage — pricing', () => {
 
     const pricing = screen.getByRole('region', { name: 'Pricing' })
     const cta = within(pricing).getByRole('link', { name: /Choose Pro/ })
-    expect(cta).toHaveAttribute('href', '/pro/register?plan=shop_pro')
+    expect(cta).toHaveAttribute('href', '/pro/register?plan=salon_pro')
   })
 
   it('sends every professional CTA to the canonical registration path', () => {

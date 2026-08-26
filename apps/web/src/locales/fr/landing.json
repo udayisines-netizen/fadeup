@@ -271,43 +271,49 @@
           "label": "Multi-salons",
           "hint": "Plusieurs établissements."
         }
-      }
+      },
+      "teamIncluded": "Équipe incluse — jamais facturée par barber."
     },
     "plans": {
+      "free": {
+        "name": "Free",
+        "positioning": "Soyez visible. Commencez à construire votre présence.",
+        "body": "Votre profil, vos services et vos horaires sur le réseau FadeUp."
+      },
       "solo": {
         "name": "Solo",
-        "positioning": "Un barber, un carnet",
-        "body": "Tout le produit FadeUp, taillé pour quelqu'un qui travaille seul. Une page publique où l'on vous trouve, une page de réservation, les walk-ins, la file en direct et Fade Passport — sans un seul écran de gestion du personnel."
+        "positioning": "Un barber, son activité.",
+        "body": "Gérez vos clients, vos réservations et votre activité depuis un seul endroit."
       },
-      "shop_essential": {
+      "salon_essential": {
         "name": "Essential",
-        "positioning": "Tenir un salon numérique",
-        "body": "Tout ce qu'il faut à un salon moderne pour prendre des rendez-vous et garder ses clients : pages publiques du salon et de chaque barber, prestations, disponibilités, walk-ins, équipe et Fade Passport."
+        "positioning": "Les essentiels pour votre salon.",
+        "body": "Centralisez votre salon, votre équipe et vos réservations au quotidien."
       },
-      "shop_pro": {
+      "salon_pro": {
         "name": "Pro",
-        "positioning": "Le tenir en direct, et les faire revenir",
-        "body": "Tout Essential, plus la salle en direct : la file, l'écran en boutique, les fauteuils et la liste d'attente. C'est l'offre que décrivait toute cette page."
+        "positioning": "Faites tourner votre salon. Faites revenir vos clients.",
+        "body": "Pilotez votre salon, fidélisez vos clients et accélérez votre croissance."
       },
-      "shop_business": {
+      "salon_business": {
         "name": "Business",
-        "positioning": "Pilotage avancé, une adresse",
-        "body": "Tout Pro, plus les réglages plus fins qu'un salon chargé réclame dès que plusieurs personnes le font tourner."
+        "positioning": "Passez du pilotage à l’optimisation.",
+        "body": "Automatisez davantage, analysez vos performances et gardez le contrôle."
       },
       "multi_growth": {
         "name": "Growth",
-        "positioning": "Plus d'un salon",
-        "body": "Plusieurs établissements sous une seule entreprise. Équipes, prestations, files et fauteuils par salon, et un endroit pour tout voir."
+        "positioning": "Vos premiers salons, enfin réunis.",
+        "body": "Gérez jusqu’à 2 établissements depuis un espace unique."
       },
       "multi_pro": {
         "name": "Pro",
-        "positioning": "Multi-salons, et fidélisation",
-        "body": "Tout Growth, et la fidélisation des clients sur l'ensemble du groupe plutôt qu'un salon à la fois."
+        "positioning": "Un réseau. Une seule vision.",
+        "body": "Centralisez jusqu’à 5 salons, vos équipes et votre fidélisation."
       },
       "multi_scale": {
         "name": "Scale",
-        "positioning": "Pilotage centralisé",
-        "body": "Tout Multi Pro, plus la configuration centralisée et le reporting dont un groupe plus large a besoin."
+        "positioning": "Pilotez votre réseau à grande échelle.",
+        "body": "Contrôlez jusqu’à 10 salons avec une vision centralisée de votre activité."
       }
     },
     "capabilities": {
@@ -468,11 +474,31 @@
     "included": "Inclus",
     "notIncluded": "Non inclus",
     "plansThatScaleWithYour": "Des formules qui grandissent avec votre salon.",
-    "fadeupIsInEarlyAccess": "FadeUp est en accès anticipé. Les niveaux ci-dessous décrivent la structure de formules envisagée — regroupée par nombre d'adresses et par fonctionnalités — et non des tarifs définitifs. Chaque établissement commence de la même façon : créez-le gratuitement et configurez votre salon.",
+    "fadeupIsInEarlyAccess": "Un prix par offre, pour l’offre entière. Votre équipe est incluse — FadeUp ne facture jamais par barber, par siège ni par établissement. La facturation n’est pas encore active : rejoindre FadeUp lance une candidature, pas un paiement.",
     "mostCommon": "Le plus choisi",
     "comparePlanFeatures": "Comparer les fonctionnalités",
     "feature": "Fonctionnalité",
     "pricingQuestions": "Questions sur les tarifs",
-    "setUpYourShopOn": "Configurez votre salon sur FadeUp dès aujourd'hui"
+    "setUpYourShopOn": "Configurez votre salon sur FadeUp dès aujourd'hui",
+    "freeEyebrow": "Réseau gratuit",
+    "freeCta": "Rejoindre gratuitement",
+    "faq": {
+      "final": {
+        "q": "Ces prix sont-ils définitifs ?",
+        "a": "Ce sont les offres et les prix actuels. La facturation n’est pas encore activée : rejoindre FadeUp aujourd’hui lance une candidature, pas un abonnement."
+      },
+      "team": {
+        "q": "Est-ce que je paie plus quand mon équipe grandit ?",
+        "a": "Non. L’équipe est incluse dans chaque offre Salon et Multi-salons. Un salon de dix barbers paie le même prix qu’un salon de deux — l’effectif n’est jamais un multiplicateur."
+      },
+      "locations": {
+        "q": "Et si je gère plusieurs salons ?",
+        "a": "Une offre Salon couvre exactement un salon en activité. Plusieurs établissements demandent une offre Multi-salons, dont le prix est le total pour tout le groupe : Growth, c’est 99 € pour deux établissements, pas 99 € chacun."
+      },
+      "downgrade": {
+        "q": "Que se passe-t-il si je passe à une offre plus petite ?",
+        "a": "Rien n’est supprimé. Si vos salons ou votre équipe n’entrent pas dans l’offre plus petite, le changement est refusé et expliqué — FadeUp ne retire jamais un établissement, un professionnel ou un historique pour faire entrer une offre."
+      }
+    }
   }
 }

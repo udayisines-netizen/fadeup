@@ -27,21 +27,52 @@
  *    `docs/design-2026/for-business.md` for the audit behind each status.
  *
  * A note on what this is NOT: this is a DISPLAY and PACKAGING matrix. It is not
- * authorization. There is no subscription table in the database today, and when
- * there is, entitlement will be decided server-side. A client-side capability
- * lookup answers "what should this pricing page say", never "may this request
- * proceed".
+ * authorization. Since R2 the database holds the same catalog in
+ * `commercial_plans` / `commercial_capabilities` / `plan_capabilities`, and THAT
+ * is what triggers and RLS consult. A client-side capability lookup answers
+ * "what should this pricing page say", never "may this request proceed".
+ *
+ * The two catalogs are kept in step by `catalog.test.ts`, which parses the
+ * migration and compares it to this file key by key and price by price. If they
+ * ever disagree the test fails — which is the only reason it is safe to keep a
+ * compiled copy at all.
  */
 
+/**
+ * Which marketing narrative the /for-business page is telling. Presentation
+ * only, never persisted, and deliberately NOT the same axis as the commercial
+ * family below: `barbershop` is a story about a shop floor, `salon` is a
+ * statement about what FadeUp is owed.
+ */
 export type BusinessMode = 'independent' | 'barbershop' | 'multi_location'
 
 export const BUSINESS_MODES: BusinessMode[] = ['independent', 'barbershop', 'multi_location']
 
+/**
+ * The commercial family — the durable axis, mirroring the
+ * `public.commercial_family` enum exactly.
+ *
+ * Kept separate from BusinessMode because they answer different questions and
+ * will diverge: a hair salon and a barbershop tell different marketing stories
+ * and buy the same `salon` plans.
+ */
+export type CommercialFamily = 'free' | 'independent' | 'salon' | 'multi_salon'
+
+/**
+ * Durable machine identities. These strings are the primary key of
+ * `public.commercial_plans` and are the only thing business logic may branch on.
+ *
+ * `salon_pro` and `multi_pro` are BOTH displayed as "Pro" and are different
+ * products at different prices, so branching on the label is always a bug.
+ * Branching on the price is also a bug: the regional table in pricing.ts
+ * already gives one plan several amounts.
+ */
 export type PlanId =
+  | 'free'
   | 'solo'
-  | 'shop_essential'
-  | 'shop_pro'
-  | 'shop_business'
+  | 'salon_essential'
+  | 'salon_pro'
+  | 'salon_business'
   | 'multi_growth'
   | 'multi_pro'
   | 'multi_scale'
@@ -336,99 +367,166 @@ const ADVANCED_CONTROL: CapabilityId[] = [
   'prioritySupport',
 ]
 
+/**
+ * Free is the network tier, and it is a strict SUBSET rather than "foundation
+ * minus a couple of things": be findable, show what you do and when, keep your
+ * Fade Passport. No booking, no customer records, no team, no queue.
+ *
+ * That is what makes Solo at 19 € an upgrade rather than a formality, and it is
+ * the honest reading of "Soyez visible. Commencez à construire votre présence."
+ */
+const FREE_SET: CapabilityId[] = ['marketplace', 'publicProfile', 'services', 'availability', 'passport']
+
 export interface Plan {
   id: PlanId
-  mode: BusinessMode
+  /** The durable commercial axis. Mirrors public.commercial_plans.commercial_family. */
+  family: CommercialFamily
+  /**
+   * Which marketing rail this plan appears on, or null for a plan that is not
+   * on one. Free is null: it is surfaced as the network state beneath the
+   * rail, not as a fourth column competing with the paid plans.
+   */
+  mode: BusinessMode | null
   /** Position within its family, cheapest first. Drives the plan rail order. */
   tier: number
-  /** The family's recommended plan — exactly one per mode. */
+  /** The family's recommended plan — exactly one per family that offers a choice. */
   recommended: boolean
   capabilities: CapabilityId[]
   /**
-   * Commercial location cap, or null for "not applicable / unlimited".
+   * Commercial cap on ACTIVE establishments, mirroring
+   * public.commercial_plans.max_establishments.
    *
    * Deliberately data, not a sentence buried in JSX: the number is shown in the
    * UI through a translated template, so changing the commercial limit is a
    * one-line edit here rather than an edit in ten locale files.
+   *
+   * A CAP, never a billed quantity. FadeUp does not charge per location, and
+   * nothing multiplies a price by this number.
    */
-  locationLimit: number | null
+  maxEstablishments: number
+  /**
+   * Commercial cap on ACTIVE operational professionals, or null for unlimited —
+   * which is how "team is included" is spelled. Mirrors
+   * public.commercial_plans.max_operational_professionals.
+   *
+   * Deliberately null rather than a large number: a large number is a
+   * multiplier waiting to be discovered.
+   */
+  maxOperationalProfessionals: number | null
 }
 
 function plan(
   id: PlanId,
-  mode: BusinessMode,
+  family: CommercialFamily,
+  mode: BusinessMode | null,
   tier: number,
   capabilities: CapabilityId[],
-  options: { recommended?: boolean; locationLimit?: number | null } = {},
+  options: {
+    recommended?: boolean
+    maxEstablishments: number
+    maxOperationalProfessionals?: number | null
+  },
 ): Plan {
   return {
     id,
+    family,
     mode,
     tier,
     recommended: options.recommended ?? false,
     // Deduplicate and keep a stable order, so a comparison table built from two
     // different plans lines its rows up without extra sorting.
     capabilities: Array.from(new Set(capabilities)),
-    locationLimit: options.locationLimit ?? null,
+    maxEstablishments: options.maxEstablishments,
+    maxOperationalProfessionals: options.maxOperationalProfessionals ?? null,
   }
 }
+
+/**
+ * Free is a legitimate state, not an error one: not an expiry, not a failed
+ * trial, not a lapsed subscription. One presence, one professional.
+ */
+const FREE = plan('free', 'free', null, 1, FREE_SET, {
+  maxEstablishments: 1,
+  maxOperationalProfessionals: 1,
+})
 
 /**
  * Independent Solo is NOT a crippled salon plan. It is a smaller product for
  * one person: the whole foundation, plus walk-ins and the live queue for a
  * barber who takes people off the street, and none of the team/chair machinery
  * that would only be noise for someone working alone.
+ *
+ * Exactly one operational professional, and that cap is real: the database
+ * refuses the second one.
  */
-const SOLO = plan('solo', 'independent', 1, [...FOUNDATION, 'walkIns', 'liveQueue'], {
-  recommended: true,
-  locationLimit: 1,
+const SOLO = plan('solo', 'independent', 'independent', 1, [...FOUNDATION, 'walkIns', 'liveQueue'], {
+  maxEstablishments: 1,
+  maxOperationalProfessionals: 1,
 })
 
-/** Essential is a real entry-level shop product, not a demo of what you cannot have. */
-const SHOP_ESSENTIAL = plan('shop_essential', 'barbershop', 1, [...FOUNDATION, 'walkIns', 'team'], {
-  locationLimit: 1,
-})
+/** Essential is a real entry-level salon product, not a demo of what you cannot have. */
+const SALON_ESSENTIAL = plan(
+  'salon_essential',
+  'salon',
+  'barbershop',
+  1,
+  [...FOUNDATION, 'walkIns', 'team'],
+  { maxEstablishments: 1 },
+)
 
 /** Pro is the core FadeUp salon experience: the floor runs live, and customers come back. */
-const SHOP_PRO = plan('shop_pro', 'barbershop', 2, [...FOUNDATION, ...FLOOR, ...RETENTION_SUITE], {
-  recommended: true,
-  locationLimit: 1,
-})
+const SALON_PRO = plan(
+  'salon_pro',
+  'salon',
+  'barbershop',
+  2,
+  [...FOUNDATION, ...FLOOR, ...RETENTION_SUITE],
+  { recommended: true, maxEstablishments: 1 },
+)
 
-const SHOP_BUSINESS = plan(
-  'shop_business',
+const SALON_BUSINESS = plan(
+  'salon_business',
+  'salon',
   'barbershop',
   3,
   [...FOUNDATION, ...FLOOR, ...RETENTION_SUITE, ...ADVANCED_CONTROL],
-  { locationLimit: 1 },
+  { maxEstablishments: 1 },
 )
 
-/** Growth runs several shops properly. Retention automation is what Pro adds on top. */
-const MULTI_GROWTH = plan('multi_growth', 'multi_location', 1, [...FOUNDATION, ...FLOOR, ...MULTI_CORE], {
-  locationLimit: 2,
-})
+/** Growth runs several salons properly. Retention is what Multi Pro adds on top. */
+const MULTI_GROWTH = plan(
+  'multi_growth',
+  'multi_salon',
+  'multi_location',
+  1,
+  [...FOUNDATION, ...FLOOR, ...MULTI_CORE],
+  { maxEstablishments: 2 },
+)
 
 const MULTI_PRO = plan(
   'multi_pro',
+  'multi_salon',
   'multi_location',
   2,
   [...FOUNDATION, ...FLOOR, ...MULTI_CORE, ...RETENTION_SUITE],
-  { recommended: true, locationLimit: 5 },
+  { recommended: true, maxEstablishments: 5 },
 )
 
 const MULTI_SCALE = plan(
   'multi_scale',
+  'multi_salon',
   'multi_location',
   3,
   [...FOUNDATION, ...FLOOR, ...MULTI_CORE, ...RETENTION_SUITE, ...ADVANCED_CONTROL],
-  { locationLimit: 10 },
+  { maxEstablishments: 10 },
 )
 
 export const PLANS: Record<PlanId, Plan> = {
+  free: FREE,
   solo: SOLO,
-  shop_essential: SHOP_ESSENTIAL,
-  shop_pro: SHOP_PRO,
-  shop_business: SHOP_BUSINESS,
+  salon_essential: SALON_ESSENTIAL,
+  salon_pro: SALON_PRO,
+  salon_business: SALON_BUSINESS,
   multi_growth: MULTI_GROWTH,
   multi_pro: MULTI_PRO,
   multi_scale: MULTI_SCALE,
@@ -436,16 +534,46 @@ export const PLANS: Record<PlanId, Plan> = {
 
 export const PLAN_IDS = Object.keys(PLANS) as PlanId[]
 
-/** The plans offered to a given business mode, cheapest first. */
+/** The Free network tier, for the surfaces that present it separately. */
+export const FREE_PLAN = FREE
+
+/** The plans offered on a given marketing rail, cheapest first. Free is not on one. */
 export function plansForMode(mode: BusinessMode): Plan[] {
   return PLAN_IDS.map((id) => PLANS[id])
     .filter((p) => p.mode === mode)
     .sort((a, b) => a.tier - b.tier)
 }
 
+/** The plans in a commercial family, cheapest first. */
+export function plansForFamily(family: CommercialFamily): Plan[] {
+  return PLAN_IDS.map((id) => PLANS[id])
+    .filter((p) => p.family === family)
+    .sort((a, b) => a.tier - b.tier)
+}
+
+export function familyForPlan(planId: PlanId): CommercialFamily {
+  return PLANS[planId].family
+}
+
 export function recommendedPlanFor(mode: BusinessMode): Plan {
   const plans = plansForMode(mode)
   return plans.find((p) => p.recommended) ?? plans[0]!
+}
+
+/**
+ * Plan keys that were canonical before R2 renamed the Salon family.
+ *
+ * `/pro/register?plan=shop_pro` links exist in the wild — in emails, in the
+ * business landing page's own CTA history, and in anything anyone bookmarked.
+ * Silently returning null for them would drop a visitor's stated intent on the
+ * floor, so they are mapped forward rather than rejected. The old strings are
+ * NOT valid plan identities anywhere else: nothing in the database, the
+ * catalog, or any gate accepts them.
+ */
+const LEGACY_PLAN_ALIASES: Record<string, PlanId> = {
+  shop_essential: 'salon_essential',
+  shop_pro: 'salon_pro',
+  shop_business: 'salon_business',
 }
 
 export function planHas(planId: PlanId, capability: CapabilityId): boolean {
@@ -489,10 +617,12 @@ export function plannedCapabilities(planId: PlanId): CapabilityId[] {
  */
 export function parsePlanId(value: string | null | undefined): PlanId | null {
   if (!value) return null
-  return (PLAN_IDS as string[]).includes(value) ? (value as PlanId) : null
+  if ((PLAN_IDS as string[]).includes(value)) return value as PlanId
+  return LEGACY_PLAN_ALIASES[value] ?? null
 }
 
-export function modeForPlan(planId: PlanId): BusinessMode {
+/** Which marketing rail a plan belongs to, or null for Free, which is on none. */
+export function modeForPlan(planId: PlanId): BusinessMode | null {
   return PLANS[planId].mode
 }
 

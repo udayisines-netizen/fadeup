@@ -271,43 +271,49 @@
           "label": "Mehrere Standorte",
           "hint": "Mehrere Betriebe."
         }
-      }
+      },
+      "teamIncluded": "Team inklusive — nie pro Barbier abgerechnet."
     },
     "plans": {
+      "free": {
+        "name": "Free",
+        "positioning": "Sichtbar werden. Fang an, deine Präsenz aufzubauen.",
+        "body": "Dein Profil, deine Leistungen und deine Öffnungszeiten im FadeUp-Netzwerk."
+      },
       "solo": {
         "name": "Solo",
-        "positioning": "Ein Barbier, ein Buch",
-        "body": "Das ganze FadeUp-Produkt, zugeschnitten auf jemanden, der allein arbeitet. Eine öffentliche Seite, auf der man Sie findet, eine Buchungsseite, Laufkundschaft, Live-Warteschlange und Fade Passport — ohne einen einzigen Personalverwaltungsbildschirm."
+        "positioning": "Ein Barbier, sein Geschäft.",
+        "body": "Verwalte deine Kunden, deine Termine und dein Geschäft an einem Ort."
       },
-      "shop_essential": {
+      "salon_essential": {
         "name": "Essential",
-        "positioning": "Einen digitalen Laden führen",
-        "body": "Alles, was ein moderner Barbershop braucht, um Buchungen anzunehmen und Kunden zu halten: öffentliche Seiten für Laden und jeden Barbier, Leistungen, Verfügbarkeit, Laufkundschaft, Team und Fade Passport."
+        "positioning": "Das Wesentliche für deinen Salon.",
+        "body": "Bring deinen Salon, dein Team und deine Termine jeden Tag zusammen."
       },
-      "shop_pro": {
+      "salon_pro": {
         "name": "Pro",
-        "positioning": "Live führen und sie zurückholen",
-        "body": "Alles aus Essential, dazu die Fläche in Echtzeit: Warteschlange, Bildschirm im Laden, Stühle und Warteliste. Das ist der Tarif, den diese ganze Seite beschrieben hat."
+        "positioning": "Führ deinen Salon. Hol deine Kunden zurück.",
+        "body": "Steuere deinen Salon, binde deine Kunden und wachse schneller."
       },
-      "shop_business": {
+      "salon_business": {
         "name": "Business",
-        "positioning": "Erweiterte Steuerung, ein Standort",
-        "body": "Alles aus Pro, dazu die feineren Regler, nach denen ein gut laufender Laden fragt, sobald mehrere Leute ihn führen."
+        "positioning": "Vom Steuern zum Optimieren.",
+        "body": "Automatisiere mehr, analysiere deine Leistung und behalte die Kontrolle."
       },
       "multi_growth": {
         "name": "Growth",
-        "positioning": "Mehr als ein Laden",
-        "body": "Mehrere Standorte unter einem Unternehmen. Teams, Leistungen, Schlangen und Stühle je Laden, und eine Stelle, an der man alles sieht."
+        "positioning": "Deine ersten Salons, endlich vereint.",
+        "body": "Verwalte bis zu 2 Standorte aus einem einzigen Bereich."
       },
       "multi_pro": {
         "name": "Pro",
-        "positioning": "Mehrere Standorte, plus Kundenbindung",
-        "body": "Alles aus Growth, dazu Kundenbindung über die ganze Gruppe statt Laden für Laden."
+        "positioning": "Ein Netzwerk. Eine Sicht.",
+        "body": "Bring bis zu 5 Salons, deine Teams und deine Kundenbindung zusammen."
       },
       "multi_scale": {
         "name": "Scale",
-        "positioning": "Zentrale Steuerung",
-        "body": "Alles aus Multi Pro, dazu die zentrale Konfiguration und das Reporting, das eine größere Gruppe braucht."
+        "positioning": "Führ dein Netzwerk im großen Maßstab.",
+        "body": "Steuere bis zu 10 Salons mit einer zentralen Sicht auf dein Geschäft."
       }
     },
     "capabilities": {
@@ -468,11 +474,31 @@
     "included": "Enthalten",
     "notIncluded": "Nicht enthalten",
     "plansThatScaleWithYour": "Tarife, die mit deinem Salon wachsen.",
-    "fadeupIsInEarlyAccess": "FadeUp ist im Early Access. Die Stufen unten beschreiben die geplante Tarifstruktur — nach Standortanzahl und Funktionsumfang — keine endgültigen Preise. Jeder Betrieb startet gleich: kostenlos anlegen und den Salon einrichten.",
+    "fadeupIsInEarlyAccess": "Ein Preis pro Plan, für den ganzen Plan. Dein Team ist inklusive — FadeUp rechnet nie pro Barbier, pro Platz oder pro Standort ab. Die Abrechnung ist noch nicht aktiv: Beitreten startet eine Bewerbung, keine Zahlung.",
     "mostCommon": "Am häufigsten",
     "comparePlanFeatures": "Funktionen vergleichen",
     "feature": "Funktion",
     "pricingQuestions": "Fragen zu den Preisen",
-    "setUpYourShopOn": "Richte deinen Salon noch heute auf FadeUp ein"
+    "setUpYourShopOn": "Richte deinen Salon noch heute auf FadeUp ein",
+    "freeEyebrow": "Kostenloses Netzwerk",
+    "freeCta": "Kostenlos beitreten",
+    "faq": {
+      "final": {
+        "q": "Sind das die endgültigen Preise?",
+        "a": "Das sind die aktuellen Pläne und Preise. Die Abrechnung ist noch nicht eingeschaltet: Wer heute zu FadeUp kommt, startet eine Bewerbung, kein Abo."
+      },
+      "team": {
+        "q": "Zahle ich mehr, wenn mein Team wächst?",
+        "a": "Nein. Das Team ist in jedem Salon- und Multi-Salon-Plan enthalten. Ein Salon mit zehn Barbieren zahlt dasselbe wie einer mit zwei — die Teamgröße multipliziert nie den Preis."
+      },
+      "locations": {
+        "q": "Was, wenn ich mehr als einen Salon führe?",
+        "a": "Ein Salon-Plan deckt genau einen laufenden Salon ab. Mehrere Standorte brauchen einen Multi-Salon-Plan, und dessen Preis ist der Gesamtpreis für die ganze Gruppe: Growth kostet 99 € für bis zu zwei, nicht 99 € je Standort."
+      },
+      "downgrade": {
+        "q": "Was passiert, wenn ich auf einen kleineren Plan wechsle?",
+        "a": "Nichts wird gelöscht. Passen deine Salons oder dein Team nicht in den kleineren Plan, wird der Wechsel abgelehnt und erklärt — FadeUp entfernt nie einen Standort, eine Fachkraft oder Historie, damit ein Plan passt."
+      }
+    }
   }
 }

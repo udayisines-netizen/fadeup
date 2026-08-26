@@ -271,43 +271,49 @@
           "label": "Multi-location",
           "hint": "Several locations."
         }
-      }
+      },
+      "teamIncluded": "Team included — never priced per barber."
     },
     "plans": {
+      "free": {
+        "name": "Free",
+        "positioning": "Be seen. Start building your presence.",
+        "body": "Your profile, your services and your hours on the FadeUp network."
+      },
       "solo": {
         "name": "Solo",
-        "positioning": "One barber, one book",
-        "body": "The whole FadeUp product, sized for someone working alone. A public profile people can find, a booking page, walk-ins, a live queue and Fade Passport — without a single screen about managing staff."
+        "positioning": "One barber, one business.",
+        "body": "Manage your clients, your bookings and your business from one place."
       },
-      "shop_essential": {
+      "salon_essential": {
         "name": "Essential",
-        "positioning": "Run a digital shop",
-        "body": "Everything a modern barbershop needs to take bookings and keep its customers: public profiles for the shop and every barber, services, availability, walk-ins, a team, and Fade Passport."
+        "positioning": "The essentials for your salon.",
+        "body": "Bring your salon, your team and your bookings together, every day."
       },
-      "shop_pro": {
+      "salon_pro": {
         "name": "Pro",
-        "positioning": "Run it live, and bring them back",
-        "body": "Everything in Essential, plus the floor running live: the queue, the in-shop screen, chairs and the waitlist. This is the plan the rest of this page was describing."
+        "positioning": "Run your salon. Bring your clients back.",
+        "body": "Run your salon, keep your clients coming back and grow faster."
       },
-      "shop_business": {
+      "salon_business": {
         "name": "Business",
-        "positioning": "Advanced control, one location",
-        "body": "Everything in Pro, plus the deeper controls a busy single-location shop asks for once several people are running it."
+        "positioning": "From running it to optimising it.",
+        "body": "Automate more, analyse your performance and stay in control."
       },
       "multi_growth": {
         "name": "Growth",
-        "positioning": "More than one shop",
-        "body": "Several locations under one business. Teams, services, queues and chairs per shop, and one place to see them all."
+        "positioning": "Your first salons, finally together.",
+        "body": "Manage up to 2 establishments from a single space."
       },
       "multi_pro": {
         "name": "Pro",
-        "positioning": "Multi-location, plus retention",
-        "body": "Everything in Growth, and customer retention across the whole group rather than one shop at a time."
+        "positioning": "One network. One view.",
+        "body": "Bring up to 5 salons, your teams and your client loyalty together."
       },
       "multi_scale": {
         "name": "Scale",
-        "positioning": "Centralised control",
-        "body": "Everything in Multi Pro, plus the centralised configuration and reporting a larger group needs."
+        "positioning": "Run your network at scale.",
+        "body": "Control up to 10 salons with one central view of your business."
       }
     },
     "capabilities": {
@@ -468,11 +474,31 @@
     "included": "Included",
     "notIncluded": "Not included",
     "plansThatScaleWithYour": "Plans that scale with your shop.",
-    "fadeupIsInEarlyAccess": "FadeUp is in early access. The tiers below describe the intended plan structure — grouped by location count and feature set — not final, committed pricing. Every organization starts the same way: create it free and start setting up your shop.",
+    "fadeupIsInEarlyAccess": "One price per plan, for the whole plan. Your team is included — FadeUp never charges per barber, per seat or per location. Billing is not live yet: joining starts an application, not a charge.",
     "mostCommon": "Most common",
     "comparePlanFeatures": "Compare plan features",
     "feature": "Feature",
     "pricingQuestions": "Pricing questions",
-    "setUpYourShopOn": "Set up your shop on FadeUp today"
+    "setUpYourShopOn": "Set up your shop on FadeUp today",
+    "freeEyebrow": "Free network",
+    "freeCta": "Join for free",
+    "faq": {
+      "final": {
+        "q": "Is this final pricing?",
+        "a": "These are the current plans and the current prices. Billing is not switched on yet, so joining FadeUp today starts an application rather than a subscription."
+      },
+      "team": {
+        "q": "Do I pay more as my team grows?",
+        "a": "No. Team is included in every Salon and Multi-salons plan. A salon with ten barbers pays the same as a salon with two — staff count is never a billing multiplier."
+      },
+      "locations": {
+        "q": "What if I run more than one salon?",
+        "a": "A Salon plan covers exactly one operating salon. Several establishments need a Multi-salons plan, and its price is the total for the whole group: Growth is 99 € for up to two, not 99 € each."
+      },
+      "downgrade": {
+        "q": "What happens if I move to a smaller plan?",
+        "a": "Nothing is deleted. If your salons or your team would not fit the smaller plan, the change is refused and explained — FadeUp never removes an establishment, a professional or any history to make a plan fit."
+      }
+    }
   }
 }

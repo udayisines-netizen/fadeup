@@ -271,43 +271,49 @@
           "label": "多门店",
           "hint": "多个经营场所。"
         }
-      }
+      },
+      "teamIncluded": "团队已含——绝不按理发师人头计费。"
     },
     "plans": {
+      "free": {
+        "name": "Free",
+        "positioning": "先被看见，再谈其他。",
+        "body": "把你的主页、服务和营业时间放到 FadeUp 网络上。"
+      },
       "solo": {
         "name": "Solo",
-        "positioning": "一位理发师，一本账",
-        "body": "完整的 FadeUp，按一个人干活的尺寸裁好。一个能被找到的公开页面、一个预约页、临时到店、实时排队和 Fade Passport——一块管员工的界面都没有。"
+        "positioning": "一位理发师，一门生意。",
+        "body": "客户、预约和整门生意，都在一个地方。"
       },
-      "shop_essential": {
+      "salon_essential": {
         "name": "Essential",
-        "positioning": "把店数字化地开起来",
-        "body": "一家现代理发店接单和留客所需要的一切：店铺和每位理发师的公开页面、服务、可预约时间、临时到店、团队，还有 Fade Passport。"
+        "positioning": "门店需要的那些基本功。",
+        "body": "把门店、团队和预约每天都收在一处。"
       },
-      "shop_pro": {
+      "salon_pro": {
         "name": "Pro",
-        "positioning": "实时地跑起来，并把他们带回来",
-        "body": "Essential 的全部，加上实时的现场：队列、店内屏幕、椅位和候补名单。这一页从头到尾讲的就是这个方案。"
+        "positioning": "把店开好，把客人留住。",
+        "body": "管好门店，留住客人，把增长跑起来。"
       },
-      "shop_business": {
+      "salon_business": {
         "name": "Business",
-        "positioning": "单店的进阶掌控",
-        "body": "Pro 的全部，加上一家忙碌的店在多人一起打理时会要的那些更细的控制。"
+        "positioning": "从管得住，到做得更好。",
+        "body": "更多自动化，看清经营数据，始终掌控。"
       },
       "multi_growth": {
         "name": "Growth",
-        "positioning": "不止一家店",
-        "body": "一个生意底下多家门店。每家店各自的团队、服务、队列和椅位，还有一个能一起看的地方。"
+        "positioning": "头几家店，终于合到一起。",
+        "body": "在一个空间里管理最多 2 家门店。"
       },
       "multi_pro": {
         "name": "Pro",
-        "positioning": "多门店，加上召回",
-        "body": "Growth 的全部，而且是整个集团一起做客户召回，不是一家一家做。"
+        "positioning": "一个网络，一个视角。",
+        "body": "把最多 5 家门店、团队和客户留存汇到一起。"
       },
       "multi_scale": {
         "name": "Scale",
-        "positioning": "集中管控",
-        "body": "Multi Pro 的全部，加上更大的集团需要的集中配置与报表。"
+        "positioning": "把整张网络管起来。",
+        "body": "用一个中心视角掌控最多 10 家门店。"
       }
     },
     "capabilities": {
@@ -468,11 +474,31 @@
     "included": "包含",
     "notIncluded": "不包含",
     "plansThatScaleWithYour": "随门店一起成长的方案。",
-    "fadeupIsInEarlyAccess": "FadeUp 目前处于早期访问阶段。以下档位描述的是计划中的方案结构（按门店数量和功能划分），并非最终定价。所有商家的起点相同：免费创建并开始设置你的门店。",
+    "fadeupIsInEarlyAccess": "一个方案一个价格，覆盖整个方案。团队已包含——FadeUp 从不按理发师、席位或门店计费。计费尚未开启：加入是提交申请，不是付款。",
     "mostCommon": "最常选择",
     "comparePlanFeatures": "对比方案功能",
     "feature": "功能",
     "pricingQuestions": "价格相关问题",
-    "setUpYourShopOn": "今天就在 FadeUp 上设置你的门店"
+    "setUpYourShopOn": "今天就在 FadeUp 上设置你的门店",
+    "freeEyebrow": "免费网络",
+    "freeCta": "免费加入",
+    "faq": {
+      "final": {
+        "q": "这是最终价格吗？",
+        "a": "这是当前的方案和当前的价格。计费还没有开启：今天加入 FadeUp 是提交申请，而不是订阅。"
+      },
+      "team": {
+        "q": "团队变大以后要多付钱吗？",
+        "a": "不会。所有 Salon 和 Multi-salons 方案都已包含团队。十位理发师的门店和两位的价格一样——人数从不乘进价格里。"
+      },
+      "locations": {
+        "q": "如果我有不止一家门店呢？",
+        "a": "Salon 方案覆盖的正好是一家在营门店。多家门店需要 Multi-salons 方案，价格是整个集团的总价：Growth 是最多两家门店 99 €，而不是每家 99 €。"
+      },
+      "downgrade": {
+        "q": "降到更小的方案会怎样？",
+        "a": "什么都不会被删除。如果门店或团队放不进更小的方案，变更会被拒绝并说明原因——FadeUp 绝不会为了让方案装得下而移除门店、专业人员或历史记录。"
+      }
+    }
   }
 }

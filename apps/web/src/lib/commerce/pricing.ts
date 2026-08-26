@@ -49,66 +49,85 @@ const REGION_CURRENCY: Record<PricingRegion, RegionCurrency> = {
  * Monthly price in MINOR units (cents), so no float arithmetic ever touches a
  * price.
  *
- * `eu` is the authoritative catalog — those seven amounts are the commercially
- * agreed France reference prices. The other regions are explicit commercial
- * prices anchored on FadeUp's pre-existing UK/US/CA/CH positioning; they are
- * round local numbers chosen once, not conversions, and they are listed in
+ * `eu` is the authoritative catalog — those amounts are the commercially agreed
+ * France reference prices, and they are the SAME numbers stored in
+ * `public.commercial_plans.price_minor`. `catalog.test.ts` asserts that
+ * equality against the migration itself, so the database and this table cannot
+ * drift apart unnoticed.
+ *
+ * The other regions are explicit commercial prices anchored on FadeUp's
+ * pre-existing UK/US/CA/CH positioning; they are round local numbers chosen
+ * once, not conversions, and they are listed in
  * `docs/design-2026/for-business.md` as awaiting a formal commercial sign-off
  * per region. `intl` deliberately mirrors `eu` in EUR: billing an unlisted
  * country in euros at the European price is an honest default, where inventing
  * "$29" because the euro price is 29 would not be.
+ *
+ * Every amount is a PLAN TOTAL. multi_pro is 149 € for up to five
+ * establishments, not 149 € each; salon_pro is 49 € for a salon with as many
+ * barbers as it employs. Nothing in this module multiplies a price by a count,
+ * and there is no count here to multiply by.
+ *
+ * `free` is 0 in every region. It is a real plan and a legitimate state, so it
+ * carries a real price rather than being absent and rendering as `undefined`.
  */
 const PLAN_PRICES: Record<PricingRegion, Record<PlanId, number>> = {
   eu: {
+    free: 0,
     solo: 1900,
-    shop_essential: 2900,
-    shop_pro: 4900,
-    shop_business: 7900,
+    salon_essential: 2900,
+    salon_pro: 4900,
+    salon_business: 7900,
     multi_growth: 9900,
     multi_pro: 14900,
     multi_scale: 24900,
   },
   uk: {
+    free: 0,
     solo: 1700,
-    shop_essential: 2500,
-    shop_pro: 4200,
-    shop_business: 6900,
+    salon_essential: 2500,
+    salon_pro: 4200,
+    salon_business: 6900,
     multi_growth: 8500,
     multi_pro: 12900,
     multi_scale: 21500,
   },
   us: {
+    free: 0,
     solo: 2100,
-    shop_essential: 3200,
-    shop_pro: 5400,
-    shop_business: 8900,
+    salon_essential: 3200,
+    salon_pro: 5400,
+    salon_business: 8900,
     multi_growth: 10900,
     multi_pro: 16900,
     multi_scale: 27900,
   },
   ca: {
+    free: 0,
     solo: 2700,
-    shop_essential: 3900,
-    shop_pro: 6900,
-    shop_business: 10900,
+    salon_essential: 3900,
+    salon_pro: 6900,
+    salon_business: 10900,
     multi_growth: 13900,
     multi_pro: 20900,
     multi_scale: 34900,
   },
   ch: {
+    free: 0,
     solo: 1900,
-    shop_essential: 2900,
-    shop_pro: 4900,
-    shop_business: 7900,
+    salon_essential: 2900,
+    salon_pro: 4900,
+    salon_business: 7900,
     multi_growth: 9900,
     multi_pro: 14900,
     multi_scale: 24900,
   },
   intl: {
+    free: 0,
     solo: 1900,
-    shop_essential: 2900,
-    shop_pro: 4900,
-    shop_business: 7900,
+    salon_essential: 2900,
+    salon_pro: 4900,
+    salon_business: 7900,
     multi_growth: 9900,
     multi_pro: 14900,
     multi_scale: 24900,
@@ -179,13 +198,23 @@ export const PRICING_REGIONS = Object.keys(REGION_CURRENCY) as PricingRegion[]
  * Every region prices every plan. Exported for the test suite: a region added
  * without a full price column would otherwise silently render `undefined` as a
  * price, which is the one failure mode a pricing page cannot survive.
+ *
+ * Zero is a valid price and NEGATIVE is not. The bound moved from `<= 0` to
+ * `< 0` when Free became a real plan: rejecting zero would have made the one
+ * plan that genuinely costs nothing indistinguishable from a plan somebody
+ * forgot to price.
  */
 export function missingPlanPrices(): string[] {
   const missing: string[] = []
   for (const region of PRICING_REGIONS) {
     for (const planId of PLAN_IDS) {
       const amount = PLAN_PRICES[region]?.[planId]
-      if (typeof amount !== 'number' || !Number.isInteger(amount) || amount <= 0) {
+      if (typeof amount !== 'number' || !Number.isInteger(amount) || amount < 0) {
+        missing.push(`${region}/${planId}`)
+      }
+      if (planId !== 'free' && amount === 0) {
+        // A paid plan priced at zero is a mistake that renders as a working
+        // page, so it is caught here rather than discovered in production.
         missing.push(`${region}/${planId}`)
       }
     }

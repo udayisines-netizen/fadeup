@@ -227,7 +227,7 @@ describe('plan intent arriving from /for-business', () => {
   })
 
   it('shows the plan the applicant chose on the pricing page', () => {
-    renderPage('/pro/register?plan=shop_pro')
+    renderPage('/pro/register?plan=salon_pro')
 
     const banner = screen.getByText('Plan selected').parentElement!
     expect(banner.textContent).toContain('Pro')

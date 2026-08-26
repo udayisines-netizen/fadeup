@@ -40,15 +40,22 @@ describe('commercial region', () => {
 })
 
 describe('the France reference catalog', () => {
-  // These seven numbers are the commercially agreed France prices. If this test
-  // fails, someone changed what FadeUp charges — which is allowed, but it is a
+  // These eight numbers are the commercially agreed France prices, and they are
+  // the same amounts stored in public.commercial_plans.price_minor — catalog
+  // .test.ts asserts that equality against the migration itself. If this test
+  // fails, someone changed what FadeUp charges. That is allowed, but it is a
   // commercial decision and not a refactor, so it has to be made deliberately
   // here rather than noticed later on a live pricing page.
+  //
+  // Every amount is a PLAN TOTAL. multi_pro is 149 € for up to five
+  // establishments, not 149 € each — there is no count in this module for a
+  // price to be multiplied by, and that absence is the whole defence.
   const FRANCE_EUROS: Record<PlanId, number> = {
+    free: 0,
     solo: 19,
-    shop_essential: 29,
-    shop_pro: 49,
-    shop_business: 79,
+    salon_essential: 29,
+    salon_pro: 49,
+    salon_business: 79,
     multi_growth: 99,
     multi_pro: 149,
     multi_scale: 249,
@@ -63,13 +70,41 @@ describe('the France reference catalog', () => {
   }
 
   it('reads as a price, not an invoice line', () => {
-    expect(formatPlanPrice('shop_pro', 'eu', 'en')).toBe('€49')
+    expect(formatPlanPrice('salon_pro', 'eu', 'en')).toBe('€49')
+  })
+
+  it('prices Free at zero in every region, because Free is a real plan', () => {
+    // Not an absent price, not a null, not a special case the UI has to
+    // remember. Free is a legitimate commercial state and it costs zero.
+    for (const region of PRICING_REGIONS) {
+      expect(planPriceMinor('free', region)).toBe(0)
+    }
+  })
+
+  it('charges the SAME total however many establishments a Multi plan covers', () => {
+    // The obsolete model was a per-location multiplier. If it ever came back,
+    // these are the three numbers that would move.
+    expect(planPriceMinor('multi_growth', 'eu')).toBe(9900)
+    expect(planPriceMinor('multi_growth', 'eu')).not.toBe(9900 * 2)
+    expect(planPriceMinor('multi_pro', 'eu')).toBe(14900)
+    expect(planPriceMinor('multi_pro', 'eu')).not.toBe(14900 * 5)
+    expect(planPriceMinor('multi_scale', 'eu')).toBe(24900)
+    expect(planPriceMinor('multi_scale', 'eu')).not.toBe(24900 * 10)
+  })
+
+  it('does not carry any obsolete pre-R2 subscription price', () => {
+    // The superseded assumptions were 20 € Independent and 35/39/69 € per
+    // LOCATION shop tiers. None of them may survive as a France price.
+    const franceAmounts = PLAN_IDS.map((id) => planPriceMinor(id, 'eu'))
+    for (const obsolete of [2000, 3500, 3900, 6900]) {
+      expect(franceAmounts).not.toContain(obsolete)
+    }
   })
 })
 
 describe('language never changes the currency', () => {
   it('keeps euros for a French shop read in English', () => {
-    const formatted = formatPlanPrice('shop_pro', 'eu', 'en')
+    const formatted = formatPlanPrice('salon_pro', 'eu', 'en')
     expect(formatted).toContain('€')
     expect(formatted).not.toContain('$')
   })
@@ -77,7 +112,7 @@ describe('language never changes the currency', () => {
   it('keeps dollars for an American shop read in French', () => {
     // A French speaker in Texas: French words, dollars. Language chooses the
     // wording and the grouping; geography chooses the money.
-    const formatted = formatPlanPrice('shop_pro', 'us', 'fr')
+    const formatted = formatPlanPrice('salon_pro', 'us', 'fr')
     expect(formatted).toContain('$')
     expect(formatted).not.toContain('€')
   })
@@ -112,7 +147,7 @@ describe('the price table itself', () => {
     // no amount of design can hide, and it is easy to introduce by editing one
     // region and not the rest.
     const families: PlanId[][] = [
-      ['shop_essential', 'shop_pro', 'shop_business'],
+      ['salon_essential', 'salon_pro', 'salon_business'],
       ['multi_growth', 'multi_pro', 'multi_scale'],
     ]
     for (const region of PRICING_REGIONS) {
@@ -121,16 +156,19 @@ describe('the price table itself', () => {
           expect(planPriceMinor(family[i]!, region)).toBeGreaterThan(planPriceMinor(family[i - 1]!, region))
         }
       }
-      expect(planPriceMinor('shop_essential', region)).toBeGreaterThan(planPriceMinor('solo', region))
-      expect(planPriceMinor('multi_growth', region)).toBeGreaterThan(planPriceMinor('shop_business', region))
+      expect(planPriceMinor('salon_essential', region)).toBeGreaterThan(planPriceMinor('solo', region))
+      expect(planPriceMinor('multi_growth', region)).toBeGreaterThan(planPriceMinor('salon_business', region))
     }
   })
 
   it('never converts one region into another', () => {
     // Not a rate check — a shape check. Every region is its own literal column,
     // so no two regions should be derivable from each other by a single factor.
-    const eu = PLAN_IDS.map((id) => planPriceMinor(id, 'eu'))
-    const us = PLAN_IDS.map((id) => planPriceMinor(id, 'us'))
+    // Free is excluded: it is 0 in every region, so its "ratio" is 0/0 and
+    // says nothing about whether one region was derived from another.
+    const paid = PLAN_IDS.filter((id) => id !== 'free')
+    const eu = paid.map((id) => planPriceMinor(id, 'eu'))
+    const us = paid.map((id) => planPriceMinor(id, 'us'))
     const ratios = eu.map((amount, index) => us[index]! / amount)
     expect(new Set(ratios.map((r) => r.toFixed(4))).size).toBeGreaterThan(1)
   })
