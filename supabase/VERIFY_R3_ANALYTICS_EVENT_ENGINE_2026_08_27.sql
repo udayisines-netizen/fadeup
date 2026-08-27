@@ -24,7 +24,10 @@
 --   * analytics taking a booking down with it (§14) — the one failure here
 --     that is NOT quiet, and the most damaging.
 --
--- Zero FAIL rows is the pass condition.
+-- Zero FAIL rows is the pass condition, on BOTH paths this file serves — a
+-- fresh replay and an upgrade over a populated pre-R3 database. Section 15
+-- decides which one is running and says so in the output; sections 16 and 17
+-- are the halves that only one path can assert.
 -- ============================================================================
 
 \set ON_ERROR_STOP off
@@ -122,6 +125,25 @@ returns bigint language sql as $$
 $$;
 
 
+-- ---------------------------------------------------------------------------
+-- STATE AT ENTRY, captured before this file creates anything
+--
+-- The strongest form of the no-backfill claim is "applying the lot wrote zero
+-- events, anywhere" — but it can only be measured HERE, before the suite's own
+-- fixtures start emitting. Asserting it later would be asserting that this
+-- file had done nothing, which is false by design.
+--
+-- Both paths check it. On a fresh replay it proves no migration writes an
+-- event at install time; on an upgrade it proves MASTER did not backfill a
+-- populated database.
+-- ---------------------------------------------------------------------------
+
+create temp table verify_entry_state as
+select
+  (select count(*) from public.analytics_events)               as events_at_entry,
+  (select count(*) from public.analytics_ingestion_rejections) as rejections_at_entry;
+
+
 -- ============================================================================
 -- 0. FIXTURES
 -- ============================================================================
@@ -136,7 +158,15 @@ begin
     ('33330000-0000-4000-8000-000000000005', 'r3.customer.two@verify.invalid'),
     ('33330000-0000-4000-8000-000000000006', 'r3.outsider@verify.invalid'),
     ('33330000-0000-4000-8000-000000000007', 'r3.rival.owner@verify.invalid'),
-    ('33330000-0000-4000-8000-000000000008', 'r3.platform@verify.invalid')
+    ('33330000-0000-4000-8000-000000000008', 'r3.platform@verify.invalid'),
+    -- A customer used by NOTHING else in this file. The cross-lot chain in
+    -- §13 needs an account with no existing professional_follows edge:
+    -- auto-follow is ON CONFLICT DO NOTHING with no DO UPDATE branch — by
+    -- design, so it can never reverse an explicit unfollow — so reusing a
+    -- customer who had already followed manually would suppress the very edge
+    -- the test exists to observe, and the failure would look like a product
+    -- bug rather than a fixture collision.
+    ('33330000-0000-4000-8000-000000000009', 'r3.chain@verify.invalid')
   on conflict (id) do nothing;
 
   insert into public.organizations (id, name, slug) values
@@ -1377,8 +1407,99 @@ exception when others then
     format('%s / %s', sqlstate, sqlerrm));
 end $$;
 
-select pg_temp.expect('13.04 a relationship event fires from a completed service',
-  pg_temp.events('passport_relationship_created') >= 0);
+-- 13.04-13.08 — THE CROSS-LOT CHAIN, exercised rather than assumed.
+--
+-- A completed appointment with real account attribution sets off three R1B
+-- triggers before any R3 trigger sees it: auto-follow on entry to confirmed,
+-- relationship recording on entry to completed, and the relationship's own
+-- INSERT. R3 instruments the last two of those and the first indirectly. The
+-- previous version of this check asserted `count >= 0`, which is true of every
+-- possible database and therefore tested nothing — it would have passed with
+-- the relationship trigger deleted.
+--
+-- booked_by_user_id is what all of this keys on: R1B chose it because it is
+-- the only account attribution a shop cannot fabricate.
+do $$
+declare
+  v_org uuid := '33331000-0000-4000-8000-000000000001';
+  v_customer uuid := '33330000-0000-4000-8000-000000000009';
+  v_appt uuid := '33336000-0000-4000-8000-000000000010';
+  v_pro uuid;
+  v_rel_before bigint;
+  v_follow_before bigint;
+  v_count integer;
+begin
+  select professional_id into v_pro from public.barbers
+  where id = '33334000-0000-4000-8000-000000000001';
+
+  v_rel_before := pg_temp.events('passport_relationship_created', v_org);
+  v_follow_before := (select count(*) from public.analytics_events
+                      where event_name = 'professional_followed'
+                        and professional_id = v_pro);
+
+  insert into public.appointments
+    (id, organization_id, location_id, barber_id, service_id,
+     customer_name, booked_by_user_id, starts_at, ends_at, status)
+  values (v_appt, v_org, '33332000-0000-4000-8000-000000000001',
+     '33334000-0000-4000-8000-000000000001', '33335000-0000-4000-8000-000000000001',
+     'R3 Chain', v_customer,
+     now() + interval '20 days', now() + interval '20 days' + interval '30 minutes',
+     'confirmed');
+
+  -- R1B auto-follows on entry to confirmed. R3 must record that as a follow
+  -- whose SOURCE is auto — a follower count that cannot separate a deliberate
+  -- follow from one earned by a booking is not evidence of anything.
+  perform pg_temp.expect('13.04 an auto-follow is measured, and marked auto',
+    exists (select 1 from public.analytics_events
+            where event_name = 'professional_followed'
+              and professional_id = v_pro
+              and properties ->> 'source' = 'auto'),
+    'R1B creates the edge; R3 must not report it as a manual follow');
+
+  update public.appointments set status = 'completed' where id = v_appt;
+
+  perform pg_temp.expect('13.05 a first completed service creates one relationship event',
+    pg_temp.events('passport_relationship_created', v_org) = v_rel_before + 1,
+    format('before=%s after=%s', v_rel_before,
+           pg_temp.events('passport_relationship_created', v_org)));
+
+  perform pg_temp.expect('13.06 the relationship event names the durable identity',
+    exists (select 1 from public.analytics_events
+            where event_name = 'passport_relationship_created'
+              and organization_id = v_org and professional_id = v_pro));
+
+  -- THE TRANSFORMATION THAT MUST *NOT* PRODUCE AN EVENT. A second service by
+  -- the same customer with the same professional UPDATES the existing
+  -- relationship row rather than inserting one. The R3 trigger is INSERT-only,
+  -- so the count must not move — while the relationship's own counter does.
+  v_rel_before := pg_temp.events('passport_relationship_created', v_org);
+
+  insert into public.appointments
+    (id, organization_id, location_id, barber_id, service_id,
+     customer_name, booked_by_user_id, starts_at, ends_at, status)
+  values ('33336000-0000-4000-8000-000000000011', v_org,
+     '33332000-0000-4000-8000-000000000001', '33334000-0000-4000-8000-000000000001',
+     '33335000-0000-4000-8000-000000000001', 'R3 Chain Two', v_customer,
+     now() + interval '25 days', now() + interval '25 days' + interval '30 minutes',
+     'confirmed');
+  update public.appointments set status = 'completed'
+   where id = '33336000-0000-4000-8000-000000000011';
+
+  select completed_interaction_count into v_count
+  from public.customer_professional_relationships
+  where customer_user_id = v_customer and professional_id = v_pro
+    and organization_id = v_org;
+
+  perform pg_temp.expect('13.07 a returning customer increments the relationship',
+    v_count = 2, coalesce(v_count::text, 'null'));
+
+  perform pg_temp.expect('13.08 but creates NO second relationship-created event',
+    pg_temp.events('passport_relationship_created', v_org) = v_rel_before,
+    'the event marks a relationship coming into existence, not every visit');
+exception when others then
+  perform pg_temp.record('13.04 an auto-follow is measured, and marked auto', 'FAIL',
+    format('%s / %s', sqlstate, sqlerrm));
+end $$;
 
 -- §9: the same real professional found through several sources must convert
 -- ONCE. The linkage table is unique per prospect, and the event is keyed on
@@ -1416,109 +1537,377 @@ select pg_temp.expect('14.02 the version is stamped from the registry, not joine
 
 
 -- ============================================================================
--- 15. THE UPGRADE PATH
+-- 15. WHICH PATH IS THIS?
 --
--- These only run when the pre-upgrade seed is present, i.e. under
---   --skip-from 20260827120000_analytics_event_foundation.sql
---   --seed supabase/SEED_R3_PRE_UPGRADE_2026_08_27.sql
---   --master supabase/MASTER_R3_ANALYTICS_EVENT_ENGINE_2026_08_27.sql
--- On a fresh replay they report INFO and assert nothing, so one VERIFY file
--- serves both paths without pretending to have tested the one it did not.
+-- One VERIFY file serves two genuinely different tests, and they must not be
+-- allowed to blur into each other:
+--
+--   FRESH    every migration replayed in order onto an empty database.
+--            Proves the lot installs correctly and behaves correctly.
+--
+--   UPGRADE  the base replay stopped immediately before R3, a populated
+--            pre-analytics database seeded on top, then MASTER applied.
+--            Proves the lot can be installed over a LIVE product without
+--            rewriting its history or breaking its trade.
+--
+-- The fresh path cannot test preservation, because there is nothing to
+-- preserve. The upgrade path is the only one that can. So each path asserts
+-- what it is actually able to assert, and — importantly — each asserts that it
+-- IS the path it thinks it is. A mis-invoked run that silently took the fresh
+-- path while the operator believed they were testing an upgrade would report a
+-- clean sheet having tested nothing about upgrading at all.
 -- ============================================================================
 
+create or replace function pg_temp.is_upgrade_run()
+returns boolean language sql stable as $$
+  select to_regclass('r3_upgrade_baseline.snapshot') is not null
+     and exists (select 1 from public.organizations
+                 where id = '44441000-0000-4000-8000-000000000001');
+$$;
+
+do $$
+begin
+  if pg_temp.is_upgrade_run() then
+    perform pg_temp.record('15.00 test path', 'INFO',
+      'UPGRADE — pre-R3 baseline + populated seed + MASTER. Section 16 asserts; section 17 is skipped.');
+  else
+    perform pg_temp.record('15.00 test path', 'INFO',
+      'FRESH — full migration replay onto an empty database. Section 17 asserts; section 16 is skipped.');
+  end if;
+end $$;
+
+-- The two markers must never both be present, and never both absent. Either
+-- would mean the harness did something other than what it was asked, and every
+-- conclusion drawn from the run would be about a database nobody described.
+select pg_temp.expect('15.01 the run is unambiguously one path or the other',
+  (to_regclass('r3_upgrade_baseline.snapshot') is not null)
+    = (exists (select 1 from public.organizations
+               where id = '44441000-0000-4000-8000-000000000001')),
+  'the seed schema and the seeded tenant must appear together or not at all');
+
+
+-- ============================================================================
+-- 16. UPGRADE PATH — PRESERVATION AND FORWARD CORRECTNESS
+--
+-- Skipped entirely on a fresh run. Every check here is either a proof that
+-- pre-R3 data survived UNCHANGED, or a proof that the product still transforms
+-- correctly afterwards. There are no presence checks: "the follow is still
+-- there" passes just as happily against a migration that repointed it.
+-- ============================================================================
+
+-- 16.01-16.09 — PRESERVATION, BY FINGERPRINT.
+--
+-- The seed recorded an md5 over an ordered projection of every row that
+-- constitutes this tenant's history, immediately before MASTER ran. Here the
+-- SAME function recomputes it. A changed value, an added row, a removed row
+-- and a reordered set are all a different digest.
+--
+-- Sharing r3_upgrade_baseline.digest() between the two sides is the whole
+-- point: a VERIFY that re-implemented the projection could drift from the seed
+-- and produce two different queries agreeing about nothing — which looks
+-- exactly like a passing test.
+-- One row per entity, numbered in a plain counter rather than a window
+-- function, so a failure says WHICH part of the shop's history moved instead
+-- of only that something did.
 do $$
 declare
-  v_seeded boolean;
-  v_org uuid := '44441000-0000-4000-8000-000000000001';
+  r record;
+  v_now_count bigint;
+  v_now_fp text;
+  v_i integer := 0;
 begin
-  select exists (select 1 from public.organizations where id = v_org) into v_seeded;
-
-  if not v_seeded then
-    perform pg_temp.record('15.00 upgrade path', 'INFO',
-      'pre-upgrade seed absent — this was a fresh-database run');
+  if not pg_temp.is_upgrade_run() then
+    perform pg_temp.record('16.00 upgrade preservation', 'INFO',
+      'skipped — fresh run, there is no pre-R3 history to preserve');
     return;
   end if;
 
-  -- THE CENTRAL UPGRADE CLAIM. Two appointments completed a month ago, a
-  -- completed queue entry, a follow and a favorite, all created before any
-  -- trigger existed. R3 backfills NOTHING, so the log must be empty for this
-  -- tenant: there is no honest occurred_at for a service delivered last
-  -- month, no honest actor and no honest record of the plan in force, and
-  -- inventing them would put fabricated evidence in the evidence table.
-  perform pg_temp.expect('15.01 the upgrade fabricated NO history',
+  for r in select entity, row_count, fingerprint from r3_upgrade_baseline.snapshot order by entity loop
+    v_i := v_i + 1;
+    select d.row_count, d.fingerprint into v_now_count, v_now_fp
+    from r3_upgrade_baseline.digest(r.entity) d;
+
+    perform pg_temp.expect(
+      format('16.%s %s survived the upgrade unchanged', lpad(v_i::text, 2, '0'), r.entity),
+      v_now_fp = r.fingerprint and v_now_count = r.row_count,
+      case
+        when v_now_count <> r.row_count
+          then format('row count moved: %s -> %s', r.row_count, v_now_count)
+        when v_now_fp <> r.fingerprint
+          then format('%s row(s) unchanged in number but changed in content (%s -> %s)',
+                      r.row_count, left(r.fingerprint, 12), left(v_now_fp, 12))
+        else format('%s row(s)', r.row_count)
+      end);
+  end loop;
+end $$;
+
+-- 16.10-16.14 — NO FABRICATED HISTORY.
+--
+-- Stronger than "the tenant has no events", because the seeded tenant does not
+-- merely have completed appointments: R1B's triggers already turned those into
+-- a professional_follows edge and a customer_professional_relationships row
+-- before R3 existed. Those are exactly the facts a well-meaning backfill would
+-- have reached for. None of them may have produced an event.
+do $$
+declare
+  v_org uuid := '44441000-0000-4000-8000-000000000001';
+  v_user uuid := '44440000-0000-4000-8000-000000000003';
+  v_rels integer;
+  v_follows integer;
+begin
+  if not pg_temp.is_upgrade_run() then
+    return;
+  end if;
+
+  perform pg_temp.expect('16.10 the upgrade fabricated NO events for the tenant',
     (select count(*) from public.analytics_events where organization_id = v_org) = 0,
     (select count(*)::text from public.analytics_events where organization_id = v_org));
 
-  -- And the pre-existing product data is untouched.
-  perform pg_temp.expect('15.02 historical completions survived the upgrade',
-    (select count(*) from public.appointments
-     where organization_id = v_org and status = 'completed') = 2);
+  -- The pre-existing facts a backfill would have mined, proven to exist...
+  select count(*) into v_rels from public.customer_professional_relationships
+   where organization_id = v_org;
+  select count(*) into v_follows from public.professional_follows
+   where follower_user_id = v_user;
 
-  perform pg_temp.expect('15.03 completion times were not rewritten',
-    not exists (select 1 from public.appointments
-                where organization_id = v_org and status = 'completed'
-                  and completed_at is null));
+  perform pg_temp.expect('16.11 the pre-R3 relationship really does exist',
+    v_rels >= 1, v_rels::text || ' relationship(s)');
+  perform pg_temp.expect('16.12 the pre-R3 auto-follow really does exist',
+    v_follows >= 1, v_follows::text || ' follow(s)');
 
-  perform pg_temp.expect('15.04 the live follow survived',
-    exists (select 1 from public.organization_follows
-            where organization_id = v_org and is_following));
+  -- ...and proven to have produced nothing.
+  perform pg_temp.expect('16.13 and neither produced a fabricated event',
+    not exists (
+      select 1 from public.analytics_events
+      where event_name in ('passport_relationship_created', 'professional_followed',
+                           'organization_followed', 'organization_favorited',
+                           'passport_issued', 'appointment_completed', 'queue_completed')
+        and (organization_id = v_org or actor_user_id = v_user)),
+    'there is no honest occurred_at, actor or plan for a service delivered before instrumentation');
+
+  -- Measured at file entry, not here: by this point the suite's own sections
+  -- have deliberately emitted events, and asserting a global zero now would
+  -- assert that this file had done nothing.
+  perform pg_temp.expect('16.14 MASTER wrote no event anywhere, not merely none for this tenant',
+    (select events_at_entry from verify_entry_state) = 0,
+    (select events_at_entry::text from verify_entry_state));
+
+  perform pg_temp.expect('16.15 and MASTER logged no ingestion rejection either',
+    (select rejections_at_entry from verify_entry_state) = 0,
+    'a rejection at install time would mean a trigger fired during the migration');
 end $$;
 
--- The shop must still be able to TRADE after the upgrade: the thirteen new
--- triggers fire on its existing rows, and a raise from any of them would stop
--- a business that was working the day before.
+-- 16.20-16.29 — FORWARD CORRECTNESS.
+--
+-- The shop must still be able to trade, and everything from the upgrade
+-- forward must be measured correctly. This is where the thirteen new triggers
+-- meet rows they did not create.
+--
+-- Deliberately ordered AFTER the preservation checks: these mutate the seeded
+-- data on purpose, and running them first would destroy the thing 16.01-16.09
+-- exists to measure.
 do $$
 declare
   v_org uuid := '44441000-0000-4000-8000-000000000001';
+  v_user uuid := '44440000-0000-4000-8000-000000000003';
+  v_appt uuid := '44445000-0000-4000-8000-000000000003';
   v_entry uuid := '44446000-0000-4000-8000-000000000002';
+  v_pro uuid;
+  v_rel_count_before integer;
+  v_rel_count_after integer;
 begin
-  if not exists (select 1 from public.organizations where id = v_org) then
+  if not pg_temp.is_upgrade_run() then
     return;
   end if;
 
-  -- Complete the future appointment through its real lifecycle.
-  update public.appointments set status = 'completed'
-   where id = '44445000-0000-4000-8000-000000000003';
+  select professional_id into v_pro from public.barbers
+  where id = '44443000-0000-4000-8000-000000000001';
 
-  perform pg_temp.expect('15.05 a seeded appointment can still be completed after the upgrade',
-    (select status::text from public.appointments
-     where id = '44445000-0000-4000-8000-000000000003') = 'completed');
+  select completed_interaction_count into v_rel_count_before
+  from public.customer_professional_relationships
+  where customer_user_id = v_user and professional_id = v_pro and organization_id = v_org;
 
-  perform pg_temp.expect('15.06 and THAT completion is measured',
-    exists (select 1 from public.analytics_events
-            where appointment_id = '44445000-0000-4000-8000-000000000003'
-              and event_name = 'appointment_completed'),
+  -- The live commitment, completed through its real lifecycle.
+  update public.appointments set status = 'completed' where id = v_appt;
+
+  perform pg_temp.expect('16.20 a seeded commitment can still be completed after the upgrade',
+    (select status::text from public.appointments where id = v_appt) = 'completed',
+    'if any of the thirteen new triggers raised, a working shop would have stopped trading');
+
+  perform pg_temp.expect('16.21 the completion time is server-stamped, not seeded',
+    (select completed_at is not null and completed_at > now() - interval '1 minute'
+     from public.appointments where id = v_appt),
+    'R1A stamps it on the transition; the seed left it NULL');
+
+  perform pg_temp.expect('16.22 that completion produced EXACTLY ONE event',
+    (select count(*) from public.analytics_events
+     where appointment_id = v_appt and event_name = 'appointment_completed') = 1,
     'history is not invented, but everything from the upgrade forward is recorded');
 
-  perform pg_temp.expect('15.07 the new event carries the plan in force',
-    (select plan_key from public.analytics_events
-     where appointment_id = '44445000-0000-4000-8000-000000000003'
-       and event_name = 'appointment_completed') = 'salon_pro');
+  perform pg_temp.expect('16.23 the event is timed by completed_at, not by ingest time',
+    (select e.occurred_at = a.completed_at
+     from public.analytics_events e join public.appointments a on a.id = e.appointment_id
+     where e.event_name = 'appointment_completed' and e.appointment_id = v_appt));
 
-  -- The customer standing in the shop while the upgrade ran must still be
-  -- servable.
+  perform pg_temp.expect('16.24 the event carries the durable identity behind the seeded barber',
+    (select professional_id from public.analytics_events
+     where appointment_id = v_appt and event_name = 'appointment_completed') = v_pro,
+    'derived from barbers.professional_id, a row the seed created and R3 did not touch');
+
+  perform pg_temp.expect('16.25 the event captured the plan actually in force',
+    (select plan_key from public.analytics_events
+     where appointment_id = v_appt and event_name = 'appointment_completed') = 'salon_pro');
+
+  -- THE TRANSFORMATION, not a presence check: the seeded relationship row
+  -- already existed with a count, and this completion must INCREMENT it
+  -- without producing a second relationship-created event.
+  select completed_interaction_count into v_rel_count_after
+  from public.customer_professional_relationships
+  where customer_user_id = v_user and professional_id = v_pro and organization_id = v_org;
+
+  perform pg_temp.expect('16.26 the pre-existing relationship was incremented, not replaced',
+    v_rel_count_after = v_rel_count_before + 1,
+    format('%s -> %s', coalesce(v_rel_count_before::text, 'null'),
+                       coalesce(v_rel_count_after::text, 'null')));
+
+  perform pg_temp.expect('16.27 incrementing it produced no relationship-created event',
+    (select count(*) from public.analytics_events
+     where event_name = 'passport_relationship_created' and organization_id = v_org) = 0,
+    'the relationship came into existence before R3; only its counter moved');
+
+  -- The customer standing in the shop while the upgrade ran.
   update public.queue_entries set status = 'completed' where id = v_entry;
 
-  perform pg_temp.expect('15.08 a waiting walk-in can still be served after the upgrade',
+  perform pg_temp.expect('16.28 a waiting walk-in can still be served after the upgrade',
     (select status::text from public.queue_entries where id = v_entry) = 'completed');
 
-  perform pg_temp.expect('15.09 and that service is measured',
-    exists (select 1 from public.analytics_events
-            where queue_entry_id = v_entry and event_name = 'queue_completed'));
+  perform pg_temp.expect('16.29 and that service produced exactly one queue event',
+    (select count(*) from public.analytics_events
+     where queue_entry_id = v_entry and event_name = 'queue_completed') = 1);
 exception when others then
-  perform pg_temp.record('15.05 a seeded appointment can still be completed after the upgrade',
+  perform pg_temp.record('16.20 a seeded commitment can still be completed after the upgrade',
     'FAIL', format('%s / %s', sqlstate, sqlerrm));
+end $$;
+
+-- 16.30-16.32 — THE MUTATIONS ABOVE CHANGED EXACTLY WHAT THEY MEANT TO.
+--
+-- Re-fingerprinting after the deliberate changes closes the last hole: without
+-- it, a run in which the analytics triggers had also quietly rewritten the
+-- follow graph or the favorites would still pass everything above, because
+-- nothing after 16.09 looks at them again.
+do $$
+declare
+  v_fp text;
+  v_count bigint;
+  v_baseline record;
+begin
+  if not pg_temp.is_upgrade_run() then
+    return;
+  end if;
+
+  -- Appointments and queue entries SHOULD have moved: two rows changed status.
+  select d.fingerprint into v_fp from r3_upgrade_baseline.digest('appointments') d;
+  select fingerprint into v_baseline from r3_upgrade_baseline.snapshot where entity = 'appointments';
+  perform pg_temp.expect('16.30 the deliberate completion did change the appointments digest',
+    v_fp is distinct from v_baseline.fingerprint,
+    'a digest that did NOT move would mean the fingerprint is not sensitive to status');
+
+  -- Everything untouched must still be untouched.
+  select d.row_count, d.fingerprint into v_count, v_fp
+  from r3_upgrade_baseline.digest('organization_follows') d;
+  perform pg_temp.expect('16.31 the follow graph was not touched by any of it',
+    (select s.fingerprint = v_fp and s.row_count = v_count
+     from r3_upgrade_baseline.snapshot s where s.entity = 'organization_follows'));
+
+  select d.row_count, d.fingerprint into v_count, v_fp
+  from r3_upgrade_baseline.digest('customer_favorites') d;
+  perform pg_temp.expect('16.32 favorites were not touched by any of it',
+    (select s.fingerprint = v_fp and s.row_count = v_count
+     from r3_upgrade_baseline.snapshot s where s.entity = 'customer_favorites'));
+end $$;
+
+
+-- ============================================================================
+-- 17. FRESH PATH — WHAT ONLY THIS PATH CAN ASSERT
+--
+-- Skipped entirely on an upgrade run. Its job is the mirror image of §16: to
+-- make it impossible for a fresh run to be mistaken for an upgrade run, and to
+-- assert the property only a full replay can establish — that db/migrations,
+-- replayed in filename order onto an empty database, produces exactly the same
+-- schema MASTER produces.
+-- ============================================================================
+
+do $$
+begin
+  if pg_temp.is_upgrade_run() then
+    perform pg_temp.record('17.00 fresh-path checks', 'INFO',
+      'skipped — this was an upgrade run; section 16 asserted instead');
+    return;
+  end if;
+
+  -- No seed, no seeded tenant, no baseline. Asserted rather than assumed, so
+  -- a half-loaded seed cannot leave §16 silently skipped while the summary
+  -- still reads clean.
+  perform pg_temp.expect('17.01 no upgrade seed leaked into the fresh run',
+    to_regclass('r3_upgrade_baseline.snapshot') is null
+    and not exists (select 1 from public.organizations
+                    where slug = 'seed-r3-salon'));
+
+  -- The property only a replay can prove: the migrations built the analytics
+  -- engine on their own, without MASTER. If these are absent on a fresh run,
+  -- the lot works only as a concatenated artefact — which would mean a
+  -- developer running migrations locally gets a different database from the
+  -- one production has.
+  perform pg_temp.expect('17.02 the replay alone built the event log',
+    to_regclass('public.analytics_events') is not null);
+
+  perform pg_temp.expect('17.03 the replay alone seeded the full taxonomy',
+    (select count(*) from public.analytics_event_definitions) = 40,
+    (select count(*)::text from public.analytics_event_definitions));
+
+  perform pg_temp.expect('17.04 the replay alone attached all thirteen triggers',
+    (select count(*) from pg_trigger t
+     join pg_class c on c.oid = t.tgrelid
+     join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public' and not t.tgisinternal
+       and t.tgname like '%_analytics%') >= 13);
+
+  -- The replay must have emitted NOTHING. Measured at file entry, before this
+  -- suite's fixtures existed, so it is an exact count rather than an
+  -- id-exclusion heuristic that a new fixture would quietly erode.
+  perform pg_temp.expect('17.05 no migration wrote an event at install time',
+    (select events_at_entry from verify_entry_state) = 0,
+    (select events_at_entry::text from verify_entry_state));
+
+  perform pg_temp.expect('17.06 and no migration logged an ingestion rejection',
+    (select rejections_at_entry from verify_entry_state) = 0,
+    (select rejections_at_entry::text from verify_entry_state));
 end $$;
 
 
 -- ============================================================================
 -- RESULTS
+--
+-- The path is printed first and separately. A summary that did not say which
+-- of the two tests ran is a summary somebody will eventually read as covering
+-- both.
 -- ============================================================================
+
+\echo ''
+\echo '=========== VERIFY: R3 — ANALYTICS AND EVENT ENGINE ==========='
+
+select detail as test_path from verify_results where check_name = '15.00 test path';
 
 select check_name, status, detail from verify_results order by check_name;
 
+\echo ''
+\echo '--- summary ---'
 select
   count(*) filter (where status = 'PASS') as pass,
   count(*) filter (where status = 'FAIL') as fail,
+  count(*) filter (where status = 'INFO') as info,
   count(*) as total
 from verify_results;
+
+\echo ''
+\echo '--- failures (expected: none) ---'
+select check_name, detail from verify_results where status = 'FAIL' order by check_name;
