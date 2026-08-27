@@ -44,10 +44,18 @@ export function BusinessListingCard({
   result,
   currency,
   className,
+  onSelect,
 }: {
   result: MarketplaceProfessionalResult
   currency: string | undefined
   className?: string
+  /**
+   * Fired when the customer opens this result. The card itself knows nothing
+   * about analytics — it reports a UI fact and the caller, which knows the
+   * result's rank in the list, decides what that means (§19: no tracking
+   * calls scattered through components).
+   */
+  onSelect?: () => void
 }) {
   const { t } = useTranslation()
   const money = useMoney()
@@ -134,6 +142,7 @@ export function BusinessListingCard({
               the card, while the accessible name stays the business name. */}
           <Link
             to={href}
+            onClick={onSelect}
             className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
           >
             {title}
@@ -179,6 +188,7 @@ export function BusinessListingCard({
           */}
           <Link
             to={bookHref}
+            onClick={onSelect}
             className={buttonVariants({ variant: 'secondary', size: 'sm' }, 'relative shrink-0')}
           >
             {t('marketplace:card.book')}

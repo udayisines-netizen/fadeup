@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTrackView } from '@/lib/analytics'
 import { useMoney, useDateTime } from '@/lib/intl/use-intl'
 
 /**
@@ -52,6 +53,29 @@ export function PublicBarberPage() {
       : t('professional.profileTitle'),
     description: barberQuery.data?.bio ?? t('professional.profileDescription'),
   })
+
+  /**
+   * The professional identity is deliberately NOT resolved here.
+   *
+   * This page has a barber_id — an operational placement — and
+   * `get_public_barber` does not return the durable professional_id, because
+   * the frozen customer API has no reason to expose it. Rather than widen a
+   * closed contract for analytics' benefit, the event carries the placement
+   * and the SERVER derives the professional from it. That keeps the
+   * derivation in the one place that can be trusted with it, and means a
+   * future page that only knows a barber still attributes correctly.
+   */
+  useTrackView(
+    'public_profile_viewed',
+    {
+      properties: { profile_type: 'professional' },
+      context: {
+        organizationId: organizationQuery.data?.id,
+        barberId: barberId ?? null,
+      },
+    },
+    Boolean(organizationQuery.data?.id && barberQuery.data),
+  )
 
   if (organizationQuery.isPending || barberQuery.isPending) {
     return <PageSpinner label={t('professional.loadingProfile')} />

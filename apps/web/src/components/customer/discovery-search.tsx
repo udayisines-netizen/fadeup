@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Button } from '@/components/ui/button'
+import { useAnalytics, useTrackView } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 
 /**
@@ -63,10 +64,18 @@ export function DiscoverySearch({
   suggestedCountry = null,
   headingAs = 'h2',
   className,
+  /**
+   * Which discovery surface this instance is. The two callers are genuinely
+   * different products — an anonymous marketplace visit and a signed-in
+   * customer's home — and a discovery funnel that could not tell them apart
+   * would average two different behaviours into one meaningless number.
+   */
+  analyticsSurface = 'marketplace',
 }: {
   suggestedCountry?: string | null
   headingAs?: 'h2' | 'h3'
   className?: string
+  analyticsSurface?: 'marketplace' | 'customer_discover'
 }) {
   const { t, i18n } = useTranslation('marketplace')
   const [searchParams, setSearchParams] = useSearchParams()
@@ -108,6 +117,11 @@ export function DiscoverySearch({
   })
 
   const results = useMemo(() => resultsQuery.data ?? [], [resultsQuery.data])
+
+  const analytics = useAnalytics()
+
+  useTrackView('discovery_viewed', { properties: { surface: analyticsSurface } }, true)
+
   // One batch lookup for the shops on screen: a marketplace spans countries,
   // so every card is priced in ITS OWN shop's currency.
   const currencies = usePublicCurrencies(useMemo(() => results.map((r) => r.organizationId), [results]))
@@ -115,6 +129,31 @@ export function DiscoverySearch({
   const serviceChips = SERVICE_CHIP_KEYS.map((key) => t(`searchForm.${key}`))
   const hasCustomService = Boolean(service) && !serviceChips.includes(service)
   const hasActiveFilters = Boolean(service) || openNowOnly || entityFilter !== 'all'
+
+  /**
+   * Reported when the SERVER has answered, never when the customer types.
+   *
+   * Firing on keystroke would count one search as eight, and firing on submit
+   * would count searches that returned nothing because the request failed. A
+   * search is a search once there is a result count to report — and the count
+   * is the entire point of the event.
+   *
+   * The query STRING never leaves the browser. It is free text into which a
+   * customer can type their own name or a phone number, so only its length is
+   * sent. See lib/analytics/events.ts.
+   */
+  useTrackView(
+    'search_performed',
+    {
+      properties: {
+        result_count: results.length,
+        has_filters: hasActiveFilters,
+        query_length: query.length,
+      },
+    },
+    resultsQuery.isSuccess,
+  )
+
 
   const usingCoords = latitude != null && longitude != null
   const placeLabel = city || (usingCoords ? t('searchForm.currentLocation') : '')
@@ -361,11 +400,26 @@ export function DiscoverySearch({
           )
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((result) => (
+            {results.map((result, index) => (
               <BusinessListingCard
                 key={`${result.entityType}-${result.organizationId}-${result.barberId ?? result.locationId}`}
                 result={result}
                 currency={currencies[result.organizationId]}
+                onSelect={() =>
+                  analytics.track('search_result_viewed', {
+                    properties: {
+                      // 1-based: "the third result" is what anyone reading the
+                      // report means, and an off-by-one here would quietly
+                      // shift every position histogram.
+                      position: index + 1,
+                      result_type: result.entityType === 'barber' ? 'professional' : 'organization',
+                    },
+                    context: {
+                      organizationId: result.organizationId,
+                      barberId: result.entityType === 'barber' ? result.barberId : null,
+                    },
+                  })
+                }
               />
             ))}
           </div>

@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/ui/error-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTrackView } from '@/lib/analytics'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -49,6 +50,25 @@ export function PublicQueueDisplayPage() {
     title: organizationQuery.data ? `Queue — ${organizationQuery.data.name} — FadeUp` : 'Queue — FadeUp',
     description: 'Live walk-in queue status.',
   })
+
+  /**
+   * Reported once the shop AND the establishment have resolved, because a
+   * queue view with no location is not a view of a queue. The throttle in the
+   * analytics client matters more here than anywhere else: this display is
+   * built to be left open on a screen in the shop all day, and it re-renders
+   * on every realtime queue change.
+   */
+  useTrackView(
+    'queue_viewed',
+    {
+      properties: {},
+      context: {
+        organizationId: organizationQuery.data?.id,
+        locationId: resolvedLocationId,
+      },
+    },
+    Boolean(organizationQuery.data?.id && resolvedLocationId),
+  )
 
   if (organizationQuery.isPending || locationsQuery.isPending) {
     return (

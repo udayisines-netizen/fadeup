@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTrackView } from '@/lib/analytics'
 import { directionsUrl, formatFullAddress } from '@/lib/geo/address'
 
 /**
@@ -46,6 +47,25 @@ export function ShopProfilePage() {
       ? t('shop.metaDescription', { organization: organizationQuery.data.name })
       : t('shop.profileDescription'),
   })
+
+  /**
+   * A profile view is reported once the shop has actually RESOLVED, not once
+   * the route matched. A view attributed to no organization is not a view of
+   * anything, and firing on mount would count every mistyped slug and every
+   * failed request as profile traffic.
+   *
+   * The viewer is never sent: the server derives the actor from auth.uid() and
+   * no read contract projects it, so a shop learns how many people looked and
+   * never who (§12).
+   */
+  useTrackView(
+    'public_profile_viewed',
+    {
+      properties: { profile_type: 'organization' },
+      context: { organizationId: organizationQuery.data?.id },
+    },
+    Boolean(organizationQuery.data?.id),
+  )
 
   if (organizationQuery.isPending) {
     return <PageSpinner label={t('shop.loadingProfile')} />

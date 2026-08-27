@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { DateStrip } from '@/components/ui/date-strip'
 import { TimeSlotGrid, firstPopulatedPart, type PartOfDay } from '@/components/ui/time-slot-grid'
 import { BookingCrumbs, BookingStepRail, type BookingCrumb, type BookingStep } from '@/components/booking/booking-steps'
+import { useAnalytics, useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { bookingErrorKey, isSlotUnavailable } from '@/lib/booking/booking-error'
@@ -165,6 +166,25 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
   const dateTime = useDateTime()
   const locationsQuery = usePublicLocations(organization.slug)
   const { preselectedBarberId, preselectedLocationId, preselectedServiceId } = usePreselection()
+
+  const analytics = useAnalytics()
+
+  /**
+   * INTENT, and only intent.
+   *
+   * Nothing in this wizard reports that an appointment was made. The
+   * appointment_created / _confirmed / _completed events come from database
+   * triggers on the appointments table, so they exist if and only if a row
+   * does — a submit that fails, a slot that was taken in the meantime, or a
+   * Service Mode guard that refuses the insert all produce no conversion
+   * event, which is exactly §5's point. These four events measure where people
+   * ABANDON, which is a question only the client can answer.
+   */
+  useTrackView(
+    'booking_started',
+    { properties: {}, context: { organizationId: organization.id } },
+    true,
+  )
 
   const [phase, setPhase] = useState<Phase>('location')
   const [locationId, setLocationId] = useState<string | null>(null)
@@ -397,6 +417,10 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
           query={servicesQuery}
           currency={organization.currency}
           onSelect={(id) => {
+            analytics.track('booking_service_selected', {
+              properties: { service_id: id },
+              context: { organizationId: organization.id, locationId },
+            })
             setServiceId(id)
             setBarberId(null)
             setSlot(null)
@@ -409,6 +433,10 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
         <BarberStep
           query={barbersQuery}
           onSelect={(id) => {
+            analytics.track('booking_barber_selected', {
+              properties: { any_available: false },
+              context: { organizationId: organization.id, locationId, barberId: id },
+            })
             setBarberId(id)
             setSlot(null)
             setPhase('datetime')
@@ -427,6 +455,21 @@ function BookingWizard({ organization }: { organization: PublicOrganization }) {
             setSlot(null)
           }}
           onSelectSlot={(next) => {
+            analytics.track('booking_slot_selected', {
+              properties: {
+                /*
+                 * How far AHEAD, never WHEN. §12 forbids future appointment
+                 * details in analytics, and "how far in advance do customers
+                 * book" is the question this is actually for. Clamped at zero
+                 * so a clock skew cannot produce a negative the schema refuses.
+                 */
+                lead_time_minutes: Math.max(
+                  0,
+                  Math.round((new Date(next.slotStart).getTime() - Date.now()) / 60_000),
+                ),
+              },
+              context: { organizationId: organization.id, locationId, barberId },
+            })
             setSlot(next)
             setPhase('details')
           }}

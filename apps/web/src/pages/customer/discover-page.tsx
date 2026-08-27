@@ -110,7 +110,7 @@ export function CustomerDiscoverPage() {
         />
       ) : null}
 
-      <DiscoverySearch suggestedCountry={geo.countryCode} />
+      <DiscoverySearch suggestedCountry={geo.countryCode} analyticsSurface="customer_discover" />
     </div>
   )
 }

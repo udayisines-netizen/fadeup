@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PageSpinner } from '@/components/ui/spinner'
 import { TextField } from '@/components/ui/text-field'
 import { useDocumentMeta } from '@/lib/use-document-meta'
+import { useTrackView } from '@/lib/analytics'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useTranslation } from 'react-i18next'
 
@@ -118,6 +119,19 @@ function WalkinCheckIn({ organization }: { organization: PublicOrganization }) {
   const [locationId, setLocationId] = useState<string | null>(null)
   const [lastEntry, setLastEntry] = useState<JoinedQueueEntry | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  /**
+   * Opening the check-in form is intent. Whether anyone actually joined the
+   * line is answered by the queue_joined event, which a database trigger emits
+   * from the queue_entries INSERT — so a submit refused by Service Mode, by an
+   * entitlement guard or by a closed queue produces intent and no join, which
+   * is the abandonment this pair of numbers exists to expose.
+   */
+  useTrackView(
+    'queue_join_started',
+    { properties: {}, context: { organizationId: organization.id } },
+    true,
+  )
 
   // Auto-select the (very common) single-location shop — a kiosk shouldn't
   // make every customer tap through a step with only one possible answer.

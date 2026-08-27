@@ -6,6 +6,7 @@ import { PreferencesSync } from '@/components/preferences-sync'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme'
 import { PricingProvider } from '@/lib/commerce/pricing-context'
+import { AnalyticsProvider } from '@/lib/analytics'
 import { queryClient } from '@/lib/query-client'
 import { router } from '@/routes/router'
 
@@ -20,10 +21,19 @@ function App() {
               separately from language — see lib/commerce/pricing-context.
             */}
             <PricingProvider>
-              <ToastProvider>
-                <PreferencesSync />
-                <RouterProvider router={router} />
-              </ToastProvider>
+              {/*
+                Inside AuthProvider because the analytics origin follows the
+                session (public_web vs customer_web), and outside the router so
+                one client instance survives navigation — a per-route client
+                would reset the throttle that stops a back-navigation
+                re-reporting a view it already reported.
+              */}
+              <AnalyticsProvider>
+                <ToastProvider>
+                  <PreferencesSync />
+                  <RouterProvider router={router} />
+                </ToastProvider>
+              </AnalyticsProvider>
             </PricingProvider>
           </AuthProvider>
         </ThemeProvider>
