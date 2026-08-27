@@ -19,7 +19,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | **R1B** | Social + acquisition domain foundation | **Complete (2026-08-26)** — see `R1B_IMPLEMENTATION_REPORT.md` |
 | **R2** | Pricing, plans, capability catalogue, entitlement gating | **Complete (2026-08-26)** — see `R2_IMPLEMENTATION_REPORT.md`. Supersedes `ENTITLEMENTS_DRAFT.md`, whose per-location billing unit R2 reverses. |
 | **Service Mode** | Booking + Live Queue admission model, enforced server-side | **Complete (2026-08-26)** — interstitial lot between R2 and R3. See `SERVICE_MODE_IMPLEMENTATION_REPORT.md`. Also closes the entitlement bypass R2 left open: booking and queue admission now consult `private.org_has_capability`, which nothing had called. |
-| R3 | Product analytics and event architecture | Not started — see `ANALYTICS_DRAFT.md` |
+| R3 | Product analytics and event architecture | **Complete (2026-08-27)** — see `R3_ANALYTICS_EVENT_ENGINE.md`. Canonical append-only `analytics_events`, a 40-contract taxonomy as data, 13 authoritative instrumentation triggers, one typed web adapter, four aggregation contracts. Backfills nothing: every funnel starts empty and fills from application forward. |
 | R4 | Worker engine foundations | Not started |
 | R6 / R7 | Social UI — Follow, verified customers, social proof | Not started |
 | R10 | Worker discovery at scale → external profiles | Not started |
@@ -38,11 +38,12 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | `TARGET_DOMAIN_MODEL.md` | Concept-by-concept: reusable / extend / new / derived. Answers A–O. Public/private data map. |
 | `MIGRATION_STRATEGY.md` | Answers P–T. Exact migrations, backfills, RLS, indexes, tests, bridges, rollback. |
 | `ENTITLEMENTS_DRAFT.md` | R2 sketch, **superseded**. Its per-location billing unit and `subscription_seat` table were reversed by R2; the banner at its top says which parts survived. |
-| `ANALYTICS_DRAFT.md` | R3 sketch. Lists the facts R1 must leave recoverable. |
+| `ANALYTICS_DRAFT.md` | R3 sketch, **superseded** by `R3_ANALYTICS_EVENT_ENGINE.md`. Its funnel list and its idempotency instinct survived; its `product_event` shape, its separate client-telemetry stream and its month-partitioning did not — §15 of the R3 report says why for each. |
 | `ROADMAP.md` | This file. |
 | `R1A_IMPLEMENTATION_REPORT.md` | What R1A actually did, and its validation results. |
 | `R1B_IMPLEMENTATION_REPORT.md` | What R1B actually did, its validation results, and the two places it deliberately departs from `MIGRATION_STRATEGY` §2 Phase 3 (public customer profiles and showcases deferred to R6/R7). |
 | `R2_IMPLEMENTATION_REPORT.md` | What R2 actually did: the commercial model, the eight canonical plans, the capacity enforcement, its validation results, and the Constitution §6 amendment it required. |
+| `R3_ANALYTICS_EVENT_ENGINE.md` | What R3 actually did: the four-stream boundary, the event table and why it deliberately carries no foreign keys, the taxonomy as data, the server/client emission wall, the two idempotency disciplines, the commercial snapshot, the privacy gate, the read contracts, and the five event contracts documented but not wired. |
 | `SERVICE_MODE_IMPLEMENTATION_REPORT.md` | What the Service Mode lot did: the four modes, the establishment default and the two override layers, the one resolver, `queue_open` as a separate fact, the two `BEFORE INSERT` guards, the shared/exclusive mutex, and why R1A's VERIFY needed an entitled fixture afterwards. |
 
 ---
