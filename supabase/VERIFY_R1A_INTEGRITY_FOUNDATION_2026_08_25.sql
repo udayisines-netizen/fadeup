@@ -132,6 +132,28 @@ values ((select id from v where k = 'org'), 'Main', 'Lyon', 'FR', true);
 insert into public.services (organization_id, name, duration_minutes, price_cents, is_active)
 values ((select id from v where k = 'org'), 'Fade', 30, 2500, true);
 
+-- THE FIXTURE SHOP HAS TO BE ENTITLED TO OPERATE.
+--
+-- Added by the Service Mode lot (20260826120500), which wired R2's entitlement
+-- gate into booking and queue admission for the first time. A newly created
+-- organization gets `free` commercial state by default, and `free` packages
+-- neither `booking` nor `walkIns`/`liveQueue` — so without this line every
+-- appointment and queue fixture below is refused with 42501 before any R1A
+-- integrity rule is reached.
+--
+-- This WEAKENS NO ASSERTION. Not one check is removed, softened or skipped; the
+-- fixture is simply made into a shop that is commercially allowed to take a
+-- booking, which is what R1A's integrity tests were always about. Testing
+-- appointment integrity against an organization that may not legally accept an
+-- appointment would be testing nothing.
+--
+-- salon_pro is the smallest plan carrying all three capabilities, and covers
+-- one establishment — exactly this fixture's shape, so no capacity rule is
+-- disturbed either.
+update public.organization_commercial_state
+   set plan_key = 'salon_pro', status = 'active'
+ where organization_id = (select id from v where k = 'org');
+
 insert into public.memberships (organization_id, user_id, role) values
   ((select id from v where k = 'org'), (select id from v where k = 'owner'), 'owner'),
   ((select id from v where k = 'org'), (select id from v where k = 'manager'), 'manager'),
@@ -721,23 +743,23 @@ select pg_temp.expect('10.6 both R1A indexes exist',
   (select count(*) = 2 from pg_indexes where schemaname = 'public'
    and indexname in ('staff_profiles_user_id_idx', 'appointments_barber_customer_completed_idx')));
 
--- RESTATED BY R1B, THEN BY R2 — and deliberately made STRONGER each time
--- rather than relaxed.
+-- RESTATED BY R1B, THEN BY R2, THEN BY SERVICE MODE — and deliberately made
+-- STRONGER each time rather than relaxed.
 --
 -- The property this check exists to defend is "R1A itself creates no table".
 -- It was written as an absolute count of 89, which expresses that property
 -- only for as long as R1A is the newest lot — R1B legitimately adds exactly
--- five tables and R2 legitimately adds exactly five more, so the literal would
+-- five tables, R2 five more and Service Mode three more, so the literal would
 -- fail for the right reason and hide any wrong one behind it.
 --
--- The form below allows the 89 baseline PLUS however many of the ten NAMED
+-- The form below allows the 89 baseline PLUS however many of the thirteen NAMED
 -- later-lot tables are present, and nothing else. It passes at 89 on a pre-R1B
--- database, at 94 after R1B, at 99 after R2, and still FAILS the moment an
--- unexpected hundredth table appears — which the bare literal could no longer
--- detect, and which is the whole point of the check.
+-- database, at 94 after R1B, at 99 after R2, at 102 after Service Mode, and
+-- still FAILS the moment an unexpected extra table appears — which the bare
+-- literal could no longer detect, and which is the whole point of the check.
 --
--- Nothing was weakened to make R2 pass: the allow-list is explicit names, so an
--- unexpected table is caught exactly as strictly as it was before.
+-- Nothing was weakened to make any lot pass: the allow-list is explicit names,
+-- so an unexpected table is caught exactly as strictly as it was before.
 select pg_temp.expect('10.7 R1A introduced no new table',
   (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
    where n.nspname = 'public' and c.relkind = 'r')
@@ -750,8 +772,11 @@ select pg_temp.expect('10.7 R1A introduced no new table',
               'professional_claims', 'prospect_professionals',
               -- R2: the pricing and entitlements foundation
               'commercial_plans', 'commercial_capabilities', 'plan_capabilities',
-              'organization_commercial_state', 'commercial_plan_changes')),
-  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds and the five R2 adds, all named explicitly');
+              'organization_commercial_state', 'commercial_plan_changes',
+              -- Service Mode: the booking/queue admission foundation
+              'location_service_settings', 'service_mode_overrides',
+              'service_mode_changes')),
+  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds, the five R2 adds and the three Service Mode adds, all named explicitly');
 
 select pg_temp.record('10.8 public tables', 'INFO',
   (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
