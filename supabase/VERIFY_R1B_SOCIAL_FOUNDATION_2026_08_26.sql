@@ -121,6 +121,38 @@ begin
 end;
 $$;
 
+-- R4 addition: provision the identity evidence the publication gate requires.
+--
+-- R1B was written when nothing stood between a prospect and an external
+-- identity, so its fixtures minted from bare prospect rows. R4's
+-- publication_block_reason now refuses that with insufficient_source_evidence,
+-- correctly: Constitution §5.1 says never one scraper result = one
+-- professional, and a fixture with zero source records is weaker still.
+--
+-- The fixtures are upgraded to carry real provenance rather than exempted from
+-- the gate — the same move the Service Mode lot made when its admission rules
+-- invalidated R1A's unentitled fixture. A test that has to route around a
+-- guarantee is testing the wrong thing.
+--
+-- Two independent sources, which is exactly the minimum the gate accepts, so
+-- these fixtures also pin the boundary: drop either row and R1B's §7 starts
+-- failing for the right reason.
+create or replace function pg_temp.provision_publishable(p_prospect_id uuid)
+returns void language plpgsql as $$
+begin
+  insert into public.prospect_source_records (source_id, prospect_id, external_id, external_type)
+  select ps.id, p_prospect_id, 'verify-r1b-' || p_prospect_id::text || '-osm', 'node'
+  from public.prospect_sources ps where ps.key = 'osm';
+
+  insert into public.prospect_source_records (source_id, prospect_id, external_id, external_type)
+  select ps.id, p_prospect_id, 'verify-r1b-' || p_prospect_id::text || '-geo', 'place'
+  from public.prospect_sources ps where ps.key = 'geoapify';
+
+  insert into public.prospect_locations (prospect_id, is_primary, country)
+  values (p_prospect_id, true, 'FR');
+end;
+$$;
+
 begin;
 
 -- ============================================================================
@@ -1199,6 +1231,7 @@ declare
 begin
   insert into public.prospects (id, type, entity_kind, status, canonical_name, country)
   values (v_prospect, 'barbershop', 'independent', 'qualified', 'Verify Discovered Shop', 'FR');
+  perform pg_temp.provision_publishable(v_prospect);
 
   perform pg_temp.expect(
     '7.1 an ordinary account cannot mint an external professional',
@@ -1409,6 +1442,7 @@ begin
 
   insert into public.prospects (id, type, entity_kind, status, canonical_name, country)
   values (v_prospect, 'barbershop', 'independent', 'qualified', 'Race Shop', 'FR');
+  perform pg_temp.provision_publishable(v_prospect);
 
   perform pg_temp.become((select id from v where k = 'admin'));
   v_external := public.create_external_professional(v_prospect);
@@ -1460,14 +1494,24 @@ declare
   v_external uuid;
   v_claim uuid;
 begin
-  insert into public.prospects (id, type, entity_kind, status, canonical_name, country,
-                                converted_organization_id)
-  values (v_prospect, 'barbershop', 'independent', 'customer', 'Already Converted', 'FR',
-          (select id from v where k = 'org1'));
+  -- R4: the conversion is applied AFTER minting rather than in the INSERT.
+  -- R4's gate refuses to mint an identity for a business that has already
+  -- converted (already_converted) or is already a customer (already_customer):
+  -- such a business gets its identity from its own account, and a second
+  -- unclaimed one would compete with the real thing. The order change preserves
+  -- what 7.27-7.30 actually test — withdrawal, and that a recorded conversion
+  -- is never overwritten — while respecting a rule that did not exist in R1B.
+  insert into public.prospects (id, type, entity_kind, status, canonical_name, country)
+  values (v_prospect, 'barbershop', 'independent', 'qualified', 'Already Converted', 'FR');
+  perform pg_temp.provision_publishable(v_prospect);
 
   perform pg_temp.become((select id from v where k = 'admin'));
   v_external := public.create_external_professional(v_prospect);
   perform pg_temp.become_postgres();
+
+  update public.prospects
+  set status = 'customer', converted_organization_id = (select id from v where k = 'org1')
+  where id = v_prospect;
 
   perform pg_temp.become((select id from v where k = 'owner2'));
   v_claim := public.submit_professional_claim(v_external);
@@ -1849,6 +1893,7 @@ declare
 begin
   insert into public.prospects (id, type, entity_kind, status, canonical_name, country)
   values (v_prospect, 'barbershop', 'independent', 'discovered', 'Delete Probe', 'FR');
+  perform pg_temp.provision_publishable(v_prospect);
 
   perform pg_temp.become((select id from v where k = 'admin'));
   v_external := public.create_external_professional(v_prospect);

@@ -554,8 +554,25 @@ select pg_temp.expect('4.02 every conversion event is server-emitted',
 select pg_temp.expect('4.03 every event carries a version',
   not exists (select 1 from public.analytics_event_definitions where event_version < 1));
 
+-- R4 correction: this asserted `>= 4`, which was R3's own deferred COUNT rather
+-- than an invariant, so it decayed the moment a later lot wired one. R4 wired
+-- prospect_discovered and prospect_enriched — the two R3 explicitly assigned to
+-- it — leaving three.
+--
+-- Restated as what the check was actually for: deferred contracts still exist
+-- as documented vocabulary, and — the part that matters — a deferred contract
+-- has emitted nothing. That second clause is the real guarantee ("a deferred
+-- definition cannot produce a single row, by construction") and it does not
+-- decay as lots wire their events.
 select pg_temp.expect('4.04 deferred contracts exist and are documented',
-  (select count(*) from public.analytics_event_definitions where status = 'deferred') >= 4);
+  (select count(*) from public.analytics_event_definitions where status = 'deferred') >= 3);
+
+select pg_temp.expect('4.04b no deferred contract has ever emitted a row',
+  not exists (
+    select 1 from public.analytics_events e
+    join public.analytics_event_definitions d on d.event_name = e.event_name
+    where d.status = 'deferred'),
+  'the registry IS the ingestion allowlist — a deferred name is refused, not silently accepted');
 
 select pg_temp.expect('4.05 no client event is marked idempotent',
   not exists (select 1 from public.analytics_event_definitions

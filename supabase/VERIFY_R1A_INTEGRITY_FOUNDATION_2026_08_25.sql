@@ -743,7 +743,7 @@ select pg_temp.expect('10.6 both R1A indexes exist',
   (select count(*) = 2 from pg_indexes where schemaname = 'public'
    and indexname in ('staff_profiles_user_id_idx', 'appointments_barber_customer_completed_idx')));
 
--- RESTATED BY R1B, THEN BY R2, THEN BY SERVICE MODE, THEN BY R3 — and
+-- RESTATED BY R1B, THEN BY R2, THEN BY SERVICE MODE, THEN BY R3, THEN BY R4 — and
 -- deliberately made STRONGER each time rather than relaxed.
 --
 -- The property this check exists to defend is "R1A itself creates no table".
@@ -752,12 +752,13 @@ select pg_temp.expect('10.6 both R1A indexes exist',
 -- five tables, R2 five more, Service Mode three more and R3 three more, so the
 -- literal would fail for the right reason and hide any wrong one behind it.
 --
--- The form below allows the 89 baseline PLUS however many of the seventeen
+-- The form below allows the 89 baseline PLUS however many of the eighteen
 -- NAMED later-lot tables are present, and nothing else. It passes at 89 on a
 -- pre-R1B database, at 94 after R1B, at 99 after R2, at 102 after Service
--- Mode, at 103 after the Customer API alignment, at 106 after R3, and still
--- FAILS the moment an unexpected extra table appears — which the bare literal
--- could no longer detect, and which is the whole point of the check.
+-- Mode, at 103 after the Customer API alignment, at 106 after R3, at 107 after
+-- R4, and still FAILS the moment an unexpected extra table appears — which the
+-- bare literal could no longer detect, and which is the whole point of the
+-- check.
 --
 -- organization_follows was MISSING from this list until R3 added it. The
 -- Customer API alignment lot (20260827110000) created the table and did not
@@ -789,8 +790,10 @@ select pg_temp.expect('10.7 R1A introduced no new table',
               'organization_follows',
               -- R3: the analytics and event engine
               'analytics_events', 'analytics_event_definitions',
-              'analytics_ingestion_rejections')),
-  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds, the five R2 adds, the three Service Mode adds, the one Customer API add and the three R3 adds, all named explicitly');
+              'analytics_ingestion_rejections',
+              -- R4: the acquisition publication gate
+              'prospect_publication_eligibility')),
+  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds, the five R2 adds, the three Service Mode adds, the one Customer API add, the three R3 adds and the one R4 add, all named explicitly');
 
 select pg_temp.record('10.8 public tables', 'INFO',
   (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace

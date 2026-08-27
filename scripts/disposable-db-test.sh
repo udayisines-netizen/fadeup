@@ -263,14 +263,21 @@ if [[ -n "$VERIFY_FILE" ]]; then
   echo "==> running VERIFY: $VERIFY_FILE"
   # ON_ERROR_STOP is deliberately OFF here: VERIFY reports FAIL rows, it
   # does not abort. A genuine SQL error still surfaces in the output.
+  # Per-run file, not a fixed /tmp path. A shared name is unwritable the moment
+  # another user on the box has run this once, and `tee` failing there is
+  # silent: the summary below would then count PASS/FAIL rows out of a STALE
+  # file from someone else's run, and the exit code — which CI and every
+  # caller trusts — would be reporting on the wrong output entirely.
+  VERIFY_OUTPUT="$(mktemp -t fadeup-verify-XXXXXX.txt)"
   docker exec -i "$CONTAINER" psql -U postgres -d postgres -q < "$REPO_ROOT/$VERIFY_FILE" \
-    | tee /tmp/fadeup-verify-output.txt
+    | tee "$VERIFY_OUTPUT"
   echo
   echo "==> VERIFY summary"
-  pass=$(grep -c '| PASS' /tmp/fadeup-verify-output.txt || true)
-  fail=$(grep -c '| FAIL' /tmp/fadeup-verify-output.txt || true)
-  info=$(grep -c '| INFO' /tmp/fadeup-verify-output.txt || true)
+  pass=$(grep -c '| PASS' "$VERIFY_OUTPUT" || true)
+  fail=$(grep -c '| FAIL' "$VERIFY_OUTPUT" || true)
+  info=$(grep -c '| INFO' "$VERIFY_OUTPUT" || true)
   echo "PASS=$pass FAIL=$fail INFO=$info"
+  rm -f "$VERIFY_OUTPUT"
   if [[ "$fail" -gt 0 ]]; then
     echo "!! VERIFY reported $fail FAIL row(s)" >&2
     exit 1
