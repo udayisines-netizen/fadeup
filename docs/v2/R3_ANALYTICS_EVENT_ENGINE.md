@@ -624,6 +624,14 @@ was changed.
 `supabase/SEED_R3_PRE_UPGRADE_2026_08_27.sql`,
 `supabase/VERIFY_R3_ANALYTICS_EVENT_ENGINE_2026_08_27.sql`.
 
+The seed creates schema **`r3_upgrade_baseline`** (fingerprint function +
+snapshot table). It is upgrade-test scaffolding only, is never created by a
+migration and never exists in production, and lives outside `public`
+deliberately — a test table in `public` would enter `VERIFY_R1A`'s
+public-table allow-list and its "every public table has RLS forced" invariant,
+and the correct response to that is not to add a test table to a product
+allow-list.
+
 **Web:** `apps/web/src/lib/analytics/` (`events.ts`, `client.ts`, `session.ts`,
 `analytics-context.tsx`, `index.ts`, `analytics.test.ts`), plus instrumentation
 in the shop profile, public barber profile, discovery search, business listing
@@ -635,13 +643,93 @@ card, booking wizard, walk-in check-in and queue display.
 
 | Test | Result |
 | --- | --- |
-| Fresh database, all migrations + `VERIFY_R3` | **114 PASS / 0 FAIL** |
-| Upgrade: pre-R3 baseline + populated seed + MASTER + `VERIFY_R3` | **123 PASS / 0 FAIL** |
+| **Fresh path** — every migration replayed onto an empty database + `VERIFY_R3` | **125 PASS / 0 FAIL / 2 INFO** |
+| **Upgrade path** — base replay stopped before R3, populated seed, MASTER + `VERIFY_R3` | **147 PASS / 0 FAIL / 2 INFO** |
 | MASTER generator safety assertions | pass (in sync, no forbidden statement, no backfill, no client grant, 13 triggers present) |
 | R1A / R1B / R2 / Service Mode / Organization Follows / Customer API Freeze / Lots A–B / Worker V2 | **993 PASS / 0 FAIL** |
 | Web unit tests | **703 PASS / 0 FAIL** (71 files, 17 of them new analytics tests) |
 | TypeScript | clean |
 | Production build | succeeds |
+
+### 18.1 The two paths are semantically distinct, and each says so
+
+One VERIFY file serves both, but they test different claims and neither is
+allowed to be mistaken for the other:
+
+| | Fresh | Upgrade |
+| --- | --- | --- |
+| Proves | the lot installs and behaves correctly from `db/migrations` alone | the lot can be installed over a **live** product |
+| Can prove preservation? | No — there is nothing to preserve | **Yes**, and it is the only path that can |
+| Asserting section | §17 | §16 |
+
+`§15` detects which path is running, prints it above the results, and asserts
+the two markers (the baseline schema and the seeded tenant) appear **together
+or not at all**. A mis-invoked run that silently took the fresh path while the
+operator believed they were testing an upgrade would otherwise report a clean
+sheet having tested nothing about upgrading.
+
+Each path also asserts that it *is* its path: §17 proves no upgrade seed leaked
+in, and that the replay alone built the log, seeded all 40 contracts and
+attached all thirteen triggers — the property only a replay can establish, and
+the one that guarantees a developer running migrations locally gets the same
+database production has.
+
+### 18.2 Preservation is proven by fingerprint, not by presence
+
+Presence checks — "the follow is still there", "there are still two completed
+appointments" — are close to worthless for an upgrade test. They pass just as
+happily against a migration that rewrote every `completed_at` to `now()`,
+repointed a follow, or reset a passport number.
+
+So `SEED_R3_PRE_UPGRADE` computes an md5 over an ordered projection of every row
+that constitutes the seeded tenant's history **before MASTER runs**, across nine
+entities: appointments, queue entries, organization follows, professional
+follows, favorites, passports, relationships, commercial state and
+professionals. `VERIFY` recomputes and asserts byte equality, with the row count
+stored alongside so a failure says *which kind* of change occurred.
+
+**The fingerprint function is defined in the seed and called by both sides.**
+That is deliberate: a VERIFY that re-implemented the projection could drift from
+the seed and produce two different queries agreeing about nothing — which looks
+exactly like a passing test.
+
+**Verified to be able to fail.** Three negative controls were run against a
+freshly upgraded database:
+
+| Injected fault | Detected by | Reported as |
+| --- | --- | --- |
+| A historical `completed_at` rewritten to `now()` | `16.01` | *3 rows unchanged in number but changed in content* |
+| A pre-existing follow deleted | `16.05` | *row count moved: 1 → 0* |
+| A fabricated backfill event inserted | `16.10`, `16.13` | 3 events for a tenant that must have none |
+
+### 18.3 The upgrade path's no-backfill claim is stronger than an empty tenant
+
+The seed sets `booked_by_user_id`, so R1B's own triggers turn the seeded
+completions into a `professional_follows` edge and a
+`customer_professional_relationships` row **before R3 exists**. Those are
+exactly the facts a well-meaning backfill would reach for. §16 asserts they
+really do exist (16.11, 16.12) and that none of them produced an event (16.13),
+which is a materially stronger claim than an empty tenant would support.
+
+`16.14` measures the global event count **at file entry**, before the suite's
+own fixtures emit anything, so the claim is "MASTER wrote no event anywhere",
+not merely "none for this tenant". `16.15` makes the same measurement on the
+rejection log — a rejection at install time would mean a trigger fired during
+the migration.
+
+### 18.4 Forward correctness, and the transformation that must *not* fire
+
+§16.20–16.29 then complete the seeded live commitment and serve the seeded
+waiting walk-in, proving the shop can still trade and that everything from the
+upgrade forward is measured with the right professional identity, the right
+timestamp and the right plan snapshot.
+
+The subtlest assertion is `16.26`/`16.27`: the completion **increments** the
+pre-existing relationship's counter (1 → 2) and must produce **no**
+`passport_relationship_created` event, because that event marks a relationship
+coming into existence, not every visit. §16.30–16.32 re-fingerprint afterwards
+to confirm the deliberate mutations moved exactly the digests they should have
+and left the follow graph and favorites untouched.
 
 **Two pre-existing issues, both verified against a pre-R3 database and both
 unchanged by R3:**
