@@ -18,6 +18,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | **R1A** | Data integrity & security foundation | **Complete (2026-08-25)** — see `R1A_IMPLEMENTATION_REPORT.md` |
 | **R1B** | Social + acquisition domain foundation | **Complete (2026-08-26)** — see `R1B_IMPLEMENTATION_REPORT.md` |
 | **R2** | Pricing, plans, capability catalogue, entitlement gating | **Complete (2026-08-26)** — see `R2_IMPLEMENTATION_REPORT.md`. Supersedes `ENTITLEMENTS_DRAFT.md`, whose per-location billing unit R2 reverses. |
+| **Service Mode** | Booking + Live Queue admission model, enforced server-side | **Complete (2026-08-26)** — interstitial lot between R2 and R3. See `SERVICE_MODE_IMPLEMENTATION_REPORT.md`. Also closes the entitlement bypass R2 left open: booking and queue admission now consult `private.org_has_capability`, which nothing had called. |
 | R3 | Product analytics and event architecture | Not started — see `ANALYTICS_DRAFT.md` |
 | R4 | Worker engine foundations | Not started |
 | R6 / R7 | Social UI — Follow, verified customers, social proof | Not started |
@@ -42,6 +43,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | `R1A_IMPLEMENTATION_REPORT.md` | What R1A actually did, and its validation results. |
 | `R1B_IMPLEMENTATION_REPORT.md` | What R1B actually did, its validation results, and the two places it deliberately departs from `MIGRATION_STRATEGY` §2 Phase 3 (public customer profiles and showcases deferred to R6/R7). |
 | `R2_IMPLEMENTATION_REPORT.md` | What R2 actually did: the commercial model, the eight canonical plans, the capacity enforcement, its validation results, and the Constitution §6 amendment it required. |
+| `SERVICE_MODE_IMPLEMENTATION_REPORT.md` | What the Service Mode lot did: the four modes, the establishment default and the two override layers, the one resolver, `queue_open` as a separate fact, the two `BEFORE INSERT` guards, the shared/exclusive mutex, and why R1A's VERIFY needed an entitled fixture afterwards. |
 
 ---
 
