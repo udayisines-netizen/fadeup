@@ -743,20 +743,29 @@ select pg_temp.expect('10.6 both R1A indexes exist',
   (select count(*) = 2 from pg_indexes where schemaname = 'public'
    and indexname in ('staff_profiles_user_id_idx', 'appointments_barber_customer_completed_idx')));
 
--- RESTATED BY R1B, THEN BY R2, THEN BY SERVICE MODE — and deliberately made
--- STRONGER each time rather than relaxed.
+-- RESTATED BY R1B, THEN BY R2, THEN BY SERVICE MODE, THEN BY R3 — and
+-- deliberately made STRONGER each time rather than relaxed.
 --
 -- The property this check exists to defend is "R1A itself creates no table".
 -- It was written as an absolute count of 89, which expresses that property
 -- only for as long as R1A is the newest lot — R1B legitimately adds exactly
--- five tables, R2 five more and Service Mode three more, so the literal would
--- fail for the right reason and hide any wrong one behind it.
+-- five tables, R2 five more, Service Mode three more and R3 three more, so the
+-- literal would fail for the right reason and hide any wrong one behind it.
 --
--- The form below allows the 89 baseline PLUS however many of the thirteen NAMED
--- later-lot tables are present, and nothing else. It passes at 89 on a pre-R1B
--- database, at 94 after R1B, at 99 after R2, at 102 after Service Mode, and
--- still FAILS the moment an unexpected extra table appears — which the bare
--- literal could no longer detect, and which is the whole point of the check.
+-- The form below allows the 89 baseline PLUS however many of the seventeen
+-- NAMED later-lot tables are present, and nothing else. It passes at 89 on a
+-- pre-R1B database, at 94 after R1B, at 99 after R2, at 102 after Service
+-- Mode, at 103 after the Customer API alignment, at 106 after R3, and still
+-- FAILS the moment an unexpected extra table appears — which the bare literal
+-- could no longer detect, and which is the whole point of the check.
+--
+-- organization_follows was MISSING from this list until R3 added it. The
+-- Customer API alignment lot (20260827110000) created the table and did not
+-- extend the allow-list, so this check had been failing on every run since —
+-- which is exactly how a guard stops guarding: not by being deleted, but by
+-- going permanently red until people stop reading it. Verified against a
+-- pre-R3 database (103 tables, same FAIL) before adding it, so this is a
+-- correction of an existing gap and not a relaxation made to fit R3.
 --
 -- Nothing was weakened to make any lot pass: the allow-list is explicit names,
 -- so an unexpected table is caught exactly as strictly as it was before.
@@ -775,8 +784,13 @@ select pg_temp.expect('10.7 R1A introduced no new table',
               'organization_commercial_state', 'commercial_plan_changes',
               -- Service Mode: the booking/queue admission foundation
               'location_service_settings', 'service_mode_overrides',
-              'service_mode_changes')),
-  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds, the five R2 adds and the three Service Mode adds, all named explicitly');
+              'service_mode_changes',
+              -- Customer API alignment: the barbershop Follow graph
+              'organization_follows',
+              -- R3: the analytics and event engine
+              'analytics_events', 'analytics_event_definitions',
+              'analytics_ingestion_rejections')),
+  'R1A is integrity only — the only tables above the 89-table R1A baseline are the five R1B adds, the five R2 adds, the three Service Mode adds, the one Customer API add and the three R3 adds, all named explicitly');
 
 select pg_temp.record('10.8 public tables', 'INFO',
   (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
