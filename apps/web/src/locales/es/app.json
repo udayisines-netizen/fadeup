@@ -487,5 +487,47 @@
     "weekly": "/ semana",
     "monthly": "/ mes",
     "yearly": "/ año"
+  },
+  "serviceMode": {
+    "title": "¿Cómo quieres trabajar ahora?",
+    "subtitle": "Cambia lo que aceptas a partir de ahora. No afecta a nada ya reservado ni a quien está esperando.",
+    "currentlyLabel": "Ahora mismo:",
+    "durationLabel": "Durante cuánto tiempo",
+    "untilTime": "hasta las {{time}}",
+    "backToNormal": "Volver a tu organización habitual",
+    "noLocation": "Elige un local para definir cómo funciona.",
+    "readOnly": "Solo un propietario o un gerente puede cambiar cómo funciona el salón.",
+    "inheriting": "Sigue al salón",
+    "followShop": "Seguir al salón",
+    "unnamedProfessional": "Profesional",
+    "queueOpenLabel": "Cola sin cita abierta",
+    "queueOpenHelp": "Quien llegue puede ponerse en la cola.",
+    "queueClosedHelp": "Nadie nuevo puede entrar. Todos los que esperan siguen en la cola.",
+    "queueBlockedByMode": "Tu organización actual no ofrece atención sin cita, así que la cola sigue cerrada aunque esto esté activado.",
+    "mode": {
+      "hybrid": "Citas + sin cita",
+      "reservationOnly": "Solo citas",
+      "queueOnly": "Solo sin cita",
+      "unavailable": "No disponible"
+    },
+    "help": {
+      "hybrid": "Acepta citas reservadas y a quien entre por la puerta.",
+      "reservation_only": "Acepta citas reservadas. Sin nuevas entradas sin cita.",
+      "queue_only": "Acepta a quien entre por la puerta. Sin nuevas citas.",
+      "unavailable": "No aceptes nada nuevo. Todo lo ya reservado se mantiene."
+    },
+    "source": {
+      "barberTemporary": "Definido para este profesional, temporalmente",
+      "locationTemporary": "Definido para el salón, temporalmente",
+      "barberPersistent": "Organización habitual de este profesional",
+      "locationDefault": "Organización habitual del salón"
+    },
+    "duration": {
+      "thirtyMinutes": "30 min",
+      "oneHour": "1 hora",
+      "today": "Hoy",
+      "untilClosing": "Hasta el cierre",
+      "untilChanged": "A partir de ahora"
+    }
   }
 }

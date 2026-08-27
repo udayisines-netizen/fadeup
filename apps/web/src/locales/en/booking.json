@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Change"
+  },
+  "serviceMode": {
+    "book": "Book",
+    "joinQueue": "Join the queue",
+    "queueClosedTitle": "Queue closed for now",
+    "queueClosedBody": "This shop takes walk-ins, but the line is closed at the moment. Try again a little later.",
+    "notAcceptingTitle": "Not taking new bookings right now",
+    "notAcceptingBody": "You can still follow this professional and book when they reopen.",
+    "bookingClosedTitle": "Walk-ins only right now",
+    "bookingClosedBody": "This shop is not taking new reservations at the moment — come by and join the queue instead."
   }
 }

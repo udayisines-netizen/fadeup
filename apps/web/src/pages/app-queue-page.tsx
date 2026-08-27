@@ -19,6 +19,9 @@ import {
   type QueueStatus,
 } from '@/lib/queries/queue'
 import { QueueEntryCard } from '@/components/pro/queue-entry-card'
+import { ServiceModeControl } from '@/components/pro/service-mode-control'
+import { useOrgLocationHours } from '@/lib/queries/location-hours'
+import { closingHoursToday, useServiceModeState } from '@/lib/queries/service-mode'
 import { PageHeader, SectionHeader } from '@/components/ui/page-header'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { TextField } from '@/components/ui/text-field'
@@ -163,6 +166,27 @@ export function AppQueuePage() {
     [queueQuery.data, activeLocationId],
   )
 
+  // How this establishment is working, and today's closing time so the
+  // "until closing" duration is offered only when it is genuinely known.
+  const serviceModeQuery = useServiceModeState(activeLocationId ?? undefined, organizationId)
+  const locationHoursQuery = useOrgLocationHours(organizationId)
+  const closingToday = useMemo(
+    () =>
+      closingHoursToday(
+        locationHoursQuery.data,
+        activeLocationId ?? undefined,
+        activeLocation?.timezone ?? 'UTC',
+      ),
+    [locationHoursQuery.data, activeLocationId, activeLocation?.timezone],
+  )
+
+  // Changing how the shop PRESENTS itself is an owner/manager decision;
+  // opening and closing the line is front-of-house and uses `canManage`, which
+  // already includes receptionists. The two are separate on purpose, and the
+  // database enforces both regardless of what this renders.
+  const canManageServiceMode =
+    currentMembership?.role === 'owner' || currentMembership?.role === 'manager'
+
   const { upNext, rest, active, finished } = useMemo(() => {
     // Position is derived from arrival order among `waiting` only, and never
     // stored — an entry that has been called has left the line.
@@ -226,6 +250,21 @@ export function AppQueuePage() {
               ariaLabel={t('common:entity.location')}
             />
           ) : null}
+
+          {/* HOW THE SHOP IS WORKING, above the line itself.
+              §26 asks for a quick control on an operational surface rather than
+              buried in settings, and this is that surface: whoever is watching
+              the queue is exactly who decides to stop taking walk-ins. It sits
+              above the list because it governs what arrives INTO the list. */}
+          <ServiceModeControl
+            rows={serviceModeQuery.data}
+            isPending={serviceModeQuery.isPending}
+            locationId={activeLocationId ?? undefined}
+            timeZone={activeLocation?.timezone ?? 'UTC'}
+            closingToday={closingToday}
+            canManageLocation={canManageServiceMode}
+            canManageQueue={canManage}
+          />
 
           {upNext === null && active.length === 0 ? (
             <EmptyState

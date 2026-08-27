@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Ändern"
+  },
+  "serviceMode": {
+    "book": "Termin buchen",
+    "joinQueue": "Anstellen",
+    "queueClosedTitle": "Schlange derzeit geschlossen",
+    "queueClosedBody": "Dieser Salon nimmt Laufkundschaft an, aber die Schlange ist gerade geschlossen. Versuche es etwas später.",
+    "notAcceptingTitle": "Nimmt gerade nichts Neues an",
+    "notAcceptingBody": "Du kannst dieser Fachkraft weiter folgen und buchen, sobald wieder geöffnet ist.",
+    "bookingClosedTitle": "Gerade nur Laufkundschaft",
+    "bookingClosedBody": "Dieser Salon nimmt derzeit keine neuen Termine an — komm vorbei und stell dich an."
   }
 }

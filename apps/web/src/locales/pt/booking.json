@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Alterar"
+  },
+  "serviceMode": {
+    "book": "Marcar",
+    "joinQueue": "Entrar na fila",
+    "queueClosedTitle": "Fila fechada por agora",
+    "queueClosedBody": "Este salão aceita sem marcação, mas a fila está fechada neste momento. Tente um pouco mais tarde.",
+    "notAcceptingTitle": "Não aceita nada de novo neste momento",
+    "notAcceptingBody": "Pode seguir este profissional e marcar assim que reabrir.",
+    "bookingClosedTitle": "Só sem marcação neste momento",
+    "bookingClosedBody": "Este salão não aceita novas marcações neste momento — passe por cá e entre na fila."
   }
 }

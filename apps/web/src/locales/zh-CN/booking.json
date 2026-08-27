@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "修改"
+  },
+  "serviceMode": {
+    "book": "预约",
+    "joinQueue": "加入排队",
+    "queueClosedTitle": "队列暂时关闭",
+    "queueClosedBody": "这家店接受现场客人，但目前队列已关闭。请稍后再试。",
+    "notAcceptingTitle": "目前不接受新的预约或排队",
+    "notAcceptingBody": "你可以关注这位专业人员，等重新开放时再预约。",
+    "bookingClosedTitle": "目前仅接受现场",
+    "bookingClosedBody": "这家店目前不接受新的预约——欢迎到店排队。"
   }
 }

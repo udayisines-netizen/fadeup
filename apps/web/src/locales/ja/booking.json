@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "変更"
+  },
+  "serviceMode": {
+    "book": "予約する",
+    "joinQueue": "列に並ぶ",
+    "queueClosedTitle": "現在、列を閉じています",
+    "queueClosedBody": "こちらのお店は当日受付を行っていますが、今は列を閉じています。少し時間をおいてお試しください。",
+    "notAcceptingTitle": "現在、新規の受付を停止しています",
+    "notAcceptingBody": "フォローしておくと、再開したときに予約できます。",
+    "bookingClosedTitle": "現在は当日受付のみ",
+    "bookingClosedBody": "こちらのお店は今、新規のご予約を受け付けていません。ご来店のうえ列にお並びください。"
   }
 }

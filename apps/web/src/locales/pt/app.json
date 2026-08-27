@@ -487,5 +487,47 @@
     "weekly": "/ semana",
     "monthly": "/ mês",
     "yearly": "/ ano"
+  },
+  "serviceMode": {
+    "title": "Como quer trabalhar agora?",
+    "subtitle": "Muda o que aceita a partir de agora. Nada já marcado nem quem está à espera é afetado.",
+    "currentlyLabel": "Neste momento:",
+    "durationLabel": "Durante quanto tempo",
+    "untilTime": "até às {{time}}",
+    "backToNormal": "Voltar à sua organização habitual",
+    "noLocation": "Escolha um espaço para definir como funciona.",
+    "readOnly": "Só um proprietário ou gestor pode mudar como o salão funciona.",
+    "inheriting": "Segue o salão",
+    "followShop": "Seguir o salão",
+    "unnamedProfessional": "Profissional",
+    "queueOpenLabel": "Fila sem marcação aberta",
+    "queueOpenHelp": "Quem chega pode entrar na fila.",
+    "queueClosedHelp": "Ninguém novo pode entrar. Quem já espera continua na fila.",
+    "queueBlockedByMode": "O atendimento sem marcação não está previsto na sua organização atual: a fila continua fechada mesmo com isto ligado.",
+    "mode": {
+      "hybrid": "Marcações + sem marcação",
+      "reservationOnly": "Só marcações",
+      "queueOnly": "Só sem marcação",
+      "unavailable": "Indisponível"
+    },
+    "help": {
+      "hybrid": "Aceite marcações e quem entra sem marcar.",
+      "reservation_only": "Aceite marcações. Sem novas entradas sem marcação.",
+      "queue_only": "Aceite quem entra sem marcar. Sem novas marcações.",
+      "unavailable": "Não aceite nada de novo. Tudo o que já está marcado mantém-se."
+    },
+    "source": {
+      "barberTemporary": "Definido para este profissional, temporariamente",
+      "locationTemporary": "Definido para o salão, temporariamente",
+      "barberPersistent": "Organização habitual deste profissional",
+      "locationDefault": "Organização habitual do salão"
+    },
+    "duration": {
+      "thirtyMinutes": "30 min",
+      "oneHour": "1 hora",
+      "today": "Hoje",
+      "untilClosing": "Até ao fecho",
+      "untilChanged": "A partir de agora"
+    }
   }
 }

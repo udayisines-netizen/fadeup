@@ -487,5 +487,47 @@
     "weekly": "/ semaine",
     "monthly": "/ mois",
     "yearly": "/ an"
+  },
+  "serviceMode": {
+    "title": "Comment voulez-vous travailler maintenant ?",
+    "subtitle": "Change ce que vous acceptez à partir de maintenant. Rien de déjà réservé ni personne dans la file n'est touché.",
+    "currentlyLabel": "En ce moment :",
+    "durationLabel": "Pour combien de temps",
+    "untilTime": "jusqu'à {{time}}",
+    "backToNormal": "Revenir à votre organisation habituelle",
+    "noLocation": "Choisissez un salon pour définir son fonctionnement.",
+    "readOnly": "Seul un propriétaire ou un manager peut changer le fonctionnement du salon.",
+    "inheriting": "Suit le salon",
+    "followShop": "Suivre le salon",
+    "unnamedProfessional": "Professionnel",
+    "queueOpenLabel": "File d'attente ouverte",
+    "queueOpenHelp": "Les nouveaux arrivants peuvent prendre la file.",
+    "queueClosedHelp": "Personne de nouveau ne peut entrer. Tous ceux qui attendent restent dans la file.",
+    "queueBlockedByMode": "Le sans rendez-vous n'est pas proposé dans votre organisation actuelle : la file reste fermée même si ceci est activé.",
+    "mode": {
+      "hybrid": "Rendez-vous + sans rendez-vous",
+      "reservationOnly": "Rendez-vous uniquement",
+      "queueOnly": "Sans rendez-vous uniquement",
+      "unavailable": "Indisponible"
+    },
+    "help": {
+      "hybrid": "Acceptez les rendez-vous et les clients qui passent.",
+      "reservation_only": "Acceptez les rendez-vous. Plus de sans rendez-vous.",
+      "queue_only": "Acceptez les clients qui passent. Plus de nouveaux rendez-vous.",
+      "unavailable": "N'acceptez plus rien de nouveau. Tout ce qui est déjà prévu tient."
+    },
+    "source": {
+      "barberTemporary": "Défini pour ce professionnel, temporairement",
+      "locationTemporary": "Défini pour le salon, temporairement",
+      "barberPersistent": "Organisation habituelle de ce professionnel",
+      "locationDefault": "Organisation habituelle du salon"
+    },
+    "duration": {
+      "thirtyMinutes": "30 min",
+      "oneHour": "1 heure",
+      "today": "Aujourd'hui",
+      "untilClosing": "Jusqu'à la fermeture",
+      "untilChanged": "À partir de maintenant"
+    }
   }
 }

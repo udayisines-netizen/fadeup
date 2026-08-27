@@ -487,5 +487,47 @@
     "weekly": "/ 周",
     "monthly": "/ 月",
     "yearly": "/ 年"
+  },
+  "serviceMode": {
+    "title": "现在想怎么接客？",
+    "subtitle": "更改从现在起接受的方式。已预约的客人和正在排队的人都不受影响。",
+    "currentlyLabel": "当前：",
+    "durationLabel": "持续多久",
+    "untilTime": "至 {{time}}",
+    "backToNormal": "恢复常用设置",
+    "noLocation": "请选择一个门店来设置其接客方式。",
+    "readOnly": "只有店主或店长可以更改门店的接客方式。",
+    "inheriting": "跟随门店",
+    "followShop": "跟随门店",
+    "unnamedProfessional": "专业人员",
+    "queueOpenLabel": "现场排队开放",
+    "queueOpenHelp": "到店的客人可以排队。",
+    "queueClosedHelp": "新客人无法加入。已在排队的客人仍在队列中。",
+    "queueBlockedByMode": "当前设置不提供现场接客，因此即使开启此项，队列仍保持关闭。",
+    "mode": {
+      "hybrid": "预约 + 现场",
+      "reservationOnly": "仅预约",
+      "queueOnly": "仅现场",
+      "unavailable": "暂不接客"
+    },
+    "help": {
+      "hybrid": "同时接受预约客人和到店客人。",
+      "reservation_only": "接受预约客人。不再接受新的现场客人。",
+      "queue_only": "接受到店客人。不再接受新的预约。",
+      "unavailable": "不接受任何新客。已预约的一切照常。"
+    },
+    "source": {
+      "barberTemporary": "为这位专业人员临时设置",
+      "locationTemporary": "为门店临时设置",
+      "barberPersistent": "这位专业人员的常用设置",
+      "locationDefault": "门店的常用设置"
+    },
+    "duration": {
+      "thirtyMinutes": "30 分钟",
+      "oneHour": "1 小时",
+      "today": "今天",
+      "untilClosing": "直到打烊",
+      "untilChanged": "从现在起"
+    }
   }
 }

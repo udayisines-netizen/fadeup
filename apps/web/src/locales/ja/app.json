@@ -487,5 +487,47 @@
     "weekly": "/ 週",
     "monthly": "/ 月",
     "yearly": "/ 年"
+  },
+  "serviceMode": {
+    "title": "今はどのように働きますか？",
+    "subtitle": "ここから先に受け付ける内容が変わります。予約済みの方も、並んでいる方も影響を受けません。",
+    "currentlyLabel": "現在：",
+    "durationLabel": "どのくらいの間",
+    "untilTime": "{{time}} まで",
+    "backToNormal": "いつもの設定に戻す",
+    "noLocation": "設定する店舗を選んでください。",
+    "readOnly": "店舗の働き方を変更できるのはオーナーまたはマネージャーだけです。",
+    "inheriting": "店舗に合わせる",
+    "followShop": "店舗に合わせる",
+    "unnamedProfessional": "スタッフ",
+    "queueOpenLabel": "当日受付の列を開く",
+    "queueOpenHelp": "来店した方が列に並べます。",
+    "queueClosedHelp": "新しく並ぶことはできません。すでに並んでいる方はそのままです。",
+    "queueBlockedByMode": "現在の設定では当日受付を行っていないため、これをオンにしても列は閉じたままです。",
+    "mode": {
+      "hybrid": "予約 + 当日受付",
+      "reservationOnly": "予約のみ",
+      "queueOnly": "当日受付のみ",
+      "unavailable": "受付停止"
+    },
+    "help": {
+      "hybrid": "ご予約のお客様も、ご来店のお客様も受け付けます。",
+      "reservation_only": "ご予約のお客様を受け付けます。当日受付は行いません。",
+      "queue_only": "ご来店のお客様を受け付けます。新規のご予約は受け付けません。",
+      "unavailable": "新規の受付を停止します。予約済みの内容はそのまま有効です。"
+    },
+    "source": {
+      "barberTemporary": "このスタッフに一時的に設定",
+      "locationTemporary": "店舗に一時的に設定",
+      "barberPersistent": "このスタッフの通常の設定",
+      "locationDefault": "店舗の通常の設定"
+    },
+    "duration": {
+      "thirtyMinutes": "30分",
+      "oneHour": "1時間",
+      "today": "今日",
+      "untilClosing": "閉店まで",
+      "untilChanged": "これ以降ずっと"
+    }
   }
 }

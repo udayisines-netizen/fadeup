@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Clock } from 'lucide-react'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
 import { usePublicBarber, usePublicBarberServices } from '@/lib/queries/public-barber'
+import { usePublicServiceState } from '@/lib/queries/service-mode'
 import { FavoriteButton } from '@/components/customer/favorite-button'
+import { ServiceModeCtas } from '@/components/booking/service-mode-ctas'
 import { Container } from '@/components/ui/container'
 import { Avatar } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -117,6 +119,15 @@ function BarberProfile({
     barber.locationId ? `?barber=${barber.barberId}&location=${barber.locationId}` : `?barber=${barber.barberId}`
   }`
 
+  // Server truth about what this professional is accepting. The slug is what
+  // authorizes the read; the ids are re-validated against it, so a barber from
+  // another shop simply returns nothing rather than an answer.
+  const serviceStateQuery = usePublicServiceState(
+    organization.slug,
+    barber.locationId ?? undefined,
+    barber.barberId,
+  )
+
   /*
    * The FULL name in the CTA, not a first name.
    *
@@ -155,9 +166,20 @@ function BarberProfile({
             {barber.bio ? <p className="mt-3 text-pretty text-sm text-ink-700">{barber.bio}</p> : null}
           </div>
 
-          <Link to={bookHref} className={buttonVariants({ size: 'lg' }, 'w-full sm:w-fit')}>
-            {t('professional.bookWith', { professional: barber.displayName })}
-          </Link>
+          {/* WHAT THIS PROFESSIONAL IS ACTUALLY ACCEPTING.
+              Until this lot the page offered "Book with …" unconditionally, to
+              everyone, always — which for a walk-in-only barber sent the
+              customer into a wizard that had nothing to offer them, and for an
+              unavailable one produced a booking the trigger now refuses.
+              The Favorite control above is untouched: following a professional
+              has nothing to do with whether they are taking bookings today. */}
+          <ServiceModeCtas
+            state={serviceStateQuery.data}
+            isPending={serviceStateQuery.isPending}
+            bookHref={bookHref}
+            queueHref={`/s/${organization.slug}/walk-in`}
+            bookLabel={t('professional.bookWith', { professional: barber.displayName })}
+          />
         </div>
       </section>
 

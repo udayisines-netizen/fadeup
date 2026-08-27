@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Modifier"
+  },
+  "serviceMode": {
+    "book": "Réserver",
+    "joinQueue": "Prendre la file",
+    "queueClosedTitle": "File fermée pour le moment",
+    "queueClosedBody": "Ce salon accepte le sans rendez-vous, mais la file est fermée en ce moment. Réessayez un peu plus tard.",
+    "notAcceptingTitle": "N'accepte rien de nouveau pour le moment",
+    "notAcceptingBody": "Vous pouvez suivre ce professionnel et réserver dès sa réouverture.",
+    "bookingClosedTitle": "Sans rendez-vous uniquement",
+    "bookingClosedBody": "Ce salon n'accepte pas de nouvelle réservation en ce moment — passez et prenez la file."
   }
 }

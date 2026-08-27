@@ -487,5 +487,47 @@
     "weekly": "/ week",
     "monthly": "/ month",
     "yearly": "/ year"
+  },
+  "serviceMode": {
+    "title": "How do you want to work right now?",
+    "subtitle": "Changes what you accept from now on. Nothing already booked or waiting is affected.",
+    "currentlyLabel": "Right now:",
+    "durationLabel": "For how long",
+    "untilTime": "until {{time}}",
+    "backToNormal": "Back to your usual setup",
+    "noLocation": "Choose a location to set how it works.",
+    "readOnly": "Only an owner or manager can change how the shop works.",
+    "inheriting": "Following the shop",
+    "followShop": "Follow the shop",
+    "unnamedProfessional": "Professional",
+    "queueOpenLabel": "Walk-in queue open",
+    "queueOpenHelp": "New arrivals can join the line.",
+    "queueClosedHelp": "No one new can join. Everyone already waiting is still in line.",
+    "queueBlockedByMode": "Walk-ins are not on offer in your current setup, so the line stays closed even when this is on.",
+    "mode": {
+      "hybrid": "Reservations + walk-ins",
+      "reservationOnly": "Reservations only",
+      "queueOnly": "Walk-ins only",
+      "unavailable": "Not available"
+    },
+    "help": {
+      "hybrid": "Take booked appointments and people who walk in.",
+      "reservation_only": "Take booked appointments. No new walk-ins.",
+      "queue_only": "Take people who walk in. No new reservations.",
+      "unavailable": "Take nothing new. Everything already booked still stands."
+    },
+    "source": {
+      "barberTemporary": "Set for this professional, temporarily",
+      "locationTemporary": "Set for the shop, temporarily",
+      "barberPersistent": "This professional's usual setup",
+      "locationDefault": "The shop's usual setup"
+    },
+    "duration": {
+      "thirtyMinutes": "30 min",
+      "oneHour": "1 hour",
+      "today": "Today",
+      "untilClosing": "Until closing",
+      "untilChanged": "From now on"
+    }
   }
 }

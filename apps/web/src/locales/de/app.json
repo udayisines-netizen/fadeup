@@ -487,5 +487,47 @@
     "weekly": "/ Woche",
     "monthly": "/ Monat",
     "yearly": "/ Jahr"
+  },
+  "serviceMode": {
+    "title": "Wie möchtest du gerade arbeiten?",
+    "subtitle": "Ändert, was du ab jetzt annimmst. Bereits gebuchte Termine und Wartende bleiben unberührt.",
+    "currentlyLabel": "Gerade:",
+    "durationLabel": "Für wie lange",
+    "untilTime": "bis {{time}}",
+    "backToNormal": "Zurück zur üblichen Einstellung",
+    "noLocation": "Wähle einen Standort, um festzulegen, wie er arbeitet.",
+    "readOnly": "Nur Inhaber oder Manager können ändern, wie der Salon arbeitet.",
+    "inheriting": "Folgt dem Salon",
+    "followShop": "Dem Salon folgen",
+    "unnamedProfessional": "Fachkraft",
+    "queueOpenLabel": "Warteschlange offen",
+    "queueOpenHelp": "Wer vorbeikommt, kann sich anstellen.",
+    "queueClosedHelp": "Niemand Neues kann dazukommen. Alle Wartenden bleiben in der Schlange.",
+    "queueBlockedByMode": "Laufkundschaft ist in deiner aktuellen Einstellung nicht vorgesehen — die Schlange bleibt geschlossen, auch wenn dies aktiv ist.",
+    "mode": {
+      "hybrid": "Termine + Laufkundschaft",
+      "reservationOnly": "Nur Termine",
+      "queueOnly": "Nur Laufkundschaft",
+      "unavailable": "Nicht verfügbar"
+    },
+    "help": {
+      "hybrid": "Nimm gebuchte Termine und Laufkundschaft an.",
+      "reservation_only": "Nimm gebuchte Termine an. Keine neue Laufkundschaft.",
+      "queue_only": "Nimm Laufkundschaft an. Keine neuen Termine.",
+      "unavailable": "Nimm nichts Neues an. Alles bereits Gebuchte bleibt bestehen."
+    },
+    "source": {
+      "barberTemporary": "Für diese Fachkraft festgelegt, vorübergehend",
+      "locationTemporary": "Für den Salon festgelegt, vorübergehend",
+      "barberPersistent": "Übliche Einstellung dieser Fachkraft",
+      "locationDefault": "Übliche Einstellung des Salons"
+    },
+    "duration": {
+      "thirtyMinutes": "30 Min.",
+      "oneHour": "1 Stunde",
+      "today": "Heute",
+      "untilClosing": "Bis Ladenschluss",
+      "untilChanged": "Ab jetzt"
+    }
   }
 }

@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Modifica"
+  },
+  "serviceMode": {
+    "book": "Prenota",
+    "joinQueue": "Mettiti in coda",
+    "queueClosedTitle": "Coda chiusa per ora",
+    "queueClosedBody": "Questo salone accetta senza appuntamento, ma la coda è chiusa in questo momento. Riprova un po' più tardi.",
+    "notAcceptingTitle": "Non accetta nulla di nuovo in questo momento",
+    "notAcceptingBody": "Puoi seguire questo professionista e prenotare appena riapre.",
+    "bookingClosedTitle": "Solo senza appuntamento",
+    "bookingClosedBody": "Questo salone non accetta nuove prenotazioni al momento: passa e mettiti in coda."
   }
 }

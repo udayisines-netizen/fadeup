@@ -180,5 +180,15 @@
   },
   "crumbs": {
     "change": "Cambiar"
+  },
+  "serviceMode": {
+    "book": "Reservar",
+    "joinQueue": "Ponerse en la cola",
+    "queueClosedTitle": "Cola cerrada por ahora",
+    "queueClosedBody": "Este salón atiende sin cita, pero la cola está cerrada ahora mismo. Inténtalo un poco más tarde.",
+    "notAcceptingTitle": "No acepta nada nuevo ahora mismo",
+    "notAcceptingBody": "Puedes seguir a este profesional y reservar cuando vuelva a abrir.",
+    "bookingClosedTitle": "Solo sin cita ahora mismo",
+    "bookingClosedBody": "Este salón no acepta nuevas reservas en este momento: pásate y ponte en la cola."
   }
 }

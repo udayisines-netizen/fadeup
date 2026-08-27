@@ -487,5 +487,47 @@
     "weekly": "/ settimana",
     "monthly": "/ mese",
     "yearly": "/ anno"
+  },
+  "serviceMode": {
+    "title": "Come vuoi lavorare adesso?",
+    "subtitle": "Cambia ciò che accetti da adesso. Nulla di già prenotato e nessuno in attesa viene toccato.",
+    "currentlyLabel": "In questo momento:",
+    "durationLabel": "Per quanto tempo",
+    "untilTime": "fino alle {{time}}",
+    "backToNormal": "Torna alla tua organizzazione abituale",
+    "noLocation": "Scegli una sede per definire come lavora.",
+    "readOnly": "Solo un titolare o un manager può cambiare come lavora il salone.",
+    "inheriting": "Segue il salone",
+    "followShop": "Segui il salone",
+    "unnamedProfessional": "Professionista",
+    "queueOpenLabel": "Coda senza appuntamento aperta",
+    "queueOpenHelp": "Chi arriva può mettersi in coda.",
+    "queueClosedHelp": "Nessun nuovo arrivo può entrare. Chi è in attesa resta in coda.",
+    "queueBlockedByMode": "Il servizio senza appuntamento non è previsto nella tua organizzazione attuale: la coda resta chiusa anche se questo è attivo.",
+    "mode": {
+      "hybrid": "Appuntamenti + senza appuntamento",
+      "reservationOnly": "Solo appuntamenti",
+      "queueOnly": "Solo senza appuntamento",
+      "unavailable": "Non disponibile"
+    },
+    "help": {
+      "hybrid": "Accetta appuntamenti e chi entra senza prenotare.",
+      "reservation_only": "Accetta appuntamenti. Niente nuovi ingressi senza appuntamento.",
+      "queue_only": "Accetta chi entra senza prenotare. Niente nuovi appuntamenti.",
+      "unavailable": "Non accettare nulla di nuovo. Tutto ciò che è già prenotato resta valido."
+    },
+    "source": {
+      "barberTemporary": "Impostato per questo professionista, temporaneamente",
+      "locationTemporary": "Impostato per il salone, temporaneamente",
+      "barberPersistent": "Organizzazione abituale di questo professionista",
+      "locationDefault": "Organizzazione abituale del salone"
+    },
+    "duration": {
+      "thirtyMinutes": "30 min",
+      "oneHour": "1 ora",
+      "today": "Oggi",
+      "untilClosing": "Fino alla chiusura",
+      "untilChanged": "Da adesso"
+    }
   }
 }
