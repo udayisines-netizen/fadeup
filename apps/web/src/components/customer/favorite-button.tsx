@@ -6,7 +6,6 @@ import { cn } from '@/lib/cn'
 
 interface FavoriteButtonProps {
   organizationId: string
-  barberId?: string | null
   favoriteLabel?: string
   unfavoriteLabel?: string
   className?: string
@@ -27,7 +26,6 @@ interface FavoriteButtonProps {
  */
 export function FavoriteButton({
   organizationId,
-  barberId = null,
   favoriteLabel = 'Add to favorites',
   unfavoriteLabel = 'Remove from favorites',
   className,
@@ -38,7 +36,9 @@ export function FavoriteButton({
   const addFavorite = useAddFavorite()
   const removeFavorite = useRemoveFavorite()
 
-  const existing = favoritesQuery.data?.find((f) => f.organizationId === organizationId && f.barberId === barberId)
+  const existing = favoritesQuery.data?.find(
+    (favorite) => favorite.organizationId === organizationId && favorite.barberId === null,
+  )
 
   if (!user) {
     const redirectTarget = `${location.pathname}${location.search}`
@@ -59,7 +59,7 @@ export function FavoriteButton({
     if (existing) {
       removeFavorite.mutate(existing.favoriteId)
     } else {
-      addFavorite.mutate({ userId: user!.id, organizationId, barberId })
+      addFavorite.mutate({ organizationId })
     }
   }
 

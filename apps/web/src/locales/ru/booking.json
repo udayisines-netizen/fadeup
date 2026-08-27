@@ -142,7 +142,10 @@
     "profileTitle": "Профиль мастера — FadeUp",
     "profileDescription": "Профиль мастера на FadeUp.",
     "atOrganization": "в {{organization}}",
-    "bookWith": "Записаться к {{professional}}"
+    "bookWith": "Записаться к {{professional}}",
+    "follow": "Подписаться",
+    "following": "Вы подписаны",
+    "unfollow": "Отписаться"
   },
   "shop": {
     "loadingProfile": "Загружаем профиль…",

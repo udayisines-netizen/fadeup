@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
 import { usePublicBarber, usePublicBarberServices } from '@/lib/queries/public-barber'
 import { usePublicServiceState } from '@/lib/queries/service-mode'
-import { FavoriteButton } from '@/components/customer/favorite-button'
+import { FollowButton } from '@/components/customer/follow-button'
 import { ServiceModeCtas } from '@/components/booking/service-mode-ctas'
 import { Container } from '@/components/ui/container'
 import { Avatar } from '@/components/ui/avatar'
@@ -103,6 +103,7 @@ function BarberProfile({
   organization: { id: string; slug: string; name: string; currency: string }
   barber: {
     barberId: string
+    professionalId: string | null
     displayName: string
     title: string | null
     bio: string | null
@@ -142,12 +143,9 @@ function BarberProfile({
       <section className="overflow-hidden rounded-2xl border border-border bg-paper-0">
         <div className="relative h-28 bg-gradient-to-br from-accent-100 via-paper-100 to-paper-200 sm:h-32">
           <span className="absolute end-3 top-3">
-            <FavoriteButton
-              organizationId={organization.id}
-              barberId={barber.barberId}
-              favoriteLabel={t('marketplace:card.addFavorite')}
-              unfavoriteLabel={t('marketplace:card.removeFavorite')}
-            />
+            {barber.professionalId ? (
+              <FollowButton professionalId={barber.professionalId} />
+            ) : null}
           </span>
         </div>
 
@@ -171,7 +169,7 @@ function BarberProfile({
               everyone, always — which for a walk-in-only barber sent the
               customer into a wizard that had nothing to offer them, and for an
               unavailable one produced a booking the trigger now refuses.
-              The Favorite control above is untouched: following a professional
+              The Follow control above is independent: following a professional
               has nothing to do with whether they are taking bookings today. */}
           <ServiceModeCtas
             state={serviceStateQuery.data}

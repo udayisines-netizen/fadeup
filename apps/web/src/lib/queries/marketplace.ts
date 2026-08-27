@@ -17,6 +17,7 @@ export interface MarketplaceProfessionalResult {
   organizationName: string
   organizationSlug: string
   barberId: string | null
+  professionalId: string | null
   barberDisplayName: string | null
   barberAvatarUrl: string | null
   barberTitle: string | null
@@ -40,6 +41,7 @@ interface MarketplaceProfessionalRow {
   organization_name: string
   organization_slug: string
   barber_id: string | null
+  professional_id: string | null
   barber_display_name: string | null
   barber_avatar_url: string | null
   barber_title: string | null
@@ -64,6 +66,7 @@ function mapProfessionalResult(row: MarketplaceProfessionalRow): MarketplaceProf
     organizationName: row.organization_name,
     organizationSlug: row.organization_slug,
     barberId: row.barber_id,
+    professionalId: row.professional_id,
     barberDisplayName: row.barber_display_name,
     barberAvatarUrl: row.barber_avatar_url,
     barberTitle: row.barber_title,

@@ -296,12 +296,13 @@ export function useMyFavorites(enabled: boolean) {
 
 export function useAddFavorite() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async ({ userId, organizationId, barberId }: { userId: string; organizationId: string; barberId?: string | null }) => {
+    mutationFn: async ({ organizationId }: { organizationId: string }) => {
       const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from('customer_favorites')
-        .insert({ user_id: userId, organization_id: organizationId, barber_id: barberId ?? null })
+      const { error } = await supabase.rpc('favorite_shop', {
+        p_organization_id: organizationId,
+      })
       if (error) throw error
     },
     onSuccess: () => {
@@ -312,10 +313,13 @@ export function useAddFavorite() {
 
 export function useRemoveFavorite() {
   const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (favoriteId: string) => {
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from('customer_favorites').delete().eq('id', favoriteId)
+      const { error } = await supabase.rpc('remove_favorite', {
+        p_favorite_id: favoriteId,
+      })
       if (error) throw error
     },
     onSuccess: () => {

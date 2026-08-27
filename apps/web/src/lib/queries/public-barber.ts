@@ -14,6 +14,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 
 export interface PublicBarberProfile {
   barberId: string
+  professionalId: string | null
   displayName: string
   title: string | null
   bio: string | null
@@ -23,6 +24,7 @@ export interface PublicBarberProfile {
 
 interface PublicBarberProfileRow {
   barber_id: string
+  professional_id: string | null
   display_name: string
   title: string | null
   bio: string | null
@@ -33,6 +35,7 @@ interface PublicBarberProfileRow {
 function mapPublicBarberProfile(row: PublicBarberProfileRow): PublicBarberProfile {
   return {
     barberId: row.barber_id,
+    professionalId: row.professional_id,
     displayName: row.display_name,
     title: row.title,
     bio: row.bio,
@@ -102,6 +105,7 @@ export function usePublicBarberServices(organizationSlug: string | undefined, ba
 /** One entry in a shop's public team roster — see list_public_organization_barbers. */
 export interface PublicOrganizationBarber {
   barberId: string
+  professionalId: string | null
   displayName: string
   title: string | null
   avatarUrl: string | null
@@ -111,6 +115,7 @@ export interface PublicOrganizationBarber {
 
 interface PublicOrganizationBarberRow {
   barber_id: string
+  professional_id: string | null
   display_name: string
   title: string | null
   avatar_url: string | null
@@ -121,6 +126,7 @@ interface PublicOrganizationBarberRow {
 function mapPublicOrganizationBarber(row: PublicOrganizationBarberRow): PublicOrganizationBarber {
   return {
     barberId: row.barber_id,
+    professionalId: row.professional_id,
     displayName: row.display_name,
     title: row.title,
     avatarUrl: row.avatar_url,

@@ -142,7 +142,10 @@
     "profileTitle": "Profil der Fachkraft — FadeUp",
     "profileDescription": "Ein Profil einer Fachkraft auf FadeUp.",
     "atOrganization": "bei {{organization}}",
-    "bookWith": "Termin bei {{professional}} buchen"
+    "bookWith": "Termin bei {{professional}} buchen",
+    "follow": "Folgen",
+    "following": "Folge ich",
+    "unfollow": "Nicht mehr folgen"
   },
   "shop": {
     "loadingProfile": "Profil wird geladen…",

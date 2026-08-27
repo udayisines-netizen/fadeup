@@ -142,7 +142,10 @@
     "profileTitle": "الملف المهني — FadeUp",
     "profileDescription": "ملف مهني على FadeUp.",
     "atOrganization": "في {{organization}}",
-    "bookWith": "احجز مع {{professional}}"
+    "bookWith": "احجز مع {{professional}}",
+    "follow": "متابعة",
+    "following": "تتم المتابعة",
+    "unfollow": "إلغاء المتابعة"
   },
   "shop": {
     "loadingProfile": "جارٍ تحميل الملف…",

@@ -142,7 +142,10 @@
     "profileTitle": "Professional profile — FadeUp",
     "profileDescription": "A professional profile on FadeUp.",
     "atOrganization": "at {{organization}}",
-    "bookWith": "Book with {{professional}}"
+    "bookWith": "Book with {{professional}}",
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
   },
   "shop": {
     "loadingProfile": "Loading profile…",

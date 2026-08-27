@@ -142,7 +142,10 @@
     "profileTitle": "スタッフプロフィール — FadeUp",
     "profileDescription": "FadeUp のスタッフプロフィールです。",
     "atOrganization": "{{organization}} 所属",
-    "bookWith": "{{professional}} を予約する"
+    "bookWith": "{{professional}} を予約する",
+    "follow": "フォロー",
+    "following": "フォロー中",
+    "unfollow": "フォロー解除"
   },
   "shop": {
     "loadingProfile": "プロフィールを読み込んでいます…",

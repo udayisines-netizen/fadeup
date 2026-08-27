@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { MapPin, Scissors, Users } from 'lucide-react'
 import { FavoriteButton } from '@/components/customer/favorite-button'
+import { FollowButton } from '@/components/customer/follow-button'
 import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Avatar } from '@/components/ui/avatar'
@@ -106,12 +107,17 @@ export function BusinessListingCard({
         ) : null}
 
         <span className="absolute end-2 top-2">
-          <FavoriteButton
-            organizationId={result.organizationId}
-            barberId={isBarber ? result.barberId : null}
-            favoriteLabel={t('marketplace:card.addFavorite')}
-            unfavoriteLabel={t('marketplace:card.removeFavorite')}
-          />
+          {isBarber ? (
+            result.professionalId ? (
+              <FollowButton professionalId={result.professionalId} />
+            ) : null
+          ) : (
+            <FavoriteButton
+              organizationId={result.organizationId}
+              favoriteLabel={t('marketplace:card.addFavorite')}
+              unfavoriteLabel={t('marketplace:card.removeFavorite')}
+            />
+          )}
         </span>
 
         {result.queueWaitingCount > 0 ? (

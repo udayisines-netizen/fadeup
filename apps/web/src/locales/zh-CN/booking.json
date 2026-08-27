@@ -142,7 +142,10 @@
     "profileTitle": "理发师主页 — FadeUp",
     "profileDescription": "FadeUp 上的理发师主页。",
     "atOrganization": "任职于 {{organization}}",
-    "bookWith": "预约 {{professional}}"
+    "bookWith": "预约 {{professional}}",
+    "follow": "关注",
+    "following": "已关注",
+    "unfollow": "取消关注"
   },
   "shop": {
     "loadingProfile": "正在加载资料…",

@@ -142,7 +142,10 @@
     "profileTitle": "Perfil profesional — FadeUp",
     "profileDescription": "Un perfil profesional en FadeUp.",
     "atOrganization": "en {{organization}}",
-    "bookWith": "Reservar con {{professional}}"
+    "bookWith": "Reservar con {{professional}}",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "unfollow": "Dejar de seguir"
   },
   "shop": {
     "loadingProfile": "Cargando el perfil…",

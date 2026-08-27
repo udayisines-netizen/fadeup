@@ -142,7 +142,10 @@
     "profileTitle": "Profil du coiffeur — FadeUp",
     "profileDescription": "Un profil de coiffeur sur FadeUp.",
     "atOrganization": "chez {{organization}}",
-    "bookWith": "Réserver avec {{professional}}"
+    "bookWith": "Réserver avec {{professional}}",
+    "follow": "Suivre",
+    "following": "Abonné",
+    "unfollow": "Ne plus suivre"
   },
   "shop": {
     "loadingProfile": "Chargement du profil…",
