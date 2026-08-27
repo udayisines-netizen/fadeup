@@ -8,12 +8,12 @@ import {
 } from '@/lib/queries/organization-follows'
 import { cn } from '@/lib/cn'
 
-interface OrganizationOrganizationFollowButtonProps {
+interface OrganizationFollowButtonProps {
   organizationId: string
   className?: string
 }
 
-export function OrganizationFollowButton({ organizationId, className }: OrganizationOrganizationFollowButtonProps) {
+export function OrganizationFollowButton({ organizationId, className }: OrganizationFollowButtonProps) {
   const { t } = useTranslation('booking')
   const { user } = useAuth()
   const location = useLocation()
@@ -23,7 +23,9 @@ export function OrganizationFollowButton({ organizationId, className }: Organiza
   const unfollow = useUnfollowOrganization()
 
   const isFollowing =
-    followedQuery.data?.some((professional) => professional.id === organizationId) ?? false
+    followedQuery.data?.some(
+      (organization) => organization.organizationId === organizationId,
+    ) ?? false
 
   const isPending =
     followedQuery.isPending || follow.isPending || unfollow.isPending
