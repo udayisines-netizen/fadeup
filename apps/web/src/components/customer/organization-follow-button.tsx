@@ -1,0 +1,79 @@
+import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/lib/auth-context'
+import {
+  useFollowOrganization,
+  useMyFollowedOrganizations,
+  useUnfollowOrganization,
+} from '@/lib/queries/organization-follows'
+import { cn } from '@/lib/cn'
+
+interface OrganizationOrganizationFollowButtonProps {
+  organizationId: string
+  className?: string
+}
+
+export function OrganizationFollowButton({ organizationId, className }: OrganizationOrganizationFollowButtonProps) {
+  const { t } = useTranslation('booking')
+  const { user } = useAuth()
+  const location = useLocation()
+
+  const followedQuery = useMyFollowedOrganizations(Boolean(user))
+  const follow = useFollowOrganization()
+  const unfollow = useUnfollowOrganization()
+
+  const isFollowing =
+    followedQuery.data?.some((professional) => professional.id === organizationId) ?? false
+
+  const isPending =
+    followedQuery.isPending || follow.isPending || unfollow.isPending
+
+  if (!user) {
+    const redirectTarget = `${location.pathname}${location.search}`
+
+    return (
+      <Link
+        to={`/login?redirect=${encodeURIComponent(redirectTarget)}`}
+        className={cn(
+          'relative z-10 inline-flex min-h-9 items-center justify-center rounded-full border border-border bg-paper-0/95 px-3 text-sm font-semibold text-ink-950 shadow-sm backdrop-blur transition-colors hover:bg-paper-100',
+          className,
+        )}
+      >
+        {t('professional.follow')}
+      </Link>
+    )
+  }
+
+  function handleClick() {
+    if (isFollowing) {
+      unfollow.mutate(organizationId)
+    } else {
+      follow.mutate(organizationId)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isPending}
+      aria-pressed={isFollowing}
+      aria-label={
+        isFollowing
+          ? t('professional.unfollow')
+          : t('professional.follow')
+      }
+      className={cn(
+        'relative z-10 inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50',
+        isFollowing
+          ? 'border-ink-200 bg-ink-950 text-paper-0 hover:bg-ink-800'
+          : 'border-border bg-paper-0/95 text-ink-950 backdrop-blur hover:bg-paper-100',
+        className,
+      )}
+    >
+      {isFollowing
+        ? t('professional.following')
+        : t('professional.follow')}
+    </button>
+  )
+}

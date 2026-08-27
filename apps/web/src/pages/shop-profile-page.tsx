@@ -4,6 +4,7 @@ import { MapPin, Navigation } from 'lucide-react'
 import { usePublicOrganization, usePublicLocations, type PublicLocation } from '@/lib/queries/public-booking'
 import { usePublicOrganizationBarbers } from '@/lib/queries/public-barber'
 import { FavoriteButton } from '@/components/customer/favorite-button'
+import { OrganizationFollowButton } from '@/components/customer/organization-follow-button'
 import { Container } from '@/components/ui/container'
 import { Avatar } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -89,13 +90,16 @@ export function ShopProfilePage() {
     <Container size="md" className="flex flex-1 flex-col gap-8 py-6 sm:py-10">
       <section className="overflow-hidden rounded-2xl border border-border bg-paper-0">
         <div className="relative h-32 bg-gradient-to-br from-accent-100 via-paper-100 to-paper-200 sm:h-40">
-          <span className="absolute end-3 top-3">
+          <div className="absolute end-3 top-3 flex items-center gap-2">
+            <OrganizationFollowButton
+              organizationId={organization.id}
+            />
             <FavoriteButton
               organizationId={organization.id}
               favoriteLabel={t('marketplace:card.addFavorite')}
               unfavoriteLabel={t('marketplace:card.removeFavorite')}
             />
-          </span>
+          </div>
         </div>
 
         {/* The avatar straddles the panel edge — the one place on the public
