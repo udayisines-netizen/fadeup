@@ -26,6 +26,11 @@ export type ProspectJobType =
   | 'outreach_preparation'
   | 'whatsapp_send'
   | 'outcome_processing'
+  // R4 (20260828100100): refreshes public.prospect_publication_eligibility so
+  // the operator's publication review queue stays current. Evaluates only —
+  // publishing is public.publish_external_professional, which this worker's
+  // role deliberately has no EXECUTE grant on.
+  | 'publication_evaluation'
 
 export interface ProspectJob {
   id: string

@@ -13,6 +13,7 @@ import { runFeatureComputationJob } from './feature-computation.js'
 import { runOutreachPreparationJob } from './outreach-preparation.js'
 import { runWhatsAppSendJob } from './whatsapp-send.js'
 import { runSearchPlanJob } from './search-plan.js'
+import { runPublicationEvaluationJob } from './publication-evaluation.js'
 
 export interface JobContext {
   pool: DbPool
@@ -79,6 +80,12 @@ export async function runJob(ctx: JobContext, job: ProspectJob): Promise<Record<
 
     case 'outcome_processing':
       return { ...(await runOutcomeProcessingJob(pool, log)) }
+
+    // Evaluates publication eligibility; never publishes. The operator's
+    // decision path is public.publish_external_professional, which the
+    // prospect_worker role has no EXECUTE grant on by design.
+    case 'publication_evaluation':
+      return { ...(await runPublicationEvaluationJob(pool, job, log)) }
 
     default: {
       const exhaustive: never = job.jobType
