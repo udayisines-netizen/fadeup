@@ -92,6 +92,67 @@ psql_run() {
     psql -U postgres -d postgres -v ON_ERROR_STOP=1 "$@"
 }
 
+# pg_isready alone is NOT enough for supabase/postgres.
+# During first boot the image exposes a temporary PostgreSQL server while its
+# init scripts are still creating Supabase objects, then restarts PostgreSQL.
+#
+# Wait for the objects FadeUp actually requires and require them to remain
+# available for consecutive checks. This avoids racing the temporary init
+# server without fabricating a fake auth schema/table in the test harness.
+echo -n "==> waiting for Supabase auth readiness"
+auth_stable=0
+
+for _ in $(seq 1 180); do
+  AUTH_READY="$(
+    docker exec "$CONTAINER" \
+      psql -U postgres -d postgres -Atqc "
+        select case when
+          exists (
+            select 1
+            from pg_namespace
+            where nspname = 'auth'
+          )
+          and exists (
+            select 1
+            from pg_class c
+            join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'auth'
+              and c.relname = 'users'
+              and c.relkind in ('r', 'p')
+          )
+          and exists (
+            select 1
+            from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'auth'
+              and p.proname = 'uid'
+              and p.pronargs = 0
+          )
+        then 1 else 0 end
+      " 2>/dev/null || true
+  )"
+
+  if [[ "$AUTH_READY" == "1" ]]; then
+    auth_stable=$((auth_stable + 1))
+  else
+    auth_stable=0
+  fi
+
+  if [[ "$auth_stable" -ge 8 ]]; then
+    echo " ok"
+    break
+  fi
+
+  echo -n "."
+  sleep 1
+done
+
+if [[ "$auth_stable" -lt 8 ]]; then
+  echo " FAILED — Supabase auth objects never became stably ready" >&2
+  docker logs --tail 80 "$CONTAINER" >&2
+  exit 1
+fi
+
 # The supabase/postgres image ALREADY ships the roles (anon, authenticated,
 # service_role, supabase_auth_admin), the auth schema, auth.users and
 # auth.uid() — verified by probing the image, not assumed. This step only

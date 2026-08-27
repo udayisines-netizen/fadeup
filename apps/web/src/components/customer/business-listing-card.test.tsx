@@ -27,6 +27,7 @@ function shopResult(overrides: Partial<MarketplaceProfessionalResult> = {}): Mar
     organizationName: 'Le Fade Parisien',
     organizationSlug: 'demo-le-fade-parisien',
     barberId: null,
+    professionalId: null,
     barberDisplayName: null,
     barberAvatarUrl: null,
     barberTitle: null,

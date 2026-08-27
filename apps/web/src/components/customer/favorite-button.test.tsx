@@ -52,7 +52,7 @@ describe('FavoriteButton', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add to favorites' }))
 
-    await waitFor(() => expect(addMutate).toHaveBeenCalledWith({ userId: 'user-1', organizationId: 'org-1', barberId: null }))
+    await waitFor(() => expect(addMutate).toHaveBeenCalledWith({ organizationId: 'org-1' }))
   })
 
   it('shows the "remove" state once the organization is already a favorite', () => {
