@@ -165,9 +165,12 @@ identity.
 sharing a group count once; an ungrouped source is its own group, so nothing
 else changed meaning. `osm` and `geoapify` share `openstreetmap`.
 
-The same rule is why Planity evidence never counts toward publication: its page
-is reached by following a link the business published about itself, so it is the
-`website` chain one hop longer, not a second observer.
+The same rule decides what Planity contributes, and the answer differs by role.
+Planity DISCOVERY reads Planity's own category listing, which is a genuine
+independent observation and counts as one observer. Planity ENRICHMENT reaches
+its page by following a link the business published about itself, so it is the
+`website` chain one hop longer and counts as nothing. The transport does not
+determine independence; the underlying assertion does.
 
 ---
 
@@ -303,7 +306,7 @@ ambiguous between US and CA.
 | `whatsapp_send` | `jobs/whatsapp-send.ts` | Drain a campaign's queued recipients |
 | `outcome_processing` | `jobs/runner.ts` | Reconcile conversions back onto the funnel |
 | `publication_evaluation` | `jobs/publication-evaluation.ts` | Refresh the operator's publication review queue (R4). **Evaluates only** — it holds no copy of the eligibility rules and cannot publish |
-| `planity_enrichment` | `jobs/planity-enrichment.ts` | Read the public Planity page of prospects whose own website links to one (R4.1). Enrichment only — see [`planity.md`](./planity.md) |
+| `planity_enrichment` | `jobs/planity-enrichment.ts` | Read the public Planity page of prospects whose own website links to one. Enrichment only — see [`planity.md`](./planity.md) |
 
 ---
 

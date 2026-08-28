@@ -101,3 +101,25 @@ migration, not editing the applied one), and add its env keys to
 `src/config.ts` + `.env.worker.example` + this file. The job runner
 (`src/jobs/discovery.ts`) needs no changes — it only depends on the
 `SourceAdapter` contract.
+
+
+---
+
+## planity (R4.1 follow-up)
+
+France only. No credential — public pages.
+
+Discovers from Planity's published `/barbier/{city}` category tree, resolved
+through its sitemap. Returns `RawCandidate`s through the normal
+dedup/reconciliation pipeline like any other source, and additionally records a
+`PLANITY` booking-provider observation, because a business found ON Planity is a
+Planity customer and waiting for a website crawl to rediscover that would leave
+the record empty for businesses whose only web presence is their Planity page.
+
+Runs LAST in the French waterfall so its candidates merge into businesses the
+broad sweeps already found rather than creating a parallel population.
+
+Filters `NailSalon` and similar out: Planity's own barber listing returns them.
+
+See [`planity.md`](./planity.md) for the full contract, bounds and provenance
+rules.
