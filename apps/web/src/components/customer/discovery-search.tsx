@@ -10,6 +10,7 @@ import {
 } from '@/lib/queries/marketplace'
 import { getCurrentPosition } from '@/lib/geolocation'
 import { countryName } from '@/lib/intl/countries'
+import { ANYWHERE, setExplicitCountry } from '@/lib/intl/country-preference'
 import { MarketplaceResults, type ResultsMode } from '@/components/marketplace/marketplace-results'
 import { SectionHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -234,7 +235,13 @@ export function DiscoverySearch({
         onSubmit={handleSubmit}
         className={cn(
           'flex flex-col gap-1 rounded-2xl border border-border bg-paper-0 p-2 shadow-xs',
-          'focus-within:border-accent-200 sm:flex-row sm:items-center sm:gap-0',
+          // ONE control, two inputs. The panel indicates focus, not each
+          // input — ringing both separately draws two boxes inside one box.
+          // A ring rather than only a border tint: a 1px accent-200 edge is
+          // not a focus indicator anyone can find at a glance, which is the
+          // whole job (WCAG 2.4.11).
+          'focus-within:border-accent-600 focus-within:ring-2 focus-within:ring-accent-600/30',
+          'sm:flex-row sm:items-center sm:gap-0',
         )}
       >
         <div className="relative flex min-w-0 flex-1 items-center">
@@ -353,7 +360,13 @@ export function DiscoverySearch({
             countryIsImplicit && country && results.length > 0 ? (
               <button
                 type="button"
-                onClick={() => updateParams((params) => params.set('country', 'any'))}
+                onClick={() => {
+                  // Persisted, not just applied. §31/AC: a country the
+                  // customer switched off must stay off on their next visit,
+                  // otherwise they re-fight the same filter every time.
+                  setExplicitCountry(ANYWHERE)
+                  updateParams((params) => params.set('country', ANYWHERE))
+                }}
                 className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-ink-700 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
               >
                 {t('results.searchEverywhere')}
@@ -401,7 +414,13 @@ export function DiscoverySearch({
               description={t('results.emptyNoneAtAllDescription')}
               action={
                 countryIsImplicit && country ? (
-                  <Button variant="secondary" onClick={() => updateParams((params) => params.set('country', 'any'))}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setExplicitCountry(ANYWHERE)
+                      updateParams((params) => params.set('country', ANYWHERE))
+                    }}
+                  >
                     {t('results.searchEverywhere')}
                   </Button>
                 ) : undefined

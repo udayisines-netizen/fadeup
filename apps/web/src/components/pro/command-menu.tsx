@@ -76,7 +76,7 @@ export function CommandMenu({
       <DialogContent className="max-w-lg gap-0 p-0">
         <DialogTitle className="sr-only">{t('app:nav.searchTitle')}</DialogTitle>
 
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3 focus-within:border-accent-600">
           <Search className="h-4 w-4 shrink-0 text-ink-500" aria-hidden="true" />
           <input
             autoFocus

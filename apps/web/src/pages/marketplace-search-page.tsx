@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { DiscoverySearch } from '@/components/customer/discovery-search'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useGeoSuggestion } from '@/lib/intl/geo'
+import { effectiveCountry } from '@/lib/intl/country-preference'
 
 /**
  * "/search" — the public marketplace.
@@ -23,6 +24,9 @@ export function MarketplaceSearchPage() {
   const { t } = useTranslation('marketplace')
   const [searchParams] = useSearchParams()
   const geo = useGeoSuggestion()
+  // An explicit choice outranks GeoIP and survives the tab — the same
+  // precedence the language switcher has had since Lot E (§31).
+  const country = effectiveCountry(geo.countryCode)
 
   const city = searchParams.get('city') ?? ''
   const hasCoords = searchParams.has('lat') && searchParams.has('lng')
@@ -37,7 +41,7 @@ export function MarketplaceSearchPage() {
     <main>
       <Container size="lg" className="flex flex-col gap-6 py-8 sm:py-10">
         <PageHeader title={t('hero.title')} subtitle={t('hero.subtitle')} />
-        <DiscoverySearch suggestedCountry={geo.countryCode} headingAs="h2" />
+        <DiscoverySearch suggestedCountry={country} headingAs="h2" />
       </Container>
     </main>
   )

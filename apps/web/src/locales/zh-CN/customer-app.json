@@ -172,5 +172,11 @@
     "favouriteDetail": "已收藏",
     "nothingYet": "你还没有预约过——先找一家店吧。",
     "findAShop": "查找店铺"
+  },
+  "preferences": {
+    "countryLabel": "你在哪里找理发师",
+    "countryAutomatic": "自动",
+    "countryAutomaticWith": "自动（{{country}}）",
+    "countryAnywhere": "不限地区"
   }
 }

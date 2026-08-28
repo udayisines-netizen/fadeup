@@ -172,5 +172,11 @@
     "favouriteDetail": "保存済み",
     "nothingYet": "まだ予約がありません。まずは店を探しましょう。",
     "findAShop": "店を探す"
+  },
+  "preferences": {
+    "countryLabel": "どこで探すか",
+    "countryAutomatic": "自動",
+    "countryAutomaticWith": "自動（{{country}}）",
+    "countryAnywhere": "すべての地域"
   }
 }

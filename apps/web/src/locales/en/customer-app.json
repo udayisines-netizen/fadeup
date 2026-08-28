@@ -172,5 +172,11 @@
     "favouriteDetail": "Saved",
     "nothingYet": "You haven't booked yet — find a shop to get started.",
     "findAShop": "Find a shop"
+  },
+  "preferences": {
+    "countryLabel": "Where you look for barbers",
+    "countryAutomatic": "Automatic",
+    "countryAutomaticWith": "Automatic ({{country}})",
+    "countryAnywhere": "Anywhere"
   }
 }

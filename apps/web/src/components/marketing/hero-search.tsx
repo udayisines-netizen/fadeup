@@ -63,7 +63,7 @@ export function HeroSearch({ className, autoFocus = false }: { className?: strin
           fields is a border on the second field rather than a separate
           element, so it flips correctly under RTL without any extra rules.
         */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong bg-paper-0 shadow-sm transition-shadow focus-within:shadow-md sm:flex-row sm:items-stretch">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong bg-paper-0 shadow-sm transition-shadow focus-within:border-accent-600 focus-within:shadow-md focus-within:ring-2 focus-within:ring-accent-600/30 sm:flex-row sm:items-stretch">
           <label className="flex min-w-0 flex-1 items-center gap-3 px-5 py-4">
             <Search className="h-5 w-5 shrink-0 text-ink-300" aria-hidden="true" />
             <span className="sr-only">{t('searchForm.whatLabel')}</span>

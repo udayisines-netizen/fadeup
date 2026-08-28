@@ -22,6 +22,18 @@ vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(),
 }))
 
+// The country preference field reads GeoIP to label its "Automatic" option.
+// Mocked so the profile page's own tests make no network call — the
+// preference's own behaviour is covered in country-preference.test.ts.
+vi.mock('@/lib/intl/geo', () => ({
+  useGeoSuggestion: () => ({
+    countryCode: 'FR',
+    suggestedLocale: 'fr',
+    suggestedCurrency: 'EUR',
+    suggestedTimezone: 'Europe/Paris',
+  }),
+}))
+
 vi.mock('@/lib/queries/customer-profile', () => ({
   useMyCustomerProfile: vi.fn(),
   useUpsertMyCustomerProfile: vi.fn(),

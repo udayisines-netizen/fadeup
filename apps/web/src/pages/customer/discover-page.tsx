@@ -14,6 +14,7 @@ import {
 import { useSearchPublicProfessionals, usePublicCurrencies } from '@/lib/queries/marketplace'
 import { computeFreshness } from '@/lib/personalization'
 import { useGeoSuggestion } from '@/lib/intl/geo'
+import { effectiveCountry } from '@/lib/intl/country-preference'
 import { countryName } from '@/lib/intl/countries'
 import { useDateTime } from '@/lib/intl/use-intl'
 import { BusinessListingCard } from '@/components/customer/business-listing-card'
@@ -75,6 +76,9 @@ export function CustomerDiscoverPage() {
   const { t, i18n } = useTranslation('customer-app')
   const { user } = useAuth()
   const geo = useGeoSuggestion()
+  // An explicit choice outranks GeoIP and survives the tab — the same
+  // precedence the language switcher has had since Lot E (§31).
+  const country = effectiveCountry(geo.countryCode)
   const analytics = useAnalytics()
 
   const profileQuery = useMyCustomerProfile(user?.id)
@@ -100,7 +104,7 @@ export function CustomerDiscoverPage() {
   // two rows at the widest breakpoint without the section outgrowing the two
   // above it, which are the ones the customer came here for.
   const nearbyQuery = useSearchPublicProfessionals({
-    country: geo.countryCode,
+    country,
     entityType: 'shop',
     limit: 6,
   })
@@ -188,8 +192,8 @@ export function CustomerDiscoverPage() {
           title={
             // The country NAME in the reader's language, never the ISO code:
             // "Près de vous en France", not "Près de vous en FR".
-            geo.countryCode
-              ? t('discover.nearbyTitleWithCountry', { country: countryName(geo.countryCode, i18n.language) })
+            country
+              ? t('discover.nearbyTitleWithCountry', { country: countryName(country, i18n.language) })
               : t('discover.nearbyTitle')
           }
           action={

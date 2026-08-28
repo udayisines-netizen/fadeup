@@ -172,5 +172,11 @@
     "favouriteDetail": "Enregistré",
     "nothingYet": "Vous n'avez pas encore réservé — trouvez un salon pour commencer.",
     "findAShop": "Trouver un salon"
+  },
+  "preferences": {
+    "countryLabel": "Où vous cherchez un professionnel",
+    "countryAutomatic": "Automatique",
+    "countryAutomaticWith": "Automatique ({{country}})",
+    "countryAnywhere": "Partout"
   }
 }

@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Heart, IdCard, type LucideIcon } from 'lucid
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useMyCustomerProfile, useUpsertMyCustomerProfile } from '@/lib/queries/customer-profile'
+import { CountryPreferenceField } from '@/components/customer/country-preference-field'
 import { PageHeader } from '@/components/ui/page-header'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { TextField } from '@/components/ui/text-field'
@@ -120,6 +121,16 @@ export function CustomerProfilePage() {
             {t('profile.save')}
           </Button>
         </form>
+      </section>
+
+      {/*
+        §31: language already persisted an explicit choice; country did not.
+        The marketplace's "Search everywhere" chip can turn the filter off, but
+        once it is gone nothing on that screen mentions countries — so the way
+        BACK lives here, beside the other preferences.
+      */}
+      <section className="rounded-xl border border-border bg-paper-0 p-5">
+        <CountryPreferenceField />
       </section>
 
       <section className="rounded-xl border border-border bg-paper-0 p-5">

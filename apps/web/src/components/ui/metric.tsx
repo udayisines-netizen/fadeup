@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { RealtimeValue } from '@/components/ui/realtime-value'
 import { cn } from '@/lib/cn'
 
 /**
@@ -33,6 +34,7 @@ export function Metric({
   icon,
   tone = 'neutral',
   className,
+  realtimeKey,
 }: {
   value: ReactNode
   label: string
@@ -41,6 +43,13 @@ export function Metric({
   icon?: ReactNode
   tone?: MetricTone
   className?: string
+  /**
+   * The comparison key for the realtime highlight (§20). Deliberately separate
+   * from `value`, which is formatted output: comparing "€1,240.00" would make
+   * a locale change or a plain re-render look like new data. Omit it and the
+   * metric never highlights, which is right for anything not actually live.
+   */
+  realtimeKey?: string | number
 }) {
   return (
     <div className={cn('flex min-w-0 flex-col gap-1', className)}>
@@ -53,7 +62,7 @@ export function Metric({
         </span>
       ) : null}
       <span className={cn('text-2xl font-semibold leading-none tracking-tight tabular-nums', TONES[tone])}>
-        {value}
+        {realtimeKey === undefined ? value : <RealtimeValue value={realtimeKey}>{value}</RealtimeValue>}
       </span>
       {/* text-pretty stops a two-word label orphaning its second word, which
           happens constantly once these are translated into German. */}

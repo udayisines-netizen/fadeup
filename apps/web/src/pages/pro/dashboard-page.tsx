@@ -414,12 +414,14 @@ function Dashboard({ organizationId, role }: { organizationId: string; role: Mem
                 <Metric
                   icon={<CalendarCheck2 className="h-4 w-4" />}
                   value={day.liveCount}
+                  realtimeKey={day.liveCount}
                   label={t('app:today.kpiAppointments')}
                   context={day.remaining > 0 ? t('app:today.kpiRemaining', { count: day.remaining }) : undefined}
                 />
                 <Metric
                   icon={<PieChart className="h-4 w-4" />}
                   value={occupancy === null ? '—' : `${occupancy}%`}
+                  realtimeKey={occupancy ?? 'none'}
                   label={t('app:today.kpiOccupancy')}
                   tone={occupancy === null ? 'quiet' : 'neutral'}
                 />
@@ -432,12 +434,16 @@ function Dashboard({ organizationId, role }: { organizationId: string; role: Mem
                 */}
                 <Metric
                   value={money(day.bookedValueCents, currency)}
+                  // The CENTS, not the formatted string — see the note on
+                  // realtimeKey. A language switch must not read as income.
+                  realtimeKey={day.bookedValueCents}
                   label={t('app:today.kpiBookedValue')}
                   context={t('app:today.kpiBookedValueHint')}
                 />
                 <Metric
                   icon={<UserX className="h-4 w-4" />}
                   value={day.noShows}
+                  realtimeKey={day.noShows}
                   label={t('app:today.kpiNoShows')}
                   tone={day.noShows === 0 ? 'quiet' : 'danger'}
                 />

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { DiscoverySearch } from '@/components/customer/discovery-search'
 import { PageHeader } from '@/components/ui/page-header'
 import { useGeoSuggestion } from '@/lib/intl/geo'
+import { effectiveCountry } from '@/lib/intl/country-preference'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 
 /**
@@ -23,6 +24,9 @@ export function CustomerSearchPage() {
   const { t } = useTranslation('marketplace')
   const [searchParams] = useSearchParams()
   const geo = useGeoSuggestion()
+  // An explicit choice outranks GeoIP and survives the tab — the same
+  // precedence the language switcher has had since Lot E (§31).
+  const country = effectiveCountry(geo.countryCode)
 
   const city = searchParams.get('city') ?? ''
   const hasCoords = searchParams.has('lat') && searchParams.has('lng')
@@ -36,7 +40,7 @@ export function CustomerSearchPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t('hero.title')} subtitle={t('hero.subtitle')} />
-      <DiscoverySearch suggestedCountry={geo.countryCode} analyticsSurface="marketplace" />
+      <DiscoverySearch suggestedCountry={country} analyticsSurface="marketplace" />
     </div>
   )
 }

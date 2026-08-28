@@ -172,5 +172,11 @@
     "favouriteDetail": "Сохранено",
     "nothingYet": "Вы ещё не записывались — найдите салон, чтобы начать.",
     "findAShop": "Найти салон"
+  },
+  "preferences": {
+    "countryLabel": "Где вы ищете мастеров",
+    "countryAutomatic": "Автоматически",
+    "countryAutomaticWith": "Автоматически ({{country}})",
+    "countryAnywhere": "Везде"
   }
 }

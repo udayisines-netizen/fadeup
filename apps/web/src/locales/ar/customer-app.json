@@ -172,5 +172,11 @@
     "favouriteDetail": "محفوظ",
     "nothingYet": "لم تحجز بعد — ابحث عن صالون للبدء.",
     "findAShop": "ابحث عن صالون"
+  },
+  "preferences": {
+    "countryLabel": "أين تبحث عن المحترفين",
+    "countryAutomatic": "تلقائي",
+    "countryAutomaticWith": "تلقائي ({{country}})",
+    "countryAnywhere": "في كل مكان"
   }
 }

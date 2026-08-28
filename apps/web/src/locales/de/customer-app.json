@@ -172,5 +172,11 @@
     "favouriteDetail": "Gespeichert",
     "nothingYet": "Du hast noch nicht gebucht – finde einen Salon, um loszulegen.",
     "findAShop": "Salon finden"
+  },
+  "preferences": {
+    "countryLabel": "Wo du nach Profis suchst",
+    "countryAutomatic": "Automatisch",
+    "countryAutomaticWith": "Automatisch ({{country}})",
+    "countryAnywhere": "Überall"
   }
 }
