@@ -32,6 +32,14 @@ export function classifyError(error: unknown, statusCode?: number): ClassifiedEr
     if (name === 'AbortError' || name === 'TimeoutError') {
       return { retryable: true, reason: 'timeout' }
     }
+    // Overpass reports server-side failure as HTTP 200 with a `remark`, so
+    // there is no status code to classify — see src/sources/osm.ts. Named
+    // explicitly rather than left to the unclassified default below, because
+    // "a loaded public endpoint" is precisely a transient failure and the
+    // reason string is what an operator reads in prospect_jobs.last_error.
+    if (name === 'OverpassRuntimeError') {
+      return { retryable: true, reason: 'upstream query engine overloaded' }
+    }
     // Node's fetch throws TypeError for network-level failures (DNS, connection reset, ...).
     if (name === 'TypeError' || /network|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND/i.test(error.message)) {
       return { retryable: true, reason: 'temporary network error' }

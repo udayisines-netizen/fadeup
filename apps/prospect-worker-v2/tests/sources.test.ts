@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { loadConfig, resetConfigCache } from '../src/config.js'
-import { OsmAdapter } from '../src/sources/osm.js'
+import { OsmAdapter, OverpassRuntimeError } from '../src/sources/osm.js'
+import { classifyError } from '../src/retry.js'
 import { GeoapifyAdapter } from '../src/sources/geoapify.js'
 import { SireneAdapter } from '../src/sources/sirene.js'
 import { GooglePlacesAdapter } from '../src/sources/google-places.js'
@@ -78,6 +79,133 @@ describe('OsmAdapter', () => {
     const adapter = new OsmAdapter(config)
     const result = await adapter.discover({ country: 'FR', latitude: 48.857, longitude: 2.352 }, ctx)
     expect(result).toEqual([])
+  })
+
+  // ---------------------------------------------------------------------
+  // The silent-zero defect, observed live on 2026-08-28 against
+  // overpass-api.de: a discovery job over central Lyon recorded
+  // `candidates_found = 0, status = completed, error = null` while OSM
+  // actually held 367 hairdressers there.
+  //
+  // Overpass reports server-side failure as HTTP 200 with an empty
+  // `elements` array and a `remark`. Read naively that is indistinguishable
+  // from "there is nothing here", which is the manufactured-signal failure
+  // acquisition-intelligence.md's first rule forbids — and it propagates
+  // into the search planner's saturation arithmetic, where a timed-out cell
+  // looks exhausted.
+  // ---------------------------------------------------------------------
+
+  it('refuses to report a server-side timeout as zero results', async () => {
+    const config = loadConfig(baseEnv())
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          elements: [],
+          remark: 'runtime error: Query timed out in "query" at line 5 after 27 seconds.',
+        }),
+      ),
+    )
+
+    const adapter = new OsmAdapter(config)
+    await expect(
+      adapter.discover({ country: 'FR', latitude: 45.764, longitude: 4.8357, radiusKm: 2 }, ctx),
+    ).rejects.toThrow(/runtime error/i)
+  })
+
+  it('classifies that failure as retryable, because a loaded endpoint is transient', async () => {
+    const error = new OverpassRuntimeError('runtime error: Query timed out')
+    expect(classifyError(error)).toEqual({
+      retryable: true,
+      reason: 'upstream query engine overloaded',
+    })
+  })
+
+  it('tolerates a non-error remark rather than failing on the field existing', async () => {
+    const config = loadConfig(baseEnv())
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          elements: [{ type: 'node', id: 7, lat: 1, lon: 2, tags: { name: 'Still Here', shop: 'hairdresser' } }],
+          remark: 'The data included in this document is from www.openstreetmap.org.',
+        }),
+      ),
+    )
+
+    const adapter = new OsmAdapter(config)
+    const result = await adapter.discover({ country: 'FR', latitude: 1, longitude: 2 }, ctx)
+    expect(result).toHaveLength(1)
+  })
+
+  it('keeps the primary result when only the speculative fallback fails', async () => {
+    const config = loadConfig(baseEnv())
+    let call = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        call += 1
+        // First request: the cheap hairdresser query, which succeeds.
+        if (call === 1) {
+          return jsonResponse({
+            elements: [
+              { type: 'node', id: 1, lat: 45.76, lon: 4.83, tags: { name: 'Fade Lyon', shop: 'hairdresser' } },
+            ],
+          })
+        }
+        // Second: the expensive name-regex fallback, which times out. Before
+        // the split this was one union, so this failure erased the row above.
+        return jsonResponse({ elements: [], remark: 'runtime error: Query timed out' })
+      }),
+    )
+
+    const adapter = new OsmAdapter(config)
+    const result = await adapter.discover({ country: 'FR', latitude: 45.76, longitude: 4.83, radiusKm: 2 }, ctx)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ name: 'Fade Lyon' })
+  })
+
+  it('fails the whole discovery when the PRIMARY query fails', async () => {
+    const config = loadConfig(baseEnv())
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ elements: [], remark: 'runtime error: Query timed out' })),
+    )
+
+    const adapter = new OsmAdapter(config)
+    // The inverse of the test above, and the reason the fallback's catch is
+    // narrow: losing the loose-barber sweep is a partial result, losing the
+    // hairdresser sweep is no result at all and must not be reported as one.
+    await expect(
+      adapter.discover({ country: 'FR', latitude: 45.76, longitude: 4.83 }, ctx),
+    ).rejects.toThrow(OverpassRuntimeError)
+  })
+
+  it('merges both queries and de-duplicates by external id', async () => {
+    const config = loadConfig(baseEnv())
+    let call = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        call += 1
+        return jsonResponse({
+          elements: [
+            call === 1
+              ? { type: 'node', id: 1, lat: 1, lon: 2, tags: { name: 'Primary Cut', shop: 'hairdresser' } }
+              : { type: 'node', id: 2, lat: 1, lon: 2, tags: { name: 'Barber Beauty', shop: 'beauty' } },
+          ],
+        })
+      }),
+    )
+
+    const adapter = new OsmAdapter(config)
+    const result = await adapter.discover({ country: 'FR', latitude: 1, longitude: 2 }, ctx)
+
+    expect(result.map((c) => c.name)).toEqual(['Primary Cut', 'Barber Beauty'])
+    // The loose match is deliberately lower confidence than a direct
+    // shop=hairdresser tag.
+    expect(result[1]?.confidence).toBe(0.4)
   })
 })
 

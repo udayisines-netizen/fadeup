@@ -13,6 +13,61 @@ interface OverpassElement {
 
 interface OverpassResponse {
   elements: OverpassElement[]
+  /**
+   * Overpass reports SERVER-SIDE failures in this field, with HTTP 200 and an
+   * empty `elements` array. See OverpassRuntimeError below for why that
+   * matters more than it looks.
+   */
+  remark?: string
+}
+
+/**
+ * Overpass said the query failed. HTTP 200, `elements: []`, and a `remark`.
+ *
+ * THIS IS THE MOST IMPORTANT TWELVE LINES IN THIS FILE.
+ *
+ * A public Overpass instance under load does not return 429 or 503. It returns
+ * `200 OK` with `{"elements": [], "remark": "runtime error: Query timed out in
+ * \"query\" at line 5 after 27 seconds."}`. Parsed naively that is an empty
+ * result, and the discovery job faithfully records `candidates_found = 0,
+ * status = completed, error = null` — which an operator reads as "we swept
+ * Lyon and there are no barbershops there".
+ *
+ * That is exactly the failure acquisition-intelligence.md's first rule exists
+ * to forbid: "A website crawl that timed out tells us NOTHING... Recording that
+ * as FALSE would manufacture a signal out of an infrastructure failure." The
+ * rule was written about feature tribools; it applies with equal force one
+ * stage earlier, because a fabricated zero here propagates into the search
+ * planner's saturation and yield-guard arithmetic, which decides whether a
+ * geographic cell is worth subdividing. A timed-out cell would look exhausted.
+ *
+ * Observed live on 2026-08-28 against overpass-api.de: the three-clause query
+ * below timed out server-side and the job recorded a clean zero.
+ *
+ * Extends Error with a retryable marker so src/retry.ts backs off and retries
+ * rather than parking the job — a loaded public endpoint is the definition of
+ * a transient failure.
+ */
+export class OverpassRuntimeError extends Error {
+  readonly retryable = true
+
+  constructor(remark: string) {
+    super(`Overpass returned a runtime error rather than results: ${remark}`)
+    this.name = 'OverpassRuntimeError'
+  }
+}
+
+/**
+ * Overpass uses `remark` for both hard runtime errors and soft advisories
+ * ("...has been truncated..."), so the presence of the field is not by itself
+ * a failure. Only refuse on the wording that means the query did not run.
+ */
+function assertNoRuntimeError(parsed: OverpassResponse): void {
+  const remark = parsed.remark
+  if (!remark) return
+  if (/runtime error|timed out|out of memory|too many/i.test(remark)) {
+    throw new OverpassRuntimeError(remark)
+  }
 }
 
 /**
@@ -45,30 +100,94 @@ export class OsmAdapter implements SourceAdapter {
     }
 
     const radiusMeters = Math.min((query.radiusKm ?? 5) * 1000, 50_000)
-    const ql = buildOverpassQuery(query.latitude, query.longitude, radiusMeters)
 
+    // TWO REQUESTS, NOT ONE UNION — and the split is a correctness decision.
+    //
+    // These clauses used to be a single Overpass union. The third one, a
+    // case-insensitive regex over every shop=beauty node in the radius, is
+    // dramatically more expensive than the first two, and on a loaded public
+    // endpoint it is what exhausts the server-side budget. Because Overpass
+    // evaluates a union as one statement, that speculative low-confidence
+    // fallback took the high-confidence primary result down with it: the
+    // observed failure returned zero barbershops for central Lyon, where OSM
+    // actually holds 367.
+    //
+    // Split, the primary result survives on its own merits. A failure in the
+    // fallback costs us the handful of loosely-tagged independents it might
+    // have found, and is logged; it can no longer erase everything else.
+    const primary = await this.run(
+      buildPrimaryQuery(query.latitude, query.longitude, radiusMeters),
+      45_000,
+    )
+
+    let fallback: RawCandidate[] = []
+    try {
+      fallback = await this.run(
+        buildLooseBarberQuery(query.latitude, query.longitude, radiusMeters),
+        45_000,
+      )
+    } catch (error) {
+      // Deliberately swallowed, and deliberately NOT counted as zero: the
+      // primary result is returned unchanged, so nothing downstream is told
+      // that this area was searched exhaustively when it was not.
+      ctx.logger.warn('osm: loose barber fallback failed, keeping primary results', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
+    // Overpass can legitimately return the same node from both queries only if
+    // a shop were tagged hairdresser AND beauty, which it cannot be — `shop` is
+    // a single value. Dedupe anyway, because relying on that is relying on a
+    // data-modelling convention holding forever in a crowd-sourced database.
+    const seen = new Set<string>()
+    const candidates: RawCandidate[] = []
+    for (const candidate of [...primary, ...fallback]) {
+      if (seen.has(candidate.externalId)) continue
+      seen.add(candidate.externalId)
+      candidates.push(candidate)
+    }
+
+    return query.maxCandidates ? candidates.slice(0, query.maxCandidates) : candidates
+  }
+
+  private async run(ql: string, timeoutMs: number): Promise<RawCandidate[]> {
     const body = await fetchText(this.config.OVERPASS_ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'text/plain' },
       body: ql,
-      timeoutMs: 25_000,
+      timeoutMs,
     })
 
     const parsed = JSON.parse(body) as OverpassResponse
-    const candidates = parsed.elements
+    assertNoRuntimeError(parsed)
+
+    return (parsed.elements ?? [])
       .map((el) => elementToCandidate(el))
       .filter((c): c is RawCandidate => c !== null)
-
-    return query.maxCandidates ? candidates.slice(0, query.maxCandidates) : candidates
   }
 }
 
-function buildOverpassQuery(lat: number, lon: number, radiusMeters: number): string {
+// The server-side timeout is deliberately below the client timeout above, so
+// Overpass gets the chance to answer "I could not do this" — which we can now
+// distinguish from "there is nothing here" — instead of the client aborting
+// first and turning a knowable failure into an ambiguous one.
+const SERVER_TIMEOUT_SECONDS = 40
+
+function buildPrimaryQuery(lat: number, lon: number, radiusMeters: number): string {
   return `
-[out:json][timeout:20];
+[out:json][timeout:${SERVER_TIMEOUT_SECONDS}];
 (
   node["shop"="hairdresser"](around:${radiusMeters},${lat},${lon});
   way["shop"="hairdresser"](around:${radiusMeters},${lat},${lon});
+);
+out center tags;
+`.trim()
+}
+
+function buildLooseBarberQuery(lat: number, lon: number, radiusMeters: number): string {
+  return `
+[out:json][timeout:${SERVER_TIMEOUT_SECONDS}];
+(
   node["shop"="beauty"]["name"~"barber",i](around:${radiusMeters},${lat},${lon});
 );
 out center tags;
