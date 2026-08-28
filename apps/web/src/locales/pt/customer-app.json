@@ -152,9 +152,25 @@
     "goToFadeup": "Ir para a FadeUp"
   },
   "discover": {
-    "title": "Encontre o seu próximo corte",
-    "subtitle": "Procure salões e profissionais independentes perto de si e veja quem está aberto agora.",
+    "title": "Pronto para o próximo corte?",
+    "subtitle": "Os seus sítios, e o que está aberto perto de si.",
     "metaTitle": "Descobrir — FadeUp",
-    "metaDescription": "Procure salões e profissionais independentes e marque a sua próxima marcação."
+    "metaDescription": "Procure salões e profissionais independentes e marque a sua próxima marcação.",
+    "yoursTitle": "Os seus sítios",
+    "seeAll": "Ver tudo",
+    "nearbyTitle": "Perto de si",
+    "nearbyTitleWithCountry": "Perto de si em {{country}}",
+    "nothingNearbyTitle": "Ainda não há nada para mostrar",
+    "nothingNearbyDescription": "Pesquise por cidade ou serviço para encontrar salões e profissionais independentes.",
+    "openSearch": "Abrir a pesquisa"
+  },
+  "book": {
+    "sheetTitle": "Marcar um corte",
+    "sheetDescription": "Continue de onde parou, ou encontre um sítio novo.",
+    "rebookWith": "Marcar de novo com {{barber}}",
+    "rebookAt": "Marcar de novo em {{organization}}",
+    "favouriteDetail": "Guardado",
+    "nothingYet": "Ainda não marcou nada — encontre um salão para começar.",
+    "findAShop": "Encontrar um salão"
   }
 }

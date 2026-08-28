@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Heart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Heart, IdCard, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useMyCustomerProfile, useUpsertMyCustomerProfile } from '@/lib/queries/customer-profile'
@@ -26,11 +26,13 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 
 /**
  * `/app/customer/profile` — editable identity, a summary of the onboarding
- * "habits", the way through to Favorites, and sign out.
+ * "habits", the way through to Fade Passport and Favorites, and sign out.
  *
- * Favorites lives here rather than in the tab bar on purpose: it is a place
- * you go occasionally, and a permanent tab for it would cost a fifth of the
- * phone's primary navigation.
+ * Both of those live here rather than in the tab bar on purpose. They are
+ * places you go occasionally, and the phone's primary navigation has five
+ * slots — one of which R5 spent on BOOK, which is the thing the product is
+ * actually for. An identity card and a saved list are exactly what a profile
+ * screen is meant to hold.
  */
 export function CustomerProfilePage() {
   const { t } = useTranslation('customer-app')
@@ -140,16 +142,20 @@ export function CustomerProfilePage() {
         )}
       </section>
 
-      <Link
-        to="/app/customer/favorites"
-        className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-paper-0 p-4 text-sm font-medium text-ink-950 hover:bg-paper-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
-      >
-        <Heart className="h-4 w-4 text-accent-600" aria-hidden="true" />
-        {t('favorites.title')}
-        {/* A literal "→" points the wrong way in Arabic. */}
-        <ChevronRight className="ms-auto h-4 w-4 text-ink-300 rtl:hidden" aria-hidden="true" />
-        <ChevronLeft className="ms-auto hidden h-4 w-4 text-ink-300 rtl:block" aria-hidden="true" />
-      </Link>
+      {/*
+        FADE PASSPORT LIVES HERE NOW (§18).
+
+        It held a fifth of the phone's primary navigation as a top-level tab,
+        which is a lot of permanent screen for an identity artefact people look
+        at occasionally. Profile is where an identity card belongs, and it sits
+        ABOVE Favorites because the passport is who you are and favourites are
+        a list you keep.
+
+        The route did not move — /app/customer/passport still resolves, so
+        every existing link, share and bookmark keeps working.
+      */}
+      <ProfileRow to="/app/customer/passport" icon={IdCard} label={t('passport:title')} />
+      <ProfileRow to="/app/customer/favorites" icon={Heart} label={t('favorites.title')} />
 
       <button
         type="button"
@@ -159,5 +165,27 @@ export function CustomerProfilePage() {
         {t('profile.signOut')}
       </button>
     </div>
+  )
+}
+
+/**
+ * One navigable row inside Profile.
+ *
+ * Extracted the moment there were two of them: Passport and Favorites are the
+ * same object with a different label, and two hand-written copies of a
+ * fourteen-class row is how the second one ends up 4px shorter than the first.
+ */
+function ProfileRow({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="flex min-h-[--fu-control-lg] items-center gap-3 rounded-xl border border-border bg-paper-0 p-4 text-sm font-medium text-ink-950 hover:bg-paper-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
+    >
+      <Icon className="h-4 w-4 text-accent-600" aria-hidden="true" />
+      {label}
+      {/* A literal "→" points the wrong way in Arabic. */}
+      <ChevronRight className="ms-auto h-4 w-4 text-ink-300 rtl:hidden" aria-hidden="true" />
+      <ChevronLeft className="ms-auto hidden h-4 w-4 text-ink-300 rtl:block" aria-hidden="true" />
+    </Link>
   )
 }

@@ -152,9 +152,25 @@
     "goToFadeup": "Go to FadeUp"
   },
   "discover": {
-    "title": "Find your next cut",
-    "subtitle": "Search shops and independent professionals near you, and see who's open right now.",
+    "title": "Ready for your next cut?",
+    "subtitle": "Your places, and what's open near you.",
     "metaTitle": "Discover — FadeUp",
-    "metaDescription": "Search shops and independent professionals, and book your next appointment."
+    "metaDescription": "Search shops and independent professionals, and book your next appointment.",
+    "yoursTitle": "Your places",
+    "seeAll": "See all",
+    "nearbyTitle": "Near you",
+    "nearbyTitleWithCountry": "Near you in {{country}}",
+    "nothingNearbyTitle": "Nothing to show here yet",
+    "nothingNearbyDescription": "Search by city or service to find shops and independent professionals.",
+    "openSearch": "Open search"
+  },
+  "book": {
+    "sheetTitle": "Book a cut",
+    "sheetDescription": "Pick up where you left off, or find somewhere new.",
+    "rebookWith": "Book again with {{barber}}",
+    "rebookAt": "Book again at {{organization}}",
+    "favouriteDetail": "Saved",
+    "nothingYet": "You haven't booked yet — find a shop to get started.",
+    "findAShop": "Find a shop"
   }
 }

@@ -143,7 +143,10 @@
     "discover": "Найти",
     "passport": "Passport",
     "profile": "Профиль",
-    "fadeup": "FadeUp"
+    "fadeup": "FadeUp",
+    "search": "Поиск",
+    "book": "Записаться",
+    "bookAction": "Записаться на приём"
   },
   "ui": {
     "dismissNotification": "Закрыть уведомление"

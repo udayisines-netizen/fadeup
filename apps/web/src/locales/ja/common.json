@@ -143,7 +143,10 @@
     "discover": "さがす",
     "passport": "Passport",
     "profile": "プロフィール",
-    "fadeup": "FadeUp"
+    "fadeup": "FadeUp",
+    "search": "検索",
+    "book": "予約",
+    "bookAction": "カットを予約する"
   },
   "ui": {
     "dismissNotification": "通知を閉じる"

@@ -152,9 +152,25 @@
     "goToFadeup": "FadeUp へ"
   },
   "discover": {
-    "title": "次のヘアカットを探す",
-    "subtitle": "近くの店舗や独立したスタッフを検索して、今営業中のところを確認できます。",
+    "title": "次のカットの準備はできましたか？",
+    "subtitle": "お気に入りの店と、近くで営業中の店。",
     "metaTitle": "探す — FadeUp",
-    "metaDescription": "店舗や独立したスタッフを検索して、次の予約を取りましょう。"
+    "metaDescription": "店舗や独立したスタッフを検索して、次の予約を取りましょう。",
+    "yoursTitle": "お気に入り",
+    "seeAll": "すべて見る",
+    "nearbyTitle": "近くの店",
+    "nearbyTitleWithCountry": "{{country}}の近くの店",
+    "nothingNearbyTitle": "まだ表示できるものがありません",
+    "nothingNearbyDescription": "都市やメニューで検索して、店や独立したプロを見つけましょう。",
+    "openSearch": "検索を開く"
+  },
+  "book": {
+    "sheetTitle": "カットを予約",
+    "sheetDescription": "前回の続きから、または新しい店を探しましょう。",
+    "rebookWith": "{{barber}} をもう一度予約",
+    "rebookAt": "{{organization}} をもう一度予約",
+    "favouriteDetail": "保存済み",
+    "nothingYet": "まだ予約がありません。まずは店を探しましょう。",
+    "findAShop": "店を探す"
   }
 }

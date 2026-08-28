@@ -152,9 +152,25 @@
     "goToFadeup": "Ir a FadeUp"
   },
   "discover": {
-    "title": "Encuentra tu próximo corte",
-    "subtitle": "Busca locales y profesionales independientes cerca de ti, y mira quién está abierto ahora.",
+    "title": "¿Listo para tu próximo corte?",
+    "subtitle": "Tus sitios, y lo que está abierto cerca de ti.",
     "metaTitle": "Descubrir — FadeUp",
-    "metaDescription": "Busca locales y profesionales independientes, y reserva tu próxima cita."
+    "metaDescription": "Busca locales y profesionales independientes, y reserva tu próxima cita.",
+    "yoursTitle": "Tus sitios",
+    "seeAll": "Ver todo",
+    "nearbyTitle": "Cerca de ti",
+    "nearbyTitleWithCountry": "Cerca de ti en {{country}}",
+    "nothingNearbyTitle": "Todavía no hay nada que mostrar",
+    "nothingNearbyDescription": "Busca por ciudad o servicio para encontrar salones y profesionales independientes.",
+    "openSearch": "Abrir la búsqueda"
+  },
+  "book": {
+    "sheetTitle": "Reservar un corte",
+    "sheetDescription": "Continúa donde lo dejaste, o encuentra un sitio nuevo.",
+    "rebookWith": "Reservar otra vez con {{barber}}",
+    "rebookAt": "Reservar otra vez en {{organization}}",
+    "favouriteDetail": "Guardado",
+    "nothingYet": "Aún no has reservado: encuentra un salón para empezar.",
+    "findAShop": "Buscar un salón"
   }
 }

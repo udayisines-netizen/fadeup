@@ -152,9 +152,25 @@
     "goToFadeup": "Vai su FadeUp"
   },
   "discover": {
-    "title": "Trova il tuo prossimo taglio",
-    "subtitle": "Cerca saloni e professionisti indipendenti vicino a te e scopri chi è aperto adesso.",
+    "title": "Pronto per il prossimo taglio?",
+    "subtitle": "I tuoi posti, e cosa è aperto vicino a te.",
     "metaTitle": "Scopri — FadeUp",
-    "metaDescription": "Cerca saloni e professionisti indipendenti e prenota il tuo prossimo appuntamento."
+    "metaDescription": "Cerca saloni e professionisti indipendenti e prenota il tuo prossimo appuntamento.",
+    "yoursTitle": "I tuoi posti",
+    "seeAll": "Vedi tutto",
+    "nearbyTitle": "Vicino a te",
+    "nearbyTitleWithCountry": "Vicino a te in {{country}}",
+    "nothingNearbyTitle": "Ancora niente da mostrare",
+    "nothingNearbyDescription": "Cerca per città o servizio per trovare saloni e professionisti indipendenti.",
+    "openSearch": "Apri la ricerca"
+  },
+  "book": {
+    "sheetTitle": "Prenota un taglio",
+    "sheetDescription": "Riprendi da dove eri rimasto, o trova un posto nuovo.",
+    "rebookWith": "Prenota di nuovo con {{barber}}",
+    "rebookAt": "Prenota di nuovo da {{organization}}",
+    "favouriteDetail": "Salvato",
+    "nothingYet": "Non hai ancora prenotato: trova un salone per iniziare.",
+    "findAShop": "Trova un salone"
   }
 }

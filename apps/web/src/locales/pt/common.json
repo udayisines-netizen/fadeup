@@ -143,7 +143,10 @@
     "discover": "Descobrir",
     "passport": "Passport",
     "profile": "Perfil",
-    "fadeup": "FadeUp"
+    "fadeup": "FadeUp",
+    "search": "Pesquisar",
+    "book": "Marcar",
+    "bookAction": "Marcar um horário"
   },
   "ui": {
     "dismissNotification": "Dispensar notificação"

@@ -143,7 +143,10 @@
     "discover": "发现",
     "passport": "Passport",
     "profile": "个人资料",
-    "fadeup": "FadeUp"
+    "fadeup": "FadeUp",
+    "search": "搜索",
+    "book": "预约",
+    "bookAction": "预约理发"
   },
   "ui": {
     "dismissNotification": "关闭通知"

@@ -152,9 +152,25 @@
     "goToFadeup": "前往 FadeUp"
   },
   "discover": {
-    "title": "寻找您的下一次理发",
-    "subtitle": "搜索附近的店铺和独立理发师，查看现在哪些正在营业。",
+    "title": "准备好下一次理发了吗？",
+    "subtitle": "你收藏的店，以及附近正在营业的店。",
     "metaTitle": "发现 — FadeUp",
-    "metaDescription": "搜索店铺和独立理发师，预约您的下一次服务。"
+    "metaDescription": "搜索店铺和独立理发师，预约您的下一次服务。",
+    "yoursTitle": "我的收藏",
+    "seeAll": "查看全部",
+    "nearbyTitle": "附近",
+    "nearbyTitleWithCountry": "{{country}}附近",
+    "nothingNearbyTitle": "这里暂时没有内容",
+    "nothingNearbyDescription": "按城市或服务搜索，找到店铺和独立从业者。",
+    "openSearch": "打开搜索"
+  },
+  "book": {
+    "sheetTitle": "预约理发",
+    "sheetDescription": "继续上次的预约，或找一家新店。",
+    "rebookWith": "再次预约 {{barber}}",
+    "rebookAt": "再次预约 {{organization}}",
+    "favouriteDetail": "已收藏",
+    "nothingYet": "你还没有预约过——先找一家店吧。",
+    "findAShop": "查找店铺"
   }
 }

@@ -143,7 +143,10 @@
     "discover": "Descubrir",
     "passport": "Passport",
     "profile": "Perfil",
-    "fadeup": "FadeUp"
+    "fadeup": "FadeUp",
+    "search": "Buscar",
+    "book": "Reservar",
+    "bookAction": "Reservar una cita"
   },
   "ui": {
     "dismissNotification": "Descartar notificación"

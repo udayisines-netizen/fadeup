@@ -152,9 +152,25 @@
     "goToFadeup": "Aller sur FadeUp"
   },
   "discover": {
-    "title": "Trouvez votre prochaine coupe",
-    "subtitle": "Cherchez des salons et des coiffeurs indépendants près de chez vous, et voyez qui est ouvert maintenant.",
+    "title": "Prêt pour votre prochaine coupe ?",
+    "subtitle": "Vos adresses, et ce qui est ouvert près de chez vous.",
     "metaTitle": "Découvrir — FadeUp",
-    "metaDescription": "Cherchez des salons et des coiffeurs indépendants, et réservez votre prochain rendez-vous."
+    "metaDescription": "Cherchez des salons et des coiffeurs indépendants, et réservez votre prochain rendez-vous.",
+    "yoursTitle": "Vos adresses",
+    "seeAll": "Tout voir",
+    "nearbyTitle": "Près de vous",
+    "nearbyTitleWithCountry": "Près de vous en {{country}}",
+    "nothingNearbyTitle": "Rien à afficher pour l'instant",
+    "nothingNearbyDescription": "Cherchez par ville ou par prestation pour trouver des salons et des coiffeurs indépendants.",
+    "openSearch": "Ouvrir la recherche"
+  },
+  "book": {
+    "sheetTitle": "Réserver une coupe",
+    "sheetDescription": "Reprenez là où vous en étiez, ou trouvez une nouvelle adresse.",
+    "rebookWith": "Reprendre rendez-vous avec {{barber}}",
+    "rebookAt": "Reprendre rendez-vous chez {{organization}}",
+    "favouriteDetail": "Enregistré",
+    "nothingYet": "Vous n'avez pas encore réservé — trouvez un salon pour commencer.",
+    "findAShop": "Trouver un salon"
   }
 }

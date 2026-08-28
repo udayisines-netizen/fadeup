@@ -152,9 +152,25 @@
     "goToFadeup": "Zu FadeUp"
   },
   "discover": {
-    "title": "Finde deinen nächsten Schnitt",
-    "subtitle": "Suche Salons und selbstständige Fachkräfte in deiner Nähe und sieh, wer gerade geöffnet hat.",
+    "title": "Bereit für den nächsten Schnitt?",
+    "subtitle": "Deine Adressen und was in der Nähe geöffnet hat.",
     "metaTitle": "Entdecken — FadeUp",
-    "metaDescription": "Suche Salons und selbstständige Fachkräfte und buche deinen nächsten Termin."
+    "metaDescription": "Suche Salons und selbstständige Fachkräfte und buche deinen nächsten Termin.",
+    "yoursTitle": "Deine Adressen",
+    "seeAll": "Alle ansehen",
+    "nearbyTitle": "In deiner Nähe",
+    "nearbyTitleWithCountry": "In deiner Nähe in {{country}}",
+    "nothingNearbyTitle": "Hier gibt es noch nichts zu sehen",
+    "nothingNearbyDescription": "Suche nach Stadt oder Leistung, um Salons und selbstständige Profis zu finden.",
+    "openSearch": "Suche öffnen"
+  },
+  "book": {
+    "sheetTitle": "Termin buchen",
+    "sheetDescription": "Mach dort weiter, wo du aufgehört hast, oder finde etwas Neues.",
+    "rebookWith": "Wieder bei {{barber}} buchen",
+    "rebookAt": "Wieder bei {{organization}} buchen",
+    "favouriteDetail": "Gespeichert",
+    "nothingYet": "Du hast noch nicht gebucht – finde einen Salon, um loszulegen.",
+    "findAShop": "Salon finden"
   }
 }

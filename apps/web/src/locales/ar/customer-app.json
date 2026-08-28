@@ -152,9 +152,25 @@
     "goToFadeup": "الانتقال إلى FadeUp"
   },
   "discover": {
-    "title": "اعثر على قصتك القادمة",
-    "subtitle": "ابحث عن الصالونات والمحترفين المستقلين بالقرب منك، وشاهد من يعمل الآن.",
+    "title": "جاهز لقصّتك القادمة؟",
+    "subtitle": "أماكنك، وما هو مفتوح بالقرب منك.",
     "metaTitle": "اكتشف — FadeUp",
-    "metaDescription": "ابحث عن الصالونات والمحترفين المستقلين واحجز موعدك القادم."
+    "metaDescription": "ابحث عن الصالونات والمحترفين المستقلين واحجز موعدك القادم.",
+    "yoursTitle": "أماكنك",
+    "seeAll": "عرض الكل",
+    "nearbyTitle": "بالقرب منك",
+    "nearbyTitleWithCountry": "بالقرب منك في {{country}}",
+    "nothingNearbyTitle": "لا يوجد شيء لعرضه بعد",
+    "nothingNearbyDescription": "ابحث حسب المدينة أو الخدمة للعثور على الصالونات والمحترفين المستقلين.",
+    "openSearch": "فتح البحث"
+  },
+  "book": {
+    "sheetTitle": "احجز قصّة شعر",
+    "sheetDescription": "تابع من حيث توقفت، أو ابحث عن مكان جديد.",
+    "rebookWith": "احجز مجددًا مع {{barber}}",
+    "rebookAt": "احجز مجددًا في {{organization}}",
+    "favouriteDetail": "محفوظ",
+    "nothingYet": "لم تحجز بعد — ابحث عن صالون للبدء.",
+    "findAShop": "ابحث عن صالون"
   }
 }

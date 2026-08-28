@@ -189,6 +189,16 @@ export const router = createBrowserRouter([
             },
           },
           {
+            // Search is its own destination again. It shares `DiscoverySearch`
+            // with the public `/search`, so there is still exactly one search
+            // implementation — what differs is the shell around it.
+            path: 'search',
+            lazy: async () => {
+              const { CustomerSearchPage } = await import('@/pages/customer/search-page')
+              return { Component: CustomerSearchPage }
+            },
+          },
+          {
             path: 'onboarding',
             lazy: async () => {
               const { CustomerOnboardingPage } = await import('@/pages/customer-onboarding-page')
