@@ -114,11 +114,7 @@ export function ShopProfilePage() {
             <OrganizationFollowButton
               organizationId={organization.id}
             />
-            <FavoriteButton
-              organizationId={organization.id}
-              favoriteLabel={t('marketplace:card.addFavorite')}
-              unfavoriteLabel={t('marketplace:card.removeFavorite')}
-            />
+            <FavoriteButton organizationId={organization.id} />
           </div>
         </div>
 

@@ -3,7 +3,39 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { Spinner } from '@/components/ui/spinner'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+/**
+ * ============================================================================
+ * THE ACTION HIERARCHY
+ * ============================================================================
+ *
+ *   primary     the one thing this screen is for
+ *   secondary   a real alternative, not a lesser primary
+ *   ghost       navigation and dismissal — no weight of its own
+ *   danger      destructive, and it should feel like it
+ *   social      Follow. Borrowed weight, not brand weight — see below.
+ *   book        BOOK. The one variant that outranks primary.
+ *
+ * WHY `book` IS NOT JUST `primary` AT SIZE lg
+ *
+ * FadeUp has exactly one action that has to win on every surface it appears
+ * on, including surfaces that already have a primary button. On a professional
+ * profile that is Follow; in an expanded marketplace card it is the service
+ * chip the customer just tapped. A `book` that were merely `primary` would tie
+ * with those, and a tie is resolved by whichever the eye reaches first —
+ * which is not a design decision, it is an accident of layout.
+ *
+ * So `book` carries the accent fill AND a lifted shadow, which nothing else in
+ * the product does. Elevation is the only remaining axis once colour is spent.
+ *
+ * WHY `social` IS DELIBERATELY QUIET
+ *
+ * Follow is native to a social profile and it is NOT the conversion. §13 is
+ * explicit that Book outranks Follow in conversion contexts. A Follow button
+ * wearing the brand accent would out-shout Book on the one screen where that
+ * matters most, so it takes the neutral high-contrast treatment Instagram uses
+ * — ink on paper, inverting to paper on ink once followed.
+ */
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'social' | 'book'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,6 +53,13 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     'border border-border-strong bg-paper-0 text-ink-800 hover:bg-paper-100 active:bg-paper-200 disabled:border-border disabled:text-ink-300',
   ghost: 'bg-transparent text-ink-700 hover:bg-paper-100 active:bg-paper-200 disabled:text-ink-300',
   danger: 'bg-danger-600 text-on-accent hover:bg-danger-700 active:bg-danger-700 disabled:bg-danger-100 disabled:text-danger-600',
+  social:
+    'border border-border-strong bg-paper-0 text-ink-950 hover:bg-paper-100 active:bg-paper-200 disabled:text-ink-300',
+  // `shadow-sm` is the axis that separates BOOK from primary once both are
+  // wearing the accent. Dropped under reduced motion? No — a shadow is not
+  // motion. It is dropped on `active:` instead, so pressing it reads as the
+  // button settling onto the surface.
+  book: 'bg-accent-600 text-on-accent shadow-sm hover:bg-accent-700 active:bg-accent-800 active:shadow-none disabled:bg-accent-200 disabled:shadow-none',
 }
 
 // `sm` is intentionally below the 44px touch target guideline — it exists

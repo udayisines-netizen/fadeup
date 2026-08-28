@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "تصفية النتائج"
+  },
+  "availability": {
+    "from": "ابتداءً من {{time}}",
+    "noneToday": "لا مواعيد متاحة اليوم"
   }
 }

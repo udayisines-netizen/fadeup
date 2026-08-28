@@ -162,7 +162,10 @@
     "profileDescription": "Un profilo di salone su FadeUp.",
     "directions": "Indicazioni",
     "locationCount_one": "{{count}} sede",
-    "locationCount_other": "{{count}} sedi"
+    "locationCount_other": "{{count}} sedi",
+    "follow": "Segui",
+    "following": "Seguito",
+    "unfollow": "Non seguire più questo salone"
   },
   "slots": {
     "morning": "Mattina",

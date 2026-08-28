@@ -162,7 +162,10 @@
     "profileDescription": "FadeUp の店舗プロフィールです。",
     "directions": "経路を見る",
     "locationCount_one": "{{count}} 店舗",
-    "locationCount_other": "{{count}} 店舗"
+    "locationCount_other": "{{count}} 店舗",
+    "follow": "フォロー",
+    "following": "フォロー中",
+    "unfollow": "この店のフォローを解除"
   },
   "slots": {
     "morning": "午前",

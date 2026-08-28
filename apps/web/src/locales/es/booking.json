@@ -162,7 +162,10 @@
     "profileDescription": "Un perfil de local en FadeUp.",
     "directions": "Cómo llegar",
     "locationCount_one": "{{count}} local",
-    "locationCount_other": "{{count}} locales"
+    "locationCount_other": "{{count}} locales",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "unfollow": "Dejar de seguir este salón"
   },
   "slots": {
     "morning": "Mañana",

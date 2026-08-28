@@ -162,5 +162,9 @@
   "date": {
     "today": "今日",
     "tomorrow": "明日"
+  },
+  "verified": {
+    "label": "本人確認済み",
+    "description": "このプロフィールは本人が申請し、管理しています。FadeUp が施術内容を評価するものではありません。"
   }
 }

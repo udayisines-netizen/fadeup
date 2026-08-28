@@ -162,7 +162,10 @@
     "profileDescription": "Um perfil de salão na FadeUp.",
     "directions": "Como chegar",
     "locationCount_one": "{{count}} local",
-    "locationCount_other": "{{count}} locais"
+    "locationCount_other": "{{count}} locais",
+    "follow": "Seguir",
+    "following": "A seguir",
+    "unfollow": "Deixar de seguir este salão"
   },
   "slots": {
     "morning": "Manhã",

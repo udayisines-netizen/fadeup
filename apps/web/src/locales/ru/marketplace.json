@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "Фильтр результатов"
+  },
+  "availability": {
+    "from": "С {{time}}",
+    "noneToday": "На сегодня мест нет"
   }
 }

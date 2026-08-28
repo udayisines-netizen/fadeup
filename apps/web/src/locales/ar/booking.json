@@ -162,7 +162,10 @@
     "profileDescription": "ملف صالون على FadeUp.",
     "directions": "الاتجاهات",
     "locationCount_one": "فرع واحد",
-    "locationCount_other": "{{count}} فروع"
+    "locationCount_other": "{{count}} فروع",
+    "follow": "متابعة",
+    "following": "تتم المتابعة",
+    "unfollow": "إلغاء متابعة هذا الصالون"
   },
   "slots": {
     "morning": "صباحًا",

@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "Filter results"
+  },
+  "availability": {
+    "from": "From {{time}}",
+    "noneToday": "Nothing free today"
   }
 }

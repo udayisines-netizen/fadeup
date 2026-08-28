@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "Ergebnisse filtern"
+  },
+  "availability": {
+    "from": "Ab {{time}}",
+    "noneToday": "Heute nichts frei"
   }
 }

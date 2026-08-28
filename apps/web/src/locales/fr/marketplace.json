@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "Filtrer les résultats"
+  },
+  "availability": {
+    "from": "À partir de {{time}}",
+    "noneToday": "Plus rien aujourd'hui"
   }
 }

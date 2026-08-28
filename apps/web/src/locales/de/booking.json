@@ -162,7 +162,10 @@
     "profileDescription": "Ein Salonprofil auf FadeUp.",
     "directions": "Route anzeigen",
     "locationCount_one": "{{count}} Standort",
-    "locationCount_other": "{{count}} Standorte"
+    "locationCount_other": "{{count}} Standorte",
+    "follow": "Folgen",
+    "following": "Folge ich",
+    "unfollow": "Diesem Salon nicht mehr folgen"
   },
   "slots": {
     "morning": "Vormittag",

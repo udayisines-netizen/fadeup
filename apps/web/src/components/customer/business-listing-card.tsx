@@ -120,11 +120,7 @@ export function BusinessListingCard({
               <FollowButton professionalId={result.professionalId} />
             ) : null
           ) : (
-            <FavoriteButton
-              organizationId={result.organizationId}
-              favoriteLabel={t('marketplace:card.addFavorite')}
-              unfavoriteLabel={t('marketplace:card.removeFavorite')}
-            />
+            <FavoriteButton organizationId={result.organizationId} />
           )}
         </span>
 

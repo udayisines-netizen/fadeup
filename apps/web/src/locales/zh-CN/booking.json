@@ -162,7 +162,10 @@
     "profileDescription": "FadeUp 上的门店主页。",
     "directions": "查看路线",
     "locationCount_one": "{{count}} 家门店",
-    "locationCount_other": "{{count}} 家门店"
+    "locationCount_other": "{{count}} 家门店",
+    "follow": "关注",
+    "following": "已关注",
+    "unfollow": "取消关注该店"
   },
   "slots": {
     "morning": "上午",

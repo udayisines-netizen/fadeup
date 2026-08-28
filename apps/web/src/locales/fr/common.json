@@ -162,5 +162,9 @@
   "date": {
     "today": "Aujourd'hui",
     "tomorrow": "Demain"
+  },
+  "verified": {
+    "label": "Identité vérifiée",
+    "description": "Ce profil est revendiqué et géré par la personne qu'il nomme. FadeUp n'évalue pas son travail."
   }
 }

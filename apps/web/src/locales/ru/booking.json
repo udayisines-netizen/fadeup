@@ -162,7 +162,10 @@
     "profileDescription": "Профиль салона на FadeUp.",
     "directions": "Построить маршрут",
     "locationCount_one": "{{count}} салон",
-    "locationCount_other": "{{count}} салонов"
+    "locationCount_other": "{{count}} салонов",
+    "follow": "Подписаться",
+    "following": "Вы подписаны",
+    "unfollow": "Отписаться от салона"
   },
   "slots": {
     "morning": "Утро",

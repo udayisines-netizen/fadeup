@@ -162,7 +162,10 @@
     "profileDescription": "A shop profile on FadeUp.",
     "directions": "Get directions",
     "locationCount_one": "{{count}} location",
-    "locationCount_other": "{{count}} locations"
+    "locationCount_other": "{{count}} locations",
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow this shop"
   },
   "slots": {
     "morning": "Morning",

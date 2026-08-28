@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "筛选结果"
+  },
+  "availability": {
+    "from": "{{time}} 起",
+    "noneToday": "今天已约满"
   }
 }

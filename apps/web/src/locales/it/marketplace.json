@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "Filtra i risultati"
+  },
+  "availability": {
+    "from": "Dalle {{time}}",
+    "noneToday": "Niente libero oggi"
   }
 }

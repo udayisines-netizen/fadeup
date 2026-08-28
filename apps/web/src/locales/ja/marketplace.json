@@ -80,5 +80,9 @@
   },
   "filters": {
     "label": "検索結果を絞り込む"
+  },
+  "availability": {
+    "from": "{{time}} から",
+    "noneToday": "本日は空きなし"
   }
 }
