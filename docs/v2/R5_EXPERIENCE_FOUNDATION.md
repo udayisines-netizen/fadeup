@@ -309,7 +309,9 @@ Two things the disposable run found that reading the DDL would not:
 | Web typecheck (`tsc -b --noEmit`) | Clean |
 | Web production build | Succeeds; maplibre lands in its own 952kB lazy chunk, absent from the initial bundle |
 | Web lint (`oxlint`) | Warnings only, all pre-existing `only-export-components` |
-| `VERIFY_R5_EXPERIENCE_FOUNDATION` on a disposable DB | **19/19 assertions pass** over a full 112-migration replay |
+| `VERIFY_R5_EXPERIENCE_FOUNDATION` on a disposable DB | **21/21 assertions pass** over a full 112-migration replay |
+| MASTER applied to a disposable DB replayed to the **pre-R5** state, with live ownership reproduced | R5 21/21 · Customer API freeze PASS · R1B 161/0 · R3 126/0 |
+| **MASTER applied to LIVE**, 2026-08-28 | Committed; R5 19/19 and the freeze VERIFY pass against production; PostgREST reloaded and serving the new signature over HTTP (200), with the legacy 13-argument call still 200 |
 | `VERIFY_CUSTOMER_API_FREEZE` (closed-lot regression) | Passes |
 | Worker V2 (`apps/prospect-worker-v2`) | **17 files, 352 tests, all passing** — untouched by R5 |
 
@@ -358,6 +360,51 @@ existed and could never match a row.
 | AG | Relevant tests pass | ✅ 793 |
 | AH | Closed-lot regressions pass | ✅ Worker 352, Customer API freeze VERIFY |
 | AI | No R6 functionality started | ✅ no handle route, no messaging, no social graph concepts |
+
+---
+
+## 11a. Deployment, and the mistake it surfaced
+
+`MASTER_R5_EXPERIENCE_FOUNDATION_2026_08_28.sql` is generated from
+`db/migrations` by `scripts/generate-master-r5.sh`, whose safety assertions are
+written against the five ways a read-shaped experience migration goes wrong
+quietly (row set widens · two overloads survive · the layout stops belonging to
+the shop · the tenant anchor becomes writable · the file touches existing data).
+
+Applied to live 2026-08-28 after a `pg_dump -Fc` backup
+(`backups/pre-r5-live-20260828-180715.dump`, 3474 objects). One transaction,
+committed clean, followed by the PostgREST schema reload — mandatory here
+because the signature changed both its return shape and its argument list.
+
+**Every location on live currently has NULL coordinates** (0 of 6 geocoded), so
+the map view will plot nothing and will say so: `ResultsMap` counts
+unplottable results out loud rather than showing six pins where the list showed
+nine. Geocoding is Worker/R10 territory, not R5's.
+
+### The VERIFY seeded production, and has been fixed
+
+The first version of `VERIFY_R5_…` used bare `do $$ … $$` blocks with no
+enclosing transaction, so its fixtures **committed**. Every other VERIFY in
+this repository wraps its fixtures in `begin; … rollback;` (R1B lines 159/2126,
+R4 lines 181/1090); this one did not, and it was run against live.
+
+Four fixture organizations were created. One,
+`r5-far-cheap` / "R5 Far And Cheap", was `marketplace_visible = true` and was
+therefore returned by the public marketplace search to real visitors for
+roughly ninety seconds until it was switched off.
+
+Removed afterwards: all fixture locations, services, service categories,
+service locations, memberships, dashboard layouts, and both fixture auth users.
+**Four organization shells remain**, invisible and inert, because
+`organizations` cascades into `commercial_plan_changes`, which is append-only
+for every role including `postgres` — deliberately, with no role exemption.
+Deleting them requires suspending that audit trigger on production, which is an
+operator decision and not one this lot took on its own.
+
+The VERIFY now runs inside a transaction that ends in `rollback`, and asserts
+both halves: **R5.20** that the fixtures exist inside the transaction, **R5.21**
+that none survived it. A test that cannot be undone is a migration with
+assertions in it.
 
 ---
 

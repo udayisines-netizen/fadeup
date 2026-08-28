@@ -1,6 +1,6 @@
 # FadeUp Social-First V2 — Roadmap
 
-Status: **R0 reconstructed and corrected after independent adversarial review. R1A, R1B, R2, Service Mode, the Customer API freeze, R3, R4 and R5 implemented and validated. R4 is deployed to the live database and the Worker is running; R5's two migrations are validated on a disposable replay and are NOT yet deployed.**
+Status: **R0 reconstructed and corrected after independent adversarial review. R1A, R1B, R2, Service Mode, the Customer API freeze, R3, R4 and R5 implemented and validated. R4 and R5 are deployed to the live database and the Worker is running.**
 
 > **Provenance.** No `docs/v2/` directory existed in any commit reachable from
 > `git log --all` before this reconstruction. The R0 artifacts named in the R1
