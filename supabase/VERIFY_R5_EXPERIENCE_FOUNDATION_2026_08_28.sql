@@ -16,11 +16,34 @@
 -- that existed and could never match a row, because the grant was checked
 -- first. So each one below performs the operation and checks what happened.
 --
+-- ============================================================================
+-- EVERY FIXTURE IN THIS FILE IS ROLLED BACK.
+--
+-- This VERIFY creates organizations, locations, services and auth users in
+-- order to assert things about them, and it is designed to be runnable against
+-- ANY database including production. So the whole thing runs inside one
+-- transaction that ends in ROLLBACK, which is the convention every other
+-- VERIFY in this repository already follows (R1B line 159/2126, R4 line
+-- 181/1090).
+--
+-- The first version of this file did not, and it was run against live. Four
+-- fixture organizations committed, one of them marketplace_visible, and for a
+-- few minutes a shop called "R5 Far And Cheap" was returned by the public
+-- marketplace search to real visitors. The organizations could not then be
+-- deleted, because organizations cascade into commercial_plan_changes and that
+-- table is append-only for every role including postgres — by design.
+--
+-- A test that cannot be undone is not a test, it is a migration with
+-- assertions in it. Hence the transaction below, and hence the assertion at
+-- the very end that proves the rollback actually happened.
+--
 -- Run: scripts/disposable-db-test.sh --verify supabase/VERIFY_R5_EXPERIENCE_FOUNDATION_2026_08_28.sql
 -- ============================================================================
 
 \set ON_ERROR_STOP on
 \timing off
+
+begin;
 
 do $$
 begin
@@ -411,7 +434,35 @@ end
 $$;
 
 do $$
+declare
+  v_leftovers integer;
 begin
+  -- Proves the fixtures are confined to this transaction. If a later edit ever
+  -- moves a fixture outside it, this is the assertion that says so — a VERIFY
+  -- that silently seeds production is worse than one that fails.
+  select count(*) into v_leftovers from public.organizations where slug like 'r5-%';
+  if v_leftovers <> 4 then
+    raise exception 'R5.20 FAILED: expected the 4 in-transaction fixtures, found %', v_leftovers;
+  end if;
+  raise notice 'R5.20 OK — fixtures exist inside this transaction and are about to be discarded';
+end
+$$;
+
+-- ============================================================================
+-- NOTHING THIS FILE CREATED SURVIVES.
+-- ============================================================================
+rollback;
+
+do $$
+declare
+  v_leftovers integer;
+begin
+  select count(*) into v_leftovers from public.organizations where slug like 'r5-%';
+  if v_leftovers <> 0 then
+    raise warning 'R5 VERIFY left % r5-* organization(s) behind — these are NOT from this run; a previous run committed them', v_leftovers;
+  else
+    raise notice 'R5.21 OK — the rollback took: no fixture survived';
+  end if;
   raise notice '=== R5 VERIFY PASSED ===';
 end
 $$;
