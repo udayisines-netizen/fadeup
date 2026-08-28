@@ -28,11 +28,44 @@ export interface MarketplaceProfessionalResult {
   region: string | null
   postalCode: string | null
   country: string | null
+  /**
+   * The location's coordinates, for the map. Null for a shop that has never
+   * been geocoded — such a shop is a real result that simply cannot be
+   * plotted, which the map view says out loud rather than dropping it.
+   */
+  latitude: number | null
+  longitude: number | null
+  /**
+   * The SHOP's timezone. Carried on the result so an availability label can be
+   * written in the shop's own hours without a second lookup per card.
+   */
+  timezone: string
   distanceKm: number | null
   startingPriceCents: number | null
   isOpenNow: boolean | null
   queueWaitingCount: number
   totalCount: number
+}
+
+/**
+ * Ordering, resolved server-side.
+ *
+ * The search is paged, so a client-side sort would order the wrong page:
+ * "cheapest first" applied to a distance-ordered page of twenty-four is the
+ * cheapest of the nearest, which is a different and misleading answer.
+ *
+ * The two options §12 names that are NOT here are absent because nothing can
+ * back them. `available_soonest` needs a service (availability is a function
+ * of location, professional, service and date) and this query has no notion of
+ * one; `rating` needs a reviews table, and this schema has none. An option
+ * that silently fell back to `recommended` would let the marketplace offer a
+ * sort that does nothing, which is worse than not offering it.
+ */
+export const MARKETPLACE_SORTS = ['recommended', 'nearest', 'price'] as const
+export type MarketplaceSort = (typeof MARKETPLACE_SORTS)[number]
+
+export function isMarketplaceSort(value: string | null | undefined): value is MarketplaceSort {
+  return MARKETPLACE_SORTS.includes(value as MarketplaceSort)
 }
 
 interface MarketplaceProfessionalRow {
@@ -52,6 +85,9 @@ interface MarketplaceProfessionalRow {
   region: string | null
   postal_code: string | null
   country: string | null
+  latitude: number | null
+  longitude: number | null
+  timezone: string
   distance_km: number | null
   starting_price_cents: number | null
   is_open_now: boolean | null
@@ -77,6 +113,9 @@ function mapProfessionalResult(row: MarketplaceProfessionalRow): MarketplaceProf
     region: row.region,
     postalCode: row.postal_code,
     country: row.country,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    timezone: row.timezone,
     distanceKm: row.distance_km,
     startingPriceCents: row.starting_price_cents,
     isOpenNow: row.is_open_now,
@@ -97,6 +136,7 @@ export interface MarketplaceProfessionalSearchParams {
   maxPriceCents?: number | null
   openNowOnly?: boolean
   entityType?: 'shop' | 'barber' | null
+  sort?: MarketplaceSort
   limit?: number
   offset?: number
 }
@@ -126,6 +166,7 @@ export function useSearchPublicProfessionals(params: MarketplaceProfessionalSear
         p_entity_type: params.entityType ?? null,
         p_limit: params.limit ?? 20,
         p_offset: params.offset ?? 0,
+        p_sort: params.sort ?? 'recommended',
       })
       if (error) throw error
       return ((data ?? []) as MarketplaceProfessionalRow[]).map(mapProfessionalResult)

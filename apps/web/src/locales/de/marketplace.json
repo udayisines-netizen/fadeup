@@ -84,5 +84,26 @@
   "availability": {
     "from": "Ab {{time}}",
     "noneToday": "Heute nichts frei"
+  },
+  "mode": {
+    "label": "Ergebnisse anzeigen als",
+    "list": "Liste",
+    "map": "Karte"
+  },
+  "sort": {
+    "label": "Sortieren",
+    "recommended": "Empfohlen",
+    "nearest": "Am nächsten",
+    "price": "Preis"
+  },
+  "expand": {
+    "chooseProfessional": "Profi auswählen",
+    "hideTeam": "Team ausblenden",
+    "noTeam": "Dieser Salon hat sein Team noch nicht veröffentlicht.",
+    "teamUnavailable": "Dieses Team konnte nicht geladen werden. Versuche es gleich noch einmal."
+  },
+  "map": {
+    "notPlotted_one": "{{count}} Ergebnis ohne Kartenposition",
+    "notPlotted_other": "{{count}} Ergebnisse ohne Kartenposition"
   }
 }

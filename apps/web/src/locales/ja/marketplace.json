@@ -84,5 +84,26 @@
   "availability": {
     "from": "{{time}} から",
     "noneToday": "本日は空きなし"
+  },
+  "mode": {
+    "label": "表示形式",
+    "list": "リスト",
+    "map": "マップ"
+  },
+  "sort": {
+    "label": "並び替え",
+    "recommended": "おすすめ",
+    "nearest": "近い順",
+    "price": "料金"
+  },
+  "expand": {
+    "chooseProfessional": "スタッフを選ぶ",
+    "hideTeam": "スタッフを閉じる",
+    "noTeam": "この店はまだスタッフを公開していません。",
+    "teamUnavailable": "スタッフ情報を読み込めませんでした。しばらくしてからお試しください。"
+  },
+  "map": {
+    "notPlotted_other": "{{count}} 件は地図に表示できません",
+    "notPlotted_one": "{{count}} 件は地図に表示できません"
   }
 }

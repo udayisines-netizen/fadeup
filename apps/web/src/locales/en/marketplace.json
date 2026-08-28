@@ -84,5 +84,26 @@
   "availability": {
     "from": "From {{time}}",
     "noneToday": "Nothing free today"
+  },
+  "mode": {
+    "label": "View results as",
+    "list": "List",
+    "map": "Map"
+  },
+  "sort": {
+    "label": "Sort",
+    "recommended": "Recommended",
+    "nearest": "Nearest",
+    "price": "Price"
+  },
+  "expand": {
+    "chooseProfessional": "Choose a professional",
+    "hideTeam": "Hide team",
+    "noTeam": "This shop has not published its team yet.",
+    "teamUnavailable": "We couldn't load this team. Try again in a moment."
+  },
+  "map": {
+    "notPlotted_one": "{{count}} result has no map location",
+    "notPlotted_other": "{{count}} results have no map location"
   }
 }

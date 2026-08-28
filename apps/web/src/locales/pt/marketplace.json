@@ -84,5 +84,26 @@
   "availability": {
     "from": "A partir das {{time}}",
     "noneToday": "Nada livre hoje"
+  },
+  "mode": {
+    "label": "Ver resultados como",
+    "list": "Lista",
+    "map": "Mapa"
+  },
+  "sort": {
+    "label": "Ordenar",
+    "recommended": "Recomendados",
+    "nearest": "Mais perto",
+    "price": "Preço"
+  },
+  "expand": {
+    "chooseProfessional": "Escolher um profissional",
+    "hideTeam": "Ocultar a equipa",
+    "noTeam": "Este salão ainda não publicou a sua equipa.",
+    "teamUnavailable": "Não foi possível carregar esta equipa. Tente novamente daqui a pouco."
+  },
+  "map": {
+    "notPlotted_one": "{{count}} resultado sem localização no mapa",
+    "notPlotted_other": "{{count}} resultados sem localização no mapa"
   }
 }

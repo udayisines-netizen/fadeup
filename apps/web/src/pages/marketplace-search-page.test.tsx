@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { MarketplaceSearchPage } from '@/pages/marketplace-search-page'
 import { useSearchPublicProfessionals } from '@/lib/queries/marketplace'
 
-vi.mock('@/lib/queries/marketplace', () => ({
+// Partial mock: the two hooks are replaced, but MARKETPLACE_SORTS and
+// isMarketplaceSort are REAL. The sort control renders one option per entry in
+// that constant, so stubbing it would let this test pass against a sort list
+// the database does not actually support.
+vi.mock('@/lib/queries/marketplace', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/queries/marketplace')>()),
   useSearchPublicProfessionals: vi.fn(),
   // A marketplace spans countries, so each card is priced in its own shop's
   // currency — resolved in one batch call beside the search itself.
@@ -49,6 +54,7 @@ function shopResult(overrides: Record<string, unknown> = {}) {
     organizationName: 'Le Fade Parisien',
     organizationSlug: 'demo-le-fade-parisien',
     barberId: null,
+    professionalId: null,
     barberDisplayName: null,
     barberAvatarUrl: null,
     barberTitle: null,
@@ -59,6 +65,9 @@ function shopResult(overrides: Record<string, unknown> = {}) {
     region: 'Île-de-France',
     postalCode: '75004',
     country: 'FR',
+    latitude: 48.857,
+    longitude: 2.359,
+    timezone: 'Europe/Paris',
     distanceKm: null,
     startingPriceCents: 1600,
     isOpenNow: true,
@@ -73,6 +82,7 @@ function barberResult(overrides: Record<string, unknown> = {}) {
     ...shopResult(),
     entityType: 'barber' as const,
     barberId: 'barber-1',
+    professionalId: 'pro-1',
     barberDisplayName: 'Karim Belhadj',
     barberTitle: 'Master barber',
     ...overrides,

@@ -84,5 +84,26 @@
   "availability": {
     "from": "{{time}} 起",
     "noneToday": "今天已约满"
+  },
+  "mode": {
+    "label": "结果展示方式",
+    "list": "列表",
+    "map": "地图"
+  },
+  "sort": {
+    "label": "排序",
+    "recommended": "推荐",
+    "nearest": "最近",
+    "price": "价格"
+  },
+  "expand": {
+    "chooseProfessional": "选择理发师",
+    "hideTeam": "收起团队",
+    "noTeam": "该店尚未公开团队信息。",
+    "teamUnavailable": "无法加载团队信息，请稍后再试。"
+  },
+  "map": {
+    "notPlotted_other": "{{count}} 个结果没有地图位置",
+    "notPlotted_one": "{{count}} 个结果没有地图位置"
   }
 }

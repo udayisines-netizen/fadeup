@@ -84,5 +84,26 @@
   "availability": {
     "from": "ابتداءً من {{time}}",
     "noneToday": "لا مواعيد متاحة اليوم"
+  },
+  "mode": {
+    "label": "عرض النتائج بصيغة",
+    "list": "قائمة",
+    "map": "خريطة"
+  },
+  "sort": {
+    "label": "ترتيب",
+    "recommended": "موصى به",
+    "nearest": "الأقرب",
+    "price": "السعر"
+  },
+  "expand": {
+    "chooseProfessional": "اختر محترفًا",
+    "hideTeam": "إخفاء الفريق",
+    "noTeam": "لم ينشر هذا الصالون فريقه بعد.",
+    "teamUnavailable": "تعذّر تحميل هذا الفريق. حاول مرة أخرى بعد قليل."
+  },
+  "map": {
+    "notPlotted_one": "نتيجة واحدة بلا موقع على الخريطة",
+    "notPlotted_other": "{{count}} نتائج بلا موقع على الخريطة"
   }
 }

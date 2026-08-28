@@ -2,12 +2,16 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LocateFixed, MapPin, Search, SearchX, X } from 'lucide-react'
-import { useSearchPublicProfessionals, usePublicCurrencies } from '@/lib/queries/marketplace'
+import {
+  isMarketplaceSort,
+  useSearchPublicProfessionals,
+  usePublicCurrencies,
+  type MarketplaceSort,
+} from '@/lib/queries/marketplace'
 import { getCurrentPosition } from '@/lib/geolocation'
 import { countryName } from '@/lib/intl/countries'
-import { BusinessListingCard } from '@/components/customer/business-listing-card'
+import { MarketplaceResults, type ResultsMode } from '@/components/marketplace/marketplace-results'
 import { SectionHeader } from '@/components/ui/page-header'
-import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Button } from '@/components/ui/button'
@@ -90,6 +94,17 @@ export function DiscoverySearch({
   const openNowOnly = searchParams.get('openNow') === '1'
   const entityFilter = (searchParams.get('type') as EntityFilter | null) ?? 'all'
 
+  /**
+   * Mode and sort live in the URL alongside the filters, and that is what makes
+   * §12's "filters should not reset unexpectedly when switching modes" true by
+   * construction rather than by remembering to preserve them: switching to the
+   * map rewrites one parameter and leaves the other six exactly where they
+   * were, so the query key does not change and nothing refetches.
+   */
+  const mode: ResultsMode = searchParams.get('mode') === 'map' ? 'map' : 'list'
+  const sortParam = searchParams.get('sort')
+  const sort: MarketplaceSort = isMarketplaceSort(sortParam) ? sortParam : 'recommended'
+
   // `country=any` is how a customer switches the geo suggestion off, and it
   // has to be a distinct value from "absent" so that removing it sticks.
   const countryParam = searchParams.get('country')
@@ -113,6 +128,7 @@ export function DiscoverySearch({
     serviceQuery: service || null,
     openNowOnly,
     entityType: entityFilter === 'all' ? null : entityFilter,
+    sort,
     limit: 24,
   })
 
@@ -347,13 +363,7 @@ export function DiscoverySearch({
           }
         />
 
-        {resultsQuery.isPending ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-72 w-full rounded-xl" />
-            ))}
-          </div>
-        ) : resultsQuery.isError ? (
+        {resultsQuery.isError ? (
           <ErrorState
             title={t('results.errorTitle')}
             description={resultsQuery.error.message}
@@ -363,7 +373,7 @@ export function DiscoverySearch({
               </Button>
             }
           />
-        ) : results.length === 0 ? (
+        ) : results.length === 0 && !resultsQuery.isPending ? (
           hasActiveFilters ? (
             <EmptyState
               icon={SearchX}
@@ -399,30 +409,41 @@ export function DiscoverySearch({
             />
           )
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((result, index) => (
-              <BusinessListingCard
-                key={`${result.entityType}-${result.organizationId}-${result.barberId ?? result.locationId}`}
-                result={result}
-                currency={currencies[result.organizationId]}
-                onSelect={() =>
-                  analytics.track('search_result_viewed', {
-                    properties: {
-                      // 1-based: "the third result" is what anyone reading the
-                      // report means, and an off-by-one here would quietly
-                      // shift every position histogram.
-                      position: index + 1,
-                      result_type: result.entityType === 'barber' ? 'professional' : 'organization',
-                    },
-                    context: {
-                      organizationId: result.organizationId,
-                      barberId: result.entityType === 'barber' ? result.barberId : null,
-                    },
-                  })
-                }
-              />
-            ))}
-          </div>
+          <MarketplaceResults
+            results={results}
+            currencies={currencies}
+            isPending={resultsQuery.isPending}
+            mode={mode}
+            onModeChange={(next) =>
+              // `replace` so switching back and forth does not fill the history
+              // stack — Back from the map should leave the marketplace, not
+              // walk through every mode the customer tried.
+              updateParams((params) => (next === 'map' ? params.set('mode', 'map') : params.delete('mode')), {
+                replace: true,
+              })
+            }
+            sort={sort}
+            onSortChange={(next) =>
+              updateParams((params) =>
+                next === 'recommended' ? params.delete('sort') : params.set('sort', next),
+              )
+            }
+            onOpenResult={(result, index) =>
+              analytics.track('search_result_viewed', {
+                properties: {
+                  // 1-based: "the third result" is what anyone reading the
+                  // report means, and an off-by-one here would quietly shift
+                  // every position histogram.
+                  position: index + 1,
+                  result_type: result.entityType === 'barber' ? 'professional' : 'organization',
+                },
+                context: {
+                  organizationId: result.organizationId,
+                  barberId: result.entityType === 'barber' ? result.barberId : null,
+                },
+              })
+            }
+          />
         )}
       </section>
     </div>

@@ -87,6 +87,12 @@ function looksLikeProse(value) {
   // translate="no" on brand names precisely so machine translation leaves
   // them alone; flagging it here would be asking to translate "FadeUp".
   if (/^FadeUp$/i.test(text)) return false
+  // Same reasoning, one more proper noun: the OpenStreetMap tile usage policy
+  // requires an attribution naming the project and linking to its copyright
+  // page. Rendering it as anything else in any locale would be wrong, and the
+  // string reaches this detector because the attribution is HTML — its
+  // `>OpenStreetMap<` reads to the JSX-text pattern as a text node.
+  if (/^OpenStreetMap$/.test(text)) return false
   if (text.includes('=>') || text.includes('...')) return false
   // Needs either a space (a phrase) or a leading capital (a word like "Save").
   return /\s/.test(text) || /^[A-Z]/.test(text)
