@@ -348,21 +348,36 @@ clause does not decay as lots wire their events.
 
 **R1A's public-table allow-list** names the one new table.
 
-### 9.1 A defect in R1B, corrected
+### 9.1 An R1B observation, deliberately NOT "corrected"
 
-R1B created a platform-staff SELECT policy on `prospect_professionals` and then
-revoked ALL from `authenticated`, including SELECT. Postgres checks the grant
-**before** it consults any policy, so that policy has never been reachable:
-every platform administrator reading the table gets "permission denied" and the
-policy never matches a row. It is unreachable code, not extra safety.
+R1B creates a platform-staff SELECT policy on `prospect_professionals` and also
+revokes ALL from `authenticated`, including SELECT. Postgres checks the grant
+before it consults any policy, so **that policy can never match a row** — even
+for a platform administrator.
 
-R1B's intent is unambiguous — it wrote the policy, naming all three platform
-roles — and its stated concern was that *ordinary* accounts must not be able to
-ask "was I scraped, and how confident was FadeUp". That concern is served by the
-policy, which is unchanged. R4 adds the grant that lets it run, narrowed to the
-three columns the operator queue needs: `prospect_id`, `professional_id`,
-`created_at`. `match_confidence` and `matching_rule` stay ungranted, and VERIFY
-§11.2b asserts it.
+R4 initially treated this as a defect and granted three columns so the policy
+could run, in order to give the publication queue a `professional_id` and an
+exact `is_published`. Running the full regression caught it: R1B's VERIFY §8.16
+asserts by name that *"an ordinary account cannot SELECT acquisition provenance
+either"*, and that check went from PASS to FAIL.
+
+The check was right and the framing was wrong. The revoke and the policy are
+**belt and braces**: the policy alone would already return zero rows to an
+ordinary account, so the absent grant is a second, independent layer. The
+policy is redundant, not broken — and trading away one of two layers to
+populate a column the screen does not even display would have been a bad deal.
+
+The grant was reverted. `prospect_publication_queue` no longer joins the
+linkage table at all and derives `is_published` from the cached
+`block_reason = 'already_published'` instead. That is as fresh as the cache,
+which is exact immediately after a publication — `publish_external_professional`
+refreshes the row in the same transaction — and the screen offers a Re-check
+action for every other case. VERIFY §11.2b now asserts that R4 re-granted
+**nothing** on `prospect_professionals`.
+
+Worth recording as a process note: this was caught by re-running every closed
+lot's suite after a late change, not by review. The change looked entirely
+reasonable and was accompanied by a confident explanation of why it was safe.
 
 ### 9.2 An unrelated harness fix
 

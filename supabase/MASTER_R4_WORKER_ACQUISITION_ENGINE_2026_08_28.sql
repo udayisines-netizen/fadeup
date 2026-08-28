@@ -839,29 +839,35 @@ grant execute on function public.publish_external_professional(uuid, text) to au
 -- view is a narrower projection, never an escalation.
 -- ---------------------------------------------------------------------------
 
--- ---- A defect in R1B this view exposes, and the minimal correction ---------
+-- ---- WHY THIS VIEW DOES NOT JOIN prospect_professionals --------------------
 --
--- R1B created a platform-staff SELECT policy on prospect_professionals and then
--- revoked ALL from authenticated, including SELECT. Postgres checks the grant
--- before it consults any policy, so that policy has never been reachable: every
--- platform administrator reading the table gets "permission denied" and the
--- policy never matches a single row. It is unreachable code, not extra safety.
+-- The obvious shape is a LEFT JOIN onto the linkage table, giving the operator
+-- screen the minted professional_id and an honest `is_published` flag.
 --
--- R1B's stated intent is unambiguous — it wrote the policy, naming
--- platform_owner, platform_admin and platform_support — and its comment's
--- concern was that ORDINARY accounts must not be able to ask "was I scraped,
--- and how confident was FadeUp". That concern is served by the policy, which is
--- unchanged here. What R4 adds is the grant that lets the policy run at all,
--- narrowed to the three columns the operator queue needs: no match_confidence,
--- no matching_rule, so the acquisition pipeline's assessment of a business
--- stays out of reach even for staff reading through this path.
+-- It is not done, because this view is security_invoker: the join would execute
+-- with the CALLER's privileges, and R1B revoked SELECT on
+-- prospect_professionals from `authenticated` entirely. Making the join work
+-- would mean re-granting it — and R1B's VERIFY §8.16 asserts, as a named check,
+-- that an ordinary account cannot SELECT acquisition provenance at all.
 --
--- Recorded as a correction to a closed lot rather than done quietly, because
--- that is what it is.
-grant select (prospect_id, professional_id, created_at)
-  on public.prospect_professionals to authenticated;
+-- That revoke plus the platform-staff policy R1B also wrote is belt AND
+-- braces: the policy alone would already return zero rows to an ordinary
+-- account, so the grant being absent is a second, independent layer. Removing
+-- one of two layers to render a column this screen does not display would be a
+-- bad trade, so the flag is derived from the cached verdict instead.
+--
+-- The cost is honest and small: `is_published` is as fresh as the cache. It is
+-- correct immediately after a publication, because publish_external_professional
+-- refreshes the row in the same transaction, and the screen offers a Re-check
+-- action for every other case.
 
-create or replace view public.prospect_publication_queue
+-- DROP then CREATE, not CREATE OR REPLACE: replace cannot remove a column from
+-- an existing view, and an environment that applied an earlier revision of this
+-- file has a `professional_id` column that must go. Dropping a view removes a
+-- projection, never data, and this one has no dependents.
+drop view if exists public.prospect_publication_queue;
+
+create view public.prospect_publication_queue
 with (security_invoker = true) as
 select
   p.id                        as prospect_id,
@@ -876,14 +882,12 @@ select
   e.distinct_source_count,
   e.has_trust_anchor,
   e.evaluated_at,
-  pp.professional_id,
-  (pp.professional_id is not null) as is_published
+  (e.block_reason = 'already_published') as is_published
 from public.prospects p
-join public.prospect_publication_eligibility e on e.prospect_id = p.id
-left join public.prospect_professionals pp on pp.prospect_id = p.id;
+join public.prospect_publication_eligibility e on e.prospect_id = p.id;
 
 comment on view public.prospect_publication_queue is
-  'The operator review queue for external-profile publication. A deliberately NARROW projection of prospects: name, country, kind, domain and the gate''s own evidence — and none of the commercial score, contact details or sales pipeline state that live on the same row, because the publication decision is about whether a business is real, not whether it is a good lead. security_invoker, so platform-role RLS on the underlying tables still decides who sees anything.';
+  'The operator review queue for external-profile publication. A deliberately NARROW projection of prospects: name, country, kind, domain and the gate''s own evidence — and none of the commercial score, contact details or sales pipeline state that live on the same row, because the publication decision is about whether a business is real, not whether it is a good lead. security_invoker, so platform-role RLS on the underlying tables still decides who sees anything. Deliberately does NOT join prospect_professionals: that would require re-granting SELECT on it to `authenticated`, removing one of the two independent layers R1B put in front of acquisition provenance, to populate a column this screen does not display.';
 
 revoke all on public.prospect_publication_queue from anon, authenticated;
 grant select on public.prospect_publication_queue to authenticated;
@@ -1377,6 +1381,15 @@ revoke all on table public.prospect_publication_eligibility from public, anon, a
 grant select on table public.prospect_publication_eligibility to authenticated;
 grant select on table public.prospect_publication_eligibility to prospect_worker;
 
+-- R1B revoked SELECT on prospect_professionals from `authenticated` outright,
+-- and separately wrote a platform-staff policy: two independent layers in front
+-- of the one table that answers "was FadeUp scraping this business". An earlier
+-- revision of R4 re-granted three columns so the operator queue could join it,
+-- and R1B's own VERIFY §8.16 caught the regression. The queue now derives what
+-- it needs from the cached verdict, and this restores the posture on any
+-- environment that applied that revision.
+revoke all on table public.prospect_professionals from authenticated;
+
 -- The Worker is deliberately not admitted to the publication decision. It has
 -- SELECT on the queue's inputs through its existing grants; it has no path to
 -- the operator's front door.
@@ -1476,6 +1489,13 @@ begin
 
   if not has_table_privilege('authenticated', 'public.prospect_publication_eligibility', 'SELECT') then
     raise exception 'R4 hardening: the platform-staff SELECT policy is unreachable without a grant';
+  end if;
+
+  -- 4.4b R4 gave back NOTHING on prospect_professionals. Asserted rather than
+  -- merely revoked above, because the revert this restores was a change that
+  -- looked entirely reasonable and came with a confident justification.
+  if has_table_privilege('authenticated', 'public.prospect_professionals', 'SELECT') then
+    raise exception 'R4 hardening: authenticated can read prospect_professionals — R1B revoked this deliberately';
   end if;
 
   if exists (select 1 from pg_roles where rolname = 'prospect_worker') then

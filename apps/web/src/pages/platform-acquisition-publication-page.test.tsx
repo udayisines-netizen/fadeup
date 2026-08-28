@@ -40,7 +40,6 @@ function candidate(overrides: Partial<PublicationCandidate> = {}): PublicationCa
     distinctSourceCount: 2,
     hasTrustAnchor: false,
     evaluatedAt: '2026-08-28T09:00:00.000Z',
-    professionalId: null,
     isPublished: false,
     ...overrides,
   }

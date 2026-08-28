@@ -50,7 +50,14 @@ export interface PublicationCandidate {
   distinctSourceCount: number
   hasTrustAnchor: boolean
   evaluatedAt: string
-  professionalId: string | null
+  /**
+   * Derived from the cached verdict, not from a join onto the linkage table:
+   * that join would need SELECT on prospect_professionals re-granted to
+   * `authenticated`, removing one of the two independent layers R1B put in
+   * front of acquisition provenance. Correct immediately after a publication —
+   * the RPC refreshes the row in the same transaction — and the Re-check action
+   * covers every other case.
+   */
   isPublished: boolean
 }
 
@@ -67,7 +74,6 @@ interface PublicationQueueRow {
   distinct_source_count: number
   has_trust_anchor: boolean
   evaluated_at: string
-  professional_id: string | null
   is_published: boolean
 }
 
@@ -75,7 +81,7 @@ interface PublicationQueueRow {
 // a TYPE, and a concatenated expression degrades to GenericStringError[] — which
 // then needs an `as unknown as` cast that would silence real mistakes too.
 const QUEUE_COLUMNS =
-  'prospect_id, canonical_name, country, entity_kind, prospect_type, website_domain, first_discovered_at, is_eligible, block_reason, distinct_source_count, has_trust_anchor, evaluated_at, professional_id, is_published'
+  'prospect_id, canonical_name, country, entity_kind, prospect_type, website_domain, first_discovered_at, is_eligible, block_reason, distinct_source_count, has_trust_anchor, evaluated_at, is_published'
 
 function mapCandidate(row: PublicationQueueRow): PublicationCandidate {
   return {
@@ -91,7 +97,6 @@ function mapCandidate(row: PublicationQueueRow): PublicationCandidate {
     distinctSourceCount: row.distinct_source_count,
     hasTrustAnchor: row.has_trust_anchor,
     evaluatedAt: row.evaluated_at,
-    professionalId: row.professional_id,
     isPublished: row.is_published,
   }
 }

@@ -111,6 +111,15 @@ revoke all on table public.prospect_publication_eligibility from public, anon, a
 grant select on table public.prospect_publication_eligibility to authenticated;
 grant select on table public.prospect_publication_eligibility to prospect_worker;
 
+-- R1B revoked SELECT on prospect_professionals from `authenticated` outright,
+-- and separately wrote a platform-staff policy: two independent layers in front
+-- of the one table that answers "was FadeUp scraping this business". An earlier
+-- revision of R4 re-granted three columns so the operator queue could join it,
+-- and R1B's own VERIFY §8.16 caught the regression. The queue now derives what
+-- it needs from the cached verdict, and this restores the posture on any
+-- environment that applied that revision.
+revoke all on table public.prospect_professionals from authenticated;
+
 -- The Worker is deliberately not admitted to the publication decision. It has
 -- SELECT on the queue's inputs through its existing grants; it has no path to
 -- the operator's front door.
@@ -210,6 +219,13 @@ begin
 
   if not has_table_privilege('authenticated', 'public.prospect_publication_eligibility', 'SELECT') then
     raise exception 'R4 hardening: the platform-staff SELECT policy is unreachable without a grant';
+  end if;
+
+  -- 4.4b R4 gave back NOTHING on prospect_professionals. Asserted rather than
+  -- merely revoked above, because the revert this restores was a change that
+  -- looked entirely reasonable and came with a confident justification.
+  if has_table_privilege('authenticated', 'public.prospect_professionals', 'SELECT') then
+    raise exception 'R4 hardening: authenticated can read prospect_professionals — R1B revoked this deliberately';
   end if;
 
   if exists (select 1 from pg_roles where rolname = 'prospect_worker') then

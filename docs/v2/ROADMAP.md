@@ -167,13 +167,13 @@ lost:
   infrastructure change, it needs no lot, and R4 did not touch it because R4
   changed no Nginx or Kong configuration.
 
-**New finding from R4 — closed.** `prospect_professionals` carried a
-platform-staff SELECT policy that had never been reachable, because R1B revoked
-the table grant and Postgres checks the grant before any policy. Every platform
-administrator reading that table got "permission denied" and the policy never
-matched a row. R4 granted the three columns the operator queue needs so the
-policy can run; `match_confidence` and `matching_rule` stay ungranted. See
-`R4_WORKER_ACQUISITION_ENGINE.md` §9.1.
+**Observation from R4 — no action, deliberately.** R1B's platform-staff SELECT
+policy on `prospect_professionals` can never match a row, because the table has
+no grant for `authenticated` and Postgres checks the grant first. R4 briefly
+"fixed" this and R1B's VERIFY §8.16 caught it: the revoke and the policy are two
+independent layers, and the policy is redundant rather than broken. The grant
+was reverted and the publication queue derives what it needs from the cached
+verdict instead. See `R4_WORKER_ACQUISITION_ENGINE.md` §9.1.
 
 **New finding from R4 — closed.** The OSM adapter reported a server-side
 Overpass timeout as "0 candidates found, source completed, no error", which the

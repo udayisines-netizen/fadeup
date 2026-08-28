@@ -979,16 +979,17 @@ begin
   perform pg_temp.become_postgres();
   perform pg_temp.expect('11.1 a shop owner reads no eligibility rows', v_n = 0);
 
-  perform pg_temp.become((select id from v where k = 'cust'));
-  select count(*) into v_n from public.prospect_professionals;
-  perform pg_temp.become_postgres();
-  perform pg_temp.expect('11.2 a customer reads no prospect-to-identity links', v_n = 0,
-    'this is the table that would answer "was I scraped, and how confident was FadeUp"');
+  -- Refused at the GRANT, before RLS is even consulted. R1B revoked SELECT on
+  -- this table from authenticated outright and also wrote a platform-staff
+  -- policy — two independent layers in front of the one table that would answer
+  -- "was I scraped, and how confident was FadeUp".
+  perform pg_temp.expect('11.2 a customer cannot read prospect-to-identity links at all',
+    pg_temp.sqlstate_as((select id from v where k = 'cust'),
+      'select count(*) from public.prospect_professionals') = '42501');
 
-  perform pg_temp.expect('11.2b the acquisition assessment columns stay ungranted entirely',
-    not has_column_privilege('authenticated', 'public.prospect_professionals', 'match_confidence', 'SELECT')
-    and not has_column_privilege('authenticated', 'public.prospect_professionals', 'matching_rule', 'SELECT'),
-    'R4 granted three columns so R1B''s platform policy could run at all; the pipeline''s confidence in a business is not one of them');
+  perform pg_temp.expect('11.2b R4 re-granted NOTHING on prospect_professionals',
+    not has_table_privilege('authenticated', 'public.prospect_professionals', 'SELECT'),
+    'the publication queue derives is_published from the cached verdict rather than costing one of R1B''s two layers to populate a column it does not display');
 
   perform pg_temp.expect('11.3 a shop owner cannot ask the gate about a prospect',
     pg_temp.sqlstate_as((select id from v where k = 'owner1'), format(
