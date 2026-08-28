@@ -100,7 +100,7 @@ export function PlatformDataScienceExperimentsPage() {
                   <CardTitle className="text-base">{experiment.name}</CardTitle>
                   <p className="mt-1 font-mono text-xs text-ink-500">{experiment.key}</p>
                   {experiment.hypothesis ? (
-                    <p className="mt-1 max-w-2xl text-sm text-ink-600">{experiment.hypothesis}</p>
+                    <p className="mt-1 max-w-2xl text-sm text-ink-700">{experiment.hypothesis}</p>
                   ) : null}
                   <p className="mt-1 text-xs text-ink-500">
                     Optimising <strong>{experiment.primaryMetric}</strong> · {experiment.explorationPct}% exploration ·
@@ -213,8 +213,8 @@ export function PlatformDataScienceExperimentsPage() {
  * offered — a 100% conversion on 2 sends is not a result.
  */
 function ArmRate({ value, sent, readable }: { value: number; sent: number; readable: boolean }) {
-  if (sent === 0) return <span className="text-ink-400">—</span>
-  if (!readable) return <span className="text-ink-400">{value}</span>
+  if (sent === 0) return <span className="text-ink-500">—</span>
+  if (!readable) return <span className="text-ink-500">{value}</span>
   return (
     <span>
       {value}

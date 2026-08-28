@@ -108,7 +108,7 @@ export function ServiceModeCtas({
             ctas.book ? 'sm:max-w-sm' : 'w-full',
           )}
         >
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" aria-hidden="true" />
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-ink-500" aria-hidden="true" />
           <span className="flex flex-col">
             <span className="text-sm font-medium text-ink-950">
               {t('serviceMode.queueClosedTitle')}

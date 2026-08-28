@@ -113,7 +113,7 @@ export function NotificationBell() {
                       {notification.body ? (
                         <span className="text-xs text-ink-500">{notification.body}</span>
                       ) : null}
-                      <span className="text-xs text-ink-400">
+                      <span className="text-xs text-ink-500">
                         {new Date(notification.createdAt).toLocaleString()}
                       </span>
                     </button>

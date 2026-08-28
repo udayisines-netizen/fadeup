@@ -141,7 +141,7 @@ function ContextRow({
     <div
       className={cn(
         'flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border p-3 ps-4',
-        tone === 'live' ? 'border-accent-300 bg-accent-100/60' : 'border-border bg-paper-0',
+        tone === 'live' ? 'border-accent-200 bg-accent-100/60' : 'border-border bg-paper-0',
       )}
     >
       <span

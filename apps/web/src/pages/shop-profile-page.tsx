@@ -193,7 +193,7 @@ export function ShopProfilePage() {
               <Link
                 key={barber.barberId}
                 to={`/s/${organization.slug}/barbers/${barber.barberId}`}
-                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-paper-0 p-4 text-center transition-colors duration-[--fu-duration-quick] hover:border-accent-300 hover:bg-accent-100/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 motion-reduce:transition-none"
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-paper-0 p-4 text-center transition-colors duration-[--fu-duration-quick] hover:border-accent-200 hover:bg-accent-100/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 motion-reduce:transition-none"
               >
                 <Avatar name={barber.displayName} src={barber.avatarUrl} size="lg" />
                 <div className="min-w-0">

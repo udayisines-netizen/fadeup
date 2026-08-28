@@ -236,7 +236,7 @@ function FunnelStat({
 
 /** A count plus its rate, or an em dash when the denominator is zero. */
 function Rate({ value, of }: { value: number; of: number }) {
-  if (of === 0) return <span className="text-ink-400">—</span>
+  if (of === 0) return <span className="text-ink-500">—</span>
   return (
     <span>
       {value}

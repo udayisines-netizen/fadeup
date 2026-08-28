@@ -93,7 +93,7 @@ export function PlatformAcquisitionSuppressionsPage() {
                             {prospect.canonicalName}
                           </Link>
                         ) : (
-                          <span className="font-mono text-xs text-ink-400">{suppression.prospectId}</span>
+                          <span className="font-mono text-xs text-ink-500">{suppression.prospectId}</span>
                         )
                       ) : (
                         <span className="font-mono text-xs">{suppression.value}</span>

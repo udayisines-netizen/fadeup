@@ -115,7 +115,7 @@ export function PlatformOutreachRepliesPage() {
                     </Button>
                   </div>
                 ) : (
-                  <p className="text-xs text-ink-400">Classification requires a platform owner or admin role.</p>
+                  <p className="text-xs text-ink-500">Classification requires a platform owner or admin role.</p>
                 )}
               </CardContent>
             </Card>

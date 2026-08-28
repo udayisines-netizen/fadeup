@@ -204,17 +204,17 @@ export function ServiceModeControl({
               onClick={() => void choose(mode)}
               className={cn(
                 'flex min-h-16 items-start gap-3 rounded-lg border px-3 py-3 text-start transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600',
                 'disabled:cursor-not-allowed disabled:opacity-60',
                 isCurrent
-                  ? 'border-accent-300 bg-accent-50'
+                  ? 'border-accent-200 bg-accent-100'
                   : 'border-border bg-paper-0 hover:border-accent-200 hover:bg-paper-100',
               )}
             >
               <Icon
                 className={cn(
                   'mt-0.5 h-5 w-5 shrink-0',
-                  isCurrent ? 'text-accent-700' : 'text-ink-400',
+                  isCurrent ? 'text-accent-700' : 'text-ink-500',
                 )}
                 aria-hidden="true"
               />
@@ -355,11 +355,11 @@ export function BarberServiceModeRow({
               }
               className={cn(
                 'min-h-11 rounded-md border px-2.5 text-xs font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600',
                 'disabled:cursor-not-allowed disabled:opacity-60',
                 row.effectiveServiceMode === mode
-                  ? 'border-accent-300 bg-accent-50 text-accent-800'
-                  : 'border-border bg-paper-0 text-ink-600 hover:bg-paper-100',
+                  ? 'border-accent-200 bg-accent-100 text-accent-800'
+                  : 'border-border bg-paper-0 text-ink-700 hover:bg-paper-100',
               )}
             >
               {t(modeLabelKey(mode))}

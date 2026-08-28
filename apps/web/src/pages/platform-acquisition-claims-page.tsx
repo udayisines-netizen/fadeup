@@ -178,13 +178,13 @@ function ClaimCard({
         </div>
 
         <div className="rounded-md border border-border bg-paper-50 px-3 py-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-400">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
             Claimant’s evidence, in their words
           </p>
           {claim.evidence ? (
             <p className="mt-1 whitespace-pre-wrap text-sm text-ink-700">{claim.evidence}</p>
           ) : (
-            <p className="mt-1 text-sm italic text-ink-400">
+            <p className="mt-1 text-sm italic text-ink-500">
               No evidence supplied. That is not by itself a reason to reject, and it is not a reason to approve.
             </p>
           )}
@@ -192,7 +192,7 @@ function ClaimCard({
 
         {claim.decisionNote ? (
           <div className="rounded-md border border-border px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-ink-400">Reply sent to the claimant</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-500">Reply sent to the claimant</p>
             <p className="mt-1 whitespace-pre-wrap text-sm text-ink-700">{claim.decisionNote}</p>
           </div>
         ) : null}
@@ -209,7 +209,7 @@ function ClaimCard({
         ) : null}
 
         {claim.state !== 'pending' && claim.decidedAt ? (
-          <p className="text-xs text-ink-400">Decided {new Date(claim.decidedAt).toLocaleString()}</p>
+          <p className="text-xs text-ink-500">Decided {new Date(claim.decidedAt).toLocaleString()}</p>
         ) : null}
       </CardContent>
 
@@ -274,7 +274,7 @@ function ReviewDialog({
 
         <DialogBody className="flex flex-col gap-4">
           {isApprove ? (
-            <div className="flex gap-2.5 rounded-md border border-warning-200 bg-warning-50 px-3 py-2">
+            <div className="flex gap-2.5 rounded-md border border-warning-600/40 bg-warning-100 px-3 py-2">
               <ShieldAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-warning-700" />
               <p className="text-sm text-ink-700">
                 Approving grants control of an identity, not a subscription. The account stays on whatever plan it

@@ -1077,7 +1077,7 @@ function SelectableRow({ children, onClick }: { children: ReactNode; onClick: ()
       className={cn(
         'flex min-h-16 w-full items-start gap-3 rounded-xl border border-border bg-paper-0 p-4 text-start',
         'transition-colors duration-[--fu-duration-quick] motion-reduce:transition-none',
-        'hover:border-accent-300 hover:bg-accent-100/40',
+        'hover:border-accent-200 hover:bg-accent-100/40',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
       )}
     >

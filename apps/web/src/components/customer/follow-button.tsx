@@ -66,7 +66,7 @@ export function FollowButton({ professionalId, className }: FollowButtonProps) {
       className={cn(
         'relative z-10 inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-sm font-semibold shadow-sm transition-colors disabled:opacity-50',
         isFollowing
-          ? 'border-ink-200 bg-ink-950 text-paper-0 hover:bg-ink-800'
+          ? 'border-ink-950 bg-ink-950 text-paper-0 hover:bg-ink-800'
           : 'border-border bg-paper-0/95 text-ink-950 backdrop-blur hover:bg-paper-100',
         className,
       )}

@@ -46,7 +46,7 @@ export function FavoriteButton({
       <Link
         to={`/login?redirect=${encodeURIComponent(redirectTarget)}`}
         aria-label={favoriteLabel}
-        className={cn('inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-400 hover:bg-paper-100 hover:text-ink-600', className)}
+        className={cn('inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-500 hover:bg-paper-100 hover:text-ink-700', className)}
       >
         <Heart className="h-5 w-5" aria-hidden="true" />
       </Link>
@@ -72,7 +72,7 @@ export function FavoriteButton({
       aria-label={existing ? unfavoriteLabel : favoriteLabel}
       className={cn(
         'inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-paper-100 disabled:opacity-50',
-        existing ? 'text-danger-600' : 'text-ink-400 hover:text-ink-600',
+        existing ? 'text-danger-600' : 'text-ink-500 hover:text-ink-700',
         className,
       )}
     >

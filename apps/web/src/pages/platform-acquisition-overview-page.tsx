@@ -106,7 +106,7 @@ export function PlatformAcquisitionOverviewPage() {
                 {stats.topCities.map((city) => (
                   <li key={`${city.country}:${city.city}`} className="flex items-center justify-between gap-3 text-sm">
                     <span className="text-ink-800">
-                      {city.city} <span className="text-ink-400">· {city.country}</span>
+                      {city.city} <span className="text-ink-500">· {city.country}</span>
                     </span>
                     <span className="font-semibold text-ink-950">{city.count}</span>
                   </li>

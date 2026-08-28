@@ -121,7 +121,7 @@ function SourceCard({
       <CardHeader className="flex-row items-start justify-between gap-3">
         <div>
           <CardTitle>{source.displayName}</CardTitle>
-          <p className="mt-0.5 font-mono text-xs text-ink-400">{source.key}</p>
+          <p className="mt-0.5 font-mono text-xs text-ink-500">{source.key}</p>
         </div>
         <Switch
           label={`Enable ${source.displayName}`}

@@ -48,7 +48,9 @@ export function BookingStepRail({
             key={step.key}
             className={cn(
               'h-1 flex-1 rounded-full transition-colors duration-[--fu-duration-quick] motion-reduce:transition-none',
-              index < currentIndex ? 'bg-accent-600' : index === currentIndex ? 'bg-accent-400' : 'bg-paper-200',
+              // Completed steps are solid; the current one is the lighter
+              // accent tint, so the bar reads as "this far, and here now".
+              index < currentIndex ? 'bg-accent-600' : index === currentIndex ? 'bg-accent-200' : 'bg-paper-200',
             )}
           />
         ))}
@@ -85,7 +87,7 @@ export function BookingCrumbs({ crumbs, className }: { crumbs: BookingCrumb[]; c
           onClick={crumb.onEdit}
           className={cn(
             'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-border bg-paper-0 ps-3 pe-2.5 text-xs font-medium text-ink-700',
-            'hover:border-accent-300 hover:text-ink-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
+            'hover:border-accent-200 hover:text-ink-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
           )}
         >
           <Check className="h-3 w-3 text-accent-600" aria-hidden="true" />

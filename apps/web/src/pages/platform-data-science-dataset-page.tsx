@@ -150,7 +150,7 @@ export function PlatformDataScienceDatasetPage() {
                 <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
                   {worstCoverage.map(([feature, coverage]) => (
                     <li key={feature} className="flex items-center justify-between gap-3 text-xs">
-                      <span className="truncate font-mono text-ink-600">{feature}</span>
+                      <span className="truncate font-mono text-ink-700">{feature}</span>
                       <span className="tabular-nums text-ink-950">{(coverage * 100).toFixed(0)}%</span>
                     </li>
                   ))}

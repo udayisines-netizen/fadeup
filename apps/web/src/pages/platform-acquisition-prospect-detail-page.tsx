@@ -473,7 +473,7 @@ function DuplicatesSection({ prospectId, query }: { prospectId: string; query: R
                         {other.canonicalName}
                       </Link>
                     ) : (
-                      <span className="font-mono text-xs text-ink-400">{otherId}</span>
+                      <span className="font-mono text-xs text-ink-500">{otherId}</span>
                     )}
                     <p className="text-ink-500">{pair.reason}</p>
                   </div>
@@ -515,7 +515,7 @@ function EventsSection({ query }: { query: ReturnType<typeof useProspectEvents> 
                 <p className="font-medium text-ink-950">{event.eventType.replace(/_/g, ' ')}</p>
                 <p className="text-xs text-ink-500">{formatDateTime(event.createdAt)}</p>
                 {event.metadata && Object.keys(event.metadata).length > 0 ? (
-                  <p className="mt-0.5 font-mono text-xs text-ink-400">{JSON.stringify(event.metadata)}</p>
+                  <p className="mt-0.5 font-mono text-xs text-ink-500">{JSON.stringify(event.metadata)}</p>
                 ) : null}
               </li>
             ))}
@@ -564,7 +564,7 @@ function TagsSection({ prospectId, query, canManage }: { prospectId: string; que
                   <button
                     type="button"
                     aria-label={`Remove tag ${tag.tag}`}
-                    className="text-ink-400 hover:text-danger-700"
+                    className="text-ink-500 hover:text-danger-700"
                     onClick={() => removeTag.mutate({ id: tag.id, prospectId })}
                   >
                     ×
@@ -639,7 +639,7 @@ function NotesSection({ prospectId, query, canManage }: { prospectId: string; qu
             {query.data.map((note) => (
               <li key={note.id} className="rounded-md border border-border p-3 text-sm">
                 <p className="whitespace-pre-wrap text-ink-800">{note.body}</p>
-                <p className="mt-1 text-xs text-ink-400">{formatDateTime(note.createdAt)}</p>
+                <p className="mt-1 text-xs text-ink-500">{formatDateTime(note.createdAt)}</p>
               </li>
             ))}
           </ul>
@@ -711,7 +711,7 @@ function OutreachSection({ prospectId, query, canManage }: { prospectId: string;
                   <span className="font-medium capitalize text-ink-950">
                     {entry.channel} · {entry.direction}
                   </span>
-                  <span className="text-xs text-ink-400">{formatDateTime(entry.occurredAt)}</span>
+                  <span className="text-xs text-ink-500">{formatDateTime(entry.occurredAt)}</span>
                 </div>
                 {entry.summary ? <p className="mt-1 text-ink-700">{entry.summary}</p> : null}
               </li>

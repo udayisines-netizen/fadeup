@@ -186,10 +186,10 @@ export function PlatformOutreachTemplatesPage() {
                           <p className="mt-0.5 text-xs text-ink-500">{template.name}</p>
                         </TableCell>
                         <TableCell className="font-mono text-xs">{template.locale}</TableCell>
-                        <TableCell className="text-xs text-ink-600">
+                        <TableCell className="text-xs text-ink-700">
                           {template.salesAngle ? <div>{template.salesAngle}</div> : null}
                           {template.segmentKey ? <div className="text-ink-500">{template.segmentKey}</div> : null}
-                          {!template.salesAngle && !template.segmentKey ? <span className="text-ink-400">generic</span> : null}
+                          {!template.salesAngle && !template.segmentKey ? <span className="text-ink-500">generic</span> : null}
                         </TableCell>
                         <TableCell>
                           <Badge variant={STATUS_VARIANT[template.status]}>{template.status.replace('_', ' ')}</Badge>
@@ -222,7 +222,7 @@ export function PlatformOutreachTemplatesPage() {
                               ) : null}
                             </div>
                           ) : (
-                            <span className="text-xs text-ink-400">read only</span>
+                            <span className="text-xs text-ink-500">read only</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -268,6 +268,6 @@ export function PlatformOutreachTemplatesPage() {
 
 /** Renders a rate, or an em dash when nothing has been sent — an untested template is not a 0% template. */
 function RateCell({ rate }: { rate: number | null }) {
-  if (rate === null) return <span className="text-ink-400">—</span>
+  if (rate === null) return <span className="text-ink-500">—</span>
   return <span>{(rate * 100).toFixed(1)}%</span>
 }

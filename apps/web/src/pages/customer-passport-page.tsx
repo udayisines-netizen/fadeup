@@ -288,7 +288,7 @@ function SharesSection() {
         <Card className="mb-3 p-4">
           <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-medium text-ink-950">{t('shareCreated')}</p>
-            <button type="button" aria-label={t('cancel')} onClick={() => setFreshLink(null)} className="text-ink-400 hover:text-ink-700">
+            <button type="button" aria-label={t('cancel')} onClick={() => setFreshLink(null)} className="text-ink-500 hover:text-ink-700">
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>

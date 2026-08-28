@@ -184,7 +184,7 @@ function ReviewProgress({ status }: { status: 'pending_review' | 'approved' | 'r
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                 step.state === 'done' && 'border-success-600 bg-success-600 text-paper-0',
                 step.state === 'active' && 'border-accent-600 bg-accent-100 text-accent-700',
-                step.state === 'todo' && 'border-border-strong bg-paper-0 text-ink-400',
+                step.state === 'todo' && 'border-border-strong bg-paper-0 text-ink-500',
               )}
             >
               {step.state === 'done' ? (
@@ -209,7 +209,7 @@ function ReviewProgress({ status }: { status: 'pending_review' | 'approved' | 'r
             <p
               className={cn(
                 'text-sm font-medium',
-                step.state === 'todo' ? 'text-ink-400' : 'text-ink-950',
+                step.state === 'todo' ? 'text-ink-500' : 'text-ink-950',
               )}
             >
               {step.label}

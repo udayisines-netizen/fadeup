@@ -218,7 +218,7 @@ export function DiscoverySearch({
         onSubmit={handleSubmit}
         className={cn(
           'flex flex-col gap-1 rounded-2xl border border-border bg-paper-0 p-2 shadow-xs',
-          'focus-within:border-accent-300 sm:flex-row sm:items-center sm:gap-0',
+          'focus-within:border-accent-200 sm:flex-row sm:items-center sm:gap-0',
         )}
       >
         <div className="relative flex min-w-0 flex-1 items-center">

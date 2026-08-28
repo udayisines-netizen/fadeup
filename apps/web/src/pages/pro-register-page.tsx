@@ -386,7 +386,7 @@ export function ProRegisterPage() {
                         : 'border-border-strong bg-paper-0 hover:border-accent-600/60',
                     )}
                   >
-                    <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', isSelected ? 'text-accent-700' : 'text-ink-400')} aria-hidden="true" />
+                    <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', isSelected ? 'text-accent-700' : 'text-ink-500')} aria-hidden="true" />
                     <span>
                       <span className="block text-sm font-medium text-ink-950">{t(`professionalType.${type}`)}</span>
                       <span className="block text-xs text-ink-500">{t(`professionalType.${type}Hint`)}</span>

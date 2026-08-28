@@ -172,7 +172,7 @@ export function PlatformOutreachCampaignDetailPage() {
                         '—'
                       )}
                     </TableCell>
-                    <TableCell className="max-w-xs text-xs text-ink-600">
+                    <TableCell className="max-w-xs text-xs text-ink-700">
                       {recipient.blockedReason ? (
                         <span className="font-mono text-danger-700">{recipient.blockedReason}</span>
                       ) : recipient.lastError ? (

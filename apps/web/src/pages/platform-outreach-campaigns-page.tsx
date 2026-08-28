@@ -189,7 +189,7 @@ export function PlatformOutreachCampaignsPage() {
                             onSend={() => runAction('Send batch queued', () => enqueueSend.mutateAsync(campaign.id))}
                           />
                         ) : (
-                          <span className="text-xs text-ink-400">read only</span>
+                          <span className="text-xs text-ink-500">read only</span>
                         )}
                       </TableCell>
                     </TableRow>

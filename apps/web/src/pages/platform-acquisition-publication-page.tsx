@@ -177,7 +177,7 @@ function CandidateCard({ candidate }: { candidate: PublicationCandidate }) {
             </p>
           </div>
 
-          <span className="shrink-0 text-xs text-ink-400">
+          <span className="shrink-0 text-xs text-ink-500">
             Found {new Date(candidate.firstDiscoveredAt).toLocaleDateString()}
           </span>
         </div>
@@ -187,7 +187,7 @@ function CandidateCard({ candidate }: { candidate: PublicationCandidate }) {
         {candidate.blockReason && !candidate.isPublished ? <BlockExplanation reason={candidate.blockReason} /> : null}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs text-ink-400">
+          <span className="text-xs text-ink-500">
             Checked {new Date(candidate.evaluatedAt).toLocaleString()}
           </span>
 
@@ -233,7 +233,7 @@ function EvidenceRow({ candidate }: { candidate: PublicationCandidate }) {
         <dt className="text-ink-500">Sources</dt>
         <dd className="font-medium text-ink-950">
           {candidate.distinctSourceCount}
-          <span className="ml-1 font-normal text-ink-400">
+          <span className="ml-1 font-normal text-ink-500">
             {candidate.distinctSourceCount >= 2 ? 'independent' : 'only'}
           </span>
         </dd>
@@ -327,11 +327,11 @@ function BlockExplanation({ reason }: { reason: PublicationBlockReason }) {
   const copy = BLOCK_COPY[reason]
 
   return (
-    <div className="flex gap-2.5 rounded-md border border-warning-200 bg-warning-50 px-3 py-2">
+    <div className="flex gap-2.5 rounded-md border border-warning-600/40 bg-warning-100 px-3 py-2">
       <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-warning-700" />
       <div className="min-w-0 text-sm">
         <p className="font-medium text-ink-950">{copy.label}</p>
-        <p className="mt-0.5 text-ink-600">{copy.remedy}</p>
+        <p className="mt-0.5 text-ink-700">{copy.remedy}</p>
       </div>
     </div>
   )

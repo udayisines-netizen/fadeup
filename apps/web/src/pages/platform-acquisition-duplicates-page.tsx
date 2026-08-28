@@ -99,7 +99,7 @@ function DuplicatePairCard({ pair, showActions }: { pair: ProspectDuplicatePair;
             <span className="font-medium text-ink-950">{Math.round(pair.confidence * 100)}% confidence</span>
             <Badge variant="neutral">{pair.status.replace(/_/g, ' ')}</Badge>
           </div>
-          <span className="text-xs text-ink-400">{new Date(pair.createdAt).toLocaleString()}</span>
+          <span className="text-xs text-ink-500">{new Date(pair.createdAt).toLocaleString()}</span>
         </div>
 
         {isLoading ? (
@@ -146,7 +146,7 @@ function DuplicatePairCard({ pair, showActions }: { pair: ProspectDuplicatePair;
 
 function ProspectSummary({ prospect, location }: { prospect: Prospect | undefined; location: ProspectLocation | undefined }) {
   if (!prospect) {
-    return <div className="rounded-md border border-dashed border-border p-3 text-sm text-ink-400">Prospect not found</div>
+    return <div className="rounded-md border border-dashed border-border p-3 text-sm text-ink-500">Prospect not found</div>
   }
 
   return (

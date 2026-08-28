@@ -148,7 +148,7 @@ export function PlatformAcquisitionCompetitorsPage() {
         <CardHeader>
           <CardTitle>Provider discovery support</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3 text-sm text-ink-600">
+        <CardContent className="flex flex-col gap-3 text-sm text-ink-700">
           <p>
             FadeUp detects a competitor from publicly-observable signals on a business’s own website — booking links,
             embedded widgets, iframe and script domains, and public structured data.
@@ -191,7 +191,7 @@ function SummaryCard({ label, value, hint, tone }: { label: string; value: numbe
 /** Renders a count with its rate, or an em dash when there is no denominator to divide by. */
 function RateCell({ numerator, denominator }: { numerator: number; denominator: number }) {
   if (denominator === 0) {
-    return <span className="text-ink-400">—</span>
+    return <span className="text-ink-500">—</span>
   }
   return (
     <span>
@@ -202,7 +202,7 @@ function RateCell({ numerator, denominator }: { numerator: number; denominator: 
 }
 
 function DiscoverySupport({ provider }: { provider: { isSentinel: boolean; supportsCompliantDiscovery: boolean | null } }) {
-  if (provider.isSentinel) return <span className="text-xs text-ink-400">n/a</span>
+  if (provider.isSentinel) return <span className="text-xs text-ink-500">n/a</span>
   if (provider.supportsCompliantDiscovery === true) return <Badge variant="success">compliant API</Badge>
   if (provider.supportsCompliantDiscovery === false) return <Badge variant="neutral">none available</Badge>
   return <Badge variant="neutral">not assessed</Badge>

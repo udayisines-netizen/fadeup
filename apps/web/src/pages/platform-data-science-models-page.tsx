@@ -107,7 +107,7 @@ export function PlatformDataScienceModelsPage() {
                   {activeModel.modelKey}:{activeModel.modelVersion}
                 </span>
               </div>
-              <p className="text-sm text-ink-600">
+              <p className="text-sm text-ink-700">
                 Predicting <strong>{activeModel.target}</strong>, feature schema {activeModel.featureSchemaVersion}.
                 Promoted {activeModel.promotedAt ? new Date(activeModel.promotedAt).toLocaleString() : 'unknown'}.
               </p>
@@ -121,7 +121,7 @@ export function PlatformDataScienceModelsPage() {
               <div className="flex items-center gap-2">
                 <Badge variant="accent">Deterministic rules</Badge>
               </div>
-              <p className="text-sm text-ink-600">
+              <p className="text-sm text-ink-700">
                 No model is promoted. Template selection uses the deterministic rule ranking: locale match, then
                 competitor targeting, then segment targeting, then sales-angle priority.
               </p>
@@ -205,7 +205,7 @@ export function PlatformDataScienceModelsPage() {
                           </Button>
                         )
                       ) : (
-                        <span className="text-xs text-ink-400">—</span>
+                        <span className="text-xs text-ink-500">—</span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -271,7 +271,7 @@ function MetricList({ metrics }: { metrics: Record<string, number> }) {
   )
 
   if (entries.length === 0) {
-    return <span className="text-xs text-ink-400">no metrics recorded</span>
+    return <span className="text-xs text-ink-500">no metrics recorded</span>
   }
 
   return (

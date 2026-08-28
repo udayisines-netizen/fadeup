@@ -88,7 +88,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </div>
               <ToastPrimitive.Close
                 aria-label={t('common:ui.dismissNotification')}
-                className="shrink-0 rounded-sm text-ink-400 hover:text-ink-950"
+                className="shrink-0 rounded-sm text-ink-500 hover:text-ink-950"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </ToastPrimitive.Close>

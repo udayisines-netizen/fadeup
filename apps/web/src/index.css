@@ -900,6 +900,106 @@ body {
   --fu-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ============================================================================
+ * TYPOGRAPHY ROLES
+ * ============================================================================
+ *
+ * Seven names, not a numeric ramp.
+ *
+ * `text-lg` says how big something is; `text-title` says what it IS, and two
+ * screens that both use `text-title` stay in agreement when the value changes.
+ * The numeric utilities remain available and remain correct for one-off body
+ * copy — this layer exists for the recurring structural roles, which are the
+ * ones that drift.
+ *
+ * `--text-kpi` is the reason this block earns its place. A dashboard number is
+ * the one piece of type in FadeUp that must be tabular, tight and optically
+ * larger than its label, and every KPI in the product having independently
+ * chosen its own size is exactly how a dashboard starts looking assembled.
+ */
+@theme {
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 600;
+
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.022em;
+  --text-title--font-weight: 600;
+
+  --text-heading: 1.125rem;
+  --text-heading--line-height: 1.3;
+  --text-heading--letter-spacing: -0.012em;
+  --text-heading--font-weight: 600;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.55;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.45;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1;
+  --text-label--letter-spacing: 0.06em;
+  --text-label--font-weight: 600;
+
+  /* Numerals only. `tabular-nums` still has to be applied by the caller —
+     a font-variant-numeric cannot be expressed as a --text-* modifier. */
+  --text-kpi: 1.875rem;
+  --text-kpi--line-height: 1.05;
+  --text-kpi--letter-spacing: -0.025em;
+  --text-kpi--font-weight: 600;
+}
+
+/* ============================================================================
+ * LAYERS, CONTROLS, ICONS, SAFE AREA
+ * ============================================================================
+ *
+ * These are the four scales that were being decided ad hoc at each call site,
+ * which is how a bottom sheet ends up underneath a sticky header exactly once,
+ * on one screen, in one breakpoint.
+ *
+ * LAYERS are ordered by what must be able to cover what, and the order is the
+ * whole point: a sheet covers the tab bar, an overlay covers the sheet's
+ * siblings, a toast covers everything because it is the only thing that may
+ * interrupt. Written as plain custom properties and used through `z-[…]`
+ * rather than as Tailwind's numeric `z-40`, so the INTENT is legible in the
+ * markup and a future insertion between two layers is a one-line change here.
+ *
+ * CONTROL HEIGHTS carry the accessibility floor. `--fu-control-md` is 44px
+ * because that is the WCAG 2.2 target minimum, and `--fu-control-sm` is
+ * deliberately below it: it exists only for dense pointer-driven admin rows,
+ * and naming it `sm` rather than leaving `min-h-9` scattered around is what
+ * makes an audit of "where are we under 44px?" a grep instead of a reading.
+ */
+@theme {
+  --fu-z-base: 0;
+  --fu-z-raised: 10;
+  --fu-z-sticky: 20;
+  --fu-z-header: 30;
+  --fu-z-tabbar: 40;
+  --fu-z-overlay: 50;
+  --fu-z-sheet: 55;
+  --fu-z-toast: 60;
+
+  --fu-control-sm: 2.25rem; /* 36px — dense pointer-only contexts ONLY */
+  --fu-control-md: 2.75rem; /* 44px — the touch-target floor */
+  --fu-control-lg: 3.5rem; /* 56px — primary consumer actions */
+  --fu-control-xl: 4rem; /* 64px — the BOOK action */
+
+  --fu-icon-xs: 0.75rem;
+  --fu-icon-sm: 0.875rem;
+  --fu-icon-md: 1.25rem;
+  --fu-icon-lg: 1.5rem;
+
+  /* Resolved once here so no component has to remember the `max()` — the
+     fallback matters on every desktop browser, where the inset is 0 and a
+     bare `env()` would collapse the padding entirely. */
+  --fu-safe-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  --fu-safe-top: max(0.5rem, env(safe-area-inset-top));
+}
+
 @media (prefers-reduced-motion: no-preference) {
   /* A row arriving from realtime: it must be noticeable without being a
      distraction on a screen that stays open for eight hours. */

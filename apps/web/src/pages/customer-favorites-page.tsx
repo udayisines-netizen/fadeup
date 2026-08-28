@@ -102,7 +102,7 @@ function FavoriteCard({ favorite, onRemove }: { favorite: MyFavorite; onRemove: 
         type="button"
         onClick={onRemove}
         aria-label={t('favorites.remove')}
-        className="shrink-0 rounded-full p-2 text-ink-400 hover:bg-paper-100 hover:text-danger-600"
+        className="shrink-0 rounded-full p-2 text-ink-500 hover:bg-paper-100 hover:text-danger-600"
       >
         <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
       </button>
