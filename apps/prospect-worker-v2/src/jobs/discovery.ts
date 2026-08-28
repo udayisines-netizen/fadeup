@@ -15,8 +15,21 @@ import type { ProspectJob, DiscoveryJobPayload } from '../queue/types.js'
 // France gets the full waterfall (Sirene is France-only); every other
 // country skips straight from Geoapify to Google — see spec's
 // source-waterfall section.
+// Planity is France-only and LAST in the French waterfall, deliberately.
+//
+// Order matters here because the loop links candidates into whichever prospect
+// already exists, so an earlier source's record becomes the anchor a later one
+// reconciles against. OSM/Geoapify/Sirene are broad geographic and registry
+// sweeps; Planity covers only businesses that chose to be on Planity. Running
+// it last means its candidates mostly MERGE into prospects the sweeps already
+// found — adding a booking-provider fact to a known business — rather than
+// creating a parallel population of Planity-only prospects that the sweeps
+// then have to be reconciled against.
+//
+// It is also the most expensive to run and the one a provider could start
+// refusing, so it is the right thing to reach last and cheapest to lose.
 const BULK_SOURCES_BY_COUNTRY: Record<string, string[]> = {
-  FR: ['osm', 'geoapify', 'sirene'],
+  FR: ['osm', 'geoapify', 'sirene', 'planity'],
 }
 const DEFAULT_BULK_SOURCES = ['osm', 'geoapify']
 
@@ -98,6 +111,19 @@ export async function runDiscoveryJob(
           else summary.prospectsLinked++
           summary.duplicateCandidatesFound += outcome.duplicateCandidates
           processedProspectIds.push(outcome.prospectId)
+
+          // A business found ON Planity is a Planity customer. That is known
+          // right now, from the page that listed it — waiting for a later
+          // website crawl to rediscover it would leave the competitor record
+          // empty for businesses whose only web presence IS their Planity page,
+          // which is exactly the population this source finds.
+          //
+          // booking_status stays UNKNOWN: a listing shows that a business is
+          // there, not that its services are bookable. Only planity_enrichment,
+          // which reads the establishment page, can say that.
+          if (sourceKey === 'planity') {
+            await recordPlanityProviderObservation(pool, job.id, outcome.prospectId, raw, log)
+          }
         }
       }
 
@@ -429,4 +455,49 @@ async function markJobSource(pool: DbPool, jobSourceId: string, status: string, 
      where id = $1`,
     [jobSourceId, status, candidatesFound, error],
   )
+}
+
+/**
+ * Records the booking-provider fact implied by finding a business on Planity.
+ *
+ * Uses the SAME append-only observation table and the same BEFORE INSERT
+ * trigger as website-based competitor detection, so re-running discovery
+ * extends `last_seen_at` on the existing row instead of accumulating one per
+ * run. `provider_public_page` is the honest detection method: the evidence came
+ * from Planity's own listing, not from something found on the business's site.
+ *
+ * Non-fatal by design. A discovery job that found a real business must not be
+ * failed because a secondary provider fact could not be written — the prospect
+ * and its provenance are already committed, and website enrichment would
+ * eventually record the same relationship anyway.
+ */
+async function recordPlanityProviderObservation(
+  pool: DbPool,
+  jobId: string,
+  prospectId: string,
+  raw: RawCandidate,
+  log: Logger,
+): Promise<void> {
+  const url = typeof raw.rawPayload['canonicalPlanityUrl'] === 'string'
+    ? (raw.rawPayload['canonicalPlanityUrl'] as string)
+    : raw.sourceUrl
+
+  if (!url) return
+
+  try {
+    await pool.query(
+      `insert into public.booking_provider_observations
+         (prospect_id, provider_id, detection_method, evidence, evidence_url,
+          confidence, job_id, is_current, booking_status)
+       select $1, bp.id, 'provider_public_page'::public.booking_provider_detection_method,
+              $2, $2, $3, $4, true, 'UNKNOWN'::public.booking_availability_status
+       from public.booking_providers bp where bp.key = 'PLANITY'`,
+      [prospectId, url, 0.95, jobId],
+    )
+  } catch (error) {
+    log.warn('discovery: could not record Planity provider observation', {
+      prospect_id: prospectId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
 }

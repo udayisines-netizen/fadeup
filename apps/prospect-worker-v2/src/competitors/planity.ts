@@ -113,6 +113,51 @@ export function isPlanityEstablishmentUrl(rawUrl: string): boolean {
   return /-\d{4,6}-[a-z0-9-]+$/i.test(segments[0]!)
 }
 
+/**
+ * Category prefixes Planity publishes listing pages under.
+ *
+ * `barbier` first and deliberately: it is the barber-specific tree, and
+ * FadeUp's market is barbers. `coiffeur` is the general hairdressing tree and
+ * is far broader — useful as a fallback for a town too small to have its own
+ * barber listing, never as the primary.
+ *
+ * `manucure-et-pedicure` is the largest tree on the site and is excluded
+ * entirely. Ingesting it would fill FadeUp with nail bars.
+ */
+export const PLANITY_LISTING_CATEGORIES = ['barbier', 'coiffeur'] as const
+
+/**
+ * True for a Planity category/listing page — the surface discovery reads.
+ *
+ * Shapes, from the published sitemap:
+ *   /barbier/paris-75                     city listing
+ *   /barbier/59113-seclin                 city listing (postcode form)
+ *   /barbier/rasage-homme/paris-75        service-refined listing
+ *   /barbier/paris-75/page-2              pagination
+ *
+ * Checked before a request rather than after, so a marketing page or an
+ * establishment page can never be mistaken for a listing and parsed as one.
+ */
+export function isPlanityListingUrl(rawUrl: string): boolean {
+  const canonical = canonicalizePlanityUrl(rawUrl)
+  if (!canonical) return false
+
+  const segments = new URL(canonical).pathname.split('/').filter(Boolean)
+  if (segments.length < 2 || segments.length > 4) return false
+  if (!PLANITY_LISTING_CATEGORIES.includes(segments[0] as (typeof PLANITY_LISTING_CATEGORIES)[number])) return false
+
+  // A trailing /page-N is pagination, not a further path segment.
+  const last = segments[segments.length - 1]!
+  return /^page-\d{1,3}$/.test(last) ? segments.length >= 3 : true
+}
+
+/** True for one of Planity's published sitemap files. */
+export function isPlanitySitemapUrl(rawUrl: string): boolean {
+  const canonical = canonicalizePlanityUrl(rawUrl)
+  if (!canonical) return false
+  return /^\/sitemap(-\d+)?\.xml$/.test(new URL(canonical).pathname)
+}
+
 // ---------------------------------------------------------------------------
 // robots.txt
 // ---------------------------------------------------------------------------
@@ -502,4 +547,170 @@ function normalizeCountry(value: string | null): string | null {
     switzerland: 'CH', suisse: 'CH',
   }
   return byName[trimmed.toLowerCase()] ?? null
+}
+
+// ---------------------------------------------------------------------------
+// Listing pages — the discovery surface
+// ---------------------------------------------------------------------------
+
+/**
+ * One establishment as a category page describes it.
+ *
+ * Deliberately thinner than PlanityEstablishment: a listing carries name,
+ * address, reputation and a canonical URL, and that is enough to create a
+ * candidate. Phone, geo, services and team live on the detail page, and
+ * fetching 20 detail pages to enrich a listing would make discovery cost 20x
+ * what it needs to. That work belongs to planity_enrichment, which already
+ * exists and is scheduled by freshness.
+ */
+export interface PlanityListingItem {
+  canonicalUrl: string
+  name: string
+  streetAddress: string | null
+  postalCode: string | null
+  city: string | null
+  countryCode: string | null
+  rating: number | null
+  reviewCount: number | null
+  /** The schema.org type the listing gave it. The classification signal. */
+  schemaType: string | null
+}
+
+export interface PlanityListing {
+  items: PlanityListingItem[]
+  /** From <link rel="next">. Null on the last page. */
+  nextPageUrl: string | null
+  /** True when an ItemList was found at all — distinguishes "empty city" from "page shape changed". */
+  hasStructuredData: boolean
+}
+
+/**
+ * schema.org types that are NOT a barbershop or an independent barber.
+ *
+ * A DENYLIST, not an allowlist, and the direction matters. Planity's own
+ * barber category page returns NailSalon entries — "Meet Nail - Marais Paris 4"
+ * appeared on /barbier/paris-75 — so without a filter FadeUp would ingest nail
+ * bars as barbershops. An allowlist would instead silently drop every type
+ * Planity adds later, which fails in the direction of losing real supply.
+ *
+ * Matched case-insensitively against the bare type name.
+ */
+const NON_BARBER_SCHEMA_TYPES = new Set([
+  'nailsalon',
+  'dayspa',
+  'spa',
+  'tattooparlor',
+  'medicalclinic',
+  'medicalbusiness',
+  'physiotherapy',
+  'healthclub',
+  'gym',
+])
+
+/**
+ * Whether a listing entry is plausibly a barbershop or independent barber.
+ *
+ * Being on the /barbier/ page is already strong evidence; this only removes
+ * the entries Planity itself labels as something else. Presence on Planity is
+ * never proof a business is a barber, and this is the cheap half of that
+ * judgement — the rest is FadeUp's existing reconciliation and scoring.
+ */
+export function isBarberRelevantSchemaType(schemaType: string | null): boolean {
+  if (!schemaType) return true
+  return !NON_BARBER_SCHEMA_TYPES.has(schemaType.toLowerCase().trim())
+}
+
+/**
+ * Parses a Planity category page.
+ *
+ * Reads the schema.org ItemList — the surface Planity publishes FOR machines —
+ * and <link rel="next"> for pagination. No CSS selectors, for the reason given
+ * on parsePlanityEstablishment: Planity's class names are build-hashed and a
+ * selector would break silently.
+ *
+ * Never throws. A changed page yields zero items and hasStructuredData=false,
+ * which the caller must report as a parser failure rather than as "this city
+ * has no barbers".
+ */
+export function parsePlanityListing(html: string, fetchedUrl: string): PlanityListing {
+  const itemList = extractItemList(html)
+  const items: PlanityListingItem[] = []
+
+  for (const entry of itemList) {
+    if (!isRecord(entry)) continue
+    const item = isRecord(entry['item']) ? entry['item'] : entry
+    const url = canonicalizePlanityUrl(str(item['url']) ?? '')
+    const name = cleanText(str(item['name']))
+
+    // A listing entry with no canonical URL or no name cannot become a
+    // candidate: there would be nothing to enrich and nothing to reconcile on.
+    if (!url || !name) continue
+    if (!isPlanityEstablishmentUrl(url)) continue
+
+    const address = isRecord(item['address']) ? item['address'] : {}
+    const rating = isRecord(item['aggregateRating']) ? item['aggregateRating'] : {}
+    const rawType = item['@type']
+    const schemaType = typeof rawType === 'string' ? rawType : Array.isArray(rawType) ? String(rawType[0] ?? '') : null
+
+    items.push({
+      canonicalUrl: url,
+      name,
+      streetAddress: cleanText(str(address['streetAddress'])),
+      postalCode: cleanText(str(address['postalCode'])),
+      city: cleanText(str(address['addressLocality'])),
+      countryCode: normalizeCountry(str(address['addressCountry'])),
+      rating: num(rating['ratingValue']),
+      reviewCount: intOrNull(rating['reviewCount']),
+      schemaType,
+    })
+  }
+
+  return {
+    items,
+    nextPageUrl: extractNextPage(html, fetchedUrl),
+    hasStructuredData: itemList.length > 0,
+  }
+}
+
+function extractItemList(html: string): unknown[] {
+  const blocks = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)
+
+  for (const block of blocks) {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(block[1]!)
+    } catch {
+      continue
+    }
+
+    const candidates: unknown[] = Array.isArray(parsed)
+      ? parsed
+      : isRecord(parsed) && Array.isArray(parsed['@graph'])
+        ? (parsed['@graph'] as unknown[])
+        : [parsed]
+
+    for (const candidate of candidates) {
+      if (!isRecord(candidate)) continue
+      if (String(candidate['@type'] ?? '').toLowerCase() !== 'itemlist') continue
+      const elements = candidate['itemListElement']
+      if (Array.isArray(elements)) return elements
+    }
+  }
+
+  return []
+}
+
+function extractNextPage(html: string, fetchedUrl: string): string | null {
+  const match = /<link[^>]*rel=["']next["'][^>]*>/i.exec(html)
+  if (!match) return null
+  const href = /href=["']([^"']+)["']/i.exec(match[0])?.[1]
+  if (!href) return null
+
+  try {
+    const absolute = new URL(href, fetchedUrl).toString()
+    const canonical = canonicalizePlanityUrl(absolute)
+    return canonical && isPlanityListingUrl(canonical) ? canonical : null
+  } catch {
+    return null
+  }
 }

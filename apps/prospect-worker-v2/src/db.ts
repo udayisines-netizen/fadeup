@@ -42,3 +42,14 @@ export async function closePool(): Promise<void> {
 export function setPool(p: DbPool): void {
   pool = p
 }
+
+/**
+ * The pool if one already exists, else undefined — never creates one.
+ *
+ * Exists for code that WANTS the worker's pool when running inside the worker
+ * but must not open a database connection when it is not, such as a source
+ * adapter invoked from `cli.js source test`.
+ */
+export function peekPool(): DbPool | undefined {
+  return pool
+}

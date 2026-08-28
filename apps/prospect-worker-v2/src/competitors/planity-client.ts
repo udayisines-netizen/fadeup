@@ -6,6 +6,8 @@ import {
   canonicalizePlanityUrl,
   isPathAllowed,
   isPlanityEstablishmentUrl,
+  isPlanityListingUrl,
+  isPlanitySitemapUrl,
   parseRobots,
   type RobotsRules,
 } from './planity.js'
@@ -36,7 +38,7 @@ import {
 export type PlanityFetchOutcome =
   | { status: 'ok'; html: string; finalUrl: string }
   /** Refused before the network: wrong host, wrong page shape, or robots. */
-  | { status: 'refused'; reason: 'not_planity' | 'not_establishment' | 'robots_denied' | 'robots_unavailable' }
+  | { status: 'refused'; reason: 'not_planity' | 'not_establishment' | 'wrong_page_kind' | 'robots_denied' | 'robots_unavailable' }
   /** Planity answered, and the answer was "no". */
   | { status: 'blocked'; reason: 'forbidden' | 'rate_limited' | 'challenge'; statusCode: number | null }
   | { status: 'not_found' }
@@ -101,9 +103,43 @@ export class PlanityClient {
    * so the job can skip cleanly.
    */
   async fetchEstablishment(rawUrl: string): Promise<PlanityFetchOutcome> {
+    return this.fetch(rawUrl, 'establishment', isPlanityEstablishmentUrl)
+  }
+
+  /**
+   * Fetches a category/listing page — the discovery surface.
+   *
+   * Shares every guard with fetchEstablishment: same robots check, same rate
+   * limiter, same serialisation, same challenge detection, same quota guard.
+   * Discovery can issue far more requests than enrichment, so giving it its own
+   * relaxed transport would have defeated the point of having the guards.
+   */
+  async fetchListing(rawUrl: string): Promise<PlanityFetchOutcome> {
+    return this.fetch(rawUrl, 'listing', isPlanityListingUrl)
+  }
+
+  /**
+   * Fetches one published sitemap file — the index used to resolve a city to
+   * its listing URL WITHOUT constructing or guessing slugs.
+   *
+   * Larger size cap because sitemap shards are ~7 MB, and no robots concern:
+   * robots.txt itself advertises them.
+   */
+  async fetchSitemap(rawUrl: string): Promise<PlanityFetchOutcome> {
+    return this.fetch(rawUrl, 'sitemap', isPlanitySitemapUrl, 16 * 1024 * 1024)
+  }
+
+  private async fetch(
+    rawUrl: string,
+    kind: 'establishment' | 'listing' | 'sitemap',
+    isAcceptable: (url: string) => boolean,
+    maxBytes?: number,
+  ): Promise<PlanityFetchOutcome> {
     const canonical = canonicalizePlanityUrl(rawUrl)
     if (!canonical) return { status: 'refused', reason: 'not_planity' }
-    if (!isPlanityEstablishmentUrl(canonical)) return { status: 'refused', reason: 'not_establishment' }
+    if (!isAcceptable(canonical)) {
+      return { status: 'refused', reason: kind === 'establishment' ? 'not_establishment' : 'wrong_page_kind' }
+    }
 
     await this.loadRobots()
     if (!this.robotsAvailable || !this.robots) {
@@ -125,12 +161,15 @@ export class PlanityClient {
       try {
         const html = await withQuotaGuard(
           this.pool,
-          { sourceKey: 'planity', jobId: this.jobId, endpoint: 'establishment' },
+          { sourceKey: 'planity', jobId: this.jobId, endpoint: kind },
           async () => ({
             value: await fetchText(canonical, {
-              headers: { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml' },
+              headers: {
+                'user-agent': USER_AGENT,
+                accept: kind === 'sitemap' ? 'application/xml,text/xml,*/*' : 'text/html,application/xhtml+xml',
+              },
               timeoutMs: this.options.timeoutMs,
-              maxResponseBytes: this.options.maxResponseBytes,
+              maxResponseBytes: maxBytes ?? this.options.maxResponseBytes,
             }),
           }),
         )

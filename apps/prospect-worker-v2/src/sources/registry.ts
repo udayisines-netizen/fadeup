@@ -5,12 +5,14 @@ import { SireneAdapter } from './sirene.js'
 import { GooglePlacesAdapter } from './google-places.js'
 import { WebsiteAdapter } from './website.js'
 import { InstagramAdapter } from './instagram.js'
+import { PlanityAdapter } from './planity.js'
 import type { SourceAdapter } from './types.js'
 
 /**
  * Builds every adapter, keyed by the same `key` values seeded into
  * public.prospect_sources (osm, geoapify, sirene, google_places, website,
- * instagram — see db/migrations/20260811150100_prospect_acquisition_schema.sql).
+ * instagram — see db/migrations/20260811150100_prospect_acquisition_schema.sql —
+ * and planity, added by db/migrations/20260828110000).
  * Each adapter is independently constructible regardless of whether its
  * credentials are configured — callers check `isConfigured()` (Worker
  * environment) AND the DB's `is_enabled`/quota-pause state
@@ -24,6 +26,7 @@ export function buildSourceRegistry(config: Config): Map<string, SourceAdapter> 
     new GooglePlacesAdapter(config),
     new WebsiteAdapter(config),
     new InstagramAdapter(config),
+    new PlanityAdapter(config),
   ]
   return new Map(adapters.map((a) => [a.key, a]))
 }

@@ -105,6 +105,19 @@ const envSchema = z.object({
   PLANITY_BATCH_SIZE: z.coerce.number().int().positive().max(200).default(25),
   PLANITY_RECHECK_AFTER_HOURS: z.coerce.number().int().positive().default(720),
 
+  // Discovery bounds. Discovery can issue far more requests than enrichment —
+  // a Paris barber listing runs to 29 pages — so both are capped here AND
+  // clamped again at the call site, because a config file is easier to edit
+  // than a code review is to pass.
+  //
+  // 3 pages is ~60 establishments, which is a sane default for one job. Early
+  // stopping means a query for 5 candidates still reads exactly one page.
+  PLANITY_MAX_DISCOVERY_PAGES: z.coerce.number().int().positive().max(20).default(3),
+  // Sitemap shards scanned to resolve a city to its listing URL. Scanning stops
+  // at the first match, and the result is cached for the process, so this is a
+  // ceiling on a cold miss rather than a per-query cost.
+  PLANITY_MAX_SITEMAP_SHARDS: z.coerce.number().int().positive().max(20).default(10),
+
   // --- Website enrichment crawler --------------------------------------
   CRAWLER_MAX_PAGES_PER_DOMAIN: z.coerce.number().int().positive().max(50).default(8),
   CRAWLER_MAX_DEPTH: z.coerce.number().int().nonnegative().max(4).default(2),
