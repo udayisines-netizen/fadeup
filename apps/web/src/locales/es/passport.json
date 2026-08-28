@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "Este enlace fue revocado",
   "sharedRevokedDescription": "El cliente desactivó este enlace. Pídele uno nuevo.",
   "sharedNotFoundTitle": "Este enlace no es válido",
-  "sharedNotFoundDescription": "Revisa el enlace o pide uno nuevo."
+  "sharedNotFoundDescription": "Revisa el enlace o pide uno nuevo.",
+  "cardEmptyHint": "Añade tu corte habitual para que cualquier profesional ya sepa cómo te gusta."
 }

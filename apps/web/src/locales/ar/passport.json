@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "تم إلغاء هذا الرابط",
   "sharedRevokedDescription": "قام العميل بإيقاف هذا الرابط. اطلب منه رابطًا جديدًا.",
   "sharedNotFoundTitle": "هذا الرابط غير صالح",
-  "sharedNotFoundDescription": "تحقق من الرابط أو اطلب رابطًا جديدًا."
+  "sharedNotFoundDescription": "تحقق من الرابط أو اطلب رابطًا جديدًا.",
+  "cardEmptyHint": "أضف قصّتك المعتادة ليعرف أي محترف تزوره كيف تفضّلها."
 }

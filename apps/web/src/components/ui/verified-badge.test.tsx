@@ -1,14 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { TooltipProvider } from '@/components/ui/tooltip'
 import { VerifiedBadge } from '@/components/ui/verified-badge'
 
+// Deliberately NOT wrapped in a TooltipProvider: the badge is dropped into
+// cards, list rows and profile headers all over the product, and it has to
+// work in every one of them without its caller knowing Radix exists.
 function renderBadge(props: Parameters<typeof VerifiedBadge>[0]) {
-  return render(
-    <TooltipProvider>
-      <VerifiedBadge {...props} />
-    </TooltipProvider>,
-  )
+  return render(<VerifiedBadge {...props} />)
 }
 
 describe('VerifiedBadge', () => {

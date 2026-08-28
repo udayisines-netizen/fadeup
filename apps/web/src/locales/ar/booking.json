@@ -145,7 +145,10 @@
     "bookWith": "احجز مع {{professional}}",
     "follow": "متابعة",
     "following": "تتم المتابعة",
-    "unfollow": "إلغاء المتابعة"
+    "unfollow": "إلغاء المتابعة",
+    "followers_one": "متابع واحد",
+    "followers_other": "{{count}} متابعين",
+    "about": "نبذة"
   },
   "shop": {
     "loadingProfile": "جارٍ تحميل الملف…",

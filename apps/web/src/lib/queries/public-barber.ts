@@ -150,3 +150,70 @@ export function usePublicOrganizationBarbers(organizationSlug: string | undefine
     enabled: Boolean(organizationSlug),
   })
 }
+
+/**
+ * The durable, shop-independent public identity behind a barber placement —
+ * `get_public_professional` (20260826100900_public_projections.sql).
+ *
+ * Two things live here that the operational `get_public_barber` contract
+ * deliberately does not carry, because they are facts about a PERSON rather
+ * than about a chair at a shop:
+ *
+ *   follower_count   computed from the canonical follow edges rather than
+ *                    materialized, and capped at 10000 inside the function, so
+ *                    a very popular professional costs the same as any other.
+ *   handle           the shop-independent address R6/R7 will route on. Read
+ *                    here so the profile can show it; nothing links to it yet.
+ *
+ * Returns null — never an error — for an identity that is unclaimed, not
+ * public, or absent. Those three cases are deliberately indistinguishable: "a
+ * professional exists here but is hidden" is itself a disclosure.
+ */
+export interface PublicProfessionalIdentity {
+  id: string
+  displayName: string
+  handle: string | null
+  headline: string | null
+  bio: string | null
+  avatarUrl: string | null
+  followerCount: number
+}
+
+interface PublicProfessionalIdentityRow {
+  id: string
+  display_name: string
+  handle: string | null
+  headline: string | null
+  bio: string | null
+  avatar_url: string | null
+  follower_count: number
+}
+
+export function usePublicProfessionalIdentity(professionalId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['public-professional', professionalId],
+    queryFn: async (): Promise<PublicProfessionalIdentity | null> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('get_public_professional', {
+        p_professional_id: professionalId,
+      })
+      if (error) throw error
+      const rows = (data ?? []) as PublicProfessionalIdentityRow[]
+      const row = rows[0]
+      if (!row) return null
+      return {
+        id: row.id,
+        displayName: row.display_name,
+        handle: row.handle,
+        headline: row.headline,
+        bio: row.bio,
+        avatarUrl: row.avatar_url,
+        followerCount: row.follower_count,
+      }
+    },
+    // Only asked for a CLAIMED identity. An unclaimed placement has no
+    // professional_id to ask about, and asking anyway would be a round trip
+    // guaranteed to return nothing.
+    enabled: Boolean(professionalId),
+  })
+}

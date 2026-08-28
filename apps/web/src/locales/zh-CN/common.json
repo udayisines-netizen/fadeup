@@ -10,7 +10,8 @@
     "mainNavigation": "主导航",
     "openMenu": "打开菜单",
     "mobileNavigation": "移动端导航",
-    "menu": "菜单"
+    "menu": "菜单",
+    "profileOf": "{{name}} 的主页"
   },
   "auth": {
     "logIn": "登录",

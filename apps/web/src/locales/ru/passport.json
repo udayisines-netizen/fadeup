@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "Ссылка отозвана",
   "sharedRevokedDescription": "Клиент отключил эту ссылку. Попросите новую.",
   "sharedNotFoundTitle": "Ссылка недействительна",
-  "sharedNotFoundDescription": "Проверьте ссылку или попросите новую."
+  "sharedNotFoundDescription": "Проверьте ссылку или попросите новую.",
+  "cardEmptyHint": "Укажите привычную стрижку — и любой мастер сразу поймёт, как вы её любите."
 }

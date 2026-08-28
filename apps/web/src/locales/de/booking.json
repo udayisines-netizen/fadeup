@@ -145,7 +145,10 @@
     "bookWith": "Termin bei {{professional}} buchen",
     "follow": "Folgen",
     "following": "Folge ich",
-    "unfollow": "Nicht mehr folgen"
+    "unfollow": "Nicht mehr folgen",
+    "followers_one": "{{count}} Follower",
+    "followers_other": "{{count}} Follower",
+    "about": "Über"
   },
   "shop": {
     "loadingProfile": "Profil wird geladen…",

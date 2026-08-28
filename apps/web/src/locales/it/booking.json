@@ -145,7 +145,10 @@
     "bookWith": "Prenota con {{professional}}",
     "follow": "Segui",
     "following": "Seguito",
-    "unfollow": "Non seguire più"
+    "unfollow": "Non seguire più",
+    "followers_one": "{{count}} follower",
+    "followers_other": "{{count}} follower",
+    "about": "Informazioni"
   },
   "shop": {
     "loadingProfile": "Caricamento del profilo…",

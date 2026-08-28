@@ -10,7 +10,8 @@
     "mainNavigation": "التنقل الرئيسي",
     "openMenu": "فتح القائمة",
     "mobileNavigation": "التنقل على الجوال",
-    "menu": "القائمة"
+    "menu": "القائمة",
+    "profileOf": "الملف الشخصي لـ {{name}}"
   },
   "auth": {
     "logIn": "تسجيل الدخول",

@@ -10,7 +10,8 @@
     "mainNavigation": "Main navigation",
     "openMenu": "Open menu",
     "mobileNavigation": "Mobile navigation",
-    "menu": "Menu"
+    "menu": "Menu",
+    "profileOf": "Profile of {{name}}"
   },
   "auth": {
     "logIn": "Log in",

@@ -145,7 +145,10 @@
     "bookWith": "预约 {{professional}}",
     "follow": "关注",
     "following": "已关注",
-    "unfollow": "取消关注"
+    "unfollow": "取消关注",
+    "followers_one": "{{count}} 位关注者",
+    "followers_other": "{{count}} 位关注者",
+    "about": "简介"
   },
   "shop": {
     "loadingProfile": "正在加载资料…",

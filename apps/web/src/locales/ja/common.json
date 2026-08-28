@@ -10,7 +10,8 @@
     "mainNavigation": "メインナビゲーション",
     "openMenu": "メニューを開く",
     "mobileNavigation": "モバイルナビゲーション",
-    "menu": "メニュー"
+    "menu": "メニュー",
+    "profileOf": "{{name}} のプロフィール"
   },
   "auth": {
     "logIn": "ログイン",

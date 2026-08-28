@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "このリンクは取り消されました",
   "sharedRevokedDescription": "お客様がこのリンクを無効にしました。新しいリンクをご依頼ください。",
   "sharedNotFoundTitle": "このリンクは無効です",
-  "sharedNotFoundDescription": "リンクを確認するか、新しいリンクをもらってください。"
+  "sharedNotFoundDescription": "リンクを確認するか、新しいリンクをもらってください。",
+  "cardEmptyHint": "いつものカットを登録しておくと、どの店でも好みが伝わります。"
 }

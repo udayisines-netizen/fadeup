@@ -145,7 +145,10 @@
     "bookWith": "{{professional}} を予約する",
     "follow": "フォロー",
     "following": "フォロー中",
-    "unfollow": "フォロー解除"
+    "unfollow": "フォロー解除",
+    "followers_one": "フォロワー {{count}} 人",
+    "followers_other": "フォロワー {{count}} 人",
+    "about": "プロフィール"
   },
   "shop": {
     "loadingProfile": "プロフィールを読み込んでいます…",

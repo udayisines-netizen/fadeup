@@ -19,6 +19,12 @@ vi.mock('@/lib/auth-context', () => ({
   useAuth: vi.fn(),
 }))
 
+// The card at the top of the page carries the customer's OWN name, from
+// their own profile — never one a shop typed for them on a booking.
+vi.mock('@/lib/queries/customer-profile', () => ({
+  useMyCustomerProfile: vi.fn(() => ({ data: { displayName: 'Alex Customer' }, isPending: false })),
+}))
+
 vi.mock('@/lib/queries/passport', () => ({
   useMyPassport: vi.fn(),
   useUpsertMyPassport: vi.fn(),
@@ -91,23 +97,35 @@ describe('CustomerPassportPage', () => {
     mockUseRevokeShare.mockReturnValue({ mutate: revokeMutate, isPending: false } as never)
   })
 
-  it('shows a first-use empty state when no Passport exists — never fabricated content', () => {
+  it('never offers to CREATE the passport — every customer already has one', () => {
     mockUseMyPassport.mockReturnValue(successQuery(null))
 
     renderPage()
 
-    expect(screen.getByText('Create your Fade Passport')).toBeInTheDocument()
+    // §18. This screen used to open with an empty state and a "Create your
+    // Fade Passport" button, which manufactures an action out of a state.
+    expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument()
+
+    // The card is there regardless, carrying the customer's own identity, and
+    // an unfilled passport reads as a card with nothing on it yet.
+    expect(screen.getByRole('region', { name: 'Fade Passport' })).toBeInTheDocument()
+    expect(screen.getByText('Alex Customer')).toBeInTheDocument()
+
     // Photos/shares sections only appear once a Passport actually exists.
     expect(screen.queryByText('Share my fade')).not.toBeInTheDocument()
   })
 
-  it('renders real saved Passport values, and partial data stays useful', () => {
+  it('puts real saved values on the card and simply omits the unfilled ones', () => {
     mockUseMyPassport.mockReturnValue(successQuery(passport({ beardPreferences: null, preferencesNotes: null })))
 
     renderPage()
 
     expect(screen.getByText('Mid fade')).toBeInTheDocument()
-    expect(screen.getAllByText('Not set').length).toBe(2)
+    // "Not set" rows turn an identity card back into a half-finished form.
+    // What is missing is absent, not labelled as missing — the form is where
+    // the blanks live, because the form is where you fill them.
+    expect(screen.queryByText('Not set')).not.toBeInTheDocument()
+    expect(screen.queryByText('Beard preferences')).not.toBeInTheDocument()
   })
 
   it('saves edits through the upsert mutation', async () => {

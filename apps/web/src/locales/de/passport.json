@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "Dieser Link wurde widerrufen",
   "sharedRevokedDescription": "Der Kunde hat diesen Link deaktiviert. Bitte um einen neuen.",
   "sharedNotFoundTitle": "Dieser Link ist ungültig",
-  "sharedNotFoundDescription": "Prüfe den Link oder bitte um einen neuen."
+  "sharedNotFoundDescription": "Prüfe den Link oder bitte um einen neuen.",
+  "cardEmptyHint": "Trage deinen üblichen Schnitt ein, damit jeder Profi schon weiß, wie du ihn magst."
 }

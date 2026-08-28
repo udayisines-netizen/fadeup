@@ -2,12 +2,17 @@ import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Clock } from 'lucide-react'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
-import { usePublicBarber, usePublicBarberServices } from '@/lib/queries/public-barber'
+import {
+  usePublicBarber,
+  usePublicBarberServices,
+  usePublicProfessionalIdentity,
+} from '@/lib/queries/public-barber'
 import { usePublicServiceState } from '@/lib/queries/service-mode'
 import { FollowButton } from '@/components/customer/follow-button'
 import { ServiceModeCtas } from '@/components/booking/service-mode-ctas'
+import { ProfileHeader } from '@/components/profile/profile-header'
+import { StickyBookBar } from '@/components/profile/sticky-book-bar'
 import { Container } from '@/components/ui/container'
-import { Avatar } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { SectionHeader } from '@/components/ui/page-header'
 import { ErrorState } from '@/components/ui/error-state'
@@ -21,19 +26,44 @@ import { useMoney, useDateTime } from '@/lib/intl/use-intl'
 /**
  * `/s/:slug/barbers/:barberId` — a professional's shareable public profile.
  *
- * Real data only: name, title, bio and photo from `staff_profiles`, and the
- * services they actually perform. Never a fabricated specialties list, never
- * a review count, never a portfolio — `get_public_barber` and
- * `list_public_barber_services` return exactly these fields and nothing else
- * exists to draw from.
+ * ============================================================================
+ * SOCIAL FIRST, AND STILL CONVERTS
+ * ============================================================================
+ *
+ * §13 puts the hierarchy in this order: identity, social credibility, Follow,
+ * Book, social proof, availability, then content. Before R5 this page was
+ * conversion-first — a header, a Book button, a price list — which is a
+ * perfectly good booking page and is not a profile. The change is that the
+ * first viewport now answers "who is this, and do other people go to them?"
+ * before it answers "how much".
+ *
+ * Book still wins, because §13 also says it must. It appears twice: once in
+ * the header beside Follow, and again in a bar that sticks to the bottom of
+ * the page once the header has scrolled away. Follow takes the neutral
+ * `social` treatment precisely so it cannot out-shout Book on the one screen
+ * where that trade matters.
+ *
+ * ============================================================================
+ * WHAT IS STILL DELIBERATELY ABSENT
+ * ============================================================================
+ *
+ * No portfolio, no "Work" tab, no reviews, no specialties. There is no photo
+ * table for a professional, no reviews table anywhere, and the only services
+ * shown are the ones `list_public_barber_services` says they actually perform.
+ * §14 asks for tabs like Work and Reviews "following existing localization
+ * conventions" — the convention that matters more is that a tab must contain
+ * something, and an empty Reviews tab on every profile in the product would
+ * advertise a feature FadeUp does not have.
+ *
+ * The follower count IS real: `get_public_professional` computes it from the
+ * canonical follow edges. It is shown only when the identity is claimed and
+ * only when it is greater than zero — a "0 followers" line on a new
+ * professional is a discouraging number that tells a customer nothing.
  *
  * A private, unbookable or unknown professional returns zero rows and is
- * indistinguishable from a wrong link. That is the same privacy posture as
- * the rest of the public surface and it is intentional: "this person exists
- * but is hidden" is itself a disclosure.
- *
- * "Book with <name>" deep-links `/s/:slug?barber=…&location=…`, which the
- * wizard uses to preselect and skip steps.
+ * indistinguishable from a wrong link. That is the same privacy posture as the
+ * rest of the public surface and it is intentional: "this person exists but is
+ * hidden" is itself a disclosure.
  */
 export function PublicBarberPage() {
   const { t } = useTranslation('booking')
@@ -58,11 +88,10 @@ export function PublicBarberPage() {
    * The professional identity is deliberately NOT resolved here.
    *
    * This page has a barber_id — an operational placement — and
-   * `get_public_barber` does not return the durable professional_id, because
-   * the frozen customer API has no reason to expose it. Rather than widen a
-   * closed contract for analytics' benefit, the event carries the placement
-   * and the SERVER derives the professional from it. That keeps the
-   * derivation in the one place that can be trusted with it, and means a
+   * `get_public_barber` does not return the durable professional_id for
+   * analytics' benefit. Rather than widen a closed contract, the event carries
+   * the placement and the SERVER derives the professional from it. That keeps
+   * the derivation in the one place that can be trusted with it, and means a
    * future page that only knows a barber still attributes correctly.
    */
   useTrackView(
@@ -153,6 +182,12 @@ function BarberProfile({
     barber.barberId,
   )
 
+  // Only asked when there is a claimed identity to ask about. `professionalId`
+  // is null for an unclaimed placement, and that null is exactly the signal
+  // §16 asks for: no verified badge, no follower count, no Follow control.
+  const identityQuery = usePublicProfessionalIdentity(barber.professionalId)
+  const identity = identityQuery.data
+
   /*
    * The FULL name in the CTA, not a first name.
    *
@@ -162,48 +197,75 @@ function BarberProfile({
    * who has never met the customer by his first name in German. The whole
    * display name is the name the person chose to publish.
    */
+  const bookLabel = t('professional.bookWith', { professional: barber.displayName })
+
   return (
     <Container size="md" className="flex flex-1 flex-col gap-8 py-6 sm:py-10">
-      <section className="overflow-hidden rounded-2xl border border-border bg-paper-0">
-        <div className="relative h-28 bg-gradient-to-br from-accent-100 via-paper-100 to-paper-200 sm:h-32">
-          <span className="absolute end-3 top-3">
-            {barber.professionalId ? (
-              <FollowButton professionalId={barber.professionalId} />
-            ) : null}
-          </span>
-        </div>
+      <ProfileHeader
+        variant="person"
+        name={barber.displayName}
+        avatarUrl={barber.avatarUrl}
+        verified={barber.professionalId !== null}
+        headline={barber.title ?? identity?.headline}
+        subtitle={
+          <Link
+            to={`/s/${organization.slug}/profile`}
+            className="underline-offset-2 hover:text-ink-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
+          >
+            {t('professional.atOrganization', { organization: organization.name })}
+          </Link>
+        }
+        stats={
+          // Zero is never shown. A new professional's profile should not open
+          // with a number that reads as a verdict.
+          identity && identity.followerCount > 0
+            ? [
+                {
+                  key: 'followers',
+                  value: String(identity.followerCount),
+                  label: t('professional.followers', { count: identity.followerCount }),
+                },
+              ]
+            : undefined
+        }
+        actions={
+          /*
+            FOLLOW ONLY — Book is NOT here, and that is deliberate.
 
-        <div className="-mt-10 flex flex-col gap-4 px-5 pb-5 sm:px-6 sm:pb-6">
-          <Avatar name={barber.displayName} src={barber.avatarUrl} size="xl" className="ring-4 ring-paper-0" />
-
-          <div className="min-w-0">
-            <h1 className="text-balance text-2xl font-semibold text-ink-950">{barber.displayName}</h1>
-            {barber.title ? <p className="mt-0.5 text-sm font-medium text-accent-700">{barber.title}</p> : null}
-            <Link
-              to={`/s/${organization.slug}/profile`}
-              className="mt-1 inline-block text-sm text-ink-500 underline-offset-2 hover:text-ink-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
-            >
-              {t('professional.atOrganization', { organization: organization.name })}
-            </Link>
-            {barber.bio ? <p className="mt-3 text-pretty text-sm text-ink-700">{barber.bio}</p> : null}
-          </div>
-
-          {/* WHAT THIS PROFESSIONAL IS ACTUALLY ACCEPTING.
-              Until this lot the page offered "Book with …" unconditionally, to
-              everyone, always — which for a walk-in-only barber sent the
-              customer into a wizard that had nothing to offer them, and for an
-              unavailable one produced a booking the trigger now refuses.
-              The Follow control above is independent: following a professional
-              has nothing to do with whether they are taking bookings today. */}
+            The obvious composition puts a Book link beside Follow. It would be
+            wrong for the same reason Service Mode existed: an unconditional
+            Book offers a reservation to a walk-in-only barber and sends the
+            customer into a wizard that has nothing for them. Book is rendered
+            immediately below by `ServiceModeCtas`, which asks the server what
+            this professional is actually accepting — so the reading order is
+            still identity, credibility, Follow, Book, exactly as §13 sets out,
+            without the page ever promising something the shop has not offered.
+          */
+          barber.professionalId ? <FollowButton professionalId={barber.professionalId} /> : null
+        }
+        meta={
+          // WHAT THIS PROFESSIONAL IS ACTUALLY ACCEPTING. Until Service Mode
+          // this page offered "Book with …" unconditionally, to everyone,
+          // always — which for a walk-in-only barber sent the customer into a
+          // wizard that had nothing to offer them. Follow above is
+          // independent: following someone has nothing to do with whether they
+          // are taking bookings today (§25).
           <ServiceModeCtas
             state={serviceStateQuery.data}
             isPending={serviceStateQuery.isPending}
             bookHref={bookHref}
             queueHref={`/s/${organization.slug}/walk-in`}
-            bookLabel={t('professional.bookWith', { professional: barber.displayName })}
+            bookLabel={bookLabel}
           />
-        </div>
-      </section>
+        }
+      />
+
+      {barber.bio ? (
+        <section className="flex flex-col gap-3">
+          <SectionHeader title={t('professional.about')} />
+          <p className="text-pretty text-sm leading-relaxed text-ink-700">{barber.bio}</p>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-3">
         <SectionHeader title={t('common:entity.services')} />
@@ -229,8 +291,8 @@ function BarberProfile({
           <ul className="flex flex-col gap-2">
             {servicesQuery.data.map((service) => (
               // A row, not a link: booking always starts from the CTA above,
-              // because the wizard needs a location before a service and
-              // this list has no location to give it.
+              // because the wizard needs a location before a service and this
+              // list has no location to give it.
               <li
                 key={service.id}
                 className="flex items-center justify-between gap-4 rounded-xl border border-border bg-paper-0 px-4 py-3"
@@ -250,6 +312,27 @@ function BarberProfile({
           </ul>
         )}
       </section>
+
+      {/*
+        The second Book. Sticky rather than fixed, so it arrives as the header's
+        own Book leaves rather than covering the page from first paint — and
+        only when the professional is actually accepting bookings, because a
+        persistent CTA for something unavailable is worse than no CTA.
+      */}
+      {serviceStateQuery.data?.bookingAcceptingNewEntries ? (
+        <StickyBookBar>
+          {/*
+            The SHORT label, not "Book with <name>". Whose profile this is has
+            been established by everything above it, a persistent bar should
+            not restate it, and a distinct accessible name means the two Book
+            controls on this page are separately addressable rather than two
+            identically-named links.
+          */}
+          <Link to={bookHref} className={buttonVariants({ variant: 'book', size: 'lg' }, 'w-full')}>
+            {t('serviceMode.book')}
+          </Link>
+        </StickyBookBar>
+      ) : null}
     </Container>
   )
 }

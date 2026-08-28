@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/cn'
 
 /**
@@ -106,7 +106,17 @@ export function VerifiedBadge({
   if (withoutTooltip) return mark
 
   return (
-    <Tooltip>
+    /*
+      Its own provider, rather than assuming an ancestor mounted one.
+      `ui/tooltip` had no consumers before this badge, so nothing in the app
+      rendered a TooltipProvider — and a Radix tooltip without one does not
+      degrade, it throws. A badge that crashes a barber profile because
+      somebody forgot a provider three layers up is not a primitive anyone can
+      safely drop into a card. Providers nest, and the cost of an extra one is
+      a context value.
+    */
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
       {/*
         `asChild` on a plain <span> wrapper rather than on the svg: Radix needs
         to attach focus and pointer handlers, and an <svg> that receives
@@ -114,12 +124,16 @@ export function VerifiedBadge({
         focusable so the tooltip is reachable by keyboard, which is the half of
         WCAG 1.4.13 that hover-only tooltips always miss.
       */}
-      <TooltipTrigger asChild>
-        <span tabIndex={0} className="inline-flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700">
-          {mark}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{t('verified.description')}</TooltipContent>
-    </Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            tabIndex={0}
+            className="inline-flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700"
+          >
+            {mark}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{t('verified.description')}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

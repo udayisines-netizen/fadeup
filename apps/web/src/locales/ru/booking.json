@@ -145,7 +145,10 @@
     "bookWith": "Записаться к {{professional}}",
     "follow": "Подписаться",
     "following": "Вы подписаны",
-    "unfollow": "Отписаться"
+    "unfollow": "Отписаться",
+    "followers_one": "{{count}} подписчик",
+    "followers_other": "{{count}} подписчиков",
+    "about": "О мастере"
   },
   "shop": {
     "loadingProfile": "Загружаем профиль…",

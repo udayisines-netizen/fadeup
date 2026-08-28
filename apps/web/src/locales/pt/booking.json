@@ -145,7 +145,10 @@
     "bookWith": "Marcar com {{professional}}",
     "follow": "Seguir",
     "following": "A seguir",
-    "unfollow": "Deixar de seguir"
+    "unfollow": "Deixar de seguir",
+    "followers_one": "{{count}} seguidor",
+    "followers_other": "{{count}} seguidores",
+    "about": "Sobre"
   },
   "shop": {
     "loadingProfile": "A carregar o perfil…",

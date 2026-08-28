@@ -14,6 +14,10 @@ vi.mock('@/lib/queries/public-booking', () => ({
 vi.mock('@/lib/queries/public-barber', () => ({
   usePublicBarber: vi.fn(),
   usePublicBarberServices: vi.fn(),
+  // The durable identity behind the placement. Only consulted for a CLAIMED
+  // professional, and the profile renders fully without it — an unclaimed
+  // placement simply gets no badge, no follower count and no Follow control.
+  usePublicProfessionalIdentity: vi.fn(() => ({ data: null, isPending: false, isError: false })),
 }))
 
 // PARTIAL mock, deliberately. Only the network hook is replaced; the CTA

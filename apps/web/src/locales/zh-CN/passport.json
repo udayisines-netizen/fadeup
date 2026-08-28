@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "此链接已被撤销",
   "sharedRevokedDescription": "客户已关闭此链接，请向其索取新链接。",
   "sharedNotFoundTitle": "此链接无效",
-  "sharedNotFoundDescription": "请检查链接，或索取新链接。"
+  "sharedNotFoundDescription": "请检查链接，或索取新链接。",
+  "cardEmptyHint": "填写你常剪的发型，这样每位理发师都已经知道你的偏好。"
 }

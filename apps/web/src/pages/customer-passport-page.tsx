@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import QRCode from 'qrcode'
 import { Check, Copy, ImagePlus, QrCode, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useMyCustomerProfile } from '@/lib/queries/customer-profile'
 import {
   useMyPassport,
   useUpsertMyPassport,
@@ -14,13 +15,13 @@ import {
   useCreatePassportShare,
   useRevokePassportShare,
 } from '@/lib/queries/passport'
+import { PassportCard } from '@/components/passport/passport-card'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TextField } from '@/components/ui/text-field'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert } from '@/components/ui/alert'
-import { EmptyState } from '@/components/ui/empty-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { PageSpinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
@@ -46,6 +47,9 @@ export function CustomerPassportPage() {
   const { user } = useAuth()
   const toast = useToast()
   const passportQuery = useMyPassport(user?.id)
+  // The name on the card is the customer's own, from their own profile — never
+  // derived from a booking, which would be a name a shop typed for them.
+  const profileQuery = useMyCustomerProfile(user?.id)
   const upsert = useUpsertMyPassport()
   const [editing, setEditing] = useState(false)
 
@@ -108,6 +112,19 @@ export function CustomerPassportPage() {
 
   const passport = passportQuery.data
 
+  /**
+   * Only what the customer actually filled in. A card that listed every field
+   * with "Not set" beside most of them would look like an incomplete form,
+   * which is precisely what the card exists to stop it being.
+   */
+  const cardEntries = [
+    { key: 'usualHaircut', label: t('usualHaircut'), value: passport?.usualHaircut },
+    { key: 'fadeType', label: t('fadeType'), value: passport?.fadeType },
+    { key: 'sideLength', label: t('sideLength'), value: passport?.sideLength },
+    { key: 'topLength', label: t('topLength'), value: passport?.topLength },
+    { key: 'beardPreferences', label: t('beardPreferences'), value: passport?.beardPreferences },
+  ].flatMap((entry) => (entry.value ? [{ key: entry.key, label: entry.label, value: entry.value }] : []))
+
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <div>
@@ -115,13 +132,21 @@ export function CustomerPassportPage() {
         <p className="mt-1 text-sm text-ink-500">{t('subtitle')}</p>
       </div>
 
-      {!passport && !editing ? (
-        <EmptyState
-          title={t('emptyTitle')}
-          description={t('emptyDescription')}
-          action={<Button onClick={() => setEditing(true)}>{t('create')}</Button>}
-        />
-      ) : editing ? (
+      {/*
+        THE CARD IS ALWAYS THERE (§18).
+
+        It used to be an EmptyState with a "Create" button, which is the one
+        shape §18 forbids: every customer already has a Fade Passport, and a
+        button offering to create the thing you already have manufactures an
+        action out of a state. An unfilled passport is now simply a card with
+        nothing on it yet, and the form below is how you fill it.
+      */}
+      <PassportCard
+        name={profileQuery.data?.displayName ?? user.email ?? ''}
+        entries={cardEntries}
+      />
+
+      {editing ? (
         <Card className="p-5">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <TextField label={t('usualHaircut')} {...register('usualHaircut')} />
@@ -140,35 +165,30 @@ export function CustomerPassportPage() {
             </div>
           </form>
         </Card>
-      ) : passport ? (
-        <Card className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <dl className="flex min-w-0 flex-1 flex-col gap-2 text-sm">
-              <PassportRow label={t('usualHaircut')} value={passport.usualHaircut} notSet={t('notSet')} />
-              <PassportRow label={t('fadeType')} value={passport.fadeType} notSet={t('notSet')} />
-              <PassportRow label={t('sideLength')} value={passport.sideLength} notSet={t('notSet')} />
-              <PassportRow label={t('topLength')} value={passport.topLength} notSet={t('notSet')} />
-              <PassportRow label={t('beardPreferences')} value={passport.beardPreferences} notSet={t('notSet')} />
-              <PassportRow label={t('preferencesNotes')} value={passport.preferencesNotes} notSet={t('notSet')} />
-            </dl>
-            <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
-              {t('edit')}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
+      ) : (
+        <>
+          {/*
+            The read view is the CARD, not a second list under it.
+
+            There used to be a panel here repeating all six fields with "Not
+            set" beside the empty ones. Alongside the card that is the same
+            information twice, and the "Not set" rows turn an identity artefact
+            back into a half-finished form — which is exactly what the card was
+            added to stop it being. Anything not filled in is simply not on the
+            card; the form is where you see the blanks, because the form is
+            where you fill them.
+          */}
+          {passport?.preferencesNotes ? (
+            <p className="text-pretty text-sm text-ink-700">{passport.preferencesNotes}</p>
+          ) : null}
+          <Button variant="secondary" onClick={() => setEditing(true)} className="self-start">
+            {t('edit')}
+          </Button>
+        </>
+      )}
 
       {passport ? <PhotosSection userId={user.id} /> : null}
       {passport ? <SharesSection /> : null}
-    </div>
-  )
-}
-
-function PassportRow({ label, value, notSet }: { label: string; value: string | null; notSet: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="shrink-0 text-ink-500">{label}</dt>
-      <dd className={value ? 'text-end font-medium text-ink-950' : 'text-end text-ink-300'}>{value || notSet}</dd>
     </div>
   )
 }

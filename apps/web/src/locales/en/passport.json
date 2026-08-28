@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "This link was revoked",
   "sharedRevokedDescription": "The customer turned this link off. Ask them for a new one.",
   "sharedNotFoundTitle": "This link isn't valid",
-  "sharedNotFoundDescription": "Double-check the link, or ask for a new one."
+  "sharedNotFoundDescription": "Double-check the link, or ask for a new one.",
+  "cardEmptyHint": "Add your usual cut so any barber you visit already knows how you like it."
 }

@@ -5,6 +5,9 @@ import { usePublicOrganization, usePublicLocations, type PublicLocation } from '
 import { usePublicOrganizationBarbers } from '@/lib/queries/public-barber'
 import { FavoriteButton } from '@/components/customer/favorite-button'
 import { OrganizationFollowButton } from '@/components/customer/organization-follow-button'
+import { ProfileHeader } from '@/components/profile/profile-header'
+import { StickyBookBar } from '@/components/profile/sticky-book-bar'
+import { VerifiedBadge } from '@/components/ui/verified-badge'
 import { Container } from '@/components/ui/container'
 import { Avatar } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -24,13 +27,30 @@ import { directionsUrl, formatFullAddress } from '@/lib/geo/address'
  * addresses, and the public team, so a customer can go shop → professional →
  * book. It contains no booking logic of its own; it only links into it.
  *
+ * ============================================================================
+ * RELATED TO THE BARBER PROFILE, AND NOT THE SAME (§15)
+ * ============================================================================
+ *
+ * Both use `ProfileHeader`, so the avatar treatment, the badge position, the
+ * stat row and the action placement agree — that agreement is most of what
+ * makes two pages read as one product. What differs is what each one IS: a
+ * professional gets a circular avatar and leads with "who"; a shop gets a
+ * rounded square, an inverted band, and leads with "where and who works here".
+ *
+ * FOLLOW AND FAVOURITE ARE BOTH HERE, AND THEY ARE NOT THE SAME ACTION.
+ * Follow Shop writes `organization_follows` and is a social relationship;
+ * Favourite writes `customer_favorites` and is a private bookmark. §15 forbids
+ * conflating them, and showing them side by side is what makes the difference
+ * legible rather than merely true.
+ *
  * WHAT IS DELIBERATELY ABSENT: opening hours, ratings, photos, "since 2014".
  * There is no reviews table, no per-location open-now read on this page and
  * no image column, and a profile is exactly the screen where inventing any of
- * that would change someone's decision. The hero is a branded panel carrying
- * the shop's initial, tinted from its name — the same treatment as the
- * marketplace card, so the shop a customer tapped still looks like the shop
- * they landed on.
+ * that would change someone's decision.
+ *
+ * A shop carries NO verified badge. §17's badge means "this identity is
+ * claimed and controlled by the person it names", which is a statement about a
+ * person; FadeUp verifies people, not premises.
  */
 export function ShopProfilePage() {
   const { t } = useTranslation('booking')
@@ -108,45 +128,38 @@ export function ShopProfilePage() {
 
   return (
     <Container size="md" className="flex flex-1 flex-col gap-8 py-6 sm:py-10">
-      <section className="overflow-hidden rounded-2xl border border-border bg-paper-0">
-        <div className="relative h-32 bg-gradient-to-br from-accent-100 via-paper-100 to-paper-200 sm:h-40">
-          <div className="absolute end-3 top-3 flex items-center gap-2">
-            <OrganizationFollowButton
-              organizationId={organization.id}
-            />
-            <FavoriteButton organizationId={organization.id} />
-          </div>
-        </div>
-
-        {/* The avatar straddles the panel edge — the one place on the public
-            surface that gets this treatment, because it is the shop's
-            identity and everything below it is detail. */}
-        <div className="-mt-10 flex flex-col gap-4 px-5 pb-5 sm:px-6 sm:pb-6">
-          <Avatar name={organization.name} size="xl" className="ring-4 ring-paper-0" />
-
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-balance text-2xl font-semibold text-ink-950">{organization.name}</h1>
-              {locationsQuery.isPending ? (
-                <Skeleton className="mt-1.5 h-4 w-40" />
-              ) : locations.length > 0 ? (
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-500">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  <span className="truncate">
-                    {locations.length === 1
-                      ? (locations[0]!.city ?? locations[0]!.name)
-                      : t('shop.locationCount', { count: locations.length })}
-                  </span>
-                </p>
-              ) : null}
-            </div>
-
-            <Link to={`/s/${organization.slug}`} className={buttonVariants({ size: 'lg' }, 'w-full sm:w-auto')}>
+      <ProfileHeader
+        variant="place"
+        name={organization.name}
+        // Never. See the note above: the badge is a statement about a person.
+        verified={false}
+        subtitle={
+          locationsQuery.isPending ? (
+            <Skeleton className="h-4 w-40" />
+          ) : locations.length > 0 ? (
+            <span className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                {locations.length === 1
+                  ? (locations[0]!.city ?? locations[0]!.name)
+                  : t('shop.locationCount', { count: locations.length })}
+              </span>
+            </span>
+          ) : null
+        }
+        actions={
+          <>
+            <Link
+              to={`/s/${organization.slug}`}
+              className={buttonVariants({ variant: 'book', size: 'lg' }, 'flex-1 sm:flex-none')}
+            >
               {t('shop.bookNow')}
             </Link>
-          </div>
-        </div>
-      </section>
+            <OrganizationFollowButton organizationId={organization.id} />
+            <FavoriteButton organizationId={organization.id} />
+          </>
+        }
+      />
 
       {locations.length > 0 ? (
         <section className="flex flex-col gap-3">
@@ -193,7 +206,13 @@ export function ShopProfilePage() {
               >
                 <Avatar name={barber.displayName} src={barber.avatarUrl} size="lg" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-ink-950">{barber.displayName}</p>
+                  <p className="flex items-center justify-center gap-1 truncate text-sm font-medium text-ink-950">
+                    <span className="truncate">{barber.displayName}</span>
+                    {/* The team is where a shop profile carries the badge:
+                        these are people, and professional_id is non-null only
+                        for a claimed identity. */}
+                    <VerifiedBadge verified={barber.professionalId !== null} size="sm" withoutTooltip />
+                  </p>
                   {barber.title ? <p className="truncate text-xs text-ink-500">{barber.title}</p> : null}
                 </div>
               </Link>
@@ -201,6 +220,19 @@ export function ShopProfilePage() {
           </div>
         )}
       </section>
+
+      {/* The second Book, arriving as the header's own scrolls away. A shop
+          page always has one: unlike a professional, a shop's bookability is
+          not a single service-mode answer — the wizard resolves it per
+          location and per professional, which is what it is for. */}
+      <StickyBookBar>
+        {/* The short label. The header's Book says "Book now"; a persistent
+            bar restating the same phrase would give the page two identically
+            named links, which is worse for a screen reader than for anyone. */}
+        <Link to={`/s/${organization.slug}`} className={buttonVariants({ variant: 'book', size: 'lg' }, 'w-full')}>
+          {t('serviceMode.book')}
+        </Link>
+      </StickyBookBar>
     </Container>
   )
 }

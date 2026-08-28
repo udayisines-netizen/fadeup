@@ -39,5 +39,6 @@
   "sharedRevokedTitle": "Ce lien a été révoqué",
   "sharedRevokedDescription": "Le client a désactivé ce lien. Demande-lui-en un nouveau.",
   "sharedNotFoundTitle": "Ce lien n'est pas valide",
-  "sharedNotFoundDescription": "Vérifie le lien ou demandes-en un nouveau."
+  "sharedNotFoundDescription": "Vérifie le lien ou demandes-en un nouveau.",
+  "cardEmptyHint": "Ajoutez votre coupe habituelle pour que chaque coiffeur sache déjà comment vous l’aimez."
 }
