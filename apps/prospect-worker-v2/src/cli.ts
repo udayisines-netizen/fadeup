@@ -19,7 +19,7 @@ FadeUp Prospect Worker V2 — developer CLI
 
 Usage:
   npm run cli -- source test <osm|geoapify|sirene|google_places|website|instagram> [options]
-  npm run cli -- job create <discovery|enrichment|dedup_scan|scoring|publication_evaluation> --payload '<json>' [--priority N] [--sources osm,geoapify]
+  npm run cli -- job create <discovery|enrichment|dedup_scan|scoring|publication_evaluation|planity_enrichment> --payload '<json>' [--priority N] [--sources osm,geoapify]
   npm run cli -- job status <job-id>
   npm run cli -- sources list
 
@@ -30,6 +30,14 @@ professional, which this worker's role has no EXECUTE grant on. Payloads:
   '{"limit":500}'               sweep a larger batch (hard cap 1000)
   '{"prospectIds":["<uuid>"]}'  re-evaluate specific prospects
 Pass --sources to a non-discovery job to avoid a meaningless source fan-out.
+
+planity_enrichment reads the PUBLIC Planity establishment page of prospects
+whose own website already links to one, to learn whether they are actually
+bookable there. It discovers nothing, searches nothing, and publishes nothing.
+  '{}'                          up to PLANITY_BATCH_SIZE candidates due a check
+  '{"limit":5}'                 a small, conservative batch
+  '{"prospectIds":["<uuid>"]}'  re-check specific prospects, ignoring freshness
+Set PLANITY_ENABLED=false to switch the source off without a deploy.
 
 Options for "source test":
   --country FR        (default: config DEFAULT_COUNTRY)

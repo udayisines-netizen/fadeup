@@ -31,6 +31,9 @@ export type BookingProviderKey =
   | 'NO_BOOKING'
   | 'UNKNOWN'
 
+/** Whether a business can actually be booked through the detected provider. */
+export type BookingAvailabilityStatus = 'ACTIVE' | 'LISTED_ONLY' | 'UNKNOWN'
+
 export type BookingProviderDetectionMethod =
   | 'booking_url'
   | 'outbound_link'
@@ -41,6 +44,11 @@ export type BookingProviderDetectionMethod =
   | 'structured_data'
   | 'domain_pattern'
   | 'provider_directory'
+  // R4.1: evidence read from the provider's OWN public establishment page,
+  // rather than inferred from a link on the business's site. Deliberately
+  // distinct from provider_directory, which the competitor documentation
+  // reserves for a compliant provider API.
+  | 'provider_public_page'
   | 'manual_override'
 
 export interface BookingProvider {
@@ -167,6 +175,15 @@ export interface BookingProviderObservation {
   providerKey: string
   providerDisplayName: string
   detectionMethod: BookingProviderDetectionMethod
+  /**
+   * Whether the business is actually bookable through this provider.
+   *
+   * UNKNOWN for every detection made from the business's own website: a link
+   * to Planity proves a relationship and says nothing about whether bookings
+   * are open. Only an observation that read the provider's public page can
+   * distinguish ACTIVE from LISTED_ONLY.
+   */
+  bookingStatus: BookingAvailabilityStatus
   evidence: string | null
   evidenceUrl: string | null
   confidence: number
@@ -186,6 +203,7 @@ interface ObservationRow {
   first_seen_at: string
   last_seen_at: string
   is_current: boolean
+  booking_status: BookingAvailabilityStatus
   booking_providers: { key: string; display_name: string } | null
 }
 
@@ -203,7 +221,7 @@ export function useProspectBookingProviderHistory(prospectId: string | undefined
       const { data, error } = await supabase
         .from('booking_provider_observations')
         .select(
-          'id, detection_method, evidence, evidence_url, confidence, observed_at, first_seen_at, last_seen_at, is_current, booking_providers(key, display_name)',
+          'id, detection_method, evidence, evidence_url, confidence, observed_at, first_seen_at, last_seen_at, is_current, booking_status, booking_providers(key, display_name)',
         )
         .eq('prospect_id', prospectId!)
         .order('is_current', { ascending: false })
@@ -215,6 +233,7 @@ export function useProspectBookingProviderHistory(prospectId: string | undefined
         providerKey: row.booking_providers?.key ?? 'UNKNOWN',
         providerDisplayName: row.booking_providers?.display_name ?? 'Unknown',
         detectionMethod: row.detection_method as BookingProviderDetectionMethod,
+        bookingStatus: row.booking_status ?? 'UNKNOWN',
         evidence: row.evidence,
         evidenceUrl: row.evidence_url,
         confidence: Number(row.confidence),

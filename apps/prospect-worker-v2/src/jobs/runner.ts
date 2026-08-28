@@ -14,6 +14,7 @@ import { runOutreachPreparationJob } from './outreach-preparation.js'
 import { runWhatsAppSendJob } from './whatsapp-send.js'
 import { runSearchPlanJob } from './search-plan.js'
 import { runPublicationEvaluationJob } from './publication-evaluation.js'
+import { runPlanityEnrichmentJob } from './planity-enrichment.js'
 
 export interface JobContext {
   pool: DbPool
@@ -86,6 +87,12 @@ export async function runJob(ctx: JobContext, job: ProspectJob): Promise<Record<
     // prospect_worker role has no EXECUTE grant on by design.
     case 'publication_evaluation':
       return { ...(await runPublicationEvaluationJob(pool, job, log)) }
+
+    // Reads the provider's own public page for prospects already known to use
+    // Planity. Enrichment only: it publishes nothing, discovers nothing, and
+    // creates no prospect.
+    case 'planity_enrichment':
+      return { ...(await runPlanityEnrichmentJob(pool, job, config, log)) }
 
     default: {
       const exhaustive: never = job.jobType

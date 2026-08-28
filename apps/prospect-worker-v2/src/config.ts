@@ -85,6 +85,26 @@ const envSchema = z.object({
   ML_ARTIFACT_DIR: z.string().default('/app/ml-artifacts'),
   ML_MODEL_CACHE_TTL_MS: z.coerce.number().int().positive().default(300_000),
 
+  // --- Planity public establishment pages -------------------------------
+  // No credential: these are public pages. The knobs exist so the source can
+  // be slowed or switched off without a deploy; per-source pause/quota is
+  // already handled by prospect_sources + api_source_limits and is NOT
+  // duplicated here.
+  //
+  // Explicit opt-in string handling, matching WEBHOOK_HTTP_ENABLED: an unset,
+  // empty or unrecognised value means DISABLED, so a typo can never
+  // accidentally start sending requests to a third party.
+  PLANITY_ENABLED: z
+    .string()
+    .default('true')
+    .transform((v) => v === 'true' || v === '1'),
+  PLANITY_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
+  // Deliberately slow: one page per prospect, and a salon's listing does not
+  // change minute to minute. There is no volume target to trade against.
+  PLANITY_MIN_REQUEST_INTERVAL_MS: z.coerce.number().int().nonnegative().default(2_000),
+  PLANITY_BATCH_SIZE: z.coerce.number().int().positive().max(200).default(25),
+  PLANITY_RECHECK_AFTER_HOURS: z.coerce.number().int().positive().default(720),
+
   // --- Website enrichment crawler --------------------------------------
   CRAWLER_MAX_PAGES_PER_DOMAIN: z.coerce.number().int().positive().max(50).default(8),
   CRAWLER_MAX_DEPTH: z.coerce.number().int().nonnegative().max(4).default(2),

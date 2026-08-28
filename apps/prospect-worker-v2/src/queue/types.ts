@@ -31,6 +31,10 @@ export type ProspectJobType =
   // publishing is public.publish_external_professional, which this worker's
   // role deliberately has no EXECUTE grant on.
   | 'publication_evaluation'
+  // R4.1 (20260828110000): reads the public Planity establishment page of
+  // prospects whose OWN website already links to one, to learn whether they
+  // are actually bookable there. Enrichment only — no discovery, no search.
+  | 'planity_enrichment'
 
 export interface ProspectJob {
   id: string

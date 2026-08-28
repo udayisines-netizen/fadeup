@@ -68,7 +68,24 @@ export function detectCompetitors(pages: CrawledPage[], registry: CompetitorRegi
   const record = (detection: CompetitorDetection): void => {
     const dedupeKey = `${detection.providerKey}:${detection.detectionMethod}`
     const existing = detections.get(dedupeKey)
-    if (!existing || detection.confidence > existing.confidence) {
+    if (!existing) {
+      detections.set(dedupeKey, detection)
+      return
+    }
+    if (detection.confidence > existing.confidence) {
+      detections.set(dedupeKey, detection)
+      return
+    }
+    // Equal confidence: keep the MORE SPECIFIC provider URL.
+    //
+    // A salon's site commonly links the provider twice — a footer link to the
+    // provider's homepage and a "Book now" link to its own establishment page.
+    // Both match with identical confidence, and first-wins would keep whichever
+    // the crawler happened to see first. The establishment URL is the useful
+    // one: it identifies WHICH listing is theirs, and it is what a later
+    // enrichment pass can actually read. Path depth is a reliable proxy for
+    // that and stays provider-agnostic.
+    if (detection.confidence === existing.confidence && pathDepth(detection.evidence) > pathDepth(existing.evidence)) {
       detections.set(dedupeKey, detection)
     }
   }
@@ -158,4 +175,13 @@ export function noBookingDetection(evidenceUrl: string, pagesCrawled: number): C
 
 function truncate(value: string, max: number): string {
   return value.length <= max ? value : `${value.slice(0, max - 1)}…`
+}
+
+/** Non-empty path segments, or 0 for anything unparseable. */
+function pathDepth(rawUrl: string): number {
+  try {
+    return new URL(rawUrl).pathname.split('/').filter(Boolean).length
+  } catch {
+    return 0
+  }
 }
