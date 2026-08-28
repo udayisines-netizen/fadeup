@@ -185,6 +185,62 @@ select pg_temp.expect('3.4 planity alone could never publish a prospect',
   'and the job additionally writes no prospect_source_records at all — see the enrichment job''s persist()');
 
 -- ============================================================================
+-- 3b. PLANITY AS A DISCOVERY OBSERVER
+--
+-- Promoting Planity to a first-class discovery source means it may now
+-- contribute ONE independent observer to publication evidence. These pin what
+-- that does and — more importantly — what it does not do.
+-- ============================================================================
+
+do $$
+declare
+  v_alone uuid;
+  v_with_osm uuid;
+  v_with_geoapify uuid;
+  v_all_three uuid;
+begin
+  -- Planity on its own is one observer. One is not two.
+  v_alone := pg_temp.mk('R41 Planity Only', array['planity']);
+  perform pg_temp.expect('3b.1 Planity alone cannot publish a prospect',
+    public.publication_block_reason(v_alone) = 'insufficient_source_evidence',
+    'a commercial platform listing is one observer, and the rule requires two');
+
+  -- Planity and OSM are genuinely different observers: a French booking
+  -- platform the business signed up to, and a crowd-sourced map.
+  v_with_osm := pg_temp.mk('R41 Planity plus OSM', array['planity', 'osm']);
+  perform pg_temp.expect('3b.2 Planity + OSM is two independent observers',
+    public.publication_block_reason(v_with_osm) is null,
+    coalesce(public.publication_block_reason(v_with_osm), '(eligible)'));
+
+  -- Geoapify redistributes OSM, but it is still not Planity, so this pair is
+  -- also two — the grouping rule collapses OSM+Geoapify, not everything.
+  v_with_geoapify := pg_temp.mk('R41 Planity plus Geoapify', array['planity', 'geoapify']);
+  perform pg_temp.expect('3b.3 Planity + Geoapify(OSM) is two independent observers',
+    public.publication_block_reason(v_with_geoapify) is null,
+    coalesce(public.publication_block_reason(v_with_geoapify), '(eligible)'));
+
+  -- The composition case. Three source rows, two observers.
+  v_all_three := pg_temp.mk('R41 Planity OSM Geoapify', array['planity', 'osm', 'geoapify']);
+  perform pg_temp.expect('3b.4 Planity + OSM + Geoapify counts as TWO observers, not three',
+    (select count(distinct coalesce(ps.independence_group, ps.key))
+     from public.prospect_source_records psr
+     join public.prospect_sources ps on ps.id = psr.source_id
+     where psr.prospect_id = v_all_three) = 2,
+    'planity + openstreetmap; geoapify does not add a third');
+
+  -- Removing Planity from that set must drop it back to one observer, which is
+  -- what proves the count above came from grouping rather than from luck.
+  delete from public.prospect_source_records
+  where prospect_id = v_all_three
+    and source_id = (select id from public.prospect_sources where key = 'planity');
+
+  perform pg_temp.expect('3b.5 ...and without Planity it is back to ONE',
+    public.publication_block_reason(v_all_three) = 'insufficient_source_evidence');
+exception when others then
+  perform pg_temp.record('3b.x (block) unexpected error', 'FAIL', format('%s / %s', sqlstate, sqlerrm));
+end $$;
+
+-- ============================================================================
 -- 4. SECURITY POSTURE IS UNCHANGED
 -- ============================================================================
 

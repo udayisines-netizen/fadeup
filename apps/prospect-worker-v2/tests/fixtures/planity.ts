@@ -135,3 +135,86 @@ User-agent: Googlebot
 Disallow: /*serviceSetId*
 Disallow: /
 `
+
+interface ListingOptions {
+  /** Barber-relevant entries (HairSalon). */
+  salons?: number
+  /** NailSalon entries — Planity returns these on its own barber listing. */
+  nailSalons?: number
+  nextPage?: string | null
+  withItemList?: boolean
+  /** Entries missing a url or a name; must be skipped, not crash the parse. */
+  malformed?: number
+  startIndex?: number
+}
+
+/**
+ * A Planity category/listing page.
+ *
+ * Shape verified against https://www.planity.com/barbier/paris-75 on
+ * 2026-08-28: a schema.org ItemList of 20 entries, each with name, full
+ * PostalAddress, aggregateRating and canonical url, plus <link rel="next">.
+ */
+export function planityListingPage(options: ListingOptions = {}): string {
+  const {
+    salons = 3,
+    nailSalons = 0,
+    nextPage = null,
+    withItemList = true,
+    malformed = 0,
+    startIndex = 0,
+  } = options
+
+  const entry = (type: string, i: number) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': type,
+      name: `${type} ${startIndex + i}`,
+      url: `https://www.planity.com/salon-${startIndex + i}-7500${(startIndex + i) % 10}-paris`,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: `${startIndex + i} Rue de Test`,
+        addressLocality: 'Paris',
+        postalCode: `7500${(startIndex + i) % 10}`,
+        addressCountry: 'FR',
+      },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.5, reviewCount: 100 + i },
+    },
+  })
+
+  const items = [
+    ...Array.from({ length: salons }, (_, i) => entry('HairSalon', i)),
+    ...Array.from({ length: nailSalons }, (_, i) => entry('NailSalon', salons + i)),
+    // No url and no name: unusable as a candidate, must be skipped silently.
+    ...Array.from({ length: malformed }, (_, i) => ({
+      '@type': 'ListItem',
+      position: salons + nailSalons + i + 1,
+      item: { '@type': 'HairSalon' },
+    })),
+  ]
+
+  const jsonLd = withItemList
+    ? `<script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: items,
+      })}</script>`
+    : ''
+
+  const next = nextPage ? `<link data-react-helmet="true" href="${nextPage}" rel="next"/>` : ''
+
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"/>${next}${jsonLd}</head><body><div id="root"></div></body></html>`
+}
+
+/** A sitemap shard containing city-level /barbier/ listing URLs. */
+export function planitySitemap(cities: string[] = ['paris-75']): string {
+  const urls = cities
+    .map((slug) => `<url><loc>https://www.planity.com/barbier/${slug}</loc></url>`)
+    .join('')
+  // Service-refined and non-barber entries that must NOT be indexed as cities.
+  const noise =
+    '<url><loc>https://www.planity.com/barbier/barbe/paris-75</loc></url>' +
+    '<url><loc>https://www.planity.com/manucure-et-pedicure/paris-75</loc></url>'
+  return `<?xml version="1.0" encoding="UTF-8"?><urlset>${urls}${noise}</urlset>`
+}

@@ -13,6 +13,8 @@
 #   scripts/disposable-db-test.sh --master FILE         # + apply MASTER on a base built WITHOUT the new migrations
 #   scripts/disposable-db-test.sh --verify FILE         # + run VERIFY
 #   scripts/disposable-db-test.sh --seed FILE           # + load fixtures AFTER the base replay, BEFORE MASTER
+#   scripts/disposable-db-test.sh --pre-master FILE     # + reproduce production conditions (e.g. object OWNERSHIP) before MASTER
+#   scripts/disposable-db-test.sh --master-role ROLE    # apply MASTER as ROLE instead of postgres
 #
 # --seed exists so an upgrade can be tested against a database that already
 # contains the messy rows the fix is meant to cope with. A MASTER applied only
@@ -28,6 +30,17 @@ IMAGE="${DISPOSABLE_PG_IMAGE:-supabase/postgres:17.6.1.136}"
 PGPASSWORD_VALUE="disposable_$(date +%s)"
 
 MASTER_FILE=""
+# Role used to apply MASTER. Defaults to postgres, which is how migrations are
+# normally applied. `supabase_admin` exists because LIVE has objects owned by
+# that role — see --pre-master.
+MASTER_ROLE="postgres"
+# SQL applied AFTER the base replay and BEFORE MASTER, as supabase_admin.
+# Its purpose is to reproduce PRODUCTION conditions a clean replay cannot,
+# most importantly object ownership: live's competitor-intelligence objects are
+# owned by supabase_admin, and R4.1's first apply attempt failed on exactly
+# that with "must be owner of type booking_provider_detection_method". A
+# migration test that only ever sees postgres-owned objects cannot catch it.
+PRE_MASTER_FILE=""
 VERIFY_FILE=""
 SEED_FILE=""
 KEEP=0
@@ -39,6 +52,8 @@ SKIP_FROM=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --master) MASTER_FILE="$2"; shift 2 ;;
+    --master-role) MASTER_ROLE="$2"; shift 2 ;;
+    --pre-master) PRE_MASTER_FILE="$2"; shift 2 ;;
     --verify) VERIFY_FILE="$2"; shift 2 ;;
     --seed) SEED_FILE="$2"; shift 2 ;;
     --skip-from) SKIP_FROM="$2"; shift 2 ;;
@@ -249,10 +264,20 @@ if [[ -n "$SEED_FILE" ]]; then
   echo "==> SEED loaded"
 fi
 
-if [[ -n "$MASTER_FILE" ]]; then
-  echo "==> applying MASTER: $MASTER_FILE"
+if [[ -n "$PRE_MASTER_FILE" ]]; then
+  echo "==> applying PRE-MASTER conditions (as supabase_admin): $PRE_MASTER_FILE"
   if ! docker exec -i -e PGOPTIONS='--client-min-messages=warning' "$CONTAINER" \
-      psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "$REPO_ROOT/$MASTER_FILE"; then
+      psql -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -q < "$REPO_ROOT/$PRE_MASTER_FILE"; then
+    echo "!! PRE-MASTER FAILED" >&2
+    exit 1
+  fi
+  echo "==> PRE-MASTER applied"
+fi
+
+if [[ -n "$MASTER_FILE" ]]; then
+  echo "==> applying MASTER as $MASTER_ROLE: $MASTER_FILE"
+  if ! docker exec -i -e PGOPTIONS='--client-min-messages=warning' "$CONTAINER" \
+      psql -U "$MASTER_ROLE" -d postgres -v ON_ERROR_STOP=1 < "$REPO_ROOT/$MASTER_FILE"; then
     echo "!! MASTER FAILED — transaction did not commit" >&2
     exit 1
   fi
