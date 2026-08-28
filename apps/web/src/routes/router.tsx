@@ -406,6 +406,20 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: 'publication',
+                lazy: async () => {
+                  const { PlatformAcquisitionPublicationPage } = await import('@/pages/platform-acquisition-publication-page')
+                  return { Component: PlatformAcquisitionPublicationPage }
+                },
+              },
+              {
+                path: 'claims',
+                lazy: async () => {
+                  const { PlatformAcquisitionClaimsPage } = await import('@/pages/platform-acquisition-claims-page')
+                  return { Component: PlatformAcquisitionClaimsPage }
+                },
+              },
+              {
                 path: 'pipeline',
                 lazy: async () => {
                   const { PlatformAcquisitionPipelinePage } = await import('@/pages/platform-acquisition-pipeline-page')

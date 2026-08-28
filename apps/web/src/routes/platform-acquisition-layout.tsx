@@ -12,6 +12,12 @@ const ACQUISITION_NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: '/platform/acquisition/independent-barbers', label: 'Independent barbers' },
   { to: '/platform/acquisition/pipeline', label: 'Pipeline' },
   { to: '/platform/acquisition/duplicates', label: 'Duplicates' },
+  // R4. Ordered after Duplicates on purpose: an unresolved duplicate BLOCKS
+  // publication, so the screen that clears the blocker sits before the one that
+  // reports it, and Claims sits after Publication because a claim can only
+  // exist against something already published.
+  { to: '/platform/acquisition/publication', label: 'Publication' },
+  { to: '/platform/acquisition/claims', label: 'Claims' },
   { to: '/platform/acquisition/jobs', label: 'Jobs' },
   { to: '/platform/acquisition/sources', label: 'Sources' },
   { to: '/platform/acquisition/api-usage', label: 'API usage' },
