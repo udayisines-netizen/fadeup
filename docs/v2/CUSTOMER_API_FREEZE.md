@@ -431,3 +431,62 @@ Customer Mobile V1 against this boundary.
 ---
 
 **Customer API Freeze: CLOSED — 2026-08-27**
+
+---
+
+## 20. Amendment — R5, 2026-08-28
+
+The freeze remains CLOSED. One amendment, recorded here because a closed-lot
+artifact must never change silently.
+
+### What changed
+
+`search_public_professionals` was rewritten by
+`db/migrations/20260828120000_marketplace_map_and_sort.sql`:
+
+* **Three columns added to the projection** — `latitude`, `longitude`,
+  `timezone`. The function already accepted a latitude and longitude and
+  computed `distance_km` from them; it returned neither, so a map had nothing
+  to plot. `timezone` was already carried internally by the open-now and
+  queue-window subqueries and dropped at the final SELECT.
+* **One trailing parameter added** — `p_sort text default 'recommended'`.
+  `recommended` is the pre-R5 ordering, byte for byte, and is also the fallback
+  for any unrecognised value.
+
+### Why this does not break the freeze
+
+§1 of this document freezes "API and identity semantics, not visual UI
+implementation".
+
+* No identity semantic moved. `professional_id` is still exposed, still NULL
+  for a shop and for a barber with no currently claimed identity, and still
+  distinct from `barber_id` and `organization_id`.
+* No row became visible that was not visible before. Every WHERE clause is
+  unchanged, and `VERIFY_R5 §R5.9` proves it by flipping `marketplace_visible`
+  off and asserting the shop disappears from the results.
+* Nothing was removed. The frozen columns are now asserted individually by
+  §19's VERIFY rather than implied.
+* Coordinates disclose nothing new: these are active locations of
+  `marketplace_visible` organizations whose street address, city and postcode
+  the same rows already returned.
+* Every parameter is trailing and defaulted, so an existing 13-argument call
+  keeps working and keeps its ordering.
+
+### What this amendment corrected in the VERIFY itself
+
+`VERIFY_CUSTOMER_API_FREEZE` addressed the function by a pinned 13-argument
+signature and therefore failed with **"function does not exist"** — reporting a
+purely additive change as a broken contract. That framing is worse than
+useless: it trains whoever hits it to edit the VERIFY rather than to think
+about the contract.
+
+The block now resolves the function by name, asserts there is **exactly one
+overload** (two would make every existing 13-argument call ambiguous at
+runtime — which is what the arity pin was really buying), and asserts each
+frozen column individually.
+
+### Not amended
+
+Nothing else. In particular §2's marketplace rules stand and R5 honours them:
+no barbershop Follow control appears on a marketplace card, and ordinary team
+members are not promoted into standalone marketplace entities.

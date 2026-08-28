@@ -32,16 +32,58 @@ begin
 end
 $$;
 
+-- ---------------------------------------------------------------------------
+-- AMENDED 2026-08-28 (R5). Resolved by NAME, not by a pinned argument list.
+--
+-- This block used to address the function as
+--   search_public_professionals(text,text,…,integer,integer)   -- 13 args
+-- and R5 added a trailing `p_sort text default 'recommended'`, which made the
+-- assertion fail with "function does not exist" — reporting an ADDITIVE change
+-- as a broken contract.
+--
+-- The freeze is explicit that it freezes "API and identity semantics, not
+-- visual UI implementation", and the semantic this block exists to protect is
+-- that `professional_id` is exposed and remains distinct from barber_id. That
+-- semantic is unchanged. Pinning the arity instead made every future additive
+-- parameter look like a violation, which trains people to edit the VERIFY
+-- rather than to think about the contract.
+--
+-- The uniqueness check below is what the arity pin was really buying: exactly
+-- one overload must exist, because two would make every existing
+-- 13-argument call site ambiguous at runtime.
+-- ---------------------------------------------------------------------------
 do $$
 declare
   v_result text;
+  v_count integer;
 begin
-  v_result := pg_get_function_result(
-    'public.search_public_professionals(text,text,text,text,double precision,double precision,double precision,integer,integer,boolean,text,integer,integer)'::regprocedure
-  );
+  select count(*) into v_count
+  from pg_proc
+  where proname = 'search_public_professionals'
+    and pronamespace = 'public'::regnamespace;
+
+  if v_count <> 1 then
+    raise exception 'expected exactly one search_public_professionals, found %', v_count;
+  end if;
+
+  select pg_get_function_result(oid) into v_result
+  from pg_proc
+  where proname = 'search_public_professionals'
+    and pronamespace = 'public'::regnamespace;
 
   if position('professional_id uuid' in v_result) = 0 then
     raise exception 'search_public_professionals does not expose professional_id';
+  end if;
+
+  -- The other columns the frozen customer contract depends on. Named
+  -- individually so a projection rewrite that drops one is caught here rather
+  -- than by a customer whose marketplace card lost its price.
+  if position('barber_id uuid' in v_result) = 0
+     or position('organization_id uuid' in v_result) = 0
+     or position('starting_price_cents integer' in v_result) = 0
+     or position('is_open_now boolean' in v_result) = 0
+     or position('queue_waiting_count integer' in v_result) = 0 then
+    raise exception 'search_public_professionals dropped a frozen column: %', v_result;
   end if;
 end
 $$;
