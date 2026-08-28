@@ -395,14 +395,17 @@ now uses a per-run `mktemp`.
 | --- | --- |
 | `VERIFY_R4` fresh database | 94 PASS / 0 FAIL / 1 INFO |
 | `VERIFY_R4` upgrade over populated pre-R4 database | 101 PASS / 0 FAIL / 1 INFO |
-| `VERIFY_R1A` | 0 FAIL |
+| `VERIFY_R1A` | 70 PASS / 0 FAIL |
 | `VERIFY_R1B` | 161 PASS / 0 FAIL |
 | `VERIFY_R2` | 197 PASS / 0 FAIL |
 | `VERIFY_SERVICE_MODE` | 172 PASS / 0 FAIL |
 | `VERIFY_R3` | 126 PASS / 0 FAIL |
 | `VERIFY_ORGANIZATION_FOLLOWS` | 32 PASS / 0 FAIL |
 | `VERIFY_CUSTOMER_API_FREEZE` | 0 FAIL |
-| `VERIFY_WORKER_V2_ACQUISITION` | 0 FAIL |
+| `VERIFY_WORKER_V2_ACQUISITION` | 280 PASS / 0 FAIL |
+
+All nine re-run against the final state of the branch, not against the state
+each was written for.
 | Worker suite | 247 tests pass, typecheck + build clean |
 | Web suite | 722 tests pass, typecheck + production build clean |
 | `generate-master-r4.sh` | all safety assertions pass |
