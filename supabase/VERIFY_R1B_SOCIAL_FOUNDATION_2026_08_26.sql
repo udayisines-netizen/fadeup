@@ -134,7 +134,7 @@ $$;
 -- invalidated R1A's unentitled fixture. A test that has to route around a
 -- guarantee is testing the wrong thing.
 --
--- Two independent sources, which is exactly the minimum the gate accepts, so
+-- Two INDEPENDENT sources, which is exactly the minimum the gate accepts, so
 -- these fixtures also pin the boundary: drop either row and R1B's §7 starts
 -- failing for the right reason.
 create or replace function pg_temp.provision_publishable(p_prospect_id uuid)
@@ -144,9 +144,12 @@ begin
   select ps.id, p_prospect_id, 'verify-r1b-' || p_prospect_id::text || '-osm', 'node'
   from public.prospect_sources ps where ps.key = 'osm';
 
+  -- google_places, NOT geoapify. R4.1 grouped Geoapify with OpenStreetMap —
+  -- Geoapify redistributes OSM, so that pair is one observer reporting twice
+  -- and no longer satisfies "two independent sources".
   insert into public.prospect_source_records (source_id, prospect_id, external_id, external_type)
-  select ps.id, p_prospect_id, 'verify-r1b-' || p_prospect_id::text || '-geo', 'place'
-  from public.prospect_sources ps where ps.key = 'geoapify';
+  select ps.id, p_prospect_id, 'verify-r1b-' || p_prospect_id::text || '-gp', 'place'
+  from public.prospect_sources ps where ps.key = 'google_places';
 
   insert into public.prospect_locations (prospect_id, is_primary, country)
   values (p_prospect_id, true, 'FR');

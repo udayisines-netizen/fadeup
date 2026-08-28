@@ -144,7 +144,11 @@ $$;
  */
 create or replace function pg_temp.mk_prospect(
   p_name text,
-  p_sources text[] default array['osm', 'geoapify'],
+  -- osm + google_places, NOT osm + geoapify. R4.1 grouped Geoapify with
+  -- OpenStreetMap because Geoapify redistributes it, so that pair is one
+  -- observer reporting twice and no longer clears the evidence bar. Two
+  -- genuinely independent sources is what this default is supposed to mean.
+  p_sources text[] default array['osm', 'google_places'],
   p_with_location boolean default true,
   p_entity_kind text default 'independent',
   p_status text default 'qualified'
@@ -320,7 +324,7 @@ begin
     public.publication_block_reason(v_anchor) is null,
     'a SIRET is a verified legal identity, not a crowd-sourced listing');
 
-  v_no_place := pg_temp.mk_prospect('R4 Nowhere', array['osm', 'geoapify'], false);
+  v_no_place := pg_temp.mk_prospect('R4 Nowhere', array['osm', 'google_places'], false);
   perform pg_temp.expect('2.5 an identity with no location and no domain is refused',
     public.publication_block_reason(v_no_place) = 'no_corroborating_location',
     'nobody could recognise it as themselves and no customer could be looking for it');
@@ -334,7 +338,7 @@ begin
     public.publication_block_reason(v_junk) = 'name_not_publishable',
     'create_external_professional copies canonical_name straight onto the identity');
 
-  v_group := pg_temp.mk_prospect('R4 Chain HQ', array['osm', 'geoapify'], true, 'group_parent');
+  v_group := pg_temp.mk_prospect('R4 Chain HQ', array['osm', 'google_places'], true, 'group_parent');
   perform pg_temp.expect('2.8 a chain umbrella record is not a claimable identity',
     public.publication_block_reason(v_group) = 'entity_kind_not_publishable',
     'its locations are the publishable entities');
@@ -379,7 +383,7 @@ begin
     public.publication_block_reason(v_converted) = 'already_converted',
     'a second unclaimed identity would compete with the real one');
 
-  v_customer := pg_temp.mk_prospect('R4 Customer', array['osm', 'geoapify'], true, 'independent', 'customer');
+  v_customer := pg_temp.mk_prospect('R4 Customer', array['osm', 'google_places'], true, 'independent', 'customer');
   perform pg_temp.expect('2.12 an existing customer is refused',
     public.publication_block_reason(v_customer) = 'already_customer');
 
