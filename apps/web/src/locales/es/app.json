@@ -529,5 +529,36 @@
       "untilClosing": "Hasta el cierre",
       "untilChanged": "A partir de ahora"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Ahora y a continuación",
+    "moduleMetrics": "Hoy de un vistazo",
+    "moduleToday": "El día",
+    "moduleQueue": "Cola",
+    "moduleCustomers": "Clientes",
+    "moduleSocial": "Rendimiento social",
+    "layoutEdit": "Reorganizar",
+    "layoutDone": "Listo",
+    "layoutSaved": "Disposición guardada para todo el salón",
+    "layoutSaveFailed": "No pudimos guardar la disposición. Nada cambió para tu equipo.",
+    "moveUp": "Subir {{card}}",
+    "moveDown": "Bajar {{card}}",
+    "movedTo": "{{card}} movido a la posición {{position}} de {{total}}",
+    "socialTitle": "Rendimiento social",
+    "socialMeta": "Últimos 30 días",
+    "socialViews": "Vistas",
+    "socialFollows": "Seguidores",
+    "socialFavorites": "Guardados",
+    "socialConversion": "Vistas que iniciaron una reserva",
+    "socialConversionHint": "Se cuentan desde que se abre tu perfil.",
+    "socialEmptyTitle": "Todavía no hay nada contado",
+    "socialEmptyDescription": "FadeUp empezó a contar cuando te uniste: esto se irá llenando a medida que te encuentren.",
+    "socialUnavailable": "Solo los propietarios y responsables ven estas cifras.",
+    "customersTitle": "Clientes",
+    "customersTotal": "En tu fichero",
+    "customersReturning": "Han vuelto",
+    "customersOpen": "Abrir clientes",
+    "customersEmptyTitle": "Aún no hay clientes",
+    "customersEmptyDescription": "Todas las personas que reserves o registres aparecerán aquí."
   }
 }

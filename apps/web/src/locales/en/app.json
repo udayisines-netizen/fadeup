@@ -529,5 +529,36 @@
       "untilClosing": "Until closing",
       "untilChanged": "From now on"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Now & next",
+    "moduleMetrics": "Today at a glance",
+    "moduleToday": "Today's flow",
+    "moduleQueue": "Queue",
+    "moduleCustomers": "Customers",
+    "moduleSocial": "Social performance",
+    "layoutEdit": "Rearrange",
+    "layoutDone": "Done",
+    "layoutSaved": "Dashboard layout saved for the whole shop",
+    "layoutSaveFailed": "We couldn't save the layout. Nothing changed for your team.",
+    "moveUp": "Move {{card}} up",
+    "moveDown": "Move {{card}} down",
+    "movedTo": "{{card}} moved to position {{position}} of {{total}}",
+    "socialTitle": "Social performance",
+    "socialMeta": "Last 30 days",
+    "socialViews": "Views",
+    "socialFollows": "Follows",
+    "socialFavorites": "Saves",
+    "socialConversion": "Views that started a booking",
+    "socialConversionHint": "Counted from the moment your profile was opened.",
+    "socialEmptyTitle": "Nothing counted yet",
+    "socialEmptyDescription": "FadeUp started counting when you joined — this fills in as people find you.",
+    "socialUnavailable": "Only owners and managers can see these numbers.",
+    "customersTitle": "Customers",
+    "customersTotal": "On your books",
+    "customersReturning": "Came back",
+    "customersOpen": "Open customers",
+    "customersEmptyTitle": "No customers yet",
+    "customersEmptyDescription": "Everyone you book or check in will appear here."
   }
 }

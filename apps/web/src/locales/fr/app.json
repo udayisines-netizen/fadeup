@@ -529,5 +529,36 @@
       "untilClosing": "Jusqu'à la fermeture",
       "untilChanged": "À partir de maintenant"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "En cours et à suivre",
+    "moduleMetrics": "Aujourd'hui en bref",
+    "moduleToday": "Déroulé du jour",
+    "moduleQueue": "File d'attente",
+    "moduleCustomers": "Clients",
+    "moduleSocial": "Performance sociale",
+    "layoutEdit": "Réorganiser",
+    "layoutDone": "Terminé",
+    "layoutSaved": "Disposition enregistrée pour tout le salon",
+    "layoutSaveFailed": "Impossible d'enregistrer la disposition. Rien n'a changé pour votre équipe.",
+    "moveUp": "Monter {{card}}",
+    "moveDown": "Descendre {{card}}",
+    "movedTo": "{{card}} déplacé en position {{position}} sur {{total}}",
+    "socialTitle": "Performance sociale",
+    "socialMeta": "30 derniers jours",
+    "socialViews": "Vues",
+    "socialFollows": "Abonnements",
+    "socialFavorites": "Enregistrements",
+    "socialConversion": "Vues ayant lancé une réservation",
+    "socialConversionHint": "Comptées dès l'ouverture de votre profil.",
+    "socialEmptyTitle": "Rien de compté pour le moment",
+    "socialEmptyDescription": "FadeUp a commencé à compter à votre arrivée — cela se remplit à mesure que les clients vous trouvent.",
+    "socialUnavailable": "Seuls les propriétaires et les managers voient ces chiffres.",
+    "customersTitle": "Clients",
+    "customersTotal": "Dans votre fichier",
+    "customersReturning": "Revenus",
+    "customersOpen": "Ouvrir les clients",
+    "customersEmptyTitle": "Aucun client pour le moment",
+    "customersEmptyDescription": "Toutes les personnes que vous réservez ou accueillez apparaîtront ici."
   }
 }

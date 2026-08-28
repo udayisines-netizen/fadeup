@@ -529,5 +529,36 @@
       "untilClosing": "Até ao fecho",
       "untilChanged": "A partir de agora"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Agora e a seguir",
+    "moduleMetrics": "Hoje num relance",
+    "moduleToday": "O dia",
+    "moduleQueue": "Fila",
+    "moduleCustomers": "Clientes",
+    "moduleSocial": "Desempenho social",
+    "layoutEdit": "Reorganizar",
+    "layoutDone": "Concluído",
+    "layoutSaved": "Disposição guardada para todo o salão",
+    "layoutSaveFailed": "Não foi possível guardar a disposição. Nada mudou para a sua equipa.",
+    "moveUp": "Subir {{card}}",
+    "moveDown": "Descer {{card}}",
+    "movedTo": "{{card}} movido para a posição {{position}} de {{total}}",
+    "socialTitle": "Desempenho social",
+    "socialMeta": "Últimos 30 dias",
+    "socialViews": "Visualizações",
+    "socialFollows": "Seguidores",
+    "socialFavorites": "Guardados",
+    "socialConversion": "Visualizações que iniciaram uma marcação",
+    "socialConversionHint": "Contadas a partir da abertura do seu perfil.",
+    "socialEmptyTitle": "Ainda não há nada contado",
+    "socialEmptyDescription": "A FadeUp começou a contar quando entrou — isto preenche-se à medida que o encontram.",
+    "socialUnavailable": "Só proprietários e gestores veem estes números.",
+    "customersTitle": "Clientes",
+    "customersTotal": "Na sua ficha",
+    "customersReturning": "Voltaram",
+    "customersOpen": "Abrir clientes",
+    "customersEmptyTitle": "Ainda sem clientes",
+    "customersEmptyDescription": "Todas as pessoas que marcar ou receber aparecerão aqui."
   }
 }

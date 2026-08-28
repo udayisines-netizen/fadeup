@@ -529,5 +529,36 @@
       "untilClosing": "閉店まで",
       "untilChanged": "これ以降ずっと"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "現在と次",
+    "moduleMetrics": "今日の概要",
+    "moduleToday": "今日の流れ",
+    "moduleQueue": "待ち列",
+    "moduleCustomers": "顧客",
+    "moduleSocial": "ソーシャル指標",
+    "layoutEdit": "並べ替え",
+    "layoutDone": "完了",
+    "layoutSaved": "レイアウトを店舗全体に保存しました",
+    "layoutSaveFailed": "レイアウトを保存できませんでした。チームの表示は変わっていません。",
+    "moveUp": "{{card}} を上へ",
+    "moveDown": "{{card}} を下へ",
+    "movedTo": "{{card}} を {{total}} 件中 {{position}} 番目に移動しました",
+    "socialTitle": "ソーシャル指標",
+    "socialMeta": "過去 30 日",
+    "socialViews": "表示",
+    "socialFollows": "フォロー",
+    "socialFavorites": "保存",
+    "socialConversion": "予約につながった表示",
+    "socialConversionHint": "プロフィールが開かれた時点から数えています。",
+    "socialEmptyTitle": "まだ集計がありません",
+    "socialEmptyDescription": "FadeUp は登録時から集計しています。見つけてもらうにつれて増えていきます。",
+    "socialUnavailable": "この数字はオーナーとマネージャーのみが見られます。",
+    "customersTitle": "顧客",
+    "customersTotal": "登録数",
+    "customersReturning": "再来",
+    "customersOpen": "顧客を開く",
+    "customersEmptyTitle": "まだ顧客がいません",
+    "customersEmptyDescription": "予約や受付をした方がここに表示されます。"
   }
 }

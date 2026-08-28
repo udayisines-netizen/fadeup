@@ -18,6 +18,23 @@ vi.mock('@/lib/queries/locations', () => ({ useOrgLocations: vi.fn() }))
 vi.mock('@/lib/queries/barbers', () => ({ useOrgBarbers: vi.fn() }))
 vi.mock('@/lib/queries/staff-profiles', () => ({ useOrgStaffProfiles: vi.fn() }))
 vi.mock('@/lib/queries/queue', () => ({ useOrgQueue: vi.fn() }))
+vi.mock('@/lib/queries/customers', () => ({ useOrgCustomers: vi.fn(() => ({ data: [], isPending: false })) }))
+// R3's read contract. Owner/manager-gated inside the RPC; a null summary is
+// the ordinary state for a shop with no counted activity yet.
+vi.mock('@/lib/queries/analytics-summary', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/queries/analytics-summary')>()),
+  useOrganizationAnalyticsSummary: vi.fn(() => ({ data: null, isPending: false, isError: false })),
+}))
+// The SHOP's dashboard arrangement. Real reconcile/permission helpers are
+// kept — the default order and who may edit it are contract, not fixture.
+vi.mock('@/lib/queries/dashboard-layout', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/queries/dashboard-layout')>()
+  return {
+    ...actual,
+    useDashboardLayout: vi.fn(() => ({ data: actual.reconcileLayout(null), isPending: false, refetch: vi.fn() })),
+    useSaveDashboardLayout: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  }
+})
 vi.mock('@/lib/queries/booking-requests', () => ({
   useBookingRequests: vi.fn(),
   useConfirmBookingRequest: () => ({ mutateAsync: vi.fn(), isPending: false }),

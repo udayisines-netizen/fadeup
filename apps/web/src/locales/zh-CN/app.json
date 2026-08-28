@@ -529,5 +529,36 @@
       "untilClosing": "直到打烊",
       "untilChanged": "从现在起"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "当前与下一位",
+    "moduleMetrics": "今日概览",
+    "moduleToday": "今日流程",
+    "moduleQueue": "排队",
+    "moduleCustomers": "客户",
+    "moduleSocial": "社交表现",
+    "layoutEdit": "重新排列",
+    "layoutDone": "完成",
+    "layoutSaved": "布局已为整个店铺保存",
+    "layoutSaveFailed": "无法保存布局，团队看到的内容没有变化。",
+    "moveUp": "上移{{card}}",
+    "moveDown": "下移{{card}}",
+    "movedTo": "{{card}} 已移动到第 {{position}} 位，共 {{total}} 位",
+    "socialTitle": "社交表现",
+    "socialMeta": "最近 30 天",
+    "socialViews": "浏览",
+    "socialFollows": "关注",
+    "socialFavorites": "收藏",
+    "socialConversion": "发起预约的浏览",
+    "socialConversionHint": "从主页被打开时开始计算。",
+    "socialEmptyTitle": "还没有数据",
+    "socialEmptyDescription": "FadeUp 从你加入时开始统计——随着更多人找到你，这里会逐渐填满。",
+    "socialUnavailable": "只有店主和管理者能看到这些数字。",
+    "customersTitle": "客户",
+    "customersTotal": "档案中",
+    "customersReturning": "回头客",
+    "customersOpen": "打开客户",
+    "customersEmptyTitle": "还没有客户",
+    "customersEmptyDescription": "你预约或登记的每一位都会出现在这里。"
   }
 }

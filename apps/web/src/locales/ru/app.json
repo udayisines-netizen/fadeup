@@ -529,5 +529,36 @@
       "untilClosing": "До закрытия",
       "untilChanged": "С этого момента"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Сейчас и далее",
+    "moduleMetrics": "Сегодня вкратце",
+    "moduleToday": "Ход дня",
+    "moduleQueue": "Очередь",
+    "moduleCustomers": "Клиенты",
+    "moduleSocial": "Социальные показатели",
+    "layoutEdit": "Переставить",
+    "layoutDone": "Готово",
+    "layoutSaved": "Расположение сохранено для всего салона",
+    "layoutSaveFailed": "Не удалось сохранить расположение. Для команды ничего не изменилось.",
+    "moveUp": "Переместить {{card}} вверх",
+    "moveDown": "Переместить {{card}} вниз",
+    "movedTo": "{{card}} перемещён на позицию {{position}} из {{total}}",
+    "socialTitle": "Социальные показатели",
+    "socialMeta": "Последние 30 дней",
+    "socialViews": "Просмотры",
+    "socialFollows": "Подписки",
+    "socialFavorites": "Сохранения",
+    "socialConversion": "Просмотры, начавшие запись",
+    "socialConversionHint": "Считаются с момента открытия вашего профиля.",
+    "socialEmptyTitle": "Пока нечего считать",
+    "socialEmptyDescription": "FadeUp начал считать с вашего прихода — здесь появятся данные, когда вас начнут находить.",
+    "socialUnavailable": "Эти цифры видят только владельцы и управляющие.",
+    "customersTitle": "Клиенты",
+    "customersTotal": "В картотеке",
+    "customersReturning": "Вернулись",
+    "customersOpen": "Открыть клиентов",
+    "customersEmptyTitle": "Пока нет клиентов",
+    "customersEmptyDescription": "Все, кого вы записываете или принимаете, появятся здесь."
   }
 }

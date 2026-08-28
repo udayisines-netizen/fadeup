@@ -529,5 +529,36 @@
       "untilClosing": "Fino alla chiusura",
       "untilChanged": "Da adesso"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Ora e dopo",
+    "moduleMetrics": "Oggi in sintesi",
+    "moduleToday": "La giornata",
+    "moduleQueue": "Coda",
+    "moduleCustomers": "Clienti",
+    "moduleSocial": "Performance social",
+    "layoutEdit": "Riorganizza",
+    "layoutDone": "Fatto",
+    "layoutSaved": "Disposizione salvata per tutto il salone",
+    "layoutSaveFailed": "Non siamo riusciti a salvare la disposizione. Per il team non è cambiato nulla.",
+    "moveUp": "Sposta {{card}} in alto",
+    "moveDown": "Sposta {{card}} in basso",
+    "movedTo": "{{card}} spostato in posizione {{position}} di {{total}}",
+    "socialTitle": "Performance social",
+    "socialMeta": "Ultimi 30 giorni",
+    "socialViews": "Visualizzazioni",
+    "socialFollows": "Follower",
+    "socialFavorites": "Salvataggi",
+    "socialConversion": "Visualizzazioni che hanno avviato una prenotazione",
+    "socialConversionHint": "Contate dall'apertura del tuo profilo.",
+    "socialEmptyTitle": "Ancora nulla da contare",
+    "socialEmptyDescription": "FadeUp ha iniziato a contare da quando ti sei iscritto: si riempirà man mano che ti trovano.",
+    "socialUnavailable": "Solo titolari e manager vedono questi numeri.",
+    "customersTitle": "Clienti",
+    "customersTotal": "In archivio",
+    "customersReturning": "Tornati",
+    "customersOpen": "Apri i clienti",
+    "customersEmptyTitle": "Ancora nessun cliente",
+    "customersEmptyDescription": "Tutte le persone che prenoti o accogli compariranno qui."
   }
 }

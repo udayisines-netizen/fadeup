@@ -529,5 +529,36 @@
       "untilClosing": "Bis Ladenschluss",
       "untilChanged": "Ab jetzt"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "Jetzt und als Nächstes",
+    "moduleMetrics": "Heute auf einen Blick",
+    "moduleToday": "Tagesverlauf",
+    "moduleQueue": "Warteschlange",
+    "moduleCustomers": "Kundschaft",
+    "moduleSocial": "Social-Performance",
+    "layoutEdit": "Neu anordnen",
+    "layoutDone": "Fertig",
+    "layoutSaved": "Anordnung für den ganzen Salon gespeichert",
+    "layoutSaveFailed": "Die Anordnung konnte nicht gespeichert werden. Für dein Team hat sich nichts geändert.",
+    "moveUp": "{{card}} nach oben",
+    "moveDown": "{{card}} nach unten",
+    "movedTo": "{{card}} an Position {{position}} von {{total}} verschoben",
+    "socialTitle": "Social-Performance",
+    "socialMeta": "Letzte 30 Tage",
+    "socialViews": "Aufrufe",
+    "socialFollows": "Follows",
+    "socialFavorites": "Gespeichert",
+    "socialConversion": "Aufrufe, aus denen eine Buchung wurde",
+    "socialConversionHint": "Gezählt ab dem Öffnen deines Profils.",
+    "socialEmptyTitle": "Noch nichts gezählt",
+    "socialEmptyDescription": "FadeUp zählt seit deinem Start — das füllt sich, sobald dich Leute finden.",
+    "socialUnavailable": "Diese Zahlen sehen nur Inhaber und Manager.",
+    "customersTitle": "Kundschaft",
+    "customersTotal": "In deiner Kartei",
+    "customersReturning": "Wiedergekommen",
+    "customersOpen": "Kundschaft öffnen",
+    "customersEmptyTitle": "Noch keine Kundschaft",
+    "customersEmptyDescription": "Alle, die du buchst oder eincheckst, erscheinen hier."
   }
 }

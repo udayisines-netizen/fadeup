@@ -1,10 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, CalendarCheck2, CalendarDays, Inbox, PieChart, UserX, WifiOff } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarCheck2,
+  CalendarDays,
+  Check,
+  Inbox,
+  LayoutGrid,
+  PieChart,
+  UserX,
+  WifiOff,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useCurrentOrg } from '@/lib/current-org-context'
 import { useOrgLocations } from '@/lib/queries/locations'
+import { useOrgCustomers } from '@/lib/queries/customers'
+import { useOrganizationAnalyticsSummary } from '@/lib/queries/analytics-summary'
+import {
+  canEditDashboardLayout,
+  useDashboardLayout,
+  useSaveDashboardLayout,
+  type DashboardModule,
+} from '@/lib/queries/dashboard-layout'
 import { useOrgQueue } from '@/lib/queries/queue'
 import { useBookingRequests } from '@/lib/queries/booking-requests'
 import {
@@ -20,6 +38,9 @@ import { NowCard } from '@/components/pro/now-card'
 import { NextCard } from '@/components/pro/next-card'
 import { TodayFlow } from '@/components/pro/today-flow'
 import { QueuePanel } from '@/components/pro/queue-panel'
+import { DashboardGrid } from '@/components/pro/dashboard-grid'
+import { SocialPerformancePanel } from '@/components/pro/social-performance-panel'
+import { CustomersPanel } from '@/components/pro/customers-panel'
 import { AppointmentSheet } from '@/components/calendar/appointment-sheet'
 import { TimeBlockSheet } from '@/components/calendar/time-block-dialog'
 import { PageHeader, Panel } from '@/components/ui/page-header'
@@ -183,6 +204,47 @@ function Dashboard({ organizationId, role }: { organizationId: string; role: Mem
   )
   const pendingRequests = requestsQuery.data?.length ?? 0
 
+  const customersQuery = useOrgCustomers(canManage ? organizationId : undefined)
+
+  /**
+   * The analytics summary is owner/manager only — the RPC re-derives that in
+   * its own body and refuses anyone else with 42501. `enabled` here is a UX
+   * decision (do not fire a request that will be refused), never the boundary.
+   */
+  const analyticsQuery = useOrganizationAnalyticsSummary(organizationId, { enabled: canManage })
+
+  /**
+   * THE LAYOUT BELONGS TO THE SHOP (§24).
+   *
+   * `draftOrder` exists because rearranging is a MODE, not a stream of writes:
+   * a drag or a keyboard move updates the draft, and leaving the mode saves it
+   * once. Six writes for six nudges would be six chances of a failure the
+   * person cannot connect to anything they did.
+   */
+  const layoutQuery = useDashboardLayout(organizationId)
+  const saveLayout = useSaveDashboardLayout(organizationId)
+  const canEditLayout = canEditDashboardLayout(role)
+  const [editingLayout, setEditingLayout] = useState(false)
+  const [draftOrder, setDraftOrder] = useState<DashboardModule[] | null>(null)
+  const order = draftOrder ?? layoutQuery.data ?? []
+
+  async function saveAndExitLayout() {
+    const next = draftOrder
+    setEditingLayout(false)
+    setDraftOrder(null)
+    if (!next) return
+    try {
+      await saveLayout.mutateAsync(next)
+      toast({ title: t('app:dashboard.layoutSaved'), variant: 'success' })
+    } catch {
+      // The shop's arrangement did not change, so the honest thing is to say
+      // so and let the query's own data win on the next render — NOT to keep
+      // showing a draft the database refused.
+      toast({ title: t('app:dashboard.layoutSaveFailed'), variant: 'error' })
+      void layoutQuery.refetch()
+    }
+  }
+
   async function completeNow(appointment: CalendarAppointment) {
     try {
       await completeAppointment.mutateAsync(appointment.id)
@@ -236,119 +298,210 @@ function Dashboard({ organizationId, role }: { organizationId: string; role: Mem
           </span>
         }
         actions={
-          <Link to="/app/calendar?action=book" className={buttonVariants()}>
-            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            {t('app:quickAction.newBooking')}
-          </Link>
+          <>
+            {/* Only rendered for a member who can actually save. This is a UI
+                affordance, not the gate: RLS restricts the write to owner and
+                manager, so a barber who reaches the mutation another way
+                updates zero rows. */}
+            {canEditLayout ? (
+              editingLayout ? (
+                <Button variant="secondary" onClick={() => void saveAndExitLayout()} isLoading={saveLayout.isPending}>
+                  <Check className="h-4 w-4" aria-hidden="true" />
+                  {t('app:dashboard.layoutDone')}
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftOrder(order as DashboardModule[])
+                    setEditingLayout(true)
+                  }}
+                >
+                  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  {t('app:dashboard.layoutEdit')}
+                </Button>
+              )
+            ) : null}
+
+            <Link to="/app/calendar?action=book" className={buttonVariants()}>
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
+              {t('app:quickAction.newBooking')}
+            </Link>
+          </>
         }
       />
 
-      {/* Asymmetric by design: NOW earns roughly two thirds. */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
-        {day.current ? (
-          <NowCard
-            appointment={day.current}
-            timeZone={timeZone}
-            onComplete={() => void completeNow(day.current!)}
-            onOpen={() => setSelectedAppointment(day.current)}
-            isCompleting={completeAppointment.isPending}
-            canComplete={canManage || Boolean(ownProfessional)}
-          />
-        ) : (
-          <IdleCard
-            title={day.next ? t('app:today.nobodyInChair') : t('app:today.nothingElseToday')}
-            description={day.next ? t('app:today.nextIsComing') : t('app:today.enjoyIt')}
-          />
-        )}
+      {/*
+        ============================================================================
+        SIX MODULES OVER ONE GRID
+        ============================================================================
 
-        {day.next ? (
-          <NextCard
-            appointment={day.next}
-            timeZone={timeZone}
-            onOpen={() => setSelectedAppointment(day.next)}
-          />
-        ) : (
-          <IdleCard title={t('app:today.noNext')} description={t('app:today.noNextBody')} muted />
-        )}
-      </div>
+        §23 names the categories the first viewport must surface: Revenue,
+        Appointments, Queue, Customers, Social performance. They are built
+        here, passed to `DashboardGrid` as items, and ordered by whatever this
+        SHOP saved — §24, not per staff member.
 
-      {canManage && pendingRequests > 0 ? (
-        <Link
-          to="/app/requests"
-          data-fu-enter
-          className={cn(
-            'flex min-h-14 items-center gap-3 rounded-lg border border-warning-600/40 bg-warning-100 px-4 py-3',
-            'transition-colors hover:bg-warning-100/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
-          )}
-        >
-          <Inbox className="h-5 w-5 shrink-0 text-warning-700" aria-hidden="true" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-medium text-ink-950">
-              {t('app:today.requestsWaiting', { count: pendingRequests })}
-            </span>
-            <span className="block text-xs text-ink-700">{t('app:today.theyHoldASlotUntil')}</span>
-          </span>
-          <ArrowRight className="h-4 w-4 shrink-0 text-ink-700 rtl:rotate-180" aria-hidden="true" />
-        </Link>
-      ) : null}
+        The composition that used to be hardcoded (a dominant NOW beside a
+        narrower NEXT, over a metric strip, over two panels) survives inside
+        the `focus` and `metrics` modules. What changed is that their ORDER is
+        no longer a decision this file makes on every shop's behalf.
+      */}
+      <DashboardGrid
+        items={[
+          {
+            key: 'focus',
+            label: t('app:dashboard.moduleFocus'),
+            wide: true,
+            content: (
+              <div className="flex flex-col gap-4">
+                {/* Asymmetric by design: NOW earns roughly two thirds. */}
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
+                  {day.current ? (
+                    <NowCard
+                      appointment={day.current}
+                      timeZone={timeZone}
+                      onComplete={() => void completeNow(day.current!)}
+                      onOpen={() => setSelectedAppointment(day.current)}
+                      isCompleting={completeAppointment.isPending}
+                      canComplete={canManage || Boolean(ownProfessional)}
+                    />
+                  ) : (
+                    <IdleCard
+                      title={day.next ? t('app:today.nobodyInChair') : t('app:today.nothingElseToday')}
+                      description={day.next ? t('app:today.nextIsComing') : t('app:today.enjoyIt')}
+                    />
+                  )}
 
-      <MetricStrip>
-        <Metric
-          icon={<CalendarCheck2 className="h-4 w-4" />}
-          value={day.liveCount}
-          label={t('app:today.kpiAppointments')}
-          context={day.remaining > 0 ? t('app:today.kpiRemaining', { count: day.remaining }) : undefined}
-        />
-        <Metric
-          icon={<PieChart className="h-4 w-4" />}
-          value={occupancy === null ? '—' : `${occupancy}%`}
-          label={t('app:today.kpiOccupancy')}
-          tone={occupancy === null ? 'quiet' : 'neutral'}
-        />
-        <Metric
-          value={money(day.bookedValueCents, currency)}
-          label={t('app:today.kpiBookedValue')}
-          context={t('app:today.kpiBookedValueHint')}
-        />
-        <Metric
-          icon={<UserX className="h-4 w-4" />}
-          value={day.noShows}
-          label={t('app:today.kpiNoShows')}
-          tone={day.noShows === 0 ? 'quiet' : 'danger'}
-        />
-      </MetricStrip>
+                  {day.next ? (
+                    <NextCard
+                      appointment={day.next}
+                      timeZone={timeZone}
+                      onOpen={() => setSelectedAppointment(day.next)}
+                    />
+                  ) : (
+                    <IdleCard title={t('app:today.noNext')} description={t('app:today.noNextBody')} muted />
+                  )}
+                </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <Panel
-          title={t('app:today.theWholeDay')}
-          meta={t('app:today.flowMeta', { count: day.liveCount })}
-          bodyClassName="p-2 sm:p-3"
-          footer={
-            <Link
-              to="/app/calendar"
-              className={buttonVariants({ variant: 'secondary' }, 'w-full')}
-            >
-              <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              {t('app:today.openCalendar')}
-            </Link>
-          }
-        >
-          <TodayFlow
-            appointments={calendar.appointments}
-            timeBlocks={calendar.timeBlocks}
-            timeZone={timeZone}
-            activeAppointmentId={day.current?.id ?? null}
-            onSelectAppointment={setSelectedAppointment}
-            onSelectBlock={setSelectedBlock}
-          />
-        </Panel>
-
-        <QueuePanel
-          entries={waiting}
-          isPending={queueQuery.isPending}
-          professionalsById={byBarberId}
-        />
-      </div>
+                {canManage && pendingRequests > 0 ? (
+                  <Link
+                    to="/app/requests"
+                    data-fu-enter
+                    className={cn(
+                      'flex min-h-14 items-center gap-3 rounded-lg border border-warning-600/40 bg-warning-100 px-4 py-3',
+                      'transition-colors hover:bg-warning-100/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700',
+                    )}
+                  >
+                    <Inbox className="h-5 w-5 shrink-0 text-warning-700" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-ink-950">
+                        {t('app:today.requestsWaiting', { count: pendingRequests })}
+                      </span>
+                      <span className="block text-xs text-ink-700">{t('app:today.theyHoldASlotUntil')}</span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-ink-700 rtl:rotate-180" aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </div>
+            ),
+          },
+          {
+            key: 'metrics',
+            label: t('app:dashboard.moduleMetrics'),
+            wide: true,
+            content: (
+              <MetricStrip>
+                <Metric
+                  icon={<CalendarCheck2 className="h-4 w-4" />}
+                  value={day.liveCount}
+                  label={t('app:today.kpiAppointments')}
+                  context={day.remaining > 0 ? t('app:today.kpiRemaining', { count: day.remaining }) : undefined}
+                />
+                <Metric
+                  icon={<PieChart className="h-4 w-4" />}
+                  value={occupancy === null ? '—' : `${occupancy}%`}
+                  label={t('app:today.kpiOccupancy')}
+                  tone={occupancy === null ? 'quiet' : 'neutral'}
+                />
+                {/*
+                  BOOKED VALUE, never "revenue". There are no payments in this
+                  schema, so the sum of today's appointment prices is what was
+                  agreed and not what was taken. Calling it revenue would be a
+                  different and false claim on the one number an owner is most
+                  likely to repeat out loud.
+                */}
+                <Metric
+                  value={money(day.bookedValueCents, currency)}
+                  label={t('app:today.kpiBookedValue')}
+                  context={t('app:today.kpiBookedValueHint')}
+                />
+                <Metric
+                  icon={<UserX className="h-4 w-4" />}
+                  value={day.noShows}
+                  label={t('app:today.kpiNoShows')}
+                  tone={day.noShows === 0 ? 'quiet' : 'danger'}
+                />
+              </MetricStrip>
+            ),
+          },
+          {
+            key: 'today',
+            label: t('app:dashboard.moduleToday'),
+            content: (
+              <Panel
+                title={t('app:today.theWholeDay')}
+                meta={t('app:today.flowMeta', { count: day.liveCount })}
+                bodyClassName="p-2 sm:p-3"
+                footer={
+                  <Link to="/app/calendar" className={buttonVariants({ variant: 'secondary' }, 'w-full')}>
+                    <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                    {t('app:today.openCalendar')}
+                  </Link>
+                }
+              >
+                <TodayFlow
+                  appointments={calendar.appointments}
+                  timeBlocks={calendar.timeBlocks}
+                  timeZone={timeZone}
+                  activeAppointmentId={day.current?.id ?? null}
+                  onSelectAppointment={setSelectedAppointment}
+                  onSelectBlock={setSelectedBlock}
+                />
+              </Panel>
+            ),
+          },
+          {
+            key: 'queue',
+            label: t('app:dashboard.moduleQueue'),
+            content: <QueuePanel entries={waiting} isPending={queueQuery.isPending} professionalsById={byBarberId} />,
+          },
+          {
+            key: 'customers',
+            label: t('app:dashboard.moduleCustomers'),
+            content: (
+              <CustomersPanel
+                totalCustomers={customersQuery.data?.length}
+                isPending={customersQuery.isPending}
+                summary={analyticsQuery.data}
+              />
+            ),
+          },
+          {
+            key: 'social',
+            label: t('app:dashboard.moduleSocial'),
+            content: (
+              <SocialPerformancePanel
+                summary={analyticsQuery.data}
+                isPending={analyticsQuery.isPending}
+                isError={analyticsQuery.isError}
+              />
+            ),
+          },
+        ]}
+        order={order}
+        editing={editingLayout}
+        onReorder={(next) => setDraftOrder(next as DashboardModule[])}
+      />
 
       <AppointmentSheet
         appointment={selectedAppointment}

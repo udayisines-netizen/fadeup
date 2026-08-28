@@ -529,5 +529,36 @@
       "untilClosing": "حتى الإغلاق",
       "untilChanged": "من الآن فصاعدًا"
     }
+  },
+  "dashboard": {
+    "moduleFocus": "الآن والتالي",
+    "moduleMetrics": "اليوم بلمحة",
+    "moduleToday": "مسار اليوم",
+    "moduleQueue": "قائمة الانتظار",
+    "moduleCustomers": "العملاء",
+    "moduleSocial": "الأداء الاجتماعي",
+    "layoutEdit": "إعادة الترتيب",
+    "layoutDone": "تم",
+    "layoutSaved": "تم حفظ الترتيب للصالون بأكمله",
+    "layoutSaveFailed": "تعذّر حفظ الترتيب. لم يتغيّر شيء لفريقك.",
+    "moveUp": "تحريك {{card}} لأعلى",
+    "moveDown": "تحريك {{card}} لأسفل",
+    "movedTo": "تم نقل {{card}} إلى الموضع {{position}} من {{total}}",
+    "socialTitle": "الأداء الاجتماعي",
+    "socialMeta": "آخر 30 يومًا",
+    "socialViews": "المشاهدات",
+    "socialFollows": "المتابعات",
+    "socialFavorites": "الحفظ",
+    "socialConversion": "مشاهدات بدأت حجزًا",
+    "socialConversionHint": "تُحتسب منذ فتح ملفك الشخصي.",
+    "socialEmptyTitle": "لا شيء محسوب بعد",
+    "socialEmptyDescription": "بدأت FadeUp العد منذ انضمامك — وسيمتلئ هذا مع عثور الناس عليك.",
+    "socialUnavailable": "المالك والمدير فقط يريان هذه الأرقام.",
+    "customersTitle": "العملاء",
+    "customersTotal": "في سجلك",
+    "customersReturning": "عادوا",
+    "customersOpen": "فتح العملاء",
+    "customersEmptyTitle": "لا عملاء بعد",
+    "customersEmptyDescription": "كل من تحجز له أو تستقبله سيظهر هنا."
   }
 }
