@@ -9,6 +9,7 @@ Companion documents:
 - [`competitor-intelligence.md`](./competitor-intelligence.md) — the competitor registry, detection and discovery policy
 - [`whatsapp.md`](./whatsapp.md) — the WhatsApp Cloud API integration and Meta setup
 - [`data-science.md`](./data-science.md) — the phased ML strategy, dataset and model registry
+- [`planity.md`](./planity.md) — reading a provider's own public page, and the source-independence rule it forced
 
 ---
 
@@ -72,7 +73,7 @@ direct session can route around it.
 
 ---
 
-## The three rules that shape everything
+## The four rules that shape everything
 
 ### 1. UNKNOWN is not FALSE
 
@@ -148,6 +149,25 @@ locale flagged for human review.
 
 A scraped phone number creates **no** eligibility. `is_eligible` defaults
 to `false` and must be granted deliberately.
+
+### 4. Two reports are not two observers
+
+Added by R4.1, and it belongs beside the other three because it is the same
+kind of rule: a guard against evidence that looks stronger than it is.
+
+`publication_block_reason` requires two independent sources, and until R4.1 it
+counted distinct source ROWS. Geoapify's places data is substantially derived
+from OpenStreetMap, so a prospect seen by OSM and by Geoapify had been seen
+ONCE and reported twice — and that cleared the bar and minted a durable public
+identity.
+
+`prospect_sources.independence_group` names the underlying observer. Sources
+sharing a group count once; an ungrouped source is its own group, so nothing
+else changed meaning. `osm` and `geoapify` share `openstreetmap`.
+
+The same rule is why Planity evidence never counts toward publication: its page
+is reached by following a link the business published about itself, so it is the
+`website` chain one hop longer, not a second observer.
 
 ---
 
@@ -283,6 +303,7 @@ ambiguous between US and CA.
 | `whatsapp_send` | `jobs/whatsapp-send.ts` | Drain a campaign's queued recipients |
 | `outcome_processing` | `jobs/runner.ts` | Reconcile conversions back onto the funnel |
 | `publication_evaluation` | `jobs/publication-evaluation.ts` | Refresh the operator's publication review queue (R4). **Evaluates only** — it holds no copy of the eligibility rules and cannot publish |
+| `planity_enrichment` | `jobs/planity-enrichment.ts` | Read the public Planity page of prospects whose own website links to one (R4.1). Enrichment only — see [`planity.md`](./planity.md) |
 
 ---
 
