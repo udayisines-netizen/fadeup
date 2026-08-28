@@ -10,15 +10,23 @@ interface SireneAdresse {
   libelleCommuneEtablissement?: string
 }
 
+interface SirenePeriodeEtablissement {
+  dateDebut?: string | null
+  dateFin?: string | null
+  etatAdministratifEtablissement?: string
+  activitePrincipaleEtablissement?: string
+  enseigne1Etablissement?: string | null
+}
+
 interface SireneEtablissement {
   siren: string
   siret: string
   adresseEtablissement?: SireneAdresse
+  periodesEtablissement?: SirenePeriodeEtablissement[]
   uniteLegale?: {
     denominationUniteLegale?: string
     nomUniteLegale?: string
     prenom1UniteLegale?: string
-    activitePrincipaleUniteLegale?: string
   }
 }
 
@@ -26,23 +34,27 @@ interface SireneResponse {
   etablissements?: SireneEtablissement[]
 }
 
-// APE/NAF code for hairdressing establishments (France). See
-// https://www.insee.fr/fr/metadonnees/nafr2 — "9602A Coiffure".
-const HAIRDRESSING_NAF_CODE = '9602A'
+// NAF 96.02A — Coiffure.
+// We query establishment-level activity because FadeUp discovers physical
+// establishments, not merely legal units.
+const HAIRDRESSING_NAF_CODE = '96.02A'
+
+const SIRENE_BASE_URL = 'https://api.insee.fr/api-sirene/3.11'
 
 /**
- * INSEE Sirene — France-only, official business registry. Third in the
- * France waterfall, after OSM/Geoapify: contributes SIREN/SIRET (a
- * high-confidence dedup identifier — see src/dedupe/candidates.ts) and
- * confirms legal/registered status. Requires INSEE_API_KEY (a bearer
- * token); isConfigured() false without one.
+ * INSEE Sirene — France-only official business registry.
  *
- * NOTE: field names here follow INSEE Sirene API v3's documented
- * response shape. INSEE_API_KEY is not currently provisioned in this
- * environment (see infra/worker/.env.worker) — this adapter's live shape
- * has not been exercised against the real API and should be re-verified
- * against a fresh response the first time a real key is configured (see
- * docs/worker-v2/sources.md).
+ * Sirene is primarily an administrative/trust source for FadeUp:
+ * - SIREN/SIRET
+ * - legal/business identity
+ * - physical establishment address
+ * - activity code
+ * - current active/closed state
+ *
+ * It is NOT treated as a contact-data source for phone/email.
+ *
+ * Authentication uses the current public INSEE API key header:
+ * X-INSEE-Api-Key-Integration.
  */
 export class SireneAdapter implements SourceAdapter {
   readonly key = 'sirene'
@@ -58,57 +70,126 @@ export class SireneAdapter implements SourceAdapter {
     if (!this.isConfigured()) {
       throw new Error('sirene: INSEE_API_KEY not configured')
     }
+
     if (query.country !== 'FR') {
-      ctx.logger.debug('sirene: skipped — France-only source', { country: query.country })
+      ctx.logger.debug('sirene: skipped — France-only source', {
+        country: query.country,
+      })
       return []
     }
+
     if (!query.city) {
       ctx.logger.debug('sirene: skipped — no city in query')
       return []
     }
 
-    const q = [
-      `activitePrincipaleUniteLegale:${HAIRDRESSING_NAF_CODE}`,
-      `libelleCommuneEtablissement:"${query.city}"`,
-      'etatAdministratifUniteLegale:A',
-    ].join(' AND ')
+    const today = new Date().toISOString().slice(0, 10)
+    const city = escapeSirenePhrase(query.city.trim().toUpperCase())
 
-    const url = new URL('https://api.insee.fr/entreprises/sirene/V3/siret')
+    /*
+     * establishment activity/state are historised Sirene fields.
+     * `periode(...)` + `date=<today>` means:
+     * "this physical establishment is active and classified 96.02A today",
+     * rather than "it had such a state at some point in its history".
+     */
+    const q =
+      `periode(` +
+      `etatAdministratifEtablissement:A AND ` +
+      `activitePrincipaleEtablissement:${HAIRDRESSING_NAF_CODE}` +
+      `) AND ` +
+      `libelleCommuneEtablissement:"${city}"`
+
+    const url = new URL(`${SIRENE_BASE_URL}/siret`)
     url.searchParams.set('q', q)
-    url.searchParams.set('nombre', String(Math.min(query.maxCandidates ?? 50, 1000)))
+    url.searchParams.set('date', today)
+    url.searchParams.set(
+      'nombre',
+      String(Math.min(query.maxCandidates ?? 50, 1000)),
+    )
 
     const response = await fetchJson<SireneResponse>(url.toString(), {
-      headers: { Authorization: `Bearer ${this.config.INSEE_API_KEY}` },
+      headers: {
+        'X-INSEE-Api-Key-Integration': this.config.INSEE_API_KEY!,
+        Accept: 'application/json',
+      },
       timeoutMs: 15_000,
     })
 
-    return (response.etablissements ?? []).map((e) => etablissementToCandidate(e))
+    return (response.etablissements ?? [])
+      .map((e) => etablissementToCandidate(e, today))
+      .filter((candidate): candidate is RawCandidate => candidate !== null)
   }
 }
 
-function etablissementToCandidate(e: SireneEtablissement): RawCandidate {
+function etablissementToCandidate(
+  e: SireneEtablissement,
+  date: string,
+): RawCandidate | null {
+  const currentPeriod =
+    e.periodesEtablissement?.find(
+      (period) =>
+        (!period.dateDebut || period.dateDebut <= date) &&
+        (!period.dateFin || period.dateFin >= date),
+    ) ?? e.periodesEtablissement?.[0]
+
+  // Defensive check: the API query should already guarantee both conditions,
+  // but never manufacture a current FadeUp prospect from a closed or
+  // non-hairdressing establishment if the upstream response changes.
+  if (
+    currentPeriod &&
+    (currentPeriod.etatAdministratifEtablissement !== 'A' ||
+      currentPeriod.activitePrincipaleEtablissement !== HAIRDRESSING_NAF_CODE)
+  ) {
+    return null
+  }
+
   const legal = e.uniteLegale
+
   const name =
+    currentPeriod?.enseigne1Etablissement ??
     legal?.denominationUniteLegale ??
-    (legal?.prenom1UniteLegale && legal?.nomUniteLegale ? `${legal.prenom1UniteLegale} ${legal.nomUniteLegale}` : legal?.nomUniteLegale)
+    (legal?.prenom1UniteLegale && legal?.nomUniteLegale
+      ? `${legal.prenom1UniteLegale} ${legal.nomUniteLegale}`
+      : legal?.nomUniteLegale)
+
+  if (!name?.trim()) {
+    return null
+  }
 
   const addr = e.adresseEtablissement
-  const addressLine = [addr?.numeroVoieEtablissement, addr?.typeVoieEtablissement, addr?.libelleVoieEtablissement]
+
+  const addressLine = [
+    addr?.numeroVoieEtablissement,
+    addr?.typeVoieEtablissement,
+    addr?.libelleVoieEtablissement,
+  ]
     .filter(Boolean)
     .join(' ')
 
   return {
     externalId: e.siret,
     externalType: 'siret',
-    name,
+    name: name.trim(),
     addressLine: addressLine || undefined,
     city: addr?.libelleCommuneEtablissement,
     postalCode: addr?.codePostalEtablissement,
     country: 'FR',
-    // A registered legal entity match on the exact hairdressing NAF code
-    // is a strong signal — high confidence, and siret is itself a
-    // high-confidence dedup identifier (see src/dedupe/candidates.ts).
+
+    // Exact SIRET + active physical establishment + exact NAF activity
+    // is strong administrative evidence for identity/deduplication.
     confidence: 0.85,
-    rawPayload: { siren: e.siren, siret: e.siret, uniteLegale: legal },
+
+    rawPayload: {
+      siren: e.siren,
+      siret: e.siret,
+      activityCode: currentPeriod?.activitePrincipaleEtablissement ?? null,
+      administrativeState:
+        currentPeriod?.etatAdministratifEtablissement ?? null,
+      referenceDate: date,
+    },
   }
+}
+
+function escapeSirenePhrase(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }

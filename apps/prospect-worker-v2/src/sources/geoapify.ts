@@ -32,7 +32,7 @@ interface GeoapifyResponse {
  * skipped rather than failing the job (see spec: "a failed source must
  * not destroy the entire discovery job").
  *
- * Category: commercial.hairdresser is Geoapify's Places category for
+ * Category: service.beauty.hairdresser is Geoapify's Places category for
  * barbershops/hair salons.
  */
 export class GeoapifyAdapter implements SourceAdapter {
@@ -58,7 +58,7 @@ export class GeoapifyAdapter implements SourceAdapter {
     const limit = Math.min(query.maxCandidates ?? 50, 100)
 
     const url = new URL('https://api.geoapify.com/v2/places')
-    url.searchParams.set('categories', 'commercial.hairdresser')
+    url.searchParams.set('categories', 'service.beauty.hairdresser')
     url.searchParams.set('filter', `circle:${query.longitude},${query.latitude},${radiusMeters}`)
     url.searchParams.set('limit', String(limit))
     url.searchParams.set('apiKey', this.config.GEOAPIFY_API_KEY as string)

@@ -232,7 +232,7 @@ describe('GeoapifyAdapter', () => {
               properties: {
                 place_id: 'geo-1',
                 name: 'Barbier Moderne',
-                categories: ['commercial.hairdresser'],
+                categories: ['service.beauty.hairdresser'],
                 city: 'Lyon',
                 country_code: 'fr',
                 lat: 45.75,
