@@ -315,13 +315,31 @@ export async function runPlanityEnrichmentJob(
 }
 
 /**
- * Candidates: prospects whose OWN website links to a Planity establishment
- * page, and whose Planity evidence is stale or was never status-checked.
+ * Candidates come from TWO first-party statements, both of which are the
+ * business saying "this is where you book us".
+ *
+ *   A. A current PLANITY observation whose evidence is an establishment URL —
+ *      i.e. the website crawler found the link on their own site.
+ *
+ *   B. The prospect's own `website_url` IS a Planity establishment page.
+ *
+ * (B) is not a fallback; it is the STRONGER of the two, and it exists because
+ * the crawler cannot produce (A) for these businesses. Observed on live: a
+ * Lyon barbershop whose OpenStreetMap `website` tag is its Planity page. The
+ * generic crawler fetched it, hit its 2 MB per-page cap on a ~1.5 MB Planity
+ * document, and correctly recorded the crawl as FAILED — which by the
+ * UNKNOWN-is-not-FALSE rule means no observation at all. So the businesses
+ * most obviously committed to Planity, the ones using it as their entire web
+ * presence, were exactly the ones (A) could never find.
+ *
+ * Reading `website_url` needs no crawl, no size limit, and no inference: a
+ * source recorded the business's own address for itself, and that address is a
+ * Planity page.
  *
  * Deterministic and bounded. Ordered by staleness so a repeated run walks
- * forward through the backlog instead of re-reading the same rows, and
- * `last_seen_at` — which the existing observation trigger already maintains —
- * is the freshness clock, so this needs no new state.
+ * forward through the backlog, using `last_seen_at` — maintained by the
+ * existing observation trigger — as the freshness clock, so this needs no new
+ * state. A candidate with no observation yet sorts first.
  */
 async function selectCandidates(
   pool: DbPool,
@@ -337,23 +355,30 @@ async function selectCandidates(
             p.phone_e164,
             loc.postal_code,
             loc.city,
-            o.evidence      as planity_url
+            -- Prefer the observation's URL when one exists: it is what the
+            -- crawler actually saw. Fall back to the business's own listed
+            -- website when that is itself a Planity page.
+            coalesce(o.evidence, p.website_url) as planity_url
      from public.prospects p
-     join public.booking_provider_observations o on o.prospect_id = p.id and o.is_current
-     join public.booking_providers bp on bp.id = o.provider_id and bp.key = 'PLANITY'
+     left join public.booking_provider_observations o
+            on o.prospect_id = p.id
+           and o.is_current
+           and o.provider_id = (select id from public.booking_providers where key = 'PLANITY')
+           and o.evidence like '%planity.%'
      left join public.prospect_locations loc on loc.prospect_id = p.id and loc.is_primary
-     where o.evidence is not null
-       and o.evidence like '%planity.%'
+     where coalesce(o.evidence, p.website_url) like '%planity.%'
        and p.converted_organization_id is null
        and not p.do_not_contact
        and ($1::uuid[] is null or p.id = any($1::uuid[]))
        and (
          $1::uuid[] is not null
-         -- Never status-checked, or checked long enough ago to have changed.
+         -- No observation yet, never status-checked, or checked long enough
+         -- ago to have changed.
+         or o.id is null
          or o.booking_status = 'UNKNOWN'
          or o.last_seen_at < now() - make_interval(hours => $2::int)
        )
-     order by p.id, o.last_seen_at asc
+     order by p.id, o.last_seen_at asc nulls first
      limit $3`,
     [explicitIds, recheckAfterHours, limit],
   )

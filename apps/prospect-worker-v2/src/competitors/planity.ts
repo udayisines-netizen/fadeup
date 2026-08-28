@@ -319,7 +319,7 @@ function countServices(html: string): ServiceCounts {
 }
 
 /**
- * Practitioner count, names discarded.
+ * CURRENT practitioner count, names discarded.
  *
  * Planity renders a per-practitioner calendar structure. The COUNT is a
  * legitimate public signal of establishment size and feeds
@@ -327,8 +327,24 @@ function countServices(html: string): ServiceCounts {
  * FadeUp's model, so they are never returned — and, per the domain rule, a
  * practitioner never becomes a standalone marketplace prospect.
  *
- * Bounded: the scan gives up after a fixed budget rather than brace-matching
- * an arbitrarily large blob.
+ * TWO FILTERS, BOTH LEARNED THE HARD WAY
+ *
+ * The first live run reported 33 collaborators for a Lyon barbershop. The
+ * structure retains DEPARTED staff with a `deletedAt` stamp — in one observed
+ * salon, four of six children were former employees going back two years — so
+ * counting children naively measures everyone who has ever worked there.
+ *
+ * That is the specific error acquisition-intelligence.md warns about: "an
+ * over-eager headcount would inflate the multi-barber signal that both scores
+ * depend on". A three-chair shop with a decade of turnover would read as a
+ * chain and score like one.
+ *
+ * So: skip anything carrying `deletedAt`, skip anything hidden from the web,
+ * and only count calendars under a `system: "people"` parent — Planity uses the
+ * same structure for rooms and equipment, which are not barbers.
+ *
+ * Bounded: the scan gives up after a fixed budget rather than brace-matching an
+ * arbitrarily large blob.
  */
 function countCollaborators(html: string): number | null {
   const object = extractObjectAfterKey(html, '"calendars"', 256 * 1024)
@@ -341,17 +357,34 @@ function countCollaborators(html: string): number | null {
     return null
   }
 
-  if (!parsed || typeof parsed !== 'object') return null
+  if (!isRecord(parsed)) return null
 
   let count = 0
-  for (const calendar of Object.values(parsed as Record<string, unknown>)) {
-    if (!calendar || typeof calendar !== 'object') continue
-    const children = (calendar as Record<string, unknown>)['children']
-    if (children && typeof children === 'object') {
-      count += Object.keys(children as Record<string, unknown>).length
+
+  for (const calendar of Object.values(parsed)) {
+    if (!isRecord(calendar)) continue
+
+    // `system` names what the calendar group is FOR. Absent on older records,
+    // so its absence is tolerated; a value that is present and is not "people"
+    // is a resource calendar and is skipped.
+    const system = calendar['system']
+    if (typeof system === 'string' && system !== 'people') continue
+
+    const children = calendar['children']
+    if (!isRecord(children)) continue
+
+    for (const child of Object.values(children)) {
+      if (!isRecord(child)) continue
+      if (child['deletedAt'] !== undefined && child['deletedAt'] !== null) continue
+      if (child['webHidden'] === true) continue
+      count += 1
     }
   }
 
+  // Zero current practitioners on a page that clearly HAS a people calendar is
+  // a real observation of an empty roster, but it is far more likely to mean
+  // the structure changed under us. Null says "not observed" rather than
+  // asserting a salon with no staff.
   return count > 0 ? count : null
 }
 

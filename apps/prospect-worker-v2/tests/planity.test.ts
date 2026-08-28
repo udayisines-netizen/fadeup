@@ -348,3 +348,46 @@ describe('website → Planity link detection (PATH 1)', () => {
     expect(detections.find((d) => d.providerKey === 'PLANITY')).toBeUndefined()
   })
 })
+
+describe('collaborator counting — the over-eager headcount trap', () => {
+  // The first live run reported 33 collaborators for a Lyon barbershop.
+  // Planity retains DEPARTED staff indefinitely with a deletedAt stamp, so a
+  // naive child count measures everyone who has ever worked there. That is the
+  // exact error acquisition-intelligence.md warns about: an inflated headcount
+  // feeds the multi-barber signal that BOTH scores depend on, and a three-chair
+  // shop with a decade of turnover would score like a chain.
+  it('counts current practitioners only, never departed ones', () => {
+    const page = parsePlanityEstablishment(
+      planityPage({ collaborators: 2, departedCollaborators: 4 }),
+      FETCHED,
+    )
+    expect(page.collaboratorCount).toBe(2)
+  })
+
+  it('ignores resource calendars — a chair is not a barber', () => {
+    const page = parsePlanityEstablishment(
+      planityPage({ collaborators: 3, resourceCalendars: 5 }),
+      FETCHED,
+    )
+    expect(page.collaboratorCount).toBe(3)
+  })
+
+  it('returns null rather than 0 when every practitioner has departed', () => {
+    // An empty roster is far more likely to mean the structure changed than
+    // that a trading salon has no staff. Null says "not observed".
+    const page = parsePlanityEstablishment(
+      planityPage({ collaborators: 0, departedCollaborators: 3 }),
+      FETCHED,
+    )
+    expect(page.collaboratorCount).toBeNull()
+  })
+
+  it('still discards names while filtering', () => {
+    const page = parsePlanityEstablishment(
+      planityPage({ collaborators: 2, departedCollaborators: 2 }),
+      FETCHED,
+    )
+    expect(JSON.stringify(page)).not.toContain('Departed')
+    expect(JSON.stringify(page)).not.toContain('Practitioner')
+  })
+})

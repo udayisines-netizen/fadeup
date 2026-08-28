@@ -159,6 +159,27 @@ update public.prospect_sources
 set is_identity_trust_anchor = false
 where key = 'planity' and is_identity_trust_anchor;
 
+-- A budget and a health row, without which the source is UNUSABLE.
+--
+-- private.is_prospect_source_paused INNER JOINS api_source_health, so a source
+-- with no health row yields NULL, and the Worker's quota helper turns NULL into
+-- `true` — paused. That is the correct fail-closed default and it is also why
+-- registering a source in prospect_sources alone is not enough: the first
+-- planity_enrichment run against live selected its candidate and then skipped
+-- it with "source paused", having made no request at all.
+--
+-- 300/day is deliberately low. This job reads ONE page per prospect and only
+-- for prospects that already link to Planity; there is no volume target to
+-- trade against, and a low ceiling means a runaway loop stops on its own rather
+-- than being noticed later. Raise it in /platform, not here.
+insert into public.api_source_limits (source_id, max_requests_per_minute, max_requests_per_day, max_requests_per_month)
+select id, 20, 300, 5000 from public.prospect_sources where key = 'planity'
+on conflict (source_id) do nothing;
+
+insert into public.api_source_health (source_id)
+select id from public.prospect_sources where key = 'planity'
+on conflict (source_id) do nothing;
+
 -- ---------------------------------------------------------------------------
 -- 4. The gate learns to count observers instead of rows
 --
@@ -332,6 +353,14 @@ begin
     where key = 'planity' and independence_group = 'planity' and not is_identity_trust_anchor
   ) then
     raise exception 'R4.1: the planity source is missing, ungrouped, or wrongly marked a trust anchor';
+  end if;
+
+  -- Registering a source without a health row leaves it permanently paused,
+  -- and the symptom is a job that selects candidates and quietly skips every
+  -- one of them. Asserted because that is exactly what happened on the first
+  -- live run.
+  if private.is_prospect_source_paused('planity') is distinct from false then
+    raise exception 'R4.1: the planity source is paused or has no health row — it would skip every candidate';
   end if;
 
   -- A grouped pair must now count as ONE. Asserted directly rather than

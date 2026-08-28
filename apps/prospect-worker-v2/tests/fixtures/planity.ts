@@ -19,6 +19,10 @@ interface FixtureOptions {
   bookableServices?: number
   unbookableServices?: number
   collaborators?: number
+  /** Departed staff, retained by Planity with a deletedAt stamp. Must not be counted. */
+  departedCollaborators?: number
+  /** A non-practitioner calendar group (rooms, equipment). Must not be counted. */
+  resourceCalendars?: number
   withJsonLd?: boolean
   withCanonical?: boolean
   name?: string
@@ -35,6 +39,8 @@ export function planityPage(options: FixtureOptions = {}): string {
     bookableServices = 3,
     unbookableServices = 1,
     collaborators = 2,
+    departedCollaborators = 0,
+    resourceCalendars = 0,
     withJsonLd = true,
     withCanonical = true,
     name = 'La Loge',
@@ -75,12 +81,28 @@ export function planityPage(options: FixtureOptions = {}): string {
     ...Array.from({ length: unbookableServices }, (_, i) => `{"appHidden":false,"bookable":false,"duration":30,"id":"svc-n${i}"}`),
   ].join(',')
 
-  const calendarChildren = Array.from(
-    { length: collaborators },
-    (_, i) => `"cal-child-${i}":{"color":"#daff75","name":"Practitioner ${i}"}`,
+  const calendarChildren = [
+    ...Array.from({ length: collaborators }, (_, i) => `"cal-child-${i}":{"color":"#daff75","name":"Practitioner ${i}"}`),
+    // Planity retains departed staff indefinitely with a deletedAt stamp.
+    ...Array.from(
+      { length: departedCollaborators },
+      (_, i) => `"cal-gone-${i}":{"color":"#D53F8C","deletedAt":1688038806936,"name":"Departed ${i}"}`,
+    ),
+  ].join(',')
+
+  const resourceChildren = Array.from(
+    { length: resourceCalendars },
+    (_, i) => `"res-${i}":{"name":"Chair ${i}"}`,
   ).join(',')
 
-  const calendars = collaborators > 0 ? `"calendars":{"cal-root":{"children":{${calendarChildren}}}},` : ''
+  const groups = [
+    collaborators + departedCollaborators > 0
+      ? `"cal-root":{"children":{${calendarChildren}},"system":"people"}`
+      : null,
+    resourceCalendars > 0 ? `"res-root":{"children":{${resourceChildren}},"system":"resources"}` : null,
+  ].filter(Boolean).join(',')
+
+  const calendars = groups ? `"calendars":{${groups}},` : ''
 
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"/>${canonical}${jsonLd}</head>
 <body><div id="root">
