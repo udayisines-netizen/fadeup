@@ -49,6 +49,27 @@ POSITIVE REPLY / CLAIM / ACTIVATION / PAID     outreach_events
 DATA SCIENCE FEEDBACK LOOP                     ml/
 ```
 
+R4 added the branch that turns a prospect into marketplace supply rather than a
+sales lead. It hangs off CANONICAL PROSPECT and runs in parallel with outreach:
+
+```
+CANONICAL PROSPECT
+  ↓ PUBLICATION ELIGIBILITY   ← enforced in SQL, by a BEFORE INSERT trigger
+  ↓ public.publication_block_reason()      eleven reasons, first hit wins
+  ↓ prospect_publication_eligibility       a CACHE, refreshed by the Worker
+OPERATOR DECISION                          publish_external_professional()
+  ↓ prospect_professionals                 one identity per canonical prospect
+EXTERNAL UNCLAIMED PROFILE                 professionals, claim_state=unclaimed
+  ↓ CLAIM                                  professional_claims
+CLAIMED PROFESSIONAL
+```
+
+See `docs/v2/R4_WORKER_ACQUISITION_ENGINE.md`. Two properties matter here:
+**the Worker evaluates but cannot publish** — `prospect_worker` is explicitly
+revoked from `publish_external_professional`, asserted in the migration — and
+the gate is a trigger rather than a check inside the RPC, so no caller, role or
+direct session can route around it.
+
 ---
 
 ## The three rules that shape everything
@@ -80,6 +101,16 @@ separate functions precisely so the asymmetry is unavoidable in SQL:
 In scoring, an UNKNOWN awards zero points *and says so in the breakdown* —
 it never counts as a negative. In the ML feature matrix, UNKNOWN encodes to
 `NaN`, never `0`.
+
+**The rule applies one stage earlier too, and R4 had to enforce it there.**
+Overpass reports a server-side timeout as HTTP 200 with an empty `elements`
+array and a `remark`. Read naively that is "there are no barbershops here" — a
+zero manufactured from an infrastructure failure, exactly what this rule
+forbids, and worse than a wrong tribool because `candidates_found` feeds the
+search planner's saturation and yield-guard arithmetic. A timed-out geographic
+cell would look exhausted and never be revisited. `src/sources/osm.ts` now
+raises `OverpassRuntimeError` instead, classified retryable by name. A *failed
+search is not an empty search*, and neither is a failed crawl.
 
 ### 2. Message copy is never generated
 
@@ -251,6 +282,7 @@ ambiguous between US and CA.
 | `outreach_preparation` | `jobs/outreach-preparation.ts` | Eligibility gate, template selection, rendering |
 | `whatsapp_send` | `jobs/whatsapp-send.ts` | Drain a campaign's queued recipients |
 | `outcome_processing` | `jobs/runner.ts` | Reconcile conversions back onto the funnel |
+| `publication_evaluation` | `jobs/publication-evaluation.ts` | Refresh the operator's publication review queue (R4). **Evaluates only** — it holds no copy of the eligibility rules and cannot publish |
 
 ---
 

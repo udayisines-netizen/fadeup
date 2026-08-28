@@ -51,7 +51,9 @@ processing one job at a time.
 
 ## Job types and the discovery waterfall
 
-`job_type`: `discovery | enrichment | dedup_scan | scoring | website_crawl | instagram_enrich`.
+`job_type`: `discovery | enrichment | dedup_scan | scoring | website_crawl | instagram_enrich`,
+plus the acquisition-intelligence types (see acquisition-intelligence.md) and
+R4's `publication_evaluation`.
 
 A **discovery** job (`src/jobs/discovery.ts`) is the main flow:
 

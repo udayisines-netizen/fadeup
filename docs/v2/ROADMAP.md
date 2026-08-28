@@ -1,6 +1,6 @@
 # FadeUp Social-First V2 — Roadmap
 
-Status: **R0 reconstructed and corrected after independent adversarial review. R1A implemented and validated. R1B implemented and validated. R2 implemented and validated.**
+Status: **R0 reconstructed and corrected after independent adversarial review. R1A, R1B, R2, Service Mode, the Customer API freeze, R3 and R4 implemented and validated. R4 is deployed to the live database and the Worker is running.**
 
 > **Provenance.** No `docs/v2/` directory existed in any commit reachable from
 > `git log --all` before this reconstruction. The R0 artifacts named in the R1
@@ -20,7 +20,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | **R2** | Pricing, plans, capability catalogue, entitlement gating | **Complete (2026-08-26)** — see `R2_IMPLEMENTATION_REPORT.md`. Supersedes `ENTITLEMENTS_DRAFT.md`, whose per-location billing unit R2 reverses. |
 | **Service Mode** | Booking + Live Queue admission model, enforced server-side | **Complete (2026-08-26)** — interstitial lot between R2 and R3. See `SERVICE_MODE_IMPLEMENTATION_REPORT.md`. Also closes the entitlement bypass R2 left open: booking and queue admission now consult `private.org_has_capability`, which nothing had called. |
 | R3 | Product analytics and event architecture | **Complete (2026-08-27)** — see `R3_ANALYTICS_EVENT_ENGINE.md`. Canonical append-only `analytics_events`, a 40-contract taxonomy as data, 13 authoritative instrumentation triggers, one typed web adapter, four aggregation contracts. Backfills nothing: every funnel starts empty and fills from application forward. |
-| R4 | Worker engine foundations | Not started |
+| **R4** | Worker V2 core & acquisition engine | **Complete (2026-08-28)** — see `R4_WORKER_ACQUISITION_ENGINE.md`. Builds Constitution §5.1's missing PUBLIC ELIGIBILITY stage as an eleven-reason gate enforced by a `BEFORE INSERT` trigger with no role exemption, wires R3's two deferred acquisition contracts, ships the publication and claim review screens, and deploys the Worker for the first time — which is how it found the Overpass silent-zero defect in §7. |
 | R6 / R7 | Social UI — Follow, verified customers, social proof | Not started |
 | R10 | Worker discovery at scale → external profiles | Not started |
 | R16 | Subscription capabilities | Not started |
@@ -45,6 +45,7 @@ Status: **R0 reconstructed and corrected after independent adversarial review. R
 | `R2_IMPLEMENTATION_REPORT.md` | What R2 actually did: the commercial model, the eight canonical plans, the capacity enforcement, its validation results, and the Constitution §6 amendment it required. |
 | `R3_ANALYTICS_EVENT_ENGINE.md` | What R3 actually did: the four-stream boundary, the event table and why it deliberately carries no foreign keys, the taxonomy as data, the server/client emission wall, the two idempotency disciplines, the commercial snapshot, the privacy gate, the read contracts, and the five event contracts documented but not wired. |
 | `SERVICE_MODE_IMPLEMENTATION_REPORT.md` | What the Service Mode lot did: the four modes, the establishment default and the two override layers, the one resolver, `queue_open` as a separate fact, the two `BEFORE INSERT` guards, the shared/exclusive mutex, and why R1A's VERIFY needed an entitled fixture afterwards. |
+| `R4_WORKER_ACQUISITION_ENGINE.md` | What R4 actually did: the eleven-reason publication gate and why it is a trigger rather than a check inside the RPC, trust anchors as data, why the cache is deliberately not the guarantee, the machine-evaluates/human-decides split expressed as a revoked grant, the two acquisition event contracts, the Overpass silent-zero defect that deploying it surfaced, and the three closed-lot fixture corrections it required. |
 
 ---
 
@@ -102,11 +103,23 @@ assigned to it were reassessed and left alone, each for a stated reason:
 **R3** — auto-follow is best-effort and lossy by design; if it ever needs an
 at-least-once guarantee, that is an outbox, and R3 owns event architecture.
 
-**R4 / R10** — R1 adds **no** Worker observation, matching or dedupe structure;
-that pipeline is production quality and untouched. The only new surface is
-controlled external-profile creation with safe defaults, idempotent per prospect.
-Nothing propagates prospect data onto a claimed identity, and that write path
-must not be created.
+**R4 — done.** R4 honoured this exactly: it added **no** Worker observation,
+matching or dedupe structure, and the discovery/enrichment/scoring/outreach
+pipeline is untouched. The one new surface is controlled external-profile
+creation with safe defaults, idempotent per prospect. Nothing propagates
+prospect data onto a claimed identity, and that write path was not created.
+
+R4 went further than this note anticipated in one respect: it made the gate
+**structural**. Publication is enforced by a `BEFORE INSERT` trigger on
+`prospect_professionals` with no role exemption — not by a check inside the RPC
+— so `create_external_professional`, a future auto-publish lane, and a direct
+`psql` session as the table owner all hit the same wall.
+
+**R10** still owns discovery at scale and auto-publication. Any bounded
+auto-publish lane must sit **on top of** R4's gate, not replace it; the
+`prospect_worker` role is explicitly revoked from
+`publish_external_professional`, asserted inside the migration, so making the
+machine able to publish requires deleting an assertion on purpose.
 
 **R6 / R7** — handles exist but are unpopulated; follower counts are capped;
 `/s/:slug/barbers/:barberId` must keep working when a handle route is added.
@@ -135,9 +148,9 @@ lost:
 | D-2 | Deleting a barber cascades away completed appointment history — **exploitable today over REST by any owner/manager** | **CRITICAL, proven** |
 | D-3 | Completion + queue state forgeable by any `barber`-role member: status PATCH, causally-impossible backdated timestamps, and `customer_id` reassignment | **HIGH, proven** |
 | D-8 | `customers.user_id` settable to any account by staff — **raised to HIGH**: composes with D-1/D-3 into a complete fabricated "verified client" about a real victim | **HIGH, proven** |
-| SEC-2 | The cold-outreach worker can read every tenant's transactional email stream | **HIGH** |
+| SEC-2 | ~~The cold-outreach worker can read every tenant's transactional email stream~~ — **FIXED, verified 2026-08-28.** `email_outbox` is absent from `prospect_worker`'s 50 table grants; the dispatcher reaches the outbox only through `private.claim_next_email`. Closed by R1A's least-privilege migration. | ~~HIGH~~ CLOSED |
 | SEC-1 | `professional_applications.internal_note` readable by the applicant | **MEDIUM** |
-| APP-1 | Booking emails render as application rejections once SMTP is enabled | **HIGH** |
+| APP-1 | ~~Booking emails render as application rejections once SMTP is enabled~~ — **FIXED, verified 2026-08-28.** `src/email/templates.ts` is an exhaustive fail-closed lookup, not the two-branch ternary. **Residual, MEDIUM:** the six booking templates have no copy at all, so once SMTP is enabled every booking email hard-fails to `failed` rather than sending the wrong thing. Failing loudly beats delivering a rejection to a confirmed booking; writing the copy belongs to whichever lot turns SMTP on. | ~~HIGH~~ → MEDIUM |
 | SEC-3 | Kong on `0.0.0.0:18100` — **downgraded to MEDIUM**: credential-gated (basic-auth; key-auth+ACL), real `.env` not the placeholder; the loss is nginx's TLS/rate-limit boundary, not open data | MEDIUM |
 | SEC-4 | **WITHDRAWN — disproved.** Every acquisition RPC re-derives `is_platform_admin()` in-body. Replacement: `prospect_effective_locale(uuid)` has no role check | LOW |
 | SEC-5 | `customers.notes` readable by role `barber` | MEDIUM |
@@ -145,7 +158,25 @@ lost:
 | — | Chair Mode is sold on `/pricing` and `/features` but marked `planned` in code | MEDIUM |
 | — | No CI anywhere; Playwright installed but unconfigured | MEDIUM |
 
-**Two items need no lot and should be done immediately:** bind Kong to
-`127.0.0.1`, and fix the Worker email-template ternary before SMTP is ever
-enabled — today six booking templates route through a two-branch boolean, so a
-customer whose booking is *confirmed* would receive application-rejection copy.
+**Status of the two "do immediately" items, re-checked 2026-08-28 during R4:**
+
+* The Worker email-template ternary is **already fixed** — `renderEmail` is an
+  exhaustive lookup that throws rather than delivering the wrong message. What
+  remains is the missing booking copy, recorded against APP-1 above.
+* **Binding Kong to `127.0.0.1` is still open** (SEC-3). It is a one-line
+  infrastructure change, it needs no lot, and R4 did not touch it because R4
+  changed no Nginx or Kong configuration.
+
+**New finding from R4 — closed.** `prospect_professionals` carried a
+platform-staff SELECT policy that had never been reachable, because R1B revoked
+the table grant and Postgres checks the grant before any policy. Every platform
+administrator reading that table got "permission denied" and the policy never
+matched a row. R4 granted the three columns the operator queue needs so the
+policy can run; `match_confidence` and `matching_rule` stay ungranted. See
+`R4_WORKER_ACQUISITION_ENGINE.md` §9.1.
+
+**New finding from R4 — closed.** The OSM adapter reported a server-side
+Overpass timeout as "0 candidates found, source completed, no error", which the
+search planner's saturation arithmetic would have read as an exhausted
+geographic cell. Found by running a real discovery job, not by reading code.
+See §7 of the R4 report.
