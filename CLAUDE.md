@@ -1,219 +1,487 @@
-# FADEUP
+# FadeUp — Claude Code Project Instructions
 
-## Identity
+## Mission
 
-FadeUp is a production-grade multi-tenant SaaS for modern barbershops.
+FadeUp is a production SaaS and social-first marketplace/operating system for barbers, independent professionals, barbershops and customers.
 
-This repository is completely independent from Jasmean OS.
+We are building FadeUp Social-First V2.
 
-## Absolute project isolation
+Current roadmap checkpoint:
 
-Allowed project root:
+- R0: completed
+- R1A: completed
+- R1B: completed
+- R2: completed
+- Service Mode foundation: completed
+- Customer API / social contracts: completed
+- R3 Analytics & Event Engine: completed
+- R4 Worker Foundation: completed
+- R5 technical/database work exists
+- R5 frontend/design is NOT product-approved
+- Current mission: R5R Frontend Reset
 
-/opt/fadeup
+Do not treat the previous R5 visual implementation as approved product direction.
 
-Forbidden:
+Do not proceed into R6 as though the previous R5 frontend/design were accepted.
 
-/opt/jasmean-os
+The immediate objective is to rebuild the frontend foundation from first principles while preserving working backend contracts and proven technical foundations.
 
-Never modify:
+## Product principle
 
-- Jasmean OS source
-- Jasmean OS containers
-- Jasmean OS databases
-- Jasmean OS Docker networks
-- Jasmean OS Docker volumes
-- Jasmean OS configuration
-- unrelated Nginx virtual hosts
+FadeUp is:
 
-Never execute commands against /opt/jasmean-os.
+Social-first discovery.
+Booking-first conversion.
 
-## Stack
+Discovery should create desire, relevance, trust and intent.
 
-Frontend:
+Once booking intent exists, the interface should aggressively minimize:
+
+- time to booking
+- cognitive load
+- number of screens
+- number of taps
+- unnecessary choices
+- unnecessary form fields
+- repeated information
+- unnecessary navigation
+
+## Sources of truth
+
+Before making frontend or product decisions, read the relevant parts of:
+
+- `docs/product/FRONTEND_SPEC.md`
+- `docs/product/BOOKING_UX.md`
+- `docs/design/DESIGN_SYSTEM.md`
+- `docs/design/REFERENCE_PRODUCTS.md`
+- `docs/frontend/REBUILD_PLAN.md`
+
+Also inspect the authoritative existing V2 documentation under `docs/v2/`.
+
+Do not replace explicit FadeUp decisions with generic SaaS assumptions.
+
+If an older document conflicts with the current R5R frontend direction described in these documents, do not silently choose one.
+
+Preserve proven backend/domain contracts and apply the newer frontend/product direction.
+
+## Existing architecture
+
+Preserve working backend architecture and contracts.
+
+Current core stack includes:
 
 - React
 - TypeScript
 - Vite
-- Tailwind CSS
-
-Application:
-
+- Tailwind
 - TanStack Query
 - React Hook Form
 - Zod
-
-Backend:
-
-- Supabase self-hosted
-- PostgreSQL
+- Supabase/PostgreSQL
 - Supabase Auth
-- PostgREST
-- Realtime
-- Storage
-- Row Level Security
-
-Infrastructure:
-
-- Docker
-- Docker Compose
-- Nginx
-- TLS
-
-## Multi-tenancy
-
-Primary tenant entity:
-
-organizations
-
-Never build business data without tenant isolation.
-
-Business resources must contain organization_id or have an immutable ownership chain leading to an organization.
-
-Never trust organization_id submitted by frontend code.
-
-Every feature must explicitly consider tenant boundaries.
-
-A user belonging to one organization must never be able to read, modify, delete, or infer private data belonging to another organization.
-
-## Database
-
-All schema changes must be reproducible SQL migrations.
-
-Always consider:
-
 - RLS
-- foreign keys
-- indexes
-- constraints
-- tenant isolation
-- auditability
-- timestamps
+- Supabase Realtime
+- Storage
+- Docker
+- Nginx
 
-Use the Supabase and Postgres skills before significant database work.
+Before adding a new abstraction, inspect whether an existing one already solves the problem.
 
-Never make undocumented schema changes directly in production.
+Do not create parallel:
 
-## Security
+- authentication systems
+- authorization systems
+- API clients
+- query layers
+- state-management systems
+- realtime architectures
+- localization architectures
 
-RLS must protect exposed tenant tables.
+unless there is a proven architectural reason.
 
-Never expose service_role or secret server credentials to frontend code.
+## R0–R4 preservation
 
-Never expose PostgreSQL directly to the public Internet.
+Do not casually rewrite foundations completed before R5.
 
-Never rely only on frontend authorization.
+R0–R4 contain significant work around:
 
-Authorization must be enforced server-side and/or through PostgreSQL RLS.
+- integrity
+- security
+- identity
+- social domain
+- acquisition
+- pricing
+- entitlements
+- service modes
+- customer contracts
+- analytics
+- Worker V2
 
-Treat tenant data as inaccessible by default.
+Treat these as existing foundations.
 
-## UI/UX
+Change them only when evidence proves a frontend requirement cannot be satisfied correctly through existing contracts.
 
-Use ui-ux-director whenever creating or substantially modifying UI.
+## R5 status
 
-All important screens must support:
+R5 was technically implemented, including frontend and some database/contracts.
 
-- mobile
-- tablet
-- desktop
+However, its frontend/design result is NOT product-approved.
+
+Therefore:
+
+Do not preserve an R5 visual decision merely because code already exists.
+
+Do not assume R5 components represent the desired design system.
+
+Do not assume R5 page hierarchy represents the desired customer experience.
+
+Do not assume R5 navigation is approved.
+
+Do not assume R5 marketplace presentation is approved.
+
+Do not assume R5 profile presentation is approved.
+
+Do not assume R5 professional dashboard presentation is approved.
+
+Technical R5 database/contracts may still be valid and useful.
+
+Audit before removing or replacing them.
+
+## Frontend rebuild rule
+
+The existing frontend is not the visual source of truth.
+
+Legacy and rejected R5 screens may be inspected to understand:
+
+- routes
+- functionality
+- backend contracts
+- data requirements
+- permissions
+- edge cases
+- historical product intent
+
+Do not preserve their structure merely because they exist.
+
+For R5R surfaces, rebuild the UX from first principles according to the current specifications.
+
+Do not simply:
+
+- add rounded cards
+- add gradients
+- add animations
+- change colors
+- rearrange old components
+- wrap existing screens in new containers
+
+and call that a rebuild.
+
+## Legacy safety
+
+Do not delete working legacy frontend surfaces before replacements are verified.
+
+Build the new V2/R5R safely alongside existing functionality where practical.
+
+Migration should happen surface-by-surface or route-by-route.
+
+Only remove obsolete implementation after:
+
+- replacement works
+- real backend integration works
+- browser QA passes
+- responsive QA passes
+- critical flows pass
+- independent review passes
+- rollback is understood
+
+## Database safety
+
+Never reset, drop or recreate production data merely to make frontend development easier.
+
+Use additive/safe migrations where schema evolution is necessary.
+
+Never weaken RLS or authorization to make the UI work.
+
+Frontend hiding is not authorization.
+
+Never delete or revert previously deployed database work merely because its associated frontend design was rejected.
+
+First determine whether the technical contract remains useful.
+
+## Real data
+
+Never fabricate operational data.
+
+Never invent:
+
+- appointment availability
+- time slots
+- queue length
+- queue position
+- waiting time
+- realtime status
+- customer relationships
+- bookings
+- reviews
+- followers
+- social proof
+- revenue
+- analytics
+
+Use real backend data when the feature requires real data.
+
+Mocks are acceptable only in isolated development/testing contexts and must never silently replace missing real integrations.
+
+## External/unclaimed profiles
+
+Worker V2 may create external/unclaimed professional profiles.
+
+These must remain clearly represented according to their real status.
+
+External/unclaimed profiles must never receive fabricated:
+
+- availability
+- booking capability
+- live queue
+- waiting time
+- realtime state
+
+They may later be claimed and become verified FadeUp professional profiles.
+
+## Product scope
+
+The defined FadeUp V2 scope is frozen.
+
+Do not invent unrelated product concepts during implementation.
+
+Do not introduce messaging.
+
+Do not introduce SMS.
+
+Do not create speculative social features.
+
+Do not add:
+
+- generic feeds
+- stories
+- livestream
+- DMs
+- unrelated AI assistants
+
+unless explicitly requested by a later approved decision.
+
+## AI-native principle
+
+FadeUp may use AI-native interaction patterns.
+
+AI-native does NOT mean making every screen a chatbot.
+
+Prefer AI where it can reduce interaction cost through:
+
+- natural-language intent
+- contextual discovery
+- smart defaults
+- useful ranking
+- fewer filters
+- faster decision-making
+
+AI outputs involving availability, queue, pricing or real operational state must remain grounded in actual data.
+
+## Communications
+
+FadeUp does not use SMS.
+
+Supported communication surfaces may include:
+
+- app
+- push
+- email
+- Wallet/Fade Passport related experiences
+
+according to actual product capabilities.
+
+## Pricing source of truth
+
+Independent:
+20 EUR/month.
+
+Barbershop plans:
+35 EUR/month.
+49 EUR/month.
+69 EUR/month.
+
+Pricing is per establishment, not per barber seat.
+
+Do not use obsolete 39 EUR pricing.
+
+Do not multiply subscription price by the number of barbers in a shop unless explicit plan logic requires something different.
+
+## Globalization
+
+Internationalization is a cross-cutting requirement.
+
+Preserve:
+
+- automatic locale selection
+- explicit language override
+- persistence
+- country/location behavior
+- translation architecture
+- international formatting
+- RTL compatibility where supported
+
+Do not introduce major hardcoded user-facing English strings outside the localization system.
+
+## Working method
+
+For substantial tasks:
+
+1. inspect before editing;
+2. understand actual behavior;
+3. trace relevant data flows;
+4. identify dependencies;
+5. identify risks;
+6. form the smallest coherent plan;
+7. implement;
+8. run deterministic verification;
+9. inspect the real UI in a browser when UI is affected;
+10. compare against current product/design specifications;
+11. correct failures before completion.
+
+Never declare success simply because code compiles or a component renders.
+
+## Browser-first UI verification
+
+For important frontend work, source-code review is insufficient.
+
+Run the real application.
+
+Inspect the actual rendered experience.
+
+At minimum for important customer surfaces verify representative widths around:
+
+- 390px
+- 430px
+- desktop where applicable
+
+Check:
+
+- hierarchy
+- visual quality
+- touch behavior
+- overflow
+- sticky actions
+- navigation
 - loading
-- empty
-- error
-- success states
+- empty states
+- errors
+- console
+- failed requests
+- animations
+- perceived speed
 
-Barber interfaces prioritize:
+## Model routing
 
-- speed
-- touch usability
-- large actionable controls
-- minimum interaction count
-- realtime feedback
+Use specialized agents proactively.
 
-Customer interfaces prioritize:
+Normal scoped implementation should use `opus-builder`.
 
-- minimal friction
-- clarity
-- fast booking
-- fast queue interactions
-- mobile-first usability
+Use `fable-critical` for:
 
-Avoid generic AI-generated SaaS dashboards.
+- difficult architecture
+- cross-cutting frontend/backend problems
+- hard debugging
+- repeated failed fixes
+- auth
+- RLS
+- data integrity
+- complex realtime
+- risky refactors
+- major design-system decisions
+- critical booking architecture
+- difficult product/technical ambiguity
+- systemic R5/R5R frontend problems
 
-The FadeUp interface must feel intentionally designed and consistent across the entire product.
+Use `opus-reviewer` after meaningful implementation work.
 
-## Development workflow
+If the same problem survives two serious fix attempts, stop patching symptoms and escalate root-cause analysis to `fable-critical`.
 
-Before completing a feature:
+Do not spend the strongest model on trivial edits.
 
-1. inspect existing architecture
-2. understand the business objective
-3. use product architecture skill
-4. analyze multi-tenancy
-5. analyze database impact
-6. analyze permissions and RLS
-7. implement migrations
-8. implement application code
-9. review UI/UX
-10. implement loading, empty, error and success states
-11. test
-12. typecheck
-13. build
-14. security review
-15. verify actual application behavior
-16. summarize modifications
+## Skills
 
-## Docker safety
+Use project Skills when relevant.
 
-FadeUp must remain completely isolated from Jasmean OS.
+Important project Skills include:
 
-Never execute destructive global Docker commands.
+- `frontend-rebuild`
+- `booking-conversion`
+- `frontend-qa`
+- `design-review`
 
-Do not use:
+Also discover and use other installed architecture, frontend, testing, security and design skills when relevant.
 
-docker system prune
-docker volume prune
-docker network prune
+Do not invent skill names that are not actually installed.
 
-Never use:
+## Definition of done
 
-docker compose down -v
+A frontend change is not complete until the affected behavior is genuinely verified.
 
-unless explicitly authorized and the consequences are understood.
+Where applicable verify:
 
-Never stop, restart, delete or modify unrelated containers.
+- TypeScript
+- lint
+- production build
+- unit/integration tests
+- route
+- data loading
+- authentication
+- authorization
+- booking behavior
+- loading state
+- empty state
+- error state
+- browser console
+- failed network requests
+- mobile responsive behavior
+- desktop behavior
+- localization
+- realtime updates
+- accessibility basics
+- touch targets
+- visual coherence
+- interaction count
+- conversion hierarchy
 
-All FadeUp Docker resources should use clear FadeUp-specific naming where possible.
+## R5R approval gate
 
-Examples:
+R5R is NOT automatically considered complete because tests pass.
 
-- fadeup-web
-- fadeup-supabase
-- fadeup-network
-- fadeup-* volumes
+R5R has two gates:
 
-## Quality
+1. technical verification;
+2. human product/design approval.
 
-Do not claim completion because code compiles.
+Do not mark the R5R design foundation as finally approved until the product owner explicitly validates the resulting direction.
 
-Verify actual application behavior.
+Until then, do not build later frontend phases on rejected visual assumptions.
 
-A feature is not complete until:
+## Scope discipline
 
-- its expected behavior works
-- permissions are correct
-- tenant isolation is correct
-- responsive behavior is correct
-- error states work
-- production build succeeds
-- no critical security issue remains
+When implementing a specific lot:
 
-## Product
+- work only on that lot
+- touch necessary dependencies only
+- do not start the next lot automatically
+- do not perform unrelated refactors
+- record unrelated defects separately
 
-The product name is:
+## Engineering principle
 
-FadeUp
+Fix causes, not symptoms.
 
-Never refer to the product as "Barber OS".
+Minimize blast radius.
 
-"Barber", "barbershop" and similar words may be used only to describe the target industry, users or business domain.
+Prefer coherent existing architecture over locally convenient hacks.
+
+Every completed lot should leave FadeUp easier to continue building.
