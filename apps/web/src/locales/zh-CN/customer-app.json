@@ -344,6 +344,36 @@
       "seeMoreTimes": "查看另外 {{count}} 个时段",
       "noSlots": "当天没有空闲时段，请试试其他日期。",
       "noBarbersForService": "目前没有人提供该服务。"
+    },
+    "appointments": {
+      "title": "预约",
+      "documentTitle": "预约 · FadeUp",
+      "documentDescription": "您在 FadeUp 的历史与未来预约。",
+      "upcoming": "即将到来",
+      "past": "历史",
+      "cancel": "取消预约",
+      "bookAgain": "再次预约",
+      "emptyTitle": "暂无预约",
+      "emptyBody": "预约后会显示在这里。",
+      "findSomeone": "找到你的下一位理发师",
+      "signInTitle": "登录以查看您的预约",
+      "signInBody": "预约与您的账号关联。",
+      "signInAction": "登录",
+      "stage": {
+        "waiting": "等待确认",
+        "confirmed": "已确认",
+        "declined": "已拒绝",
+        "expired": "已过期",
+        "cancelled": "已取消",
+        "completed": "已完成",
+        "missed": "未到店"
+      }
+    },
+    "book": {
+      "title": "预约",
+      "documentTitle": "预约 · FadeUp",
+      "documentDescription": "在 FadeUp 预约下一次。",
+      "searchSomeoneElse": "寻找其他人"
     }
   }
 }

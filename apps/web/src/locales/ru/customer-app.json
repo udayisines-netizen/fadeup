@@ -344,6 +344,36 @@
       "seeMoreTimes": "Показать ещё {{count}}",
       "noSlots": "В этот день свободного времени нет. Попробуйте другой день.",
       "noBarbersForService": "Эту услугу сейчас никто не оказывает."
+    },
+    "appointments": {
+      "title": "Записи",
+      "documentTitle": "Записи · FadeUp",
+      "documentDescription": "Ваши прошлые и предстоящие записи на FadeUp.",
+      "upcoming": "Предстоящие",
+      "past": "Прошедшие",
+      "cancel": "Отменить",
+      "bookAgain": "Записаться снова",
+      "emptyTitle": "Записей пока нет",
+      "emptyBody": "Ваши записи появятся здесь.",
+      "findSomeone": "Найдите своего мастера",
+      "signInTitle": "Войдите, чтобы увидеть свои записи",
+      "signInBody": "Записи привязаны к вашему аккаунту.",
+      "signInAction": "Войти",
+      "stage": {
+        "waiting": "Ожидает подтверждения",
+        "confirmed": "Подтверждена",
+        "declined": "Отклонена",
+        "expired": "Истекла",
+        "cancelled": "Отменена",
+        "completed": "Завершена",
+        "missed": "Пропущена"
+      }
+    },
+    "book": {
+      "title": "Запись",
+      "documentTitle": "Запись · FadeUp",
+      "documentDescription": "Запишитесь на следующий визит на FadeUp.",
+      "searchSomeoneElse": "Найти кого-то другого"
     }
   }
 }

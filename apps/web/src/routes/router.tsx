@@ -307,15 +307,17 @@ export const router = createBrowserRouter([
           {
             path: 'book',
             lazy: async () => {
-              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
-              return { Component: () => <V2PlaceholderPage surface="book" lot="R5R.1E" /> }
+              const { CustomerV2BookPage } = await import('@/customer-v2/book/book-page')
+              return { Component: CustomerV2BookPage }
             },
           },
           {
             path: 'appointments',
             lazy: async () => {
-              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
-              return { Component: () => <V2PlaceholderPage surface="appointments" lot="R5R.1F" /> }
+              const { CustomerV2AppointmentsPage } = await import(
+                '@/customer-v2/appointments/appointments-page'
+              )
+              return { Component: CustomerV2AppointmentsPage }
             },
           },
           {

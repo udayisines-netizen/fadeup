@@ -344,6 +344,36 @@
       "seeMoreTimes": "Vedi altri {{count}} orari",
       "noSlots": "Nessun orario libero quel giorno. Prova un altro giorno.",
       "noBarbersForService": "Nessuno offre questo servizio al momento."
+    },
+    "appointments": {
+      "title": "Appuntamenti",
+      "documentTitle": "Appuntamenti · FadeUp",
+      "documentDescription": "Le tue prenotazioni passate e future su FadeUp.",
+      "upcoming": "In arrivo",
+      "past": "Passati",
+      "cancel": "Annulla",
+      "bookAgain": "Prenota di nuovo",
+      "emptyTitle": "Ancora nessun appuntamento",
+      "emptyBody": "Le tue prenotazioni appariranno qui.",
+      "findSomeone": "Trova il tuo prossimo barbiere",
+      "signInTitle": "Accedi per vedere i tuoi appuntamenti",
+      "signInBody": "Le tue prenotazioni sono legate al tuo account.",
+      "signInAction": "Accedi",
+      "stage": {
+        "waiting": "In attesa di conferma",
+        "confirmed": "Confermato",
+        "declined": "Rifiutato",
+        "expired": "Scaduto",
+        "cancelled": "Annullato",
+        "completed": "Completato",
+        "missed": "Mancato"
+      }
+    },
+    "book": {
+      "title": "Prenota",
+      "documentTitle": "Prenota · FadeUp",
+      "documentDescription": "Prenota la tua prossima visita su FadeUp.",
+      "searchSomeoneElse": "Cerca qualcun altro"
     }
   }
 }

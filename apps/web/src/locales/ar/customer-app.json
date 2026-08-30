@@ -344,6 +344,36 @@
       "seeMoreTimes": "عرض {{count}} أوقات أخرى",
       "noSlots": "لا أوقات متاحة في هذا اليوم. جرّب يومًا آخر.",
       "noBarbersForService": "لا أحد يقدّم هذه الخدمة حاليًا."
+    },
+    "appointments": {
+      "title": "المواعيد",
+      "documentTitle": "المواعيد · FadeUp",
+      "documentDescription": "حجوزاتك السابقة والقادمة على FadeUp.",
+      "upcoming": "القادمة",
+      "past": "السابقة",
+      "cancel": "إلغاء الحجز",
+      "bookAgain": "احجز مجددًا",
+      "emptyTitle": "لا مواعيد بعد",
+      "emptyBody": "ستظهر حجوزاتك هنا.",
+      "findSomeone": "اعثر على حلّاقك التالي",
+      "signInTitle": "سجّل الدخول لعرض مواعيدك",
+      "signInBody": "حجوزاتك مرتبطة بحسابك.",
+      "signInAction": "تسجيل الدخول",
+      "stage": {
+        "waiting": "بانتظار التأكيد",
+        "confirmed": "مؤكد",
+        "declined": "مرفوض",
+        "expired": "منتهي",
+        "cancelled": "ملغى",
+        "completed": "مكتمل",
+        "missed": "لم يحضر"
+      }
+    },
+    "book": {
+      "title": "حجز",
+      "documentTitle": "حجز · FadeUp",
+      "documentDescription": "احجز زيارتك القادمة على FadeUp.",
+      "searchSomeoneElse": "ابحث عن شخص آخر"
     }
   }
 }

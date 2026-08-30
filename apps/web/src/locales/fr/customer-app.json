@@ -344,6 +344,36 @@
       "seeMoreTimes": "Voir {{count}} horaires de plus",
       "noSlots": "Aucun horaire libre ce jour-là. Essayez un autre jour.",
       "noBarbersForService": "Personne ne propose cette prestation pour le moment."
+    },
+    "appointments": {
+      "title": "Rendez-vous",
+      "documentTitle": "Rendez-vous · FadeUp",
+      "documentDescription": "Vos réservations passées et à venir sur FadeUp.",
+      "upcoming": "À venir",
+      "past": "Passés",
+      "cancel": "Annuler",
+      "bookAgain": "Réserver à nouveau",
+      "emptyTitle": "Aucun rendez-vous pour le moment",
+      "emptyBody": "Vos réservations apparaîtront ici.",
+      "findSomeone": "Trouvez votre prochain coiffeur",
+      "signInTitle": "Connectez-vous pour voir vos rendez-vous",
+      "signInBody": "Vos réservations sont liées à votre compte.",
+      "signInAction": "Se connecter",
+      "stage": {
+        "waiting": "En attente de confirmation",
+        "confirmed": "Confirmé",
+        "declined": "Refusé",
+        "expired": "Expiré",
+        "cancelled": "Annulé",
+        "completed": "Terminé",
+        "missed": "Manqué"
+      }
+    },
+    "book": {
+      "title": "Réserver",
+      "documentTitle": "Réserver · FadeUp",
+      "documentDescription": "Réservez votre prochaine visite sur FadeUp.",
+      "searchSomeoneElse": "Chercher quelqu’un d’autre"
     }
   }
 }
