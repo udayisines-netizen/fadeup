@@ -272,6 +272,12 @@ export function CustomerV2BarberProfilePage() {
           ) : null}
         </div>
 
+        {follow.isError || unfollow.isError ? (
+          <p role="alert" className="mt-2 text-v2-meta font-medium text-v2-alert">
+            {t('customer-app:v2.errors.actionFailed')}
+          </p>
+        ) : null}
+
         {waitingCount > 0 ? (
           <p className="mt-3 text-v2-meta text-v2-ink-soft">
             {t('customer-app:v2.result.waiting', { count: waitingCount })}
