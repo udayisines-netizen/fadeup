@@ -5,6 +5,7 @@ import { FadeUpLockup } from '@/components/brand/fadeup-mark'
 import { usePendingClaimRedemption } from '@/lib/use-pending-claim'
 import { V2TabBar, type V2NavItem } from '@/customer-v2/shell/v2-tab-bar'
 import { V2NotificationEntry } from '@/customer-v2/shell/v2-notification-entry'
+import { LanguageMenu } from '@/customer-v2/ui/language-menu'
 import { V2_ROUTES } from '@/customer-v2/routes'
 
 /**
@@ -112,7 +113,8 @@ export function CustomerV2Shell() {
             ))}
           </nav>
 
-          <div className="ms-auto flex shrink-0 items-center">
+          <div className="ms-auto flex shrink-0 items-center gap-0.5">
+            <LanguageMenu />
             <V2NotificationEntry
               to={V2_ROUTES.profile}
               activityLabel={t('customer-app:v2.shell.notifications')}

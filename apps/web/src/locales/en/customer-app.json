@@ -343,7 +343,9 @@
       "timeLabel": "Time",
       "seeMoreTimes": "See {{count}} more times",
       "noSlots": "No free times on this day. Try another day.",
-      "noBarbersForService": "No one offers this service right now."
+      "noBarbersForService": "No one offers this service right now.",
+      "chooseLocation": "Choose a location",
+      "firstFreeDay": "First free times are on {{day}}."
     },
     "appointments": {
       "title": "Appointments",
@@ -367,7 +369,8 @@
         "cancelled": "Cancelled",
         "completed": "Completed",
         "missed": "Missed"
-      }
+      },
+      "confirmCancel": "Really cancel?"
     },
     "book": {
       "title": "Book",
@@ -433,6 +436,9 @@
         "beardPreferences": "Beard",
         "preferencesNotes": "Notes"
       }
+    },
+    "errors": {
+      "actionFailed": "That didn't go through. Try again."
     }
   }
 }

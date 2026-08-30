@@ -183,7 +183,7 @@ export function ProV2CalendarPage() {
           <button
             type="button"
             onClick={() => setDateKey(todayInZone(timezone))}
-            className="v2-press inline-flex h-9 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink"
+            className="v2-press inline-flex h-11 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink"
           >
             {t('app:v2pro.calendar.today')}
           </button>
@@ -251,7 +251,7 @@ export function ProV2CalendarPage() {
                             type="button"
                             disabled={complete.isPending}
                             onClick={() => complete.mutate(appointment.id)}
-                            className="v2-press inline-flex h-9 items-center rounded-v2-2 bg-v2-green px-3 text-v2-meta font-semibold text-v2-paper"
+                            className="v2-press inline-flex h-11 items-center rounded-v2-2 bg-v2-green px-3 text-v2-meta font-semibold text-v2-paper"
                           >
                             {t('app:v2pro.calendar.complete')}
                           </button>
@@ -259,7 +259,7 @@ export function ProV2CalendarPage() {
                             type="button"
                             disabled={noShow.isPending}
                             onClick={() => noShow.mutate(appointment.id)}
-                            className="v2-press inline-flex h-9 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft"
+                            className="v2-press inline-flex h-11 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft"
                           >
                             {t('app:v2pro.calendar.noShow')}
                           </button>

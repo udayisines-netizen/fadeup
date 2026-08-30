@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth-context'
+import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useMyQueueStatus, type MyQueueEntry } from '@/lib/queries/customer-app'
 import { useDelayedFlag } from '@/customer-v2/hooks/use-delayed'
@@ -50,6 +51,9 @@ export function CustomerV2QueuePage() {
 
   const queue = useMyQueueStatus(Boolean(user))
   const showSkeletons = useDelayedFlag(Boolean(user) && queue.isPending)
+
+  /* The same R3 funnel event the legacy queue surface records. */
+  useTrackView('queue_viewed', { properties: {} }, Boolean(user))
 
   useDocumentMeta({
     title: t('customer-app:v2.queue.documentTitle'),

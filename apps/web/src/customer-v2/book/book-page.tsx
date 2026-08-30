@@ -8,6 +8,7 @@ import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
 import { useHomeDiscovery } from '@/customer-v2/hooks/use-home-discovery'
 import { ProfessionalResult } from '@/customer-v2/home/professional-result'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
+import { Notice } from '@/customer-v2/ui/notice'
 import { V2_ROUTES, v2BookingPath } from '@/customer-v2/routes'
 
 /**
@@ -119,7 +120,20 @@ export function CustomerV2BookPage() {
         {t('customer-app:v2.book.searchSomeoneElse')}
       </Link>
 
-      {discovery.listings.length > 0 ? (
+      {discovery.isError ? (
+        <Notice
+          tone="failure"
+          title={t('customer-app:v2.discovery.errorTitle')}
+          body={t('customer-app:v2.discovery.errorBody')}
+          actionLabel={t('customer-app:v2.discovery.retry')}
+          onAction={() => discovery.refetch()}
+        />
+      ) : discovery.isPending ? (
+        <section className="v2-plate p-4 md:p-5">
+          <div className="v2-skeleton h-5 w-1/3 rounded-v2-1" />
+          <div className="v2-skeleton mt-3 h-14 w-full rounded-v2-2" />
+        </section>
+      ) : discovery.listings.length > 0 ? (
         <section aria-labelledby="v2-book-supply" className="v2-plate overflow-hidden">
           <h2 id="v2-book-supply" className="px-4 py-3 text-v2-title font-semibold text-v2-ink md:px-5">
             {t('customer-app:v2.discovery.nearYou')}

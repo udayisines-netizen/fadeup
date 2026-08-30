@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { MarketplaceSort } from '@/lib/queries/marketplace'
 import { ANYWHERE } from '@/lib/intl/country-preference'
+import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
 import {
@@ -85,6 +86,21 @@ export function CustomerV2MarketplacePage() {
     description: t('customer-app:v2.marketplace.documentDescription'),
     noIndex: true,
   })
+
+  /* The same two R3 funnel events the legacy marketplace records. Only the
+     query's LENGTH is sent — the string itself never leaves the device. */
+  useTrackView('discovery_viewed', { properties: { surface: 'marketplace' } }, true)
+  useTrackView(
+    'search_performed',
+    {
+      properties: {
+        result_count: discovery.listings.length,
+        has_filters: openNowOnly || effectiveSort !== 'recommended',
+        query_length: debouncedQuery.length,
+      },
+    },
+    !discovery.isPending && !discovery.isError && debouncedQuery.length > 0,
+  )
 
   const showSkeletons = useDelayedFlag(discovery.isPending)
 

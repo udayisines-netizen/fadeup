@@ -126,7 +126,7 @@ function mapAppointment(row: MyAppointmentRow): MyAppointment {
   }
 }
 
-const MY_APPOINTMENTS_KEY = ['my-appointments'] as const
+export const MY_APPOINTMENTS_KEY = ['my-appointments'] as const
 
 /**
  * Every appointment the caller has ever made, any shop, most recent first —

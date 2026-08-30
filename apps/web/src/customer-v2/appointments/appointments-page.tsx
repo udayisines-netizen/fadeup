@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth-context'
@@ -61,6 +61,9 @@ export function CustomerV2AppointmentsPage() {
   const appointments = useMyAppointments(Boolean(user), user?.id)
   const myQueue = useMyQueueStatus(Boolean(user))
   const cancel = useCancelMyAppointment()
+  /* Cancelling is irreversible: the first tap arms the control, the second
+     performs it, and tapping anything else disarms. */
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null)
   const showSkeletons = useDelayedFlag(Boolean(user) && appointments.isPending)
 
   useDocumentMeta({
@@ -213,10 +216,24 @@ export function CustomerV2AppointmentsPage() {
               <button
                 type="button"
                 disabled={cancel.isPending}
-                onClick={() => cancel.mutate(appointment.id)}
-                className="v2-press inline-flex h-9 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft hover:border-v2-edge hover:text-v2-ink disabled:text-v2-ink-mute"
+                onClick={() => {
+                  if (confirmCancelId === appointment.id) {
+                    cancel.mutate(appointment.id, {
+                      onSettled: () => setConfirmCancelId(null),
+                    })
+                  } else {
+                    setConfirmCancelId(appointment.id)
+                  }
+                }}
+                className={
+                  confirmCancelId === appointment.id
+                    ? 'v2-press inline-flex h-9 items-center rounded-v2-2 border border-v2-alert bg-v2-paper px-3 text-v2-meta font-semibold text-v2-alert'
+                    : 'v2-press inline-flex h-9 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft hover:border-v2-edge hover:text-v2-ink disabled:text-v2-ink-mute'
+                }
               >
-                {t('customer-app:v2.appointments.cancel')}
+                {confirmCancelId === appointment.id
+                  ? t('customer-app:v2.appointments.confirmCancel')
+                  : t('customer-app:v2.appointments.cancel')}
               </button>
             </>
           ) : (
@@ -231,6 +248,12 @@ export function CustomerV2AppointmentsPage() {
             </Link>
           )}
         </div>
+
+        {cancel.isError && cancel.variables === appointment.id ? (
+          <p role="alert" className="mt-2 text-v2-meta font-medium text-v2-alert">
+            {t('customer-app:v2.errors.actionFailed')}
+          </p>
+        ) : null}
       </li>
     )
   }

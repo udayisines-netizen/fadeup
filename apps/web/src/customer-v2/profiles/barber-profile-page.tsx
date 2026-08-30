@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BadgeCheck } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useMoney } from '@/lib/intl/use-intl'
 import { usePublicOrganization } from '@/lib/queries/public-booking'
@@ -98,6 +99,17 @@ export function CustomerV2BarberProfilePage() {
   const isFollowing = useMemo(
     () => Boolean(professionalId && followed.data?.some((f) => f.id === professionalId)),
     [followed.data, professionalId],
+  )
+
+  /* Same R3 event the legacy profile records — the funnel the pro analytics
+     page reads must not go dark when v2 replaces that surface. */
+  useTrackView(
+    'public_profile_viewed',
+    {
+      properties: { profile_type: 'professional' },
+      context: { organizationId: organization.data?.id, barberId: barber.data?.barberId },
+    },
+    Boolean(organization.data?.id && barber.data),
   )
 
   useDocumentMeta({
@@ -209,9 +221,11 @@ export function CustomerV2BarberProfilePage() {
             {organization.data ? (
               <p className="mt-1.5 text-v2-meta text-v2-ink-soft">
                 {t('customer-app:v2.barberProfile.workingAt')}{' '}
+                {/* Inline link with a 44px tap box: padding grows the target,
+                    the negative margin keeps the text sitting in its line. */}
                 <Link
                   to={v2ShopProfilePath(slug ?? '', profile.locationId)}
-                  className="font-semibold text-v2-green hover:underline"
+                  className="-mx-3 -my-3.5 inline-block px-3 py-3.5 font-semibold text-v2-green hover:underline"
                 >
                   <bdi>{organization.data.name}</bdi>
                 </Link>
@@ -275,22 +289,33 @@ export function CustomerV2BarberProfilePage() {
 
         {services.data && services.data.length > 0 ? (
           <ul>
+            {/* Each row IS the booking entry for that service — reading the
+                price and then re-choosing the same service in the flow was a
+                whole decision asked twice. */}
             {services.data.map((service) => (
-              <li
-                key={service.id}
-                className="flex items-center gap-3 border-t border-v2-hairline px-4 py-3 md:px-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-v2-body font-medium text-v2-ink">{service.name}</p>
-                  <p className="mt-0.5 text-v2-meta text-v2-ink-soft">
-                    {t('customer-app:v2.barberProfile.minutes', { count: service.durationMinutes })}
-                  </p>
-                </div>
-                {currency ? (
-                  <p className="shrink-0 text-v2-body font-semibold tabular-nums text-v2-ink">
-                    {money(service.priceCents, currency)}
-                  </p>
-                ) : null}
+              <li key={service.id} className="border-t border-v2-hairline">
+                <Link
+                  to={v2BookingPath(slug ?? '', {
+                    locationId: profile.locationId,
+                    barberId: profile.barberId,
+                    serviceId: service.id,
+                  })}
+                  className="v2-press flex items-center gap-3 px-4 py-3 hover:bg-v2-ground md:px-5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-v2-body font-medium text-v2-ink">{service.name}</p>
+                    <p className="mt-0.5 text-v2-meta text-v2-ink-soft">
+                      {t('customer-app:v2.barberProfile.minutes', {
+                        count: service.durationMinutes,
+                      })}
+                    </p>
+                  </div>
+                  {currency ? (
+                    <p className="shrink-0 text-v2-body font-semibold tabular-nums text-v2-ink">
+                      {money(service.priceCents, currency)}
+                    </p>
+                  ) : null}
+                </Link>
               </li>
             ))}
           </ul>

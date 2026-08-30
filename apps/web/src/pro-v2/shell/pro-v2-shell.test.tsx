@@ -21,6 +21,13 @@ const state: {
   pending: boolean
 } = { membership: null, locations: [], pending: false }
 
+/* The language menu drags the profile-preferences mutation (and so a
+   QueryClient) into the shell; the shell contract under test is scope and
+   navigation, so the menu is stubbed out. */
+vi.mock('@/customer-v2/ui/language-menu', () => ({
+  LanguageMenu: () => null,
+}))
+
 vi.mock('@/lib/auth-context', () => ({
   useAuth: () => ({ session: null, user: { id: 'user-1' }, loading: false }),
 }))

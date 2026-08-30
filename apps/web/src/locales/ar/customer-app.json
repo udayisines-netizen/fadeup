@@ -343,7 +343,9 @@
       "timeLabel": "الوقت",
       "seeMoreTimes": "عرض {{count}} أوقات أخرى",
       "noSlots": "لا أوقات متاحة في هذا اليوم. جرّب يومًا آخر.",
-      "noBarbersForService": "لا أحد يقدّم هذه الخدمة حاليًا."
+      "noBarbersForService": "لا أحد يقدّم هذه الخدمة حاليًا.",
+      "chooseLocation": "اختر موقعًا",
+      "firstFreeDay": "أول الأوقات المتاحة يوم {{day}}."
     },
     "appointments": {
       "title": "المواعيد",
@@ -367,7 +369,8 @@
         "cancelled": "ملغى",
         "completed": "مكتمل",
         "missed": "لم يحضر"
-      }
+      },
+      "confirmCancel": "إلغاء فعلًا؟"
     },
     "book": {
       "title": "حجز",
@@ -433,6 +436,9 @@
         "beardPreferences": "اللحية",
         "preferencesNotes": "ملاحظات"
       }
+    },
+    "errors": {
+      "actionFailed": "لم تنجح العملية. حاول مرة أخرى."
     }
   }
 }

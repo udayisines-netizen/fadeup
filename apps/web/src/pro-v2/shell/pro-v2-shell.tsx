@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Check, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { LanguageMenu } from '@/customer-v2/ui/language-menu'
 import { useResolvedOrganization } from '@/lib/queries/memberships'
 import type { MembershipRole } from '@/lib/types'
 import { useOrgLocations, type Location } from '@/lib/queries/locations'
@@ -155,6 +156,8 @@ export function ProV2Shell() {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           ) : null}
+
+          <LanguageMenu />
         </div>
 
         <nav
@@ -166,7 +169,7 @@ export function ProV2Shell() {
               key={item.to}
               to={item.to}
               end={item.end}
-              className="v2-press inline-flex h-9 shrink-0 items-center rounded-v2-2 px-3 text-v2-meta font-medium text-v2-ink-soft hover:bg-v2-fill hover:text-v2-ink aria-[current=page]:bg-v2-green-tint aria-[current=page]:font-semibold aria-[current=page]:text-v2-green-ink"
+              className="v2-press inline-flex h-11 shrink-0 items-center rounded-v2-2 px-3 text-v2-meta font-medium text-v2-ink-soft hover:bg-v2-fill hover:text-v2-ink aria-[current=page]:bg-v2-green-tint aria-[current=page]:font-semibold aria-[current=page]:text-v2-green-ink"
             >
               {item.label}
             </NavLink>

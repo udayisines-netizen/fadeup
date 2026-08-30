@@ -1,8 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Check } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import { useAnalytics, useTrackView } from '@/lib/analytics'
+import { useMyCustomerProfile } from '@/lib/queries/customer-profile'
+import { MY_APPOINTMENTS_KEY } from '@/lib/queries/customer-app'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useMoney } from '@/lib/intl/use-intl'
 import { downloadIcs } from '@/lib/calendar/ics'
@@ -89,6 +93,7 @@ function shopDates(timezone: string, language: string) {
     timeZone: timezone,
     weekday: 'short',
     day: 'numeric',
+    month: 'short',
   })
   const dates: Array<{ key: string; label: string }> = []
   const seen = new Set<string>()
@@ -114,15 +119,22 @@ export function CustomerV2BookingPage() {
 
   const requestedLocation = searchParams.get('location')
   const requestedBarber = searchParams.get('barber')
+  const requestedService = searchParams.get('service')
+
+  /* A multi-location shop with no ?location= gets an explicit choice, never a
+     silent first branch — a deep link must not book the wrong side of town. */
+  const [locationChoice, setLocationChoice] = useState<string | null>(null)
 
   const location = useMemo(() => {
     const all = locations.data ?? []
-    return all.find((l) => l.id === requestedLocation) ?? all[0] ?? null
-  }, [locations.data, requestedLocation])
+    const explicit = all.find((l) => l.id === (requestedLocation ?? locationChoice))
+    if (explicit) return explicit
+    return all.length === 1 ? all[0] : null
+  }, [locations.data, requestedLocation, locationChoice])
 
   const services = usePublicServices(slug, location?.id)
 
-  const [serviceId, setServiceId] = useState<string | null>(null)
+  const [serviceId, setServiceId] = useState<string | null>(requestedService)
   const [barberId, setBarberId] = useState<string | null>(requestedBarber)
   const [date, setDate] = useState<string | null>(null)
   const [slot, setSlot] = useState<{ start: string; end: string } | null>(null)
@@ -130,6 +142,11 @@ export function CustomerV2BookingPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [booked, setBooked] = useState<BookedAppointment | null>(null)
+  /* The slot conflict recovery flag: a failed booking lands back on the time
+     step with FRESH slots and this message (review F7). */
+  const [bookFailed, setBookFailed] = useState(false)
+  /* Auto-advanced date: the first day that actually has free times (F2). */
+  const [autoDate, setAutoDate] = useState<string | null>(null)
 
   const service: PublicService | null =
     (services.data ?? []).find((entry) => entry.id === serviceId) ?? null
@@ -149,7 +166,7 @@ export function CustomerV2BookingPage() {
     () => (location ? shopDates(location.timezone, i18n.language) : []),
     [location, i18n.language],
   )
-  const activeDate = date ?? days[0]?.key ?? null
+  const activeDate = date ?? autoDate ?? days[0]?.key ?? null
 
   const slots = usePublicAvailableSlots(
     slug,
@@ -160,6 +177,41 @@ export function CustomerV2BookingPage() {
   )
 
   const book = useBookPublicAppointment()
+  const queryClient = useQueryClient()
+  const analytics = useAnalytics()
+  const myProfile = useMyCustomerProfile(user?.id)
+
+  /* A retired/foreign ?service= id falls back to the service step (F9). */
+  useEffect(() => {
+    if (!serviceId || !services.data) return
+    if (!services.data.some((entry) => entry.id === serviceId)) setServiceId(null)
+  }, [serviceId, services.data])
+
+  /* A signed-in customer never retypes what FadeUp already knows (F5). */
+  useEffect(() => {
+    if (!myProfile.data) return
+    const known = myProfile.data
+    setName((current) => current || (known.displayName ?? ''))
+    setEmail((current) => current || (known.email ?? user?.email ?? ''))
+  }, [myProfile.data, user?.email])
+
+  /* Land on the FIRST day that has free times instead of a dead "no times
+     today" wall (F2). Walks forward one day per resolved-empty fetch, stops
+     at the window's end, and never overrides a day the customer chose. */
+  useEffect(() => {
+    if (date) return
+    if (!serviceId || !effectiveBarberId || slot) return
+    if (slots.isPending || slots.isError) return
+    if ((slots.data ?? []).length > 0) return
+    const index = days.findIndex((day) => day.key === activeDate)
+    if (index >= 0 && index < days.length - 1) setAutoDate(days[index + 1].key)
+  }, [date, serviceId, effectiveBarberId, slot, slots.isPending, slots.isError, slots.data, days, activeDate])
+
+  useTrackView(
+    'booking_started',
+    { properties: {}, context: { organizationId: organization.data?.id } },
+    Boolean(organization.data?.id),
+  )
 
   useDocumentMeta({
     title: t('customer-app:v2.booking.documentTitle'),
@@ -211,6 +263,41 @@ export function CustomerV2BookingPage() {
         actionLabel={null}
         onAction={null}
       />
+    )
+  }
+
+  if (organization.data && !location && (locations.data ?? []).length > 1) {
+    return (
+      <div className="mx-auto max-w-[30rem]">
+        <h1 className="text-v2-lead font-semibold tracking-[-0.02em] text-v2-ink">
+          {t('customer-app:v2.booking.title', { name: organization.data.name })}
+        </h1>
+        <div className="v2-plate mt-4 overflow-hidden">
+          <h2 className="px-4 py-3 text-v2-title font-semibold text-v2-ink md:px-5">
+            {t('customer-app:v2.booking.chooseLocation')}
+          </h2>
+          <ul>
+            {(locations.data ?? []).map((entry) => (
+              <li key={entry.id} className="border-t border-v2-hairline">
+                <button
+                  type="button"
+                  onClick={() => setLocationChoice(entry.id)}
+                  className="v2-press flex w-full flex-col items-start px-4 py-3 text-start hover:bg-v2-ground md:px-5"
+                >
+                  <span className="w-full truncate text-v2-body font-medium text-v2-ink">
+                    <bdi>{entry.name}</bdi>
+                  </span>
+                  {(entry.addressLine1 ?? entry.city) ? (
+                    <span className="w-full truncate text-v2-meta text-v2-ink-soft">
+                      <bdi>{[entry.addressLine1, entry.city].filter(Boolean).join(' · ')}</bdi>
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     )
   }
 
@@ -314,19 +401,24 @@ export function CustomerV2BookingPage() {
 
   /* ─────────────────────────────── THE FLOW ─────────────────────────────── */
 
-  const summaryRow = (label: string, value: string, onChange: () => void) => (
+  /* `onChange: null` renders the fact without a Change control — a step the
+     flow answered by itself (one barber, ?barber=) offers no button whose only
+     possible effect is losing the chosen time. */
+  const summaryRow = (label: string, value: string, onChange: (() => void) | null) => (
     <div className="flex items-center gap-3 border-t border-v2-hairline px-4 py-3 first:border-t-0 md:px-5">
       <p className="min-w-0 flex-1 truncate text-v2-meta text-v2-ink">
         <span className="text-v2-ink-soft">{label}</span>{' '}
         <span className="font-semibold">{value}</span>
       </p>
-      <button
-        type="button"
-        onClick={onChange}
-        className="v2-press shrink-0 rounded-v2-1 text-v2-meta font-semibold text-v2-green hover:underline"
-      >
-        {t('customer-app:v2.booking.change')}
-      </button>
+      {onChange ? (
+        <button
+          type="button"
+          onClick={onChange}
+          className="v2-press shrink-0 rounded-v2-1 text-v2-meta font-semibold text-v2-green hover:underline"
+        >
+          {t('customer-app:v2.booking.change')}
+        </button>
+      ) : null}
     </div>
   )
 
@@ -356,15 +448,24 @@ export function CustomerV2BookingPage() {
                 setBarberId(requestedBarber)
                 setSlot(null)
                 setAllSlotsShown(false)
+                setAutoDate(null)
+                setBookFailed(false)
               },
             )
           : null}
 
         {barber && (step === 'time' || step === 'details') && !requestedBarber
-          ? summaryRow(t('customer-app:v2.booking.barberLabel'), barber.displayName, () => {
-              setBarberId(null)
-              setSlot(null)
-            })
+          ? summaryRow(
+              t('customer-app:v2.booking.barberLabel'),
+              barber.displayName,
+              roster.length > 1
+                ? () => {
+                    setBarberId(null)
+                    setSlot(null)
+                    setAutoDate(null)
+                  }
+                : null,
+            )
           : null}
 
         {slot && step === 'details' && timeFormat
@@ -388,7 +489,13 @@ export function CustomerV2BookingPage() {
                   <li key={entry.id} className="border-t border-v2-hairline">
                     <button
                       type="button"
-                      onClick={() => setServiceId(entry.id)}
+                      onClick={() => {
+                        analytics.track('booking_service_selected', {
+                          properties: { service_id: entry.id },
+                          context: { organizationId: shop.id, locationId: location.id },
+                        })
+                        setServiceId(entry.id)
+                      }}
                       className="v2-press flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-v2-ground md:px-5"
                     >
                       <span className="min-w-0 flex-1">
@@ -431,7 +538,17 @@ export function CustomerV2BookingPage() {
                   <li key={entry.barberId} className="border-t border-v2-hairline">
                     <button
                       type="button"
-                      onClick={() => setBarberId(entry.barberId)}
+                      onClick={() => {
+                        analytics.track('booking_barber_selected', {
+                          properties: { any_available: false },
+                          context: {
+                            organizationId: shop.id,
+                            locationId: location.id,
+                            barberId: entry.barberId,
+                          },
+                        })
+                        setBarberId(entry.barberId)
+                      }}
                       className="v2-press flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-v2-ground md:px-5"
                     >
                       <span className="min-w-0 flex-1 truncate text-v2-body font-medium text-v2-ink">
@@ -458,6 +575,15 @@ export function CustomerV2BookingPage() {
             <h2 className="px-4 py-3 text-v2-title font-semibold text-v2-ink md:px-5">
               {t('customer-app:v2.booking.chooseTime')}
             </h2>
+
+            {bookFailed ? (
+              <p
+                role="alert"
+                className="border-t border-v2-hairline px-4 py-3 text-v2-meta font-medium text-v2-alert md:px-5"
+              >
+                {t('customer-app:v2.booking.failed')}
+              </p>
+            ) : null}
 
             {/* Horizontal day selector, in the SHOP's calendar. */}
             <div className="flex gap-2 overflow-x-auto border-t border-v2-hairline px-4 py-3 md:px-5">
@@ -490,12 +616,35 @@ export function CustomerV2BookingPage() {
               </div>
             ) : visibleSlots.length > 0 && timeFormat ? (
               <div className="border-t border-v2-hairline px-4 py-3 md:px-5">
+                {autoDate && !date ? (
+                  <p className="pb-2 text-v2-caption text-v2-ink-soft">
+                    {t('customer-app:v2.booking.firstFreeDay', {
+                      day: days.find((entry) => entry.key === activeDate)?.label ?? '',
+                    })}
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {visibleSlots.map((entry) => (
                     <button
                       key={entry.slotStart}
                       type="button"
-                      onClick={() => setSlot({ start: entry.slotStart, end: entry.slotEnd })}
+                      onClick={() => {
+                        analytics.track('booking_slot_selected', {
+                          properties: {
+                            /* How far AHEAD, never WHEN — same §12 rule as the
+                               legacy flow this replaces. */
+                            lead_time_minutes: Math.max(
+                              0,
+                              Math.round(
+                                (new Date(entry.slotStart).getTime() - Date.now()) / 60_000,
+                              ),
+                            ),
+                          },
+                          context: { organizationId: shop.id, locationId: location.id },
+                        })
+                        setBookFailed(false)
+                        setSlot({ start: entry.slotStart, end: entry.slotEnd })
+                      }}
                       className="v2-press inline-flex h-11 items-center rounded-v2-2 border border-v2-edge bg-v2-paper px-4 text-v2-body font-semibold tabular-nums text-v2-ink hover:bg-v2-fill"
                     >
                       {timeFormat.format(new Date(entry.slotStart))}
@@ -540,7 +689,21 @@ export function CustomerV2BookingPage() {
                 {
                   onSuccess: (appointment) => {
                     if (appointment.claimToken) storePendingClaimToken(appointment.claimToken)
+                    /* The signed-in list must contain the booking it just
+                       made, staleTime notwithstanding. */
+                    void queryClient.invalidateQueries({ queryKey: MY_APPOINTMENTS_KEY })
                     setBooked(appointment)
+                  },
+                  onError: () => {
+                    /* Slot conflict recovery: refresh availability, drop the
+                       stale slot, land back on the time step with the message
+                       — never re-offer the time that was just taken. */
+                    void queryClient.invalidateQueries({
+                      queryKey: ['public-available-slots', slug, location.id],
+                    })
+                    setSlot(null)
+                    setAllSlotsShown(true)
+                    setBookFailed(true)
                   },
                 },
               )

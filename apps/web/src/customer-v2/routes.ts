@@ -61,17 +61,28 @@ export const V2_ROUTES = {
  */
 export const v2BookingPath = (
   organizationSlug: string,
-  context: { locationId?: string | null; barberId?: string | null } = {},
+  context: {
+    locationId?: string | null
+    barberId?: string | null
+    /* A service the customer already chose on a profile is carried in, so the
+       flow never asks for the same decision twice. */
+    serviceId?: string | null
+  } = {},
 ) => {
   const params = new URLSearchParams()
   if (context.locationId) params.set('location', context.locationId)
   if (context.barberId) params.set('barber', context.barberId)
+  if (context.serviceId) params.set('service', context.serviceId)
   const query = params.toString()
   return `${PREVIEW_ROOT}/s/${organizationSlug}/book${query ? `?${query}` : ''}`
 }
 
-export const v2ShopProfilePath = (organizationSlug: string, locationId?: string | null) =>
-  `${PREVIEW_ROOT}/s/${organizationSlug}${locationId ? `?location=${locationId}` : ''}`
+export const v2ShopProfilePath = (organizationSlug: string, locationId?: string | null) => {
+  const params = new URLSearchParams()
+  if (locationId) params.set('location', locationId)
+  const query = params.toString()
+  return `${PREVIEW_ROOT}/s/${organizationSlug}${query ? `?${query}` : ''}`
+}
 
 export const v2BarberProfilePath = (organizationSlug: string, barberId: string) =>
   `${PREVIEW_ROOT}/s/${organizationSlug}/b/${barberId}`

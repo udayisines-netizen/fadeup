@@ -343,7 +343,9 @@
       "timeLabel": "時間",
       "seeMoreTimes": "あと {{count}} 件の時間を見る",
       "noSlots": "この日に空きはありません。別の日をお試しください。",
-      "noBarbersForService": "現在このメニューを提供できる担当がいません。"
+      "noBarbersForService": "現在このメニューを提供できる担当がいません。",
+      "chooseLocation": "店舗を選択",
+      "firstFreeDay": "最初の空き時間は{{day}}です。"
     },
     "appointments": {
       "title": "予約一覧",
@@ -367,7 +369,8 @@
         "cancelled": "キャンセル済み",
         "completed": "完了",
         "missed": "未来店"
-      }
+      },
+      "confirmCancel": "本当にキャンセルしますか？"
     },
     "book": {
       "title": "予約",
@@ -433,6 +436,9 @@
         "beardPreferences": "ヒゲ",
         "preferencesNotes": "メモ"
       }
+    },
+    "errors": {
+      "actionFailed": "処理できませんでした。もう一度お試しください。"
     }
   }
 }

@@ -269,7 +269,7 @@ export function ProV2RetentionPage() {
   const inputClass =
     'h-11 w-full rounded-v2-2 border border-v2-edge bg-v2-paper px-3 text-v2-body text-v2-ink'
   const smallButton =
-    'v2-press rounded-v2-1 px-2 py-1 text-v2-caption font-semibold text-v2-green hover:underline'
+    'v2-press flex min-h-11 items-center rounded-v2-1 px-2.5 text-v2-caption font-semibold text-v2-green hover:underline'
 
   const openEnrollments = (enrollments.data ?? []).filter(
     (enrollment) => enrollment.status === 'active' || enrollment.status === 'paused',
@@ -396,7 +396,7 @@ export function ProV2RetentionPage() {
               <button
                 type="submit"
                 disabled={createPlan.isPending || updatePlan.isPending}
-                className="v2-press rounded-v2-2 bg-v2-green px-4 py-2.5 text-v2-body font-semibold text-white disabled:opacity-60"
+                className="v2-press rounded-v2-2 bg-v2-green px-4 py-3 text-v2-body font-semibold text-white disabled:opacity-60"
               >
                 {editingPlan
                   ? t('app:v2pro.retention.savePlan')
@@ -405,7 +405,7 @@ export function ProV2RetentionPage() {
               <button
                 type="button"
                 onClick={() => setPlanFormOpen(false)}
-                className="v2-press rounded-v2-2 px-4 py-2.5 text-v2-body font-semibold text-v2-ink-soft"
+                className="v2-press rounded-v2-2 px-4 py-3 text-v2-body font-semibold text-v2-ink-soft"
               >
                 {t('app:v2pro.retention.cancel')}
               </button>
@@ -443,7 +443,7 @@ export function ProV2RetentionPage() {
                     <button
                       type="button"
                       onClick={() => togglePlanActive(plan)}
-                      className="v2-press rounded-v2-1 px-2 py-1 text-v2-caption font-semibold text-v2-ink-soft hover:underline"
+                      className="v2-press flex min-h-11 items-center rounded-v2-1 px-2.5 text-v2-caption font-semibold text-v2-ink-soft hover:underline"
                     >
                       {plan.isActive
                         ? t('app:v2pro.retention.deactivate')
@@ -563,7 +563,7 @@ export function ProV2RetentionPage() {
                     <button
                       type="button"
                       onClick={() => transition(enrollment.id, 'cancelled')}
-                      className="v2-press rounded-v2-1 px-2 py-1 text-v2-caption font-semibold text-v2-alert hover:underline"
+                      className="v2-press flex min-h-11 items-center rounded-v2-1 px-2.5 text-v2-caption font-semibold text-v2-alert hover:underline"
                     >
                       {t('app:v2pro.retention.cancelMembership')}
                     </button>

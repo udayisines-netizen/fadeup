@@ -343,7 +343,9 @@
       "timeLabel": "Время",
       "seeMoreTimes": "Показать ещё {{count}}",
       "noSlots": "В этот день свободного времени нет. Попробуйте другой день.",
-      "noBarbersForService": "Эту услугу сейчас никто не оказывает."
+      "noBarbersForService": "Эту услугу сейчас никто не оказывает.",
+      "chooseLocation": "Выберите адрес",
+      "firstFreeDay": "Первые свободные окна — {{day}}."
     },
     "appointments": {
       "title": "Записи",
@@ -367,7 +369,8 @@
         "cancelled": "Отменена",
         "completed": "Завершена",
         "missed": "Пропущена"
-      }
+      },
+      "confirmCancel": "Точно отменить?"
     },
     "book": {
       "title": "Запись",
@@ -433,6 +436,9 @@
         "beardPreferences": "Борода",
         "preferencesNotes": "Заметки"
       }
+    },
+    "errors": {
+      "actionFailed": "Не получилось. Попробуйте ещё раз."
     }
   }
 }

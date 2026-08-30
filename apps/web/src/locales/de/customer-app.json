@@ -343,7 +343,9 @@
       "timeLabel": "Uhrzeit",
       "seeMoreTimes": "{{count}} weitere Zeiten anzeigen",
       "noSlots": "An diesem Tag ist nichts frei. Versuche einen anderen Tag.",
-      "noBarbersForService": "Diese Leistung bietet derzeit niemand an."
+      "noBarbersForService": "Diese Leistung bietet derzeit niemand an.",
+      "chooseLocation": "Standort wählen",
+      "firstFreeDay": "Erste freie Zeiten am {{day}}."
     },
     "appointments": {
       "title": "Termine",
@@ -367,7 +369,8 @@
         "cancelled": "Storniert",
         "completed": "Abgeschlossen",
         "missed": "Verpasst"
-      }
+      },
+      "confirmCancel": "Wirklich absagen?"
     },
     "book": {
       "title": "Buchen",
@@ -433,6 +436,9 @@
         "beardPreferences": "Bart",
         "preferencesNotes": "Notizen"
       }
+    },
+    "errors": {
+      "actionFailed": "Das hat nicht geklappt. Versuch es erneut."
     }
   }
 }

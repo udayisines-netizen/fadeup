@@ -76,9 +76,9 @@ const inputClass =
   'h-11 w-full rounded-v2-2 border border-v2-edge bg-v2-paper px-3 text-v2-body text-v2-ink'
 const labelClass = 'flex flex-col gap-1 text-v2-meta font-medium text-v2-ink'
 const primaryButton =
-  'v2-press rounded-v2-2 bg-v2-green px-4 py-2.5 text-v2-body font-semibold text-white disabled:opacity-60'
+  'v2-press rounded-v2-2 bg-v2-green px-4 py-3 text-v2-body font-semibold text-white disabled:opacity-60'
 const smallButton =
-  'v2-press rounded-v2-1 px-2 py-1 text-v2-caption font-semibold text-v2-green hover:underline'
+  'v2-press flex min-h-11 items-center rounded-v2-1 px-2.5 text-v2-caption font-semibold text-v2-green hover:underline'
 
 export function ProV2ProfilePage() {
   const { t } = useTranslation()
@@ -329,7 +329,7 @@ function ListingPlate({ canManage }: { canManage: boolean }) {
             aria-checked={marketplaceVisible}
             disabled={setVisibility.isPending}
             onClick={() => setVisibility.mutate(!marketplaceVisible)}
-            className={`v2-press relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+            className={`v2-press relative box-content h-7 w-12 shrink-0 rounded-full border-8 border-transparent bg-clip-padding transition-colors ${
               marketplaceVisible ? 'bg-v2-green' : 'bg-v2-fill'
             }`}
           >
@@ -673,7 +673,7 @@ function TeamMemberEditor({ member, onClose }: { member: StaffProfile; onClose: 
         <button
           type="button"
           onClick={onClose}
-          className="v2-press rounded-v2-2 px-4 py-2.5 text-v2-body font-semibold text-v2-ink-soft"
+          className="v2-press rounded-v2-2 px-4 py-3 text-v2-body font-semibold text-v2-ink-soft"
         >
           {t('app:v2pro.profilePage.cancel')}
         </button>

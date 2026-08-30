@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CustomerV2BookingPage } from '@/customer-v2/booking/booking-page'
@@ -16,16 +17,35 @@ import { CustomerV2BookingPage } from '@/customer-v2/booking/booking-page'
 const bookMutate = vi.fn()
 const storeToken = vi.fn()
 
-const state: { roster: Array<{ barberId: string; displayName: string }> } = {
+const state: {
+  roster: Array<{ barberId: string; displayName: string }>
+  /* Per-date slot lists; `null` means every date has the default two slots. */
+  slotsByDate: Record<string, Array<{ slotStart: string; slotEnd: string }>> | null
+  user: { id: string; email: string } | null
+  myProfile: { displayName: string | null; email: string | null } | null
+} = {
   roster: [],
+  slotsByDate: null,
+  user: null,
+  myProfile: null,
 }
 
 vi.mock('@/lib/auth-context', () => ({
-  useAuth: () => ({ session: null, user: null, loading: false }),
+  useAuth: () => ({ session: null, user: state.user, loading: false }),
 }))
 
 vi.mock('@/lib/queries/customer-profile', () => ({
   storePendingClaimToken: (token: string) => storeToken(token),
+  useMyCustomerProfile: () => ({ data: state.myProfile, isPending: false }),
+}))
+
+vi.mock('@/lib/analytics', () => ({
+  useAnalytics: () => ({ track: vi.fn() }),
+  useTrackView: vi.fn(),
+}))
+
+vi.mock('@/lib/queries/customer-app', () => ({
+  MY_APPOINTMENTS_KEY: ['my-appointments'],
 }))
 
 vi.mock('@/lib/calendar/ics', () => ({
@@ -77,12 +97,21 @@ vi.mock('@/lib/queries/public-booking', () => ({
     isPending: false,
   }),
   usePublicBarbers: () => ({ data: state.roster, isPending: false }),
-  usePublicAvailableSlots: () => ({
-    data: [
-      { slotStart: '2026-09-01T09:00:00+02:00', slotEnd: '2026-09-01T09:30:00+02:00' },
-      { slotStart: '2026-09-01T09:30:00+02:00', slotEnd: '2026-09-01T10:00:00+02:00' },
-    ],
+  usePublicAvailableSlots: (
+    _slug?: string,
+    _locationId?: string,
+    _barberId?: string,
+    _serviceId?: string,
+    date?: string,
+  ) => ({
+    data: state.slotsByDate
+      ? (state.slotsByDate[date ?? ''] ?? [])
+      : [
+          { slotStart: '2026-09-01T09:00:00+02:00', slotEnd: '2026-09-01T09:30:00+02:00' },
+          { slotStart: '2026-09-01T09:30:00+02:00', slotEnd: '2026-09-01T10:00:00+02:00' },
+        ],
     isPending: false,
+    isError: false,
   }),
   useBookPublicAppointment: () => ({
     mutate: bookMutate,
@@ -92,18 +121,24 @@ vi.mock('@/lib/queries/public-booking', () => ({
 }))
 
 function renderPage(query = '?location=loc-1') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter initialEntries={[`/_preview/r5r/s/side-agency/book${query}`]}>
-      <Routes>
-        <Route path="/_preview/r5r/s/:slug/book" element={<CustomerV2BookingPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[`/_preview/r5r/s/side-agency/book${query}`]}>
+        <Routes>
+          <Route path="/_preview/r5r/s/:slug/book" element={<CustomerV2BookingPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
 beforeEach(() => {
   bookMutate.mockReset()
   storeToken.mockReset()
+  state.slotsByDate = null
+  state.user = null
+  state.myProfile = null
 })
 
 describe('the barber question is asked at most once', () => {
@@ -183,5 +218,53 @@ describe('confirmation sends exactly the chosen context', () => {
     // The flow transformed in place into the confirmation.
     expect(screen.getByRole('heading', { name: 'Booked' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add to Calendar' })).toBeInTheDocument()
+  })
+})
+
+describe('review corrections', () => {
+  const parisKey = (daysAhead: number) =>
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(Date.now() + daysAhead * 86_400_000))
+
+  it('lands on the first day with free times instead of a dead empty day', async () => {
+    state.roster = [{ barberId: 'b-1', displayName: 'Sofian' }]
+    // Today and tomorrow empty; day+2 has the availability.
+    state.slotsByDate = {
+      [parisKey(2)]: [
+        { slotStart: '2026-09-01T14:00:00+02:00', slotEnd: '2026-09-01T14:30:00+02:00' },
+      ],
+    }
+    renderPage()
+    fireEvent.click(screen.getByText('Classic cut'))
+
+    // The auto-advance walks forward one effect pass per empty day.
+    expect(await screen.findByText(/First free times are on/)).toBeInTheDocument()
+    expect(screen.getByText(/2:00/)).toBeInTheDocument()
+  })
+
+  it('offers no Change control for a barber the flow answered itself', () => {
+    state.roster = [{ barberId: 'b-1', displayName: 'Sofian' }]
+    renderPage()
+    fireEvent.click(screen.getByText('Classic cut'))
+
+    // Service summary keeps its Change; the auto-answered barber has none.
+    expect(screen.getByText('Sofian')).toBeInTheDocument()
+    expect(screen.getAllByText('Change')).toHaveLength(1)
+  })
+
+  it('prefills a signed-in customer’s details from their profile', () => {
+    state.roster = [{ barberId: 'b-1', displayName: 'Sofian' }]
+    state.user = { id: 'user-1', email: 'nora@example.com' }
+    state.myProfile = { displayName: 'Nora', email: 'nora@example.com' }
+    renderPage()
+    fireEvent.click(screen.getByText('Classic cut'))
+    fireEvent.click(screen.getByText(/9:00/))
+
+    expect(screen.getByDisplayValue('Nora')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('nora@example.com')).toBeInTheDocument()
   })
 })

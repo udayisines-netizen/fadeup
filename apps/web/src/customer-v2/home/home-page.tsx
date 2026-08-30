@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ANYWHERE } from '@/lib/intl/country-preference'
+import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
 import { useHomeDiscovery } from '@/customer-v2/hooks/use-home-discovery'
@@ -103,6 +104,9 @@ export function CustomerV2HomePage() {
   const debouncedQuery = useDebounced(query, 300)
 
   const discovery = useHomeDiscovery({ location, query: debouncedQuery, openNowOnly })
+
+  /* The same R3 funnel event the legacy Discover surface records. */
+  useTrackView('discovery_viewed', { properties: { surface: 'customer_discover' } }, true)
 
   useDocumentMeta({
     title: t('customer-app:v2.home.documentTitle'),

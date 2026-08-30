@@ -343,7 +343,9 @@
       "timeLabel": "Horaire",
       "seeMoreTimes": "Voir {{count}} horaires de plus",
       "noSlots": "Aucun horaire libre ce jour-là. Essayez un autre jour.",
-      "noBarbersForService": "Personne ne propose cette prestation pour le moment."
+      "noBarbersForService": "Personne ne propose cette prestation pour le moment.",
+      "chooseLocation": "Choisissez un établissement",
+      "firstFreeDay": "Premières disponibilités le {{day}}."
     },
     "appointments": {
       "title": "Rendez-vous",
@@ -367,7 +369,8 @@
         "cancelled": "Annulé",
         "completed": "Terminé",
         "missed": "Manqué"
-      }
+      },
+      "confirmCancel": "Vraiment annuler ?"
     },
     "book": {
       "title": "Réserver",
@@ -433,6 +436,9 @@
         "beardPreferences": "Barbe",
         "preferencesNotes": "Notes"
       }
+    },
+    "errors": {
+      "actionFailed": "Ça n'a pas fonctionné. Réessayez."
     }
   }
 }

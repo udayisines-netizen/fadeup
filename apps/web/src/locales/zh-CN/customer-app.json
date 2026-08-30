@@ -343,7 +343,9 @@
       "timeLabel": "时间",
       "seeMoreTimes": "查看另外 {{count}} 个时段",
       "noSlots": "当天没有空闲时段，请试试其他日期。",
-      "noBarbersForService": "目前没有人提供该服务。"
+      "noBarbersForService": "目前没有人提供该服务。",
+      "chooseLocation": "选择门店",
+      "firstFreeDay": "最早的空闲时间在{{day}}。"
     },
     "appointments": {
       "title": "预约",
@@ -367,7 +369,8 @@
         "cancelled": "已取消",
         "completed": "已完成",
         "missed": "未到店"
-      }
+      },
+      "confirmCancel": "确定取消？"
     },
     "book": {
       "title": "预约",
@@ -433,6 +436,9 @@
         "beardPreferences": "胡须",
         "preferencesNotes": "备注"
       }
+    },
+    "errors": {
+      "actionFailed": "操作未成功，请重试。"
     }
   }
 }
