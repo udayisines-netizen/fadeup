@@ -677,7 +677,23 @@
       "unfavorites_other": "{{count}} unfavorites",
       "vsPrevious": "Small figures compare with the previous 30 days.",
       "noActivityTitle": "No analytics yet",
-      "noActivityBody": "Numbers appear here once customers start viewing and booking with you."
+      "noActivityBody": "Numbers appear here once customers start viewing and booking with you.",
+      "cancelled_many": "{{count}} cancelled",
+      "cancelled_two": "{{count}} cancelled",
+      "cancelled_zero": "{{count}} cancelled",
+      "cancelled_few": "{{count}} cancelled",
+      "noShow_many": "{{count}} no-shows",
+      "noShow_two": "{{count}} no-shows",
+      "noShow_zero": "{{count}} no-shows",
+      "noShow_few": "{{count}} no-shows",
+      "unfavorites_many": "{{count}} unfavorites",
+      "unfavorites_two": "{{count}} unfavorites",
+      "unfavorites_zero": "{{count}} unfavorites",
+      "unfavorites_few": "{{count}} unfavorites",
+      "unfollows_many": "{{count}} unfollows",
+      "unfollows_two": "{{count}} unfollows",
+      "unfollows_zero": "{{count}} unfollows",
+      "unfollows_few": "{{count}} unfollows"
     },
     "retention": {
       "documentTitle": "Retention",
@@ -733,7 +749,23 @@
       "resume": "Resume",
       "cancelMembership": "Cancel",
       "pastMembers_one": "{{count}} past membership",
-      "pastMembers_other": "{{count}} past memberships"
+      "pastMembers_other": "{{count}} past memberships",
+      "activeMembers_many": "{{count}} active members",
+      "activeMembers_two": "{{count}} active members",
+      "activeMembers_zero": "{{count}} active members",
+      "activeMembers_few": "{{count}} active members",
+      "daysAgo_many": "{{count}} days ago",
+      "daysAgo_two": "{{count}} days ago",
+      "daysAgo_zero": "{{count}} days ago",
+      "daysAgo_few": "{{count}} days ago",
+      "moreLapsed_many": "{{count}} more customers",
+      "moreLapsed_two": "{{count}} more customers",
+      "moreLapsed_zero": "{{count}} more customers",
+      "moreLapsed_few": "{{count}} more customers",
+      "pastMembers_many": "{{count}} past memberships",
+      "pastMembers_two": "{{count}} past memberships",
+      "pastMembers_zero": "{{count}} past memberships",
+      "pastMembers_few": "{{count}} past memberships"
     },
     "profilePage": {
       "documentTitle": "Business profile",
@@ -794,6 +826,7 @@
       "save": "Save",
       "cancel": "Cancel",
       "saved": "Saved."
-    }
+    },
+    "proBadge": "Pro"
   }
 }

@@ -673,7 +673,27 @@
       "unfavorites_other": "お気に入り解除 {{count}}件",
       "vsPrevious": "小さな数字は前の30日間との比較です。",
       "noActivityTitle": "まだアナリティクスはありません",
-      "noActivityBody": "お客様がプロフィールを見て予約を始めると、数字が表示されます。"
+      "noActivityBody": "お客様がプロフィールを見て予約を始めると、数字が表示されます。",
+      "cancelled_zero": "キャンセル {{count}}件",
+      "cancelled_two": "キャンセル {{count}}件",
+      "cancelled_one": "キャンセル {{count}}件",
+      "cancelled_many": "キャンセル {{count}}件",
+      "cancelled_few": "キャンセル {{count}}件",
+      "noShow_zero": "無断キャンセル {{count}}件",
+      "noShow_two": "無断キャンセル {{count}}件",
+      "noShow_one": "無断キャンセル {{count}}件",
+      "noShow_many": "無断キャンセル {{count}}件",
+      "noShow_few": "無断キャンセル {{count}}件",
+      "unfavorites_zero": "お気に入り解除 {{count}}件",
+      "unfavorites_two": "お気に入り解除 {{count}}件",
+      "unfavorites_one": "お気に入り解除 {{count}}件",
+      "unfavorites_many": "お気に入り解除 {{count}}件",
+      "unfavorites_few": "お気に入り解除 {{count}}件",
+      "unfollows_zero": "フォロー解除 {{count}}件",
+      "unfollows_two": "フォロー解除 {{count}}件",
+      "unfollows_one": "フォロー解除 {{count}}件",
+      "unfollows_many": "フォロー解除 {{count}}件",
+      "unfollows_few": "フォロー解除 {{count}}件"
     },
     "retention": {
       "documentTitle": "リテンション",
@@ -725,7 +745,27 @@
       "pause": "一時停止",
       "resume": "再開",
       "cancelMembership": "解約",
-      "pastMembers_other": "過去の会員記録 {{count}}件"
+      "pastMembers_other": "過去の会員記録 {{count}}件",
+      "activeMembers_zero": "有効メンバー {{count}}名",
+      "activeMembers_two": "有効メンバー {{count}}名",
+      "activeMembers_one": "有効メンバー {{count}}名",
+      "activeMembers_many": "有効メンバー {{count}}名",
+      "activeMembers_few": "有効メンバー {{count}}名",
+      "daysAgo_zero": "{{count}}日前",
+      "daysAgo_two": "{{count}}日前",
+      "daysAgo_one": "{{count}}日前",
+      "daysAgo_many": "{{count}}日前",
+      "daysAgo_few": "{{count}}日前",
+      "moreLapsed_zero": "他 {{count}}名",
+      "moreLapsed_two": "他 {{count}}名",
+      "moreLapsed_one": "他 {{count}}名",
+      "moreLapsed_many": "他 {{count}}名",
+      "moreLapsed_few": "他 {{count}}名",
+      "pastMembers_zero": "過去の会員記録 {{count}}件",
+      "pastMembers_two": "過去の会員記録 {{count}}件",
+      "pastMembers_one": "過去の会員記録 {{count}}件",
+      "pastMembers_many": "過去の会員記録 {{count}}件",
+      "pastMembers_few": "過去の会員記録 {{count}}件"
     },
     "profilePage": {
       "documentTitle": "ビジネスプロフィール",
@@ -786,6 +826,7 @@
       "save": "保存",
       "cancel": "キャンセル",
       "saved": "保存しました。"
-    }
+    },
+    "proBadge": "Pro"
   }
 }

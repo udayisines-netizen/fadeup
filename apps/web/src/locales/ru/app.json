@@ -685,7 +685,15 @@
       "unfavorites_other": "{{count}} удалений из избранного",
       "vsPrevious": "Малые числа — сравнение с предыдущими 30 днями.",
       "noActivityTitle": "Статистики пока нет",
-      "noActivityBody": "Цифры появятся, когда клиенты начнут просматривать профиль и записываться."
+      "noActivityBody": "Цифры появятся, когда клиенты начнут просматривать профиль и записываться.",
+      "cancelled_two": "{{count}} отменено",
+      "cancelled_zero": "{{count}} отменено",
+      "noShow_two": "{{count}} неявок",
+      "noShow_zero": "{{count}} неявок",
+      "unfavorites_two": "{{count}} удалений из избранного",
+      "unfavorites_zero": "{{count}} удалений из избранного",
+      "unfollows_two": "{{count}} отписок",
+      "unfollows_zero": "{{count}} отписок"
     },
     "retention": {
       "documentTitle": "Удержание",
@@ -749,7 +757,15 @@
       "pastMembers_one": "{{count}} прошлая подписка",
       "pastMembers_few": "{{count}} прошлые подписки",
       "pastMembers_many": "{{count}} прошлых подписок",
-      "pastMembers_other": "{{count}} прошлых подписок"
+      "pastMembers_other": "{{count}} прошлых подписок",
+      "activeMembers_two": "{{count}} активных участников",
+      "activeMembers_zero": "{{count}} активных участников",
+      "daysAgo_two": "{{count}} дней назад",
+      "daysAgo_zero": "{{count}} дней назад",
+      "moreLapsed_two": "ещё {{count}} клиентов",
+      "moreLapsed_zero": "ещё {{count}} клиентов",
+      "pastMembers_two": "{{count}} прошлых подписок",
+      "pastMembers_zero": "{{count}} прошлых подписок"
     },
     "profilePage": {
       "documentTitle": "Профиль бизнеса",
@@ -810,6 +826,7 @@
       "save": "Сохранить",
       "cancel": "Отмена",
       "saved": "Сохранено."
-    }
+    },
+    "proBadge": "Pro"
   }
 }

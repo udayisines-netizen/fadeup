@@ -677,7 +677,23 @@
       "unfavorites_other": "{{count}} preferiti rimossi",
       "vsPrevious": "Le cifre piccole confrontano con i 30 giorni precedenti.",
       "noActivityTitle": "Ancora nessuna statistica",
-      "noActivityBody": "I numeri appariranno quando i clienti inizieranno a guardare il tuo profilo e prenotare."
+      "noActivityBody": "I numeri appariranno quando i clienti inizieranno a guardare il tuo profilo e prenotare.",
+      "cancelled_many": "{{count}} annullati",
+      "cancelled_two": "{{count}} annullati",
+      "cancelled_zero": "{{count}} annullati",
+      "cancelled_few": "{{count}} annullati",
+      "noShow_many": "{{count}} assenze",
+      "noShow_two": "{{count}} assenze",
+      "noShow_zero": "{{count}} assenze",
+      "noShow_few": "{{count}} assenze",
+      "unfavorites_many": "{{count}} preferiti rimossi",
+      "unfavorites_two": "{{count}} preferiti rimossi",
+      "unfavorites_zero": "{{count}} preferiti rimossi",
+      "unfavorites_few": "{{count}} preferiti rimossi",
+      "unfollows_many": "{{count}} follower persi",
+      "unfollows_two": "{{count}} follower persi",
+      "unfollows_zero": "{{count}} follower persi",
+      "unfollows_few": "{{count}} follower persi"
     },
     "retention": {
       "documentTitle": "Fidelizzazione",
@@ -733,7 +749,23 @@
       "resume": "Riprendi",
       "cancelMembership": "Annulla",
       "pastMembers_one": "{{count}} abbonamento passato",
-      "pastMembers_other": "{{count}} abbonamenti passati"
+      "pastMembers_other": "{{count}} abbonamenti passati",
+      "activeMembers_many": "{{count}} membri attivi",
+      "activeMembers_two": "{{count}} membri attivi",
+      "activeMembers_zero": "{{count}} membri attivi",
+      "activeMembers_few": "{{count}} membri attivi",
+      "daysAgo_many": "{{count}} giorni fa",
+      "daysAgo_two": "{{count}} giorni fa",
+      "daysAgo_zero": "{{count}} giorni fa",
+      "daysAgo_few": "{{count}} giorni fa",
+      "moreLapsed_many": "{{count}} altri clienti",
+      "moreLapsed_two": "{{count}} altri clienti",
+      "moreLapsed_zero": "{{count}} altri clienti",
+      "moreLapsed_few": "{{count}} altri clienti",
+      "pastMembers_many": "{{count}} abbonamenti passati",
+      "pastMembers_two": "{{count}} abbonamenti passati",
+      "pastMembers_zero": "{{count}} abbonamenti passati",
+      "pastMembers_few": "{{count}} abbonamenti passati"
     },
     "profilePage": {
       "documentTitle": "Profilo dell’attività",
@@ -794,6 +826,7 @@
       "save": "Salva",
       "cancel": "Annulla",
       "saved": "Salvato."
-    }
+    },
+    "proBadge": "Pro"
   }
 }

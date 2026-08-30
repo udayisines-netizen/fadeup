@@ -673,7 +673,27 @@
       "unfavorites_other": "取消收藏 {{count}} 次",
       "vsPrevious": "小字数字为与前30天的对比。",
       "noActivityTitle": "暂无数据",
-      "noActivityBody": "顾客开始浏览并预约后，这里会显示数据。"
+      "noActivityBody": "顾客开始浏览并预约后，这里会显示数据。",
+      "cancelled_zero": "已取消 {{count}} 个",
+      "cancelled_two": "已取消 {{count}} 个",
+      "cancelled_one": "已取消 {{count}} 个",
+      "cancelled_many": "已取消 {{count}} 个",
+      "cancelled_few": "已取消 {{count}} 个",
+      "noShow_zero": "爽约 {{count}} 个",
+      "noShow_two": "爽约 {{count}} 个",
+      "noShow_one": "爽约 {{count}} 个",
+      "noShow_many": "爽约 {{count}} 个",
+      "noShow_few": "爽约 {{count}} 个",
+      "unfavorites_zero": "取消收藏 {{count}} 次",
+      "unfavorites_two": "取消收藏 {{count}} 次",
+      "unfavorites_one": "取消收藏 {{count}} 次",
+      "unfavorites_many": "取消收藏 {{count}} 次",
+      "unfavorites_few": "取消收藏 {{count}} 次",
+      "unfollows_zero": "取消关注 {{count}} 次",
+      "unfollows_two": "取消关注 {{count}} 次",
+      "unfollows_one": "取消关注 {{count}} 次",
+      "unfollows_many": "取消关注 {{count}} 次",
+      "unfollows_few": "取消关注 {{count}} 次"
     },
     "retention": {
       "documentTitle": "客户维系",
@@ -725,7 +745,27 @@
       "pause": "暂停",
       "resume": "恢复",
       "cancelMembership": "取消",
-      "pastMembers_other": "{{count}} 条过往会员记录"
+      "pastMembers_other": "{{count}} 条过往会员记录",
+      "activeMembers_zero": "{{count}} 名有效会员",
+      "activeMembers_two": "{{count}} 名有效会员",
+      "activeMembers_one": "{{count}} 名有效会员",
+      "activeMembers_many": "{{count}} 名有效会员",
+      "activeMembers_few": "{{count}} 名有效会员",
+      "daysAgo_zero": "{{count}} 天前",
+      "daysAgo_two": "{{count}} 天前",
+      "daysAgo_one": "{{count}} 天前",
+      "daysAgo_many": "{{count}} 天前",
+      "daysAgo_few": "{{count}} 天前",
+      "moreLapsed_zero": "还有 {{count}} 位顾客",
+      "moreLapsed_two": "还有 {{count}} 位顾客",
+      "moreLapsed_one": "还有 {{count}} 位顾客",
+      "moreLapsed_many": "还有 {{count}} 位顾客",
+      "moreLapsed_few": "还有 {{count}} 位顾客",
+      "pastMembers_zero": "{{count}} 条过往会员记录",
+      "pastMembers_two": "{{count}} 条过往会员记录",
+      "pastMembers_one": "{{count}} 条过往会员记录",
+      "pastMembers_many": "{{count}} 条过往会员记录",
+      "pastMembers_few": "{{count}} 条过往会员记录"
     },
     "profilePage": {
       "documentTitle": "商家资料",
@@ -786,6 +826,7 @@
       "save": "保存",
       "cancel": "取消",
       "saved": "已保存。"
-    }
+    },
+    "proBadge": "Pro"
   }
 }

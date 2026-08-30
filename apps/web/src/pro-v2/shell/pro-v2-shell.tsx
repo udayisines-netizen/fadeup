@@ -112,7 +112,7 @@ export function ProV2Shell() {
           <span className="flex shrink-0 items-center gap-2">
             <FadeUpLockup tone="light" className="text-[0.9375rem]" />
             <span className="rounded-v2-1 bg-v2-fill px-1.5 py-0.5 text-v2-caption font-semibold text-v2-ink-soft">
-              Pro
+              {t('app:v2pro.proBadge')}
             </span>
           </span>
 

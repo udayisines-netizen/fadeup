@@ -677,7 +677,23 @@
       "unfavorites_other": "{{count}} Favoriten entfernt",
       "vsPrevious": "Die kleinen Zahlen vergleichen mit den 30 Tagen davor.",
       "noActivityTitle": "Noch keine Statistiken",
-      "noActivityBody": "Zahlen erscheinen hier, sobald Kunden dein Profil ansehen und buchen."
+      "noActivityBody": "Zahlen erscheinen hier, sobald Kunden dein Profil ansehen und buchen.",
+      "cancelled_many": "{{count}} storniert",
+      "cancelled_two": "{{count}} storniert",
+      "cancelled_zero": "{{count}} storniert",
+      "cancelled_few": "{{count}} storniert",
+      "noShow_many": "{{count}} nicht erschienen",
+      "noShow_two": "{{count}} nicht erschienen",
+      "noShow_zero": "{{count}} nicht erschienen",
+      "noShow_few": "{{count}} nicht erschienen",
+      "unfavorites_many": "{{count}} Favoriten entfernt",
+      "unfavorites_two": "{{count}} Favoriten entfernt",
+      "unfavorites_zero": "{{count}} Favoriten entfernt",
+      "unfavorites_few": "{{count}} Favoriten entfernt",
+      "unfollows_many": "{{count}} entfolgt",
+      "unfollows_two": "{{count}} entfolgt",
+      "unfollows_zero": "{{count}} entfolgt",
+      "unfollows_few": "{{count}} entfolgt"
     },
     "retention": {
       "documentTitle": "Kundenbindung",
@@ -733,7 +749,23 @@
       "resume": "Fortsetzen",
       "cancelMembership": "Kündigen",
       "pastMembers_one": "{{count}} frühere Mitgliedschaft",
-      "pastMembers_other": "{{count}} frühere Mitgliedschaften"
+      "pastMembers_other": "{{count}} frühere Mitgliedschaften",
+      "activeMembers_many": "{{count}} aktive Mitglieder",
+      "activeMembers_two": "{{count}} aktive Mitglieder",
+      "activeMembers_zero": "{{count}} aktive Mitglieder",
+      "activeMembers_few": "{{count}} aktive Mitglieder",
+      "daysAgo_many": "vor {{count}} Tagen",
+      "daysAgo_two": "vor {{count}} Tagen",
+      "daysAgo_zero": "vor {{count}} Tagen",
+      "daysAgo_few": "vor {{count}} Tagen",
+      "moreLapsed_many": "{{count}} weitere Kunden",
+      "moreLapsed_two": "{{count}} weitere Kunden",
+      "moreLapsed_zero": "{{count}} weitere Kunden",
+      "moreLapsed_few": "{{count}} weitere Kunden",
+      "pastMembers_many": "{{count}} frühere Mitgliedschaften",
+      "pastMembers_two": "{{count}} frühere Mitgliedschaften",
+      "pastMembers_zero": "{{count}} frühere Mitgliedschaften",
+      "pastMembers_few": "{{count}} frühere Mitgliedschaften"
     },
     "profilePage": {
       "documentTitle": "Geschäftsprofil",
@@ -794,6 +826,7 @@
       "save": "Speichern",
       "cancel": "Abbrechen",
       "saved": "Gespeichert."
-    }
+    },
+    "proBadge": "Pro"
   }
 }

@@ -677,7 +677,23 @@
       "unfavorites_other": "{{count}} favoritos retirados",
       "vsPrevious": "Las cifras pequeñas comparan con los 30 días anteriores.",
       "noActivityTitle": "Aún no hay estadísticas",
-      "noActivityBody": "Los números aparecerán cuando los clientes empiecen a ver tu perfil y reservar."
+      "noActivityBody": "Los números aparecerán cuando los clientes empiecen a ver tu perfil y reservar.",
+      "cancelled_many": "{{count}} canceladas",
+      "cancelled_two": "{{count}} canceladas",
+      "cancelled_zero": "{{count}} canceladas",
+      "cancelled_few": "{{count}} canceladas",
+      "noShow_many": "{{count}} ausencias",
+      "noShow_two": "{{count}} ausencias",
+      "noShow_zero": "{{count}} ausencias",
+      "noShow_few": "{{count}} ausencias",
+      "unfavorites_many": "{{count}} favoritos retirados",
+      "unfavorites_two": "{{count}} favoritos retirados",
+      "unfavorites_zero": "{{count}} favoritos retirados",
+      "unfavorites_few": "{{count}} favoritos retirados",
+      "unfollows_many": "{{count}} bajas de seguidores",
+      "unfollows_two": "{{count}} bajas de seguidores",
+      "unfollows_zero": "{{count}} bajas de seguidores",
+      "unfollows_few": "{{count}} bajas de seguidores"
     },
     "retention": {
       "documentTitle": "Fidelización",
@@ -733,7 +749,23 @@
       "resume": "Reanudar",
       "cancelMembership": "Cancelar",
       "pastMembers_one": "{{count}} membresía anterior",
-      "pastMembers_other": "{{count}} membresías anteriores"
+      "pastMembers_other": "{{count}} membresías anteriores",
+      "activeMembers_many": "{{count}} miembros activos",
+      "activeMembers_two": "{{count}} miembros activos",
+      "activeMembers_zero": "{{count}} miembros activos",
+      "activeMembers_few": "{{count}} miembros activos",
+      "daysAgo_many": "hace {{count}} días",
+      "daysAgo_two": "hace {{count}} días",
+      "daysAgo_zero": "hace {{count}} días",
+      "daysAgo_few": "hace {{count}} días",
+      "moreLapsed_many": "{{count}} clientes más",
+      "moreLapsed_two": "{{count}} clientes más",
+      "moreLapsed_zero": "{{count}} clientes más",
+      "moreLapsed_few": "{{count}} clientes más",
+      "pastMembers_many": "{{count}} membresías anteriores",
+      "pastMembers_two": "{{count}} membresías anteriores",
+      "pastMembers_zero": "{{count}} membresías anteriores",
+      "pastMembers_few": "{{count}} membresías anteriores"
     },
     "profilePage": {
       "documentTitle": "Perfil del negocio",
@@ -794,6 +826,7 @@
       "save": "Guardar",
       "cancel": "Cancelar",
       "saved": "Guardado."
-    }
+    },
+    "proBadge": "Pro"
   }
 }
