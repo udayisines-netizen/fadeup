@@ -392,6 +392,26 @@
       "peopleAhead_few": "Перед вами {{count}} человека",
       "peopleAhead_many": "Перед вами {{count}} человек",
       "peopleAhead_other": "Перед вами {{count}} человека"
+    },
+    "profilePage": {
+      "documentTitle": "Профиль · FadeUp",
+      "documentDescription": "Ваш профиль FadeUp, активность и настройки.",
+      "signInTitle": "Войдите, чтобы увидеть свой профиль",
+      "signInBody": "Активность, подписки и настройки привязаны к вашему аккаунту.",
+      "activity": "Активность",
+      "markAllRead": "Отметить всё прочитанным",
+      "noActivity": "Пока пусто — записи и подписки появятся здесь.",
+      "following": "Подписки",
+      "noFollowing": "Вы пока ни на кого не подписаны.",
+      "settings": "Настройки",
+      "language": "Язык",
+      "signOut": "Выйти",
+      "followedShops_zero": "{{count}} барбершопа в подписках",
+      "followedShops_one": "{{count}} барбершоп в подписках",
+      "followedShops_two": "{{count}} барбершопа в подписках",
+      "followedShops_few": "{{count}} барбершопа в подписках",
+      "followedShops_many": "{{count}} барбершопов в подписках",
+      "followedShops_other": "{{count}} барбершопа в подписках"
     }
   }
 }

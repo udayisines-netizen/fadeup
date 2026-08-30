@@ -392,6 +392,26 @@
       "peopleAhead_few": "您前面有 {{count}} 人",
       "peopleAhead_many": "您前面有 {{count}} 人",
       "peopleAhead_other": "您前面有 {{count}} 人"
+    },
+    "profilePage": {
+      "documentTitle": "个人主页 · FadeUp",
+      "documentDescription": "您的 FadeUp 主页、动态与设置。",
+      "signInTitle": "登录以查看您的主页",
+      "signInBody": "动态、关注与设置均与您的账号关联。",
+      "activity": "动态",
+      "markAllRead": "全部标为已读",
+      "noActivity": "暂无内容——预约与关注动态会显示在这里。",
+      "following": "关注",
+      "noFollowing": "您还没有关注任何人。",
+      "settings": "设置",
+      "language": "语言",
+      "signOut": "退出登录",
+      "followedShops_zero": "已关注 {{count}} 家理发店",
+      "followedShops_one": "已关注 {{count}} 家理发店",
+      "followedShops_two": "已关注 {{count}} 家理发店",
+      "followedShops_few": "已关注 {{count}} 家理发店",
+      "followedShops_many": "已关注 {{count}} 家理发店",
+      "followedShops_other": "已关注 {{count}} 家理发店"
     }
   }
 }

@@ -392,6 +392,26 @@
       "peopleAhead_few": "{{count}} personas delante de ti",
       "peopleAhead_many": "{{count}} personas delante de ti",
       "peopleAhead_other": "{{count}} personas delante de ti"
+    },
+    "profilePage": {
+      "documentTitle": "Perfil · FadeUp",
+      "documentDescription": "Tu perfil de FadeUp, tu actividad y tus ajustes.",
+      "signInTitle": "Inicia sesión para ver tu perfil",
+      "signInBody": "Tu actividad, seguidos y ajustes están vinculados a tu cuenta.",
+      "activity": "Actividad",
+      "markAllRead": "Marcar todo como leído",
+      "noActivity": "Nada todavía: tus reservas y seguimientos aparecerán aquí.",
+      "following": "Siguiendo",
+      "noFollowing": "Aún no sigues a nadie.",
+      "settings": "Ajustes",
+      "language": "Idioma",
+      "signOut": "Cerrar sesión",
+      "followedShops_zero": "{{count}} barberías seguidas",
+      "followedShops_one": "{{count}} barbería seguida",
+      "followedShops_two": "{{count}} barberías seguidas",
+      "followedShops_few": "{{count}} barberías seguidas",
+      "followedShops_many": "{{count}} barberías seguidas",
+      "followedShops_other": "{{count}} barberías seguidas"
     }
   }
 }

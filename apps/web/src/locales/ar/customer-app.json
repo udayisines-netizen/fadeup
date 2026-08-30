@@ -392,6 +392,26 @@
       "peopleAhead_few": "أمامك {{count}} أشخاص",
       "peopleAhead_many": "أمامك {{count}} شخصًا",
       "peopleAhead_other": "أمامك {{count}} شخص"
+    },
+    "profilePage": {
+      "documentTitle": "الملف الشخصي · FadeUp",
+      "documentDescription": "ملفك على FadeUp ونشاطك وإعداداتك.",
+      "signInTitle": "سجّل الدخول لعرض ملفك",
+      "signInBody": "نشاطك ومتابعاتك وإعداداتك مرتبطة بحسابك.",
+      "activity": "النشاط",
+      "markAllRead": "وضع علامة مقروء على الكل",
+      "noActivity": "لا شيء بعد — ستظهر الحجوزات والمتابعات هنا.",
+      "following": "المتابَعون",
+      "noFollowing": "لا تتابع أحدًا بعد.",
+      "settings": "الإعدادات",
+      "language": "اللغة",
+      "signOut": "تسجيل الخروج",
+      "followedShops_zero": "لا صالونات متابَعة",
+      "followedShops_one": "صالون واحد متابَع",
+      "followedShops_two": "صالونان متابَعان",
+      "followedShops_few": "{{count}} صالونات متابَعة",
+      "followedShops_many": "{{count}} صالونًا متابَعًا",
+      "followedShops_other": "{{count}} صالون متابَع"
     }
   }
 }

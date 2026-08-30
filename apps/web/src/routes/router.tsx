@@ -330,8 +330,8 @@ export const router = createBrowserRouter([
           {
             path: 'profile',
             lazy: async () => {
-              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
-              return { Component: () => <V2PlaceholderPage surface="profile" lot="R5R.1H" /> }
+              const { CustomerV2ProfilePage } = await import('@/customer-v2/profile/profile-page')
+              return { Component: CustomerV2ProfilePage }
             },
           },
         ],

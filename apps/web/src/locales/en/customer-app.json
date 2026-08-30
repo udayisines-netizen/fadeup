@@ -392,6 +392,26 @@
       "peopleAhead_few": "{{count}} people ahead of you",
       "peopleAhead_many": "{{count}} people ahead of you",
       "peopleAhead_other": "{{count}} people ahead of you"
+    },
+    "profilePage": {
+      "documentTitle": "Profile · FadeUp",
+      "documentDescription": "Your FadeUp profile, activity and settings.",
+      "signInTitle": "Sign in to see your profile",
+      "signInBody": "Your activity, follows and settings live with your account.",
+      "activity": "Activity",
+      "markAllRead": "Mark all read",
+      "noActivity": "Nothing yet — booking and follow activity shows up here.",
+      "following": "Following",
+      "noFollowing": "You are not following anyone yet.",
+      "settings": "Settings",
+      "language": "Language",
+      "signOut": "Sign out",
+      "followedShops_zero": "{{count}} barbershops followed",
+      "followedShops_one": "{{count}} barbershop followed",
+      "followedShops_two": "{{count}} barbershops followed",
+      "followedShops_few": "{{count}} barbershops followed",
+      "followedShops_many": "{{count}} barbershops followed",
+      "followedShops_other": "{{count}} barbershops followed"
     }
   }
 }

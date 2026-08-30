@@ -392,6 +392,26 @@
       "peopleAhead_few": "{{count}} personnes devant vous",
       "peopleAhead_many": "{{count}} personnes devant vous",
       "peopleAhead_other": "{{count}} personnes devant vous"
+    },
+    "profilePage": {
+      "documentTitle": "Profil · FadeUp",
+      "documentDescription": "Votre profil FadeUp, votre activité et vos réglages.",
+      "signInTitle": "Connectez-vous pour voir votre profil",
+      "signInBody": "Votre activité, vos abonnements et vos réglages sont liés à votre compte.",
+      "activity": "Activité",
+      "markAllRead": "Tout marquer comme lu",
+      "noActivity": "Rien pour le moment — vos réservations et abonnements apparaîtront ici.",
+      "following": "Abonnements",
+      "noFollowing": "Vous ne suivez encore personne.",
+      "settings": "Réglages",
+      "language": "Langue",
+      "signOut": "Se déconnecter",
+      "followedShops_zero": "{{count}} salons suivis",
+      "followedShops_one": "{{count}} salon suivi",
+      "followedShops_two": "{{count}} salons suivis",
+      "followedShops_few": "{{count}} salons suivis",
+      "followedShops_many": "{{count}} salons suivis",
+      "followedShops_other": "{{count}} salons suivis"
     }
   }
 }

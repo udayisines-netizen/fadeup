@@ -392,6 +392,26 @@
       "peopleAhead_few": "前に {{count}} 人",
       "peopleAhead_many": "前に {{count}} 人",
       "peopleAhead_other": "前に {{count}} 人"
+    },
+    "profilePage": {
+      "documentTitle": "プロフィール · FadeUp",
+      "documentDescription": "FadeUp のプロフィール、アクティビティ、設定。",
+      "signInTitle": "ログインしてプロフィールを表示",
+      "signInBody": "アクティビティ・フォロー・設定はアカウントに紐づいています。",
+      "activity": "アクティビティ",
+      "markAllRead": "すべて既読にする",
+      "noActivity": "まだ何もありません。予約やフォローがここに表示されます。",
+      "following": "フォロー中",
+      "noFollowing": "まだ誰もフォローしていません。",
+      "settings": "設定",
+      "language": "言語",
+      "signOut": "ログアウト",
+      "followedShops_zero": "フォロー中の店舗 {{count}} 件",
+      "followedShops_one": "フォロー中の店舗 {{count}} 件",
+      "followedShops_two": "フォロー中の店舗 {{count}} 件",
+      "followedShops_few": "フォロー中の店舗 {{count}} 件",
+      "followedShops_many": "フォロー中の店舗 {{count}} 件",
+      "followedShops_other": "フォロー中の店舗 {{count}} 件"
     }
   }
 }
