@@ -640,7 +640,8 @@
       "intervalDays_two": "{{count}} 日",
       "intervalDays_few": "{{count}} 日",
       "intervalDays_many": "{{count}} 日",
-      "intervalDays_other": "{{count}} 日"
+      "intervalDays_other": "{{count}} 日",
+      "search": "顧客を検索"
     }
   }
 }

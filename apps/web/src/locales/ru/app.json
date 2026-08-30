@@ -640,7 +640,8 @@
       "intervalDays_two": "{{count}} дня",
       "intervalDays_few": "{{count}} дня",
       "intervalDays_many": "{{count}} дней",
-      "intervalDays_other": "{{count}} дня"
+      "intervalDays_other": "{{count}} дня",
+      "search": "Поиск клиентов"
     }
   }
 }

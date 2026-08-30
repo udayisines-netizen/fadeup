@@ -100,7 +100,12 @@ export function ProV2CustomersPage() {
           {/* ── List ─────────────────────────────────────────────────────── */}
           <section className={`v2-plate overflow-hidden ${selected ? 'hidden lg:block' : ''}`}>
             <div className="px-4 py-3">
-              <SearchEntry value={query} onChange={setQuery} />
+              <SearchEntry
+                value={query}
+                onChange={setQuery}
+                label={t('app:v2pro.customers.search')}
+                placeholder={t('app:v2pro.customers.search')}
+              />
             </div>
             {filtered.length > 0 ? (
               <ul>

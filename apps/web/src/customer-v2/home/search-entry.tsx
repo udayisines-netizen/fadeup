@@ -52,9 +52,14 @@ import { Search, X } from 'lucide-react'
 export function SearchEntry({
   value,
   onChange,
+  label,
+  placeholder,
 }: {
   value: string
   onChange: (next: string) => void
+  /** Overrides for non-marketplace hosts (the CRM search is not a barber search). */
+  label?: string
+  placeholder?: string
 }) {
   const { t } = useTranslation()
   const inputId = useId()
@@ -62,7 +67,7 @@ export function SearchEntry({
   return (
     <div className="relative">
       <label htmlFor={inputId} className="sr-only">
-        {t('customer-app:v2.search.label')}
+        {label ?? t('customer-app:v2.search.label')}
       </label>
 
       <Search
@@ -76,7 +81,7 @@ export function SearchEntry({
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={t('customer-app:v2.search.placeholder')}
+        placeholder={placeholder ?? t('customer-app:v2.search.placeholder')}
         autoComplete="off"
         enterKeyHint="search"
         className="h-12 w-full rounded-v2-3 border border-v2-edge bg-v2-paper ps-11 pe-11 text-v2-body text-v2-ink placeholder:text-v2-ink-mute [&::-webkit-search-cancel-button]:appearance-none"

@@ -640,7 +640,8 @@
       "intervalDays_two": "{{count}} Tage",
       "intervalDays_few": "{{count}} Tage",
       "intervalDays_many": "{{count}} Tage",
-      "intervalDays_other": "{{count}} Tage"
+      "intervalDays_other": "{{count}} Tage",
+      "search": "Kunden suchen"
     }
   }
 }

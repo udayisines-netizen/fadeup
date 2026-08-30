@@ -640,7 +640,8 @@
       "intervalDays_two": "يومان",
       "intervalDays_few": "{{count}} أيام",
       "intervalDays_many": "{{count}} يومًا",
-      "intervalDays_other": "{{count}} يوم"
+      "intervalDays_other": "{{count}} يوم",
+      "search": "ابحث في العملاء"
     }
   }
 }

@@ -640,7 +640,8 @@
       "intervalDays_two": "{{count}} 天",
       "intervalDays_few": "{{count}} 天",
       "intervalDays_many": "{{count}} 天",
-      "intervalDays_other": "{{count}} 天"
+      "intervalDays_other": "{{count}} 天",
+      "search": "搜索客户"
     }
   }
 }
