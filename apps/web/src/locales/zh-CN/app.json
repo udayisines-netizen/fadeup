@@ -674,6 +674,58 @@
       "vsPrevious": "小字数字为与前30天的对比。",
       "noActivityTitle": "暂无数据",
       "noActivityBody": "顾客开始浏览并预约后，这里会显示数据。"
+    },
+    "retention": {
+      "documentTitle": "客户维系",
+      "documentDescription": "唤回流失客户，管理会员方案和会员。",
+      "winBackTitle": "值得联系",
+      "winBackHint": "{{days}} 天以上未到店且没有预约的顾客。",
+      "winBackEmpty": "目前没有顾客正在流失。",
+      "daysAgo_other": "{{count}} 天前",
+      "moreLapsed_other": "还有 {{count}} 位顾客",
+      "plansTitle": "会员方案",
+      "plansEmpty": "还没有方案。会员方案为常客提供简单的周期性优惠。",
+      "newPlan": "新建方案",
+      "planName": "名称",
+      "planPrice": "价格（{{currency}}）",
+      "planInterval": "计费周期",
+      "planDescription": "描述（可选）",
+      "planInvalid": "请为方案填写名称和有效价格。",
+      "interval": {
+        "weekly": "每周",
+        "monthly": "每月",
+        "yearly": "每年"
+      },
+      "per": {
+        "weekly": "每周",
+        "monthly": "每月",
+        "yearly": "每年"
+      },
+      "activeMembers_other": "{{count}} 名有效会员",
+      "createPlan": "创建方案",
+      "savePlan": "保存",
+      "cancel": "取消",
+      "edit": "编辑",
+      "deactivate": "停用",
+      "activate": "启用",
+      "inactive": "已停用",
+      "membersTitle": "会员",
+      "membersEmpty": "还没有会员。",
+      "enrollCustomer": "顾客",
+      "enrollPlan": "方案",
+      "enroll": "办理",
+      "alreadyEnrolled": "该顾客已有生效或暂停中的会员。",
+      "status": {
+        "active": "生效中",
+        "paused": "已暂停",
+        "cancelled": "已取消",
+        "expired": "已过期"
+      },
+      "renews": "{{date}} 续期",
+      "pause": "暂停",
+      "resume": "恢复",
+      "cancelMembership": "取消",
+      "pastMembers_other": "{{count}} 条过往会员记录"
     }
   }
 }

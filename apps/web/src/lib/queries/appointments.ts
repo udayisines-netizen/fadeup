@@ -151,6 +151,37 @@ export function useCustomerAppointments(customerId: string | undefined) {
   })
 }
 
+/**
+ * Every appointment across the org since a given instant, newest first —
+ * powers the R5R retention win-back arithmetic, which needs BOTH each
+ * customer's last completed visit AND whether they already have a future
+ * booking (someone returning next week is not lapsed, whatever their last
+ * visit date says). All statuses are fetched for that reason; callers filter.
+ * RLS scopes reads to the caller's own organization, as everywhere else.
+ */
+export function useOrgAppointmentsSince(
+  organizationId: string | undefined,
+  sinceIso: string | undefined,
+) {
+  return useQuery({
+    queryKey: ['appointments', organizationId, 'since', sinceIso],
+    queryFn: async (): Promise<Appointment[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(APPOINTMENT_COLUMNS)
+        .eq('organization_id', organizationId)
+        .gte('starts_at', sinceIso)
+        .order('starts_at', { ascending: false })
+
+      if (error) throw error
+
+      return ((data ?? []) as unknown as AppointmentRow[]).map(mapAppointment)
+    },
+    enabled: Boolean(organizationId) && Boolean(sinceIso),
+  })
+}
+
 export interface CreateAppointmentInput {
   organizationId: string
   locationId: string

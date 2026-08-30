@@ -674,6 +674,58 @@
       "vsPrevious": "小さな数字は前の30日間との比較です。",
       "noActivityTitle": "まだアナリティクスはありません",
       "noActivityBody": "お客様がプロフィールを見て予約を始めると、数字が表示されます。"
+    },
+    "retention": {
+      "documentTitle": "リテンション",
+      "documentDescription": "足が遠のいたお客様を呼び戻し、会員プランとメンバーを管理します。",
+      "winBackTitle": "声をかけたいお客様",
+      "winBackHint": "{{days}}日以上来店がなく、予約もないお客様。",
+      "winBackEmpty": "いま離れつつあるお客様はいません。",
+      "daysAgo_other": "{{count}}日前",
+      "moreLapsed_other": "他 {{count}}名",
+      "plansTitle": "会員プラン",
+      "plansEmpty": "プランはまだありません。プランは常連のお客様にシンプルな定額サービスを提供します。",
+      "newPlan": "新しいプラン",
+      "planName": "名前",
+      "planPrice": "価格（{{currency}}）",
+      "planInterval": "請求周期",
+      "planDescription": "説明（任意）",
+      "planInvalid": "プラン名と有効な価格を入力してください。",
+      "interval": {
+        "weekly": "毎週",
+        "monthly": "毎月",
+        "yearly": "毎年"
+      },
+      "per": {
+        "weekly": "週あたり",
+        "monthly": "月あたり",
+        "yearly": "年あたり"
+      },
+      "activeMembers_other": "有効メンバー {{count}}名",
+      "createPlan": "プランを作成",
+      "savePlan": "保存",
+      "cancel": "キャンセル",
+      "edit": "編集",
+      "deactivate": "無効にする",
+      "activate": "有効にする",
+      "inactive": "無効",
+      "membersTitle": "メンバー",
+      "membersEmpty": "メンバーはまだいません。",
+      "enrollCustomer": "お客様",
+      "enrollPlan": "プラン",
+      "enroll": "登録",
+      "alreadyEnrolled": "このお客様にはすでに有効または一時停止中の会員プランがあります。",
+      "status": {
+        "active": "有効",
+        "paused": "一時停止",
+        "cancelled": "キャンセル済み",
+        "expired": "期限切れ"
+      },
+      "renews": "{{date}}に更新",
+      "pause": "一時停止",
+      "resume": "再開",
+      "cancelMembership": "解約",
+      "pastMembers_other": "過去の会員記録 {{count}}件"
     }
   }
 }

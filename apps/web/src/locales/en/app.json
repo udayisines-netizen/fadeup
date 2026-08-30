@@ -678,6 +678,62 @@
       "vsPrevious": "Small figures compare with the previous 30 days.",
       "noActivityTitle": "No analytics yet",
       "noActivityBody": "Numbers appear here once customers start viewing and booking with you."
+    },
+    "retention": {
+      "documentTitle": "Retention",
+      "documentDescription": "Win back lapsed customers and manage membership plans and members.",
+      "winBackTitle": "Worth a call",
+      "winBackHint": "Customers with no visit in {{days}}+ days and nothing booked.",
+      "winBackEmpty": "Nobody is slipping away right now.",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "moreLapsed_one": "{{count}} more customer",
+      "moreLapsed_other": "{{count}} more customers",
+      "plansTitle": "Membership plans",
+      "plansEmpty": "No plans yet. A membership plan gives regulars a simple recurring deal.",
+      "newPlan": "New plan",
+      "planName": "Name",
+      "planPrice": "Price ({{currency}})",
+      "planInterval": "Billing",
+      "planDescription": "Description (optional)",
+      "planInvalid": "Give the plan a name and a valid price.",
+      "interval": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "per": {
+        "weekly": "per week",
+        "monthly": "per month",
+        "yearly": "per year"
+      },
+      "activeMembers_one": "{{count}} active member",
+      "activeMembers_other": "{{count}} active members",
+      "createPlan": "Create plan",
+      "savePlan": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "inactive": "Inactive",
+      "membersTitle": "Members",
+      "membersEmpty": "No members yet.",
+      "enrollCustomer": "Customer",
+      "enrollPlan": "Plan",
+      "enroll": "Enroll",
+      "alreadyEnrolled": "This customer already has an active or paused membership.",
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "renews": "renews {{date}}",
+      "pause": "Pause",
+      "resume": "Resume",
+      "cancelMembership": "Cancel",
+      "pastMembers_one": "{{count}} past membership",
+      "pastMembers_other": "{{count}} past memberships"
     }
   }
 }

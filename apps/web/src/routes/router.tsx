@@ -284,8 +284,8 @@ export const router = createBrowserRouter([
           {
             path: 'retention',
             lazy: async () => {
-              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
-              return { Component: () => <ProPlaceholderPage lot="R5R.2E" /> }
+              const { ProV2RetentionPage } = await import('@/pro-v2/retention/retention-page')
+              return { Component: ProV2RetentionPage }
             },
           },
           {

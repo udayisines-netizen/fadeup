@@ -678,6 +678,62 @@
       "vsPrevious": "Die kleinen Zahlen vergleichen mit den 30 Tagen davor.",
       "noActivityTitle": "Noch keine Statistiken",
       "noActivityBody": "Zahlen erscheinen hier, sobald Kunden dein Profil ansehen und buchen."
+    },
+    "retention": {
+      "documentTitle": "Kundenbindung",
+      "documentDescription": "Abgesprungene Kunden zurückgewinnen und Mitgliedschaftspläne und Mitglieder verwalten.",
+      "winBackTitle": "Einen Anruf wert",
+      "winBackHint": "Kunden ohne Besuch seit {{days}}+ Tagen und ohne kommenden Termin.",
+      "winBackEmpty": "Gerade entfernt sich niemand.",
+      "daysAgo_one": "vor {{count}} Tag",
+      "daysAgo_other": "vor {{count}} Tagen",
+      "moreLapsed_one": "{{count}} weiterer Kunde",
+      "moreLapsed_other": "{{count}} weitere Kunden",
+      "plansTitle": "Mitgliedschaftspläne",
+      "plansEmpty": "Noch keine Pläne. Ein Plan bietet Stammkunden ein einfaches wiederkehrendes Angebot.",
+      "newPlan": "Neuer Plan",
+      "planName": "Name",
+      "planPrice": "Preis ({{currency}})",
+      "planInterval": "Abrechnung",
+      "planDescription": "Beschreibung (optional)",
+      "planInvalid": "Gib dem Plan einen Namen und einen gültigen Preis.",
+      "interval": {
+        "weekly": "Wöchentlich",
+        "monthly": "Monatlich",
+        "yearly": "Jährlich"
+      },
+      "per": {
+        "weekly": "pro Woche",
+        "monthly": "pro Monat",
+        "yearly": "pro Jahr"
+      },
+      "activeMembers_one": "{{count}} aktives Mitglied",
+      "activeMembers_other": "{{count}} aktive Mitglieder",
+      "createPlan": "Plan erstellen",
+      "savePlan": "Speichern",
+      "cancel": "Abbrechen",
+      "edit": "Bearbeiten",
+      "deactivate": "Deaktivieren",
+      "activate": "Aktivieren",
+      "inactive": "Inaktiv",
+      "membersTitle": "Mitglieder",
+      "membersEmpty": "Noch keine Mitglieder.",
+      "enrollCustomer": "Kunde",
+      "enrollPlan": "Plan",
+      "enroll": "Anmelden",
+      "alreadyEnrolled": "Dieser Kunde hat bereits eine aktive oder pausierte Mitgliedschaft.",
+      "status": {
+        "active": "Aktiv",
+        "paused": "Pausiert",
+        "cancelled": "Gekündigt",
+        "expired": "Abgelaufen"
+      },
+      "renews": "verlängert sich am {{date}}",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "cancelMembership": "Kündigen",
+      "pastMembers_one": "{{count}} frühere Mitgliedschaft",
+      "pastMembers_other": "{{count}} frühere Mitgliedschaften"
     }
   }
 }

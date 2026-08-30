@@ -678,6 +678,62 @@
       "vsPrevious": "Le cifre piccole confrontano con i 30 giorni precedenti.",
       "noActivityTitle": "Ancora nessuna statistica",
       "noActivityBody": "I numeri appariranno quando i clienti inizieranno a guardare il tuo profilo e prenotare."
+    },
+    "retention": {
+      "documentTitle": "Fidelizzazione",
+      "documentDescription": "Recupera i clienti inattivi e gestisci piani di abbonamento e membri.",
+      "winBackTitle": "Da richiamare",
+      "winBackHint": "Clienti senza visite da {{days}}+ giorni e senza prenotazioni future.",
+      "winBackEmpty": "Nessuno si sta allontanando al momento.",
+      "daysAgo_one": "{{count}} giorno fa",
+      "daysAgo_other": "{{count}} giorni fa",
+      "moreLapsed_one": "{{count}} altro cliente",
+      "moreLapsed_other": "{{count}} altri clienti",
+      "plansTitle": "Piani di abbonamento",
+      "plansEmpty": "Nessun piano per ora. Un piano offre ai clienti abituali una tariffa ricorrente semplice.",
+      "newPlan": "Nuovo piano",
+      "planName": "Nome",
+      "planPrice": "Prezzo ({{currency}})",
+      "planInterval": "Fatturazione",
+      "planDescription": "Descrizione (facoltativa)",
+      "planInvalid": "Dai al piano un nome e un prezzo valido.",
+      "interval": {
+        "weekly": "Settimanale",
+        "monthly": "Mensile",
+        "yearly": "Annuale"
+      },
+      "per": {
+        "weekly": "a settimana",
+        "monthly": "al mese",
+        "yearly": "all’anno"
+      },
+      "activeMembers_one": "{{count}} membro attivo",
+      "activeMembers_other": "{{count}} membri attivi",
+      "createPlan": "Crea piano",
+      "savePlan": "Salva",
+      "cancel": "Annulla",
+      "edit": "Modifica",
+      "deactivate": "Disattiva",
+      "activate": "Attiva",
+      "inactive": "Inattivo",
+      "membersTitle": "Membri",
+      "membersEmpty": "Ancora nessun membro.",
+      "enrollCustomer": "Cliente",
+      "enrollPlan": "Piano",
+      "enroll": "Iscrivi",
+      "alreadyEnrolled": "Questo cliente ha già un abbonamento attivo o in pausa.",
+      "status": {
+        "active": "Attivo",
+        "paused": "In pausa",
+        "cancelled": "Annullato",
+        "expired": "Scaduto"
+      },
+      "renews": "si rinnova il {{date}}",
+      "pause": "Metti in pausa",
+      "resume": "Riprendi",
+      "cancelMembership": "Annulla",
+      "pastMembers_one": "{{count}} abbonamento passato",
+      "pastMembers_other": "{{count}} abbonamenti passati"
     }
   }
 }

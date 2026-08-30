@@ -678,6 +678,62 @@
       "vsPrevious": "Les petits chiffres comparent avec les 30 jours précédents.",
       "noActivityTitle": "Pas encore de statistiques",
       "noActivityBody": "Les chiffres apparaîtront dès que des clients consulteront votre profil et réserveront."
+    },
+    "retention": {
+      "documentTitle": "Fidélisation",
+      "documentDescription": "Relancez les clients perdus de vue et gérez les abonnements et les membres.",
+      "winBackTitle": "À rappeler",
+      "winBackHint": "Clients sans visite depuis {{days}} jours ou plus et sans réservation à venir.",
+      "winBackEmpty": "Personne ne s’éloigne pour le moment.",
+      "daysAgo_one": "il y a {{count}} jour",
+      "daysAgo_other": "il y a {{count}} jours",
+      "moreLapsed_one": "{{count}} autre client",
+      "moreLapsed_other": "{{count}} autres clients",
+      "plansTitle": "Formules d’abonnement",
+      "plansEmpty": "Aucune formule pour l’instant. Une formule offre aux habitués un tarif récurrent simple.",
+      "newPlan": "Nouvelle formule",
+      "planName": "Nom",
+      "planPrice": "Prix ({{currency}})",
+      "planInterval": "Facturation",
+      "planDescription": "Description (facultatif)",
+      "planInvalid": "Donnez un nom et un prix valide à la formule.",
+      "interval": {
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuelle",
+        "yearly": "Annuelle"
+      },
+      "per": {
+        "weekly": "par semaine",
+        "monthly": "par mois",
+        "yearly": "par an"
+      },
+      "activeMembers_one": "{{count}} membre actif",
+      "activeMembers_other": "{{count}} membres actifs",
+      "createPlan": "Créer la formule",
+      "savePlan": "Enregistrer",
+      "cancel": "Annuler",
+      "edit": "Modifier",
+      "deactivate": "Désactiver",
+      "activate": "Activer",
+      "inactive": "Inactive",
+      "membersTitle": "Membres",
+      "membersEmpty": "Aucun membre pour l’instant.",
+      "enrollCustomer": "Client",
+      "enrollPlan": "Formule",
+      "enroll": "Inscrire",
+      "alreadyEnrolled": "Ce client a déjà un abonnement actif ou en pause.",
+      "status": {
+        "active": "Actif",
+        "paused": "En pause",
+        "cancelled": "Annulé",
+        "expired": "Expiré"
+      },
+      "renews": "renouvellement le {{date}}",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "cancelMembership": "Annuler",
+      "pastMembers_one": "{{count}} abonnement passé",
+      "pastMembers_other": "{{count}} abonnements passés"
     }
   }
 }

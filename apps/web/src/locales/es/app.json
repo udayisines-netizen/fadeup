@@ -678,6 +678,62 @@
       "vsPrevious": "Las cifras pequeñas comparan con los 30 días anteriores.",
       "noActivityTitle": "Aún no hay estadísticas",
       "noActivityBody": "Los números aparecerán cuando los clientes empiecen a ver tu perfil y reservar."
+    },
+    "retention": {
+      "documentTitle": "Fidelización",
+      "documentDescription": "Recupera clientes inactivos y gestiona planes de membresía y miembros.",
+      "winBackTitle": "Merecen una llamada",
+      "winBackHint": "Clientes sin visita en {{days}}+ días y sin ninguna reserva.",
+      "winBackEmpty": "Nadie se está alejando ahora mismo.",
+      "daysAgo_one": "hace {{count}} día",
+      "daysAgo_other": "hace {{count}} días",
+      "moreLapsed_one": "{{count}} cliente más",
+      "moreLapsed_other": "{{count}} clientes más",
+      "plansTitle": "Planes de membresía",
+      "plansEmpty": "Aún no hay planes. Un plan ofrece a los habituales una tarifa recurrente sencilla.",
+      "newPlan": "Nuevo plan",
+      "planName": "Nombre",
+      "planPrice": "Precio ({{currency}})",
+      "planInterval": "Facturación",
+      "planDescription": "Descripción (opcional)",
+      "planInvalid": "Pon un nombre y un precio válido al plan.",
+      "interval": {
+        "weekly": "Semanal",
+        "monthly": "Mensual",
+        "yearly": "Anual"
+      },
+      "per": {
+        "weekly": "por semana",
+        "monthly": "al mes",
+        "yearly": "al año"
+      },
+      "activeMembers_one": "{{count}} miembro activo",
+      "activeMembers_other": "{{count}} miembros activos",
+      "createPlan": "Crear plan",
+      "savePlan": "Guardar",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "inactive": "Inactivo",
+      "membersTitle": "Miembros",
+      "membersEmpty": "Aún no hay miembros.",
+      "enrollCustomer": "Cliente",
+      "enrollPlan": "Plan",
+      "enroll": "Inscribir",
+      "alreadyEnrolled": "Este cliente ya tiene una membresía activa o en pausa.",
+      "status": {
+        "active": "Activa",
+        "paused": "En pausa",
+        "cancelled": "Cancelada",
+        "expired": "Caducada"
+      },
+      "renews": "se renueva el {{date}}",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "cancelMembership": "Cancelar",
+      "pastMembers_one": "{{count}} membresía anterior",
+      "pastMembers_other": "{{count}} membresías anteriores"
     }
   }
 }
