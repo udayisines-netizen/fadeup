@@ -273,8 +273,10 @@ export const router = createBrowserRouter([
           {
             path: 'marketplace',
             lazy: async () => {
-              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
-              return { Component: () => <V2PlaceholderPage surface="marketplace" lot="R5R.1B" /> }
+              const { CustomerV2MarketplacePage } = await import(
+                '@/customer-v2/marketplace/marketplace-page'
+              )
+              return { Component: CustomerV2MarketplacePage }
             },
           },
           {

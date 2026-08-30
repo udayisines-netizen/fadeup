@@ -270,6 +270,17 @@
         "title": "Profile",
         "body": "Your social profile, your privacy controls, and your Fade Passport."
       }
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "documentTitle": "Marketplace · FadeUp",
+      "documentDescription": "Compare barbers and barbershops on FadeUp and book in a few taps.",
+      "results": "Results",
+      "sortLabel": "Sort results",
+      "sortRecommended": "Recommended",
+      "sortNearest": "Nearest",
+      "sortPrice": "Price",
+      "showMore": "Show more"
     }
   }
 }

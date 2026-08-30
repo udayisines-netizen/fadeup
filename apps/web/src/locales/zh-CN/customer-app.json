@@ -270,6 +270,17 @@
         "title": "个人资料",
         "body": "你的社交资料、隐私设置，以及你的 Fade Passport。"
       }
+    },
+    "marketplace": {
+      "title": "市场",
+      "documentTitle": "市场 · FadeUp",
+      "documentDescription": "在 FadeUp 比较理发师和理发店，几步即可预约。",
+      "results": "结果",
+      "sortLabel": "结果排序",
+      "sortRecommended": "推荐",
+      "sortNearest": "距离最近",
+      "sortPrice": "价格",
+      "showMore": "显示更多"
     }
   }
 }

@@ -270,6 +270,17 @@
         "title": "Профиль",
         "body": "Ваш социальный профиль, настройки приватности и ваш Fade Passport."
       }
+    },
+    "marketplace": {
+      "title": "Маркетплейс",
+      "documentTitle": "Маркетплейс · FadeUp",
+      "documentDescription": "Сравнивайте барберов и барбершопы на FadeUp и записывайтесь в пару касаний.",
+      "results": "Результаты",
+      "sortLabel": "Сортировка результатов",
+      "sortRecommended": "Рекомендуемые",
+      "sortNearest": "Ближайшие",
+      "sortPrice": "Цена",
+      "showMore": "Показать ещё"
     }
   }
 }

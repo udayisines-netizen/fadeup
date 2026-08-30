@@ -270,6 +270,17 @@
         "title": "الملف الشخصي",
         "body": "ملفك الاجتماعي وإعدادات الخصوصية وبطاقة Fade Passport الخاصة بك."
       }
+    },
+    "marketplace": {
+      "title": "السوق",
+      "documentTitle": "السوق · FadeUp",
+      "documentDescription": "قارن الحلاقين والصالونات على FadeUp واحجز بلمسات قليلة.",
+      "results": "النتائج",
+      "sortLabel": "ترتيب النتائج",
+      "sortRecommended": "موصى بها",
+      "sortNearest": "الأقرب",
+      "sortPrice": "السعر",
+      "showMore": "عرض المزيد"
     }
   }
 }

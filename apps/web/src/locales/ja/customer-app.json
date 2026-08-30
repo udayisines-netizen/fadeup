@@ -270,6 +270,17 @@
         "title": "プロフィール",
         "body": "ソーシャルプロフィール、プライバシー設定、そして Fade Passport。"
       }
+    },
+    "marketplace": {
+      "title": "マーケット",
+      "documentTitle": "マーケット · FadeUp",
+      "documentDescription": "FadeUp で理容師や店舗を比べて、数タップで予約。",
+      "results": "検索結果",
+      "sortLabel": "並び替え",
+      "sortRecommended": "おすすめ",
+      "sortNearest": "近い順",
+      "sortPrice": "料金",
+      "showMore": "もっと見る"
     }
   }
 }

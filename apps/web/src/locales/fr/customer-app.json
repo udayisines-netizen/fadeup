@@ -270,6 +270,17 @@
         "title": "Profil",
         "body": "Votre profil social, vos réglages de confidentialité et votre Fade Passport."
       }
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "documentTitle": "Marketplace · FadeUp",
+      "documentDescription": "Comparez coiffeurs et salons sur FadeUp et réservez en quelques gestes.",
+      "results": "Résultats",
+      "sortLabel": "Trier les résultats",
+      "sortRecommended": "Recommandés",
+      "sortNearest": "Les plus proches",
+      "sortPrice": "Prix",
+      "showMore": "Afficher plus"
     }
   }
 }
