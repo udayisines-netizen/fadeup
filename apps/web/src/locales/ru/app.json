@@ -560,5 +560,58 @@
     "customersOpen": "Открыть клиентов",
     "customersEmptyTitle": "Пока нет клиентов",
     "customersEmptyDescription": "Все, кого вы записываете или принимаете, появятся здесь."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Панель",
+      "calendar": "Календарь",
+      "customers": "Клиенты",
+      "analytics": "Аналитика",
+      "retention": "Удержание",
+      "profile": "Профиль"
+    },
+    "navLabel": "Профессиональная навигация",
+    "allLocations": "Все адреса",
+    "noWorkspaceTitle": "Нет рабочего пространства",
+    "noWorkspaceBody": "Ваш аккаунт пока не связан ни с одним заведением.",
+    "placeholder": {
+      "title": "Скоро",
+      "body": "Эта страница появится в лоте {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Панель · FadeUp Pro",
+      "documentDescription": "Ваш операционный кокпит FadeUp.",
+      "title": "Сегодня",
+      "next": "Следующий",
+      "noNext": "На сегодня больше ничего.",
+      "queue": "Очередь",
+      "waitingLabel": "в ожидании",
+      "today": "Сегодня",
+      "appointmentsLabel": "записей",
+      "schedule": "Расписание на сегодня",
+      "noAppointmentsToday": "Сегодня записей нет.",
+      "summary": "Последние 30 дней",
+      "noSummary": "Активность пока не зафиксирована.",
+      "status": {
+        "pending": "Ожидает",
+        "confirmed": "Подтверждена",
+        "completed": "Завершена",
+        "cancelled": "Отменена",
+        "no_show": "Неявка"
+      },
+      "kpi": {
+        "completed": "Завершённые визиты",
+        "uniqueCustomers": "Уникальные клиенты",
+        "repeatCustomers": "Постоянные клиенты",
+        "profileViews": "Просмотры профиля",
+        "conversion": "Конверсия записей"
+      },
+      "completedToday_zero": "{{count}} завершено",
+      "completedToday_one": "{{count}} завершена",
+      "completedToday_two": "{{count}} завершено",
+      "completedToday_few": "{{count}} завершены",
+      "completedToday_many": "{{count}} завершено",
+      "completedToday_other": "{{count}} завершено"
+    }
   }
 }

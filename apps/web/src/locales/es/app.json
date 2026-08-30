@@ -560,5 +560,58 @@
     "customersOpen": "Abrir clientes",
     "customersEmptyTitle": "Aún no hay clientes",
     "customersEmptyDescription": "Todas las personas que reserves o registres aparecerán aquí."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Panel",
+      "calendar": "Agenda",
+      "customers": "Clientes",
+      "analytics": "Estadísticas",
+      "retention": "Fidelización",
+      "profile": "Perfil"
+    },
+    "navLabel": "Navegación profesional",
+    "allLocations": "Todas las sedes",
+    "noWorkspaceTitle": "Sin espacio de trabajo",
+    "noWorkspaceBody": "Tu cuenta aún no pertenece a ningún establecimiento.",
+    "placeholder": {
+      "title": "Próximamente",
+      "body": "Esta página llega con el lote {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Panel · FadeUp Pro",
+      "documentDescription": "Tu panel operativo de FadeUp.",
+      "title": "Hoy",
+      "next": "Siguiente",
+      "noNext": "Nada más por hoy.",
+      "queue": "Cola",
+      "waitingLabel": "en espera",
+      "today": "Hoy",
+      "appointmentsLabel": "citas",
+      "schedule": "Agenda de hoy",
+      "noAppointmentsToday": "Sin citas hoy.",
+      "summary": "Últimos 30 días",
+      "noSummary": "Aún sin actividad registrada.",
+      "status": {
+        "pending": "Pendiente",
+        "confirmed": "Confirmada",
+        "completed": "Completada",
+        "cancelled": "Cancelada",
+        "no_show": "No asistió"
+      },
+      "kpi": {
+        "completed": "Visitas completadas",
+        "uniqueCustomers": "Clientes únicos",
+        "repeatCustomers": "Clientes recurrentes",
+        "profileViews": "Vistas del perfil",
+        "conversion": "Conversión de reservas"
+      },
+      "completedToday_zero": "{{count}} completadas",
+      "completedToday_one": "{{count}} completada",
+      "completedToday_two": "{{count}} completadas",
+      "completedToday_few": "{{count}} completadas",
+      "completedToday_many": "{{count}} completadas",
+      "completedToday_other": "{{count}} completadas"
+    }
   }
 }

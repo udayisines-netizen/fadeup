@@ -560,5 +560,58 @@
     "customersOpen": "顧客を開く",
     "customersEmptyTitle": "まだ顧客がいません",
     "customersEmptyDescription": "予約や受付をした方がここに表示されます。"
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "ダッシュボード",
+      "calendar": "カレンダー",
+      "customers": "顧客",
+      "analytics": "アナリティクス",
+      "retention": "リテンション",
+      "profile": "プロフィール"
+    },
+    "navLabel": "プロ向けナビゲーション",
+    "allLocations": "全店舗",
+    "noWorkspaceTitle": "ワークスペースがありません",
+    "noWorkspaceBody": "アカウントはまだどの店舗にも所属していません。",
+    "placeholder": {
+      "title": "近日公開",
+      "body": "このページは {{lot}} で構築されます。"
+    },
+    "dashboard": {
+      "documentTitle": "ダッシュボード · FadeUp Pro",
+      "documentDescription": "FadeUp の業務コックピット。",
+      "title": "今日",
+      "next": "次の予約",
+      "noNext": "本日はこれ以上ありません。",
+      "queue": "待機列",
+      "waitingLabel": "待ち",
+      "today": "今日",
+      "appointmentsLabel": "件の予約",
+      "schedule": "本日のスケジュール",
+      "noAppointmentsToday": "本日の予約はありません。",
+      "summary": "過去 30 日",
+      "noSummary": "まだ記録されたアクティビティはありません。",
+      "status": {
+        "pending": "保留",
+        "confirmed": "確定",
+        "completed": "完了",
+        "cancelled": "キャンセル",
+        "no_show": "未来店"
+      },
+      "kpi": {
+        "completed": "完了した来店",
+        "uniqueCustomers": "ユニーク顧客",
+        "repeatCustomers": "リピーター",
+        "profileViews": "プロフィール閲覧",
+        "conversion": "予約転換率"
+      },
+      "completedToday_zero": "完了 {{count}} 件",
+      "completedToday_one": "完了 {{count}} 件",
+      "completedToday_two": "完了 {{count}} 件",
+      "completedToday_few": "完了 {{count}} 件",
+      "completedToday_many": "完了 {{count}} 件",
+      "completedToday_other": "完了 {{count}} 件"
+    }
   }
 }

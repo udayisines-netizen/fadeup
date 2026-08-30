@@ -560,5 +560,58 @@
     "customersOpen": "Abrir clientes",
     "customersEmptyTitle": "Ainda sem clientes",
     "customersEmptyDescription": "Todas as pessoas que marcar ou receber aparecerão aqui."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Painel",
+      "calendar": "Agenda",
+      "customers": "Clientes",
+      "analytics": "Estatísticas",
+      "retention": "Fidelização",
+      "profile": "Perfil"
+    },
+    "navLabel": "Navegação profissional",
+    "allLocations": "Todas as moradas",
+    "noWorkspaceTitle": "Sem espaço de trabalho",
+    "noWorkspaceBody": "A sua conta ainda não pertence a nenhum estabelecimento.",
+    "placeholder": {
+      "title": "Em breve",
+      "body": "Esta página chega com o lote {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Painel · FadeUp Pro",
+      "documentDescription": "O seu cockpit operacional FadeUp.",
+      "title": "Hoje",
+      "next": "Próximo",
+      "noNext": "Mais nada por hoje.",
+      "queue": "Fila",
+      "waitingLabel": "em espera",
+      "today": "Hoje",
+      "appointmentsLabel": "marcações",
+      "schedule": "Agenda de hoje",
+      "noAppointmentsToday": "Sem marcações hoje.",
+      "summary": "Últimos 30 dias",
+      "noSummary": "Ainda sem atividade registada.",
+      "status": {
+        "pending": "Pendente",
+        "confirmed": "Confirmada",
+        "completed": "Concluída",
+        "cancelled": "Cancelada",
+        "no_show": "Faltou"
+      },
+      "kpi": {
+        "completed": "Visitas concluídas",
+        "uniqueCustomers": "Clientes únicos",
+        "repeatCustomers": "Clientes recorrentes",
+        "profileViews": "Visualizações do perfil",
+        "conversion": "Conversão de reservas"
+      },
+      "completedToday_zero": "{{count}} concluídas",
+      "completedToday_one": "{{count}} concluída",
+      "completedToday_two": "{{count}} concluídas",
+      "completedToday_few": "{{count}} concluídas",
+      "completedToday_many": "{{count}} concluídas",
+      "completedToday_other": "{{count}} concluídas"
+    }
   }
 }

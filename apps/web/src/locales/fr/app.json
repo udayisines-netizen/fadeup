@@ -560,5 +560,58 @@
     "customersOpen": "Ouvrir les clients",
     "customersEmptyTitle": "Aucun client pour le moment",
     "customersEmptyDescription": "Toutes les personnes que vous réservez ou accueillez apparaîtront ici."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "calendar": "Agenda",
+      "customers": "Clients",
+      "analytics": "Statistiques",
+      "retention": "Fidélisation",
+      "profile": "Profil"
+    },
+    "navLabel": "Navigation professionnelle",
+    "allLocations": "Tous les salons",
+    "noWorkspaceTitle": "Aucun espace",
+    "noWorkspaceBody": "Votre compte n’appartient encore à aucun établissement.",
+    "placeholder": {
+      "title": "Bientôt disponible",
+      "body": "Cette page arrive avec le lot {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Tableau de bord · FadeUp Pro",
+      "documentDescription": "Votre cockpit opérationnel FadeUp.",
+      "title": "Aujourd’hui",
+      "next": "Prochain",
+      "noNext": "Plus rien aujourd’hui.",
+      "queue": "File",
+      "waitingLabel": "en attente",
+      "today": "Aujourd’hui",
+      "appointmentsLabel": "rendez-vous",
+      "schedule": "Planning du jour",
+      "noAppointmentsToday": "Aucun rendez-vous aujourd’hui.",
+      "summary": "30 derniers jours",
+      "noSummary": "Aucune activité enregistrée pour le moment.",
+      "status": {
+        "pending": "En attente",
+        "confirmed": "Confirmé",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "no_show": "Absent"
+      },
+      "kpi": {
+        "completed": "Visites terminées",
+        "uniqueCustomers": "Clients uniques",
+        "repeatCustomers": "Clients fidèles",
+        "profileViews": "Vues du profil",
+        "conversion": "Conversion réservation"
+      },
+      "completedToday_zero": "{{count}} terminés",
+      "completedToday_one": "{{count}} terminé",
+      "completedToday_two": "{{count}} terminés",
+      "completedToday_few": "{{count}} terminés",
+      "completedToday_many": "{{count}} terminés",
+      "completedToday_other": "{{count}} terminés"
+    }
   }
 }

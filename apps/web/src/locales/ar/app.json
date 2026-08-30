@@ -560,5 +560,58 @@
     "customersOpen": "فتح العملاء",
     "customersEmptyTitle": "لا عملاء بعد",
     "customersEmptyDescription": "كل من تحجز له أو تستقبله سيظهر هنا."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "اللوحة",
+      "calendar": "التقويم",
+      "customers": "العملاء",
+      "analytics": "التحليلات",
+      "retention": "الاحتفاظ",
+      "profile": "الملف"
+    },
+    "navLabel": "تنقّل المحترفين",
+    "allLocations": "كل الفروع",
+    "noWorkspaceTitle": "لا مساحة عمل",
+    "noWorkspaceBody": "حسابك ليس عضوًا في أي منشأة بعد.",
+    "placeholder": {
+      "title": "قريبًا",
+      "body": "تُبنى هذه الصفحة في {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "اللوحة · FadeUp Pro",
+      "documentDescription": "قمرة قيادتك التشغيلية في FadeUp.",
+      "title": "اليوم",
+      "next": "التالي",
+      "noNext": "لا شيء آخر اليوم.",
+      "queue": "الطابور",
+      "waitingLabel": "في الانتظار",
+      "today": "اليوم",
+      "appointmentsLabel": "مواعيد",
+      "schedule": "جدول اليوم",
+      "noAppointmentsToday": "لا مواعيد اليوم.",
+      "summary": "آخر 30 يومًا",
+      "noSummary": "لا نشاط مسجّل بعد.",
+      "status": {
+        "pending": "معلّق",
+        "confirmed": "مؤكد",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "no_show": "لم يحضر"
+      },
+      "kpi": {
+        "completed": "زيارات مكتملة",
+        "uniqueCustomers": "عملاء فريدون",
+        "repeatCustomers": "عملاء متكررون",
+        "profileViews": "مشاهدات الملف",
+        "conversion": "تحويل الحجوزات"
+      },
+      "completedToday_zero": "لا مكتملة",
+      "completedToday_one": "واحدة مكتملة",
+      "completedToday_two": "اثنتان مكتملتان",
+      "completedToday_few": "{{count}} مكتملة",
+      "completedToday_many": "{{count}} مكتملة",
+      "completedToday_other": "{{count}} مكتملة"
+    }
   }
 }

@@ -560,5 +560,58 @@
     "customersOpen": "Open customers",
     "customersEmptyTitle": "No customers yet",
     "customersEmptyDescription": "Everyone you book or check in will appear here."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "calendar": "Calendar",
+      "customers": "Customers",
+      "analytics": "Analytics",
+      "retention": "Retention",
+      "profile": "Profile"
+    },
+    "navLabel": "Professional navigation",
+    "allLocations": "All locations",
+    "noWorkspaceTitle": "No workspace",
+    "noWorkspaceBody": "Your account is not a member of any organization yet.",
+    "placeholder": {
+      "title": "Coming soon",
+      "body": "This surface is built in {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Dashboard · FadeUp Pro",
+      "documentDescription": "Your FadeUp operational cockpit.",
+      "title": "Today",
+      "next": "Next",
+      "noNext": "Nothing else today.",
+      "queue": "Queue",
+      "waitingLabel": "waiting",
+      "today": "Today",
+      "appointmentsLabel": "appointments",
+      "schedule": "Today's schedule",
+      "noAppointmentsToday": "No appointments today.",
+      "summary": "Last 30 days",
+      "noSummary": "No activity recorded yet.",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No-show"
+      },
+      "kpi": {
+        "completed": "Completed visits",
+        "uniqueCustomers": "Unique customers",
+        "repeatCustomers": "Repeat customers",
+        "profileViews": "Profile views",
+        "conversion": "Booking conversion"
+      },
+      "completedToday_zero": "{{count}} completed",
+      "completedToday_one": "{{count}} completed",
+      "completedToday_two": "{{count}} completed",
+      "completedToday_few": "{{count}} completed",
+      "completedToday_many": "{{count}} completed",
+      "completedToday_other": "{{count}} completed"
+    }
   }
 }

@@ -560,5 +560,58 @@
     "customersOpen": "打开客户",
     "customersEmptyTitle": "还没有客户",
     "customersEmptyDescription": "你预约或登记的每一位都会出现在这里。"
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "仪表盘",
+      "calendar": "日历",
+      "customers": "客户",
+      "analytics": "分析",
+      "retention": "留存",
+      "profile": "资料"
+    },
+    "navLabel": "专业版导航",
+    "allLocations": "全部门店",
+    "noWorkspaceTitle": "暂无工作区",
+    "noWorkspaceBody": "您的账号尚未加入任何门店。",
+    "placeholder": {
+      "title": "即将上线",
+      "body": "此页面将在 {{lot}} 中构建。"
+    },
+    "dashboard": {
+      "documentTitle": "仪表盘 · FadeUp Pro",
+      "documentDescription": "您的 FadeUp 运营驾驶舱。",
+      "title": "今日",
+      "next": "下一单",
+      "noNext": "今天没有更多了。",
+      "queue": "排队",
+      "waitingLabel": "等待中",
+      "today": "今日",
+      "appointmentsLabel": "个预约",
+      "schedule": "今日日程",
+      "noAppointmentsToday": "今天没有预约。",
+      "summary": "近 30 天",
+      "noSummary": "暂无记录的活动。",
+      "status": {
+        "pending": "待确认",
+        "confirmed": "已确认",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "no_show": "未到店"
+      },
+      "kpi": {
+        "completed": "完成的到店",
+        "uniqueCustomers": "独立客户",
+        "repeatCustomers": "回头客",
+        "profileViews": "主页浏览",
+        "conversion": "预约转化率"
+      },
+      "completedToday_zero": "已完成 {{count}} 个",
+      "completedToday_one": "已完成 {{count}} 个",
+      "completedToday_two": "已完成 {{count}} 个",
+      "completedToday_few": "已完成 {{count}} 个",
+      "completedToday_many": "已完成 {{count}} 个",
+      "completedToday_other": "已完成 {{count}} 个"
+    }
   }
 }

@@ -560,5 +560,58 @@
     "customersOpen": "Kundschaft öffnen",
     "customersEmptyTitle": "Noch keine Kundschaft",
     "customersEmptyDescription": "Alle, die du buchst oder eincheckst, erscheinen hier."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "calendar": "Kalender",
+      "customers": "Kunden",
+      "analytics": "Statistiken",
+      "retention": "Bindung",
+      "profile": "Profil"
+    },
+    "navLabel": "Professionelle Navigation",
+    "allLocations": "Alle Standorte",
+    "noWorkspaceTitle": "Kein Arbeitsbereich",
+    "noWorkspaceBody": "Dein Konto gehört noch zu keinem Betrieb.",
+    "placeholder": {
+      "title": "Bald verfügbar",
+      "body": "Diese Seite kommt mit Los {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Dashboard · FadeUp Pro",
+      "documentDescription": "Dein operatives FadeUp-Cockpit.",
+      "title": "Heute",
+      "next": "Nächster",
+      "noNext": "Heute nichts mehr.",
+      "queue": "Warteschlange",
+      "waitingLabel": "wartend",
+      "today": "Heute",
+      "appointmentsLabel": "Termine",
+      "schedule": "Heutiger Plan",
+      "noAppointmentsToday": "Heute keine Termine.",
+      "summary": "Letzte 30 Tage",
+      "noSummary": "Noch keine Aktivität erfasst.",
+      "status": {
+        "pending": "Ausstehend",
+        "confirmed": "Bestätigt",
+        "completed": "Abgeschlossen",
+        "cancelled": "Storniert",
+        "no_show": "Nicht erschienen"
+      },
+      "kpi": {
+        "completed": "Abgeschlossene Besuche",
+        "uniqueCustomers": "Einzelne Kunden",
+        "repeatCustomers": "Wiederkehrende Kunden",
+        "profileViews": "Profilaufrufe",
+        "conversion": "Buchungs-Conversion"
+      },
+      "completedToday_zero": "{{count}} abgeschlossen",
+      "completedToday_one": "{{count}} abgeschlossen",
+      "completedToday_two": "{{count}} abgeschlossen",
+      "completedToday_few": "{{count}} abgeschlossen",
+      "completedToday_many": "{{count}} abgeschlossen",
+      "completedToday_other": "{{count}} abgeschlossen"
+    }
   }
 }

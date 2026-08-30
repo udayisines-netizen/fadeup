@@ -13,6 +13,8 @@ import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
 import { V2_ROUTE_PATH } from '@/customer-v2/routes'
+import { PRO_V2_ROUTE_PATH } from '@/pro-v2/routes'
+import { ProV2Shell } from '@/pro-v2/shell/pro-v2-shell'
 
 export const router = createBrowserRouter([
   {
@@ -232,6 +234,65 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { CustomerPassportPage } = await import('@/pages/customer-passport-page')
               return { Component: CustomerPassportPage }
+            },
+          },
+        ],
+      },
+      {
+        /*
+          R5R GREENFIELD PRO PREVIEW — the professional cockpit rebuilt on the
+          light v2 foundation, mounted beside the canonical /app product until
+          a human approves the direction. Auth-gated because every contract
+          inside is org-scoped behind RLS; RequireAuth reuses the existing
+          session infrastructure and the pro login door.
+        */
+        path: PRO_V2_ROUTE_PATH,
+        element: (
+          <RequireAuth loginPath="/pro/login">
+            <ProV2Shell />
+          </RequireAuth>
+        ),
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { ProV2DashboardPage } = await import('@/pro-v2/dashboard/dashboard-page')
+              return { Component: ProV2DashboardPage }
+            },
+          },
+          {
+            path: 'calendar',
+            lazy: async () => {
+              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
+              return { Component: () => <ProPlaceholderPage lot="R5R.2B" /> }
+            },
+          },
+          {
+            path: 'customers',
+            lazy: async () => {
+              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
+              return { Component: () => <ProPlaceholderPage lot="R5R.2C" /> }
+            },
+          },
+          {
+            path: 'analytics',
+            lazy: async () => {
+              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
+              return { Component: () => <ProPlaceholderPage lot="R5R.2D" /> }
+            },
+          },
+          {
+            path: 'retention',
+            lazy: async () => {
+              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
+              return { Component: () => <ProPlaceholderPage lot="R5R.2E" /> }
+            },
+          },
+          {
+            path: 'profile',
+            lazy: async () => {
+              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
+              return { Component: () => <ProPlaceholderPage lot="R5R.2F" /> }
             },
           },
         ],

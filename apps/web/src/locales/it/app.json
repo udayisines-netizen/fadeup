@@ -560,5 +560,58 @@
     "customersOpen": "Apri i clienti",
     "customersEmptyTitle": "Ancora nessun cliente",
     "customersEmptyDescription": "Tutte le persone che prenoti o accogli compariranno qui."
+  },
+  "v2pro": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "calendar": "Agenda",
+      "customers": "Clienti",
+      "analytics": "Statistiche",
+      "retention": "Fidelizzazione",
+      "profile": "Profilo"
+    },
+    "navLabel": "Navigazione professionale",
+    "allLocations": "Tutte le sedi",
+    "noWorkspaceTitle": "Nessuno spazio di lavoro",
+    "noWorkspaceBody": "Il tuo account non appartiene ancora a nessuna attività.",
+    "placeholder": {
+      "title": "In arrivo",
+      "body": "Questa pagina arriva con il lotto {{lot}}."
+    },
+    "dashboard": {
+      "documentTitle": "Dashboard · FadeUp Pro",
+      "documentDescription": "Il tuo cockpit operativo FadeUp.",
+      "title": "Oggi",
+      "next": "Prossimo",
+      "noNext": "Nient’altro per oggi.",
+      "queue": "Coda",
+      "waitingLabel": "in attesa",
+      "today": "Oggi",
+      "appointmentsLabel": "appuntamenti",
+      "schedule": "Programma di oggi",
+      "noAppointmentsToday": "Nessun appuntamento oggi.",
+      "summary": "Ultimi 30 giorni",
+      "noSummary": "Ancora nessuna attività registrata.",
+      "status": {
+        "pending": "In attesa",
+        "confirmed": "Confermato",
+        "completed": "Completato",
+        "cancelled": "Annullato",
+        "no_show": "Assente"
+      },
+      "kpi": {
+        "completed": "Visite completate",
+        "uniqueCustomers": "Clienti unici",
+        "repeatCustomers": "Clienti abituali",
+        "profileViews": "Visualizzazioni profilo",
+        "conversion": "Conversione prenotazioni"
+      },
+      "completedToday_zero": "{{count}} completati",
+      "completedToday_one": "{{count}} completato",
+      "completedToday_two": "{{count}} completati",
+      "completedToday_few": "{{count}} completati",
+      "completedToday_many": "{{count}} completati",
+      "completedToday_other": "{{count}} completati"
+    }
   }
 }
