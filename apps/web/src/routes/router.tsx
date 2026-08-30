@@ -289,6 +289,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'queue',
+            lazy: async () => {
+              const { CustomerV2QueuePage } = await import('@/customer-v2/queue/queue-page')
+              return { Component: CustomerV2QueuePage }
+            },
+          },
+          {
             path: 's/:slug/book',
             lazy: async () => {
               const { CustomerV2BookingPage } = await import('@/customer-v2/booking/booking-page')

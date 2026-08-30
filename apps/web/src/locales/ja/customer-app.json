@@ -374,6 +374,24 @@
       "documentTitle": "予約 · FadeUp",
       "documentDescription": "FadeUp で次の予約を。",
       "searchSomeoneElse": "ほかの人を探す"
+    },
+    "queue": {
+      "title": "リアルタイム待機列",
+      "documentTitle": "待機列 · FadeUp",
+      "documentDescription": "FadeUp での現在の順番。",
+      "signInTitle": "ログインして整理券を確認",
+      "notInQueueTitle": "現在、列に並んでいません",
+      "joinExplainer": "店舗の FadeUp QR コードを読み取って並びます。列は店頭でのみ受付です。",
+      "inService": "施術中",
+      "youAreNext": "次はあなたです",
+      "waiting": "待機中…",
+      "activeBanner": "列に並んでいます — 整理券を開く",
+      "peopleAhead_zero": "前に待ち人はいません",
+      "peopleAhead_one": "前に {{count}} 人",
+      "peopleAhead_two": "前に {{count}} 人",
+      "peopleAhead_few": "前に {{count}} 人",
+      "peopleAhead_many": "前に {{count}} 人",
+      "peopleAhead_other": "前に {{count}} 人"
     }
   }
 }

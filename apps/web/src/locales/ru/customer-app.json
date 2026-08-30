@@ -374,6 +374,24 @@
       "documentTitle": "Запись · FadeUp",
       "documentDescription": "Запишитесь на следующий визит на FadeUp.",
       "searchSomeoneElse": "Найти кого-то другого"
+    },
+    "queue": {
+      "title": "Живая очередь",
+      "documentTitle": "Очередь · FadeUp",
+      "documentDescription": "Ваша позиция в очереди на FadeUp.",
+      "signInTitle": "Войдите, чтобы увидеть свой талон",
+      "notInQueueTitle": "Вы не стоите в очереди",
+      "joinExplainer": "Встаньте в очередь в барбершопе, отсканировав его QR-код FadeUp — очереди открываются на месте.",
+      "inService": "Вас обслуживают",
+      "youAreNext": "Вы следующий",
+      "waiting": "Ожидание…",
+      "activeBanner": "Вы в очереди — открыть талон",
+      "peopleAhead_zero": "Перед вами никого",
+      "peopleAhead_one": "Перед вами {{count}} человек",
+      "peopleAhead_two": "Перед вами {{count}} человека",
+      "peopleAhead_few": "Перед вами {{count}} человека",
+      "peopleAhead_many": "Перед вами {{count}} человек",
+      "peopleAhead_other": "Перед вами {{count}} человека"
     }
   }
 }

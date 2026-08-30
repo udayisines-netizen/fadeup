@@ -374,6 +374,24 @@
       "documentTitle": "Reservar · FadeUp",
       "documentDescription": "Reserve a sua próxima visita no FadeUp.",
       "searchSomeoneElse": "Procurar outra pessoa"
+    },
+    "queue": {
+      "title": "Fila em direto",
+      "documentTitle": "Fila · FadeUp",
+      "documentDescription": "A sua posição na fila no FadeUp.",
+      "signInTitle": "Inicie sessão para ver a sua senha",
+      "notInQueueTitle": "Não está em nenhuma fila",
+      "joinExplainer": "Entre na fila na barbearia lendo o seu código QR FadeUp — as filas abrem no local.",
+      "inService": "Em atendimento",
+      "youAreNext": "É a sua vez",
+      "waiting": "A aguardar…",
+      "activeBanner": "Está numa fila — abrir a sua senha",
+      "peopleAhead_zero": "Ninguém à sua frente",
+      "peopleAhead_one": "{{count}} pessoa à sua frente",
+      "peopleAhead_two": "{{count}} pessoas à sua frente",
+      "peopleAhead_few": "{{count}} pessoas à sua frente",
+      "peopleAhead_many": "{{count}} pessoas à sua frente",
+      "peopleAhead_other": "{{count}} pessoas à sua frente"
     }
   }
 }

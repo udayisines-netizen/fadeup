@@ -10,6 +10,7 @@ import {
   isLiveStage,
   useCancelMyAppointment,
   useMyAppointments,
+  useMyQueueStatus,
   type BookingStage,
   type MyAppointment,
 } from '@/lib/queries/customer-app'
@@ -58,6 +59,7 @@ export function CustomerV2AppointmentsPage() {
   const money = useMoney()
 
   const appointments = useMyAppointments(Boolean(user), user?.id)
+  const myQueue = useMyQueueStatus(Boolean(user))
   const cancel = useCancelMyAppointment()
   const showSkeletons = useDelayedFlag(Boolean(user) && appointments.isPending)
 
@@ -240,6 +242,20 @@ export function CustomerV2AppointmentsPage() {
       <h1 className="text-v2-lead font-semibold tracking-[-0.02em] text-v2-ink">
         {t('customer-app:v2.appointments.title')}
       </h1>
+
+      {/*
+        A live queue entry outranks everything below it: someone standing in a
+        shop right now needs their ticket, not their history.
+      */}
+      {(myQueue.data ?? []).length > 0 ? (
+        <Link
+          to={V2_ROUTES.queue}
+          className="v2-press flex items-center justify-between gap-3 rounded-v2-3 bg-v2-green-tint px-4 py-3 text-v2-body font-semibold text-v2-green-ink"
+        >
+          {t('customer-app:v2.queue.activeBanner')}
+          <span aria-hidden="true">→</span>
+        </Link>
+      ) : null}
 
       {empty ? (
         <>

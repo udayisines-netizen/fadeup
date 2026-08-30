@@ -374,6 +374,24 @@
       "documentTitle": "Buchen · FadeUp",
       "documentDescription": "Buche deinen nächsten Besuch auf FadeUp.",
       "searchSomeoneElse": "Jemand anderen suchen"
+    },
+    "queue": {
+      "title": "Live-Warteschlange",
+      "documentTitle": "Warteschlange · FadeUp",
+      "documentDescription": "Deine Position in der Warteschlange auf FadeUp.",
+      "signInTitle": "Melde dich an, um dein Ticket zu sehen",
+      "notInQueueTitle": "Du stehst in keiner Warteschlange",
+      "joinExplainer": "Stell dich im Shop an, indem du dessen FadeUp-QR-Code scannst – Warteschlangen öffnen vor Ort.",
+      "inService": "Wird bedient",
+      "youAreNext": "Du bist dran",
+      "waiting": "Warten…",
+      "activeBanner": "Du stehst in einer Warteschlange – Ticket öffnen",
+      "peopleAhead_zero": "Niemand vor dir",
+      "peopleAhead_one": "{{count}} Person vor dir",
+      "peopleAhead_two": "{{count}} Personen vor dir",
+      "peopleAhead_few": "{{count}} Personen vor dir",
+      "peopleAhead_many": "{{count}} Personen vor dir",
+      "peopleAhead_other": "{{count}} Personen vor dir"
     }
   }
 }

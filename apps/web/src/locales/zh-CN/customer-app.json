@@ -374,6 +374,24 @@
       "documentTitle": "预约 · FadeUp",
       "documentDescription": "在 FadeUp 预约下一次。",
       "searchSomeoneElse": "寻找其他人"
+    },
+    "queue": {
+      "title": "实时排队",
+      "documentTitle": "排队 · FadeUp",
+      "documentDescription": "您在 FadeUp 的排队位置。",
+      "signInTitle": "登录以查看您的号码",
+      "notInQueueTitle": "您当前未在排队",
+      "joinExplainer": "到店扫描该店的 FadeUp 二维码即可排队——排队仅限到店开启。",
+      "inService": "服务中",
+      "youAreNext": "下一位就是您",
+      "waiting": "等待中…",
+      "activeBanner": "您正在排队——打开您的号码",
+      "peopleAhead_zero": "您前面没有人",
+      "peopleAhead_one": "您前面有 {{count}} 人",
+      "peopleAhead_two": "您前面有 {{count}} 人",
+      "peopleAhead_few": "您前面有 {{count}} 人",
+      "peopleAhead_many": "您前面有 {{count}} 人",
+      "peopleAhead_other": "您前面有 {{count}} 人"
     }
   }
 }

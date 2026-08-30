@@ -374,6 +374,24 @@
       "documentTitle": "حجز · FadeUp",
       "documentDescription": "احجز زيارتك القادمة على FadeUp.",
       "searchSomeoneElse": "ابحث عن شخص آخر"
+    },
+    "queue": {
+      "title": "الطابور المباشر",
+      "documentTitle": "الطابور · FadeUp",
+      "documentDescription": "موقعك في الطابور على FadeUp.",
+      "signInTitle": "سجّل الدخول لعرض تذكرتك",
+      "notInQueueTitle": "لست في أي طابور",
+      "joinExplainer": "انضم في الصالون بمسح رمز FadeUp QR الخاص به — الطوابير تُفتح في المكان فقط.",
+      "inService": "قيد الخدمة",
+      "youAreNext": "دورك التالي",
+      "waiting": "في الانتظار…",
+      "activeBanner": "أنت في طابور — افتح تذكرتك",
+      "peopleAhead_zero": "لا أحد أمامك",
+      "peopleAhead_one": "أمامك شخص واحد",
+      "peopleAhead_two": "أمامك شخصان",
+      "peopleAhead_few": "أمامك {{count}} أشخاص",
+      "peopleAhead_many": "أمامك {{count}} شخصًا",
+      "peopleAhead_other": "أمامك {{count}} شخص"
     }
   }
 }

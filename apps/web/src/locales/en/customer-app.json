@@ -374,6 +374,24 @@
       "documentTitle": "Book · FadeUp",
       "documentDescription": "Book your next visit on FadeUp.",
       "searchSomeoneElse": "Search for someone else"
+    },
+    "queue": {
+      "title": "Live queue",
+      "documentTitle": "Live queue · FadeUp",
+      "documentDescription": "Your live queue position on FadeUp.",
+      "signInTitle": "Sign in to see your queue ticket",
+      "notInQueueTitle": "You are not in a queue",
+      "joinExplainer": "Join at the shop by scanning its FadeUp QR code — queues open on location.",
+      "inService": "Being served",
+      "youAreNext": "You're next",
+      "waiting": "Waiting…",
+      "activeBanner": "You are in a queue — open your ticket",
+      "peopleAhead_zero": "No one ahead of you",
+      "peopleAhead_one": "{{count}} person ahead of you",
+      "peopleAhead_two": "{{count}} people ahead of you",
+      "peopleAhead_few": "{{count}} people ahead of you",
+      "peopleAhead_many": "{{count}} people ahead of you",
+      "peopleAhead_other": "{{count}} people ahead of you"
     }
   }
 }

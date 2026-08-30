@@ -32,6 +32,7 @@ vi.mock('@/lib/queries/customer-app', async (importOriginal) => {
       refetch: vi.fn(),
     }),
     useCancelMyAppointment: () => ({ mutate: vi.fn(), isPending: false }),
+    useMyQueueStatus: () => ({ data: [] }),
   }
 })
 

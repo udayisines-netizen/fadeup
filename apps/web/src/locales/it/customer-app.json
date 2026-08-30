@@ -374,6 +374,24 @@
       "documentTitle": "Prenota · FadeUp",
       "documentDescription": "Prenota la tua prossima visita su FadeUp.",
       "searchSomeoneElse": "Cerca qualcun altro"
+    },
+    "queue": {
+      "title": "Coda in tempo reale",
+      "documentTitle": "Coda · FadeUp",
+      "documentDescription": "La tua posizione in coda su FadeUp.",
+      "signInTitle": "Accedi per vedere il tuo biglietto",
+      "notInQueueTitle": "Non sei in nessuna coda",
+      "joinExplainer": "Mettiti in coda al salone scansionando il suo QR code FadeUp: le code si aprono sul posto.",
+      "inService": "In servizio",
+      "youAreNext": "Tocca a te",
+      "waiting": "In attesa…",
+      "activeBanner": "Sei in coda — apri il tuo biglietto",
+      "peopleAhead_zero": "Nessuno davanti a te",
+      "peopleAhead_one": "{{count}} persona davanti a te",
+      "peopleAhead_two": "{{count}} persone davanti a te",
+      "peopleAhead_few": "{{count}} persone davanti a te",
+      "peopleAhead_many": "{{count}} persone davanti a te",
+      "peopleAhead_other": "{{count}} persone davanti a te"
     }
   }
 }

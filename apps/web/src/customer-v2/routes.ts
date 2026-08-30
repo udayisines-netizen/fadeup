@@ -51,6 +51,7 @@ export const V2_ROUTES = {
   book: `${PREVIEW_ROOT}/book`,
   appointments: `${PREVIEW_ROOT}/appointments`,
   profile: `${PREVIEW_ROOT}/profile`,
+  queue: `${PREVIEW_ROOT}/queue`,
 } as const
 
 /**

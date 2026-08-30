@@ -374,6 +374,24 @@
       "documentTitle": "Réserver · FadeUp",
       "documentDescription": "Réservez votre prochaine visite sur FadeUp.",
       "searchSomeoneElse": "Chercher quelqu’un d’autre"
+    },
+    "queue": {
+      "title": "File d'attente",
+      "documentTitle": "File d'attente · FadeUp",
+      "documentDescription": "Votre position dans la file sur FadeUp.",
+      "signInTitle": "Connectez-vous pour voir votre ticket",
+      "notInQueueTitle": "Vous n'êtes dans aucune file",
+      "joinExplainer": "Rejoignez la file au salon en scannant son QR code FadeUp — les files s’ouvrent sur place.",
+      "inService": "En service",
+      "youAreNext": "À vous",
+      "waiting": "En attente…",
+      "activeBanner": "Vous êtes dans une file — ouvrir votre ticket",
+      "peopleAhead_zero": "Personne devant vous",
+      "peopleAhead_one": "{{count}} personne devant vous",
+      "peopleAhead_two": "{{count}} personnes devant vous",
+      "peopleAhead_few": "{{count}} personnes devant vous",
+      "peopleAhead_many": "{{count}} personnes devant vous",
+      "peopleAhead_other": "{{count}} personnes devant vous"
     }
   }
 }

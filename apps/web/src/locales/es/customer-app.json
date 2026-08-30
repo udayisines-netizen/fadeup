@@ -374,6 +374,24 @@
       "documentTitle": "Reservar · FadeUp",
       "documentDescription": "Reserva tu próxima visita en FadeUp.",
       "searchSomeoneElse": "Buscar a otra persona"
+    },
+    "queue": {
+      "title": "Cola en vivo",
+      "documentTitle": "Cola · FadeUp",
+      "documentDescription": "Tu posición en la cola en FadeUp.",
+      "signInTitle": "Inicia sesión para ver tu turno",
+      "notInQueueTitle": "No estás en ninguna cola",
+      "joinExplainer": "Únete en la barbería escaneando su código QR de FadeUp: las colas se abren en el local.",
+      "inService": "En servicio",
+      "youAreNext": "Eres el siguiente",
+      "waiting": "Esperando…",
+      "activeBanner": "Estás en una cola: abre tu turno",
+      "peopleAhead_zero": "Nadie delante de ti",
+      "peopleAhead_one": "{{count}} persona delante de ti",
+      "peopleAhead_two": "{{count}} personas delante de ti",
+      "peopleAhead_few": "{{count}} personas delante de ti",
+      "peopleAhead_many": "{{count}} personas delante de ti",
+      "peopleAhead_other": "{{count}} personas delante de ti"
     }
   }
 }
