@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} esperando",
       "waiting_other": "{{count}} esperando",
       "typeIndependent": "Independiente",
-      "typeBarbershop": "Barbería"
+      "typeBarbershop": "Barbería",
+      "claimedIdentity": "Profesional de FadeUp"
     },
     "placeholder": {
       "eyebrow": "Llega en {{lot}}",
@@ -281,6 +282,32 @@
       "sortNearest": "Más cercanos",
       "sortPrice": "Precio",
       "showMore": "Mostrar más"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Perfil · FadeUp",
+      "notFoundTitle": "No hay nadie aquí",
+      "notFoundBody": "Este perfil no existe o no es público.",
+      "workingAt": "Trabaja en",
+      "follow": "Seguir",
+      "following": "Siguiendo",
+      "services": "Servicios",
+      "noServices": "Aún no hay servicios.",
+      "work": "Trabajos",
+      "noWork": "Aún no hay trabajos publicados.",
+      "followers_zero": "{{count}} seguidores",
+      "followers_one": "{{count}} seguidor",
+      "followers_two": "{{count}} seguidores",
+      "followers_few": "{{count}} seguidores",
+      "followers_many": "{{count}} seguidores",
+      "followers_other": "{{count}} seguidores",
+      "minutes_zero": "{{count}} min",
+      "minutes_one": "{{count}} min",
+      "minutes_two": "{{count}} min",
+      "minutes_few": "{{count}} min",
+      "minutes_many": "{{count}} min",
+      "minutes_other": "{{count}} min",
+      "documentDescription": "Perfil del barbero en FadeUp: servicios, trabajos y reservas."
     }
   }
 }

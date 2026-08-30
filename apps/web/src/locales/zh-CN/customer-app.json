@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} 人排队",
       "waiting_other": "{{count}} 人排队",
       "typeIndependent": "独立理发师",
-      "typeBarbershop": "理发店"
+      "typeBarbershop": "理发店",
+      "claimedIdentity": "FadeUp 专业人士"
     },
     "placeholder": {
       "eyebrow": "将在 {{lot}} 推出",
@@ -281,6 +282,32 @@
       "sortNearest": "距离最近",
       "sortPrice": "价格",
       "showMore": "显示更多"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "主页 · FadeUp",
+      "notFoundTitle": "这里没有内容",
+      "notFoundBody": "该主页不存在或未公开。",
+      "workingAt": "就职于",
+      "follow": "关注",
+      "following": "已关注",
+      "services": "服务",
+      "noServices": "暂无服务。",
+      "work": "作品",
+      "noWork": "暂未发布作品。",
+      "followers_zero": "{{count}} 位关注者",
+      "followers_one": "{{count}} 位关注者",
+      "followers_two": "{{count}} 位关注者",
+      "followers_few": "{{count}} 位关注者",
+      "followers_many": "{{count}} 位关注者",
+      "followers_other": "{{count}} 位关注者",
+      "minutes_zero": "{{count}} 分钟",
+      "minutes_one": "{{count}} 分钟",
+      "minutes_two": "{{count}} 分钟",
+      "minutes_few": "{{count}} 分钟",
+      "minutes_many": "{{count}} 分钟",
+      "minutes_other": "{{count}} 分钟",
+      "documentDescription": "FadeUp 理发师主页 — 服务、作品与预约。"
     }
   }
 }

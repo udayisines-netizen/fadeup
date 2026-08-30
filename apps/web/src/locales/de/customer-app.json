@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} warten",
       "waiting_other": "{{count}} warten",
       "typeIndependent": "Selbstständig",
-      "typeBarbershop": "Barbershop"
+      "typeBarbershop": "Barbershop",
+      "claimedIdentity": "FadeUp-Profi"
     },
     "placeholder": {
       "eyebrow": "Kommt mit {{lot}}",
@@ -281,6 +282,32 @@
       "sortNearest": "In der Nähe",
       "sortPrice": "Preis",
       "showMore": "Mehr anzeigen"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Profil · FadeUp",
+      "notFoundTitle": "Hier ist niemand",
+      "notFoundBody": "Dieses Profil existiert nicht oder ist nicht öffentlich.",
+      "workingAt": "Arbeitet bei",
+      "follow": "Folgen",
+      "following": "Gefolgt",
+      "services": "Leistungen",
+      "noServices": "Noch keine Leistungen.",
+      "work": "Arbeiten",
+      "noWork": "Noch keine Arbeiten veröffentlicht.",
+      "followers_zero": "{{count}} Follower",
+      "followers_one": "{{count}} Follower",
+      "followers_two": "{{count}} Follower",
+      "followers_few": "{{count}} Follower",
+      "followers_many": "{{count}} Follower",
+      "followers_other": "{{count}} Follower",
+      "minutes_zero": "{{count}} Min.",
+      "minutes_one": "{{count}} Min.",
+      "minutes_two": "{{count}} Min.",
+      "minutes_few": "{{count}} Min.",
+      "minutes_many": "{{count}} Min.",
+      "minutes_other": "{{count}} Min.",
+      "documentDescription": "Barber-Profil auf FadeUp – Leistungen, Arbeiten und Buchung."
     }
   }
 }

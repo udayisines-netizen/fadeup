@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} в очереди",
       "waiting_other": "{{count}} в очереди",
       "typeIndependent": "Частный мастер",
-      "typeBarbershop": "Барбершоп"
+      "typeBarbershop": "Барбершоп",
+      "claimedIdentity": "Профессионал FadeUp"
     },
     "placeholder": {
       "eyebrow": "Появится в {{lot}}",
@@ -281,6 +282,32 @@
       "sortNearest": "Ближайшие",
       "sortPrice": "Цена",
       "showMore": "Показать ещё"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Профиль · FadeUp",
+      "notFoundTitle": "Здесь никого нет",
+      "notFoundBody": "Этот профиль не существует или не является публичным.",
+      "workingAt": "Работает в",
+      "follow": "Подписаться",
+      "following": "Вы подписаны",
+      "services": "Услуги",
+      "noServices": "Услуг пока нет.",
+      "work": "Работы",
+      "noWork": "Работы пока не опубликованы.",
+      "followers_zero": "{{count}} подписчика",
+      "followers_one": "{{count}} подписчик",
+      "followers_two": "{{count}} подписчика",
+      "followers_few": "{{count}} подписчика",
+      "followers_many": "{{count}} подписчиков",
+      "followers_other": "{{count}} подписчика",
+      "minutes_zero": "{{count}} мин",
+      "minutes_one": "{{count}} мин",
+      "minutes_two": "{{count}} мин",
+      "minutes_few": "{{count}} мин",
+      "minutes_many": "{{count}} мин",
+      "minutes_other": "{{count}} мин",
+      "documentDescription": "Профиль барбера на FadeUp — услуги, работы и запись."
     }
   }
 }

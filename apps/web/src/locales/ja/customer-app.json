@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} 人待ち",
       "waiting_other": "{{count}} 人待ち",
       "typeIndependent": "フリーランス",
-      "typeBarbershop": "店舗"
+      "typeBarbershop": "店舗",
+      "claimedIdentity": "FadeUp プロフェッショナル"
     },
     "placeholder": {
       "eyebrow": "{{lot}} で提供予定",
@@ -281,6 +282,32 @@
       "sortNearest": "近い順",
       "sortPrice": "料金",
       "showMore": "もっと見る"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "プロフィール · FadeUp",
+      "notFoundTitle": "該当するプロフィールがありません",
+      "notFoundBody": "このプロフィールは存在しないか、公開されていません。",
+      "workingAt": "勤務先",
+      "follow": "フォロー",
+      "following": "フォロー中",
+      "services": "メニュー",
+      "noServices": "メニューはまだありません。",
+      "work": "作品",
+      "noWork": "作品はまだ投稿されていません。",
+      "followers_zero": "フォロワー {{count}} 人",
+      "followers_one": "フォロワー {{count}} 人",
+      "followers_two": "フォロワー {{count}} 人",
+      "followers_few": "フォロワー {{count}} 人",
+      "followers_many": "フォロワー {{count}} 人",
+      "followers_other": "フォロワー {{count}} 人",
+      "minutes_zero": "{{count}} 分",
+      "minutes_one": "{{count}} 分",
+      "minutes_two": "{{count}} 分",
+      "minutes_few": "{{count}} 分",
+      "minutes_many": "{{count}} 分",
+      "minutes_other": "{{count}} 分",
+      "documentDescription": "FadeUp の理容師プロフィール — メニュー・作品・予約。"
     }
   }
 }

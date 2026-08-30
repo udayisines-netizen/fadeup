@@ -248,7 +248,8 @@
       "waiting_many": "{{count}} في الانتظار",
       "waiting_other": "{{count}} في الانتظار",
       "typeIndependent": "مستقل",
-      "typeBarbershop": "صالون"
+      "typeBarbershop": "صالون",
+      "claimedIdentity": "محترف FadeUp"
     },
     "placeholder": {
       "eyebrow": "قادم في {{lot}}",
@@ -281,6 +282,32 @@
       "sortNearest": "الأقرب",
       "sortPrice": "السعر",
       "showMore": "عرض المزيد"
+    },
+    "barberProfile": {
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "الملف · FadeUp",
+      "notFoundTitle": "لا أحد هنا",
+      "notFoundBody": "هذا الملف غير موجود أو غير علني.",
+      "workingAt": "يعمل في",
+      "follow": "متابعة",
+      "following": "متابَع",
+      "services": "الخدمات",
+      "noServices": "لا توجد خدمات بعد.",
+      "work": "الأعمال",
+      "noWork": "لم تُنشر أعمال بعد.",
+      "followers_zero": "لا متابعين",
+      "followers_one": "متابع واحد",
+      "followers_two": "متابعان",
+      "followers_few": "{{count}} متابعين",
+      "followers_many": "{{count}} متابعًا",
+      "followers_other": "{{count}} متابع",
+      "minutes_zero": "{{count}} د",
+      "minutes_one": "{{count}} د",
+      "minutes_two": "{{count}} د",
+      "minutes_few": "{{count}} د",
+      "minutes_many": "{{count}} د",
+      "minutes_other": "{{count}} د",
+      "documentDescription": "ملف الحلاق على FadeUp — الخدمات والأعمال والحجز."
     }
   }
 }

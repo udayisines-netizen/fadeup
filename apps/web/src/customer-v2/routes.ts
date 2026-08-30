@@ -53,5 +53,13 @@ export const V2_ROUTES = {
   profile: `${PREVIEW_ROOT}/profile`,
 } as const
 
+/**
+ * Detail routes take builders rather than constants, so a caller can never
+ * assemble a preview path by string concatenation in one file and drift from
+ * the router's declaration in another.
+ */
+export const v2BarberProfilePath = (organizationSlug: string, barberId: string) =>
+  `${PREVIEW_ROOT}/s/${organizationSlug}/b/${barberId}`
+
 /** The router mounts the shell at this path; children are relative to it. */
 export const V2_ROUTE_PATH = PREVIEW_ROOT.slice(1)
