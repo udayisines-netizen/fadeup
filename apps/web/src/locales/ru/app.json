@@ -623,6 +623,24 @@
       "complete": "Завершить",
       "noShow": "Неявка",
       "rescheduleFailed": "Не удалось перенести запись — возможен конфликт. Ничего не изменено."
+    },
+    "customers": {
+      "documentTitle": "Клиенты · FadeUp Pro",
+      "documentDescription": "Карточки клиентов и история их визитов.",
+      "empty": "Клиентов пока нет.",
+      "back": "Назад",
+      "visits": "Визиты",
+      "lastVisit": "Последний визит",
+      "interval": "Обычный интервал",
+      "history": "История",
+      "noHistory": "Визитов пока нет.",
+      "selectHint": "Выберите клиента, чтобы увидеть историю.",
+      "intervalDays_zero": "{{count}} дня",
+      "intervalDays_one": "{{count}} день",
+      "intervalDays_two": "{{count}} дня",
+      "intervalDays_few": "{{count}} дня",
+      "intervalDays_many": "{{count}} дней",
+      "intervalDays_other": "{{count}} дня"
     }
   }
 }

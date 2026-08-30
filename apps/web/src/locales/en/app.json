@@ -623,6 +623,24 @@
       "complete": "Complete",
       "noShow": "No-show",
       "rescheduleFailed": "Could not move that appointment — the slot may conflict. Nothing was changed."
+    },
+    "customers": {
+      "documentTitle": "Customers · FadeUp Pro",
+      "documentDescription": "Your customer records and their visit history.",
+      "empty": "No customers yet.",
+      "back": "Back",
+      "visits": "Visits",
+      "lastVisit": "Last visit",
+      "interval": "Typical interval",
+      "history": "History",
+      "noHistory": "No visits recorded yet.",
+      "selectHint": "Select a customer to see their history.",
+      "intervalDays_zero": "{{count}} days",
+      "intervalDays_one": "{{count}} day",
+      "intervalDays_two": "{{count}} days",
+      "intervalDays_few": "{{count}} days",
+      "intervalDays_many": "{{count}} days",
+      "intervalDays_other": "{{count}} days"
     }
   }
 }

@@ -623,6 +623,24 @@
       "complete": "Abschließen",
       "noShow": "Nicht erschienen",
       "rescheduleFailed": "Termin konnte nicht verschoben werden – möglicher Konflikt. Nichts wurde geändert."
+    },
+    "customers": {
+      "documentTitle": "Kunden · FadeUp Pro",
+      "documentDescription": "Deine Kundendaten und ihre Besuchshistorie.",
+      "empty": "Noch keine Kunden.",
+      "back": "Zurück",
+      "visits": "Besuche",
+      "lastVisit": "Letzter Besuch",
+      "interval": "Typischer Abstand",
+      "history": "Verlauf",
+      "noHistory": "Noch keine Besuche erfasst.",
+      "selectHint": "Wähle einen Kunden, um den Verlauf zu sehen.",
+      "intervalDays_zero": "{{count}} Tage",
+      "intervalDays_one": "{{count}} Tag",
+      "intervalDays_two": "{{count}} Tage",
+      "intervalDays_few": "{{count}} Tage",
+      "intervalDays_many": "{{count}} Tage",
+      "intervalDays_other": "{{count}} Tage"
     }
   }
 }

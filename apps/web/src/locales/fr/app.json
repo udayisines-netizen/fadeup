@@ -623,6 +623,24 @@
       "complete": "Terminer",
       "noShow": "Absent",
       "rescheduleFailed": "Impossible de déplacer ce rendez-vous — le créneau est peut-être en conflit. Rien n’a été modifié."
+    },
+    "customers": {
+      "documentTitle": "Clients · FadeUp Pro",
+      "documentDescription": "Vos fiches clients et leur historique de visites.",
+      "empty": "Aucun client pour le moment.",
+      "back": "Retour",
+      "visits": "Visites",
+      "lastVisit": "Dernière visite",
+      "interval": "Intervalle habituel",
+      "history": "Historique",
+      "noHistory": "Aucune visite enregistrée.",
+      "selectHint": "Sélectionnez un client pour voir son historique.",
+      "intervalDays_zero": "{{count}} jours",
+      "intervalDays_one": "{{count}} jour",
+      "intervalDays_two": "{{count}} jours",
+      "intervalDays_few": "{{count}} jours",
+      "intervalDays_many": "{{count}} jours",
+      "intervalDays_other": "{{count}} jours"
     }
   }
 }

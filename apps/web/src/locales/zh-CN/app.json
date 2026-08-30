@@ -623,6 +623,24 @@
       "complete": "完成",
       "noShow": "未到店",
       "rescheduleFailed": "无法移动该预约——时段可能冲突。未做任何更改。"
+    },
+    "customers": {
+      "documentTitle": "客户 · FadeUp Pro",
+      "documentDescription": "客户档案与到店历史。",
+      "empty": "暂无客户。",
+      "back": "返回",
+      "visits": "到店次数",
+      "lastVisit": "最近到店",
+      "interval": "平均间隔",
+      "history": "历史",
+      "noHistory": "暂无到店记录。",
+      "selectHint": "选择客户以查看历史。",
+      "intervalDays_zero": "{{count}} 天",
+      "intervalDays_one": "{{count}} 天",
+      "intervalDays_two": "{{count}} 天",
+      "intervalDays_few": "{{count}} 天",
+      "intervalDays_many": "{{count}} 天",
+      "intervalDays_other": "{{count}} 天"
     }
   }
 }

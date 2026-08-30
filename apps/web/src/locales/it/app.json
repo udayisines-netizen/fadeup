@@ -623,6 +623,24 @@
       "complete": "Completa",
       "noShow": "Assente",
       "rescheduleFailed": "Impossibile spostare l’appuntamento: possibile conflitto. Nulla è stato modificato."
+    },
+    "customers": {
+      "documentTitle": "Clienti · FadeUp Pro",
+      "documentDescription": "Le tue schede clienti e la loro cronologia visite.",
+      "empty": "Ancora nessun cliente.",
+      "back": "Indietro",
+      "visits": "Visite",
+      "lastVisit": "Ultima visita",
+      "interval": "Intervallo tipico",
+      "history": "Cronologia",
+      "noHistory": "Nessuna visita registrata.",
+      "selectHint": "Seleziona un cliente per vedere la cronologia.",
+      "intervalDays_zero": "{{count}} giorni",
+      "intervalDays_one": "{{count}} giorno",
+      "intervalDays_two": "{{count}} giorni",
+      "intervalDays_few": "{{count}} giorni",
+      "intervalDays_many": "{{count}} giorni",
+      "intervalDays_other": "{{count}} giorni"
     }
   }
 }

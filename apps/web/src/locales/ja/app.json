@@ -623,6 +623,24 @@
       "complete": "完了",
       "noShow": "未来店",
       "rescheduleFailed": "予約を移動できませんでした。時間が重複している可能性があります。変更はありません。"
+    },
+    "customers": {
+      "documentTitle": "顧客 · FadeUp Pro",
+      "documentDescription": "顧客情報と来店履歴。",
+      "empty": "顧客はまだいません。",
+      "back": "戻る",
+      "visits": "来店回数",
+      "lastVisit": "最終来店",
+      "interval": "平均間隔",
+      "history": "履歴",
+      "noHistory": "来店記録はまだありません。",
+      "selectHint": "顧客を選択すると履歴が表示されます。",
+      "intervalDays_zero": "{{count}} 日",
+      "intervalDays_one": "{{count}} 日",
+      "intervalDays_two": "{{count}} 日",
+      "intervalDays_few": "{{count}} 日",
+      "intervalDays_many": "{{count}} 日",
+      "intervalDays_other": "{{count}} 日"
     }
   }
 }

@@ -623,6 +623,24 @@
       "complete": "إكمال",
       "noShow": "لم يحضر",
       "rescheduleFailed": "تعذّر نقل الموعد — قد يوجد تعارض. لم يتغيّر شيء."
+    },
+    "customers": {
+      "documentTitle": "العملاء · FadeUp Pro",
+      "documentDescription": "سجلات عملائك وتاريخ زياراتهم.",
+      "empty": "لا عملاء بعد.",
+      "back": "رجوع",
+      "visits": "الزيارات",
+      "lastVisit": "آخر زيارة",
+      "interval": "الفاصل المعتاد",
+      "history": "السجل",
+      "noHistory": "لا زيارات مسجّلة بعد.",
+      "selectHint": "اختر عميلاً لعرض سجله.",
+      "intervalDays_zero": "لا أيام",
+      "intervalDays_one": "يوم واحد",
+      "intervalDays_two": "يومان",
+      "intervalDays_few": "{{count}} أيام",
+      "intervalDays_many": "{{count}} يومًا",
+      "intervalDays_other": "{{count}} يوم"
     }
   }
 }

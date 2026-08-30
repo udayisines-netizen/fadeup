@@ -623,6 +623,24 @@
       "complete": "Completar",
       "noShow": "No asistió",
       "rescheduleFailed": "No se pudo mover la cita: puede haber un conflicto. No se cambió nada."
+    },
+    "customers": {
+      "documentTitle": "Clientes · FadeUp Pro",
+      "documentDescription": "Tus fichas de clientes y su historial de visitas.",
+      "empty": "Aún no hay clientes.",
+      "back": "Atrás",
+      "visits": "Visitas",
+      "lastVisit": "Última visita",
+      "interval": "Intervalo habitual",
+      "history": "Historial",
+      "noHistory": "Sin visitas registradas.",
+      "selectHint": "Selecciona un cliente para ver su historial.",
+      "intervalDays_zero": "{{count}} días",
+      "intervalDays_one": "{{count}} día",
+      "intervalDays_two": "{{count}} días",
+      "intervalDays_few": "{{count}} días",
+      "intervalDays_many": "{{count}} días",
+      "intervalDays_other": "{{count}} días"
     }
   }
 }
