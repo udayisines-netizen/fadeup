@@ -94,7 +94,7 @@ describe('a multi-location site is an ordinary barbershop', () => {
     // Book carries the active site.
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute(
       'href',
-      '/s/fade-factory?location=loc-2',
+      '/_preview/r5r/s/fade-factory/book?location=loc-2',
     )
     // Sibling sites are a plain switcher.
     expect(screen.getByRole('link', { name: 'Fade Factory République' })).toBeInTheDocument()

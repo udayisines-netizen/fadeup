@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Barbershop · FadeUp",
       "documentDescription": "Barbershop auf FadeUp – Team, Leistungen und Buchung."
+    },
+    "booking": {
+      "documentTitle": "Buchen · FadeUp",
+      "documentDescription": "Buche deinen Termin auf FadeUp.",
+      "title": "Buchen bei {{name}}",
+      "chooseService": "Leistung wählen",
+      "chooseBarber": "Barber wählen",
+      "chooseTime": "Uhrzeit wählen",
+      "yourDetails": "Deine Angaben",
+      "nameLabel": "Dein Name",
+      "emailLabel": "E-Mail (optional)",
+      "confirm": "Buchung bestätigen",
+      "booking": "Wird gebucht…",
+      "failed": "Das hat nicht geklappt – der Termin wurde vielleicht gerade vergeben. Wähle einen anderen und versuche es erneut.",
+      "bookedTitle": "Gebucht",
+      "addToCalendar": "Zum Kalender hinzufügen",
+      "viewBooking": "Buchung ansehen",
+      "done": "Fertig",
+      "claimHint": "Erstelle ein Konto mit derselben E-Mail, um diese Buchung in deinen Terminen zu behalten.",
+      "change": "Ändern",
+      "serviceLabel": "Leistung",
+      "barberLabel": "Barber",
+      "timeLabel": "Uhrzeit",
+      "seeMoreTimes": "{{count}} weitere Zeiten anzeigen",
+      "noSlots": "An diesem Tag ist nichts frei. Versuche einen anderen Tag.",
+      "noBarbersForService": "Diese Leistung bietet derzeit niemand an."
     }
   }
 }

@@ -58,6 +58,17 @@ export const V2_ROUTES = {
  * assemble a preview path by string concatenation in one file and drift from
  * the router's declaration in another.
  */
+export const v2BookingPath = (
+  organizationSlug: string,
+  context: { locationId?: string | null; barberId?: string | null } = {},
+) => {
+  const params = new URLSearchParams()
+  if (context.locationId) params.set('location', context.locationId)
+  if (context.barberId) params.set('barber', context.barberId)
+  const query = params.toString()
+  return `${PREVIEW_ROOT}/s/${organizationSlug}/book${query ? `?${query}` : ''}`
+}
+
 export const v2ShopProfilePath = (organizationSlug: string, locationId?: string | null) =>
   `${PREVIEW_ROOT}/s/${organizationSlug}${locationId ? `?location=${locationId}` : ''}`
 

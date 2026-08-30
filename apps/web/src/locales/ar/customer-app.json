@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "الصالون · FadeUp",
       "documentDescription": "صالون على FadeUp — الفريق والخدمات والحجز."
+    },
+    "booking": {
+      "documentTitle": "حجز · FadeUp",
+      "documentDescription": "احجز موعدك على FadeUp.",
+      "title": "الحجز في {{name}}",
+      "chooseService": "اختر خدمة",
+      "chooseBarber": "اختر حلاقك",
+      "chooseTime": "اختر وقتًا",
+      "yourDetails": "بياناتك",
+      "nameLabel": "اسمك",
+      "emailLabel": "البريد الإلكتروني (اختياري)",
+      "confirm": "تأكيد الحجز",
+      "booking": "جارٍ الحجز…",
+      "failed": "لم ينجح الحجز — ربما حُجز الوقت للتو. اختر وقتًا آخر وحاول مجددًا.",
+      "bookedTitle": "تم الحجز",
+      "addToCalendar": "أضِف إلى التقويم",
+      "viewBooking": "عرض الحجز",
+      "done": "تم",
+      "claimHint": "أنشئ حسابًا بالبريد نفسه لتجد هذا الحجز ضمن مواعيدك.",
+      "change": "تغيير",
+      "serviceLabel": "الخدمة",
+      "barberLabel": "الحلاق",
+      "timeLabel": "الوقت",
+      "seeMoreTimes": "عرض {{count}} أوقات أخرى",
+      "noSlots": "لا أوقات متاحة في هذا اليوم. جرّب يومًا آخر.",
+      "noBarbersForService": "لا أحد يقدّم هذه الخدمة حاليًا."
     }
   }
 }

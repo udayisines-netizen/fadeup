@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "店舗 · FadeUp",
       "documentDescription": "FadeUp の店舗ページ — スタッフ・メニュー・予約。"
+    },
+    "booking": {
+      "documentTitle": "予約 · FadeUp",
+      "documentDescription": "FadeUp で予約。",
+      "title": "{{name}} で予約",
+      "chooseService": "メニューを選択",
+      "chooseBarber": "担当を選択",
+      "chooseTime": "時間を選択",
+      "yourDetails": "お客様情報",
+      "nameLabel": "お名前",
+      "emailLabel": "メール（任意）",
+      "confirm": "予約を確定",
+      "booking": "予約中…",
+      "failed": "予約できませんでした。その時間は埋まった可能性があります。別の時間でお試しください。",
+      "bookedTitle": "予約完了",
+      "addToCalendar": "カレンダーに追加",
+      "viewBooking": "予約を見る",
+      "done": "完了",
+      "claimHint": "同じメールでアカウントを作成すると、この予約が予約一覧に表示されます。",
+      "change": "変更",
+      "serviceLabel": "メニュー",
+      "barberLabel": "担当",
+      "timeLabel": "時間",
+      "seeMoreTimes": "あと {{count}} 件の時間を見る",
+      "noSlots": "この日に空きはありません。別の日をお試しください。",
+      "noBarbersForService": "現在このメニューを提供できる担当がいません。"
     }
   }
 }

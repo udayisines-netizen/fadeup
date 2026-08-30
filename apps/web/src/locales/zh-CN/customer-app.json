@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "理发店 · FadeUp",
       "documentDescription": "FadeUp 理发店主页 — 团队、服务与预约。"
+    },
+    "booking": {
+      "documentTitle": "预约 · FadeUp",
+      "documentDescription": "在 FadeUp 预约。",
+      "title": "在 {{name}} 预约",
+      "chooseService": "选择服务",
+      "chooseBarber": "选择理发师",
+      "chooseTime": "选择时间",
+      "yourDetails": "您的信息",
+      "nameLabel": "姓名",
+      "emailLabel": "邮箱（选填）",
+      "confirm": "确认预约",
+      "booking": "预约中…",
+      "failed": "预约失败——该时段可能刚被约走。请另选时段重试。",
+      "bookedTitle": "预约成功",
+      "addToCalendar": "添加到日历",
+      "viewBooking": "查看预约",
+      "done": "完成",
+      "claimHint": "用相同邮箱注册账号，即可在“预约”中找到这条预约。",
+      "change": "更改",
+      "serviceLabel": "服务",
+      "barberLabel": "理发师",
+      "timeLabel": "时间",
+      "seeMoreTimes": "查看另外 {{count}} 个时段",
+      "noSlots": "当天没有空闲时段，请试试其他日期。",
+      "noBarbersForService": "目前没有人提供该服务。"
     }
   }
 }

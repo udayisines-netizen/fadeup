@@ -20,7 +20,7 @@ import {
 import { useDelayedFlag } from '@/customer-v2/hooks/use-delayed'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import { Notice } from '@/customer-v2/ui/notice'
-import { v2ShopProfilePath } from '@/customer-v2/routes'
+import { v2BookingPath, v2ShopProfilePath } from '@/customer-v2/routes'
 
 /**
  * A barber's profile — a PERSON with a social identity, not a marketplace
@@ -157,9 +157,10 @@ export function CustomerV2BarberProfilePage() {
   const person = identity.data ?? null
   const currency = organization.data?.currency
 
-  const bookPath = profile.locationId
-    ? `/s/${slug}?barber=${profile.barberId}&location=${profile.locationId}`
-    : `/s/${slug}?barber=${profile.barberId}`
+  const bookPath = v2BookingPath(slug ?? '', {
+    locationId: profile.locationId,
+    barberId: profile.barberId,
+  })
 
   const waitingCount = (queue.data ?? []).filter((entry) => entry.status === 'waiting').length
 

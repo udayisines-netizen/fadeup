@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Барбершоп · FadeUp",
       "documentDescription": "Барбершоп на FadeUp — команда, услуги и запись."
+    },
+    "booking": {
+      "documentTitle": "Запись · FadeUp",
+      "documentDescription": "Запишитесь на FadeUp.",
+      "title": "Запись — {{name}}",
+      "chooseService": "Выберите услугу",
+      "chooseBarber": "Выберите барбера",
+      "chooseTime": "Выберите время",
+      "yourDetails": "Ваши данные",
+      "nameLabel": "Ваше имя",
+      "emailLabel": "Эл. почта (необязательно)",
+      "confirm": "Подтвердить запись",
+      "booking": "Записываем…",
+      "failed": "Не получилось — возможно, время только что заняли. Выберите другое и попробуйте снова.",
+      "bookedTitle": "Записаны",
+      "addToCalendar": "Добавить в календарь",
+      "viewBooking": "Открыть запись",
+      "done": "Готово",
+      "claimHint": "Создайте аккаунт с той же почтой, чтобы запись появилась в ваших записях.",
+      "change": "Изменить",
+      "serviceLabel": "Услуга",
+      "barberLabel": "Барбер",
+      "timeLabel": "Время",
+      "seeMoreTimes": "Показать ещё {{count}}",
+      "noSlots": "В этот день свободного времени нет. Попробуйте другой день.",
+      "noBarbersForService": "Эту услугу сейчас никто не оказывает."
     }
   }
 }

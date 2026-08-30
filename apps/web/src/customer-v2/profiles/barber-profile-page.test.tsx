@@ -95,7 +95,7 @@ describe('a claimed identity is social', () => {
 
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute(
       'href',
-      '/s/side-agency?barber=barber-1&location=loc-1',
+      '/_preview/r5r/s/side-agency/book?location=loc-1&barber=barber-1',
     )
 
     // Working at → the establishment, as a real link.

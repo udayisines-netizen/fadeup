@@ -129,7 +129,7 @@ describe('ProfessionalResult conversion hierarchy', () => {
 
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute(
       'href',
-      '/s/side-agency?location=loc-1',
+      '/_preview/r5r/s/side-agency/book?location=loc-1',
     )
   })
 
@@ -255,7 +255,7 @@ describe('ProfessionalResult flattens a multi-location organization', () => {
 
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute(
       'href',
-      '/s/side-agency?location=loc-1',
+      '/_preview/r5r/s/side-agency/book?location=loc-1',
     )
   })
 })

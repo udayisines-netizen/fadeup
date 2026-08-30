@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Barbería · FadeUp",
       "documentDescription": "Barbería en FadeUp: equipo, servicios y reservas."
+    },
+    "booking": {
+      "documentTitle": "Reservar · FadeUp",
+      "documentDescription": "Reserva tu cita en FadeUp.",
+      "title": "Reservar en {{name}}",
+      "chooseService": "Elige un servicio",
+      "chooseBarber": "Elige tu barbero",
+      "chooseTime": "Elige una hora",
+      "yourDetails": "Tus datos",
+      "nameLabel": "Tu nombre",
+      "emailLabel": "Correo (opcional)",
+      "confirm": "Confirmar reserva",
+      "booking": "Reservando…",
+      "failed": "No funcionó: puede que acaben de ocupar la hora. Elige otra y vuelve a intentarlo.",
+      "bookedTitle": "Reservado",
+      "addToCalendar": "Añadir al calendario",
+      "viewBooking": "Ver reserva",
+      "done": "Listo",
+      "claimHint": "Crea una cuenta con el mismo correo para guardar esta reserva en tus citas.",
+      "change": "Cambiar",
+      "serviceLabel": "Servicio",
+      "barberLabel": "Barbero",
+      "timeLabel": "Hora",
+      "seeMoreTimes": "Ver {{count}} horas más",
+      "noSlots": "No hay horas libres ese día. Prueba otro día.",
+      "noBarbersForService": "Nadie ofrece este servicio ahora mismo."
     }
   }
 }

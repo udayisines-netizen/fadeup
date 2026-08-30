@@ -106,7 +106,7 @@ describe('Marketplace is one unified supply list', () => {
     expect(screen.getByText('Barbershop')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Book' })).toHaveAttribute(
       'href',
-      '/s/side-agency?location=loc-1',
+      '/_preview/r5r/s/side-agency/book?location=loc-1',
     )
   })
 

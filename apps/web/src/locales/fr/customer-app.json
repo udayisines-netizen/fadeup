@@ -318,6 +318,32 @@
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Salon · FadeUp",
       "documentDescription": "Salon sur FadeUp — équipe, prestations et réservation."
+    },
+    "booking": {
+      "documentTitle": "Réserver · FadeUp",
+      "documentDescription": "Réservez votre rendez-vous sur FadeUp.",
+      "title": "Réserver chez {{name}}",
+      "chooseService": "Choisissez une prestation",
+      "chooseBarber": "Choisissez votre coiffeur",
+      "chooseTime": "Choisissez un horaire",
+      "yourDetails": "Vos coordonnées",
+      "nameLabel": "Votre nom",
+      "emailLabel": "E-mail (facultatif)",
+      "confirm": "Confirmer la réservation",
+      "booking": "Réservation…",
+      "failed": "Échec — le créneau vient peut-être d’être pris. Choisissez-en un autre et réessayez.",
+      "bookedTitle": "Réservé",
+      "addToCalendar": "Ajouter au calendrier",
+      "viewBooking": "Voir la réservation",
+      "done": "Terminé",
+      "claimHint": "Créez un compte avec le même e-mail pour retrouver cette réservation dans vos rendez-vous.",
+      "change": "Modifier",
+      "serviceLabel": "Prestation",
+      "barberLabel": "Coiffeur",
+      "timeLabel": "Horaire",
+      "seeMoreTimes": "Voir {{count}} horaires de plus",
+      "noSlots": "Aucun horaire libre ce jour-là. Essayez un autre jour.",
+      "noBarbersForService": "Personne ne propose cette prestation pour le moment."
     }
   }
 }

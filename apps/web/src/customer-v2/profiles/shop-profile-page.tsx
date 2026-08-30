@@ -20,7 +20,7 @@ import {
 import { useDelayedFlag } from '@/customer-v2/hooks/use-delayed'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import { Notice } from '@/customer-v2/ui/notice'
-import { v2BarberProfilePath } from '@/customer-v2/routes'
+import { v2BarberProfilePath, v2BookingPath } from '@/customer-v2/routes'
 
 /**
  * A barbershop's profile — an ESTABLISHMENT, deliberately not a person.
@@ -160,7 +160,7 @@ export function CustomerV2ShopProfilePage() {
     (member) => !activeLocation || member.locationId === activeLocation.id,
   )
 
-  const bookPath = activeLocation ? `/s/${slug}?location=${activeLocation.id}` : `/s/${slug}`
+  const bookPath = v2BookingPath(slug ?? '', { locationId: activeLocation?.id })
 
   const toggleFollow = () => {
     if (!user) {

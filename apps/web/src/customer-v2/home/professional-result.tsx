@@ -5,7 +5,7 @@ import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
 import { useMoney } from '@/lib/intl/use-intl'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import type { MarketplaceSupplyType } from '@/customer-v2/marketplace-supply'
-import { v2ShopProfilePath } from '@/customer-v2/routes'
+import { v2BookingPath, v2ShopProfilePath } from '@/customer-v2/routes'
 
 /**
  * One marketplace listing — an independently bookable place.
@@ -156,7 +156,9 @@ export function ProfessionalResult({
     choose it again in the wizard, with a real chance of landing on the wrong
     one.
   */
-  const bookPath = `/s/${result.organizationSlug}?location=${result.locationId}`
+  // R5R.1E: Book stays inside the greenfield — same context parameters,
+  // consumed by the new booking experience instead of the legacy wizard.
+  const bookPath = v2BookingPath(result.organizationSlug, { locationId: result.locationId })
 
   return (
     <article
