@@ -334,6 +334,15 @@ export const router = createBrowserRouter([
               return { Component: CustomerV2ProfilePage }
             },
           },
+          {
+            path: 'profile/passport',
+            lazy: async () => {
+              const { CustomerV2PassportPage } = await import(
+                '@/customer-v2/profile/passport-page'
+              )
+              return { Component: CustomerV2PassportPage }
+            },
+          },
         ],
       },
       {

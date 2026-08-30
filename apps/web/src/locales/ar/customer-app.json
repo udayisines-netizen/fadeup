@@ -412,6 +412,27 @@
       "followedShops_few": "{{count}} صالونات متابَعة",
       "followedShops_many": "{{count}} صالونًا متابَعًا",
       "followedShops_other": "{{count}} صالون متابَع"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "قصّتك، كبطاقة يفهمها أي حلاق.",
+      "signInBody": "بطاقتك مرتبطة بحسابك.",
+      "edit": "تعديل",
+      "save": "حفظ",
+      "emptyHint": "صف قصّتك المعتادة ليفهمها أي حلاق في ثوانٍ.",
+      "shareTitle": "شارك الفيد الخاص بك",
+      "shareBody": "أنشئ رابطًا يعرض تفضيلاتك لمدة 7 أيام — امسحه عند الكرسي.",
+      "createShare": "إنشاء رابط مشاركة",
+      "qrAlt": "رمز QR لبطاقتك المشتركة",
+      "fields": {
+        "usualHaircut": "القصّة المعتادة",
+        "fadeType": "نوع الفيد",
+        "sideLength": "الجوانب",
+        "topLength": "الأعلى",
+        "beardPreferences": "اللحية",
+        "preferencesNotes": "ملاحظات"
+      }
     }
   }
 }

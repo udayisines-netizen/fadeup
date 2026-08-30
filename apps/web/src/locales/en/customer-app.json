@@ -412,6 +412,27 @@
       "followedShops_few": "{{count}} barbershops followed",
       "followedShops_many": "{{count}} barbershops followed",
       "followedShops_other": "{{count}} barbershops followed"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "Your haircut, as a card any barber can read.",
+      "signInBody": "Your Passport lives with your account.",
+      "edit": "Edit",
+      "save": "Save",
+      "emptyHint": "Describe your usual cut so any barber can pick it up in seconds.",
+      "shareTitle": "Share your fade",
+      "shareBody": "Create a link that shows your preferences for 7 days — scan it at the chair.",
+      "createShare": "Create share link",
+      "qrAlt": "QR code for your shared Fade Passport",
+      "fields": {
+        "usualHaircut": "Usual haircut",
+        "fadeType": "Fade type",
+        "sideLength": "Sides",
+        "topLength": "Top",
+        "beardPreferences": "Beard",
+        "preferencesNotes": "Notes"
+      }
     }
   }
 }

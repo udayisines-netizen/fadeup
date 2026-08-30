@@ -412,6 +412,27 @@
       "followedShops_few": "已关注 {{count}} 家理发店",
       "followedShops_many": "已关注 {{count}} 家理发店",
       "followedShops_other": "已关注 {{count}} 家理发店"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "您的发型，做成任何理发师都能看懂的卡片。",
+      "signInBody": "Passport 与您的账号关联。",
+      "edit": "编辑",
+      "save": "保存",
+      "emptyHint": "描述您的常用发型，任何理发师几秒即可理解。",
+      "shareTitle": "分享您的渐变",
+      "shareBody": "创建一个 7 天有效的链接，在理发椅上扫码即可。",
+      "createShare": "创建分享链接",
+      "qrAlt": "您共享的 Fade Passport 二维码",
+      "fields": {
+        "usualHaircut": "常用发型",
+        "fadeType": "渐变类型",
+        "sideLength": "两侧",
+        "topLength": "顶部",
+        "beardPreferences": "胡须",
+        "preferencesNotes": "备注"
+      }
     }
   }
 }

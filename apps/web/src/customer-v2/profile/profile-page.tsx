@@ -210,6 +210,15 @@ export function CustomerV2ProfilePage() {
         ) : null}
       </section>
 
+      {/* ── Fade Passport ────────────────────────────────────────────────── */}
+      <Link
+        to={`${V2_ROUTES.profile}/passport`}
+        className="v2-press v2-plate flex items-center justify-between gap-3 px-4 py-3.5 text-v2-body font-semibold text-v2-ink hover:bg-v2-ground md:px-5"
+      >
+        {t('customer-app:v2.passport.title')}
+        <span aria-hidden="true" className="text-v2-ink-mute">→</span>
+      </Link>
+
       {/* ── Settings ─────────────────────────────────────────────────────── */}
       <section aria-labelledby="v2-profile-settings" className="v2-plate overflow-hidden">
         <h2

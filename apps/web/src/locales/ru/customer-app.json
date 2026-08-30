@@ -412,6 +412,27 @@
       "followedShops_few": "{{count}} барбершопа в подписках",
       "followedShops_many": "{{count}} барбершопов в подписках",
       "followedShops_other": "{{count}} барбершопа в подписках"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "Ваша стрижка — карточка, понятная любому барберу.",
+      "signInBody": "Ваш Passport привязан к аккаунту.",
+      "edit": "Изменить",
+      "save": "Сохранить",
+      "emptyHint": "Опишите свою обычную стрижку, чтобы любой барбер понял её за секунды.",
+      "shareTitle": "Поделитесь своим фейдом",
+      "shareBody": "Создайте ссылку с вашими предпочтениями на 7 дней — покажите QR в кресле.",
+      "createShare": "Создать ссылку",
+      "qrAlt": "QR-код вашего Fade Passport",
+      "fields": {
+        "usualHaircut": "Обычная стрижка",
+        "fadeType": "Тип фейда",
+        "sideLength": "Бока",
+        "topLength": "Верх",
+        "beardPreferences": "Борода",
+        "preferencesNotes": "Заметки"
+      }
     }
   }
 }

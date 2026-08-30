@@ -412,6 +412,27 @@
       "followedShops_few": "フォロー中の店舗 {{count}} 件",
       "followedShops_many": "フォロー中の店舗 {{count}} 件",
       "followedShops_other": "フォロー中の店舗 {{count}} 件"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "あなたのヘアスタイルを、どの理容師にも伝わるカードに。",
+      "signInBody": "Passport はアカウントに紐づいています。",
+      "edit": "編集",
+      "save": "保存",
+      "emptyHint": "いつものスタイルを書いておくと、どの理容師にも数秒で伝わります。",
+      "shareTitle": "フェードを共有",
+      "shareBody": "7 日間有効の共有リンクを作成し、チェアで QR を見せるだけ。",
+      "createShare": "共有リンクを作成",
+      "qrAlt": "共有 Fade Passport の QR コード",
+      "fields": {
+        "usualHaircut": "いつものスタイル",
+        "fadeType": "フェードの種類",
+        "sideLength": "サイド",
+        "topLength": "トップ",
+        "beardPreferences": "ヒゲ",
+        "preferencesNotes": "メモ"
+      }
     }
   }
 }

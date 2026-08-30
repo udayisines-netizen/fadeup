@@ -412,6 +412,27 @@
       "followedShops_few": "{{count}} barbearias seguidas",
       "followedShops_many": "{{count}} barbearias seguidas",
       "followedShops_other": "{{count}} barbearias seguidas"
+    },
+    "passport": {
+      "title": "Fade Passport",
+      "documentTitle": "Fade Passport · FadeUp",
+      "documentDescription": "O seu corte, como um cartão que qualquer barbeiro consegue ler.",
+      "signInBody": "O seu Passport está ligado à sua conta.",
+      "edit": "Editar",
+      "save": "Guardar",
+      "emptyHint": "Descreva o seu corte habitual para qualquer barbeiro o perceber em segundos.",
+      "shareTitle": "Partilhe o seu fade",
+      "shareBody": "Crie um link que mostra as suas preferências durante 7 dias — leia-o na cadeira.",
+      "createShare": "Criar link",
+      "qrAlt": "Código QR do seu Fade Passport partilhado",
+      "fields": {
+        "usualHaircut": "Corte habitual",
+        "fadeType": "Tipo de fade",
+        "sideLength": "Laterais",
+        "topLength": "Topo",
+        "beardPreferences": "Barba",
+        "preferencesNotes": "Notas"
+      }
     }
   }
 }
