@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} завершены",
       "completedToday_many": "{{count}} завершено",
       "completedToday_other": "{{count}} завершено"
+    },
+    "calendar": {
+      "documentTitle": "Календарь · FadeUp Pro",
+      "documentDescription": "Ваш операционный календарь.",
+      "today": "Сегодня",
+      "previousDay": "Предыдущий день",
+      "nextDay": "Следующий день",
+      "unnamed": "Без имени",
+      "complete": "Завершить",
+      "noShow": "Неявка",
+      "rescheduleFailed": "Не удалось перенести запись — возможен конфликт. Ничего не изменено."
     }
   }
 }

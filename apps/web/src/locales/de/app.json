@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} abgeschlossen",
       "completedToday_many": "{{count}} abgeschlossen",
       "completedToday_other": "{{count}} abgeschlossen"
+    },
+    "calendar": {
+      "documentTitle": "Kalender · FadeUp Pro",
+      "documentDescription": "Dein operativer Kalender.",
+      "today": "Heute",
+      "previousDay": "Vortag",
+      "nextDay": "Nächster Tag",
+      "unnamed": "Ohne Namen",
+      "complete": "Abschließen",
+      "noShow": "Nicht erschienen",
+      "rescheduleFailed": "Termin konnte nicht verschoben werden – möglicher Konflikt. Nichts wurde geändert."
     }
   }
 }

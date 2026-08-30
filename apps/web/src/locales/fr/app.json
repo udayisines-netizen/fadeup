@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} terminés",
       "completedToday_many": "{{count}} terminés",
       "completedToday_other": "{{count}} terminés"
+    },
+    "calendar": {
+      "documentTitle": "Agenda · FadeUp Pro",
+      "documentDescription": "Votre agenda opérationnel.",
+      "today": "Aujourd’hui",
+      "previousDay": "Jour précédent",
+      "nextDay": "Jour suivant",
+      "unnamed": "Sans nom",
+      "complete": "Terminer",
+      "noShow": "Absent",
+      "rescheduleFailed": "Impossible de déplacer ce rendez-vous — le créneau est peut-être en conflit. Rien n’a été modifié."
     }
   }
 }

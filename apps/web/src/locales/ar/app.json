@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} مكتملة",
       "completedToday_many": "{{count}} مكتملة",
       "completedToday_other": "{{count}} مكتملة"
+    },
+    "calendar": {
+      "documentTitle": "التقويم · FadeUp Pro",
+      "documentDescription": "تقويمك التشغيلي.",
+      "today": "اليوم",
+      "previousDay": "اليوم السابق",
+      "nextDay": "اليوم التالي",
+      "unnamed": "بلا اسم",
+      "complete": "إكمال",
+      "noShow": "لم يحضر",
+      "rescheduleFailed": "تعذّر نقل الموعد — قد يوجد تعارض. لم يتغيّر شيء."
     }
   }
 }

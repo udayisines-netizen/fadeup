@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} completati",
       "completedToday_many": "{{count}} completati",
       "completedToday_other": "{{count}} completati"
+    },
+    "calendar": {
+      "documentTitle": "Agenda · FadeUp Pro",
+      "documentDescription": "La tua agenda operativa.",
+      "today": "Oggi",
+      "previousDay": "Giorno precedente",
+      "nextDay": "Giorno successivo",
+      "unnamed": "Senza nome",
+      "complete": "Completa",
+      "noShow": "Assente",
+      "rescheduleFailed": "Impossibile spostare l’appuntamento: possibile conflitto. Nulla è stato modificato."
     }
   }
 }

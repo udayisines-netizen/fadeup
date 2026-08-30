@@ -263,8 +263,8 @@ export const router = createBrowserRouter([
           {
             path: 'calendar',
             lazy: async () => {
-              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
-              return { Component: () => <ProPlaceholderPage lot="R5R.2B" /> }
+              const { ProV2CalendarPage } = await import('@/pro-v2/calendar/calendar-page')
+              return { Component: ProV2CalendarPage }
             },
           },
           {

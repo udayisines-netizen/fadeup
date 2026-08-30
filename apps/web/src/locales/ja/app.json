@@ -612,6 +612,17 @@
       "completedToday_few": "完了 {{count}} 件",
       "completedToday_many": "完了 {{count}} 件",
       "completedToday_other": "完了 {{count}} 件"
+    },
+    "calendar": {
+      "documentTitle": "カレンダー · FadeUp Pro",
+      "documentDescription": "業務カレンダー。",
+      "today": "今日",
+      "previousDay": "前日",
+      "nextDay": "翌日",
+      "unnamed": "名前なし",
+      "complete": "完了",
+      "noShow": "未来店",
+      "rescheduleFailed": "予約を移動できませんでした。時間が重複している可能性があります。変更はありません。"
     }
   }
 }

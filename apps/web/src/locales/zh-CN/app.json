@@ -612,6 +612,17 @@
       "completedToday_few": "已完成 {{count}} 个",
       "completedToday_many": "已完成 {{count}} 个",
       "completedToday_other": "已完成 {{count}} 个"
+    },
+    "calendar": {
+      "documentTitle": "日历 · FadeUp Pro",
+      "documentDescription": "您的运营日历。",
+      "today": "今天",
+      "previousDay": "前一天",
+      "nextDay": "后一天",
+      "unnamed": "未命名",
+      "complete": "完成",
+      "noShow": "未到店",
+      "rescheduleFailed": "无法移动该预约——时段可能冲突。未做任何更改。"
     }
   }
 }

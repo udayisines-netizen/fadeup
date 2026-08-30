@@ -612,6 +612,17 @@
       "completedToday_few": "{{count}} completed",
       "completedToday_many": "{{count}} completed",
       "completedToday_other": "{{count}} completed"
+    },
+    "calendar": {
+      "documentTitle": "Calendar · FadeUp Pro",
+      "documentDescription": "Your operational calendar.",
+      "today": "Today",
+      "previousDay": "Previous day",
+      "nextDay": "Next day",
+      "unnamed": "Unnamed",
+      "complete": "Complete",
+      "noShow": "No-show",
+      "rescheduleFailed": "Could not move that appointment — the slot may conflict. Nothing was changed."
     }
   }
 }
