@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} мин",
       "minutes_other": "{{count}} мин",
       "documentDescription": "Профиль барбера на FadeUp — услуги, работы и запись."
+    },
+    "shopProfile": {
+      "team": "Команда",
+      "noTeam": "Публичных сотрудников пока нет.",
+      "locations": "Адреса",
+      "notFoundTitle": "Здесь ничего нет",
+      "notFoundBody": "Этот барбершоп не существует или не является публичным.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Барбершоп · FadeUp",
+      "documentDescription": "Барбершоп на FadeUp — команда, услуги и запись."
     }
   }
 }

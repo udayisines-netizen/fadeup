@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} د",
       "minutes_other": "{{count}} د",
       "documentDescription": "ملف الحلاق على FadeUp — الخدمات والأعمال والحجز."
+    },
+    "shopProfile": {
+      "team": "الفريق",
+      "noTeam": "لا أعضاء علنيين بعد.",
+      "locations": "الفروع",
+      "notFoundTitle": "لا شيء هنا",
+      "notFoundBody": "هذا الصالون غير موجود أو غير علني.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "الصالون · FadeUp",
+      "documentDescription": "صالون على FadeUp — الفريق والخدمات والحجز."
     }
   }
 }

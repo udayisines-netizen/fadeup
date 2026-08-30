@@ -5,6 +5,7 @@ import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
 import { useMoney } from '@/lib/intl/use-intl'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import type { MarketplaceSupplyType } from '@/customer-v2/marketplace-supply'
+import { v2ShopProfilePath } from '@/customer-v2/routes'
 
 /**
  * One marketplace listing — an independently bookable place.
@@ -139,7 +140,12 @@ export function ProfessionalResult({
       ? t('customer-app:v2.result.priceFrom', { price: money(result.startingPriceCents, currency) })
       : null
 
-  const profilePath = `/s/${result.organizationSlug}/profile`
+  /*
+    R5R.1D: the row opens the GREENFIELD establishment profile, carrying the
+    location so a multi-location organization's row opens as the site the
+    customer chose, not the organization's first site.
+  */
+  const profilePath = v2ShopProfilePath(result.organizationSlug, result.locationId)
 
   /*
     `location` is carried because `search_public_professionals` emits one row

@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} min",
       "minutes_other": "{{count}} min",
       "documentDescription": "Profil du coiffeur sur FadeUp — prestations, travaux et réservation."
+    },
+    "shopProfile": {
+      "team": "Équipe",
+      "noTeam": "Aucun membre public pour le moment.",
+      "locations": "Adresses",
+      "notFoundTitle": "Rien ici",
+      "notFoundBody": "Ce salon n’existe pas ou n’est pas public.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Salon · FadeUp",
+      "documentDescription": "Salon sur FadeUp — équipe, prestations et réservation."
     }
   }
 }

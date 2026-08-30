@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} min",
       "minutes_other": "{{count}} min",
       "documentDescription": "Perfil del barbero en FadeUp: servicios, trabajos y reservas."
+    },
+    "shopProfile": {
+      "team": "Equipo",
+      "noTeam": "Aún no hay miembros públicos.",
+      "locations": "Direcciones",
+      "notFoundTitle": "No hay nada aquí",
+      "notFoundBody": "Esta barbería no existe o no es pública.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Barbería · FadeUp",
+      "documentDescription": "Barbería en FadeUp: equipo, servicios y reservas."
     }
   }
 }

@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} Min.",
       "minutes_other": "{{count}} Min.",
       "documentDescription": "Barber-Profil auf FadeUp – Leistungen, Arbeiten und Buchung."
+    },
+    "shopProfile": {
+      "team": "Team",
+      "noTeam": "Noch keine öffentlichen Teammitglieder.",
+      "locations": "Standorte",
+      "notFoundTitle": "Hier ist nichts",
+      "notFoundBody": "Dieser Barbershop existiert nicht oder ist nicht öffentlich.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Barbershop · FadeUp",
+      "documentDescription": "Barbershop auf FadeUp – Team, Leistungen und Buchung."
     }
   }
 }

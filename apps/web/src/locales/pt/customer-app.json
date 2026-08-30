@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} min",
       "minutes_other": "{{count}} min",
       "documentDescription": "Perfil do barbeiro no FadeUp — serviços, trabalhos e reservas."
+    },
+    "shopProfile": {
+      "team": "Equipa",
+      "noTeam": "Ainda sem membros públicos.",
+      "locations": "Moradas",
+      "notFoundTitle": "Nada aqui",
+      "notFoundBody": "Esta barbearia não existe ou não é pública.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Barbearia · FadeUp",
+      "documentDescription": "Barbearia no FadeUp — equipa, serviços e reservas."
     }
   }
 }

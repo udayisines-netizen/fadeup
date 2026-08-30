@@ -20,6 +20,7 @@ import {
 import { useDelayedFlag } from '@/customer-v2/hooks/use-delayed'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import { Notice } from '@/customer-v2/ui/notice'
+import { v2ShopProfilePath } from '@/customer-v2/routes'
 
 /**
  * A barber's profile — a PERSON with a social identity, not a marketplace
@@ -207,12 +208,10 @@ export function CustomerV2BarberProfilePage() {
             {organization.data ? (
               <p className="mt-1.5 text-v2-meta text-v2-ink-soft">
                 {t('customer-app:v2.barberProfile.workingAt')}{' '}
-                {/*
-                  Legacy shop profile until R5R.1D repoints this to the
-                  greenfield establishment page — a working destination beats a
-                  route that does not exist yet.
-                */}
-                <Link to={`/s/${slug}/profile`} className="font-semibold text-v2-green hover:underline">
+                <Link
+                  to={v2ShopProfilePath(slug ?? '', profile.locationId)}
+                  className="font-semibold text-v2-green hover:underline"
+                >
                   <bdi>{organization.data.name}</bdi>
                 </Link>
               </p>

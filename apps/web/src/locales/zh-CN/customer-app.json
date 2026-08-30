@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} 分钟",
       "minutes_other": "{{count}} 分钟",
       "documentDescription": "FadeUp 理发师主页 — 服务、作品与预约。"
+    },
+    "shopProfile": {
+      "team": "团队",
+      "noTeam": "暂无公开团队成员。",
+      "locations": "门店",
+      "notFoundTitle": "这里没有内容",
+      "notFoundBody": "该理发店不存在或未公开。",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "理发店 · FadeUp",
+      "documentDescription": "FadeUp 理发店主页 — 团队、服务与预约。"
     }
   }
 }

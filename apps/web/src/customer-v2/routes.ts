@@ -58,6 +58,9 @@ export const V2_ROUTES = {
  * assemble a preview path by string concatenation in one file and drift from
  * the router's declaration in another.
  */
+export const v2ShopProfilePath = (organizationSlug: string, locationId?: string | null) =>
+  `${PREVIEW_ROOT}/s/${organizationSlug}${locationId ? `?location=${locationId}` : ''}`
+
 export const v2BarberProfilePath = (organizationSlug: string, barberId: string) =>
   `${PREVIEW_ROOT}/s/${organizationSlug}/b/${barberId}`
 

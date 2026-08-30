@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} min",
       "minutes_other": "{{count}} min",
       "documentDescription": "Barber profile on FadeUp — services, work and booking."
+    },
+    "shopProfile": {
+      "team": "Team",
+      "noTeam": "No public team members yet.",
+      "locations": "Locations",
+      "notFoundTitle": "Nothing listed here",
+      "notFoundBody": "This barbershop does not exist or is not public.",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "Barbershop · FadeUp",
+      "documentDescription": "Barbershop on FadeUp — team, services and booking."
     }
   }
 }

@@ -308,6 +308,16 @@
       "minutes_many": "{{count}} 分",
       "minutes_other": "{{count}} 分",
       "documentDescription": "FadeUp の理容師プロフィール — メニュー・作品・予約。"
+    },
+    "shopProfile": {
+      "team": "スタッフ",
+      "noTeam": "公開スタッフはまだいません。",
+      "locations": "店舗一覧",
+      "notFoundTitle": "該当する店舗がありません",
+      "notFoundBody": "この店舗は存在しないか、公開されていません。",
+      "documentTitle": "{{name}} · FadeUp",
+      "documentTitleFallback": "店舗 · FadeUp",
+      "documentDescription": "FadeUp の店舗ページ — スタッフ・メニュー・予約。"
     }
   }
 }
