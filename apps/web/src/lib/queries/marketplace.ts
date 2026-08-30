@@ -1,6 +1,35 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
+
+/**
+ * The only two things the customer marketplace calls a listing.
+ *
+ * This is the PUBLIC contract's vocabulary, not FadeUp's internal one.
+ * `organizations.business_type` has five values — solo_professional,
+ * barbershop, hair_salon, mixed_salon, multi_location — and the RPC collapses
+ * them to these two before they leave the database
+ * (20260830090000_marketplace_supply_type.sql). A client never learns which
+ * internal type a listing has, and in particular never learns that a shop
+ * belongs to a multi-location organization: that is Pro topology, and a branch
+ * of a chain is an ordinary barbershop to a customer.
+ */
+export const MARKETPLACE_SUPPLY_TYPES = ['independent', 'barbershop'] as const
+export type MarketplaceSupplyType = (typeof MARKETPLACE_SUPPLY_TYPES)[number]
+
+/**
+ * Narrow what the wire actually sent.
+ *
+ * The RPC returns null for a business type it does not classify, and this
+ * guards the other direction: a value this client has never heard of is treated
+ * as "not said" rather than passed through to be rendered. Neither case
+ * fabricates a label.
+ */
+function asSupplyType(value: string | null): MarketplaceSupplyType | null {
+  return MARKETPLACE_SUPPLY_TYPES.includes(value as MarketplaceSupplyType)
+    ? (value as MarketplaceSupplyType)
+    : null
+}
 
 /**
  * One marketplace search result that may be a shop OR an individual barber
@@ -45,6 +74,16 @@ export interface MarketplaceProfessionalResult {
   isOpenNow: boolean | null
   queueWaitingCount: number
   totalCount: number
+  /**
+   * What this listing is, in the customer's vocabulary: 'independent' or
+   * 'barbershop'. Derived authoritatively in the RPC from
+   * `organizations.business_type`, which is NOT exposed publicly.
+   *
+   * Null means the database did not classify it — a business type added after
+   * the mapping was written. Null renders no label; it never falls back to the
+   * commoner value.
+   */
+  marketplaceSupplyType: MarketplaceSupplyType | null
 }
 
 /**
@@ -93,6 +132,7 @@ interface MarketplaceProfessionalRow {
   is_open_now: boolean | null
   queue_waiting_count: number
   total_count: number
+  marketplace_supply_type: string | null
 }
 
 function mapProfessionalResult(row: MarketplaceProfessionalRow): MarketplaceProfessionalResult {
@@ -121,7 +161,18 @@ function mapProfessionalResult(row: MarketplaceProfessionalRow): MarketplaceProf
     isOpenNow: row.is_open_now,
     queueWaitingCount: row.queue_waiting_count,
     totalCount: row.total_count,
+    marketplaceSupplyType: asSupplyType(row.marketplace_supply_type),
   }
+}
+
+export interface MarketplaceSearchOptions {
+  /**
+   * Hold the previous page of results on screen while a refined query resolves,
+   * instead of unmounting the list. For any surface where the customer changes
+   * the query interactively — typing, toggling a facet — this is the difference
+   * between narrowing a list and rebuilding one.
+   */
+  keepPreviousData?: boolean
 }
 
 export interface MarketplaceProfessionalSearchParams {
@@ -147,9 +198,27 @@ export interface MarketplaceProfessionalSearchParams {
  * MarketplaceSearchPage uses; search_public_organizations above stays for
  * any shop-only lookup that still needs it.
  */
-export function useSearchPublicProfessionals(params: MarketplaceProfessionalSearchParams) {
+export function useSearchPublicProfessionals(
+  params: MarketplaceProfessionalSearchParams,
+  options: MarketplaceSearchOptions = {},
+) {
   return useQuery({
     queryKey: ['marketplace', 'search-professionals', params],
+    /*
+      OPT-IN, so no existing caller changes behaviour.
+
+      Every filter change produces a new query key, which drops the query to
+      `isPending` with `data === undefined` — so a refinement empties the list,
+      swaps in placeholders and then swaps them back out again. Measured on
+      Home at 390px against a local Supabase, one debounced keystroke moved the
+      results section 341 → 185 → 629 → 341px: a 444px jump on an 844px
+      viewport, twice per typing burst.
+
+      `keepPreviousData` holds the previous rows on screen while the refinement
+      resolves, so the list narrows in place instead of collapsing and
+      rebuilding. The caller distinguishes the two states with `isFetching`.
+    */
+    placeholderData: options.keepPreviousData ? keepPreviousData : undefined,
     queryFn: async (): Promise<MarketplaceProfessionalResult[]> => {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase.rpc('search_public_professionals', {

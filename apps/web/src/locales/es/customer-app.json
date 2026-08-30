@@ -178,5 +178,98 @@
     "countryAutomatic": "Automático",
     "countryAutomaticWith": "Automático ({{country}})",
     "countryAnywhere": "En cualquier lugar"
+  },
+  "v2": {
+    "nav": {
+      "home": "Inicio",
+      "marketplace": "Marketplace",
+      "book": "Reservar",
+      "appointments": "Citas",
+      "profile": "Perfil"
+    },
+    "shell": {
+      "primaryNavigation": "Navegación de cliente",
+      "homeLink": "Inicio de FadeUp",
+      "notifications": "Notificaciones",
+      "notificationsWithCount": "Notificaciones ({{count}} sin leer)"
+    },
+    "home": {
+      "documentTitle": "Encuentra tu próximo barbero · FadeUp",
+      "documentDescription": "Descubre barberos y barberías en FadeUp y reserva en unos pocos toques.",
+      "headline": "Encuentra tu próximo barbero",
+      "openNowFilter": "Abierto ahora"
+    },
+    "location": {
+      "everywhere": "En todas partes",
+      "useMyLocation": "Usar mi ubicación",
+      "locating": "Localizando…",
+      "denied": "La ubicación está desactivada, así que los resultados no se ordenan por distancia.",
+      "unsupported": "Este dispositivo no puede compartir la ubicación, así que los resultados no se ordenan por distancia.",
+      "nearYouShort": "Cerca de ti",
+      "fieldLabel": "Ubicación",
+      "withinRadius": "En un radio de {{radius}} km"
+    },
+    "search": {
+      "label": "Buscar barberos y barberías",
+      "placeholder": "Barbero, barbería o servicio",
+      "clear": "Borrar búsqueda"
+    },
+    "discovery": {
+      "errorTitle": "El marketplace no respondió",
+      "errorBody": "Esto es cosa de FadeUp, no de tu conexión. Inténtalo de nuevo en un momento.",
+      "retry": "Reintentar",
+      "noMatchTitle": "No hay coincidencias",
+      "noMatchBody": "Prueba con otro nombre o borra los filtros para ver todo lo que hay aquí.",
+      "clearFilters": "Borrar filtros",
+      "noneHereTitle": "Todavía no hay nadie aquí",
+      "noneHereBody": "FadeUp aún está abriendo en este país. Mientras tanto, amplía la búsqueda.",
+      "searchEverywhere": "Buscar en todas partes",
+      "count_zero": "{{count}} resultados",
+      "count_one": "{{count}} resultado",
+      "count_two": "{{count}} resultados",
+      "count_few": "{{count}} resultados",
+      "count_many": "{{count}} resultados",
+      "count_other": "{{count}} resultados",
+      "errorEyebrow": "No se pudo cargar",
+      "clearSearch": "Borrar búsqueda",
+      "clearAll": "Borrar búsqueda y filtros",
+      "nearestFirst": "Los más cercanos primero",
+      "nearYou": "Cerca de ti"
+    },
+    "result": {
+      "book": "Reservar",
+      "open": "Abierto",
+      "closed": "Cerrado",
+      "priceFrom": "desde {{price}}",
+      "waiting_zero": "{{count}} esperando",
+      "waiting_one": "{{count}} esperando",
+      "waiting_two": "{{count}} esperando",
+      "waiting_few": "{{count}} esperando",
+      "waiting_many": "{{count}} esperando",
+      "waiting_other": "{{count}} esperando",
+      "typeIndependent": "Independiente",
+      "typeBarbershop": "Barbería"
+    },
+    "placeholder": {
+      "eyebrow": "Llega en {{lot}}",
+      "backHome": "Volver al inicio",
+      "documentTitle": "{{surface}} · vista previa de FadeUp",
+      "marketplace": {
+        "title": "Marketplace",
+        "body": "El marketplace completo — lista, filtros, mapa y reserva directa desde un resultado — llega en el siguiente lote."
+      },
+      "book": {
+        "title": "Reservar",
+        "body": "Reservar y repetir reserva rápido, en torno a las barberías y profesionales que ya visitas."
+      },
+      "appointments": {
+        "title": "Citas",
+        "body": "Todo lo próximo y todo lo pasado, con Reservar otra vez cuando termine una visita."
+      },
+      "profile": {
+        "title": "Perfil",
+        "body": "Tu perfil social, tus controles de privacidad y tu Fade Passport."
+      }
+    }
   }
 }

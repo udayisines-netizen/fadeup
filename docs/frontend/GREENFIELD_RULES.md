@@ -402,3 +402,76 @@ Do not add:
 - fake scarcity
 
 Build the defined product.
+
+---
+
+# MARKETPLACE SUPPLY MODEL (authoritative)
+
+Customer discovery — Home and Marketplace — contains INDEPENDENTLY BOOKABLE
+SUPPLY, and there are exactly two customer-facing kinds of it:
+
+- **Independent** — a professional operating as their own business: mobile, at
+  home, at the customer's home, or from their own place.
+- **Barbershop** — any independently bookable barbershop location.
+
+There is no third kind.
+
+**A location of a multi-location organization is a Barbershop**, presented
+exactly like a standalone shop and titled with its own location name. Never
+expose to customers:
+
+- Multi-location
+- Organization
+- Group
+- Parent organization
+- Number of locations
+
+The Organization -> Location -> Professional hierarchy is real and is preserved;
+it is a Pro and backend concern. The customer UI flattens eligible locations into
+ordinary listings.
+
+**Staff barbers are not marketplace results.** A barber who works inside a shop
+as an employee, staff member, team member or assigned professional must never
+appear as separate supply merely because they have a public professional profile.
+Their profiles stay valid and discoverable through the shop's team, portfolio,
+follows, social content, direct links and booking context.
+
+A professional who genuinely runs their own business is not an exception: they
+are their own organization, and they reach the customer as their own listing.
+
+Eligibility and the type label come from real domain data, and the mapping is
+performed **in the database**, not in any client.
+
+`db/migrations/20260830090000_marketplace_supply_type.sql` appends
+`marketplace_supply_type` to `search_public_professionals`, carrying only the
+customer-facing vocabulary:
+
+| `organizations.business_type` (internal) | `marketplace_supply_type` (public) |
+|---|---|
+| `solo_professional` | `independent` |
+| `barbershop` | `barbershop` |
+| `hair_salon` | `barbershop` |
+| `mixed_salon` | `barbershop` |
+| `multi_location` | `barbershop` |
+| anything else | `NULL` |
+
+**The raw `business_type` is deliberately NOT exposed.** `hair_salon` and
+`mixed_salon` are distinctions the customer marketplace does not make, and
+`multi_location` describes an organization's internal topology — a branch of a
+chain is an ordinary barbershop to a customer. Publishing the enum would invite
+clients to couple to it and freeze it in place.
+
+Backend organization types stay richer, and `multi_location` in particular is a
+REAL organization type that is never renamed or flattened in the database. Only
+the public presentation collapses.
+
+No frontend may recreate this mapping. `customer-v2` consumes
+`marketplace_supply_type` directly, and `marketplace-supply.test.ts` fails if any
+file under `customer-v2/` so much as names an internal enum value in code.
+
+The mapping enumerates each value rather than using a catch-all, so a business
+type added later resolves to `NULL` and renders no label — never the commoner
+guess — and the database verification flags that a product decision is required.
+
+Do not group discovery results by entity type. Entity type is a backend row
+shape, not a customer taxonomy.

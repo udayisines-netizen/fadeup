@@ -12,6 +12,7 @@ import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
+import { V2_ROUTE_PATH } from '@/customer-v2/routes'
 
 export const router = createBrowserRouter([
   {
@@ -231,6 +232,70 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { CustomerPassportPage } = await import('@/pages/customer-passport-page')
               return { Component: CustomerPassportPage }
+            },
+          },
+        ],
+      },
+      {
+        /*
+          R5R GREENFIELD PREVIEW — not the canonical customer product.
+
+          The rebuilt customer shell and Home mount here, beside `/app/customer`
+          rather than over it, until the product owner approves the visual
+          direction. CLAUDE.md's legacy-safety rule is explicit that a working
+          surface is not removed before its replacement is verified, and
+          GREENFIELD_RULES.md §14 is explicit that a green test suite is not
+          that verification.
+
+          Deliberately NOT wrapped in RequireAuth: Home reads
+          `search_public_professionals`, which `anon` may execute, and gating a
+          public marketplace behind a login would also make the surface
+          unreviewable in a browser — the R5R.0 audit lost every one of its
+          `/app/customer` probes to exactly that redirect. Auth-dependent parts
+          degrade instead: the notification count queries nothing without a user.
+
+          Every page inside sets `noIndex`, so a preview never becomes
+          indexable content. See src/customer-v2/routes.ts for the paths.
+        */
+        path: V2_ROUTE_PATH,
+        lazy: async () => {
+          const { CustomerV2Shell } = await import('@/customer-v2/shell/customer-v2-shell')
+          return { Component: CustomerV2Shell }
+        },
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { CustomerV2HomePage } = await import('@/customer-v2/home/home-page')
+              return { Component: CustomerV2HomePage }
+            },
+          },
+          {
+            path: 'marketplace',
+            lazy: async () => {
+              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
+              return { Component: () => <V2PlaceholderPage surface="marketplace" lot="R5R.1B" /> }
+            },
+          },
+          {
+            path: 'book',
+            lazy: async () => {
+              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
+              return { Component: () => <V2PlaceholderPage surface="book" lot="R5R.1E" /> }
+            },
+          },
+          {
+            path: 'appointments',
+            lazy: async () => {
+              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
+              return { Component: () => <V2PlaceholderPage surface="appointments" lot="R5R.1F" /> }
+            },
+          },
+          {
+            path: 'profile',
+            lazy: async () => {
+              const { V2PlaceholderPage } = await import('@/customer-v2/pages/v2-placeholder-page')
+              return { Component: () => <V2PlaceholderPage surface="profile" lot="R5R.1H" /> }
             },
           },
         ],

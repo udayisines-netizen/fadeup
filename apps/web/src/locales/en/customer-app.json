@@ -178,5 +178,98 @@
     "countryAutomatic": "Automatic",
     "countryAutomaticWith": "Automatic ({{country}})",
     "countryAnywhere": "Anywhere"
+  },
+  "v2": {
+    "nav": {
+      "home": "Home",
+      "marketplace": "Marketplace",
+      "book": "Book",
+      "appointments": "Appointments",
+      "profile": "Profile"
+    },
+    "shell": {
+      "primaryNavigation": "Customer navigation",
+      "homeLink": "FadeUp home",
+      "notifications": "Notifications",
+      "notificationsWithCount": "Notifications ({{count}} unread)"
+    },
+    "home": {
+      "documentTitle": "Find your next barber · FadeUp",
+      "documentDescription": "Discover barbers and barbershops on FadeUp, and book in a few taps.",
+      "headline": "Find your next barber",
+      "openNowFilter": "Open now"
+    },
+    "location": {
+      "everywhere": "Everywhere",
+      "useMyLocation": "Use my location",
+      "locating": "Locating…",
+      "denied": "Location is off, so results aren't sorted by distance.",
+      "unsupported": "This device can't share a location, so results aren't sorted by distance.",
+      "nearYouShort": "Near you",
+      "fieldLabel": "Location",
+      "withinRadius": "Within {{radius}} km"
+    },
+    "search": {
+      "label": "Search barbers and barbershops",
+      "placeholder": "Search barbers, shops or a service",
+      "clear": "Clear search"
+    },
+    "discovery": {
+      "errorTitle": "The marketplace did not answer",
+      "errorBody": "This one is on FadeUp, not on your connection. Try again in a moment.",
+      "retry": "Try again",
+      "noMatchTitle": "Nothing matches that",
+      "noMatchBody": "Try another name, or clear the filters to see everyone listed here.",
+      "clearFilters": "Clear filters",
+      "noneHereTitle": "No one listed here yet",
+      "noneHereBody": "FadeUp is still opening in this country. Look further afield in the meantime.",
+      "searchEverywhere": "Search everywhere",
+      "count_zero": "{{count}} results",
+      "count_one": "{{count}} result",
+      "count_two": "{{count}} results",
+      "count_few": "{{count}} results",
+      "count_many": "{{count}} results",
+      "count_other": "{{count}} results",
+      "errorEyebrow": "Couldn't load",
+      "clearSearch": "Clear search",
+      "clearAll": "Clear search and filters",
+      "nearestFirst": "Nearest first",
+      "nearYou": "Near you"
+    },
+    "result": {
+      "book": "Book",
+      "open": "Open",
+      "closed": "Closed",
+      "priceFrom": "from {{price}}",
+      "waiting_zero": "{{count}} waiting",
+      "waiting_one": "{{count}} waiting",
+      "waiting_two": "{{count}} waiting",
+      "waiting_few": "{{count}} waiting",
+      "waiting_many": "{{count}} waiting",
+      "waiting_other": "{{count}} waiting",
+      "typeIndependent": "Independent",
+      "typeBarbershop": "Barbershop"
+    },
+    "placeholder": {
+      "eyebrow": "Coming in {{lot}}",
+      "backHome": "Back to Home",
+      "documentTitle": "{{surface}} · FadeUp preview",
+      "marketplace": {
+        "title": "Marketplace",
+        "body": "The full marketplace — list, filters, map, and booking straight from a result — is the next lot."
+      },
+      "book": {
+        "title": "Book",
+        "body": "Fast booking and rebooking, built around the shops and professionals you already visit."
+      },
+      "appointments": {
+        "title": "Appointments",
+        "body": "Everything upcoming and everything past, with Book again once a visit is complete."
+      },
+      "profile": {
+        "title": "Profile",
+        "body": "Your social profile, your privacy controls, and your Fade Passport."
+      }
+    }
   }
 }

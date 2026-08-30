@@ -178,5 +178,98 @@
     "countryAutomatic": "自动",
     "countryAutomaticWith": "自动（{{country}}）",
     "countryAnywhere": "不限地区"
+  },
+  "v2": {
+    "nav": {
+      "home": "首页",
+      "marketplace": "市场",
+      "book": "预约",
+      "appointments": "我的预约",
+      "profile": "个人资料"
+    },
+    "shell": {
+      "primaryNavigation": "客户端导航",
+      "homeLink": "FadeUp 首页",
+      "notifications": "通知",
+      "notificationsWithCount": "通知（{{count}} 条未读）"
+    },
+    "home": {
+      "documentTitle": "找到你的下一位理发师 · FadeUp",
+      "documentDescription": "在 FadeUp 发现理发师和理发店，几步即可预约。",
+      "headline": "找到你的下一位理发师",
+      "openNowFilter": "正在营业"
+    },
+    "location": {
+      "everywhere": "所有地区",
+      "useMyLocation": "使用我的位置",
+      "locating": "正在定位…",
+      "denied": "位置权限已关闭，因此结果不按距离排序。",
+      "unsupported": "此设备无法共享位置，因此结果不按距离排序。",
+      "nearYouShort": "附近",
+      "fieldLabel": "位置",
+      "withinRadius": "{{radius}} 公里范围内"
+    },
+    "search": {
+      "label": "搜索理发师和理发店",
+      "placeholder": "理发师、店铺或服务",
+      "clear": "清除搜索"
+    },
+    "discovery": {
+      "errorTitle": "市场没有响应",
+      "errorBody": "这是 FadeUp 的问题，不是你的网络。请稍后重试。",
+      "retry": "重试",
+      "noMatchTitle": "没有匹配的结果",
+      "noMatchBody": "换一个名称试试，或清除筛选查看这里的全部内容。",
+      "clearFilters": "清除筛选",
+      "noneHereTitle": "这里还没有商家",
+      "noneHereBody": "FadeUp 正在这个国家开通。你可以先扩大搜索范围。",
+      "searchEverywhere": "搜索所有地区",
+      "count_zero": "{{count}} 个结果",
+      "count_one": "{{count}} 个结果",
+      "count_two": "{{count}} 个结果",
+      "count_few": "{{count}} 个结果",
+      "count_many": "{{count}} 个结果",
+      "count_other": "{{count}} 个结果",
+      "errorEyebrow": "加载失败",
+      "clearSearch": "清除搜索",
+      "clearAll": "清除搜索和筛选",
+      "nearestFirst": "由近到远",
+      "nearYou": "附近"
+    },
+    "result": {
+      "book": "预约",
+      "open": "营业中",
+      "closed": "已打烊",
+      "priceFrom": "{{price}} 起",
+      "waiting_zero": "{{count}} 人排队",
+      "waiting_one": "{{count}} 人排队",
+      "waiting_two": "{{count}} 人排队",
+      "waiting_few": "{{count}} 人排队",
+      "waiting_many": "{{count}} 人排队",
+      "waiting_other": "{{count}} 人排队",
+      "typeIndependent": "独立理发师",
+      "typeBarbershop": "理发店"
+    },
+    "placeholder": {
+      "eyebrow": "将在 {{lot}} 推出",
+      "backHome": "返回首页",
+      "documentTitle": "{{surface}} · FadeUp 预览",
+      "marketplace": {
+        "title": "市场",
+        "body": "完整的市场——列表、筛选、地图，以及直接从结果预约——将在下一批次推出。"
+      },
+      "book": {
+        "title": "预约",
+        "body": "围绕你常去的店铺和从业者，快速预约与再次预约。"
+      },
+      "appointments": {
+        "title": "我的预约",
+        "body": "所有即将到来和已经完成的预约，完成后可以再次预约。"
+      },
+      "profile": {
+        "title": "个人资料",
+        "body": "你的社交资料、隐私设置，以及你的 Fade Passport。"
+      }
+    }
   }
 }

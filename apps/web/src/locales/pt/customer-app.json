@@ -178,5 +178,98 @@
     "countryAutomatic": "Automático",
     "countryAutomaticWith": "Automático ({{country}})",
     "countryAnywhere": "Em qualquer lugar"
+  },
+  "v2": {
+    "nav": {
+      "home": "Início",
+      "marketplace": "Marketplace",
+      "book": "Marcar",
+      "appointments": "Marcações",
+      "profile": "Perfil"
+    },
+    "shell": {
+      "primaryNavigation": "Navegação de cliente",
+      "homeLink": "Início do FadeUp",
+      "notifications": "Notificações",
+      "notificationsWithCount": "Notificações ({{count}} por ler)"
+    },
+    "home": {
+      "documentTitle": "Encontre o seu próximo barbeiro · FadeUp",
+      "documentDescription": "Descubra barbeiros e barbearias no FadeUp e marque em poucos toques.",
+      "headline": "Encontre o seu próximo barbeiro",
+      "openNowFilter": "Aberto agora"
+    },
+    "location": {
+      "everywhere": "Em todo o lado",
+      "useMyLocation": "Usar a minha localização",
+      "locating": "A localizar…",
+      "denied": "A localização está desligada, por isso os resultados não são ordenados por distância.",
+      "unsupported": "Este dispositivo não consegue partilhar a localização, por isso os resultados não são ordenados por distância.",
+      "nearYouShort": "Perto de si",
+      "fieldLabel": "Localização",
+      "withinRadius": "Num raio de {{radius}} km"
+    },
+    "search": {
+      "label": "Pesquisar barbeiros e barbearias",
+      "placeholder": "Barbeiro, barbearia ou serviço",
+      "clear": "Limpar pesquisa"
+    },
+    "discovery": {
+      "errorTitle": "O marketplace não respondeu",
+      "errorBody": "A falha é do FadeUp, não da sua ligação. Tente novamente daqui a pouco.",
+      "retry": "Tentar de novo",
+      "noMatchTitle": "Nada corresponde",
+      "noMatchBody": "Experimente outro nome, ou limpe os filtros para ver tudo o que está aqui.",
+      "clearFilters": "Limpar filtros",
+      "noneHereTitle": "Ainda não há ninguém aqui",
+      "noneHereBody": "O FadeUp ainda está a abrir neste país. Entretanto, alargue a pesquisa.",
+      "searchEverywhere": "Pesquisar em todo o lado",
+      "count_zero": "{{count}} resultados",
+      "count_one": "{{count}} resultado",
+      "count_two": "{{count}} resultados",
+      "count_few": "{{count}} resultados",
+      "count_many": "{{count}} resultados",
+      "count_other": "{{count}} resultados",
+      "errorEyebrow": "Não carregou",
+      "clearSearch": "Limpar pesquisa",
+      "clearAll": "Limpar pesquisa e filtros",
+      "nearestFirst": "Mais próximos primeiro",
+      "nearYou": "Perto de si"
+    },
+    "result": {
+      "book": "Marcar",
+      "open": "Aberto",
+      "closed": "Fechado",
+      "priceFrom": "desde {{price}}",
+      "waiting_zero": "{{count}} à espera",
+      "waiting_one": "{{count}} à espera",
+      "waiting_two": "{{count}} à espera",
+      "waiting_few": "{{count}} à espera",
+      "waiting_many": "{{count}} à espera",
+      "waiting_other": "{{count}} à espera",
+      "typeIndependent": "Independente",
+      "typeBarbershop": "Barbearia"
+    },
+    "placeholder": {
+      "eyebrow": "Chega em {{lot}}",
+      "backHome": "Voltar ao início",
+      "documentTitle": "{{surface}} · pré-visualização FadeUp",
+      "marketplace": {
+        "title": "Marketplace",
+        "body": "O marketplace completo — lista, filtros, mapa e marcação directa a partir de um resultado — chega no lote seguinte."
+      },
+      "book": {
+        "title": "Marcar",
+        "body": "Marcar e voltar a marcar depressa, à volta das barbearias e profissionais que já visita."
+      },
+      "appointments": {
+        "title": "Marcações",
+        "body": "Tudo o que aí vem e tudo o que já passou, com Marcar de novo quando a visita termina."
+      },
+      "profile": {
+        "title": "Perfil",
+        "body": "O seu perfil social, os seus controlos de privacidade e o seu Fade Passport."
+      }
+    }
   }
 }

@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 
 /*
+ * The R5R greenfield customer foundation. Imported here — rather than from a
+ * component — because Tailwind v4 only generates utilities for `@theme` blocks
+ * reachable from the entry stylesheet. Every token it declares is prefixed
+ * `v2-`, so it registers a NEW set of utilities and reassigns none of the ones
+ * below. See src/customer-v2/customer-v2.css for why the R5 tokens are not
+ * extended.
+ */
+@import './customer-v2/customer-v2.css';
+
+/*
  * Instrument Serif — the marketing display face. `font-display: swap` so a
  * headline never blocks paint, and unicode-range subsetting so the latin-ext
  * file is only fetched by pages that actually need it.

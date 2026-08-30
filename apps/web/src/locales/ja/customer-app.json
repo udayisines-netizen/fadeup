@@ -178,5 +178,98 @@
     "countryAutomatic": "自動",
     "countryAutomaticWith": "自動（{{country}}）",
     "countryAnywhere": "すべての地域"
+  },
+  "v2": {
+    "nav": {
+      "home": "ホーム",
+      "marketplace": "マーケット",
+      "book": "予約",
+      "appointments": "予約一覧",
+      "profile": "プロフィール"
+    },
+    "shell": {
+      "primaryNavigation": "お客様向けナビゲーション",
+      "homeLink": "FadeUp ホーム",
+      "notifications": "お知らせ",
+      "notificationsWithCount": "お知らせ（未読 {{count}} 件）"
+    },
+    "home": {
+      "documentTitle": "次の理容師をさがす · FadeUp",
+      "documentDescription": "FadeUp で理容師や理容室をさがして、数タップで予約できます。",
+      "headline": "次の理容師をさがす",
+      "openNowFilter": "営業中"
+    },
+    "location": {
+      "everywhere": "すべての地域",
+      "useMyLocation": "現在地を使う",
+      "locating": "現在地を取得中…",
+      "denied": "位置情報がオフのため、距離順では並びません。",
+      "unsupported": "この端末は位置情報を共有できないため、距離順では並びません。",
+      "nearYouShort": "現在地周辺",
+      "fieldLabel": "場所",
+      "withinRadius": "半径 {{radius}} km"
+    },
+    "search": {
+      "label": "理容師・理容室を検索",
+      "placeholder": "理容師、店舗、メニュー",
+      "clear": "検索をクリア"
+    },
+    "discovery": {
+      "errorTitle": "マーケットから応答がありませんでした",
+      "errorBody": "お客様の通信ではなく FadeUp 側の問題です。少し待ってからもう一度お試しください。",
+      "retry": "再試行",
+      "noMatchTitle": "一致するものがありません",
+      "noMatchBody": "別の名前を試すか、フィルターをクリアするとすべて表示されます。",
+      "clearFilters": "フィルターをクリア",
+      "noneHereTitle": "まだ掲載がありません",
+      "noneHereBody": "FadeUp はこの国で準備中です。まずは範囲を広げてみてください。",
+      "searchEverywhere": "すべての地域で検索",
+      "count_zero": "{{count}} 件",
+      "count_one": "{{count}} 件",
+      "count_two": "{{count}} 件",
+      "count_few": "{{count}} 件",
+      "count_many": "{{count}} 件",
+      "count_other": "{{count}} 件",
+      "errorEyebrow": "読み込み失敗",
+      "clearSearch": "検索をクリア",
+      "clearAll": "検索とフィルターをクリア",
+      "nearestFirst": "近い順",
+      "nearYou": "近くのお店"
+    },
+    "result": {
+      "book": "予約",
+      "open": "営業中",
+      "closed": "営業時間外",
+      "priceFrom": "{{price}} から",
+      "waiting_zero": "{{count}} 人待ち",
+      "waiting_one": "{{count}} 人待ち",
+      "waiting_two": "{{count}} 人待ち",
+      "waiting_few": "{{count}} 人待ち",
+      "waiting_many": "{{count}} 人待ち",
+      "waiting_other": "{{count}} 人待ち",
+      "typeIndependent": "フリーランス",
+      "typeBarbershop": "店舗"
+    },
+    "placeholder": {
+      "eyebrow": "{{lot}} で提供予定",
+      "backHome": "ホームに戻る",
+      "documentTitle": "{{surface}} · FadeUp プレビュー",
+      "marketplace": {
+        "title": "マーケット",
+        "body": "一覧・絞り込み・地図、そして結果からの直接予約を備えた完全版マーケットは次のロットで提供します。"
+      },
+      "book": {
+        "title": "予約",
+        "body": "いつも通っている店舗やプロを中心に、すばやく予約・再予約できます。"
+      },
+      "appointments": {
+        "title": "予約一覧",
+        "body": "これからの予約と過去の予約。来店が完了すると「もう一度予約」が使えます。"
+      },
+      "profile": {
+        "title": "プロフィール",
+        "body": "ソーシャルプロフィール、プライバシー設定、そして Fade Passport。"
+      }
+    }
   }
 }

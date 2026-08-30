@@ -1,0 +1,121 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { MARKETPLACE_SUPPLY_TYPES } from '@/lib/queries/marketplace'
+import { classifyMarketplaceSupply } from '@/customer-v2/marketplace-supply'
+
+/**
+ * The customer supply model, enforced at the frontend's half of it.
+ *
+ * The MAPPING from `organizations.business_type` is no longer here — the RPC
+ * derives it, and `db/tests/verify_marketplace_supply_type.sql` proves every
+ * enum value maps correctly and that an unclassified one yields NULL rather
+ * than a guess. What this file guards is the two things the frontend still
+ * decides: which rows are supply, and that no client-side copy of the internal
+ * enum ever creeps back in.
+ */
+
+const shop = (type: 'independent' | 'barbershop' | null = null) =>
+  ({ entityType: 'shop', marketplaceSupplyType: type }) as const
+const barber = { entityType: 'barber', marketplaceSupplyType: 'barbershop' } as const
+
+describe('marketplace eligibility', () => {
+  it('admits an independent professional as their own bookable business', () => {
+    expect(classifyMarketplaceSupply(shop('independent'))).toEqual({
+      eligible: true,
+      type: 'independent',
+    })
+  })
+
+  it('admits a barbershop', () => {
+    expect(classifyMarketplaceSupply(shop('barbershop'))).toEqual({
+      eligible: true,
+      type: 'barbershop',
+    })
+  })
+
+  it('never lets a barber who works at a shop become separate supply', () => {
+    /*
+      The RPC's `barber_base` joins barbers -> organizations -> locations, so a
+      barber row is by construction a member of staff at a place. Listing one
+      would show a customer a "business" they cannot book independently of the
+      shop it belongs to, and would list one bookable place once per public team
+      member.
+    */
+    expect(classifyMarketplaceSupply(barber)).toEqual({
+      eligible: false,
+      reason: 'staff-of-a-shop',
+    })
+  })
+
+  it('claims no type when the database did not classify the listing', () => {
+    /*
+      The RPC enumerates the business types it knows and returns NULL for any it
+      does not, so this is the path a business type added after that mapping was
+      written takes. It must stay null: a listing that calls itself a Barbershop
+      because nothing told it otherwise is a fabricated classification.
+    */
+    expect(classifyMarketplaceSupply(shop(null))).toEqual({ eligible: true, type: null })
+  })
+})
+
+describe('the public vocabulary', () => {
+  it('has exactly two values', () => {
+    expect([...MARKETPLACE_SUPPLY_TYPES]).toEqual(['independent', 'barbershop'])
+  })
+})
+
+/**
+ * The architectural guarantee, asserted rather than trusted.
+ *
+ * The whole point of deriving the label in the RPC is that the customer product
+ * never learns FadeUp's internal organization modelling. That is easy to undo by
+ * accident — one `import type { BusinessType }` to "be helpful" and the coupling
+ * is back, along with a second copy of a product rule free to drift from the
+ * database's.
+ */
+describe('customer-v2 does not know the internal organization model', () => {
+  const CUSTOMER_V2 = dirname(fileURLToPath(import.meta.url))
+
+  function sourceFiles(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) return sourceFiles(full)
+      return /\.tsx?$/.test(entry.name) ? [full] : []
+    })
+  }
+
+  it('never mentions business_type, BusinessType or any internal enum value', () => {
+    const forbidden = [
+      'business_type',
+      'BusinessType',
+      'solo_professional',
+      'hair_salon',
+      'mixed_salon',
+      'multi_location',
+    ]
+
+    const offenders: string[] = []
+    for (const file of sourceFiles(CUSTOMER_V2)) {
+      // This spec necessarily names them in order to ban them.
+      if (file.endsWith('marketplace-supply.test.ts')) continue
+
+      /*
+        COMMENTS ARE EXEMPT, AND DELIBERATELY SO. Coupling is a thing code does.
+        Prose explaining WHY the internal enum is not used here is exactly what
+        should survive, and banning the words from it would delete the reasoning
+        that stops someone reintroducing the mapping.
+      */
+      const code = readFileSync(file, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')
+        .replace(/\/\/[^\n]*/g, ' ')
+
+      for (const term of forbidden) {
+        if (code.includes(term)) offenders.push(`${file.split('/customer-v2/')[1]} → "${term}"`)
+      }
+    }
+
+    expect(offenders, 'the internal enum must not reach the customer product').toEqual([])
+  })
+})

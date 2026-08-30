@@ -178,5 +178,98 @@
     "countryAutomatic": "تلقائي",
     "countryAutomaticWith": "تلقائي ({{country}})",
     "countryAnywhere": "في كل مكان"
+  },
+  "v2": {
+    "nav": {
+      "home": "الرئيسية",
+      "marketplace": "السوق",
+      "book": "حجز",
+      "appointments": "المواعيد",
+      "profile": "الملف الشخصي"
+    },
+    "shell": {
+      "primaryNavigation": "تنقّل العميل",
+      "homeLink": "الصفحة الرئيسية في FadeUp",
+      "notifications": "الإشعارات",
+      "notificationsWithCount": "الإشعارات ({{count}} غير مقروء)"
+    },
+    "home": {
+      "documentTitle": "اعثر على حلّاقك التالي · FadeUp",
+      "documentDescription": "اكتشف الحلّاقين وصالونات الحلاقة على FadeUp واحجز بلمسات قليلة.",
+      "headline": "اعثر على حلّاقك التالي",
+      "openNowFilter": "مفتوح الآن"
+    },
+    "location": {
+      "everywhere": "كل الأماكن",
+      "useMyLocation": "استخدام موقعي",
+      "locating": "جارٍ تحديد الموقع…",
+      "denied": "الموقع مُعطَّل، لذلك لا تُرتَّب النتائج حسب المسافة.",
+      "unsupported": "لا يستطيع هذا الجهاز مشاركة الموقع، لذلك لا تُرتَّب النتائج حسب المسافة.",
+      "nearYouShort": "بالقرب منك",
+      "fieldLabel": "الموقع",
+      "withinRadius": "ضمن {{radius}} كم"
+    },
+    "search": {
+      "label": "ابحث عن حلّاقين وصالونات",
+      "placeholder": "حلّاق أو صالون أو خدمة",
+      "clear": "مسح البحث"
+    },
+    "discovery": {
+      "errorTitle": "لم يستجب السوق",
+      "errorBody": "المشكلة من FadeUp وليست من اتصالك. حاول مرة أخرى بعد قليل.",
+      "retry": "إعادة المحاولة",
+      "noMatchTitle": "لا توجد نتائج مطابقة",
+      "noMatchBody": "جرّب اسمًا آخر، أو امسح عوامل التصفية لرؤية كل ما هو مُدرج هنا.",
+      "clearFilters": "مسح عوامل التصفية",
+      "noneHereTitle": "لا يوجد أحد مُدرج هنا بعد",
+      "noneHereBody": "ما زال FadeUp يفتتح في هذا البلد. وسّع بحثك في هذه الأثناء.",
+      "searchEverywhere": "ابحث في كل الأماكن",
+      "count_zero": "لا نتائج",
+      "count_one": "نتيجة واحدة",
+      "count_two": "نتيجتان",
+      "count_few": "{{count}} نتائج",
+      "count_many": "{{count}} نتيجة",
+      "count_other": "{{count}} نتيجة",
+      "errorEyebrow": "تعذّر التحميل",
+      "clearSearch": "مسح البحث",
+      "clearAll": "مسح البحث وعوامل التصفية",
+      "nearestFirst": "الأقرب أولاً",
+      "nearYou": "بالقرب منك"
+    },
+    "result": {
+      "book": "حجز",
+      "open": "مفتوح",
+      "closed": "مغلق",
+      "priceFrom": "من {{price}}",
+      "waiting_zero": "لا أحد في الانتظار",
+      "waiting_one": "شخص واحد في الانتظار",
+      "waiting_two": "شخصان في الانتظار",
+      "waiting_few": "{{count}} أشخاص في الانتظار",
+      "waiting_many": "{{count}} في الانتظار",
+      "waiting_other": "{{count}} في الانتظار",
+      "typeIndependent": "مستقل",
+      "typeBarbershop": "صالون"
+    },
+    "placeholder": {
+      "eyebrow": "قادم في {{lot}}",
+      "backHome": "العودة إلى الرئيسية",
+      "documentTitle": "{{surface}} · معاينة FadeUp",
+      "marketplace": {
+        "title": "السوق",
+        "body": "السوق الكامل — القائمة وعوامل التصفية والخريطة والحجز مباشرة من النتيجة — يأتي في المرحلة التالية."
+      },
+      "book": {
+        "title": "حجز",
+        "body": "حجز وإعادة حجز سريعان، حول الصالونات والمحترفين الذين تزورهم بالفعل."
+      },
+      "appointments": {
+        "title": "المواعيد",
+        "body": "كل ما هو قادم وكل ما مضى، مع إعادة الحجز بعد اكتمال الزيارة."
+      },
+      "profile": {
+        "title": "الملف الشخصي",
+        "body": "ملفك الاجتماعي وإعدادات الخصوصية وبطاقة Fade Passport الخاصة بك."
+      }
+    }
   }
 }

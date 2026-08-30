@@ -178,5 +178,98 @@
     "countryAutomatic": "Автоматически",
     "countryAutomaticWith": "Автоматически ({{country}})",
     "countryAnywhere": "Везде"
+  },
+  "v2": {
+    "nav": {
+      "home": "Главная",
+      "marketplace": "Маркетплейс",
+      "book": "Записаться",
+      "appointments": "Записи",
+      "profile": "Профиль"
+    },
+    "shell": {
+      "primaryNavigation": "Навигация клиента",
+      "homeLink": "Главная FadeUp",
+      "notifications": "Уведомления",
+      "notificationsWithCount": "Уведомления ({{count}} непрочитанных)"
+    },
+    "home": {
+      "documentTitle": "Найдите своего мастера · FadeUp",
+      "documentDescription": "Находите барберов и барбершопы в FadeUp и записывайтесь в пару касаний.",
+      "headline": "Найдите своего мастера",
+      "openNowFilter": "Открыто сейчас"
+    },
+    "location": {
+      "everywhere": "Везде",
+      "useMyLocation": "Использовать мою геопозицию",
+      "locating": "Определяем…",
+      "denied": "Геопозиция выключена, поэтому результаты не отсортированы по расстоянию.",
+      "unsupported": "Это устройство не может передать геопозицию, поэтому результаты не отсортированы по расстоянию.",
+      "nearYouShort": "Рядом с вами",
+      "fieldLabel": "Местоположение",
+      "withinRadius": "В радиусе {{radius}} км"
+    },
+    "search": {
+      "label": "Поиск барберов и барбершопов",
+      "placeholder": "Барбер, барбершоп или услуга",
+      "clear": "Очистить поиск"
+    },
+    "discovery": {
+      "errorTitle": "Маркетплейс не ответил",
+      "errorBody": "Это на стороне FadeUp, а не вашего соединения. Попробуйте через минуту.",
+      "retry": "Повторить",
+      "noMatchTitle": "Ничего не найдено",
+      "noMatchBody": "Попробуйте другое название или сбросьте фильтры, чтобы увидеть всех.",
+      "clearFilters": "Сбросить фильтры",
+      "noneHereTitle": "Здесь пока никого нет",
+      "noneHereBody": "FadeUp только открывается в этой стране. Пока посмотрите шире.",
+      "searchEverywhere": "Искать везде",
+      "count_zero": "{{count}} результатов",
+      "count_one": "{{count}} результат",
+      "count_two": "{{count}} результатов",
+      "count_few": "{{count}} результата",
+      "count_many": "{{count}} результатов",
+      "count_other": "{{count}} результатов",
+      "errorEyebrow": "Не загрузилось",
+      "clearSearch": "Очистить поиск",
+      "clearAll": "Очистить поиск и фильтры",
+      "nearestFirst": "Сначала ближайшие",
+      "nearYou": "Рядом с вами"
+    },
+    "result": {
+      "book": "Записаться",
+      "open": "Открыто",
+      "closed": "Закрыто",
+      "priceFrom": "от {{price}}",
+      "waiting_zero": "{{count}} в очереди",
+      "waiting_one": "{{count}} в очереди",
+      "waiting_two": "{{count}} в очереди",
+      "waiting_few": "{{count}} в очереди",
+      "waiting_many": "{{count}} в очереди",
+      "waiting_other": "{{count}} в очереди",
+      "typeIndependent": "Частный мастер",
+      "typeBarbershop": "Барбершоп"
+    },
+    "placeholder": {
+      "eyebrow": "Появится в {{lot}}",
+      "backHome": "На главную",
+      "documentTitle": "{{surface}} · превью FadeUp",
+      "marketplace": {
+        "title": "Маркетплейс",
+        "body": "Полный маркетплейс — список, фильтры, карта и запись прямо из результата — в следующем этапе."
+      },
+      "book": {
+        "title": "Записаться",
+        "body": "Быстрая запись и повторная запись вокруг тех мастеров и мест, где вы уже бываете."
+      },
+      "appointments": {
+        "title": "Записи",
+        "body": "Всё предстоящее и всё прошедшее, с повторной записью после завершённого визита."
+      },
+      "profile": {
+        "title": "Профиль",
+        "body": "Ваш социальный профиль, настройки приватности и ваш Fade Passport."
+      }
+    }
   }
 }

@@ -178,5 +178,98 @@
     "countryAutomatic": "Automatisch",
     "countryAutomaticWith": "Automatisch ({{country}})",
     "countryAnywhere": "Überall"
+  },
+  "v2": {
+    "nav": {
+      "home": "Start",
+      "marketplace": "Marketplace",
+      "book": "Buchen",
+      "appointments": "Termine",
+      "profile": "Profil"
+    },
+    "shell": {
+      "primaryNavigation": "Kundennavigation",
+      "homeLink": "FadeUp Startseite",
+      "notifications": "Benachrichtigungen",
+      "notificationsWithCount": "Benachrichtigungen ({{count}} ungelesen)"
+    },
+    "home": {
+      "documentTitle": "Finde deinen nächsten Barber · FadeUp",
+      "documentDescription": "Entdecke Barber und Barbershops auf FadeUp und buche mit wenigen Schritten.",
+      "headline": "Finde deinen nächsten Barber",
+      "openNowFilter": "Jetzt geöffnet"
+    },
+    "location": {
+      "everywhere": "Überall",
+      "useMyLocation": "Meinen Standort verwenden",
+      "locating": "Standort wird ermittelt…",
+      "denied": "Der Standort ist aus, deshalb sind die Ergebnisse nicht nach Entfernung sortiert.",
+      "unsupported": "Dieses Gerät kann keinen Standort teilen, deshalb sind die Ergebnisse nicht nach Entfernung sortiert.",
+      "nearYouShort": "In deiner Nähe",
+      "fieldLabel": "Standort",
+      "withinRadius": "Im Umkreis von {{radius}} km"
+    },
+    "search": {
+      "label": "Barber und Barbershops suchen",
+      "placeholder": "Barber, Shop oder Leistung",
+      "clear": "Suche löschen"
+    },
+    "discovery": {
+      "errorTitle": "Der Marketplace hat nicht geantwortet",
+      "errorBody": "Das liegt an FadeUp, nicht an deiner Verbindung. Versuche es gleich noch einmal.",
+      "retry": "Erneut versuchen",
+      "noMatchTitle": "Dazu passt nichts",
+      "noMatchBody": "Versuche einen anderen Namen oder lösche die Filter, um alles hier zu sehen.",
+      "clearFilters": "Filter löschen",
+      "noneHereTitle": "Hier ist noch niemand gelistet",
+      "noneHereBody": "FadeUp startet in diesem Land gerade erst. Schau dich in der Zwischenzeit weiter um.",
+      "searchEverywhere": "Überall suchen",
+      "count_zero": "{{count}} Ergebnisse",
+      "count_one": "{{count}} Ergebnis",
+      "count_two": "{{count}} Ergebnisse",
+      "count_few": "{{count}} Ergebnisse",
+      "count_many": "{{count}} Ergebnisse",
+      "count_other": "{{count}} Ergebnisse",
+      "errorEyebrow": "Nicht geladen",
+      "clearSearch": "Suche löschen",
+      "clearAll": "Suche und Filter löschen",
+      "nearestFirst": "Nächste zuerst",
+      "nearYou": "In deiner Nähe"
+    },
+    "result": {
+      "book": "Buchen",
+      "open": "Geöffnet",
+      "closed": "Geschlossen",
+      "priceFrom": "ab {{price}}",
+      "waiting_zero": "{{count}} warten",
+      "waiting_one": "{{count}} wartet",
+      "waiting_two": "{{count}} warten",
+      "waiting_few": "{{count}} warten",
+      "waiting_many": "{{count}} warten",
+      "waiting_other": "{{count}} warten",
+      "typeIndependent": "Selbstständig",
+      "typeBarbershop": "Barbershop"
+    },
+    "placeholder": {
+      "eyebrow": "Kommt mit {{lot}}",
+      "backHome": "Zurück zum Start",
+      "documentTitle": "{{surface}} · FadeUp Vorschau",
+      "marketplace": {
+        "title": "Marketplace",
+        "body": "Der vollständige Marketplace — Liste, Filter, Karte und Buchen direkt aus einem Ergebnis — kommt im nächsten Abschnitt."
+      },
+      "book": {
+        "title": "Buchen",
+        "body": "Schnelles Buchen und Wiederbuchen, rund um die Shops und Profis, zu denen du ohnehin gehst."
+      },
+      "appointments": {
+        "title": "Termine",
+        "body": "Alles Kommende und alles Vergangene, mit Erneut buchen, sobald ein Besuch abgeschlossen ist."
+      },
+      "profile": {
+        "title": "Profil",
+        "body": "Dein soziales Profil, deine Privatsphäre-Einstellungen und dein Fade Passport."
+      }
+    }
   }
 }

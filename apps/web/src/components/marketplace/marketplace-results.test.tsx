@@ -59,6 +59,7 @@ function shop(overrides: Partial<MarketplaceProfessionalResult> = {}): Marketpla
     isOpenNow: true,
     queueWaitingCount: 0,
     totalCount: 1,
+    marketplaceSupplyType: null,
     ...overrides,
   }
 }

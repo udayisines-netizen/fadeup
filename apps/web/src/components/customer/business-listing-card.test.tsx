@@ -46,6 +46,7 @@ function shopResult(overrides: Partial<MarketplaceProfessionalResult> = {}): Mar
     isOpenNow: true,
     queueWaitingCount: 0,
     totalCount: 1,
+    marketplaceSupplyType: null,
     ...overrides,
   }
 }
