@@ -642,6 +642,38 @@
       "intervalDays_many": "{{count}} 日",
       "intervalDays_other": "{{count}} 日",
       "search": "顧客を検索"
+    },
+    "analytics": {
+      "documentTitle": "アナリティクス",
+      "documentDescription": "過去30日間の予約ファネル、順番待ち、オーディエンス。",
+      "window": "過去30日間",
+      "orgWide": "組織全体",
+      "bookingTitle": "予約ファネル",
+      "profileViews": "プロフィール閲覧数",
+      "bookingStarts": "予約開始数",
+      "created": "予約作成数",
+      "completed": "完了",
+      "cancelled_other": "キャンセル {{count}}件",
+      "noShow_other": "無断キャンセル {{count}}件",
+      "conversion": "コンバージョン {{rate}}",
+      "dailyTitle": "日別の完了数",
+      "dailyAria": "過去30日間に完了した予約 {{total}}件",
+      "dailyEmpty": "この期間に完了した予約はありません。",
+      "queueTitle": "順番待ちファネル",
+      "queueViews": "順番待ちの閲覧数",
+      "queueJoins": "参加数",
+      "queueCompletions": "対応済み",
+      "queueCancellations": "離脱数",
+      "audienceTitle": "オーディエンス",
+      "uniqueCustomers": "ユニーク顧客数",
+      "repeatCustomers": "リピーター数",
+      "follows": "新規フォロー",
+      "favorites": "新規お気に入り",
+      "unfollows_other": "フォロー解除 {{count}}件",
+      "unfavorites_other": "お気に入り解除 {{count}}件",
+      "vsPrevious": "小さな数字は前の30日間との比較です。",
+      "noActivityTitle": "まだアナリティクスはありません",
+      "noActivityBody": "お客様がプロフィールを見て予約を始めると、数字が表示されます。"
     }
   }
 }

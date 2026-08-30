@@ -642,6 +642,38 @@
       "intervalDays_many": "{{count}} 天",
       "intervalDays_other": "{{count}} 天",
       "search": "搜索客户"
+    },
+    "analytics": {
+      "documentTitle": "数据分析",
+      "documentDescription": "过去30天的预约漏斗、排队情况和受众。",
+      "window": "过去30天",
+      "orgWide": "整个门店",
+      "bookingTitle": "预约漏斗",
+      "profileViews": "主页浏览量",
+      "bookingStarts": "预约发起数",
+      "created": "创建的预约",
+      "completed": "已完成",
+      "cancelled_other": "已取消 {{count}} 个",
+      "noShow_other": "爽约 {{count}} 个",
+      "conversion": "转化率 {{rate}}",
+      "dailyTitle": "每日完成数",
+      "dailyAria": "过去30天共完成 {{total}} 个预约",
+      "dailyEmpty": "此期间没有已完成的预约。",
+      "queueTitle": "排队漏斗",
+      "queueViews": "排队页浏览量",
+      "queueJoins": "加入人数",
+      "queueCompletions": "已服务",
+      "queueCancellations": "离开队列",
+      "audienceTitle": "受众",
+      "uniqueCustomers": "独立顾客数",
+      "repeatCustomers": "回头客",
+      "follows": "新增关注",
+      "favorites": "新增收藏",
+      "unfollows_other": "取消关注 {{count}} 次",
+      "unfavorites_other": "取消收藏 {{count}} 次",
+      "vsPrevious": "小字数字为与前30天的对比。",
+      "noActivityTitle": "暂无数据",
+      "noActivityBody": "顾客开始浏览并预约后，这里会显示数据。"
     }
   }
 }

@@ -277,8 +277,8 @@ export const router = createBrowserRouter([
           {
             path: 'analytics',
             lazy: async () => {
-              const { ProPlaceholderPage } = await import('@/pro-v2/pages/pro-placeholder-page')
-              return { Component: () => <ProPlaceholderPage lot="R5R.2D" /> }
+              const { ProV2AnalyticsPage } = await import('@/pro-v2/analytics/analytics-page')
+              return { Component: ProV2AnalyticsPage }
             },
           },
           {
