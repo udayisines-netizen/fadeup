@@ -153,7 +153,7 @@ export function useCustomerAppointments(customerId: string | undefined) {
 
 /**
  * Every appointment across the org since a given instant, newest first —
- * powers the R5R retention win-back arithmetic, which needs BOTH each
+ * the read behind retention win-back arithmetic, which needs BOTH each
  * customer's last completed visit AND whether they already have a future
  * booking (someone returning next week is not lapsed, whatever their last
  * visit date says). All statuses are fetched for that reason; callers filter.

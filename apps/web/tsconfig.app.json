@@ -4,7 +4,12 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client", "vitest/globals"],
+    /* "node" is required by the Node-environment gate tests under src/design,
+       src/i18n and src/lib (they read the source tree with node:fs). Without it a
+       full, non-incremental `tsc -b` fails on files that vitest runs happily —
+       a latent gap that only surfaced when the frontend purge invalidated the
+       incremental build graph. @types/node is already a devDependency. */
+    "types": ["vite/client", "vitest/globals", "node"],
     "allowArbitraryExtensions": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

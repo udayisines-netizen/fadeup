@@ -171,5 +171,8 @@
     "label": "已验证身份",
     "description": "此主页已由本人认领并管理。FadeUp 不对其作品进行评价。"
   },
-  "loading": "加载中"
+  "loading": "加载中",
+  "reset": {
+    "inProgress": "前端正在重置。"
+  }
 }

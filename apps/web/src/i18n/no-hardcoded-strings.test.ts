@@ -55,7 +55,15 @@ describe('no hardcoded user-facing English', () => {
   const files = walk(SRC).filter((file) => !EXEMPT.some((pattern) => pattern.test(file)))
 
   it('scans a meaningful number of files (guards against this test passing vacuously)', () => {
-    expect(files.length).toBeGreaterThan(80)
+    /*
+      Was >80 when the customer/professional/marketing product existed. The
+      2026-09-01 web UI purge (docs/frontend/WEB_UI_PURGE_INVENTORY.md) deleted
+      those surfaces, so the tree this guard walks is smaller: the platform
+      console, shared primitives and the reset placeholder. The threshold is
+      re-based, not removed — it must still fail loudly if the walk ever stops
+      finding files.
+    */
+    expect(files.length).toBeGreaterThan(50)
   })
 
   it('finds none in the Professional workspace', () => {

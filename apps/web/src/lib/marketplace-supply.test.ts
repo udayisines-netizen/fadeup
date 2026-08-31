@@ -30,8 +30,9 @@ describe('the public vocabulary', () => {
  * is back, along with a second copy of a product rule free to drift from the
  * database's.
  */
-describe('customer-v3 does not know the internal organization model', () => {
-  const CUSTOMER_V3 = dirname(fileURLToPath(import.meta.url))
+describe('the customer product does not know the internal organization model', () => {
+  /* Scan the whole frontend source tree: the rule outlives any one namespace. */
+const SRC = join(dirname(fileURLToPath(import.meta.url)), '..')
 
   function sourceFiles(dir: string): string[] {
     return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -52,9 +53,12 @@ describe('customer-v3 does not know the internal organization model', () => {
     ]
 
     const offenders: string[] = []
-    for (const file of sourceFiles(CUSTOMER_V3)) {
+    for (const file of sourceFiles(SRC)) {
       // This spec necessarily names them in order to ban them.
       if (file.endsWith('marketplace-supply.test.ts')) continue
+      // Platform/ops surfaces legitimately administer the internal model.
+      if (file.includes('/pages/platform-') || file.includes('/components/platform/') || file.includes('/components/acquisition/')) continue
+      if (file.includes('/lib/')) continue
 
       /*
         COMMENTS ARE EXEMPT, AND DELIBERATELY SO. Coupling is a thing code does.
@@ -67,7 +71,7 @@ describe('customer-v3 does not know the internal organization model', () => {
         .replace(/\/\/[^\n]*/g, ' ')
 
       for (const term of forbidden) {
-        if (code.includes(term)) offenders.push(`${file.split('/customer-v3/')[1]} → "${term}"`)
+        if (code.includes(term)) offenders.push(`${file.split('/src/')[1]} → "${term}"`)
       }
     }
 

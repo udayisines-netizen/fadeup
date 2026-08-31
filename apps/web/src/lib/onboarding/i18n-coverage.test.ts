@@ -91,31 +91,14 @@ describe('onboarding translation coverage', () => {
   })
 })
 
-describe('no hardcoded English left in the wizard', () => {
-  const wizard = readFileSync(join(SRC, 'pages', 'onboarding-page.tsx'), 'utf8')
-
-  /** Strips comments so prose ABOUT the code is not mistaken for UI copy. */
-  const code = wizard
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
-
-  it('has no English literals in translatable JSX props', () => {
-    const offenders = [...code.matchAll(/\b(label|hint|title|description|placeholder|aria-label)=["'][A-Za-z][^"']*["']/g)]
-    expect(offenders.map((m) => m[0])).toEqual([])
-  })
-
-  it('does not pass English literals to setError/setFormError', () => {
-    // setError('slug', {...}) is react-hook-form's FIELD NAME, not a message,
-    // so the pattern deliberately requires a space — real sentences have one.
-    const offenders = [...code.matchAll(/set(?:Form)?Error\(['"][A-Za-z][^'"]*\s[^'"]*['"]\)/g)]
-    expect(offenders.map((m) => m[0])).toEqual([])
-  })
-
-  it('reaches the onboarding namespace', () => {
-    expect(code).toContain("useTranslation('onboarding')")
-  })
-})
+/*
+ * The wizard-page scan that lived here was removed with `pages/onboarding-page.tsx`
+ * in the 2026-09-01 web UI purge (docs/frontend/WEB_UI_PURGE_INVENTORY.md). It
+ * asserted that ONE deleted screen carried no English literals; the equivalent
+ * rule for whatever screen replaces it is enforced globally by
+ * src/i18n/no-hardcoded-strings.test.ts. The onboarding TEMPLATE and namespace
+ * coverage above is business truth and stays.
+ */
 
 describe('French terminology', () => {
   it('never uses "barbier"', () => {
@@ -141,24 +124,19 @@ describe('French terminology', () => {
 })
 
 describe('Arabic', () => {
-  it('is translated, and adds no manual RTL styling of its own', () => {
-    // Direction is handled once, centrally (lib/locale.ts isRtl + the
-    // pre-paint bootstrap in index.html). A `dir=` in this wizard would be a
-    // second, competing mechanism.
+  it('is translated', () => {
     const arabic = onboardingCopy('ar')
     expect(get(arabic, 'professional.title')).toBeTruthy()
     expect(get(arabic, 'shell.titleGeneric')).toBeTruthy()
-
-    const wizard = readFileSync(join(SRC, 'pages', 'onboarding-page.tsx'), 'utf8')
-    expect(wizard).not.toContain('dir="rtl"')
-    expect(wizard).not.toContain("dir={")
   })
 
-  it('uses direction-agnostic text alignment', () => {
-    // text-left would pin copy to the left even in Arabic; text-start follows
-    // the document direction.
-    const wizard = readFileSync(join(SRC, 'pages', 'onboarding-page.tsx'), 'utf8')
-    expect(wizard).not.toContain('text-left')
-    expect(wizard).not.toContain('text-right')
-  })
+  /*
+   * The two assertions that used to live here scanned `pages/onboarding-page.tsx`
+   * for `dir=` and `text-left/right`. That page was deleted in the 2026-09-01 web
+   * UI purge (docs/frontend/WEB_UI_PURGE_INVENTORY.md). Both rules are enforced
+   * tree-wide and survive: direction is asserted centrally by
+   * src/i18n/direction.test.ts, and physical-property usage by
+   * src/i18n/logical-properties.test.ts. Nothing was weakened — the checks moved
+   * from one screen to every file.
+   */
 })

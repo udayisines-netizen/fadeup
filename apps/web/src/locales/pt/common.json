@@ -171,5 +171,8 @@
     "label": "Identidade verificada",
     "description": "Este perfil foi reivindicado e é gerido pela pessoa nele indicada. A FadeUp não avalia o seu trabalho."
   },
-  "loading": "A carregar"
+  "loading": "A carregar",
+  "reset": {
+    "inProgress": "Reinicialização do frontend em curso."
+  }
 }
