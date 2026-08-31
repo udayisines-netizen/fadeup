@@ -132,5 +132,61 @@
     "title": "Cette surface arrive dans une phase ultérieure",
     "body": "L’aperçu FadeUp V3 se construit phase par phase. Cette destination n’est pas encore reconstruite.",
     "back": "Retour à l’accueil"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Accueil",
+      "marketplace": "Marketplace",
+      "book": "Réserver",
+      "appointments": "RDV",
+      "profile": "Profil",
+      "notifications": "Notifications"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Accueil",
+      "metaDescription": "Votre prochain barber, votre prochain rendez-vous, près de chez vous.",
+      "greeting": "Trouvez votre prochain barber.",
+      "nearYou": "Près de vous",
+      "seeAll": "Tout voir",
+      "emptyTitle": "Rien près de vous pour l’instant",
+      "emptyBody": "FadeUp grandit ville par ville. Essayez une recherche partout.",
+      "next": "Prochain rendez-vous",
+      "stageConfirmed": "Confirmé",
+      "stageWaiting": "En attente de confirmation",
+      "bookAgain": "Re-réserver",
+      "bookAgainCta": "Re-réserver"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Marketplace",
+      "metaDescription": "Comparez barbers et barbershops : vrais prix, vraies disponibilités, files en direct.",
+      "title": "Marketplace",
+      "count_zero": "{{count}} résultats",
+      "count_one": "{{count}} résultat",
+      "count_two": "{{count}} résultats",
+      "count_few": "{{count}} résultats",
+      "count_many": "{{count}} résultats",
+      "count_other": "{{count}} résultats",
+      "closed": "Fermé",
+      "bookAt": "Réserver chez {{name}}",
+      "sortRecommended": "Recommandés",
+      "sortNearest": "Les plus proches",
+      "sortPrice": "Prix",
+      "openNow": "Ouvert",
+      "mapView": "Carte",
+      "filtersLabel": "Filtres",
+      "emptyTitle": "Aucun résultat",
+      "emptyBody": "Rien ne correspond à cette recherche pour l’instant.",
+      "clearFilters": "Effacer les filtres",
+      "notPlotted_zero": "{{count}} résultats sans position sur la carte",
+      "notPlotted_one": "{{count}} résultat sans position sur la carte",
+      "notPlotted_two": "{{count}} résultats sans position sur la carte",
+      "notPlotted_few": "{{count}} résultats sans position sur la carte",
+      "notPlotted_many": "{{count}} résultats sans position sur la carte",
+      "notPlotted_other": "{{count}} résultats sans position sur la carte"
+    },
+    "errors": {
+      "load": "Chargement impossible. Vérifiez votre connexion et réessayez."
+    }
   }
 }

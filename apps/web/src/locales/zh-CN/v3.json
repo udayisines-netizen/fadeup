@@ -132,5 +132,61 @@
     "title": "此页面将在后续阶段推出",
     "body": "FadeUp V3 预览按阶段构建。此页面尚未重建。",
     "back": "返回首页"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "首页",
+      "marketplace": "市场",
+      "book": "预约",
+      "appointments": "我的预约",
+      "profile": "我的",
+      "notifications": "通知"
+    },
+    "home": {
+      "metaTitle": "FadeUp — 首页",
+      "metaDescription": "你的下一位理发师、下一个预约，就在附近。",
+      "greeting": "找到你的下一位理发师。",
+      "nearYou": "附近",
+      "seeAll": "查看全部",
+      "emptyTitle": "附近暂时没有",
+      "emptyBody": "FadeUp 正在逐城扩展。试试搜索所有地区。",
+      "next": "下一个预约",
+      "stageConfirmed": "已确认",
+      "stageWaiting": "等待确认",
+      "bookAgain": "再次预约",
+      "bookAgainCta": "再次预约"
+    },
+    "market": {
+      "metaTitle": "FadeUp — 市场",
+      "metaDescription": "比较理发师和理发店：真实价格、真实可约时段、实时排队。",
+      "title": "市场",
+      "count_zero": "{{count}} 个结果",
+      "count_one": "{{count}} 个结果",
+      "count_two": "{{count}} 个结果",
+      "count_few": "{{count}} 个结果",
+      "count_many": "{{count}} 个结果",
+      "count_other": "{{count}} 个结果",
+      "closed": "休息中",
+      "bookAt": "预约 {{name}}",
+      "sortRecommended": "推荐",
+      "sortNearest": "最近",
+      "sortPrice": "价格",
+      "openNow": "营业中",
+      "mapView": "地图",
+      "filtersLabel": "筛选",
+      "emptyTitle": "无结果",
+      "emptyBody": "暂时没有匹配的结果。",
+      "clearFilters": "清除筛选",
+      "notPlotted_zero": "{{count}} 个结果没有地图位置",
+      "notPlotted_one": "{{count}} 个结果没有地图位置",
+      "notPlotted_two": "{{count}} 个结果没有地图位置",
+      "notPlotted_few": "{{count}} 个结果没有地图位置",
+      "notPlotted_many": "{{count}} 个结果没有地图位置",
+      "notPlotted_other": "{{count}} 个结果没有地图位置"
+    },
+    "errors": {
+      "load": "加载失败。请检查网络后重试。"
+    }
   }
 }

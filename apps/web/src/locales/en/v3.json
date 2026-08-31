@@ -132,5 +132,61 @@
     "title": "This surface arrives in a later phase",
     "body": "The FadeUp V3 preview is built phase by phase. This destination is not rebuilt yet.",
     "back": "Back to the landing"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Home",
+      "marketplace": "Marketplace",
+      "book": "Book",
+      "appointments": "Appointments",
+      "profile": "Profile",
+      "notifications": "Notifications"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Home",
+      "metaDescription": "Your next barber, your next appointment, near you.",
+      "greeting": "Find your next barber.",
+      "nearYou": "Near you",
+      "seeAll": "See all",
+      "emptyTitle": "Nothing near you yet",
+      "emptyBody": "FadeUp is growing city by city. Try searching everywhere.",
+      "next": "Next appointment",
+      "stageConfirmed": "Confirmed",
+      "stageWaiting": "Awaiting confirmation",
+      "bookAgain": "Book again",
+      "bookAgainCta": "Book again"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Marketplace",
+      "metaDescription": "Compare barbers and barbershops: real prices, real availability, live queues.",
+      "title": "Marketplace",
+      "count_zero": "{{count}} results",
+      "count_one": "{{count}} result",
+      "count_two": "{{count}} results",
+      "count_few": "{{count}} results",
+      "count_many": "{{count}} results",
+      "count_other": "{{count}} results",
+      "closed": "Closed",
+      "bookAt": "Book at {{name}}",
+      "sortRecommended": "Recommended",
+      "sortNearest": "Nearest",
+      "sortPrice": "Price",
+      "openNow": "Open now",
+      "mapView": "Map",
+      "filtersLabel": "Filters",
+      "emptyTitle": "No results",
+      "emptyBody": "Nothing matches this search yet.",
+      "clearFilters": "Clear filters",
+      "notPlotted_zero": "{{count}} results have no map location",
+      "notPlotted_one": "{{count}} result has no map location",
+      "notPlotted_two": "{{count}} results have no map location",
+      "notPlotted_few": "{{count}} results have no map location",
+      "notPlotted_many": "{{count}} results have no map location",
+      "notPlotted_other": "{{count}} results have no map location"
+    },
+    "errors": {
+      "load": "Could not load. Check your connection and try again."
+    }
   }
 }

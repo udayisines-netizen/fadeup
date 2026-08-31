@@ -13,10 +13,10 @@ export function V3PlaceholderPage() {
   useDocumentMeta({ title: t('placeholder.title'), description: t('placeholder.body'), noIndex: true })
 
   return (
-    <main
+    <div
       data-fu-v3
       style={{
-        minHeight: '100dvh',
+        minHeight: '60dvh',
         display: 'grid',
         placeContent: 'center',
         gap: '1rem',
@@ -31,6 +31,6 @@ export function V3PlaceholderPage() {
       <Link to={V3_ROUTES.landing} className="v3-btn v3-btn--quiet v3-press" style={{ justifySelf: 'center' }}>
         {t('placeholder.back')}
       </Link>
-    </main>
+    </div>
   )
 }

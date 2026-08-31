@@ -132,5 +132,61 @@
     "title": "Эта страница появится на следующем этапе",
     "body": "Превью FadeUp V3 строится поэтапно. Эта страница ещё не пересобрана.",
     "back": "Назад на главную"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Главная",
+      "marketplace": "Маркетплейс",
+      "book": "Запись",
+      "appointments": "Записи",
+      "profile": "Профиль",
+      "notifications": "Уведомления"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Главная",
+      "metaDescription": "Ваш следующий барбер и следующая запись — рядом с вами.",
+      "greeting": "Найдите своего барбера.",
+      "nearYou": "Рядом с вами",
+      "seeAll": "Все",
+      "emptyTitle": "Рядом пока ничего нет",
+      "emptyBody": "FadeUp растёт город за городом. Попробуйте искать везде.",
+      "next": "Ближайшая запись",
+      "stageConfirmed": "Подтверждена",
+      "stageWaiting": "Ожидает подтверждения",
+      "bookAgain": "Записаться снова",
+      "bookAgainCta": "Записаться снова"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Маркетплейс",
+      "metaDescription": "Сравнивайте барберов и барбершопы: реальные цены, реальная доступность, живые очереди.",
+      "title": "Маркетплейс",
+      "count_zero": "{{count}} результата",
+      "count_one": "{{count}} результат",
+      "count_two": "{{count}} результата",
+      "count_few": "{{count}} результата",
+      "count_many": "{{count}} результатов",
+      "count_other": "{{count}} результата",
+      "closed": "Закрыто",
+      "bookAt": "Записаться в {{name}}",
+      "sortRecommended": "Рекомендуемые",
+      "sortNearest": "Ближайшие",
+      "sortPrice": "Цена",
+      "openNow": "Открыто",
+      "mapView": "Карта",
+      "filtersLabel": "Фильтры",
+      "emptyTitle": "Ничего не найдено",
+      "emptyBody": "По этому запросу пока ничего нет.",
+      "clearFilters": "Сбросить фильтры",
+      "notPlotted_zero": "{{count}} результата без позиции на карте",
+      "notPlotted_one": "{{count}} результат без позиции на карте",
+      "notPlotted_two": "{{count}} результата без позиции на карте",
+      "notPlotted_few": "{{count}} результата без позиции на карте",
+      "notPlotted_many": "{{count}} результатов без позиции на карте",
+      "notPlotted_other": "{{count}} результата без позиции на карте"
+    },
+    "errors": {
+      "load": "Не удалось загрузить. Проверьте соединение и попробуйте снова."
+    }
   }
 }

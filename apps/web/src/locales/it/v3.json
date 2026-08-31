@@ -132,5 +132,61 @@
     "title": "Questa superficie arriva in una fase successiva",
     "body": "L’anteprima FadeUp V3 si costruisce per fasi. Questa destinazione non è ancora ricostruita.",
     "back": "Torna alla pagina iniziale"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Home",
+      "marketplace": "Marketplace",
+      "book": "Prenota",
+      "appointments": "Appuntamenti",
+      "profile": "Profilo",
+      "notifications": "Notifiche"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Home",
+      "metaDescription": "Il tuo prossimo barbiere, il tuo prossimo appuntamento, vicino a te.",
+      "greeting": "Trova il tuo prossimo barbiere.",
+      "nearYou": "Vicino a te",
+      "seeAll": "Vedi tutto",
+      "emptyTitle": "Ancora niente vicino a te",
+      "emptyBody": "FadeUp cresce città per città. Prova a cercare ovunque.",
+      "next": "Prossimo appuntamento",
+      "stageConfirmed": "Confermato",
+      "stageWaiting": "In attesa di conferma",
+      "bookAgain": "Prenota di nuovo",
+      "bookAgainCta": "Prenota di nuovo"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Marketplace",
+      "metaDescription": "Confronta barbieri e barbershop: prezzi reali, disponibilità reale, code in diretta.",
+      "title": "Marketplace",
+      "count_zero": "{{count}} risultati",
+      "count_one": "{{count}} risultato",
+      "count_two": "{{count}} risultati",
+      "count_few": "{{count}} risultati",
+      "count_many": "{{count}} risultati",
+      "count_other": "{{count}} risultati",
+      "closed": "Chiuso",
+      "bookAt": "Prenota da {{name}}",
+      "sortRecommended": "Consigliati",
+      "sortNearest": "Più vicini",
+      "sortPrice": "Prezzo",
+      "openNow": "Aperto",
+      "mapView": "Mappa",
+      "filtersLabel": "Filtri",
+      "emptyTitle": "Nessun risultato",
+      "emptyBody": "Niente corrisponde a questa ricerca per ora.",
+      "clearFilters": "Cancella filtri",
+      "notPlotted_zero": "{{count}} risultati senza posizione sulla mappa",
+      "notPlotted_one": "{{count}} risultato senza posizione sulla mappa",
+      "notPlotted_two": "{{count}} risultati senza posizione sulla mappa",
+      "notPlotted_few": "{{count}} risultati senza posizione sulla mappa",
+      "notPlotted_many": "{{count}} risultati senza posizione sulla mappa",
+      "notPlotted_other": "{{count}} risultati senza posizione sulla mappa"
+    },
+    "errors": {
+      "load": "Impossibile caricare. Controlla la connessione e riprova."
+    }
   }
 }

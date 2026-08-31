@@ -132,5 +132,61 @@
     "title": "この画面は後のフェーズで登場します",
     "body": "FadeUp V3プレビューはフェーズごとに構築されます。この画面はまだ再構築されていません。",
     "back": "ランディングに戻る"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "ホーム",
+      "marketplace": "マーケット",
+      "book": "予約",
+      "appointments": "予約一覧",
+      "profile": "プロフィール",
+      "notifications": "通知"
+    },
+    "home": {
+      "metaTitle": "FadeUp — ホーム",
+      "metaDescription": "次のバーバーと次の予約を、あなたの近くで。",
+      "greeting": "次のバーバーを見つけよう。",
+      "nearYou": "近くのお店",
+      "seeAll": "すべて見る",
+      "emptyTitle": "近くにはまだありません",
+      "emptyBody": "FadeUpは都市ごとに拡大中です。すべての地域で検索してみてください。",
+      "next": "次の予約",
+      "stageConfirmed": "確定",
+      "stageWaiting": "確認待ち",
+      "bookAgain": "もう一度予約",
+      "bookAgainCta": "もう一度予約"
+    },
+    "market": {
+      "metaTitle": "FadeUp — マーケット",
+      "metaDescription": "バーバーとバーバーショップを比較：実際の価格、実際の空き状況、ライブの順番待ち。",
+      "title": "マーケット",
+      "count_zero": "{{count}}件",
+      "count_one": "{{count}}件",
+      "count_two": "{{count}}件",
+      "count_few": "{{count}}件",
+      "count_many": "{{count}}件",
+      "count_other": "{{count}}件",
+      "closed": "営業時間外",
+      "bookAt": "{{name}}を予約",
+      "sortRecommended": "おすすめ",
+      "sortNearest": "近い順",
+      "sortPrice": "価格順",
+      "openNow": "営業中",
+      "mapView": "地図",
+      "filtersLabel": "絞り込み",
+      "emptyTitle": "結果なし",
+      "emptyBody": "この検索に一致するものはまだありません。",
+      "clearFilters": "条件をクリア",
+      "notPlotted_zero": "{{count}}件は地図に位置がありません",
+      "notPlotted_one": "{{count}}件は地図に位置がありません",
+      "notPlotted_two": "{{count}}件は地図に位置がありません",
+      "notPlotted_few": "{{count}}件は地図に位置がありません",
+      "notPlotted_many": "{{count}}件は地図に位置がありません",
+      "notPlotted_other": "{{count}}件は地図に位置がありません"
+    },
+    "errors": {
+      "load": "読み込めませんでした。接続を確認して再試行してください。"
+    }
   }
 }

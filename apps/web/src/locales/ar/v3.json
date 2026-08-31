@@ -132,5 +132,61 @@
     "title": "تصل هذه الواجهة في مرحلة لاحقة",
     "body": "تُبنى معاينة FadeUp V3 مرحلة بعد مرحلة. هذه الوجهة لم يُعد بناؤها بعد.",
     "back": "العودة إلى الصفحة الرئيسية"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "الرئيسية",
+      "marketplace": "السوق",
+      "book": "احجز",
+      "appointments": "المواعيد",
+      "profile": "الملف الشخصي",
+      "notifications": "الإشعارات"
+    },
+    "home": {
+      "metaTitle": "FadeUp — الرئيسية",
+      "metaDescription": "حلاقك القادم وموعدك القادم، بالقرب منك.",
+      "greeting": "اعثر على حلاقك القادم.",
+      "nearYou": "بالقرب منك",
+      "seeAll": "عرض الكل",
+      "emptyTitle": "لا شيء بالقرب منك بعد",
+      "emptyBody": "ينمو FadeUp مدينة بعد مدينة. جرّب البحث في كل مكان.",
+      "next": "الموعد القادم",
+      "stageConfirmed": "مؤكَّد",
+      "stageWaiting": "بانتظار التأكيد",
+      "bookAgain": "احجز مجددًا",
+      "bookAgainCta": "احجز مجددًا"
+    },
+    "market": {
+      "metaTitle": "FadeUp — السوق",
+      "metaDescription": "قارن الحلاقين وصالونات الحلاقة: أسعار حقيقية، مواعيد حقيقية، طوابير مباشرة.",
+      "title": "السوق",
+      "count_zero": "لا نتائج",
+      "count_one": "نتيجة واحدة",
+      "count_two": "نتيجتان",
+      "count_few": "{{count}} نتائج",
+      "count_many": "{{count}} نتيجة",
+      "count_other": "{{count}} نتيجة",
+      "closed": "مغلق",
+      "bookAt": "احجز في {{name}}",
+      "sortRecommended": "موصى بها",
+      "sortNearest": "الأقرب",
+      "sortPrice": "السعر",
+      "openNow": "مفتوح الآن",
+      "mapView": "الخريطة",
+      "filtersLabel": "التصفية",
+      "emptyTitle": "لا نتائج",
+      "emptyBody": "لا شيء يطابق هذا البحث بعد.",
+      "clearFilters": "مسح عوامل التصفية",
+      "notPlotted_zero": "لا نتائج بلا موقع على الخريطة",
+      "notPlotted_one": "نتيجة واحدة بلا موقع على الخريطة",
+      "notPlotted_two": "نتيجتان بلا موقع على الخريطة",
+      "notPlotted_few": "{{count}} نتائج بلا موقع على الخريطة",
+      "notPlotted_many": "{{count}} نتيجة بلا موقع على الخريطة",
+      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة"
+    },
+    "errors": {
+      "load": "تعذّر التحميل. تحقق من اتصالك وحاول مرة أخرى."
+    }
   }
 }

@@ -438,11 +438,39 @@ export const router = createBrowserRouter([
             },
           },
           {
-            path: '*',
+            /* The customer application shell wraps every app destination;
+               the landing above stays shell-less on the namespace root. */
             lazy: async () => {
-              const { V3PlaceholderPage } = await import('@/customer-v3/pages/v3-placeholder-page')
-              return { Component: V3PlaceholderPage }
+              const { CustomerV3Shell } = await import('@/customer-v3/shell/customer-v3-shell')
+              return { Component: CustomerV3Shell }
             },
+            children: [
+              {
+                path: 'home',
+                lazy: async () => {
+                  const { CustomerV3HomePage } = await import('@/customer-v3/home/home-page')
+                  return { Component: CustomerV3HomePage }
+                },
+              },
+              {
+                path: 'marketplace',
+                lazy: async () => {
+                  const { CustomerV3MarketplacePage } = await import(
+                    '@/customer-v3/marketplace/marketplace-page'
+                  )
+                  return { Component: CustomerV3MarketplacePage }
+                },
+              },
+              {
+                path: '*',
+                lazy: async () => {
+                  const { V3PlaceholderPage } = await import(
+                    '@/customer-v3/pages/v3-placeholder-page'
+                  )
+                  return { Component: V3PlaceholderPage }
+                },
+              },
+            ],
           },
         ],
       },

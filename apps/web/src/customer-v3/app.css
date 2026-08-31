@@ -1,0 +1,579 @@
+/**
+ * FadeUp V3 — customer application compositions (shell, Home, Marketplace).
+ *
+ * BG-01 product surfaces on the ui-v3 foundation. The default grammar is
+ * hairline-separated rows on canvas; plates are reserved for genuinely
+ * bounded objects (map panel, next-appointment ticket, sticky bars).
+ */
+
+/* ==========================================================================
+   SHELL
+   ========================================================================== */
+
+.v3a-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--v3-ground);
+}
+
+.v3a-topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--v3-ground) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-block-end: 1px solid var(--v3-hairline);
+}
+
+.v3a-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-inline-size: 82.5rem;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  min-block-size: 3.5rem;
+}
+
+.v3a-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--v3-ink);
+  text-decoration: none;
+}
+
+.v3a-brand svg {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+/* Desktop horizontal navigation — a real application nav, 44px targets. */
+.v3a-desktop-nav {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.v3a-desktop-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-inline: 0.875rem;
+  border-radius: var(--v3-radius-m);
+  font-size: 0.9063rem;
+  font-weight: 600;
+  color: var(--v3-ink-soft);
+  text-decoration: none;
+}
+
+.v3a-desktop-nav a:hover {
+  color: var(--v3-ink);
+  background: var(--v3-fill);
+}
+
+.v3a-desktop-nav a[aria-current='page'] {
+  color: var(--v3-green-ink);
+  background: var(--v3-green-tint);
+}
+
+.v3a-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.v3a-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--v3-radius-m);
+  border: 0;
+  background: transparent;
+  color: var(--v3-ink);
+  cursor: pointer;
+}
+
+.v3a-icon-btn:hover {
+  background: var(--v3-fill);
+}
+
+.v3a-badge {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  min-inline-size: 16px;
+  block-size: 16px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--v3-green);
+  color: #fff;
+  font-size: 0.6563rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.v3a-main {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 82.5rem;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2rem);
+  padding-block: 1.25rem calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+/* Mobile bottom navigation — fixed, safe-area aware, 44px+ targets. */
+.v3a-tabbar {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: color-mix(in srgb, var(--v3-paper) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border-block-start: 1px solid var(--v3-hairline);
+  padding-block-end: env(safe-area-inset-bottom);
+}
+
+.v3a-tab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding-block: 0.5rem 0.4375rem;
+  min-block-size: 52px;
+  min-inline-size: 0;
+  text-decoration: none;
+  color: var(--v3-ink-mute);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.v3a-tab svg {
+  inline-size: 24px;
+  block-size: 24px;
+  transition: transform var(--v3-press) var(--v3-ease);
+}
+
+.v3a-tab[aria-current='page'] {
+  color: var(--v3-green-ink);
+}
+
+.v3a-tab[aria-current='page'] svg {
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v3a-tab[aria-current='page'] svg {
+    transform: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .v3a-desktop-nav {
+    display: flex;
+  }
+
+  .v3a-tabbar {
+    display: none;
+  }
+
+  .v3a-main {
+    padding-block-end: 3rem;
+  }
+}
+
+/* ==========================================================================
+   PAGE HEADERS
+   ========================================================================== */
+
+.v3a-page-head {
+  display: grid;
+  gap: 0.375rem;
+  margin-block: 0.75rem 1.25rem;
+}
+
+.v3a-page-head .v3-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* ==========================================================================
+   SEARCH FIELD (in-app)
+   ========================================================================== */
+
+.v3a-search {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-block-size: 48px;
+  padding-inline: 1rem;
+  border-radius: var(--v3-radius-l);
+  border: 1px solid var(--v3-hairline);
+  background: var(--v3-paper);
+}
+
+.v3a-search:focus-within {
+  border-color: var(--v3-edge);
+}
+
+.v3a-search svg {
+  inline-size: 18px;
+  block-size: 18px;
+  color: var(--v3-ink-mute);
+  flex-shrink: 0;
+}
+
+.v3a-search input {
+  flex: 1;
+  min-inline-size: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9688rem;
+  color: var(--v3-ink);
+  outline: none;
+}
+
+.v3a-search input::placeholder {
+  color: var(--v3-ink-mute);
+}
+
+/* Filter rail — one horizontal line of compact chips. */
+.v3a-chips {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-block: 0.875rem;
+  scrollbar-width: none;
+}
+
+.v3a-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.v3a-chips > * {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   RESULT ROW — the marketplace grammar. One grammar at every width:
+   desktop changes the page, not the row.
+   ========================================================================== */
+
+.v3a-results {
+  background: var(--v3-paper);
+  border-radius: var(--v3-radius-l);
+  border: 1px solid var(--v3-hairline);
+  overflow: clip;
+}
+
+.v3a-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.875rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color var(--v3-press) var(--v3-ease);
+}
+
+.v3a-row:hover,
+.v3a-row[data-active='true'] {
+  background: var(--v3-ground);
+}
+
+.v3a-row + .v3a-row {
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3a-row-link {
+  display: block;
+  min-inline-size: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.v3a-row-name {
+  display: flex;
+  font-size: 1.0313rem;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.v3a-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.4375rem;
+  font-size: 0.8438rem;
+  color: var(--v3-ink-soft);
+  margin-block-start: 0.125rem;
+}
+
+.v3a-row-meta > * + *::before {
+  content: '·';
+  margin-inline-end: 0.4375rem;
+  color: var(--v3-ink-mute);
+}
+
+.v3a-row-ops {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.875rem;
+  margin-block-start: 0.3125rem;
+  font-size: 0.8438rem;
+  font-weight: 600;
+}
+
+.v3a-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--v3-green-ink);
+}
+
+.v3a-closed {
+  color: var(--v3-ink-mute);
+  font-weight: 550;
+}
+
+.v3a-queue {
+  color: var(--v3-green-ink);
+}
+
+.v3a-price {
+  color: var(--v3-ink);
+}
+
+.v3a-row-book {
+  align-self: center;
+}
+
+/* ==========================================================================
+   HOME
+   ========================================================================== */
+
+.v3a-greeting {
+  font-family: var(--v3-font-display);
+  font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.v3a-section {
+  margin-block-start: 1.75rem;
+}
+
+.v3a-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block-end: 0.75rem;
+}
+
+.v3a-section-title {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--v3-ink-mute);
+}
+
+.v3a-section-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--v3-green-ink);
+  text-decoration: none;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The next appointment — the one Home object that earns a plate. */
+.v3a-next {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.125rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.v3a-next-when {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.v3a-next-when time {
+  font-size: 1.25rem;
+}
+
+.v3a-next-stage {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--v3-green-ink);
+}
+
+.v3a-next-what {
+  font-size: 0.9375rem;
+  color: var(--v3-ink-soft);
+}
+
+/* Book-again rail: compact horizontal cards of real past context. */
+.v3a-again-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15rem, 1fr);
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-block-end: 0.25rem;
+}
+
+.v3a-again-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.v3a-again {
+  scroll-snap-align: start;
+  display: grid;
+  gap: 0.625rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--v3-hairline);
+  border-radius: var(--v3-radius-l);
+  background: var(--v3-paper);
+  text-decoration: none;
+  color: inherit;
+}
+
+.v3a-again:hover {
+  background: var(--v3-ground);
+}
+
+/* ==========================================================================
+   MARKETPLACE
+   ========================================================================== */
+
+.v3a-market {
+  display: grid;
+  gap: 1rem;
+}
+
+.v3a-market-count {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 64rem) {
+  .v3a-market[data-has-map='true'] {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .v3a-market[data-has-map='true'] .v3a-map-panel {
+    position: sticky;
+    inset-block-start: 4.5rem;
+    block-size: calc(100dvh - 6rem);
+  }
+}
+
+.v3a-map-panel {
+  border-radius: var(--v3-radius-l);
+  overflow: clip;
+  box-shadow: var(--v3-float);
+  min-block-size: 20rem;
+}
+
+.v3a-map-panel > div[aria-hidden] {
+  block-size: 100%;
+  min-block-size: 20rem;
+}
+
+/* Mobile map view: the map owns the viewport under the controls. */
+.v3a-map-mobile {
+  block-size: min(62dvh, 34rem);
+}
+
+/* Map pins — FadeUp markers, not teardrops. */
+.v3-pin {
+  border: 0;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--v3-ink, #101512);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgb(16 21 18 / 0.25);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.v3-pin[data-selected='true'] {
+  background: var(--v3-green, #0a7c4c);
+}
+
+.v3-pin-dot {
+  inline-size: 14px;
+  block-size: 14px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--v3-green, #0a7c4c);
+  border: 2px solid #fff;
+}
+
+.v3-pin-dot[data-selected='true'] {
+  background: var(--v3-green-deep, #08633c);
+}
+
+/* ==========================================================================
+   STATES
+   ========================================================================== */
+
+.v3a-empty {
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+}
+
+.v3a-empty-title {
+  font-weight: 650;
+  font-size: 1.0313rem;
+}
+
+.v3a-error {
+  padding: 1rem 1.25rem;
+  border-radius: var(--v3-radius-m);
+  background: var(--v3-alert-tint);
+  color: var(--v3-alert);
+  font-size: 0.9063rem;
+  font-weight: 550;
+}
+
+.v3a-skeleton-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+}

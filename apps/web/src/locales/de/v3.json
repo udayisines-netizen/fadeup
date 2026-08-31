@@ -132,5 +132,61 @@
     "title": "Diese Oberfläche kommt in einer späteren Phase",
     "body": "Die FadeUp-V3-Vorschau entsteht Phase für Phase. Dieses Ziel ist noch nicht neu gebaut.",
     "back": "Zurück zur Startseite"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Start",
+      "marketplace": "Marktplatz",
+      "book": "Buchen",
+      "appointments": "Termine",
+      "profile": "Profil",
+      "notifications": "Mitteilungen"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Start",
+      "metaDescription": "Dein nächster Barber, dein nächster Termin, in deiner Nähe.",
+      "greeting": "Finde deinen nächsten Barber.",
+      "nearYou": "In deiner Nähe",
+      "seeAll": "Alle ansehen",
+      "emptyTitle": "Noch nichts in deiner Nähe",
+      "emptyBody": "FadeUp wächst Stadt für Stadt. Versuche eine Suche überall.",
+      "next": "Nächster Termin",
+      "stageConfirmed": "Bestätigt",
+      "stageWaiting": "Wartet auf Bestätigung",
+      "bookAgain": "Erneut buchen",
+      "bookAgainCta": "Erneut buchen"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Marktplatz",
+      "metaDescription": "Vergleiche Barber und Barbershops: echte Preise, echte Verfügbarkeit, Live-Warteschlangen.",
+      "title": "Marktplatz",
+      "count_zero": "{{count}} Ergebnisse",
+      "count_one": "{{count}} Ergebnis",
+      "count_two": "{{count}} Ergebnisse",
+      "count_few": "{{count}} Ergebnisse",
+      "count_many": "{{count}} Ergebnisse",
+      "count_other": "{{count}} Ergebnisse",
+      "closed": "Geschlossen",
+      "bookAt": "Bei {{name}} buchen",
+      "sortRecommended": "Empfohlen",
+      "sortNearest": "Nächstgelegen",
+      "sortPrice": "Preis",
+      "openNow": "Geöffnet",
+      "mapView": "Karte",
+      "filtersLabel": "Filter",
+      "emptyTitle": "Keine Ergebnisse",
+      "emptyBody": "Zu dieser Suche passt noch nichts.",
+      "clearFilters": "Filter zurücksetzen",
+      "notPlotted_zero": "{{count}} Ergebnisse ohne Kartenposition",
+      "notPlotted_one": "{{count}} Ergebnis ohne Kartenposition",
+      "notPlotted_two": "{{count}} Ergebnisse ohne Kartenposition",
+      "notPlotted_few": "{{count}} Ergebnisse ohne Kartenposition",
+      "notPlotted_many": "{{count}} Ergebnisse ohne Kartenposition",
+      "notPlotted_other": "{{count}} Ergebnisse ohne Kartenposition"
+    },
+    "errors": {
+      "load": "Laden fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut."
+    }
   }
 }

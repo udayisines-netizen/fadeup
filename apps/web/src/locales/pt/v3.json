@@ -132,5 +132,61 @@
     "title": "Esta superfície chega numa fase posterior",
     "body": "A pré-visualização FadeUp V3 é construída fase a fase. Este destino ainda não foi reconstruído.",
     "back": "Voltar à página inicial"
+  },
+  "app": {
+    "nav": {
+      "label": "FadeUp",
+      "home": "Início",
+      "marketplace": "Marketplace",
+      "book": "Reservar",
+      "appointments": "Marcações",
+      "profile": "Perfil",
+      "notifications": "Notificações"
+    },
+    "home": {
+      "metaTitle": "FadeUp — Início",
+      "metaDescription": "O seu próximo barbeiro, a sua próxima marcação, perto de si.",
+      "greeting": "Encontre o seu próximo barbeiro.",
+      "nearYou": "Perto de si",
+      "seeAll": "Ver tudo",
+      "emptyTitle": "Ainda nada perto de si",
+      "emptyBody": "O FadeUp cresce cidade a cidade. Experimente pesquisar em todo o lado.",
+      "next": "Próxima marcação",
+      "stageConfirmed": "Confirmada",
+      "stageWaiting": "A aguardar confirmação",
+      "bookAgain": "Reservar de novo",
+      "bookAgainCta": "Reservar de novo"
+    },
+    "market": {
+      "metaTitle": "FadeUp — Marketplace",
+      "metaDescription": "Compare barbeiros e barbearias: preços reais, disponibilidade real, filas ao vivo.",
+      "title": "Marketplace",
+      "count_zero": "{{count}} resultados",
+      "count_one": "{{count}} resultado",
+      "count_two": "{{count}} resultados",
+      "count_few": "{{count}} resultados",
+      "count_many": "{{count}} resultados",
+      "count_other": "{{count}} resultados",
+      "closed": "Fechado",
+      "bookAt": "Reservar em {{name}}",
+      "sortRecommended": "Recomendados",
+      "sortNearest": "Mais próximos",
+      "sortPrice": "Preço",
+      "openNow": "Aberto",
+      "mapView": "Mapa",
+      "filtersLabel": "Filtros",
+      "emptyTitle": "Sem resultados",
+      "emptyBody": "Nada corresponde a esta pesquisa por agora.",
+      "clearFilters": "Limpar filtros",
+      "notPlotted_zero": "{{count}} resultados sem posição no mapa",
+      "notPlotted_one": "{{count}} resultado sem posição no mapa",
+      "notPlotted_two": "{{count}} resultados sem posição no mapa",
+      "notPlotted_few": "{{count}} resultados sem posição no mapa",
+      "notPlotted_many": "{{count}} resultados sem posição no mapa",
+      "notPlotted_other": "{{count}} resultados sem posição no mapa"
+    },
+    "errors": {
+      "load": "Não foi possível carregar. Verifique a ligação e tente novamente."
+    }
   }
 }
