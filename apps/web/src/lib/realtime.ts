@@ -20,9 +20,43 @@ import { getSupabaseClient } from '@/lib/supabase'
  * not. So this reports its own connection state, refetches once on reconnect
  * (events during the gap are simply gone), and callers pair it with a slow
  * poll that speeds up whenever realtime is not connected.
+ *
+ * THE PHYSICAL TOPIC IS LIFECYCLE IDENTITY, NOT AUTHORIZATION. `channelName`
+ * is the logical name a caller asks for; what actually reaches the socket is
+ * that name plus a process-wide generation counter (see `nextChannelTopic`).
+ * That is purely a transport concern — nothing about a topic string grants,
+ * narrows or proves access, and the tenant boundary is still exactly where it
+ * was: RLS in the database, plus the `organization_id=eq.` filter that keeps
+ * the traffic narrow.
  */
 
 export type RealtimeStatus = 'connecting' | 'live' | 'offline'
+
+/**
+ * Monotonic, process-wide. Every mount of every channel gets its own number,
+ * so no two physical topics ever collide — not across tenants, and not across
+ * two generations of the same logical channel.
+ */
+let channelGeneration = 0
+
+/**
+ * Builds the physical topic for one effect generation.
+ *
+ * WHY THIS EXISTS. `supabase.channel(topic)` returns the EXISTING channel when
+ * one with that topic is still registered, and `removeChannel()` is async — it
+ * awaits the server's leave acknowledgement before the channel is dropped from
+ * the client's registry. So a teardown and a re-create that overlap (a tenant
+ * switch to org B and back to org A, a fast remount, React StrictMode's double
+ * effect) would hand the new generation the OLD, already-subscribed channel,
+ * and `.on('postgres_changes', …)` on a joined channel throws
+ * "cannot add `postgres_changes` callbacks … after `subscribe()`" — killing the
+ * render. A unique topic per generation means the new channel is always a new
+ * channel, and the pending removal of the old one can settle in its own time.
+ */
+export function nextChannelTopic(channelName: string): string {
+  channelGeneration += 1
+  return `${channelName}#g${channelGeneration}`
+}
 
 export interface RealtimeSubscription {
   table: string
@@ -64,15 +98,32 @@ export function useRealtimeInvalidation(
     const supabase = getSupabaseClient()
     let cancelled = false
 
+    // Snapshotted for this generation, deliberately NOT read from the ref at
+    // callback time. A channel opened for org A must invalidate org A's keys or
+    // nothing at all — never whatever tenant the ref has moved on to. Reading
+    // the ref late is what would let a not-yet-torn-down org A channel refetch
+    // org B's screens. The effect already re-runs whenever the serialized shape
+    // changes, so a snapshot is never staler than the ref would have been.
+    const generationSubscriptions = latest.current.subscriptions
+    const generationQueryKeys = latest.current.queryKeys
+
     function invalidateAll() {
-      for (const key of latest.current.queryKeys) {
+      // The single gate for every invalidation on this generation: once the
+      // cleanup has run, a late event or status callback from the old channel
+      // does nothing at all.
+      if (cancelled) return
+      for (const key of generationQueryKeys) {
         void queryClient.invalidateQueries({ queryKey: key })
       }
     }
 
-    const channel = supabase.channel(channelName)
+    // A new generation is genuinely connecting. Saying 'live' because the
+    // PREVIOUS channel was live is the same lie as a silently dropped socket.
+    setStatus('connecting')
 
-    for (const subscription of latest.current.subscriptions) {
+    const channel = supabase.channel(nextChannelTopic(channelName))
+
+    for (const subscription of generationSubscriptions) {
       channel.on(
         // The supabase-js overloads for postgres_changes are not expressible
         // through a loop without widening here; the runtime contract is exact.
@@ -88,6 +139,9 @@ export function useRealtimeInvalidation(
     }
 
     channel.subscribe((subscribeStatus) => {
+      // Same gate as invalidateAll: a status callback arriving from a channel
+      // this component has already abandoned must not touch React state either.
+      // supabase-js emits CLOSED as a direct result of our own unsubscribe.
       if (cancelled) return
 
       if (subscribeStatus === 'SUBSCRIBED') {

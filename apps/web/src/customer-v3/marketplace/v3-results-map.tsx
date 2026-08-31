@@ -18,7 +18,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useTranslation } from 'react-i18next'
 
 import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
-import { MAP_TILE_SOURCE } from '@/customer-v2/marketplace/map-config'
+import { MAP_TILE_SOURCE } from '@/customer-v3/marketplace/map-config'
 
 export function V3ResultsMap({
   results,

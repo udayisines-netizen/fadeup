@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useRealtimeInvalidation } from '@/lib/realtime'
 
 /** Mirrors public.queue_status — see db/migrations/20260809160000_queue_entries.sql. */
 export type QueueStatus = 'waiting' | 'called' | 'in_service' | 'completed' | 'cancelled' | 'no_show'
@@ -91,32 +91,17 @@ function mapQueueEntry(row: QueueEntryRow): QueueEntry {
  * avoids receiving/re-fetching on every other org's events too.
  */
 export function useOrgQueue(organizationId: string | undefined) {
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    if (!organizationId) return
-
-    const supabase = getSupabaseClient()
-    const channel = supabase
-      .channel(`queue-entries-${organizationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'queue_entries',
-          filter: `organization_id=eq.${organizationId}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ['queue', organizationId] })
-        },
-      )
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [organizationId, queryClient])
+  // Through the shared helper rather than a hand-rolled channel, so this board
+  // inherits its lifecycle guarantees: a physical topic unique to each mount
+  // (a hand-rolled `channel('queue-entries-<org>')` re-created while the
+  // previous removeChannel is still in flight gets handed the old, already
+  // subscribed channel and throws), and a hard stop on invalidations from a
+  // channel whose org has already been switched away from.
+  useRealtimeInvalidation(
+    organizationId ? `queue-entries-${organizationId}` : null,
+    [{ table: 'queue_entries', filter: `organization_id=eq.${organizationId}` }],
+    [['queue', organizationId]],
+  )
 
   return useQuery({
     queryKey: ['queue', organizationId],

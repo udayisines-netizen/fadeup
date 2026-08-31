@@ -23,7 +23,7 @@ import {
   useSearchPublicProfessionals,
   usePublicCurrencies,
 } from '@/lib/queries/marketplace'
-import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
+import { useCustomerLocation } from '@/customer-v3/hooks/use-customer-location'
 import { useDateTime } from '@/lib/intl/use-intl'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { V3_ROUTES, v3BookingPath } from '@/customer-v3/routes'

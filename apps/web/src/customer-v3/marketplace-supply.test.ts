@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { MARKETPLACE_SUPPLY_TYPES } from '@/lib/queries/marketplace'
-import { classifyMarketplaceSupply } from '@/customer-v2/marketplace-supply'
+import { classifyMarketplaceSupply } from '@/customer-v3/marketplace-supply'
 
 /**
  * The customer supply model, enforced at the frontend's half of it.
@@ -75,8 +75,8 @@ describe('the public vocabulary', () => {
  * is back, along with a second copy of a product rule free to drift from the
  * database's.
  */
-describe('customer-v2 does not know the internal organization model', () => {
-  const CUSTOMER_V2 = dirname(fileURLToPath(import.meta.url))
+describe('customer-v3 does not know the internal organization model', () => {
+  const CUSTOMER_V3 = dirname(fileURLToPath(import.meta.url))
 
   function sourceFiles(dir: string): string[] {
     return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -97,7 +97,7 @@ describe('customer-v2 does not know the internal organization model', () => {
     ]
 
     const offenders: string[] = []
-    for (const file of sourceFiles(CUSTOMER_V2)) {
+    for (const file of sourceFiles(CUSTOMER_V3)) {
       // This spec necessarily names them in order to ban them.
       if (file.endsWith('marketplace-supply.test.ts')) continue
 
@@ -112,7 +112,7 @@ describe('customer-v2 does not know the internal organization model', () => {
         .replace(/\/\/[^\n]*/g, ' ')
 
       for (const term of forbidden) {
-        if (code.includes(term)) offenders.push(`${file.split('/customer-v2/')[1]} → "${term}"`)
+        if (code.includes(term)) offenders.push(`${file.split('/customer-v3/')[1]} → "${term}"`)
       }
     }
 

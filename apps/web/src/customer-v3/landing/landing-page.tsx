@@ -10,8 +10,8 @@
  *
  * Reuse ledger (nonvisual infrastructure only, per GREENFIELD import rules):
  *   - lib/queries/marketplace (search RPC + currencies)
- *   - customer-v2/hooks/use-customer-location — REUSE_LOGIC_ONLY; relocates
- *     to lib/ when the rejected v2 pages are deleted in Phase V10
+ *   - customer-v3/hooks/use-customer-location — REUSE_LOGIC_ONLY logic
+ *     carried over from the audited R5R location resolver
  *   - lib/intl useMoney, lib/use-document-meta, i18n changeLocale
  *   - components/brand FadeUpMark (brand charter, not an R5 design decision)
  */
@@ -25,7 +25,7 @@ import {
   usePublicCurrencies,
   type MarketplaceProfessionalResult,
 } from '@/lib/queries/marketplace'
-import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
+import { useCustomerLocation } from '@/customer-v3/hooks/use-customer-location'
 import { useMoney } from '@/lib/intl/use-intl'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { changeLocale } from '@/i18n'

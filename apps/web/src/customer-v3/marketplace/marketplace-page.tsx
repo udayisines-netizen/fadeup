@@ -25,8 +25,8 @@ import {
   type MarketplaceSort,
   type MarketplaceProfessionalResult,
 } from '@/lib/queries/marketplace'
-import { useCustomerLocation } from '@/customer-v2/hooks/use-customer-location'
-import { useDebounced } from '@/customer-v2/hooks/use-delayed'
+import { useCustomerLocation } from '@/customer-v3/hooks/use-customer-location'
+import { useDebounced } from '@/customer-v3/hooks/use-delayed'
 import { useMoney } from '@/lib/intl/use-intl'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { ResultRow } from '@/customer-v3/ui/result-row'

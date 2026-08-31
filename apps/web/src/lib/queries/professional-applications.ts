@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
+import { useRealtimeInvalidation } from '@/lib/realtime'
 
 /**
  * The professional registration approval workflow —
@@ -302,31 +302,14 @@ interface PlatformNotificationRow {
  * postgres_changes on the table and let the change invalidate the query.
  */
 export function usePlatformNotifications(userId: string | undefined) {
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    if (!userId) return
-    const supabase = getSupabaseClient()
-    const channel = supabase
-      .channel(`platform-notifications-${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'platform_notifications',
-          filter: `recipient_user_id=eq.${userId}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ['platform-notifications'] })
-        },
-      )
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [userId, queryClient])
+  // Same shared helper as the live queue, for the same lifecycle reasons: one
+  // physical topic per mount, and no invalidation from a channel belonging to
+  // an identity the session has already moved off.
+  useRealtimeInvalidation(
+    userId ? `platform-notifications-${userId}` : null,
+    [{ table: 'platform_notifications', filter: `recipient_user_id=eq.${userId}` }],
+    [['platform-notifications']],
+  )
 
   return useQuery({
     queryKey: ['platform-notifications', userId],

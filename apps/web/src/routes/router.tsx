@@ -12,11 +12,8 @@ import { PublicBookingLayout } from '@/routes/public-booking-layout'
 import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
-import { V2_ROUTE_PATH } from '@/customer-v2/routes'
 import { V3_ROUTE_PATH } from '@/customer-v3/routes'
-import { V2Splash } from '@/customer-v2/ui/v2-splash'
-import { PRO_V2_ROUTE_PATH } from '@/pro-v2/routes'
-import { ProV2Shell } from '@/pro-v2/shell/pro-v2-shell'
+import { V3Splash } from '@/customer-v3/ui/v3-splash'
 import { ProV3Shell as ProV3ShellRoute } from '@/pro-v3/shell/pro-v3-shell'
 
 export const router = createBrowserRouter([
@@ -45,7 +42,7 @@ export const router = createBrowserRouter([
       refetches inside mounted routes never reach it. This also retires the
       long-standing "No HydrateFallback element" console warning.
     */
-    HydrateFallback: V2Splash,
+    HydrateFallback: V3Splash,
     children: [
       {
         // Shared nav/footer chrome for the public marketing site — kept
@@ -247,174 +244,6 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { CustomerPassportPage } = await import('@/pages/customer-passport-page')
               return { Component: CustomerPassportPage }
-            },
-          },
-        ],
-      },
-      {
-        /*
-          R5R GREENFIELD PRO PREVIEW — the professional cockpit rebuilt on the
-          light v2 foundation, mounted beside the canonical /app product until
-          a human approves the direction. Auth-gated because every contract
-          inside is org-scoped behind RLS; RequireAuth reuses the existing
-          session infrastructure and the pro login door.
-        */
-        path: PRO_V2_ROUTE_PATH,
-        element: (
-          <RequireAuth loginPath="/pro/login">
-            <ProV2Shell />
-          </RequireAuth>
-        ),
-        children: [
-          {
-            index: true,
-            lazy: async () => {
-              const { ProV2DashboardPage } = await import('@/pro-v2/dashboard/dashboard-page')
-              return { Component: ProV2DashboardPage }
-            },
-          },
-          {
-            path: 'calendar',
-            lazy: async () => {
-              const { ProV2CalendarPage } = await import('@/pro-v2/calendar/calendar-page')
-              return { Component: ProV2CalendarPage }
-            },
-          },
-          {
-            path: 'customers',
-            lazy: async () => {
-              const { ProV2CustomersPage } = await import('@/pro-v2/customers/customers-page')
-              return { Component: ProV2CustomersPage }
-            },
-          },
-          {
-            path: 'analytics',
-            lazy: async () => {
-              const { ProV2AnalyticsPage } = await import('@/pro-v2/analytics/analytics-page')
-              return { Component: ProV2AnalyticsPage }
-            },
-          },
-          {
-            path: 'retention',
-            lazy: async () => {
-              const { ProV2RetentionPage } = await import('@/pro-v2/retention/retention-page')
-              return { Component: ProV2RetentionPage }
-            },
-          },
-          {
-            path: 'profile',
-            lazy: async () => {
-              const { ProV2ProfilePage } = await import('@/pro-v2/profile/pro-profile-page')
-              return { Component: ProV2ProfilePage }
-            },
-          },
-        ],
-      },
-      {
-        /*
-          R5R GREENFIELD PREVIEW — not the canonical customer product.
-
-          The rebuilt customer shell and Home mount here, beside `/app/customer`
-          rather than over it, until the product owner approves the visual
-          direction. CLAUDE.md's legacy-safety rule is explicit that a working
-          surface is not removed before its replacement is verified, and
-          GREENFIELD_RULES.md §14 is explicit that a green test suite is not
-          that verification.
-
-          Deliberately NOT wrapped in RequireAuth: Home reads
-          `search_public_professionals`, which `anon` may execute, and gating a
-          public marketplace behind a login would also make the surface
-          unreviewable in a browser — the R5R.0 audit lost every one of its
-          `/app/customer` probes to exactly that redirect. Auth-dependent parts
-          degrade instead: the notification count queries nothing without a user.
-
-          Every page inside sets `noIndex`, so a preview never becomes
-          indexable content. See src/customer-v2/routes.ts for the paths.
-        */
-        path: V2_ROUTE_PATH,
-        lazy: async () => {
-          const { CustomerV2Shell } = await import('@/customer-v2/shell/customer-v2-shell')
-          return { Component: CustomerV2Shell }
-        },
-        children: [
-          {
-            index: true,
-            lazy: async () => {
-              const { CustomerV2HomePage } = await import('@/customer-v2/home/home-page')
-              return { Component: CustomerV2HomePage }
-            },
-          },
-          {
-            path: 'marketplace',
-            lazy: async () => {
-              const { CustomerV2MarketplacePage } = await import(
-                '@/customer-v2/marketplace/marketplace-page'
-              )
-              return { Component: CustomerV2MarketplacePage }
-            },
-          },
-          {
-            path: 's/:slug',
-            lazy: async () => {
-              const { CustomerV2ShopProfilePage } = await import(
-                '@/customer-v2/profiles/shop-profile-page'
-              )
-              return { Component: CustomerV2ShopProfilePage }
-            },
-          },
-          {
-            path: 'queue',
-            lazy: async () => {
-              const { CustomerV2QueuePage } = await import('@/customer-v2/queue/queue-page')
-              return { Component: CustomerV2QueuePage }
-            },
-          },
-          {
-            path: 's/:slug/book',
-            lazy: async () => {
-              const { CustomerV2BookingPage } = await import('@/customer-v2/booking/booking-page')
-              return { Component: CustomerV2BookingPage }
-            },
-          },
-          {
-            path: 's/:slug/b/:barberId',
-            lazy: async () => {
-              const { CustomerV2BarberProfilePage } = await import(
-                '@/customer-v2/profiles/barber-profile-page'
-              )
-              return { Component: CustomerV2BarberProfilePage }
-            },
-          },
-          {
-            path: 'book',
-            lazy: async () => {
-              const { CustomerV2BookPage } = await import('@/customer-v2/book/book-page')
-              return { Component: CustomerV2BookPage }
-            },
-          },
-          {
-            path: 'appointments',
-            lazy: async () => {
-              const { CustomerV2AppointmentsPage } = await import(
-                '@/customer-v2/appointments/appointments-page'
-              )
-              return { Component: CustomerV2AppointmentsPage }
-            },
-          },
-          {
-            path: 'profile',
-            lazy: async () => {
-              const { CustomerV2ProfilePage } = await import('@/customer-v2/profile/profile-page')
-              return { Component: CustomerV2ProfilePage }
-            },
-          },
-          {
-            path: 'profile/passport',
-            lazy: async () => {
-              const { CustomerV2PassportPage } = await import(
-                '@/customer-v2/profile/passport-page'
-              )
-              return { Component: CustomerV2PassportPage }
             },
           },
         ],
