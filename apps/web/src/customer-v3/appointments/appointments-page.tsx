@@ -49,9 +49,9 @@ export function CustomerV3AppointmentsPage() {
       <div className="v3a-empty">
         <h1 className="v3a-empty-title">{t('appointments.signedOutTitle')}</h1>
         <p className="v3-meta">{t('appointments.signedOutBody')}</p>
-        <a href="/login" className="v3-btn v3-btn--primary-ink v3-press">
+        <Link to="/login" className="v3-btn v3-btn--primary-ink v3-press">
           {t('landing.nav.signIn')}
-        </a>
+        </Link>
       </div>
     )
   }

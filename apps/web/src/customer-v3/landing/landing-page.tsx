@@ -42,7 +42,7 @@ import heroWideWebp1600 from '@/assets/marketing/home/hero-editorial-1600.webp'
 import heroMobile860 from '@/assets/marketing/home/hero-editorial-mobile-860.avif'
 import heroMobile640 from '@/assets/marketing/home/hero-editorial-mobile-640.avif'
 import heroMobileWebp640 from '@/assets/marketing/home/hero-editorial-mobile-640.webp'
-import cultureCrop from '@/assets/marketing/home/hero-editorial-mobile-860.avif'
+import cultureImage from '@/assets/marketing/home/culture-mirror-860.avif'
 
 /** How many real results the landing asks for: 1 hero proof + 3 discovery. */
 const PROOF_LIMIT = 4
@@ -72,7 +72,8 @@ export function LandingPage() {
 
   const results = search.data ?? []
   const heroResult = results[0] ?? null
-  const discoveryResults = results.slice(0, 3)
+  /* The hero already shows results[0]; Discovery continues the list. */
+  const discoveryResults = results.length > 1 ? results.slice(1, 4) : results.slice(0, 3)
 
   return (
     <div className="v3l-page" data-fu-v3>
@@ -252,7 +253,7 @@ function ResultCard({ result }: { result: MarketplaceProfessionalResult }) {
 
   const price =
     result.startingPriceCents != null && currency
-      ? money(result.startingPriceCents, currency)
+      ? money(result.startingPriceCents, currency, { trimWholeAmounts: true })
       : null
 
   return (
@@ -405,7 +406,7 @@ function CultureSection() {
           <p className="v3l-body-lede">{t('landing.culture.body')}</p>
         </div>
         <div className="v3l-culture-media">
-          <img src={cultureCrop} alt={t('landing.culture.imageAlt')} loading="lazy" decoding="async" width={922} height={1152} />
+          <img src={cultureImage} alt={t('landing.culture.imageAlt')} loading="lazy" decoding="async" width={1536} height={2048} />
         </div>
       </div>
     </section>

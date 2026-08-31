@@ -9,6 +9,7 @@
  * spring; reduced motion collapses to opacity.
  */
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '@/lib/auth-context'
@@ -32,9 +33,9 @@ export function CustomerV3QueuePage() {
             {t('queue.signedOutTitle')}
           </p>
           <p className="v3-meta">{t('queue.emptyBody')}</p>
-          <a href="/login" className="v3-btn v3-btn--on-dark v3-press">
+          <Link to="/login" className="v3-btn v3-btn--on-dark v3-press">
             {t('landing.nav.signIn')}
-          </a>
+          </Link>
         </div>
       ) : queue.isError ? (
         <p className="v3a-error" role="alert">
@@ -60,7 +61,8 @@ export function CustomerV3QueuePage() {
 }
 
 function QueueTicket({ entry }: { entry: MyQueueEntry }) {
-  const { t } = useTranslation('v3')
+  const { t, i18n } = useTranslation('v3')
+  const positionFormat = new Intl.NumberFormat(i18n.language, { minimumIntegerDigits: 2 })
 
   /* One vertical roll per REAL position change — nothing else animates. */
   const previous = useRef<number | null>(entry.queuePosition)
@@ -80,7 +82,7 @@ function QueueTicket({ entry }: { entry: MyQueueEntry }) {
         <>
           <span className="v3-kicker">{t('landing.queue.positionLabel')}</span>
           <span key={rollKey} className="v3-num--display v3q-position v3q-roll">
-            {String(entry.queuePosition).padStart(2, '0')}
+            {positionFormat.format(entry.queuePosition)}
           </span>
           {entry.queuePosition === 1 ? (
             <span className="v3q-ahead">{t('queue.youAreNextSoon')}</span>

@@ -968,7 +968,8 @@
   .v3l-hero-proof {
     position: static;
     margin-block-start: 2rem;
-    inline-size: min(21.5rem, 100%);
+    margin-inline: 1rem;
+    inline-size: min(21.5rem, calc(100% - 2rem));
   }
 
   .v3l-culture-media {

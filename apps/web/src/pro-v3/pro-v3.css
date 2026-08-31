@@ -85,6 +85,17 @@
   display: none;
 }
 
+/* Edge fade says "there is more" without a scrollbar. */
+@media (max-width: 48rem) {
+  .v3pro-nav {
+    mask-image: linear-gradient(to right, black 88%, transparent);
+  }
+
+  [dir='rtl'] .v3pro-nav {
+    mask-image: linear-gradient(to left, black 88%, transparent);
+  }
+}
+
 .v3pro-nav a {
   display: inline-flex;
   align-items: center;

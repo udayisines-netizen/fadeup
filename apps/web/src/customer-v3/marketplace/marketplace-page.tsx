@@ -4,7 +4,9 @@
  * Desktop is a genuine location marketplace: results beside a sticky map
  * with two-way pin↔row coordination. Mobile is list-first with a compact
  * chip rail; the Map view exists only when at least one result carries real
- * coordinates (the RPC returns them only when the customer shares location).
+ * coordinates. The RPC selects location coordinates unconditionally — a
+ * result without them is simply a location that was never geocoded, and the
+ * split lights up the day one is.
  *
  * State survives navigation: `?q&city&open&sort&view` — the same URL
  * contract the product has carried since R5R, plus `city` so the landing
@@ -30,6 +32,7 @@ import { useDebounced } from '@/customer-v3/hooks/use-delayed'
 import { useMoney } from '@/lib/intl/use-intl'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { ResultRow } from '@/customer-v3/ui/result-row'
+import { LocationScope } from '@/customer-v3/ui/location-scope'
 
 const V3ResultsMap = lazy(() => import('@/customer-v3/marketplace/v3-results-map'))
 
@@ -60,6 +63,12 @@ export function CustomerV3MarketplacePage() {
   const debouncedQuery = useDebounced(query, 300)
   const debouncedCity = useDebounced(city, 300)
 
+  /* Paging: the limit grows in place so refinement never loses scroll. */
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE)
+  useEffect(() => {
+    setVisibleLimit(PAGE_SIZE)
+  }, [debouncedQuery, debouncedCity, openNowOnly, effectiveSort])
+
   const search = useSearchPublicProfessionals(
     {
       country: location.isAnywhere ? null : location.countryCode,
@@ -70,7 +79,7 @@ export function CustomerV3MarketplacePage() {
       openNowOnly,
       sort: effectiveSort,
       entityType: 'shop',
-      limit: PAGE_SIZE,
+      limit: visibleLimit,
     },
     { keepPreviousData: true },
   )
@@ -128,17 +137,30 @@ export function CustomerV3MarketplacePage() {
       )}
     </div>
   ) : (
-    <div className="v3a-results">
-      {results.map((result) => (
-        <ResultRow
-          key={result.locationId}
-          result={result}
-          currency={currencies[result.organizationId]}
-          active={activeId === result.locationId}
-          onHover={setActiveId}
-        />
-      ))}
-    </div>
+    <>
+      <div className="v3a-results">
+        {results.map((result) => (
+          <ResultRow
+            key={result.locationId}
+            result={result}
+            currency={currencies[result.organizationId]}
+            active={activeId === result.locationId}
+            onHover={setActiveId}
+          />
+        ))}
+      </div>
+      {totalCount > results.length ? (
+        <button
+          type="button"
+          className="v3-btn v3-btn--quiet v3-press"
+          style={{ marginBlockStart: '0.75rem' }}
+          disabled={search.isFetching}
+          onClick={() => setVisibleLimit((current) => current + PAGE_SIZE)}
+        >
+          {t('app.market.showMore')}
+        </button>
+      ) : null}
+    </>
   )
 
   const map = hasCoordinates ? (
@@ -164,6 +186,8 @@ export function CustomerV3MarketplacePage() {
         ) : null}
       </header>
 
+      <LocationScope location={location} />
+
       <label className="v3a-search">
         <SearchIcon />
         <input
@@ -184,17 +208,20 @@ export function CustomerV3MarketplacePage() {
         >
           {t('app.market.openNow')}
         </button>
-        {sortOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            className="v3-chip v3-press"
-            aria-pressed={effectiveSort === option.value}
-            onClick={() => setParam('sort', option.value === 'recommended' ? null : option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
+        <span role="radiogroup" aria-label={t('app.market.sortLabel')} style={{ display: 'contents' }}>
+          {sortOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              className="v3-chip v3-press"
+              aria-checked={effectiveSort === option.value}
+              onClick={() => setParam('sort', option.value === 'recommended' ? null : option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </span>
         {hasCoordinates ? (
           <button
             type="button"

@@ -155,7 +155,9 @@
       "stageConfirmed": "確定",
       "stageWaiting": "確認待ち",
       "bookAgain": "もう一度予約",
-      "bookAgainCta": "もう一度予約"
+      "bookAgainCta": "もう一度予約",
+      "inCountry": "{{country}}",
+      "discover": "見つける"
     },
     "market": {
       "metaTitle": "FadeUp — マーケット",
@@ -183,10 +185,19 @@
       "notPlotted_two": "{{count}}件は地図に位置がありません",
       "notPlotted_few": "{{count}}件は地図に位置がありません",
       "notPlotted_many": "{{count}}件は地図に位置がありません",
-      "notPlotted_other": "{{count}}件は地図に位置がありません"
+      "notPlotted_other": "{{count}}件は地図に位置がありません",
+      "showMore": "もっと見る"
     },
     "errors": {
       "load": "読み込めませんでした。接続を確認して再試行してください。"
+    },
+    "location": {
+      "label": "検索エリア",
+      "useMine": "現在地を使う",
+      "locating": "取得中…",
+      "nearMe": "近くのみ",
+      "denied": "ブラウザで位置情報が拒否されています",
+      "everywhere": "すべての地域"
     }
   },
   "profile": {

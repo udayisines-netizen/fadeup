@@ -155,7 +155,9 @@
       "stageConfirmed": "Подтверждена",
       "stageWaiting": "Ожидает подтверждения",
       "bookAgain": "Записаться снова",
-      "bookAgainCta": "Записаться снова"
+      "bookAgainCta": "Записаться снова",
+      "inCountry": "{{country}}",
+      "discover": "Обзор"
     },
     "market": {
       "metaTitle": "FadeUp — Маркетплейс",
@@ -183,10 +185,19 @@
       "notPlotted_two": "{{count}} результата без позиции на карте",
       "notPlotted_few": "{{count}} результата без позиции на карте",
       "notPlotted_many": "{{count}} результатов без позиции на карте",
-      "notPlotted_other": "{{count}} результата без позиции на карте"
+      "notPlotted_other": "{{count}} результата без позиции на карте",
+      "showMore": "Показать ещё"
     },
     "errors": {
       "load": "Не удалось загрузить. Проверьте соединение и попробуйте снова."
+    },
+    "location": {
+      "label": "Область поиска",
+      "useMine": "Моё местоположение",
+      "locating": "Определяем…",
+      "nearMe": "Рядом со мной",
+      "denied": "Геолокация запрещена в браузере",
+      "everywhere": "Везде"
     }
   },
   "profile": {

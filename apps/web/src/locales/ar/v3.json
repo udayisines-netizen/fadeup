@@ -140,7 +140,7 @@
       "marketplace": "السوق",
       "book": "احجز",
       "appointments": "المواعيد",
-      "profile": "الملف الشخصي",
+      "profile": "الملف",
       "notifications": "الإشعارات"
     },
     "home": {
@@ -155,7 +155,9 @@
       "stageConfirmed": "مؤكَّد",
       "stageWaiting": "بانتظار التأكيد",
       "bookAgain": "احجز مجددًا",
-      "bookAgainCta": "احجز مجددًا"
+      "bookAgainCta": "احجز مجددًا",
+      "inCountry": "في {{country}}",
+      "discover": "استكشف"
     },
     "market": {
       "metaTitle": "FadeUp — السوق",
@@ -183,10 +185,19 @@
       "notPlotted_two": "نتيجتان بلا موقع على الخريطة",
       "notPlotted_few": "{{count}} نتائج بلا موقع على الخريطة",
       "notPlotted_many": "{{count}} نتيجة بلا موقع على الخريطة",
-      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة"
+      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة",
+      "showMore": "عرض المزيد"
     },
     "errors": {
       "load": "تعذّر التحميل. تحقق من اتصالك وحاول مرة أخرى."
+    },
+    "location": {
+      "label": "نطاق البحث",
+      "useMine": "استخدم موقعي",
+      "locating": "جارٍ التحديد…",
+      "nearMe": "بالقرب مني",
+      "denied": "رفض المتصفح تحديد الموقع",
+      "everywhere": "في كل مكان"
     }
   },
   "profile": {

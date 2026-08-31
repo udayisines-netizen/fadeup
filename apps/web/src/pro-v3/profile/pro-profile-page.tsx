@@ -35,6 +35,7 @@ import { useOrgLocations, useUpdateLocation, type Location } from '@/lib/queries
 import { useOrgStaffProfiles, useUpdateStaffProfile, type StaffProfile } from '@/lib/queries/staff-profiles'
 import { useOrgBarbers } from '@/lib/queries/barbers'
 import { useSearchPublicProfessionals } from '@/lib/queries/marketplace'
+import { useOrganizationCurrency } from '@/lib/intl/use-intl'
 import { templateFor, DEFAULT_WEEK } from '@/lib/onboarding/templates'
 import { ResultRow } from '@/customer-v3/ui/result-row'
 import { useProV3Scope } from '@/pro-v3/shell/pro-v3-shell'
@@ -99,8 +100,9 @@ function ListingMirror({ canManage }: { canManage: boolean }) {
   /* The org's own public row, from the SAME anon search contract customers
      hit — the operator sees exactly what the marketplace serves, and an
      unpublished org truthfully finds nothing. */
+  const orgCurrency = useOrganizationCurrency(scope.organizationId)
   const mirror = useSearchPublicProfessionals(
-    { query: listing.data?.name ?? null, entityType: 'shop', limit: 5 },
+    { query: listing.data?.name ?? null, entityType: 'shop', limit: 20 },
     {},
   )
   const ownRows = useMemo(
@@ -135,7 +137,7 @@ function ListingMirror({ canManage }: { canManage: boolean }) {
       {marketplaceVisible && ownRows.length > 0 ? (
         <div>
           {ownRows.map((row) => (
-            <ResultRow key={row.locationId} result={row} currency={undefined} />
+            <ResultRow key={row.locationId} result={row} currency={orgCurrency} />
           ))}
         </div>
       ) : (

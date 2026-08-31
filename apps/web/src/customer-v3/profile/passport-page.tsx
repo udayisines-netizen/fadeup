@@ -8,6 +8,7 @@
  * hover-only and dies under reduced motion.
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import QRCode from 'qrcode'
 
@@ -37,9 +38,9 @@ export function CustomerV3PassportPage() {
     return (
       <div className="v3a-empty">
         <h1 className="v3a-empty-title">{t('account.signedOutTitle')}</h1>
-        <a href="/login" className="v3-btn v3-btn--primary-ink v3-press">
+        <Link to="/login" className="v3-btn v3-btn--primary-ink v3-press">
           {t('landing.nav.signIn')}
-        </a>
+        </Link>
       </div>
     )
   }
@@ -66,7 +67,11 @@ export function CustomerV3PassportPage() {
           <span className="v3pr-pass-mini-name" style={{ fontSize: '1.375rem' }}>
             <bdi>{displayName}</bdi>
           </span>
-          {passport.isPending ? (
+          {passport.isError ? (
+            <p role="alert" className="v3a-error">
+              {t('app.errors.load')}
+            </p>
+          ) : passport.isPending ? (
             <div className="v3-skeleton" style={{ blockSize: '3rem', background: 'rgb(232 240 234 / 0.1)' }} aria-hidden="true" />
           ) : rows.length > 0 ? (
             <dl className="v3pp-rows">

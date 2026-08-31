@@ -118,9 +118,12 @@ Two voices, one family system:
 - **Product voice:** the existing system sans stack (SF-adjacent) — every
   operational surface. Efficient, never dramatic inside the app.
 - **Marketing display voice:** `Instrument Serif` (already in the repo, no new
-  dependency) for landing display headlines only — an editorial,
-  fashion-adjacent counterpoint that no generic SaaS template ships. Used at
-  large sizes with tight leading; never inside the product shell.
+  dependency) for landing display headlines — with ONE deliberate in-app
+  exception: the signed-in Home greeting, where the serif carries the
+  personal, editorial register the blueprint asks Home to open with. An
+  editorial, fashion-adjacent counterpoint that no generic SaaS template
+  ships; used at large sizes with tight leading, and nowhere else inside the
+  product shell.
 
 Scale (clamp() on marketing, fixed in product):
 
@@ -153,7 +156,9 @@ always render in the Numeric style — larger and darker than their labels.
   difference, occlusion. CSS effects second: one soft ambient shadow token for
   genuinely floating objects (map panel, passport, queue ticket, sticky bars),
   hairline borders elsewhere. No frosted glass, no glow, no heavy elevation
-  ramp. Subtle parallax only in landing hero, disabled under reduced motion.
+  ramp. (Decided exception: the fixed navigation bars use a functional
+  backdrop blur as a legibility scrim over scrolling content — a scrim, not
+  a glass card; it renders as a plain translucent fill where unsupported.) Subtle parallax only in landing hero, disabled under reduced motion.
 
 ## 8. Photography, casting, lighting (BG-04 material)
 

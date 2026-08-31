@@ -155,7 +155,9 @@
       "stageConfirmed": "Bestätigt",
       "stageWaiting": "Wartet auf Bestätigung",
       "bookAgain": "Erneut buchen",
-      "bookAgainCta": "Erneut buchen"
+      "bookAgainCta": "Erneut buchen",
+      "inCountry": "In {{country}}",
+      "discover": "Entdecken"
     },
     "market": {
       "metaTitle": "FadeUp — Marktplatz",
@@ -183,10 +185,19 @@
       "notPlotted_two": "{{count}} Ergebnisse ohne Kartenposition",
       "notPlotted_few": "{{count}} Ergebnisse ohne Kartenposition",
       "notPlotted_many": "{{count}} Ergebnisse ohne Kartenposition",
-      "notPlotted_other": "{{count}} Ergebnisse ohne Kartenposition"
+      "notPlotted_other": "{{count}} Ergebnisse ohne Kartenposition",
+      "showMore": "Mehr anzeigen"
     },
     "errors": {
       "load": "Laden fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut."
+    },
+    "location": {
+      "label": "Suchbereich",
+      "useMine": "Meinen Standort verwenden",
+      "locating": "Wird geortet…",
+      "nearMe": "In meiner Nähe",
+      "denied": "Standort im Browser abgelehnt",
+      "everywhere": "Überall"
     }
   },
   "profile": {

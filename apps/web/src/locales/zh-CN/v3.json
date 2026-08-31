@@ -155,7 +155,9 @@
       "stageConfirmed": "已确认",
       "stageWaiting": "等待确认",
       "bookAgain": "再次预约",
-      "bookAgainCta": "再次预约"
+      "bookAgainCta": "再次预约",
+      "inCountry": "{{country}}",
+      "discover": "发现"
     },
     "market": {
       "metaTitle": "FadeUp — 市场",
@@ -183,10 +185,19 @@
       "notPlotted_two": "{{count}} 个结果没有地图位置",
       "notPlotted_few": "{{count}} 个结果没有地图位置",
       "notPlotted_many": "{{count}} 个结果没有地图位置",
-      "notPlotted_other": "{{count}} 个结果没有地图位置"
+      "notPlotted_other": "{{count}} 个结果没有地图位置",
+      "showMore": "显示更多"
     },
     "errors": {
       "load": "加载失败。请检查网络后重试。"
+    },
+    "location": {
+      "label": "搜索范围",
+      "useMine": "使用我的位置",
+      "locating": "定位中…",
+      "nearMe": "我附近",
+      "denied": "浏览器已拒绝定位",
+      "everywhere": "所有地区"
     }
   },
   "profile": {

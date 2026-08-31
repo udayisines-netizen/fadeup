@@ -18,6 +18,7 @@ import { useOrgQueue } from '@/lib/queries/queue'
 import { useOrgBarbers } from '@/lib/queries/barbers'
 import { useOrgStaffProfiles } from '@/lib/queries/staff-profiles'
 import { hasAnyActivity, useOrganizationAnalyticsSummary } from '@/lib/queries/analytics-summary'
+import { todayInZone } from '@/lib/calendar/time'
 import { useProV3Scope } from '@/pro-v3/shell/pro-v3-shell'
 import { PRO_V3_ROUTES } from '@/pro-v3/routes'
 
@@ -25,7 +26,13 @@ export function ProV3DashboardPage() {
   const { t, i18n } = useTranslation('v3')
   const scope = useProV3Scope()
 
-  const today = useMemo(() => new Intl.DateTimeFormat('en-CA').format(new Date()), [])
+  /* "Today" is the SHOP's day, not the browser's — the same rule the
+     calendar already enforces. */
+  const timezone =
+    scope.locations.find((l) => l.id === scope.locationId)?.timezone ??
+    scope.locations[0]?.timezone ??
+    'UTC'
+  const today = useMemo(() => todayInZone(timezone), [timezone])
   const appointments = useOrgAppointmentsForDate(scope.organizationId, today)
   const queue = useOrgQueue(scope.organizationId)
   const barbers = useOrgBarbers(scope.organizationId)
@@ -46,12 +53,15 @@ export function ProV3DashboardPage() {
     .filter((entry) => entry.status === 'waiting')
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 
+  /* NOW = genuinely in the chair or within the 15-minute lead window;
+     everything else still ahead is NEXT. */
   const now = Date.now()
+  const LEAD_MS = 15 * 60_000
   const live = todays.filter(
     (a) => a.status !== 'cancelled' && a.status !== 'no_show' && new Date(a.endsAt).getTime() > now,
   )
-  const nowRows = live.slice(0, 3)
-  const nextRows = live.slice(3)
+  const nowRows = live.filter((a) => new Date(a.startsAt).getTime() <= now + LEAD_MS)
+  const nextRows = live.filter((a) => new Date(a.startsAt).getTime() > now + LEAD_MS)
   const completedToday = todays.filter((a) => a.status === 'completed').length
 
   const barberName = (barberId: string) => {

@@ -155,7 +155,9 @@
       "stageConfirmed": "Confirmé",
       "stageWaiting": "En attente de confirmation",
       "bookAgain": "Re-réserver",
-      "bookAgainCta": "Re-réserver"
+      "bookAgainCta": "Re-réserver",
+      "inCountry": "En {{country}}",
+      "discover": "Découvrir"
     },
     "market": {
       "metaTitle": "FadeUp — Marketplace",
@@ -183,10 +185,19 @@
       "notPlotted_two": "{{count}} résultats sans position sur la carte",
       "notPlotted_few": "{{count}} résultats sans position sur la carte",
       "notPlotted_many": "{{count}} résultats sans position sur la carte",
-      "notPlotted_other": "{{count}} résultats sans position sur la carte"
+      "notPlotted_other": "{{count}} résultats sans position sur la carte",
+      "showMore": "Voir plus"
     },
     "errors": {
       "load": "Chargement impossible. Vérifiez votre connexion et réessayez."
+    },
+    "location": {
+      "label": "Zone de recherche",
+      "useMine": "Utiliser ma position",
+      "locating": "Localisation…",
+      "nearMe": "Autour de moi",
+      "denied": "Position refusée par le navigateur",
+      "everywhere": "Partout"
     }
   },
   "profile": {

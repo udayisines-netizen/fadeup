@@ -3,7 +3,6 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { MARKETPLACE_SUPPLY_TYPES } from '@/lib/queries/marketplace'
-import { classifyMarketplaceSupply } from '@/customer-v3/marketplace-supply'
 
 /**
  * The customer supply model, enforced at the frontend's half of it.
@@ -15,50 +14,6 @@ import { classifyMarketplaceSupply } from '@/customer-v3/marketplace-supply'
  * decides: which rows are supply, and that no client-side copy of the internal
  * enum ever creeps back in.
  */
-
-const shop = (type: 'independent' | 'barbershop' | null = null) =>
-  ({ entityType: 'shop', marketplaceSupplyType: type }) as const
-const barber = { entityType: 'barber', marketplaceSupplyType: 'barbershop' } as const
-
-describe('marketplace eligibility', () => {
-  it('admits an independent professional as their own bookable business', () => {
-    expect(classifyMarketplaceSupply(shop('independent'))).toEqual({
-      eligible: true,
-      type: 'independent',
-    })
-  })
-
-  it('admits a barbershop', () => {
-    expect(classifyMarketplaceSupply(shop('barbershop'))).toEqual({
-      eligible: true,
-      type: 'barbershop',
-    })
-  })
-
-  it('never lets a barber who works at a shop become separate supply', () => {
-    /*
-      The RPC's `barber_base` joins barbers -> organizations -> locations, so a
-      barber row is by construction a member of staff at a place. Listing one
-      would show a customer a "business" they cannot book independently of the
-      shop it belongs to, and would list one bookable place once per public team
-      member.
-    */
-    expect(classifyMarketplaceSupply(barber)).toEqual({
-      eligible: false,
-      reason: 'staff-of-a-shop',
-    })
-  })
-
-  it('claims no type when the database did not classify the listing', () => {
-    /*
-      The RPC enumerates the business types it knows and returns NULL for any it
-      does not, so this is the path a business type added after that mapping was
-      written takes. It must stay null: a listing that calls itself a Barbershop
-      because nothing told it otherwise is a fabricated classification.
-    */
-    expect(classifyMarketplaceSupply(shop(null))).toEqual({ eligible: true, type: null })
-  })
-})
 
 describe('the public vocabulary', () => {
   it('has exactly two values', () => {

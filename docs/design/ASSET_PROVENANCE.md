@@ -36,3 +36,25 @@ ships only as optimized derivatives; masters are archived under
   hair texture; clipper grip anatomically correct; no in-scene text or logos;
   passed 2026-08-31 creative review (3 sibling variants archived in Artlist
   history, retrievable via `list_generations`).
+
+## culture-mirror (Landing Culture section, BG-04)
+
+- **Purpose:** the Culture section's editorial scene — a client checking his
+  fresh mid skin fade in a hand mirror. Replaces the interim reuse of the
+  hero's mobile crop (independent-review finding #6); this is the reserved
+  Image-2 spend from the direction's plan (§10).
+- **Source:** Artlist MCP · Seedream 5.0 Pro T2I 2K (modelId 2615)
+- **Generation id:** `01a0596d-771e-7f8e-9b46-69b91be8cd38` (output 1 of 4)
+- **Generated:** 2026-08-31 · consumed the second (final) free-trial image
+  generation (0 credits). Free image slots now exhausted; 1 free video
+  generation remains unspent by design.
+- **Master:** `docs/design/artifacts/v3/culture-mirror-master-1536.png`
+  (1536×2048 PNG — never shipped)
+- **Shipped derivatives:** `apps/web/src/assets/marketing/home/
+  culture-mirror-{860,640,480}.{avif,webp}` (sharp, AVIF q55/WebP q74;
+  860w AVIF = 40KB)
+- **Usage:** landing Culture section `<img loading="lazy">`, 4:5 media frame.
+- **Alt behavior:** meaningful — localized alt describes the scene.
+- **Casting/quality review:** believable fade gradient and curl texture,
+  natural hand/mirror anatomy, no in-scene text or logos; passed 2026-08-31
+  creative review (3 sibling variants retrievable via `list_generations`).

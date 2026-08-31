@@ -28,6 +28,7 @@ import { useDateTime } from '@/lib/intl/use-intl'
 import { useDocumentMeta } from '@/lib/use-document-meta'
 import { V3_ROUTES, v3BookingPath } from '@/customer-v3/routes'
 import { ResultRow } from '@/customer-v3/ui/result-row'
+import { LocationScope } from '@/customer-v3/ui/location-scope'
 
 const NEAR_YOU_LIMIT = 6
 
@@ -79,9 +80,6 @@ export function CustomerV3HomePage() {
     <div>
       <header className="v3a-page-head">
         <h1 className="v3a-greeting">{t('app.home.greeting')}</h1>
-        {location.countryLabel && !location.isAnywhere ? (
-          <p className="v3-meta">{location.countryLabel}</p>
-        ) : null}
       </header>
 
       <form
@@ -104,12 +102,18 @@ export function CustomerV3HomePage() {
         </label>
       </form>
 
+      <LocationScope location={location} />
+
       {next ? <NextAppointment appointment={next} /> : null}
 
       <section className="v3a-section" aria-labelledby="v3a-near-title">
         <div className="v3a-section-head">
           <h2 id="v3a-near-title" className="v3a-section-title">
-            {t('app.home.nearYou')}
+            {location.precision === 'precise'
+              ? t('app.home.nearYou')
+              : location.countryLabel && !location.isAnywhere
+                ? t('app.home.inCountry', { country: location.countryLabel })
+                : t('app.home.discover')}
           </h2>
           <Link to={V3_ROUTES.marketplace} className="v3a-section-link">
             {t('app.home.seeAll')}
