@@ -10,7 +10,7 @@ import { SUPPORTED_LOCALES, resolveInitialLocale, isRtl } from '@/lib/locale'
  * locale in NAMESPACES below is auto-wired, (2) adding its name to
  * NAMESPACES here.
  */
-const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport', 'auth', 'landing', 'onboarding', 'booking', 'app', 'platform'] as const
+const NAMESPACES = ['common', 'marketplace', 'customer-app', 'passport', 'auth', 'landing', 'onboarding', 'booking', 'app', 'platform', 'v3'] as const
 type Namespace = (typeof NAMESPACES)[number]
 
 const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object }>>> = {
@@ -25,6 +25,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/en/booking.json'),
     app: () => import('@/locales/en/app.json'),
     platform: () => import('@/locales/en/platform.json'),
+    v3: () => import('@/locales/en/v3.json'),
   },
   fr: {
     common: () => import('@/locales/fr/common.json'),
@@ -37,6 +38,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/fr/booking.json'),
     app: () => import('@/locales/fr/app.json'),
     platform: () => import('@/locales/fr/platform.json'),
+    v3: () => import('@/locales/fr/v3.json'),
   },
   es: {
     common: () => import('@/locales/es/common.json'),
@@ -49,6 +51,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/es/booking.json'),
     app: () => import('@/locales/es/app.json'),
     platform: () => import('@/locales/es/platform.json'),
+    v3: () => import('@/locales/es/v3.json'),
   },
   de: {
     common: () => import('@/locales/de/common.json'),
@@ -61,6 +64,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/de/booking.json'),
     app: () => import('@/locales/de/app.json'),
     platform: () => import('@/locales/de/platform.json'),
+    v3: () => import('@/locales/de/v3.json'),
   },
   it: {
     common: () => import('@/locales/it/common.json'),
@@ -73,6 +77,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/it/booking.json'),
     app: () => import('@/locales/it/app.json'),
     platform: () => import('@/locales/it/platform.json'),
+    v3: () => import('@/locales/it/v3.json'),
   },
   pt: {
     common: () => import('@/locales/pt/common.json'),
@@ -85,6 +90,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/pt/booking.json'),
     app: () => import('@/locales/pt/app.json'),
     platform: () => import('@/locales/pt/platform.json'),
+    v3: () => import('@/locales/pt/v3.json'),
   },
   ar: {
     common: () => import('@/locales/ar/common.json'),
@@ -97,6 +103,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/ar/booking.json'),
     app: () => import('@/locales/ar/app.json'),
     platform: () => import('@/locales/ar/platform.json'),
+    v3: () => import('@/locales/ar/v3.json'),
   },
   'zh-CN': {
     common: () => import('@/locales/zh-CN/common.json'),
@@ -109,6 +116,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/zh-CN/booking.json'),
     app: () => import('@/locales/zh-CN/app.json'),
     platform: () => import('@/locales/zh-CN/platform.json'),
+    v3: () => import('@/locales/zh-CN/v3.json'),
   },
   ja: {
     common: () => import('@/locales/ja/common.json'),
@@ -121,6 +129,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/ja/booking.json'),
     app: () => import('@/locales/ja/app.json'),
     platform: () => import('@/locales/ja/platform.json'),
+    v3: () => import('@/locales/ja/v3.json'),
   },
   ru: {
     common: () => import('@/locales/ru/common.json'),
@@ -133,6 +142,7 @@ const LOADERS: Record<string, Record<Namespace, () => Promise<{ default: object 
     booking: () => import('@/locales/ru/booking.json'),
     app: () => import('@/locales/ru/app.json'),
     platform: () => import('@/locales/ru/platform.json'),
+    v3: () => import('@/locales/ru/v3.json'),
   },
 }
 

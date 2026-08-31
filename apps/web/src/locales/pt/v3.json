@@ -1,0 +1,136 @@
+{
+  "landing": {
+    "meta": {
+      "title": "FadeUp — Encontre e reserve o seu próximo barbeiro",
+      "description": "Descubra ótimos barbeiros e barbearias perto de si. Preços reais, disponibilidade real, filas ao vivo. Reserve em segundos."
+    },
+    "demo": "Exemplo",
+    "nav": {
+      "label": "Site",
+      "language": "Idioma",
+      "pro": "Para profissionais",
+      "signIn": "Entrar"
+    },
+    "hero": {
+      "title": "Grandes barbeiros. Reservados em segundos.",
+      "sub": "O FadeUp mostra quem é bom, quanto custa e quando está livre — e reserva em poucos toques.",
+      "factPrices": "Preços reais",
+      "factAvailability": "Disponibilidade real",
+      "factQueues": "Filas ao vivo"
+    },
+    "search": {
+      "whatLabel": "O quê",
+      "whatPlaceholder": "Fade, barbeiro ou barbearia",
+      "whereLabel": "Onde",
+      "wherePlaceholder": "Cidade ou zona",
+      "cta": "Pesquisar"
+    },
+    "result": {
+      "open": "Aberto",
+      "independent": "Independente",
+      "barbershop": "Barbearia",
+      "from": "Desde {{price}}",
+      "distance": "{{km}} km",
+      "waiting_zero": "{{count}} à espera",
+      "waiting_one": "{{count}} à espera",
+      "waiting_two": "{{count}} à espera",
+      "waiting_few": "{{count}} à espera",
+      "waiting_many": "{{count}} à espera",
+      "waiting_other": "{{count}} à espera",
+      "book": "Reservar"
+    },
+    "discovery": {
+      "kicker": "O marketplace",
+      "title": "Saiba antes de ir.",
+      "viewAll": "Explorar o marketplace",
+      "fieldLabel": "Localizações reais dos resultados mostrados",
+      "fieldNote": "Coordenadas reais, ao vivo do marketplace"
+    },
+    "culture": {
+      "kicker": "A cultura",
+      "title": "Nunca é só um corte.",
+      "body": "Um corte fresco é a forma como se entra na semana. O FadeUp é feito por quem sabe a diferença entre um acerto e uma transformação — e trata o seu barbeiro como o artesão que ele é.",
+      "imageAlt": "Um barbeiro finaliza um skin fade com a máquina"
+    },
+    "booking": {
+      "kicker": "Reserva",
+      "title": "Serviço. Hora. Pronto.",
+      "body": "Sem contas antes de precisar, sem formulários que perguntam duas vezes, sem adivinhar. Escolha o corte, escolha o momento, confirme.",
+      "stepService": "Escolha o serviço",
+      "stepTime": "Escolha a hora",
+      "stepConfirm": "Confirme",
+      "demoService": "Skin Fade",
+      "demoServiceMeta": "25 € · 30 min",
+      "demoService2": "Corte + Barba",
+      "demoService2Meta": "35 € · 45 min",
+      "morning": "Manhã",
+      "afternoon": "Tarde",
+      "confirmed": "Reservado",
+      "demoSummary": "Skin Fade · quinta 17:30",
+      "confirmCta": "Confirmar"
+    },
+    "independent": {
+      "kicker": "Independentes",
+      "title": "Barbeiros nos seus próprios termos.",
+      "body": "Alguns dos melhores barbeiros não estão atrás de uma montra. No FadeUp, os independentes são profissionais de primeira: o seu perfil, os seus preços, a sua cadeira — onde quer que esteja.",
+      "demoName": "Sami",
+      "demoSub": "Barbeiro independente"
+    },
+    "queue": {
+      "kicker": "Fila ao vivo",
+      "title": "O seu lugar na fila. Ao vivo.",
+      "body": "Faça scan na barbearia, ocupe o seu lugar e veja-o avançar em tempo real. O FadeUp nunca inventa minutos de espera: a sua posição real e quem está à frente, nada mais.",
+      "positionLabel": "A sua posição",
+      "ahead_zero": "{{count}} pessoas à frente",
+      "ahead_one": "{{count}} pessoa à frente",
+      "ahead_two": "{{count}} pessoas à frente",
+      "ahead_few": "{{count}} pessoas à frente",
+      "ahead_many": "{{count}} pessoas à frente",
+      "ahead_other": "{{count}} pessoas à frente",
+      "demoVenue": "A sua barbearia",
+      "demoBarber": "com o seu barbeiro"
+    },
+    "passport": {
+      "kicker": "Fade Passport",
+      "title": "O seu corte, registado.",
+      "body": "Cada cliente FadeUp tem um Fade Passport: o seu corte, as suas preferências, os seus barbeiros — seu, portátil e visível apenas quando decide partilhá-lo.",
+      "cardLabel": "Fade Passport",
+      "demoName": "Malik B.",
+      "demoCut": "Skin fade · pente 2",
+      "demoPreference": "Contorno natural · fade baixo"
+    },
+    "follow": {
+      "kicker": "Siga o seu barbeiro",
+      "title": "Reservar é só o começo.",
+      "body": "O seu barbeiro muda — nova barbearia, nova cidade, novos trabalhos. Siga-o no FadeUp e a relação sobrevive à mudança. Voltar a reservar é um toque, não uma pesquisa.",
+      "follow": "Seguir",
+      "following": "A seguir",
+      "demoName": "Jordan",
+      "demoSub": "Trabalha numa barbearia perto de si"
+    },
+    "pro": {
+      "kicker": "FadeUp Pro",
+      "title": "Comande o dia. Encha as cadeiras.",
+      "outcome1": "Todo o seu dia num relance",
+      "outcome2": "Horas mortas cheias de reservas reais",
+      "outcome3": "Conheça os seus clientes e faça-os voltar",
+      "outcome4": "Gira todos os espaços a partir de um só lugar",
+      "cta": "Descobrir o FadeUp Pro",
+      "frameTitle": "Hoje",
+      "frameNow": "Agora",
+      "frameRow1": "Skin Fade · sem marcação",
+      "frameRow2": "Corte + Barba",
+      "frameRow3": "Corte de criança"
+    },
+    "footer": {
+      "label": "Rodapé",
+      "marketplace": "Marketplace",
+      "tagline": "A rede social, o marketplace e o sistema operativo da cultura barber."
+    }
+  },
+  "placeholder": {
+    "title": "Esta superfície chega numa fase posterior",
+    "body": "A pré-visualização FadeUp V3 é construída fase a fase. Este destino ainda não foi reconstruído.",
+    "back": "Voltar à página inicial"
+  }
+}

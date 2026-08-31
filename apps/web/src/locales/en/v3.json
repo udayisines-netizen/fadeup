@@ -1,0 +1,136 @@
+{
+  "landing": {
+    "meta": {
+      "title": "FadeUp — Find and book your next barber",
+      "description": "Discover great barbers and barbershops near you. Real prices, real availability, live queues. Book in seconds."
+    },
+    "demo": "Example",
+    "nav": {
+      "label": "Site",
+      "language": "Language",
+      "pro": "For professionals",
+      "signIn": "Sign in"
+    },
+    "hero": {
+      "title": "Great barbers. Booked in seconds.",
+      "sub": "FadeUp shows you who is good, what it costs and when they are free — then books it in a few taps.",
+      "factPrices": "Real prices",
+      "factAvailability": "Real availability",
+      "factQueues": "Live queues"
+    },
+    "search": {
+      "whatLabel": "What",
+      "whatPlaceholder": "Fade, barber or barbershop",
+      "whereLabel": "Where",
+      "wherePlaceholder": "City or area",
+      "cta": "Search"
+    },
+    "result": {
+      "open": "Open now",
+      "independent": "Independent",
+      "barbershop": "Barbershop",
+      "from": "From {{price}}",
+      "distance": "{{km}} km",
+      "waiting_zero": "{{count}} waiting",
+      "waiting_one": "{{count}} waiting",
+      "waiting_two": "{{count}} waiting",
+      "waiting_few": "{{count}} waiting",
+      "waiting_many": "{{count}} waiting",
+      "waiting_other": "{{count}} waiting",
+      "book": "Book"
+    },
+    "discovery": {
+      "kicker": "The marketplace",
+      "title": "Know before you go.",
+      "viewAll": "Explore the marketplace",
+      "fieldLabel": "Real locations of the results shown",
+      "fieldNote": "Live coordinates from the marketplace"
+    },
+    "culture": {
+      "kicker": "The culture",
+      "title": "It is never just a haircut.",
+      "body": "A fresh cut is how you walk into the week. FadeUp is built by people who know the difference between a trim and a transformation — and it treats your barber like the craftsman they are.",
+      "imageAlt": "A barber finishing a fresh skin fade at the nape with clippers"
+    },
+    "booking": {
+      "kicker": "Booking",
+      "title": "Service. Time. Done.",
+      "body": "No accounts before you need one, no forms that ask twice, no guessing. Pick the cut, pick the moment, confirm.",
+      "stepService": "Pick the service",
+      "stepTime": "Pick the time",
+      "stepConfirm": "Confirm",
+      "demoService": "Skin Fade",
+      "demoServiceMeta": "€25 · 30 min",
+      "demoService2": "Cut + Beard",
+      "demoService2Meta": "€35 · 45 min",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "confirmed": "Booked",
+      "demoSummary": "Skin Fade · Thursday 17:30",
+      "confirmCta": "Confirm"
+    },
+    "independent": {
+      "kicker": "Independents",
+      "title": "Barbers on their own terms.",
+      "body": "Some of the best barbers do not stand behind a shop window. On FadeUp, independent professionals are first-class: their own profile, their own prices, their own chair — wherever it stands.",
+      "demoName": "Sami",
+      "demoSub": "Independent barber"
+    },
+    "queue": {
+      "kicker": "Live queue",
+      "title": "Your place in line. Live.",
+      "body": "Scan at the shop, take your spot, and watch it move in real time. FadeUp never invents waiting minutes — it shows your real position and who is ahead, nothing else.",
+      "positionLabel": "Your position",
+      "ahead_zero": "{{count}} people ahead",
+      "ahead_one": "{{count}} person ahead",
+      "ahead_two": "{{count}} people ahead",
+      "ahead_few": "{{count}} people ahead",
+      "ahead_many": "{{count}} people ahead",
+      "ahead_other": "{{count}} people ahead",
+      "demoVenue": "Your barbershop",
+      "demoBarber": "with your barber"
+    },
+    "passport": {
+      "kicker": "Fade Passport",
+      "title": "Your cut, on record.",
+      "body": "Every FadeUp customer carries a Fade Passport: your cut, your preferences, your barber relationships — yours, portable, and shown only when you choose to share it.",
+      "cardLabel": "Fade Passport",
+      "demoName": "Malik B.",
+      "demoCut": "Skin fade · #2 guard",
+      "demoPreference": "Natural lineup · low fade"
+    },
+    "follow": {
+      "kicker": "Follow your barber",
+      "title": "Booking is just the start.",
+      "body": "Your barber moves — new shop, new city, new work. Follow them on FadeUp and the relationship survives the move. Booking again is one tap, not a search.",
+      "follow": "Follow",
+      "following": "Following",
+      "demoName": "Jordan",
+      "demoSub": "Working at a barbershop near you"
+    },
+    "pro": {
+      "kicker": "FadeUp Pro",
+      "title": "Run the day. Fill the chairs.",
+      "outcome1": "See your whole day at a glance",
+      "outcome2": "Fill quiet hours with real bookings",
+      "outcome3": "Know your clients and bring them back",
+      "outcome4": "Operate every location from one place",
+      "cta": "Discover FadeUp Pro",
+      "frameTitle": "Today",
+      "frameNow": "Now",
+      "frameRow1": "Skin Fade · walk-in",
+      "frameRow2": "Cut + Beard",
+      "frameRow3": "Kids cut"
+    },
+    "footer": {
+      "label": "Footer",
+      "marketplace": "Marketplace",
+      "tagline": "The social network, marketplace and operating system for barber culture."
+    }
+  },
+  "placeholder": {
+    "title": "This surface arrives in a later phase",
+    "body": "The FadeUp V3 preview is built phase by phase. This destination is not rebuilt yet.",
+    "back": "Back to the landing"
+  }
+}

@@ -1,0 +1,446 @@
+/**
+ * FadeUp V3 — the visual foundation of the complete V3 reconstruction.
+ *
+ * Everything visible in V3 derives from this file. It is scoped under
+ * `[data-fu-v3]` so it can live beside the canonical product and the rejected
+ * R5R preview without either leaking into the other. No rule here may weaken
+ * a product truth (docs/design/FADEUP_V3_PRODUCT_TRUTHS.md); the design
+ * rationale for every value is docs/design/FADEUP_VISUAL_V3_DIRECTION.md.
+ *
+ * Contrast facts carried forward from the audited v2 foundation:
+ *   green #0a7c4c on paper 5.09:1 · paper on green 5.25:1 ·
+ *   paper on green-deep 7.34:1 · green-ink on tint 6.95:1 ·
+ *   ink #101512 on paper 17.4:1 · on-graphite #e8f0ea on graphite ≥ 12:1.
+ */
+
+[data-fu-v3] {
+  /* ---- ink ---- */
+  --v3-ink: #101512;
+  --v3-ink-soft: #5a6862;
+  --v3-ink-mute: #647269;
+
+  /* ---- product canvas (BG-01 / BG-07) ---- */
+  --v3-paper: #ffffff;
+  --v3-ground: #fafbfa;
+  --v3-fill: #f1f4f2;
+  --v3-hairline: #e4eae7;
+  --v3-edge: #8a9691;
+
+  /* ---- brand action ---- */
+  --v3-green: #0a7c4c;
+  --v3-green-deep: #08633c;
+  --v3-green-tint: #eaf5ef;
+  --v3-green-ink: #075f3a;
+  --v3-alert: #a8442f;
+  --v3-alert-tint: #faeeea;
+
+  /* ---- marketing materials (BG-02…BG-06; never on Pro data surfaces) ---- */
+  --v3-pearl: #f4f2ec;
+  --v3-fog: #eef1ee;
+  --v3-stone: #e6e3da;
+  --v3-sage: #dfe9e2;
+  --v3-graphite: #171d1a;
+  --v3-graphite-soft: #222b26;
+  --v3-on-graphite: #e8f0ea;
+  --v3-on-graphite-dim: #8ba79a;
+
+  /* ---- type ---- */
+  --v3-font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --v3-font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+
+  /* ---- rhythm ---- */
+  --v3-radius-s: 8px;
+  --v3-radius-m: 12px;
+  --v3-radius-l: 16px;
+
+  /* The ONE ambient shadow, for genuinely floating objects only
+     (map panel, queue ticket, passport, sticky bars). Everything else
+     separates with hairlines and background changes. */
+  --v3-float:
+    0 1px 2px rgb(16 21 18 / 0.05),
+    0 12px 32px -12px rgb(16 21 18 / 0.18);
+
+  /* ---- motion (MOTION_SYSTEM.md bands) ---- */
+  --v3-press: 120ms;
+  --v3-quick: 180ms;
+  --v3-settle: 240ms;
+  --v3-scene: 360ms;
+  --v3-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --v3-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  color: var(--v3-ink);
+  background-color: var(--v3-ground);
+  font-family: var(--v3-font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+  accent-color: var(--v3-green);
+}
+
+/* ==========================================================================
+   FOCUS — one ring, everywhere.
+   ========================================================================== */
+
+[data-fu-v3] :focus-visible {
+  outline: 2px solid var(--v3-green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+[data-fu-v3] .v3-on-dark :focus-visible {
+  outline-color: var(--v3-on-graphite);
+}
+
+/* ==========================================================================
+   TYPE VOICES
+   ========================================================================== */
+
+[data-fu-v3] .v3-display {
+  font-family: var(--v3-font-display);
+  font-weight: 400;
+  font-size: clamp(2.75rem, 2rem + 3.6vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+[data-fu-v3] .v3-display-s {
+  font-family: var(--v3-font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 1.5rem + 2.4vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+[data-fu-v3] .v3-kicker {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--v3-ink-mute);
+}
+
+[data-fu-v3] .v3-kicker--green {
+  color: var(--v3-green-ink);
+}
+
+[data-fu-v3] .v3-h1 {
+  font-size: 1.625rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+[data-fu-v3] .v3-section-h {
+  font-size: 1.1875rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+[data-fu-v3] .v3-entity {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+[data-fu-v3] .v3-body {
+  font-size: 0.9688rem;
+  line-height: 1.55;
+}
+
+[data-fu-v3] .v3-meta {
+  font-size: 0.8438rem;
+  line-height: 1.45;
+  color: var(--v3-ink-soft);
+}
+
+[data-fu-v3] .v3-label {
+  font-size: 0.7813rem;
+  font-weight: 550;
+  letter-spacing: 0.02em;
+}
+
+/* Numbers are a brand asset: every operational number is tabular. */
+[data-fu-v3] .v3-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+[data-fu-v3] .v3-num--display {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: clamp(4rem, 3rem + 5vw, 6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* ==========================================================================
+   BACKGROUND SYSTEM — BG-01…BG-07 as composable band primitives.
+   A band exists because the narrative changed; never alternate mechanically.
+   ========================================================================== */
+
+[data-fu-v3] .v3-bg-canvas {
+  background-color: var(--v3-paper);
+} /* BG-01 */
+
+[data-fu-v3] .v3-bg-pearl {
+  background-color: var(--v3-pearl);
+} /* BG-02 warm */
+
+[data-fu-v3] .v3-bg-fog {
+  background-color: var(--v3-fog);
+} /* BG-02 cool */
+
+[data-fu-v3] .v3-bg-atmosphere {
+  /* BG-03 — restrained brand light; a wash, never a flood. */
+  background:
+    radial-gradient(120% 90% at 15% 0%, var(--v3-sage) 0%, transparent 55%),
+    linear-gradient(to bottom, var(--v3-fog), var(--v3-pearl));
+}
+
+[data-fu-v3] .v3-bg-spotlight {
+  /* BG-05 — earned dark. Forest-tinted graphite, never pure black. */
+  background-color: var(--v3-graphite);
+  color: var(--v3-on-graphite);
+}
+
+[data-fu-v3] .v3-bg-reveal {
+  /* BG-06 — controlled light on graphite for signature-object reveals. */
+  background:
+    radial-gradient(80% 60% at 50% 12%, rgb(139 167 154 / 0.22) 0%, transparent 60%),
+    var(--v3-graphite);
+  color: var(--v3-on-graphite);
+}
+
+[data-fu-v3] .v3-on-dark {
+  color: var(--v3-on-graphite);
+}
+
+[data-fu-v3] .v3-on-dark .v3-meta,
+[data-fu-v3] .v3-on-dark .v3-kicker {
+  color: var(--v3-on-graphite-dim);
+}
+
+/* Film grain for marketing bands — inline SVG turbulence, ~0 bytes, GPU-cheap.
+   Applied as an overlay so it never affects text contrast measurably. */
+[data-fu-v3] .v3-grain {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-fu-v3] .v3-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   INTERACTIVE PRIMITIVES
+   ========================================================================== */
+
+[data-fu-v3] .v3-press {
+  transition:
+    transform var(--v3-press) var(--v3-ease),
+    background-color var(--v3-press) var(--v3-ease),
+    border-color var(--v3-press) var(--v3-ease),
+    color var(--v3-press) var(--v3-ease),
+    opacity var(--v3-press) var(--v3-ease);
+}
+
+[data-fu-v3] .v3-press:active {
+  transform: scale(0.975);
+}
+
+[data-fu-v3] .v3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--v3-radius-m);
+  font-size: 0.9688rem;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+/* Filled green means booking — one colour, one meaning. */
+[data-fu-v3] .v3-btn--book {
+  background-color: var(--v3-green);
+  color: #ffffff;
+}
+
+[data-fu-v3] .v3-btn--book:hover {
+  background-color: var(--v3-green-deep);
+}
+
+[data-fu-v3] .v3-btn--primary-ink {
+  background-color: var(--v3-ink);
+  color: #ffffff;
+}
+
+[data-fu-v3] .v3-btn--primary-ink:hover {
+  background-color: #232b27;
+}
+
+[data-fu-v3] .v3-btn--quiet {
+  background-color: transparent;
+  border-color: var(--v3-hairline);
+  color: var(--v3-ink);
+}
+
+[data-fu-v3] .v3-btn--quiet:hover {
+  background-color: var(--v3-fill);
+}
+
+[data-fu-v3] .v3-btn--on-dark {
+  background-color: var(--v3-on-graphite);
+  color: var(--v3-graphite);
+}
+
+[data-fu-v3] .v3-btn--ghost-dark {
+  background-color: transparent;
+  border-color: rgb(232 240 234 / 0.28);
+  color: var(--v3-on-graphite);
+}
+
+[data-fu-v3] .v3-btn--ghost-dark:hover {
+  background-color: rgb(232 240 234 / 0.08);
+}
+
+[data-fu-v3] .v3-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Chip — compact filter/selection control. */
+[data-fu-v3] .v3-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--v3-hairline);
+  background: var(--v3-paper);
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--v3-ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-fu-v3] .v3-chip[aria-pressed='true'],
+[data-fu-v3] .v3-chip[data-selected='true'] {
+  background: var(--v3-green-tint);
+  border-color: var(--v3-green);
+  color: var(--v3-green-ink);
+}
+
+/* Floating object — the one elevation in the system. */
+[data-fu-v3] .v3-float {
+  background: var(--v3-paper);
+  border-radius: var(--v3-radius-l);
+  box-shadow: var(--v3-float);
+}
+
+/* Hairline row list — the default surface grammar (cards are demoted). */
+[data-fu-v3] .v3-rows > * + * {
+  border-top: 1px solid var(--v3-hairline);
+}
+
+/* Live indicator — a small breathing dot for genuinely realtime facts. */
+[data-fu-v3] .v3-live-dot {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--v3-green);
+  animation: v3-live 2.4s var(--v3-ease) infinite;
+}
+
+@keyframes v3-live {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Skeleton sweep — visually distinct from designed absence. */
+[data-fu-v3] .v3-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--v3-fill);
+  border-radius: var(--v3-radius-s);
+}
+
+[data-fu-v3] .v3-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent);
+  animation: v3-sweep 1.4s var(--v3-ease) infinite;
+}
+
+@keyframes v3-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Entrance — used sparingly for scene-level content reveals. */
+[data-fu-v3] .v3-enter {
+  animation: v3-enter var(--v3-settle) var(--v3-ease) both;
+}
+
+@keyframes v3-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION — function identical, spectacle removed.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fu-v3] .v3-press:active {
+    transform: none;
+  }
+
+  [data-fu-v3] .v3-enter {
+    animation: none;
+  }
+
+  [data-fu-v3] .v3-live-dot {
+    animation: none;
+  }
+
+  [data-fu-v3] .v3-skeleton::after {
+    animation: none;
+  }
+
+  [data-fu-v3] * {
+    scroll-behavior: auto !important;
+  }
+}

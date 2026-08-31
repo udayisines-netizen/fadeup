@@ -1,0 +1,136 @@
+{
+  "landing": {
+    "meta": {
+      "title": "FadeUp — 次のバーバーを見つけて予約",
+      "description": "近くの優れたバーバーとバーバーショップを発見。実際の価格、実際の空き状況、ライブの順番待ち。数秒で予約。"
+    },
+    "demo": "例",
+    "nav": {
+      "label": "サイト",
+      "language": "言語",
+      "pro": "プロの方へ",
+      "signIn": "ログイン"
+    },
+    "hero": {
+      "title": "優れたバーバーを、数秒で予約。",
+      "sub": "FadeUpは、誰が上手いか、いくらか、いつ空いているかを表示し、数タップで予約まで完了します。",
+      "factPrices": "実際の価格",
+      "factAvailability": "実際の空き状況",
+      "factQueues": "ライブの順番待ち"
+    },
+    "search": {
+      "whatLabel": "何を",
+      "whatPlaceholder": "フェード、バーバー、ショップ",
+      "whereLabel": "どこで",
+      "wherePlaceholder": "都市やエリア",
+      "cta": "検索"
+    },
+    "result": {
+      "open": "営業中",
+      "independent": "独立バーバー",
+      "barbershop": "バーバーショップ",
+      "from": "{{price}}〜",
+      "distance": "{{km}} km",
+      "waiting_zero": "{{count}}人待ち",
+      "waiting_one": "{{count}}人待ち",
+      "waiting_two": "{{count}}人待ち",
+      "waiting_few": "{{count}}人待ち",
+      "waiting_many": "{{count}}人待ち",
+      "waiting_other": "{{count}}人待ち",
+      "book": "予約"
+    },
+    "discovery": {
+      "kicker": "マーケットプレイス",
+      "title": "行く前に、わかる。",
+      "viewAll": "マーケットプレイスを見る",
+      "fieldLabel": "表示中の結果の実際の位置",
+      "fieldNote": "マーケットプレイスからのリアルな座標"
+    },
+    "culture": {
+      "kicker": "カルチャー",
+      "title": "ただのヘアカットではない。",
+      "body": "フレッシュなカットは、一週間の入り方そのもの。FadeUpは、整えることと変わることの違いを知る人々がつくり、あなたのバーバーを職人として扱います。",
+      "imageAlt": "バリカンでスキンフェードを仕上げるバーバー"
+    },
+    "booking": {
+      "kicker": "予約",
+      "title": "サービス。時間。完了。",
+      "body": "必要になるまでアカウント不要。二度聞くフォームなし。迷いなし。カットを選び、時間を選び、確定するだけ。",
+      "stepService": "サービスを選ぶ",
+      "stepTime": "時間を選ぶ",
+      "stepConfirm": "確定する",
+      "demoService": "スキンフェード",
+      "demoServiceMeta": "€25 · 30分",
+      "demoService2": "カット + ヒゲ",
+      "demoService2Meta": "€35 · 45分",
+      "morning": "午前",
+      "afternoon": "午後",
+      "confirmed": "予約完了",
+      "demoSummary": "スキンフェード · 木曜 17:30",
+      "confirmCta": "確定"
+    },
+    "independent": {
+      "kicker": "独立バーバー",
+      "title": "自分の流儀で働くバーバー。",
+      "body": "最高のバーバーの中には、店構えを持たない人もいます。FadeUpでは独立プロも一流の存在。自分のプロフィール、自分の価格、自分の椅子 — それがどこにあっても。",
+      "demoName": "サミ",
+      "demoSub": "独立バーバー"
+    },
+    "queue": {
+      "kicker": "ライブ順番待ち",
+      "title": "あなたの順番を、リアルタイムで。",
+      "body": "店でスキャンして列に入り、順番が進むのをリアルタイムで確認。FadeUpは待ち時間の分数を決して創作しません。実際の順位と前に何人いるか、それだけです。",
+      "positionLabel": "あなたの順番",
+      "ahead_zero": "前に{{count}}人",
+      "ahead_one": "前に{{count}}人",
+      "ahead_two": "前に{{count}}人",
+      "ahead_few": "前に{{count}}人",
+      "ahead_many": "前に{{count}}人",
+      "ahead_other": "前に{{count}}人",
+      "demoVenue": "あなたのバーバーショップ",
+      "demoBarber": "あなたのバーバーと"
+    },
+    "passport": {
+      "kicker": "Fade Passport",
+      "title": "あなたのカットを、記録に。",
+      "body": "FadeUpのすべての顧客はFade Passportを持ちます。あなたのカット、好み、バーバーとの関係 — あなたのもので、持ち運べて、共有すると選んだときだけ見せられます。",
+      "cardLabel": "Fade Passport",
+      "demoName": "マリク B.",
+      "demoCut": "スキンフェード · 2mm",
+      "demoPreference": "ナチュラルライン · ローフェード"
+    },
+    "follow": {
+      "kicker": "バーバーをフォロー",
+      "title": "予約は始まりにすぎない。",
+      "body": "バーバーは動きます — 新しい店、新しい街、新しい作品。FadeUpでフォローすれば、関係は引っ越しを越えて続きます。再予約は検索ではなく、ワンタップ。",
+      "follow": "フォロー",
+      "following": "フォロー中",
+      "demoName": "ジョーダン",
+      "demoSub": "近くのバーバーショップで勤務中"
+    },
+    "pro": {
+      "kicker": "FadeUp Pro",
+      "title": "一日を回す。椅子を埋める。",
+      "outcome1": "一日全体をひと目で",
+      "outcome2": "空き時間を本物の予約で埋める",
+      "outcome3": "顧客を知り、また来てもらう",
+      "outcome4": "すべての店舗をひとつの場所から運営",
+      "cta": "FadeUp Proを見る",
+      "frameTitle": "今日",
+      "frameNow": "対応中",
+      "frameRow1": "スキンフェード · 飛び込み",
+      "frameRow2": "カット + ヒゲ",
+      "frameRow3": "キッズカット"
+    },
+    "footer": {
+      "label": "フッター",
+      "marketplace": "マーケットプレイス",
+      "tagline": "バーバーカルチャーのソーシャルネットワーク、マーケットプレイス、OS。"
+    }
+  },
+  "placeholder": {
+    "title": "この画面は後のフェーズで登場します",
+    "body": "FadeUp V3プレビューはフェーズごとに構築されます。この画面はまだ再構築されていません。",
+    "back": "ランディングに戻る"
+  }
+}

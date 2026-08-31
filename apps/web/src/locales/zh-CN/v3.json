@@ -1,0 +1,136 @@
+{
+  "landing": {
+    "meta": {
+      "title": "FadeUp — 找到并预约你的下一位理发师",
+      "description": "发现你附近的优秀理发师和理发店。真实价格、真实可约时段、实时排队。几秒完成预约。"
+    },
+    "demo": "示例",
+    "nav": {
+      "label": "站点",
+      "language": "语言",
+      "pro": "专业人士入口",
+      "signIn": "登录"
+    },
+    "hero": {
+      "title": "优秀的理发师，几秒预约。",
+      "sub": "FadeUp 告诉你谁手艺好、价格多少、何时有空 — 然后几次点击完成预约。",
+      "factPrices": "真实价格",
+      "factAvailability": "真实可约时段",
+      "factQueues": "实时排队"
+    },
+    "search": {
+      "whatLabel": "找什么",
+      "whatPlaceholder": "渐变、理发师或理发店",
+      "whereLabel": "在哪里",
+      "wherePlaceholder": "城市或区域",
+      "cta": "搜索"
+    },
+    "result": {
+      "open": "营业中",
+      "independent": "独立理发师",
+      "barbershop": "理发店",
+      "from": "{{price}} 起",
+      "distance": "{{km}} 公里",
+      "waiting_zero": "{{count}} 人排队",
+      "waiting_one": "{{count}} 人排队",
+      "waiting_two": "{{count}} 人排队",
+      "waiting_few": "{{count}} 人排队",
+      "waiting_many": "{{count}} 人排队",
+      "waiting_other": "{{count}} 人排队",
+      "book": "预约"
+    },
+    "discovery": {
+      "kicker": "市场",
+      "title": "出发前，先了解。",
+      "viewAll": "探索市场",
+      "fieldLabel": "所示结果的真实位置",
+      "fieldNote": "来自市场的真实坐标"
+    },
+    "culture": {
+      "kicker": "文化",
+      "title": "这从来不只是理发。",
+      "body": "一个利落的发型，是你迎接这一周的方式。FadeUp 由懂得修剪与蜕变之别的人打造 — 并把你的理发师当作真正的手艺人。",
+      "imageAlt": "理发师用电推剪收尾一个渐变发型"
+    },
+    "booking": {
+      "kicker": "预约",
+      "title": "服务。时间。搞定。",
+      "body": "需要之前不用注册，不会重复询问的表单，不用猜。选发型，选时间，确认。",
+      "stepService": "选择服务",
+      "stepTime": "选择时间",
+      "stepConfirm": "确认",
+      "demoService": "渐变理发",
+      "demoServiceMeta": "€25 · 30 分钟",
+      "demoService2": "理发 + 修胡",
+      "demoService2Meta": "€35 · 45 分钟",
+      "morning": "上午",
+      "afternoon": "下午",
+      "confirmed": "已预约",
+      "demoSummary": "渐变理发 · 周四 17:30",
+      "confirmCta": "确认"
+    },
+    "independent": {
+      "kicker": "独立理发师",
+      "title": "按自己的方式工作的理发师。",
+      "body": "一些最好的理发师并不站在橱窗后面。在 FadeUp，独立理发师是一等专业人士：自己的主页、自己的价格、自己的椅子 — 无论它在哪里。",
+      "demoName": "萨米",
+      "demoSub": "独立理发师"
+    },
+    "queue": {
+      "kicker": "实时排队",
+      "title": "你的位置，实时可见。",
+      "body": "在店里扫码取位，实时看着队伍前进。FadeUp 从不编造等待分钟数：只显示你的真实位置和前面有几个人。",
+      "positionLabel": "你的位置",
+      "ahead_zero": "前面 {{count}} 人",
+      "ahead_one": "前面 {{count}} 人",
+      "ahead_two": "前面 {{count}} 人",
+      "ahead_few": "前面 {{count}} 人",
+      "ahead_many": "前面 {{count}} 人",
+      "ahead_other": "前面 {{count}} 人",
+      "demoVenue": "你的理发店",
+      "demoBarber": "你的理发师"
+    },
+    "passport": {
+      "kicker": "Fade Passport",
+      "title": "你的发型，有记录。",
+      "body": "每位 FadeUp 顾客都拥有 Fade Passport：你的发型、你的偏好、你的理发师关系 — 属于你、可携带，只有你选择分享时才展示。",
+      "cardLabel": "Fade Passport",
+      "demoName": "Malik B.",
+      "demoCut": "渐变 · 2 号卡尺",
+      "demoPreference": "自然发际线 · 低渐变"
+    },
+    "follow": {
+      "kicker": "关注你的理发师",
+      "title": "预约只是开始。",
+      "body": "你的理发师会流动 — 新店、新城市、新作品。在 FadeUp 关注他，关系不会因搬迁而断。再次预约只需一次点击，无需重新搜索。",
+      "follow": "关注",
+      "following": "已关注",
+      "demoName": "Jordan",
+      "demoSub": "在你附近的理发店工作"
+    },
+    "pro": {
+      "kicker": "FadeUp Pro",
+      "title": "掌控一天，坐满每把椅子。",
+      "outcome1": "一眼看清全天安排",
+      "outcome2": "用真实预约填满空闲时段",
+      "outcome3": "了解顾客，让他们再来",
+      "outcome4": "在一个地方管理所有门店",
+      "cta": "了解 FadeUp Pro",
+      "frameTitle": "今天",
+      "frameNow": "进行中",
+      "frameRow1": "渐变理发 · 现场客",
+      "frameRow2": "理发 + 修胡",
+      "frameRow3": "儿童理发"
+    },
+    "footer": {
+      "label": "页脚",
+      "marketplace": "市场",
+      "tagline": "理发文化的社交网络、市场与操作系统。"
+    }
+  },
+  "placeholder": {
+    "title": "此页面将在后续阶段推出",
+    "body": "FadeUp V3 预览按阶段构建。此页面尚未重建。",
+    "back": "返回首页"
+  }
+}

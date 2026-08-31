@@ -13,6 +13,7 @@ import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
 import { V2_ROUTE_PATH } from '@/customer-v2/routes'
+import { V3_ROUTE_PATH } from '@/customer-v3/routes'
 import { V2Splash } from '@/customer-v2/ui/v2-splash'
 import { PRO_V2_ROUTE_PATH } from '@/pro-v2/routes'
 import { ProV2Shell } from '@/pro-v2/shell/pro-v2-shell'
@@ -413,6 +414,34 @@ export const router = createBrowserRouter([
                 '@/customer-v2/profile/passport-page'
               )
               return { Component: CustomerV2PassportPage }
+            },
+          },
+        ],
+      },
+      {
+        /*
+          FADEUP V3 PREVIEW — the complete visual reconstruction, mounted
+          beside both the canonical routes and the rejected R5R preview until
+          the product owner approves the rendered direction (docs/design/
+          FADEUP_VISUAL_V3_DIRECTION.md). Not behind RequireAuth for the same
+          reason as the R5R preview: the landing and discovery read anon-safe
+          contracts, and auth-dependent regions degrade instead of demanding.
+          Every page inside sets noIndex.
+        */
+        path: V3_ROUTE_PATH,
+        children: [
+          {
+            index: true,
+            lazy: async () => {
+              const { LandingPage } = await import('@/customer-v3/landing/landing-page')
+              return { Component: LandingPage }
+            },
+          },
+          {
+            path: '*',
+            lazy: async () => {
+              const { V3PlaceholderPage } = await import('@/customer-v3/pages/v3-placeholder-page')
+              return { Component: V3PlaceholderPage }
             },
           },
         ],
