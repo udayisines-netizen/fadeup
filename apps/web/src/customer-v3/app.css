@@ -577,3 +577,547 @@
   gap: 0.5rem;
   padding: 0.875rem 1rem;
 }
+
+/* ==========================================================================
+   PROFILES (venue + barber)
+   ========================================================================== */
+
+.v3p-page {
+  max-inline-size: 72rem;
+  margin-inline: auto;
+}
+
+.v3p-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.125rem;
+  padding-block: 0.75rem 1.25rem;
+}
+
+.v3p-tile {
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: var(--v3-radius-l);
+  background: radial-gradient(120% 120% at 30% 20%, var(--v3-sage) 0%, var(--v3-fill) 70%);
+  display: grid;
+  place-items: center;
+  color: var(--v3-edge);
+  flex-shrink: 0;
+}
+
+.v3p-avatar {
+  inline-size: 88px;
+  block-size: 88px;
+  border-radius: 999px;
+  background: radial-gradient(120% 120% at 30% 20%, var(--v3-sage) 0%, var(--v3-fill) 70%);
+  display: grid;
+  place-items: center;
+  color: var(--v3-edge);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.v3p-avatar img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.v3p-id {
+  min-inline-size: 0;
+  flex: 1;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.v3p-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.v3p-claimed {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 999px;
+  background: var(--v3-green);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.v3p-handle {
+  font-size: 0.9063rem;
+  color: var(--v3-ink-soft);
+}
+
+.v3p-working-at {
+  font-size: 0.9063rem;
+  font-weight: 650;
+  color: var(--v3-green-ink);
+  text-decoration: none;
+}
+
+.v3p-working-at:hover {
+  text-decoration: underline;
+}
+
+.v3p-queue-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--v3-green-ink);
+}
+
+.v3p-actions {
+  display: flex;
+  gap: 0.625rem;
+  padding-block-end: 1.25rem;
+}
+
+.v3p-actions > .v3-btn {
+  flex: 1;
+  max-inline-size: 16rem;
+}
+
+.v3p-section {
+  padding-block: 1.25rem;
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3p-section-title {
+  font-size: 1.125rem;
+  font-weight: 650;
+  margin-block-end: 0.75rem;
+}
+
+/* Service commerce row: name+duration | price+Book */
+.v3p-service {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 0.75rem;
+}
+
+.v3p-service + .v3p-service {
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3p-service-info {
+  min-inline-size: 0;
+  flex: 1;
+  display: grid;
+  gap: 0.125rem;
+}
+
+.v3p-service-name {
+  font-size: 0.9688rem;
+  font-weight: 600;
+}
+
+.v3p-service-price {
+  font-size: 0.9688rem;
+  flex-shrink: 0;
+}
+
+.v3p-service .v3-btn {
+  min-block-size: 40px;
+  padding-inline: 1rem;
+}
+
+/* Team — human cards, not an admin table. */
+.v3p-team {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(9.5rem, 11rem);
+  gap: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block-end: 0.25rem;
+}
+
+.v3p-team::-webkit-scrollbar {
+  display: none;
+}
+
+.v3p-team-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--v3-hairline);
+  border-radius: var(--v3-radius-l);
+  background: var(--v3-paper);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.v3p-team-card:hover {
+  background: var(--v3-ground);
+}
+
+.v3p-team-avatar {
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 999px;
+  background: radial-gradient(120% 120% at 30% 20%, var(--v3-sage) 0%, var(--v3-fill) 70%);
+  display: grid;
+  place-items: center;
+  color: var(--v3-edge);
+  overflow: hidden;
+}
+
+.v3p-team-avatar img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.v3p-team-name {
+  font-size: 0.9063rem;
+  font-weight: 650;
+}
+
+.v3p-team-title {
+  font-size: 0.7813rem;
+  color: var(--v3-ink-soft);
+}
+
+/* Sticky Book bar — mobile, after the header scrolls off. */
+.v3p-sticky {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: calc(56px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-inline: 1rem;
+  padding: 0.625rem 0.625rem 0.625rem 1.125rem;
+  border-radius: var(--v3-radius-l);
+  background: var(--v3-ink);
+  color: #fff;
+  box-shadow: var(--v3-float);
+}
+
+.v3p-sticky-price {
+  font-size: 0.9063rem;
+  font-weight: 600;
+}
+
+/* The desktop rail exists only at desktop widths. */
+.v3p-rail {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .v3p-sticky {
+    display: none;
+  }
+
+  .v3p-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .v3p-rail {
+    position: sticky;
+    inset-block-start: 4.5rem;
+    display: grid;
+    gap: 0.625rem;
+    padding: 1.25rem;
+  }
+}
+
+/* ==========================================================================
+   BOOKING — progressive transformation in the V3 grammar.
+   ========================================================================== */
+
+.v3b-page {
+  max-inline-size: 34rem;
+  margin-inline: auto;
+}
+
+.v3b-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-block: 0.75rem;
+}
+
+.v3b-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 40px;
+  padding-inline: 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--v3-green);
+  background: var(--v3-green-tint);
+  color: var(--v3-green-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.v3b-chip[disabled] {
+  cursor: default;
+  border-color: var(--v3-hairline);
+  background: var(--v3-fill);
+  color: var(--v3-ink);
+}
+
+.v3b-chip svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+.v3b-panel {
+  background: var(--v3-paper);
+  border: 1px solid var(--v3-hairline);
+  border-radius: var(--v3-radius-l);
+  overflow: clip;
+}
+
+.v3b-step-title {
+  padding: 0.875rem 1.125rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+}
+
+.v3b-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  inline-size: 100%;
+  padding: 0.875rem 1.125rem;
+  border: 0;
+  border-block-start: 1px solid var(--v3-hairline);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.v3b-option:hover {
+  background: var(--v3-ground);
+}
+
+.v3b-option-info {
+  min-inline-size: 0;
+  flex: 1;
+  display: grid;
+  gap: 0.125rem;
+}
+
+.v3b-option-name {
+  font-size: 0.9688rem;
+  font-weight: 600;
+  color: var(--v3-ink);
+}
+
+.v3b-option-meta {
+  font-size: 0.8438rem;
+  color: var(--v3-ink-soft);
+}
+
+.v3b-option-price {
+  font-size: 0.9688rem;
+  font-weight: 650;
+  color: var(--v3-ink);
+}
+
+/* Date rail — the shop's calendar. */
+.v3b-days {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.875rem 1.125rem;
+  border-block-start: 1px solid var(--v3-hairline);
+  scrollbar-width: none;
+}
+
+.v3b-days::-webkit-scrollbar {
+  display: none;
+}
+
+.v3b-day {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  inline-size: 52px;
+  block-size: 56px;
+  flex-shrink: 0;
+  border-radius: var(--v3-radius-m);
+  border: 1px solid var(--v3-hairline);
+  background: var(--v3-paper);
+  font: inherit;
+  cursor: pointer;
+  color: var(--v3-ink-soft);
+}
+
+.v3b-day span:last-child {
+  font-size: 1rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--v3-ink);
+}
+
+.v3b-day span:first-child {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.v3b-day[aria-pressed='true'] {
+  border-color: var(--v3-green);
+  background: var(--v3-green-tint);
+  color: var(--v3-green-ink);
+}
+
+.v3b-day[aria-pressed='true'] span:last-child {
+  color: var(--v3-green-ink);
+}
+
+.v3b-slot-region {
+  padding: 0.875rem 1.125rem;
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3b-slot-label {
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--v3-ink-mute);
+  padding-block: 0.625rem 0.4375rem;
+}
+
+.v3b-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.v3b-slot {
+  min-block-size: 44px;
+  padding-inline: 1rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--v3-radius-m);
+  border: 1px solid var(--v3-hairline);
+  background: var(--v3-paper);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--v3-ink);
+  cursor: pointer;
+}
+
+.v3b-slot:hover {
+  border-color: var(--v3-edge);
+}
+
+.v3b-more {
+  margin-block-start: 0.75rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--v3-green-ink);
+  cursor: pointer;
+  min-block-size: 44px;
+}
+
+.v3b-form {
+  display: grid;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem 1.25rem;
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3b-field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.v3b-field span {
+  font-size: 0.8438rem;
+  font-weight: 600;
+}
+
+.v3b-field input {
+  min-block-size: 48px;
+  padding-inline: 0.875rem;
+  border-radius: var(--v3-radius-m);
+  border: 1px solid var(--v3-hairline);
+  background: var(--v3-paper);
+  font: inherit;
+  font-size: 0.9688rem;
+  color: var(--v3-ink);
+}
+
+.v3b-field input:focus {
+  border-color: var(--v3-edge);
+  outline: none;
+}
+
+/* Confirmation — Apple-calm. */
+.v3b-confirmed {
+  max-inline-size: 26rem;
+  margin-inline: auto;
+  padding-block: 2rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.375rem;
+  text-align: center;
+}
+
+.v3b-check {
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 999px;
+  background: var(--v3-green-tint);
+  color: var(--v3-green);
+  display: grid;
+  place-items: center;
+  margin-block-end: 0.75rem;
+}
+
+.v3b-confirmed-title {
+  font-family: var(--v3-font-display);
+  font-size: 2rem;
+  line-height: 1.05;
+}
+
+.v3b-confirmed-when {
+  margin-block-start: 0.375rem;
+  font-size: 1.125rem;
+}
+
+.v3b-confirmed-meta {
+  color: var(--v3-ink-soft);
+  font-size: 0.9063rem;
+}
+
+.v3b-confirmed-actions {
+  margin-block-start: 1.5rem;
+  display: grid;
+  gap: 0.625rem;
+  inline-size: 100%;
+}

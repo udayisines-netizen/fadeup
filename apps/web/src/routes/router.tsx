@@ -462,6 +462,33 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: 's/:slug',
+                lazy: async () => {
+                  const { CustomerV3ShopProfilePage } = await import(
+                    '@/customer-v3/profiles/shop-profile-page'
+                  )
+                  return { Component: CustomerV3ShopProfilePage }
+                },
+              },
+              {
+                path: 's/:slug/b/:barberId',
+                lazy: async () => {
+                  const { CustomerV3BarberProfilePage } = await import(
+                    '@/customer-v3/profiles/barber-profile-page'
+                  )
+                  return { Component: CustomerV3BarberProfilePage }
+                },
+              },
+              {
+                path: 's/:slug/book',
+                lazy: async () => {
+                  const { CustomerV3BookingPage } = await import(
+                    '@/customer-v3/booking/booking-page'
+                  )
+                  return { Component: CustomerV3BookingPage }
+                },
+              },
+              {
                 path: '*',
                 lazy: async () => {
                   const { V3PlaceholderPage } = await import(
