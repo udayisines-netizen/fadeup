@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { BadgeCheck } from 'lucide-react'
+import { BadgeCheck, ChevronLeft } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
@@ -134,7 +134,7 @@ export function CustomerV2BarberProfilePage() {
 
   if (barber.isPending) {
     return showSkeletons ? (
-      <div className="v2-plate mx-auto max-w-[40rem] p-5">
+      <div className="mx-auto max-w-[40rem] pt-11">
         <div className="flex items-center gap-4">
           <div className="v2-skeleton h-20 w-20 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1">
@@ -187,15 +187,37 @@ export function CustomerV2BarberProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-[40rem] flex-col gap-4">
-      {/* ── Identity ─────────────────────────────────────────────────────── */}
-      <section className="v2-plate p-5 md:p-6">
+    <div className="mx-auto flex max-w-[40rem] flex-col">
+      {/* ── Back (Design Pass A §5) ──────────────────────────────────────── */}
+      <div className="-ms-2">
+        <button
+          type="button"
+          onClick={() =>
+            window.history.length > 1
+              ? navigate(-1)
+              : navigate(v2ShopProfilePath(slug ?? '', profile.locationId))
+          }
+          className="v2-press inline-flex h-11 items-center gap-1 rounded-v2-2 px-2 text-v2-meta font-medium text-v2-ink-soft hover:text-v2-ink"
+        >
+          <ChevronLeft className="h-4 w-4 rtl:rotate-180" strokeWidth={2} aria-hidden="true" />
+          {t('customer-app:v2.shopProfile.back')}
+        </button>
+      </div>
+
+      {/*
+        ── Identity — Instagram grammar, deliberately NOT the venue page ────
+        Circular avatar, name + claim state, @handle, headline, real follower
+        count, "Working at" — then Book dominant with Follow beside it. On the
+        canvas, no plate: this is a person's page, not a card about one.
+      */}
+      <section className="border-b border-v2-hairline pb-4 pt-1">
         <div className="flex items-start gap-4 md:gap-5">
           <IdentityTile
             src={person?.avatarUrl ?? profile.avatarUrl}
             alt=""
             kind="barber"
-            className="h-20 w-20 shrink-0 md:h-24 md:w-24"
+            name={profile.displayName}
+            className="h-[4.5rem] w-[4.5rem] shrink-0 text-[1.2rem] md:h-24 md:w-24 md:text-[1.4rem]"
           />
 
           <div className="min-w-0 flex-1">
@@ -286,8 +308,8 @@ export function CustomerV2BarberProfilePage() {
       </section>
 
       {/* ── Services ─────────────────────────────────────────────────────── */}
-      <section aria-labelledby="v2-barber-services" className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
+      <section aria-labelledby="v2-barber-services" className="pb-1 pt-4">
+        <div className="pb-1.5">
           <h2 id="v2-barber-services" className="text-v2-title font-semibold text-v2-ink">
             {t('customer-app:v2.barberProfile.services')}
           </h2>
@@ -306,7 +328,7 @@ export function CustomerV2BarberProfilePage() {
                     barberId: profile.barberId,
                     serviceId: service.id,
                   })}
-                  className="v2-press flex items-center gap-3 px-4 py-3 hover:bg-v2-ground md:px-5"
+                  className="v2-press flex items-center gap-3 py-3 hover:bg-v2-ground"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-v2-body font-medium text-v2-ink">{service.name}</p>
@@ -321,6 +343,10 @@ export function CustomerV2BarberProfilePage() {
                       {money(service.priceCents, currency)}
                     </p>
                   ) : null}
+                  {/* Fresha service-row grammar: the row states its own action. */}
+                  <span className="shrink-0 rounded-v2-1 border border-v2-hairline px-2.5 py-1 text-v2-meta font-semibold text-v2-green">
+                    {t('customer-app:v2.result.book')}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -337,17 +363,27 @@ export function CustomerV2BarberProfilePage() {
       </section>
 
       {/* ── Work ─────────────────────────────────────────────────────────── */}
-      <section aria-labelledby="v2-barber-work" className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
+      <section aria-labelledby="v2-barber-work" className="border-t border-v2-hairline pb-1 pt-4">
+        <div className="pb-1.5">
           <h2 id="v2-barber-work" className="text-v2-title font-semibold text-v2-ink">
             {t('customer-app:v2.barberProfile.work')}
           </h2>
         </div>
         {/*
-          The honest state of a product with no portfolio table. Not a grid of
-          empty frames: an empty frame promises content that cannot arrive.
+          ARCHITECTED FOR THE GRID, RENDERING THE TRUTH. Design Pass A §5: the
+          portfolio's final form is a 3-column Instagram-style media grid, and
+          this container IS that grid — `grid grid-cols-3 gap-0.5`, square
+          tiles, edge-to-edge — so activating it when a work-items contract
+          exists means mapping real rows into it, not redesigning the page.
+          Today the schema has no work/media table, so the grid holds zero
+          cells and the section states that honestly in one quiet line. No
+          placeholder frames: an empty frame promises content that cannot
+          arrive.
         */}
-        <p className="border-t border-v2-hairline px-4 py-4 text-v2-meta text-v2-ink-soft md:px-5">
+        <div className="grid grid-cols-3 gap-0.5 empty:hidden">
+          {/* Real work items render here as square tiles when the contract exists. */}
+        </div>
+        <p className="py-2 text-v2-meta text-v2-ink-soft">
           {t('customer-app:v2.barberProfile.noWork')}
         </p>
       </section>

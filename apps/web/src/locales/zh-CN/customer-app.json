@@ -281,7 +281,13 @@
       "sortRecommended": "推荐",
       "sortNearest": "距离最近",
       "sortPrice": "价格",
-      "showMore": "显示更多"
+      "showMore": "显示更多",
+      "notPlotted_other": "{{count}} 个结果暂无地图位置",
+      "notPlotted_few": "{{count}} 个结果暂无地图位置",
+      "notPlotted_zero": "{{count}} 个结果暂无地图位置",
+      "notPlotted_two": "{{count}} 个结果暂无地图位置",
+      "notPlotted_one": "{{count}} 个结果暂无地图位置",
+      "notPlotted_many": "{{count}} 个结果暂无地图位置"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "该理发店不存在或未公开。",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "理发店 · FadeUp",
-      "documentDescription": "FadeUp 理发店主页 — 团队、服务与预约。"
+      "documentDescription": "FadeUp 理发店主页 — 团队、服务与预约。",
+      "back": "返回",
+      "share": "分享",
+      "linkCopied": "链接已复制"
     },
     "booking": {
       "documentTitle": "预约 · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "当天没有空闲时段，请试试其他日期。",
       "noBarbersForService": "目前没有人提供该服务。",
       "chooseLocation": "选择门店",
-      "firstFreeDay": "最早的空闲时间在{{day}}。"
+      "firstFreeDay": "最早的空闲时间在{{day}}。",
+      "morning": "上午",
+      "afternoon": "下午",
+      "evening": "晚上"
     },
     "appointments": {
       "title": "预约",

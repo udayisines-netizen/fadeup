@@ -204,7 +204,9 @@ export function ProfessionalResult({
         */
         alt=""
         kind={supplyType === 'independent' ? 'barber' : 'shop'}
-        className="h-14 w-14 md:h-[4.5rem] md:w-[4.5rem] lg:h-24 lg:w-24"
+        /* Design Pass A no-media system: initials from the real name. */
+        name={supplyType === 'independent' ? (result.barberDisplayName ?? name) : name}
+        className="h-14 w-14 text-[1.05rem] md:h-[4.5rem] md:w-[4.5rem] md:text-[1.2rem] lg:h-20 lg:w-20"
       />
 
       <div className="min-w-0 flex-1">

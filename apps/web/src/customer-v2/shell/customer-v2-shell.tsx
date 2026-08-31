@@ -68,8 +68,9 @@ export function CustomerV2Shell() {
 
   return (
     <div data-fu-v2 className="flex min-h-svh flex-col bg-v2-ground text-v2-ink">
-      <header className="sticky top-0 z-20 border-b border-v2-hairline bg-v2-ground/92 backdrop-blur-sm">
-        <div className="mx-auto flex h-13 w-full max-w-[75rem] items-center gap-3 px-4 sm:px-6">
+      {/* Solid paper, one hairline — no glass (Design Pass A §0). */}
+      <header className="sticky top-0 z-20 border-b border-v2-hairline bg-v2-paper">
+        <div className="mx-auto flex h-14 w-full max-w-[75rem] items-center gap-3 px-4 sm:px-6">
           <Link
             to={V2_ROUTES.home}
             aria-label={t('customer-app:v2.shell.homeLink')}
@@ -106,7 +107,7 @@ export function CustomerV2Shell() {
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                className="v2-press inline-flex h-9 items-center rounded-v2-2 px-3 text-v2-meta font-medium text-v2-ink-soft hover:bg-v2-fill hover:text-v2-ink aria-[current=page]:bg-v2-green-tint aria-[current=page]:font-semibold aria-[current=page]:text-v2-green-ink"
+                className="v2-press inline-flex h-11 items-center rounded-v2-2 px-3 text-v2-meta font-medium text-v2-ink-soft hover:bg-v2-fill hover:text-v2-ink aria-[current=page]:bg-v2-green-tint aria-[current=page]:font-semibold aria-[current=page]:text-v2-green-ink"
               >
                 {item.label}
               </NavLink>

@@ -355,6 +355,78 @@
 
 /*
  * ---------------------------------------------------------------------------
+ * SPLASH — the global loading identity (Design Pass A §1)
+ * ---------------------------------------------------------------------------
+ *
+ * Light, on purpose: near-white canvas, the F mark's three segments arriving
+ * in sequence — stem, top arm, mid arm — on a ~1s cycle. No spinner, no fake
+ * progress, no percentage. Used ONLY for bootstrap-class waits (router
+ * hydration of a lazy branch); ordinary refetches never show it.
+ */
+.v2-splash-seg {
+  animation: v2-splash-seg 1000ms var(--v2-ease) infinite;
+  transform-origin: 24px 24px;
+}
+
+@keyframes v2-splash-seg {
+  0% {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+  28% {
+    opacity: 1;
+    transform: none;
+  }
+  72% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * STICKY BOOK BAR — profile pages' persistent conversion (Design Pass A §4/§5)
+ * ---------------------------------------------------------------------------
+ *
+ * Sits above the mobile tab bar (which is 64px + safe area); on desktop the
+ * profile keeps Book in its own layout, so the bar is mobile-only chrome.
+ */
+.v2-book-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+  z-index: 25;
+  border-top: 1px solid var(--color-v2-hairline);
+  background-color: var(--color-v2-paper);
+  animation: v2-rise var(--v2-ui) var(--v2-ease) both;
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * MAP CHROME — maplibre, restrained to the v2 language
+ * ---------------------------------------------------------------------------
+ *
+ * Zoom controls only, hairline borders, no shadows; attribution stays (OSM
+ * usage policy) but at caption weight.
+ */
+[data-fu-v2] .maplibregl-ctrl-group {
+  border: 1px solid var(--color-v2-hairline);
+  border-radius: var(--radius-v2-2);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+[data-fu-v2] .maplibregl-ctrl-attrib {
+  font-size: 0.6875rem;
+  background: rgb(255 255 255 / 0.85);
+}
+
+/*
+ * ---------------------------------------------------------------------------
  * REDUCED MOTION
  * ---------------------------------------------------------------------------
  *
@@ -387,5 +459,25 @@
   [data-fu-v2] .v2-refining {
     opacity: 0.55;
     transition: none;
+  }
+
+  /* Splash: static mark, the faintest opacity breath only (§1). */
+  .v2-splash-seg {
+    animation: v2-splash-breathe 1600ms ease-in-out infinite;
+    transform: none;
+  }
+
+  [data-fu-v2] .v2-book-bar {
+    animation: none;
+  }
+}
+
+@keyframes v2-splash-breathe {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
   }
 }

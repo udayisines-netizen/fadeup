@@ -281,7 +281,13 @@
       "sortRecommended": "Recommended",
       "sortNearest": "Nearest",
       "sortPrice": "Price",
-      "showMore": "Show more"
+      "showMore": "Show more",
+      "notPlotted_one": "{{count}} result has no map position yet",
+      "notPlotted_other": "{{count}} results have no map position yet",
+      "notPlotted_few": "{{count}} results have no map position yet",
+      "notPlotted_zero": "{{count}} results have no map position yet",
+      "notPlotted_two": "{{count}} results have no map position yet",
+      "notPlotted_many": "{{count}} results have no map position yet"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "This barbershop does not exist or is not public.",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Barbershop · FadeUp",
-      "documentDescription": "Barbershop on FadeUp — team, services and booking."
+      "documentDescription": "Barbershop on FadeUp — team, services and booking.",
+      "back": "Back",
+      "share": "Share",
+      "linkCopied": "Link copied"
     },
     "booking": {
       "documentTitle": "Book · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "No free times on this day. Try another day.",
       "noBarbersForService": "No one offers this service right now.",
       "chooseLocation": "Choose a location",
-      "firstFreeDay": "First free times are on {{day}}."
+      "firstFreeDay": "First free times are on {{day}}.",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
     },
     "appointments": {
       "title": "Appointments",

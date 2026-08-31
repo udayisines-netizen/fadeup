@@ -281,7 +281,13 @@
       "sortRecommended": "موصى بها",
       "sortNearest": "الأقرب",
       "sortPrice": "السعر",
-      "showMore": "عرض المزيد"
+      "showMore": "عرض المزيد",
+      "notPlotted_zero": "كل النتائج لها موقع على الخريطة",
+      "notPlotted_one": "نتيجة واحدة بلا موقع على الخريطة",
+      "notPlotted_two": "نتيجتان بلا موقع على الخريطة",
+      "notPlotted_few": "{{count}} نتائج بلا موقع على الخريطة",
+      "notPlotted_many": "{{count}} نتيجة بلا موقع على الخريطة",
+      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "هذا الصالون غير موجود أو غير علني.",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "الصالون · FadeUp",
-      "documentDescription": "صالون على FadeUp — الفريق والخدمات والحجز."
+      "documentDescription": "صالون على FadeUp — الفريق والخدمات والحجز.",
+      "back": "رجوع",
+      "share": "مشاركة",
+      "linkCopied": "تم نسخ الرابط"
     },
     "booking": {
       "documentTitle": "حجز · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "لا أوقات متاحة في هذا اليوم. جرّب يومًا آخر.",
       "noBarbersForService": "لا أحد يقدّم هذه الخدمة حاليًا.",
       "chooseLocation": "اختر موقعًا",
-      "firstFreeDay": "أول الأوقات المتاحة يوم {{day}}."
+      "firstFreeDay": "أول الأوقات المتاحة يوم {{day}}.",
+      "morning": "صباحًا",
+      "afternoon": "بعد الظهر",
+      "evening": "مساءً"
     },
     "appointments": {
       "title": "المواعيد",

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import type { MarketplaceSort } from '@/lib/queries/marketplace'
+import { isMarketplaceSort, type MarketplaceSort } from '@/lib/queries/marketplace'
 import { ANYWHERE } from '@/lib/intl/country-preference'
 import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
@@ -20,55 +21,70 @@ import { Notice } from '@/customer-v2/ui/notice'
  * The Marketplace — where a customer COMPARES the supply Home introduced.
  *
  * ============================================================================
- * ONE LIST, HOME'S GRAMMAR, TWO MORE CONTROLS
+ * DESIGN PASS A: LIST + MAP, AND STATE THAT SURVIVES NAVIGATION
  * ============================================================================
  *
- * The page is deliberately Home's discovery composition — the same location
- * chip, the same search entry, the same listing row — because a customer who
- * learned to read one surface has learned to read both. What the Marketplace
- * adds is exactly what the backend genuinely supports beyond Home: a sort
- * (`p_sort`) and a growing page. Supply rules are identical: one unified list,
- * Independent + Barbershop, staff barbers structurally excluded, no
- * entity-type sections.
+ * Desktop stops centring a phone list in a 1440px viewport. When at least one
+ * result carries REAL coordinates the page is a Fresha-style split — an
+ * independently scrolling list beside a sticky map with real pins (the RPC
+ * already returns latitude/longitude per row; nothing is geocoded here).
+ * With zero geocoded results the page is a wide list and no map exists at
+ * all: an empty decorative map is exactly the fabrication the rules ban.
+ * The map module is lazy — maplibre never enters the initial bundle.
+ *
+ * Query, Open-now and sort live in the URL (`?q&open&sort`), so
+ * Marketplace → profile → Back restores the search instead of restarting
+ * discovery; the scroll position is restored from sessionStorage the same
+ * way. `replace` keeps typing from spamming history.
+ *
+ * Supply rules are untouched: one unified list, Independent + Barbershop,
+ * staff barbers structurally excluded, `marketplace_supply_type` only.
  *
  * ============================================================================
- * LIST-FIRST, AND WHY THERE IS NO MAP
+ * THE FILTER ROW TELLS THE TRUTH ABOUT ITSELF
  * ============================================================================
  *
- * The blueprint's desktop marketplace is list + map — WHERE coordinates exist.
- * Measured against the live database: zero of the nine active locations are
- * geocoded (`latitude`/`longitude` all null), so a map would render an empty
- * viewport with no pins, or worse, invented ones. Until locations carry real
- * coordinates this page is honestly list-first; the RPC already returns
- * lat/long per row, so a map composition needs no contract work when the data
- * arrives — it is a rendering addition, not an architecture change.
- *
- * ============================================================================
- * THE SORT CONTROL TELLS THE TRUTH ABOUT ITSELF
- * ============================================================================
- *
- * "Nearest" is offered only while precise location is genuinely on: with no
- * coordinates the RPC has no distance to sort by and the option would be a
- * placebo. Rating and soonest-availability sorts do not exist because nothing
- * in this schema can back them (no reviews table; availability needs a
- * service), and offering a control that silently falls back is how customers
- * learn to distrust controls.
+ * One compact chip row: Open now, then the sorts the backend genuinely has
+ * (`recommended` / `nearest`-when-precise / `price`). Distance, price-range
+ * and "when" filters do not exist in the contract, so no chip pretends they
+ * do — a control that silently falls back teaches customers to distrust
+ * controls.
  */
+
+const V2ResultsMap = lazy(() => import('@/customer-v2/marketplace/v2-results-map'))
+
+const SCROLL_KEY = 'v2-marketplace-scroll'
+
 export function CustomerV2MarketplacePage() {
   const { t } = useTranslation()
 
   const location = useCustomerLocation()
-  const [query, setQuery] = useState('')
-  const [openNowOnly, setOpenNowOnly] = useState(false)
-  const [sort, setSort] = useState<MarketplaceSort>('recommended')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const query = searchParams.get('q') ?? ''
+  const openNowOnly = searchParams.get('open') === '1'
+  const sortParam = searchParams.get('sort')
+  const sort: MarketplaceSort = isMarketplaceSort(sortParam) ? sortParam : 'recommended'
+
+  const setParam = (key: string, value: string | null) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (value === null || value === '') next.delete(key)
+        else next.set(key, value)
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   const debouncedQuery = useDebounced(query, 300)
 
   /*
     If the customer chose "Nearest" and then turned precise location off, the
-    stored preference survives but the QUERY falls back to the ordering that
-    still means something — and the UI below hides the chip, so the state and
-    the presentation cannot disagree.
+    stored preference survives in the URL but the QUERY falls back to the
+    ordering that still means something — and the UI hides the chip, so state
+    and presentation cannot disagree.
   */
   const nearestAvailable = location.precision === 'precise'
   const effectiveSort: MarketplaceSort =
@@ -102,6 +118,20 @@ export function CustomerV2MarketplacePage() {
     !discovery.isPending && !discovery.isError && debouncedQuery.length > 0,
   )
 
+  /* ── Scroll restoration: leaving saves, returning restores once. ───────── */
+  const restoredRef = useRef(false)
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
+    }
+  }, [])
+  useLayoutEffect(() => {
+    if (restoredRef.current || discovery.isPending) return
+    restoredRef.current = true
+    const saved = Number(sessionStorage.getItem(SCROLL_KEY) ?? 0)
+    if (saved > 0) window.scrollTo(0, saved)
+  }, [discovery.isPending])
+
   const showSkeletons = useDelayedFlag(discovery.isPending)
 
   const sortOptions: Array<{ value: MarketplaceSort; label: string }> = [
@@ -112,47 +142,58 @@ export function CustomerV2MarketplacePage() {
     { value: 'price', label: t('customer-app:v2.marketplace.sortPrice') },
   ]
 
+  const hasCoordinates = discovery.listings.some(
+    (listing) => listing.result.latitude !== null && listing.result.longitude !== null,
+  )
+
+  const chip = (selected: boolean) =>
+    selected
+      ? 'inline-flex h-8 items-center rounded-v2-2 bg-v2-green-tint px-3 text-v2-meta font-semibold text-v2-green-ink'
+      : 'inline-flex h-8 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft'
+
+  const list = (
+    <Body
+      discovery={discovery}
+      showSkeletons={showSkeletons}
+      onClearFilters={() => {
+        setParam('q', null)
+        setParam('open', null)
+      }}
+      onSearchEverywhere={location.countryCode ? () => location.chooseCountry(ANYWHERE) : null}
+    />
+  )
+
   return (
     <div className="flex flex-col">
       <div className="flex min-h-11 items-center justify-start gap-2">
         <LocationSelector location={location} />
-
-        <button
-          type="button"
-          aria-pressed={openNowOnly}
-          onClick={() => setOpenNowOnly((current) => !current)}
-          className="v2-press inline-flex h-11 shrink-0 items-center rounded-v2-2"
-        >
-          <span
-            className={
-              openNowOnly
-                ? 'inline-flex h-8 items-center rounded-v2-2 bg-v2-green-tint px-3 text-v2-meta font-semibold text-v2-green-ink'
-                : 'inline-flex h-8 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft'
-            }
-          >
-            {t('customer-app:v2.home.openNowFilter')}
-          </span>
-        </button>
+        <h1 className="sr-only">{t('customer-app:v2.marketplace.title')}</h1>
       </div>
 
-      <h1 className="mt-1.5 text-v2-lead font-semibold tracking-[-0.02em] text-v2-ink lg:mt-2 lg:text-[1.5rem]/[1.75rem]">
-        {t('customer-app:v2.marketplace.title')}
-      </h1>
-
-      <div className="mt-3.5 lg:max-w-[26rem]">
-        <SearchEntry value={query} onChange={setQuery} />
+      <div className="mt-2.5 lg:max-w-[30rem]">
+        <SearchEntry value={query} onChange={(next) => setParam('q', next || null)} />
       </div>
 
       {/*
-        The sort is a radio group in behaviour and a chip row in look —
-        `aria-pressed` per chip, exactly one true. It sits UNDER the search
-        because it refines the answer, not the question.
+        ONE compact filter row — facet first, then the sorts, horizontally
+        scrollable on a phone so it never wraps into a second band of chrome.
       */}
       <div
         role="group"
         aria-label={t('customer-app:v2.marketplace.sortLabel')}
-        className="mt-3 flex flex-wrap items-center gap-2"
+        className="mt-2.5 flex items-center gap-2 overflow-x-auto pb-0.5"
       >
+        <button
+          type="button"
+          aria-pressed={openNowOnly}
+          onClick={() => setParam('open', openNowOnly ? null : '1')}
+          className="v2-press inline-flex h-11 shrink-0 items-center rounded-v2-2"
+        >
+          <span className={chip(openNowOnly)}>{t('customer-app:v2.home.openNowFilter')}</span>
+        </button>
+
+        <span aria-hidden="true" className="h-5 w-px shrink-0 bg-v2-hairline" />
+
         {sortOptions.map((option) => {
           const selected = effectiveSort === option.value
           return (
@@ -160,34 +201,41 @@ export function CustomerV2MarketplacePage() {
               key={option.value}
               type="button"
               aria-pressed={selected}
-              onClick={() => setSort(option.value)}
-              className="v2-press inline-flex h-11 items-center rounded-v2-2"
+              onClick={() => setParam('sort', option.value === 'recommended' ? null : option.value)}
+              className="v2-press inline-flex h-11 shrink-0 items-center rounded-v2-2"
             >
-              <span
-                className={
-                  selected
-                    ? 'inline-flex h-8 items-center rounded-v2-2 bg-v2-green-tint px-3 text-v2-meta font-semibold text-v2-green-ink'
-                    : 'inline-flex h-8 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft'
-                }
-              >
-                {option.label}
-              </span>
+              <span className={chip(selected)}>{option.label}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="mt-4 md:mt-5 lg:max-w-[46rem]">
-        <Body
-          discovery={discovery}
-          showSkeletons={showSkeletons}
-          onClearFilters={() => {
-            setQuery('')
-            setOpenNowOnly(false)
-          }}
-          onSearchEverywhere={location.countryCode ? () => location.chooseCountry(ANYWHERE) : null}
-        />
-      </div>
+      {hasCoordinates ? (
+        /*
+          LIST + MAP. The list column scrolls with the page; the map is sticky
+          under the shell header for the whole scroll. ~52/48 in the map's
+          favour per the direction.
+        */
+        <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,48%)_minmax(0,1fr)] lg:items-start lg:gap-5">
+          <div className="min-w-0">{list}</div>
+          <div className="hidden lg:block lg:sticky lg:top-[4.5rem] lg:h-[calc(100vh-6rem)]">
+            <Suspense fallback={<div className="v2-skeleton h-full min-h-[28rem] rounded-v2-3" />}>
+              <V2ResultsMap
+                results={discovery.listings.map((listing) => listing.result)}
+                onSelect={(result) => {
+                  document
+                    .getElementById(`v2-result-${result.locationId}`)
+                    ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                }}
+                className="h-full"
+              />
+            </Suspense>
+          </div>
+        </div>
+      ) : (
+        /* No geocoded results → an honest wide list, no decorative map. */
+        <div className="mt-3 lg:max-w-[52rem]">{list}</div>
+      )}
     </div>
   )
 }
@@ -220,8 +268,8 @@ function Body({
   if (discovery.isPending) {
     if (!showSkeletons) return <div className="min-h-64" />
     return (
-      <div className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
+      <div>
+        <div className="py-2.5">
           <div className="v2-skeleton h-5 w-28 rounded-v2-1" />
         </div>
         <ResultSkeleton count={4} />
@@ -256,8 +304,13 @@ function Body({
   }
 
   return (
-    <section aria-labelledby="v2-marketplace-heading" className="v2-plate overflow-hidden">
-      <div className="flex items-baseline justify-between gap-3 px-4 py-3 md:px-5">
+    /*
+      DESIGN PASS A CARD DEMOTION: results sit straight on the canvas as
+      hairline-separated rows — the Fresha edge-to-edge list — instead of
+      inside a plate-within-the-page. The section header is one quiet line.
+    */
+    <section aria-labelledby="v2-marketplace-heading">
+      <div className="flex items-baseline justify-between gap-3 py-2">
         <h2 id="v2-marketplace-heading" className="text-v2-title font-semibold text-v2-ink">
           {t('customer-app:v2.marketplace.results')}
         </h2>
@@ -269,11 +322,19 @@ function Body({
       </div>
 
       <ul
-        className={discovery.isFetching ? 'v2-refining' : undefined}
+        className={
+          discovery.isFetching
+            ? 'v2-refining border-t border-v2-hairline'
+            : 'border-t border-v2-hairline'
+        }
         aria-busy={discovery.isFetching || undefined}
       >
         {discovery.listings.map((listing, index) => (
-          <li key={listing.result.locationId} className="border-t border-v2-hairline">
+          <li
+            key={listing.result.locationId}
+            id={`v2-result-${listing.result.locationId}`}
+            className="border-b border-v2-hairline"
+          >
             <ProfessionalResult
               result={listing.result}
               supplyType={listing.supplyType}
@@ -285,7 +346,7 @@ function Body({
       </ul>
 
       {discovery.hasMore ? (
-        <div className="border-t border-v2-hairline px-4 py-3 md:px-5">
+        <div className="py-3">
           <button
             type="button"
             onClick={discovery.showMore}

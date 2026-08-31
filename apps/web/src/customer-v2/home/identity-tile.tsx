@@ -67,10 +67,35 @@ import { cn } from '@/lib/cn'
  * the professional passes `alt=""`, because an image duplicating adjacent text
  * is decorative by WCAG's own guidance.
  */
+/**
+ * DESIGN PASS A REVISION — the no-media system.
+ *
+ * The product owner's Fresha directive replaces the glyph-only empty state
+ * with a branded identity fallback: INITIALS derived from the entity's real
+ * name, set in the ink the rest of the row uses, on the same still two-stop
+ * fade. This deliberately supersedes the earlier "no monograms" ruling — the
+ * Design Pass A brief specifies "initials / FadeUp identity treatment" for
+ * both entity kinds, and the shape convention (person = circle, place =
+ * rounded square) still carries the entity type. When no name reaches the
+ * tile the old glyph remains the last resort, so the fallback never renders
+ * an empty circle.
+ */
+function initialsOf(name: string): string {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.replace(/[^\p{L}\p{N}]/gu, ''))
+    .filter(Boolean)
+  if (parts.length === 0) return ''
+  const first = [...parts[0]][0] ?? ''
+  const second = parts.length > 1 ? ([...parts[parts.length - 1]][0] ?? '') : ''
+  return (first + second).toLocaleUpperCase()
+}
+
 export function IdentityTile({
   src,
   alt,
   kind,
+  name,
   className,
 }: {
   /** A real image URL, or null when the backend genuinely has none. */
@@ -79,6 +104,8 @@ export function IdentityTile({
   alt: string
   /** Which kind of thing this is. Decides the shape and the glyph. */
   kind: 'barber' | 'shop'
+  /** The entity's real name; when given, the no-media state shows initials. */
+  name?: string | null
   className?: string
 }) {
   const [failed, setFailed] = useState<string | null>(null)
@@ -87,6 +114,7 @@ export function IdentityTile({
   const showImage = Boolean(src) && failed !== src
 
   const Glyph = kind === 'barber' ? UserRound : Store
+  const initials = name ? initialsOf(name) : ''
 
   return (
     <div
@@ -109,7 +137,13 @@ export function IdentityTile({
       ) : (
         <>
           <span className="v2-well-empty absolute inset-0" />
-          <Glyph className="relative h-5 w-5 text-v2-ink-mute md:h-6 md:w-6" strokeWidth={1.6} />
+          {initials ? (
+            <span className="relative select-none text-[0.9em] font-semibold tracking-[0.02em] text-v2-ink-soft">
+              {initials}
+            </span>
+          ) : (
+            <Glyph className="relative h-5 w-5 text-v2-ink-mute md:h-6 md:w-6" strokeWidth={1.6} />
+          )}
         </>
       )}
     </div>

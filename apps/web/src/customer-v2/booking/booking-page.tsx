@@ -78,7 +78,7 @@ import { V2_ROUTES } from '@/customer-v2/routes'
 
 type Step = 'service' | 'barber' | 'time' | 'details'
 
-const INITIAL_SLOTS_SHOWN = 3
+const INITIAL_SLOTS_SHOWN = 6
 const DAYS_SHOWN = 14
 
 /** The next N dates as the SHOP sees them — `p_date` is shop-local. */
@@ -95,14 +95,24 @@ function shopDates(timezone: string, language: string) {
     day: 'numeric',
     month: 'short',
   })
-  const dates: Array<{ key: string; label: string }> = []
+  /* The rail stacks weekday over day-of-month (Fresha's date rail); the full
+     label stays for accessible names and prose. Both come from Intl, so every
+     locale keeps its own forms. */
+  const formatWeekday = new Intl.DateTimeFormat(language, { timeZone: timezone, weekday: 'short' })
+  const formatDay = new Intl.DateTimeFormat(language, { timeZone: timezone, day: 'numeric' })
+  const dates: Array<{ key: string; label: string; weekday: string; day: string }> = []
   const seen = new Set<string>()
   for (let i = 0; i < DAYS_SHOWN; i += 1) {
     const instant = new Date(Date.now() + i * 86_400_000)
     const key = formatKey.format(instant)
     if (seen.has(key)) continue
     seen.add(key)
-    dates.push({ key, label: formatLabel.format(instant) })
+    dates.push({
+      key,
+      label: formatLabel.format(instant),
+      weekday: formatWeekday.format(instant),
+      day: formatDay.format(instant),
+    })
   }
   return dates
 }
@@ -594,17 +604,30 @@ export function CustomerV2BookingPage() {
                     key={day.key}
                     type="button"
                     aria-pressed={selected}
+                    aria-label={day.label}
                     onClick={() => {
                       setDate(day.key)
                       setAllSlotsShown(false)
                     }}
                     className={
                       selected
-                        ? 'v2-press inline-flex h-9 shrink-0 items-center rounded-v2-2 bg-v2-green-tint px-3 text-v2-meta font-semibold text-v2-green-ink'
-                        : 'v2-press inline-flex h-9 shrink-0 items-center rounded-v2-2 border border-v2-hairline bg-v2-paper px-3 text-v2-meta font-medium text-v2-ink-soft'
+                        ? 'v2-press flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-v2-2 bg-v2-green-tint text-v2-green-ink'
+                        : 'v2-press flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-v2-2 border border-v2-hairline bg-v2-paper text-v2-ink-soft'
                     }
                   >
-                    {day.label}
+                    <span aria-hidden="true" className="text-v2-caption font-medium">
+                      {day.weekday}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={
+                        selected
+                          ? 'text-v2-body font-semibold tabular-nums'
+                          : 'text-v2-body font-medium tabular-nums text-v2-ink'
+                      }
+                    >
+                      {day.day}
+                    </span>
                   </button>
                 )
               })}
@@ -623,34 +646,76 @@ export function CustomerV2BookingPage() {
                     })}
                   </p>
                 ) : null}
-                <div className="flex flex-wrap gap-2">
-                  {visibleSlots.map((entry) => (
-                    <button
-                      key={entry.slotStart}
-                      type="button"
-                      onClick={() => {
-                        analytics.track('booking_slot_selected', {
-                          properties: {
-                            /* How far AHEAD, never WHEN — same §12 rule as the
-                               legacy flow this replaces. */
-                            lead_time_minutes: Math.max(
-                              0,
-                              Math.round(
-                                (new Date(entry.slotStart).getTime() - Date.now()) / 60_000,
-                              ),
-                            ),
-                          },
-                          context: { organizationId: shop.id, locationId: location.id },
-                        })
-                        setBookFailed(false)
-                        setSlot({ start: entry.slotStart, end: entry.slotEnd })
-                      }}
-                      className="v2-press inline-flex h-11 items-center rounded-v2-2 border border-v2-edge bg-v2-paper px-4 text-v2-body font-semibold tabular-nums text-v2-ink hover:bg-v2-fill"
-                    >
-                      {timeFormat.format(new Date(entry.slotStart))}
-                    </button>
-                  ))}
-                </div>
+                {/*
+                  Fresha's time-of-day grouping, computed from the REAL slot
+                  timestamps in the shop's own timezone: before 12 is morning,
+                  12–16:59 afternoon, 17+ evening. A period with no slots does
+                  not render — grouping never invents a section.
+                */}
+                {(() => {
+                  const hourFormat = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: location.timezone,
+                    hour: 'numeric',
+                    hour12: false,
+                  })
+                  const hourOf = (iso: string) => Number(hourFormat.format(new Date(iso)))
+                  const groups = [
+                    {
+                      id: 'morning',
+                      label: t('customer-app:v2.booking.morning'),
+                      slots: visibleSlots.filter((entry) => hourOf(entry.slotStart) < 12),
+                    },
+                    {
+                      id: 'afternoon',
+                      label: t('customer-app:v2.booking.afternoon'),
+                      slots: visibleSlots.filter((entry) => {
+                        const hour = hourOf(entry.slotStart)
+                        return hour >= 12 && hour < 17
+                      }),
+                    },
+                    {
+                      id: 'evening',
+                      label: t('customer-app:v2.booking.evening'),
+                      slots: visibleSlots.filter((entry) => hourOf(entry.slotStart) >= 17),
+                    },
+                  ].filter((group) => group.slots.length > 0)
+
+                  return groups.map((group) => (
+                    <div key={group.id} className="pb-1 pt-2 first:pt-0">
+                      <p className="pb-1.5 text-v2-caption font-semibold uppercase tracking-[0.08em] text-v2-ink-mute">
+                        {group.label}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.slots.map((entry) => (
+                          <button
+                            key={entry.slotStart}
+                            type="button"
+                            onClick={() => {
+                              analytics.track('booking_slot_selected', {
+                                properties: {
+                                  /* How far AHEAD, never WHEN — same §12 rule as
+                                     the legacy flow this replaces. */
+                                  lead_time_minutes: Math.max(
+                                    0,
+                                    Math.round(
+                                      (new Date(entry.slotStart).getTime() - Date.now()) / 60_000,
+                                    ),
+                                  ),
+                                },
+                                context: { organizationId: shop.id, locationId: location.id },
+                              })
+                              setBookFailed(false)
+                              setSlot({ start: entry.slotStart, end: entry.slotEnd })
+                            }}
+                            className="v2-press inline-flex h-11 items-center rounded-v2-2 border border-v2-edge bg-v2-paper px-4 text-v2-body font-semibold tabular-nums text-v2-ink hover:bg-v2-fill"
+                          >
+                            {timeFormat.format(new Date(entry.slotStart))}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                })()}
                 {!allSlotsShown && (slots.data?.length ?? 0) > INITIAL_SLOTS_SHOWN ? (
                   <button
                     type="button"

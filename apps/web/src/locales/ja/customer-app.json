@@ -281,7 +281,13 @@
       "sortRecommended": "おすすめ",
       "sortNearest": "近い順",
       "sortPrice": "料金",
-      "showMore": "もっと見る"
+      "showMore": "もっと見る",
+      "notPlotted_other": "地図上の位置がない結果 {{count}}件",
+      "notPlotted_few": "地図上の位置がない結果 {{count}}件",
+      "notPlotted_zero": "地図上の位置がない結果 {{count}}件",
+      "notPlotted_two": "地図上の位置がない結果 {{count}}件",
+      "notPlotted_one": "地図上の位置がない結果 {{count}}件",
+      "notPlotted_many": "地図上の位置がない結果 {{count}}件"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "この店舗は存在しないか、公開されていません。",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "店舗 · FadeUp",
-      "documentDescription": "FadeUp の店舗ページ — スタッフ・メニュー・予約。"
+      "documentDescription": "FadeUp の店舗ページ — スタッフ・メニュー・予約。",
+      "back": "戻る",
+      "share": "共有",
+      "linkCopied": "リンクをコピーしました"
     },
     "booking": {
       "documentTitle": "予約 · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "この日に空きはありません。別の日をお試しください。",
       "noBarbersForService": "現在このメニューを提供できる担当がいません。",
       "chooseLocation": "店舗を選択",
-      "firstFreeDay": "最初の空き時間は{{day}}です。"
+      "firstFreeDay": "最初の空き時間は{{day}}です。",
+      "morning": "午前",
+      "afternoon": "午後",
+      "evening": "夜"
     },
     "appointments": {
       "title": "予約一覧",

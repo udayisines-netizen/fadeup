@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MapPin } from 'lucide-react'
+import { ChevronLeft, MapPin, Share } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useTrackView } from '@/lib/analytics'
 import { useDocumentMeta } from '@/lib/use-document-meta'
@@ -21,7 +21,7 @@ import {
 import { useDelayedFlag } from '@/customer-v2/hooks/use-delayed'
 import { IdentityTile } from '@/customer-v2/home/identity-tile'
 import { Notice } from '@/customer-v2/ui/notice'
-import { v2BarberProfilePath, v2BookingPath } from '@/customer-v2/routes'
+import { V2_ROUTES, v2BarberProfilePath, v2BookingPath } from '@/customer-v2/routes'
 
 /**
  * A barbershop's profile — an ESTABLISHMENT, deliberately not a person.
@@ -55,9 +55,11 @@ import { v2BarberProfilePath, v2BookingPath } from '@/customer-v2/routes'
  * OPEN STATE — `is_open_now` lives on the marketplace search projection, not
  * on any of this page's contracts, and deriving it client-side from hours the
  * client cannot read would be a guess. RATING/REVIEWS — no reviews table.
- * COVER PHOTOGRAPHY — `organizations` has no image column (recorded as D-2);
- * the cover band is a designed absence that a real image fills when the
- * backend gains one.
+ * COVER/GALLERY — `organizations` has no image column (recorded as D-2);
+ * per Design Pass A, NO empty media chrome is reserved — the header is
+ * typographic, and a Fresha-style gallery composition mounts above it the
+ * day a venue-media contract exists. HOURS — `location_hours` is not
+ * anon-readable, so no public opening-hours section is invented.
  */
 export function CustomerV2ShopProfilePage() {
   const { t } = useTranslation()
@@ -85,6 +87,10 @@ export function CustomerV2ShopProfilePage() {
 
   const money = useMoney()
   const showSkeletons = useDelayedFlag(organization.isPending)
+  /* Sticky-Book state must be unconditional — declared here, used after the
+     early returns. */
+  const [stickyBook, setStickyBook] = useState(false)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const organizationId = organization.data?.id ?? null
   const isFollowing = useMemo(
@@ -126,11 +132,18 @@ export function CustomerV2ShopProfilePage() {
 
   if (organization.isPending) {
     return showSkeletons ? (
-      <div className="v2-plate mx-auto max-w-[40rem] overflow-hidden">
-        <div className="v2-skeleton h-24 w-full" />
-        <div className="p-5">
-          <div className="v2-skeleton h-5 w-2/5 rounded-v2-1" />
-          <div className="v2-skeleton mt-2 h-4 w-3/5 rounded-v2-1" />
+      <div className="mx-auto max-w-[40rem] pt-11">
+        {/* Matches the typographic header: tile, name, address, action pair. */}
+        <div className="flex items-start gap-4">
+          <div className="v2-skeleton h-16 w-16 shrink-0 rounded-v2-2" />
+          <div className="min-w-0 flex-1 pt-1">
+            <div className="v2-skeleton h-6 w-2/5 rounded-v2-1" />
+            <div className="v2-skeleton mt-2 h-4 w-3/5 rounded-v2-1" />
+          </div>
+        </div>
+        <div className="mt-4 flex gap-2.5">
+          <div className="v2-skeleton h-11 flex-1 rounded-v2-2" />
+          <div className="v2-skeleton h-11 w-28 rounded-v2-2" />
         </div>
       </div>
     ) : (
@@ -174,6 +187,23 @@ export function CustomerV2ShopProfilePage() {
 
   const bookPath = v2BookingPath(slug ?? '', { locationId: activeLocation?.id })
 
+  /*
+    Sticky Book (mobile): once the header's own Book scrolls away, a compact
+    bar keeps the conversion action one thumb-reach away — Fresha's persistent
+    Book, above the tab bar. IntersectionObserver on the identity section, so
+    the bar exists only while the primary Book is genuinely off screen.
+  */
+  const identityRef = (node: HTMLElement | null) => {
+    observerRef.current?.disconnect()
+    if (!node) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyBook(!entry.isIntersecting),
+      { rootMargin: '-56px 0px 0px 0px' },
+    )
+    observer.observe(node)
+    observerRef.current = observer
+  }
+
   const toggleFollow = () => {
     if (!user) {
       navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
@@ -185,29 +215,42 @@ export function CustomerV2ShopProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-[40rem] flex-col gap-4">
-      {/* ── Establishment identity ───────────────────────────────────────── */}
-      <section className="v2-plate overflow-hidden">
-        {/*
-          The cover band. `organizations` has no image column, so this is a flat
-          field of `fill` — a designed absence, not a broken image — that a real
-          cover replaces without moving anything below it.
-        */}
-        <div className="h-20 bg-v2-fill md:h-24" aria-hidden="true" />
+    <div className="mx-auto flex max-w-[40rem] flex-col">
+      {/* ── Back / Share (Fresha venue IA, Design Pass A §4) ─────────────── */}
+      <div className="-ms-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(V2_ROUTES.marketplace))}
+          className="v2-press inline-flex h-11 items-center gap-1 rounded-v2-2 px-2 text-v2-meta font-medium text-v2-ink-soft hover:text-v2-ink"
+        >
+          <ChevronLeft className="h-4 w-4 rtl:rotate-180" strokeWidth={2} aria-hidden="true" />
+          {t('customer-app:v2.shopProfile.back')}
+        </button>
+        <ShareControl name={displayName} />
+      </div>
 
-        <div className="px-5 pb-5 md:px-6 md:pb-6">
-          <div className="-mt-8 flex items-end gap-4">
-            <IdentityTile
-              src={null}
-              alt=""
-              kind="shop"
-              className="h-20 w-20 shrink-0 border-4 border-v2-paper md:h-24 md:w-24"
-            />
+      {/*
+        ── Establishment identity ─────────────────────────────────────────
+        Typographic, on the canvas. The empty cover band is gone — the brief
+        bans reserving media chrome no real media can fill; a venue gallery
+        composition slots in above this block the day a media contract exists.
+      */}
+      <section ref={identityRef} className="border-b border-v2-hairline pb-4 pt-1">
+        <div className="flex items-start gap-4">
+          <IdentityTile
+            src={null}
+            alt=""
+            kind="shop"
+            name={displayName}
+            className="h-16 w-16 shrink-0 text-[1.15rem] md:h-20 md:w-20 md:text-[1.3rem]"
+          />
+          <div className="min-w-0 flex-1 pt-1">
+            <h1 className="text-v2-lead font-semibold tracking-[-0.01em] text-v2-ink lg:text-v2-heading">
+              <bdi>{displayName}</bdi>
+            </h1>
           </div>
-
-          <h1 className="mt-3 text-v2-lead font-semibold text-v2-ink">
-            <bdi>{displayName}</bdi>
-          </h1>
+        </div>
+        <div>
 
           {address ? (
             <p className="mt-1 flex items-center gap-1.5 text-v2-meta text-v2-ink-soft">
@@ -287,9 +330,60 @@ export function CustomerV2ShopProfilePage() {
         </div>
       </section>
 
+      {/* ── Services ─────────────────────────────────────────────────────── */}
+      <section aria-labelledby="v2-shop-services" className="pb-1 pt-4">
+        <div className="pb-1.5">
+          <h2 id="v2-shop-services" className="text-v2-title font-semibold text-v2-ink">
+            {t('customer-app:v2.barberProfile.services')}
+          </h2>
+        </div>
+
+        {services.data && services.data.length > 0 ? (
+          <ul>
+            {/* Each row IS the booking entry for that service — the flow never
+                asks for a decision the profile already answered. */}
+            {services.data.map((service) => (
+              <li key={service.id} className="border-t border-v2-hairline">
+                <Link
+                  to={v2BookingPath(slug ?? '', {
+                    locationId: activeLocation?.id,
+                    serviceId: service.id,
+                  })}
+                  className="v2-press flex items-center gap-3 py-3 hover:bg-v2-ground"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-v2-body font-medium text-v2-ink">{service.name}</p>
+                    <p className="mt-0.5 text-v2-meta text-v2-ink-soft">
+                      {t('customer-app:v2.barberProfile.minutes', {
+                        count: service.durationMinutes,
+                      })}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-v2-body font-semibold tabular-nums text-v2-ink">
+                    {money(service.priceCents, shop.currency)}
+                  </p>
+                  {/* Fresha service-row grammar: the row states its own action. */}
+                  <span className="shrink-0 rounded-v2-1 border border-v2-hairline px-2.5 py-1 text-v2-meta font-semibold text-v2-green">
+                    {t('customer-app:v2.result.book')}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : services.isPending ? (
+          <div className="border-t border-v2-hairline px-4 py-4 md:px-5">
+            <div className="v2-skeleton h-5 w-1/2 rounded-v2-1" />
+          </div>
+        ) : (
+          <p className="border-t border-v2-hairline px-4 py-4 text-v2-meta text-v2-ink-soft md:px-5">
+            {t('customer-app:v2.barberProfile.noServices')}
+          </p>
+        )}
+      </section>
+
       {/* ── Team ─────────────────────────────────────────────────────────── */}
-      <section aria-labelledby="v2-shop-team" className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
+      <section aria-labelledby="v2-shop-team" className="border-t border-v2-hairline pb-1 pt-4">
+        <div className="pb-1.5">
           <h2 id="v2-shop-team" className="text-v2-title font-semibold text-v2-ink">
             {t('customer-app:v2.shopProfile.team')}
           </h2>
@@ -306,13 +400,14 @@ export function CustomerV2ShopProfilePage() {
                 */}
                 <Link
                   to={v2BarberProfilePath(slug ?? '', member.barberId)}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-v2-ground md:px-5"
+                  className="flex items-center gap-3 py-3 hover:bg-v2-ground"
                 >
                   <IdentityTile
                     src={member.avatarUrl}
                     alt=""
                     kind="barber"
-                    className="h-12 w-12 shrink-0"
+                    name={member.displayName}
+                    className="h-12 w-12 shrink-0 text-[0.95rem]"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-v2-body font-medium text-v2-ink">
@@ -339,52 +434,59 @@ export function CustomerV2ShopProfilePage() {
         )}
       </section>
 
-      {/* ── Services ─────────────────────────────────────────────────────── */}
-      <section aria-labelledby="v2-shop-services" className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
-          <h2 id="v2-shop-services" className="text-v2-title font-semibold text-v2-ink">
-            {t('customer-app:v2.barberProfile.services')}
-          </h2>
-        </div>
-
-        {services.data && services.data.length > 0 ? (
-          <ul>
-            {/* Each row IS the booking entry for that service — the flow never
-                asks for a decision the profile already answered. */}
-            {services.data.map((service) => (
-              <li key={service.id} className="border-t border-v2-hairline">
-                <Link
-                  to={v2BookingPath(slug ?? '', {
-                    locationId: activeLocation?.id,
-                    serviceId: service.id,
-                  })}
-                  className="v2-press flex items-center gap-3 px-4 py-3 hover:bg-v2-ground md:px-5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-v2-body font-medium text-v2-ink">{service.name}</p>
-                    <p className="mt-0.5 text-v2-meta text-v2-ink-soft">
-                      {t('customer-app:v2.barberProfile.minutes', {
-                        count: service.durationMinutes,
-                      })}
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-v2-body font-semibold tabular-nums text-v2-ink">
-                    {money(service.priceCents, shop.currency)}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : services.isPending ? (
-          <div className="border-t border-v2-hairline px-4 py-4 md:px-5">
-            <div className="v2-skeleton h-5 w-1/2 rounded-v2-1" />
+      {stickyBook ? (
+        <div className="v2-book-bar lg:hidden">
+          <div className="mx-auto flex max-w-[40rem] items-center gap-3 px-4 py-2.5">
+            <p className="min-w-0 flex-1 truncate text-v2-meta font-semibold text-v2-ink">
+              <bdi>{displayName}</bdi>
+            </p>
+            <Link
+              to={bookPath}
+              className="v2-press inline-flex h-11 shrink-0 items-center justify-center rounded-v2-2 bg-v2-green px-6 text-v2-body font-semibold text-v2-paper"
+            >
+              {t('customer-app:v2.result.book')}
+            </Link>
           </div>
-        ) : (
-          <p className="border-t border-v2-hairline px-4 py-4 text-v2-meta text-v2-ink-soft md:px-5">
-            {t('customer-app:v2.barberProfile.noServices')}
-          </p>
-        )}
-      </section>
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+/**
+ * Share — the native share sheet when the platform has one, the clipboard
+ * when it does not, and a quiet confirmation either way. Shares only the
+ * page's own URL: real data, nothing else.
+ */
+function ShareControl({ name }: { name: string }) {
+  const { t } = useTranslation()
+  const [copied, setCopied] = useState(false)
+
+  const share = async () => {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* The customer dismissed the sheet — not an error worth announcing. */
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void share()}
+      className="v2-press -me-2 inline-flex h-11 items-center gap-1.5 rounded-v2-2 px-2 text-v2-meta font-medium text-v2-ink-soft hover:text-v2-ink"
+    >
+      <Share className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+      <span aria-live="polite">
+        {copied ? t('customer-app:v2.shopProfile.linkCopied') : t('customer-app:v2.shopProfile.share')}
+      </span>
+    </button>
   )
 }

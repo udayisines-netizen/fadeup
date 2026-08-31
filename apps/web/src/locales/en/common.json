@@ -170,5 +170,6 @@
   "verified": {
     "label": "Verified identity",
     "description": "This profile is claimed and controlled by the person it names. FadeUp does not rate their work."
-  }
+  },
+  "loading": "Loading"
 }

@@ -281,7 +281,13 @@
       "sortRecommended": "Recomendados",
       "sortNearest": "Mais próximos",
       "sortPrice": "Preço",
-      "showMore": "Mostrar mais"
+      "showMore": "Mostrar mais",
+      "notPlotted_one": "{{count}} resultado sem posição no mapa",
+      "notPlotted_other": "{{count}} resultados sem posição no mapa",
+      "notPlotted_few": "{{count}} resultados sem posição no mapa",
+      "notPlotted_zero": "{{count}} resultados sem posição no mapa",
+      "notPlotted_two": "{{count}} resultados sem posição no mapa",
+      "notPlotted_many": "{{count}} resultados sem posição no mapa"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "Esta barbearia não existe ou não é pública.",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Barbearia · FadeUp",
-      "documentDescription": "Barbearia no FadeUp — equipa, serviços e reservas."
+      "documentDescription": "Barbearia no FadeUp — equipa, serviços e reservas.",
+      "back": "Voltar",
+      "share": "Partilhar",
+      "linkCopied": "Link copiado"
     },
     "booking": {
       "documentTitle": "Reservar · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "Sem horários livres nesse dia. Tente outro dia.",
       "noBarbersForService": "Ninguém oferece este serviço neste momento.",
       "chooseLocation": "Escolhe uma localização",
-      "firstFreeDay": "As primeiras horas livres são a {{day}}."
+      "firstFreeDay": "As primeiras horas livres são a {{day}}.",
+      "morning": "Manhã",
+      "afternoon": "Tarde",
+      "evening": "Noite"
     },
     "appointments": {
       "title": "Marcações",

@@ -99,8 +99,8 @@ function Body({
     if (!showSkeletons) return <div className="min-h-64" />
 
     return (
-      <div className="v2-plate overflow-hidden">
-        <div className="px-4 py-3 md:px-5">
+      <div>
+        <div className="py-2.5">
           <div className="v2-skeleton h-5 w-28 rounded-v2-1" />
         </div>
         <ResultSkeleton count={3} />
@@ -156,8 +156,13 @@ function ListingPlate({ discovery }: { discovery: HomeDiscovery }) {
   const headingId = 'v2-discovery-heading'
 
   return (
-    <section aria-labelledby={headingId} className="v2-plate overflow-hidden">
-      <div className="flex items-baseline justify-between gap-3 px-4 py-3 md:px-5">
+    /*
+      DESIGN PASS A CARD DEMOTION: the supply list sits straight on the canvas
+      as hairline-separated rows — the Fresha edge-to-edge idiom — with the
+      section title as one quiet line, not a plate-within-the-page.
+    */
+    <section aria-labelledby={headingId}>
+      <div className="flex items-baseline justify-between gap-3 py-2">
         <h2 id={headingId} className="text-v2-title font-semibold text-v2-ink">
           {t('customer-app:v2.discovery.nearYou')}
         </h2>
@@ -181,11 +186,15 @@ function ListingPlate({ discovery }: { discovery: HomeDiscovery }) {
         every keystroke.
       */}
       <ul
-        className={discovery.isFetching ? 'v2-refining' : undefined}
+        className={
+          discovery.isFetching
+            ? 'v2-refining border-t border-v2-hairline'
+            : 'border-t border-v2-hairline'
+        }
         aria-busy={discovery.isFetching || undefined}
       >
         {discovery.listings.map((listing, index) => (
-          <li key={listing.result.locationId} className="border-t border-v2-hairline">
+          <li key={listing.result.locationId} className="border-b border-v2-hairline">
             <ProfessionalResult
               result={listing.result}
               supplyType={listing.supplyType}

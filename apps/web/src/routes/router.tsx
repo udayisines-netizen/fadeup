@@ -13,6 +13,7 @@ import { PlatformLayout } from '@/routes/platform-layout'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
 import { V2_ROUTE_PATH } from '@/customer-v2/routes'
+import { V2Splash } from '@/customer-v2/ui/v2-splash'
 import { PRO_V2_ROUTE_PATH } from '@/pro-v2/routes'
 import { ProV2Shell } from '@/pro-v2/shell/pro-v2-shell'
 
@@ -33,6 +34,16 @@ export const router = createBrowserRouter([
       add their own errorElement to keep their chrome; none needs to today.
     */
     errorElement: <RouteErrorBoundary />,
+    /*
+      Design Pass A §1: bootstrap-class waits get the FadeUp splash — the
+      light F-mark sequence — instead of a blank frame. React Router shows
+      this exactly while a matched lazy branch is still loading its module
+      on initial navigation, which is precisely the "initial app bootstrap /
+      major lazy bootstrap" scope the direction allows; ordinary query
+      refetches inside mounted routes never reach it. This also retires the
+      long-standing "No HydrateFallback element" console warning.
+    */
+    HydrateFallback: V2Splash,
     children: [
       {
         // Shared nav/footer chrome for the public marketing site — kept

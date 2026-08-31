@@ -281,7 +281,13 @@
       "sortRecommended": "Рекомендуемые",
       "sortNearest": "Ближайшие",
       "sortPrice": "Цена",
-      "showMore": "Показать ещё"
+      "showMore": "Показать ещё",
+      "notPlotted_one": "{{count}} результат без позиции на карте",
+      "notPlotted_few": "{{count}} результата без позиции на карте",
+      "notPlotted_many": "{{count}} результатов без позиции на карте",
+      "notPlotted_other": "{{count}} результатов без позиции на карте",
+      "notPlotted_zero": "{{count}} результатов без позиции на карте",
+      "notPlotted_two": "{{count}} результатов без позиции на карте"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
@@ -317,7 +323,10 @@
       "notFoundBody": "Этот барбершоп не существует или не является публичным.",
       "documentTitle": "{{name}} · FadeUp",
       "documentTitleFallback": "Барбершоп · FadeUp",
-      "documentDescription": "Барбершоп на FadeUp — команда, услуги и запись."
+      "documentDescription": "Барбершоп на FadeUp — команда, услуги и запись.",
+      "back": "Назад",
+      "share": "Поделиться",
+      "linkCopied": "Ссылка скопирована"
     },
     "booking": {
       "documentTitle": "Запись · FadeUp",
@@ -345,7 +354,10 @@
       "noSlots": "В этот день свободного времени нет. Попробуйте другой день.",
       "noBarbersForService": "Эту услугу сейчас никто не оказывает.",
       "chooseLocation": "Выберите адрес",
-      "firstFreeDay": "Первые свободные окна — {{day}}."
+      "firstFreeDay": "Первые свободные окна — {{day}}.",
+      "morning": "Утро",
+      "afternoon": "День",
+      "evening": "Вечер"
     },
     "appointments": {
       "title": "Записи",
