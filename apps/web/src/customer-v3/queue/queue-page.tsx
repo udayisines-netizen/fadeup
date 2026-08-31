@@ -25,6 +25,7 @@ export function CustomerV3QueuePage() {
 
   return (
     <div className="v3q-scene v3-bg-spotlight v3-on-dark v3-grain">
+      <h1 className="v3-sr-only">{t('queue.metaTitle')}</h1>
       {!loading && !user ? (
         <div className="v3q-empty">
           <p className="v3-section-h" style={{ color: '#fff' }}>

@@ -193,7 +193,7 @@ export function ProV3RetentionPage() {
               <button
                 type="button"
                 className="v3-btn v3-btn--quiet v3-press"
-                style={{ minBlockSize: 36, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
+                style={{ minBlockSize: 44, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
                 onClick={() => {
                   setEditingPlan(plan)
                   setPlanFormOpen(true)
@@ -259,7 +259,7 @@ export function ProV3RetentionPage() {
                 <button
                   type="button"
                   className="v3-btn v3-btn--quiet v3-press"
-                  style={{ minBlockSize: 36, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
+                  style={{ minBlockSize: 44, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
                   disabled={updateStatus.isPending}
                   onClick={() =>
                     updateStatus.mutate({
@@ -274,7 +274,7 @@ export function ProV3RetentionPage() {
                 <button
                   type="button"
                   className="v3-btn v3-btn--quiet v3-press"
-                  style={{ minBlockSize: 36, paddingInline: '0.75rem', fontSize: '0.8125rem', color: 'var(--v3-alert)' }}
+                  style={{ minBlockSize: 44, paddingInline: '0.75rem', fontSize: '0.8125rem', color: 'var(--v3-alert)' }}
                   disabled={updateStatus.isPending}
                   onClick={() =>
                     updateStatus.mutate({ id: enrollment.id, organizationId: scope.organizationId, status: 'cancelled' })
@@ -352,7 +352,7 @@ function PlanForm({
         <span>{t('pro.retention.planName')}</span>
         <input value={name} onChange={(event) => setName(event.target.value)} required />
       </label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
         <label className="v3b-field">
           <span>
             {t('pro.retention.planPrice')} ({currency})
@@ -454,7 +454,7 @@ function EnrollForm({
         })
       }}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
         <label className="v3b-field">
           <span>{t('pro.retention.customer')}</span>
           <select value={customerId} onChange={(event) => setCustomerId(event.target.value)} required style={selectStyle}>

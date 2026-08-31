@@ -40,6 +40,7 @@
 .v3a-brand {
   display: inline-flex;
   align-items: center;
+  min-block-size: 44px;
   gap: 0.5rem;
   font-weight: 700;
   font-size: 1.0625rem;
@@ -238,6 +239,7 @@
 .v3a-search input {
   flex: 1;
   min-inline-size: 0;
+  min-block-size: 46px;
   border: 0;
   background: transparent;
   font: inherit;
@@ -657,6 +659,9 @@
 }
 
 .v3p-working-at {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
   font-size: 0.9063rem;
   font-weight: 650;
   color: var(--v3-green-ink);
@@ -728,7 +733,7 @@
 }
 
 .v3p-service .v3-btn {
-  min-block-size: 40px;
+  min-block-size: 44px;
   padding-inline: 1rem;
 }
 
@@ -860,7 +865,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  min-block-size: 40px;
+  min-block-size: 44px;
   padding-inline: 0.875rem;
   border-radius: 999px;
   border: 1px solid var(--v3-green);

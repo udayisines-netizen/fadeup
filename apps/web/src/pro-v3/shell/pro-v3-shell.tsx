@@ -23,6 +23,7 @@ import { SUPPORTED_LOCALES, LOCALE_LABELS, isSupportedLocale } from '@/lib/local
 import { PRO_V3_ROUTES } from '@/pro-v3/routes'
 
 import '@/ui-v3/ui-v3.css'
+import '@/customer-v3/app.css'
 import '@/pro-v3/pro-v3.css'
 
 export interface ProScope {

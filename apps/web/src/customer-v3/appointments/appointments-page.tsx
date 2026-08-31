@@ -47,7 +47,7 @@ export function CustomerV3AppointmentsPage() {
   if (!loading && !user) {
     return (
       <div className="v3a-empty">
-        <p className="v3a-empty-title">{t('appointments.signedOutTitle')}</p>
+        <h1 className="v3a-empty-title">{t('appointments.signedOutTitle')}</h1>
         <p className="v3-meta">{t('appointments.signedOutBody')}</p>
         <a href="/login" className="v3-btn v3-btn--primary-ink v3-press">
           {t('landing.nav.signIn')}

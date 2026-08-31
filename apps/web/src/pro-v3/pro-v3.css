@@ -575,3 +575,12 @@
   padding: 0.25rem 1rem 0.75rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* No pro control below the 44px target rule. */
+.v3pro-shell .v3-btn {
+  min-block-size: 44px;
+}
+
+.v3pro-scope {
+  min-block-size: 44px;
+}

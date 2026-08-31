@@ -36,7 +36,7 @@ export function CustomerV3PassportPage() {
   if (!loading && !user) {
     return (
       <div className="v3a-empty">
-        <p className="v3a-empty-title">{t('account.signedOutTitle')}</p>
+        <h1 className="v3a-empty-title">{t('account.signedOutTitle')}</h1>
         <a href="/login" className="v3-btn v3-btn--primary-ink v3-press">
           {t('landing.nav.signIn')}
         </a>
@@ -61,8 +61,8 @@ export function CustomerV3PassportPage() {
   return (
     <div>
       <div className="v3pp-scene v3-bg-reveal v3-on-dark v3-grain">
-        <article className="v3pp-pass" aria-label={t('landing.passport.cardLabel')}>
-          <span className="v3pr-pass-mini-label">{t('landing.passport.cardLabel')}</span>
+        <article className="v3pp-pass">
+          <h1 className="v3pr-pass-mini-label">{t('landing.passport.cardLabel')}</h1>
           <span className="v3pr-pass-mini-name" style={{ fontSize: '1.375rem' }}>
             <bdi>{displayName}</bdi>
           </span>

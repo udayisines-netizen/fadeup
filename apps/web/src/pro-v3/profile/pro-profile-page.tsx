@@ -123,6 +123,7 @@ function ListingMirror({ canManage }: { canManage: boolean }) {
             <input
               type="checkbox"
               role="switch"
+              style={{ inlineSize: 24, blockSize: 24 }}
               checked={marketplaceVisible}
               disabled={setVisibility.isPending}
               onChange={() => setVisibility.mutate(!marketplaceVisible)}
@@ -361,7 +362,7 @@ function BusinessPanel({
           <span>{t('pro.editor.businessName')}</span>
           <input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
           <label className="v3b-field">
             <span>{t('pro.editor.businessType')}</span>
             <select
@@ -470,7 +471,7 @@ function LocationPanel({ location }: { location: Location }) {
           <span>{t('pro.editor.address')}</span>
           <input {...bind('addressLine1')} />
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
           <label className="v3b-field">
             <span>{t('pro.editor.city')}</span>
             <input {...bind('city')} />
@@ -480,7 +481,7 @@ function LocationPanel({ location }: { location: Location }) {
             <input {...bind('postalCode')} />
           </label>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.75rem' }}>
           <label className="v3b-field">
             <span>{t('pro.editor.country')}</span>
             <input {...bind('country')} maxLength={2} style={{ textTransform: 'uppercase' }} dir="ltr" />
@@ -538,7 +539,7 @@ function TeamPanel({ staff }: { staff: StaffProfile[] }) {
               <button
                 type="button"
                 className="v3-btn v3-btn--quiet v3-press"
-                style={{ minBlockSize: 36, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
+                style={{ minBlockSize: 44, paddingInline: '0.75rem', fontSize: '0.8125rem' }}
                 onClick={() => setEditingId(member.id)}
               >
                 {t('pro.editor.edit')}

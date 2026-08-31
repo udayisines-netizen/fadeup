@@ -60,7 +60,7 @@ export function CustomerV3ProfilePage() {
           const next = event.target.value
           if (isSupportedLocale(next)) void changeLocale(next)
         }}
-        style={{ font: 'inherit', border: 0, background: 'transparent', color: 'var(--v3-green-ink)', fontWeight: 600 }}
+        style={{ font: 'inherit', border: 0, background: 'transparent', color: 'var(--v3-green-ink)', fontWeight: 600, minBlockSize: 44 }}
       >
         {SUPPORTED_LOCALES.map((locale) => (
           <option key={locale} value={locale}>
@@ -75,7 +75,7 @@ export function CustomerV3ProfilePage() {
     return (
       <div className="v3pr-page">
         <div className="v3a-empty">
-          <p className="v3a-empty-title">{t('account.signedOutTitle')}</p>
+          <h1 className="v3a-empty-title">{t('account.signedOutTitle')}</h1>
           <p className="v3-meta">{t('account.signedOutBody')}</p>
           <a href="/login" className="v3-btn v3-btn--primary-ink v3-press">
             {t('landing.nav.signIn')}
