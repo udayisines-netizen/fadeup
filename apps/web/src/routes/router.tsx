@@ -564,6 +564,34 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: 'customers',
+                lazy: async () => {
+                  const { ProV3CustomersPage } = await import('@/pro-v3/customers/customers-page')
+                  return { Component: ProV3CustomersPage }
+                },
+              },
+              {
+                path: 'analytics',
+                lazy: async () => {
+                  const { ProV3AnalyticsPage } = await import('@/pro-v3/analytics/analytics-page')
+                  return { Component: ProV3AnalyticsPage }
+                },
+              },
+              {
+                path: 'retention',
+                lazy: async () => {
+                  const { ProV3RetentionPage } = await import('@/pro-v3/retention/retention-page')
+                  return { Component: ProV3RetentionPage }
+                },
+              },
+              {
+                path: 'profile',
+                lazy: async () => {
+                  const { ProV3ProfilePage } = await import('@/pro-v3/profile/pro-profile-page')
+                  return { Component: ProV3ProfilePage }
+                },
+              },
+              {
                 path: '*',
                 lazy: async () => {
                   const { V3PlaceholderPage } = await import(

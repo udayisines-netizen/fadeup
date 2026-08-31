@@ -439,3 +439,139 @@
     display: none;
   }
 }
+
+/* ---- CRM ---- */
+
+.v3crm-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+  .v3crm-grid {
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .v3crm-list-collapsed {
+    display: block;
+  }
+
+  .v3crm-back {
+    display: none;
+  }
+}
+
+@media (max-width: 63.98rem) {
+  .v3crm-list-collapsed {
+    display: none;
+  }
+}
+
+.v3crm-row {
+  display: grid;
+  gap: 0.125rem;
+  inline-size: 100%;
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-block-start: 1px solid var(--v3-hairline);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  min-block-size: 48px;
+}
+
+.v3crm-row:hover {
+  background: var(--v3-ground);
+}
+
+.v3crm-row[aria-pressed='true'] {
+  background: var(--v3-green-tint);
+}
+
+.v3crm-row-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--v3-ink);
+}
+
+.v3crm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.v3crm-band {
+  padding: 0.625rem 1rem;
+  border-block-start: 1px solid var(--v3-hairline);
+  font-size: 0.9063rem;
+  font-weight: 600;
+  background: var(--v3-ground);
+}
+
+.v3crm-hint {
+  display: none;
+  border: 1px dashed var(--v3-hairline);
+  border-radius: var(--v3-radius-m);
+  padding: 2.5rem;
+  text-align: center;
+}
+
+@media (min-width: 64rem) {
+  .v3crm-hint {
+    display: grid;
+    place-items: center;
+  }
+}
+
+/* ---- analytics ---- */
+
+.v3an-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+  .v3an-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.v3an-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  block-size: 11rem;
+  padding: 1rem 1rem 0.25rem;
+}
+
+.v3an-bar {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  block-size: 100%;
+  min-inline-size: 2px;
+}
+
+.v3an-bar span {
+  inline-size: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--v3-green);
+  min-block-size: 0;
+}
+
+.v3an-bar span[data-empty] {
+  background: var(--v3-fill);
+  block-size: 3px;
+}
+
+.v3an-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 1rem 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
