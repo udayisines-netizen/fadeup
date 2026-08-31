@@ -17,6 +17,7 @@ import { V3_ROUTE_PATH } from '@/customer-v3/routes'
 import { V2Splash } from '@/customer-v2/ui/v2-splash'
 import { PRO_V2_ROUTE_PATH } from '@/pro-v2/routes'
 import { ProV2Shell } from '@/pro-v2/shell/pro-v2-shell'
+import { ProV3Shell as ProV3ShellRoute } from '@/pro-v3/shell/pro-v3-shell'
 
 export const router = createBrowserRouter([
   {
@@ -525,6 +526,41 @@ export const router = createBrowserRouter([
                     '@/customer-v3/booking/booking-page'
                   )
                   return { Component: CustomerV3BookingPage }
+                },
+              },
+              {
+                path: '*',
+                lazy: async () => {
+                  const { V3PlaceholderPage } = await import(
+                    '@/customer-v3/pages/v3-placeholder-page'
+                  )
+                  return { Component: V3PlaceholderPage }
+                },
+              },
+            ],
+          },
+          {
+            /* V3 professional preview — auth-gated: every contract inside is
+               org-scoped behind RLS. */
+            path: 'pro',
+            element: (
+              <RequireAuth loginPath="/pro/login">
+                <ProV3ShellRoute />
+              </RequireAuth>
+            ),
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const { ProV3DashboardPage } = await import('@/pro-v3/dashboard/dashboard-page')
+                  return { Component: ProV3DashboardPage }
+                },
+              },
+              {
+                path: 'calendar',
+                lazy: async () => {
+                  const { ProV3CalendarPage } = await import('@/pro-v3/calendar/calendar-page')
+                  return { Component: ProV3CalendarPage }
                 },
               },
               {

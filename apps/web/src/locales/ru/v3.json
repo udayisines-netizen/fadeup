@@ -340,5 +340,79 @@
     "title": "Запись",
     "emptyTitle": "Пока нечего повторить",
     "emptyBody": "После первого завершённого визита здесь появится повторная запись в одно касание."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Навигация Pro",
+    "scopeLabel": "Охват",
+    "allLocations": "Все филиалы",
+    "noWorkspaceTitle": "Нет рабочего пространства",
+    "noWorkspaceBody": "У этого аккаунта нет профессионального членства.",
+    "nav": {
+      "dashboard": "Панель",
+      "calendar": "Календарь",
+      "customers": "Клиенты",
+      "analytics": "Аналитика",
+      "retention": "Удержание",
+      "profile": "Профиль"
+    },
+    "status": {
+      "pending": "Запрошена",
+      "confirmed": "Подтверждена",
+      "completed": "Готово",
+      "cancelled": "Отменена",
+      "no_show": "Не пришёл"
+    },
+    "dashboard": {
+      "metaTitle": "Панель — FadeUp Pro",
+      "metaDescription": "Ваш день, вживую.",
+      "today": "Сегодня",
+      "bookings_zero": "{{count}} записи",
+      "bookings_one": "{{count}} запись",
+      "bookings_two": "{{count}} записи",
+      "bookings_few": "{{count}} записи",
+      "bookings_many": "{{count}} записей",
+      "bookings_other": "{{count}} записи",
+      "done_zero": "{{count}} готово",
+      "done_one": "{{count}} готова",
+      "done_two": "{{count}} готово",
+      "done_few": "{{count}} готовы",
+      "done_many": "{{count}} готово",
+      "done_other": "{{count}} готово",
+      "waiting_zero": "{{count}} в очереди",
+      "waiting_one": "{{count}} в очереди",
+      "waiting_two": "{{count}} в очереди",
+      "waiting_few": "{{count}} в очереди",
+      "waiting_many": "{{count}} в очереди",
+      "waiting_other": "{{count}} в очереди",
+      "now": "Сейчас",
+      "next": "Далее",
+      "queue": "Очередь",
+      "noNext": "Прямо сейчас ничего.",
+      "nothingElse": "Больше ничего на сегодня.",
+      "emptyQueue": "Никто не ждёт.",
+      "openCalendar": "Открыть календарь",
+      "summary": "Последние 30 дней",
+      "summaryOrgWide": "Последние 30 дней · вся организация",
+      "noSummary": "Нет активности за последние 30 дней."
+    },
+    "kpi": {
+      "completed": "Завершено",
+      "uniqueCustomers": "Клиенты",
+      "repeatCustomers": "Повторные",
+      "profileViews": "Просмотры профиля",
+      "conversion": "Конверсия"
+    },
+    "calendar": {
+      "metaTitle": "Календарь — FadeUp Pro",
+      "metaDescription": "День, каждый мастер.",
+      "today": "Сегодня",
+      "previousDay": "Предыдущий день",
+      "nextDay": "Следующий день",
+      "unnamed": "Без имени",
+      "complete": "Завершить",
+      "noShow": "Не пришёл",
+      "rescheduleFailed": "Не удалось перенести запись — время конфликтует."
+    }
   }
 }

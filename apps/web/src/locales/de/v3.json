@@ -340,5 +340,79 @@
     "title": "Buchen",
     "emptyTitle": "Noch nichts zum Wiederbuchen",
     "emptyBody": "Nach deinem ersten abgeschlossenen Besuch erscheint hier die Ein-Tap-Wiederbuchung."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Pro-Navigation",
+    "scopeLabel": "Standort-Auswahl",
+    "allLocations": "Alle Standorte",
+    "noWorkspaceTitle": "Kein Arbeitsbereich",
+    "noWorkspaceBody": "Dieses Konto hat keine professionelle Mitgliedschaft.",
+    "nav": {
+      "dashboard": "Übersicht",
+      "calendar": "Kalender",
+      "customers": "Kunden",
+      "analytics": "Analysen",
+      "retention": "Bindung",
+      "profile": "Profil"
+    },
+    "status": {
+      "pending": "Angefragt",
+      "confirmed": "Bestätigt",
+      "completed": "Fertig",
+      "cancelled": "Storniert",
+      "no_show": "Nicht erschienen"
+    },
+    "dashboard": {
+      "metaTitle": "Übersicht — FadeUp Pro",
+      "metaDescription": "Dein Tag, live.",
+      "today": "Heute",
+      "bookings_zero": "{{count}} Buchungen",
+      "bookings_one": "{{count}} Buchung",
+      "bookings_two": "{{count}} Buchungen",
+      "bookings_few": "{{count}} Buchungen",
+      "bookings_many": "{{count}} Buchungen",
+      "bookings_other": "{{count}} Buchungen",
+      "done_zero": "{{count}} fertig",
+      "done_one": "{{count}} fertig",
+      "done_two": "{{count}} fertig",
+      "done_few": "{{count}} fertig",
+      "done_many": "{{count}} fertig",
+      "done_other": "{{count}} fertig",
+      "waiting_zero": "{{count}} warten",
+      "waiting_one": "{{count}} wartet",
+      "waiting_two": "{{count}} warten",
+      "waiting_few": "{{count}} warten",
+      "waiting_many": "{{count}} warten",
+      "waiting_other": "{{count}} warten",
+      "now": "Jetzt",
+      "next": "Danach",
+      "queue": "Warteschlange",
+      "noNext": "Gerade steht nichts an.",
+      "nothingElse": "Sonst nichts heute.",
+      "emptyQueue": "Niemand wartet.",
+      "openCalendar": "Kalender öffnen",
+      "summary": "Letzte 30 Tage",
+      "summaryOrgWide": "Letzte 30 Tage · gesamte Organisation",
+      "noSummary": "Keine Aktivität in den letzten 30 Tagen."
+    },
+    "kpi": {
+      "completed": "Abgeschlossen",
+      "uniqueCustomers": "Kunden",
+      "repeatCustomers": "Wiederkehrend",
+      "profileViews": "Profilaufrufe",
+      "conversion": "Konversion"
+    },
+    "calendar": {
+      "metaTitle": "Kalender — FadeUp Pro",
+      "metaDescription": "Der Tag, jeder Profi.",
+      "today": "Heute",
+      "previousDay": "Vortag",
+      "nextDay": "Nächster Tag",
+      "unnamed": "Ohne Namen",
+      "complete": "Abschließen",
+      "noShow": "Nicht erschienen",
+      "rescheduleFailed": "Termin konnte nicht verschoben werden — Konflikt im Zeitfenster."
+    }
   }
 }

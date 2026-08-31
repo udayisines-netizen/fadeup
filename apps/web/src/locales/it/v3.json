@@ -340,5 +340,79 @@
     "title": "Prenota",
     "emptyTitle": "Ancora niente da riprenotare",
     "emptyBody": "Dopo la prima visita completata, la riprenotazione a un tocco appare qui."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Navigazione Pro",
+    "scopeLabel": "Ambito",
+    "allLocations": "Tutte le sedi",
+    "noWorkspaceTitle": "Nessuno spazio di lavoro",
+    "noWorkspaceBody": "Questo account non ha un’adesione professionale.",
+    "nav": {
+      "dashboard": "Pannello",
+      "calendar": "Calendario",
+      "customers": "Clienti",
+      "analytics": "Analisi",
+      "retention": "Fidelizzazione",
+      "profile": "Profilo"
+    },
+    "status": {
+      "pending": "Richiesto",
+      "confirmed": "Confermato",
+      "completed": "Fatto",
+      "cancelled": "Annullato",
+      "no_show": "Assente"
+    },
+    "dashboard": {
+      "metaTitle": "Pannello — FadeUp Pro",
+      "metaDescription": "La tua giornata, in diretta.",
+      "today": "Oggi",
+      "bookings_zero": "{{count}} prenotazioni",
+      "bookings_one": "{{count}} prenotazione",
+      "bookings_two": "{{count}} prenotazioni",
+      "bookings_few": "{{count}} prenotazioni",
+      "bookings_many": "{{count}} prenotazioni",
+      "bookings_other": "{{count}} prenotazioni",
+      "done_zero": "{{count}} fatte",
+      "done_one": "{{count}} fatta",
+      "done_two": "{{count}} fatte",
+      "done_few": "{{count}} fatte",
+      "done_many": "{{count}} fatte",
+      "done_other": "{{count}} fatte",
+      "waiting_zero": "{{count}} in attesa",
+      "waiting_one": "{{count}} in attesa",
+      "waiting_two": "{{count}} in attesa",
+      "waiting_few": "{{count}} in attesa",
+      "waiting_many": "{{count}} in attesa",
+      "waiting_other": "{{count}} in attesa",
+      "now": "Adesso",
+      "next": "Dopo",
+      "queue": "Coda",
+      "noNext": "Niente di imminente.",
+      "nothingElse": "Nient’altro oggi.",
+      "emptyQueue": "Nessuno in attesa.",
+      "openCalendar": "Apri il calendario",
+      "summary": "Ultimi 30 giorni",
+      "summaryOrgWide": "Ultimi 30 giorni · intera organizzazione",
+      "noSummary": "Nessuna attività negli ultimi 30 giorni."
+    },
+    "kpi": {
+      "completed": "Completati",
+      "uniqueCustomers": "Clienti",
+      "repeatCustomers": "Di ritorno",
+      "profileViews": "Visite al profilo",
+      "conversion": "Conversione"
+    },
+    "calendar": {
+      "metaTitle": "Calendario — FadeUp Pro",
+      "metaDescription": "La giornata, ogni professionista.",
+      "today": "Oggi",
+      "previousDay": "Giorno precedente",
+      "nextDay": "Giorno successivo",
+      "unnamed": "Senza nome",
+      "complete": "Completa",
+      "noShow": "Assente",
+      "rescheduleFailed": "Impossibile spostare l’appuntamento: lo slot è in conflitto."
+    }
   }
 }

@@ -340,5 +340,79 @@
     "title": "Réserver",
     "emptyTitle": "Rien à re-réserver pour l’instant",
     "emptyBody": "Après votre première visite terminée, la re-réservation en un geste apparaît ici."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Navigation Pro",
+    "scopeLabel": "Périmètre",
+    "allLocations": "Tous les salons",
+    "noWorkspaceTitle": "Aucun espace",
+    "noWorkspaceBody": "Ce compte n’a pas d’adhésion professionnelle.",
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "calendar": "Calendrier",
+      "customers": "Clients",
+      "analytics": "Analyses",
+      "retention": "Fidélisation",
+      "profile": "Profil"
+    },
+    "status": {
+      "pending": "Demandé",
+      "confirmed": "Confirmé",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "no_show": "Absent"
+    },
+    "dashboard": {
+      "metaTitle": "Tableau de bord — FadeUp Pro",
+      "metaDescription": "Votre journée, en direct.",
+      "today": "Aujourd’hui",
+      "bookings_zero": "{{count}} réservations",
+      "bookings_one": "{{count}} réservation",
+      "bookings_two": "{{count}} réservations",
+      "bookings_few": "{{count}} réservations",
+      "bookings_many": "{{count}} réservations",
+      "bookings_other": "{{count}} réservations",
+      "done_zero": "{{count}} terminées",
+      "done_one": "{{count}} terminée",
+      "done_two": "{{count}} terminées",
+      "done_few": "{{count}} terminées",
+      "done_many": "{{count}} terminées",
+      "done_other": "{{count}} terminées",
+      "waiting_zero": "{{count}} en attente",
+      "waiting_one": "{{count}} en attente",
+      "waiting_two": "{{count}} en attente",
+      "waiting_few": "{{count}} en attente",
+      "waiting_many": "{{count}} en attente",
+      "waiting_other": "{{count}} en attente",
+      "now": "Maintenant",
+      "next": "Ensuite",
+      "queue": "File",
+      "noNext": "Rien d’imminent.",
+      "nothingElse": "Rien d’autre aujourd’hui.",
+      "emptyQueue": "Personne n’attend.",
+      "openCalendar": "Ouvrir le calendrier",
+      "summary": "30 derniers jours",
+      "summaryOrgWide": "30 derniers jours · toute l’organisation",
+      "noSummary": "Aucune activité sur les 30 derniers jours."
+    },
+    "kpi": {
+      "completed": "Terminés",
+      "uniqueCustomers": "Clients",
+      "repeatCustomers": "Fidèles",
+      "profileViews": "Vues du profil",
+      "conversion": "Conversion"
+    },
+    "calendar": {
+      "metaTitle": "Calendrier — FadeUp Pro",
+      "metaDescription": "La journée, chaque professionnel.",
+      "today": "Aujourd’hui",
+      "previousDay": "Jour précédent",
+      "nextDay": "Jour suivant",
+      "unnamed": "Sans nom",
+      "complete": "Terminer",
+      "noShow": "Absent",
+      "rescheduleFailed": "Impossible de déplacer le rendez-vous — créneau en conflit."
+    }
   }
 }

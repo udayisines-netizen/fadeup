@@ -340,5 +340,79 @@
     "title": "احجز",
     "emptyTitle": "لا شيء لإعادة حجزه بعد",
     "emptyBody": "بعد أول زيارة مكتملة، تظهر إعادة الحجز بلمسة واحدة هنا."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "تنقل المحترفين",
+    "scopeLabel": "النطاق",
+    "allLocations": "كل الفروع",
+    "noWorkspaceTitle": "لا مساحة عمل",
+    "noWorkspaceBody": "لا يملك هذا الحساب عضوية مهنية.",
+    "nav": {
+      "dashboard": "اللوحة",
+      "calendar": "التقويم",
+      "customers": "العملاء",
+      "analytics": "التحليلات",
+      "retention": "الاحتفاظ",
+      "profile": "الملف"
+    },
+    "status": {
+      "pending": "مطلوب",
+      "confirmed": "مؤكَّد",
+      "completed": "منجز",
+      "cancelled": "ملغى",
+      "no_show": "لم يحضر"
+    },
+    "dashboard": {
+      "metaTitle": "اللوحة — FadeUp Pro",
+      "metaDescription": "يومك، مباشرة.",
+      "today": "اليوم",
+      "bookings_zero": "لا حجوزات",
+      "bookings_one": "حجز واحد",
+      "bookings_two": "حجزان",
+      "bookings_few": "{{count}} حجوزات",
+      "bookings_many": "{{count}} حجزًا",
+      "bookings_other": "{{count}} حجز",
+      "done_zero": "لا شيء منجز",
+      "done_one": "واحد منجز",
+      "done_two": "اثنان منجزان",
+      "done_few": "{{count}} منجزة",
+      "done_many": "{{count}} منجزًا",
+      "done_other": "{{count}} منجز",
+      "waiting_zero": "لا أحد ينتظر",
+      "waiting_one": "{{count}} ينتظر",
+      "waiting_two": "{{count}} ينتظران",
+      "waiting_few": "{{count}} ينتظرون",
+      "waiting_many": "{{count}} ينتظرون",
+      "waiting_other": "{{count}} ينتظرون",
+      "now": "الآن",
+      "next": "التالي",
+      "queue": "الطابور",
+      "noNext": "لا شيء وشيك الآن.",
+      "nothingElse": "لا شيء آخر اليوم.",
+      "emptyQueue": "لا أحد ينتظر.",
+      "openCalendar": "افتح التقويم",
+      "summary": "آخر 30 يومًا",
+      "summaryOrgWide": "آخر 30 يومًا · المنظمة كاملة",
+      "noSummary": "لا نشاط في آخر 30 يومًا."
+    },
+    "kpi": {
+      "completed": "مكتملة",
+      "uniqueCustomers": "العملاء",
+      "repeatCustomers": "العائدون",
+      "profileViews": "مشاهدات الملف",
+      "conversion": "التحويل"
+    },
+    "calendar": {
+      "metaTitle": "التقويم — FadeUp Pro",
+      "metaDescription": "اليوم، كل محترف.",
+      "today": "اليوم",
+      "previousDay": "اليوم السابق",
+      "nextDay": "اليوم التالي",
+      "unnamed": "بدون اسم",
+      "complete": "إنهاء",
+      "noShow": "لم يحضر",
+      "rescheduleFailed": "تعذّر نقل الموعد — الوقت متعارض."
+    }
   }
 }

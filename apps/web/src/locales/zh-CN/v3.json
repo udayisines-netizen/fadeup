@@ -340,5 +340,79 @@
     "title": "预约",
     "emptyTitle": "暂时没有可再次预约的",
     "emptyBody": "完成第一次到店后，一键再预约会出现在这里。"
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "专业版导航",
+    "scopeLabel": "范围",
+    "allLocations": "所有门店",
+    "noWorkspaceTitle": "没有工作区",
+    "noWorkspaceBody": "该账号没有专业会员资格。",
+    "nav": {
+      "dashboard": "工作台",
+      "calendar": "日历",
+      "customers": "客户",
+      "analytics": "分析",
+      "retention": "留存",
+      "profile": "主页"
+    },
+    "status": {
+      "pending": "已请求",
+      "confirmed": "已确认",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "no_show": "未到店"
+    },
+    "dashboard": {
+      "metaTitle": "工作台 — FadeUp Pro",
+      "metaDescription": "实时掌握你的一天。",
+      "today": "今天",
+      "bookings_zero": "{{count}} 个预约",
+      "bookings_one": "{{count}} 个预约",
+      "bookings_two": "{{count}} 个预约",
+      "bookings_few": "{{count}} 个预约",
+      "bookings_many": "{{count}} 个预约",
+      "bookings_other": "{{count}} 个预约",
+      "done_zero": "完成 {{count}} 个",
+      "done_one": "完成 {{count}} 个",
+      "done_two": "完成 {{count}} 个",
+      "done_few": "完成 {{count}} 个",
+      "done_many": "完成 {{count}} 个",
+      "done_other": "完成 {{count}} 个",
+      "waiting_zero": "{{count}} 人排队",
+      "waiting_one": "{{count}} 人排队",
+      "waiting_two": "{{count}} 人排队",
+      "waiting_few": "{{count}} 人排队",
+      "waiting_many": "{{count}} 人排队",
+      "waiting_other": "{{count}} 人排队",
+      "now": "当前",
+      "next": "接下来",
+      "queue": "排队",
+      "noNext": "当前没有临近的预约。",
+      "nothingElse": "今天没有其他安排。",
+      "emptyQueue": "没有人在等。",
+      "openCalendar": "打开日历",
+      "summary": "过去 30 天",
+      "summaryOrgWide": "过去 30 天 · 整个组织",
+      "noSummary": "过去 30 天没有活动。"
+    },
+    "kpi": {
+      "completed": "已完成",
+      "uniqueCustomers": "客户",
+      "repeatCustomers": "回头客",
+      "profileViews": "主页浏览",
+      "conversion": "转化率"
+    },
+    "calendar": {
+      "metaTitle": "日历 — FadeUp Pro",
+      "metaDescription": "一天的安排，按理发师排列。",
+      "today": "今天",
+      "previousDay": "前一天",
+      "nextDay": "后一天",
+      "unnamed": "未命名",
+      "complete": "完成",
+      "noShow": "未到店",
+      "rescheduleFailed": "无法移动该预约 — 时段冲突。"
+    }
   }
 }

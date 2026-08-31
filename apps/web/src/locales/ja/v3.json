@@ -340,5 +340,79 @@
     "title": "予約",
     "emptyTitle": "まだ再予約できるものがありません",
     "emptyBody": "最初の来店が完了すると、ワンタップ再予約がここに表示されます。"
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "プロナビゲーション",
+    "scopeLabel": "対象範囲",
+    "allLocations": "すべての店舗",
+    "noWorkspaceTitle": "ワークスペースがありません",
+    "noWorkspaceBody": "このアカウントにはプロのメンバーシップがありません。",
+    "nav": {
+      "dashboard": "ダッシュボード",
+      "calendar": "カレンダー",
+      "customers": "顧客",
+      "analytics": "分析",
+      "retention": "リテンション",
+      "profile": "プロフィール"
+    },
+    "status": {
+      "pending": "リクエスト",
+      "confirmed": "確定",
+      "completed": "完了",
+      "cancelled": "キャンセル",
+      "no_show": "不参加"
+    },
+    "dashboard": {
+      "metaTitle": "ダッシュボード — FadeUp Pro",
+      "metaDescription": "あなたの一日を、ライブで。",
+      "today": "今日",
+      "bookings_zero": "予約{{count}}件",
+      "bookings_one": "予約{{count}}件",
+      "bookings_two": "予約{{count}}件",
+      "bookings_few": "予約{{count}}件",
+      "bookings_many": "予約{{count}}件",
+      "bookings_other": "予約{{count}}件",
+      "done_zero": "完了{{count}}件",
+      "done_one": "完了{{count}}件",
+      "done_two": "完了{{count}}件",
+      "done_few": "完了{{count}}件",
+      "done_many": "完了{{count}}件",
+      "done_other": "完了{{count}}件",
+      "waiting_zero": "{{count}}人待ち",
+      "waiting_one": "{{count}}人待ち",
+      "waiting_two": "{{count}}人待ち",
+      "waiting_few": "{{count}}人待ち",
+      "waiting_many": "{{count}}人待ち",
+      "waiting_other": "{{count}}人待ち",
+      "now": "今",
+      "next": "次",
+      "queue": "順番待ち",
+      "noNext": "直近の予定はありません。",
+      "nothingElse": "今日はこれ以上ありません。",
+      "emptyQueue": "待っている人はいません。",
+      "openCalendar": "カレンダーを開く",
+      "summary": "過去30日",
+      "summaryOrgWide": "過去30日 · 組織全体",
+      "noSummary": "過去30日の活動はありません。"
+    },
+    "kpi": {
+      "completed": "完了",
+      "uniqueCustomers": "顧客",
+      "repeatCustomers": "リピーター",
+      "profileViews": "プロフィール閲覧",
+      "conversion": "コンバージョン"
+    },
+    "calendar": {
+      "metaTitle": "カレンダー — FadeUp Pro",
+      "metaDescription": "一日を、プロごとに。",
+      "today": "今日",
+      "previousDay": "前日",
+      "nextDay": "翌日",
+      "unnamed": "名前なし",
+      "complete": "完了",
+      "noShow": "不参加",
+      "rescheduleFailed": "予約を移動できませんでした — 時間が重複しています。"
+    }
   }
 }

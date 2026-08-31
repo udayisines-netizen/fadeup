@@ -340,5 +340,79 @@
     "title": "Book",
     "emptyTitle": "Nothing to rebook yet",
     "emptyBody": "After your first completed visit, one-tap rebooking appears here."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Pro navigation",
+    "scopeLabel": "Location scope",
+    "allLocations": "All locations",
+    "noWorkspaceTitle": "No workspace",
+    "noWorkspaceBody": "This account has no professional membership.",
+    "nav": {
+      "dashboard": "Dashboard",
+      "calendar": "Calendar",
+      "customers": "Clients",
+      "analytics": "Analytics",
+      "retention": "Retention",
+      "profile": "Profile"
+    },
+    "status": {
+      "pending": "Requested",
+      "confirmed": "Confirmed",
+      "completed": "Done",
+      "cancelled": "Cancelled",
+      "no_show": "No-show"
+    },
+    "dashboard": {
+      "metaTitle": "Dashboard — FadeUp Pro",
+      "metaDescription": "Your day, live.",
+      "today": "Today",
+      "bookings_zero": "{{count}} bookings",
+      "bookings_one": "{{count}} booking",
+      "bookings_two": "{{count}} bookings",
+      "bookings_few": "{{count}} bookings",
+      "bookings_many": "{{count}} bookings",
+      "bookings_other": "{{count}} bookings",
+      "done_zero": "{{count}} done",
+      "done_one": "{{count}} done",
+      "done_two": "{{count}} done",
+      "done_few": "{{count}} done",
+      "done_many": "{{count}} done",
+      "done_other": "{{count}} done",
+      "waiting_zero": "{{count}} waiting",
+      "waiting_one": "{{count}} waiting",
+      "waiting_two": "{{count}} waiting",
+      "waiting_few": "{{count}} waiting",
+      "waiting_many": "{{count}} waiting",
+      "waiting_other": "{{count}} waiting",
+      "now": "Now",
+      "next": "Next",
+      "queue": "Queue",
+      "noNext": "Nothing coming up right now.",
+      "nothingElse": "Nothing else today.",
+      "emptyQueue": "No one is waiting.",
+      "openCalendar": "Open the calendar",
+      "summary": "Last 30 days",
+      "summaryOrgWide": "Last 30 days · whole organization",
+      "noSummary": "No activity in the last 30 days."
+    },
+    "kpi": {
+      "completed": "Completed",
+      "uniqueCustomers": "Clients",
+      "repeatCustomers": "Returning",
+      "profileViews": "Profile views",
+      "conversion": "Conversion"
+    },
+    "calendar": {
+      "metaTitle": "Calendar — FadeUp Pro",
+      "metaDescription": "The day, every professional.",
+      "today": "Today",
+      "previousDay": "Previous day",
+      "nextDay": "Next day",
+      "unnamed": "Unnamed",
+      "complete": "Complete",
+      "noShow": "No-show",
+      "rescheduleFailed": "Could not move the appointment — that slot conflicts."
+    }
   }
 }

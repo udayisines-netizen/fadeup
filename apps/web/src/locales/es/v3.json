@@ -340,5 +340,79 @@
     "title": "Reservar",
     "emptyTitle": "Nada que reservar de nuevo todavía",
     "emptyBody": "Tras tu primera visita completada, la reserva en un toque aparece aquí."
+  },
+  "pro": {
+    "badge": "Pro",
+    "navLabel": "Navegación Pro",
+    "scopeLabel": "Ámbito",
+    "allLocations": "Todos los locales",
+    "noWorkspaceTitle": "Sin espacio de trabajo",
+    "noWorkspaceBody": "Esta cuenta no tiene membresía profesional.",
+    "nav": {
+      "dashboard": "Panel",
+      "calendar": "Calendario",
+      "customers": "Clientes",
+      "analytics": "Analítica",
+      "retention": "Retención",
+      "profile": "Perfil"
+    },
+    "status": {
+      "pending": "Solicitada",
+      "confirmed": "Confirmada",
+      "completed": "Hecha",
+      "cancelled": "Cancelada",
+      "no_show": "Ausente"
+    },
+    "dashboard": {
+      "metaTitle": "Panel — FadeUp Pro",
+      "metaDescription": "Tu día, en directo.",
+      "today": "Hoy",
+      "bookings_zero": "{{count}} reservas",
+      "bookings_one": "{{count}} reserva",
+      "bookings_two": "{{count}} reservas",
+      "bookings_few": "{{count}} reservas",
+      "bookings_many": "{{count}} reservas",
+      "bookings_other": "{{count}} reservas",
+      "done_zero": "{{count}} hechas",
+      "done_one": "{{count}} hecha",
+      "done_two": "{{count}} hechas",
+      "done_few": "{{count}} hechas",
+      "done_many": "{{count}} hechas",
+      "done_other": "{{count}} hechas",
+      "waiting_zero": "{{count}} en espera",
+      "waiting_one": "{{count}} en espera",
+      "waiting_two": "{{count}} en espera",
+      "waiting_few": "{{count}} en espera",
+      "waiting_many": "{{count}} en espera",
+      "waiting_other": "{{count}} en espera",
+      "now": "Ahora",
+      "next": "Después",
+      "queue": "Cola",
+      "noNext": "Nada inminente.",
+      "nothingElse": "Nada más hoy.",
+      "emptyQueue": "Nadie espera.",
+      "openCalendar": "Abrir el calendario",
+      "summary": "Últimos 30 días",
+      "summaryOrgWide": "Últimos 30 días · toda la organización",
+      "noSummary": "Sin actividad en los últimos 30 días."
+    },
+    "kpi": {
+      "completed": "Completadas",
+      "uniqueCustomers": "Clientes",
+      "repeatCustomers": "Recurrentes",
+      "profileViews": "Vistas del perfil",
+      "conversion": "Conversión"
+    },
+    "calendar": {
+      "metaTitle": "Calendario — FadeUp Pro",
+      "metaDescription": "El día, cada profesional.",
+      "today": "Hoy",
+      "previousDay": "Día anterior",
+      "nextDay": "Día siguiente",
+      "unnamed": "Sin nombre",
+      "complete": "Completar",
+      "noShow": "Ausente",
+      "rescheduleFailed": "No se pudo mover la cita: el hueco entra en conflicto."
+    }
   }
 }
