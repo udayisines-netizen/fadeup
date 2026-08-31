@@ -258,5 +258,87 @@
     "viewBooking": "Vedi prenotazione",
     "done": "Fatto",
     "claimHint": "Crea un account con questa email per ritrovare la prenotazione nei tuoi appuntamenti."
+  },
+  "appointments": {
+    "metaTitle": "Appuntamenti — FadeUp",
+    "metaDescription": "Le tue prenotazioni future e passate.",
+    "title": "Appuntamenti",
+    "next": "Prossimo",
+    "upcoming": "In arrivo",
+    "past": "Passati",
+    "signedOutTitle": "Accedi per vedere i tuoi appuntamenti",
+    "signedOutBody": "Le tue prenotazioni vivono con il tuo account FadeUp.",
+    "emptyTitle": "Ancora nessun appuntamento",
+    "emptyBody": "Prenota una poltrona e apparirà qui.",
+    "queueBanner": "Sei in una coda in diretta",
+    "cancel": "Annulla",
+    "cancelConfirm": "Conferma annullamento",
+    "cancelling": "Annullamento…",
+    "cancelFailed": "Impossibile annullare. Riprova.",
+    "status": {
+      "pending": "Richiesto",
+      "confirmed": "Confermato",
+      "completed": "Completato",
+      "cancelled": "Annullato",
+      "no_show": "Perso"
+    }
+  },
+  "queue": {
+    "metaTitle": "Coda in diretta — FadeUp",
+    "metaDescription": "Il tuo posto reale in fila, in diretta.",
+    "signedOutTitle": "Accedi per vedere la tua coda",
+    "emptyTitle": "Non sei in nessuna coda",
+    "emptyBody": "Unisciti in negozio: scansiona il QR FadeUp sul posto. Funziona solo in barberia, nelle vicinanze.",
+    "ticketLabel": "Biglietto coda per {{name}}",
+    "youAreNext": "Tocca a te",
+    "youAreNextSoon": "Quasi il tuo turno — resta vicino",
+    "inService": "In poltrona"
+  },
+  "account": {
+    "metaTitle": "Profilo — FadeUp",
+    "metaDescription": "La tua identità, il tuo Fade Passport e la tua attività.",
+    "signedOutTitle": "Accedi al tuo FadeUp",
+    "signedOutBody": "Il tuo Passport, i tuoi seguiti e la tua attività vivono qui.",
+    "passportOpen": "Apri il tuo Passport",
+    "following": "Segui",
+    "activity": "Attività",
+    "markAllRead": "Segna tutto letto",
+    "noActivity": "Nessuna attività per ora.",
+    "settings": "Impostazioni",
+    "signOut": "Esci",
+    "followedShops_zero": "{{count}} barbershop seguiti",
+    "followedShops_one": "{{count}} barbershop seguito",
+    "followedShops_two": "{{count}} barbershop seguiti",
+    "followedShops_few": "{{count}} barbershop seguiti",
+    "followedShops_many": "{{count}} barbershop seguiti",
+    "followedShops_other": "{{count}} barbershop seguiti"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "Il tuo taglio, le tue preferenze, tuoi da condividere.",
+    "emptyBody": "Aggiungi taglio e preferenze — il tuo barbiere vede esattamente cosa funziona.",
+    "fields": {
+      "usualHaircut": "Taglio abituale",
+      "fadeType": "Fade",
+      "sideLength": "Lati",
+      "topLength": "Sopra",
+      "beard": "Barba",
+      "notes": "Note"
+    },
+    "share": "Condividi con QR code",
+    "sharing": "Creazione…",
+    "shareHint": "Questo codice vale 7 giorni e solo finché lo tieni attivo.",
+    "qrAlt": "QR code che condivide il tuo Fade Passport",
+    "edit": "Modifica dettagli",
+    "closeEdit": "Chiudi modifica",
+    "save": "Salva",
+    "saving": "Salvataggio…"
+  },
+  "book": {
+    "metaTitle": "Prenota — FadeUp",
+    "metaDescription": "Riprenota il tuo barbiere con un tocco, o trovane uno nuovo.",
+    "title": "Prenota",
+    "emptyTitle": "Ancora niente da riprenotare",
+    "emptyBody": "Dopo la prima visita completata, la riprenotazione a un tocco appare qui."
   }
 }

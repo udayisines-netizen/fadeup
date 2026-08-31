@@ -462,6 +462,45 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: 'book',
+                lazy: async () => {
+                  const { CustomerV3BookPage } = await import('@/customer-v3/book/book-page')
+                  return { Component: CustomerV3BookPage }
+                },
+              },
+              {
+                path: 'appointments',
+                lazy: async () => {
+                  const { CustomerV3AppointmentsPage } = await import(
+                    '@/customer-v3/appointments/appointments-page'
+                  )
+                  return { Component: CustomerV3AppointmentsPage }
+                },
+              },
+              {
+                path: 'queue',
+                lazy: async () => {
+                  const { CustomerV3QueuePage } = await import('@/customer-v3/queue/queue-page')
+                  return { Component: CustomerV3QueuePage }
+                },
+              },
+              {
+                path: 'profile',
+                lazy: async () => {
+                  const { CustomerV3ProfilePage } = await import('@/customer-v3/profile/profile-page')
+                  return { Component: CustomerV3ProfilePage }
+                },
+              },
+              {
+                path: 'profile/passport',
+                lazy: async () => {
+                  const { CustomerV3PassportPage } = await import(
+                    '@/customer-v3/profile/passport-page'
+                  )
+                  return { Component: CustomerV3PassportPage }
+                },
+              },
+              {
                 path: 's/:slug',
                 lazy: async () => {
                   const { CustomerV3ShopProfilePage } = await import(

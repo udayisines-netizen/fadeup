@@ -258,5 +258,87 @@
     "viewBooking": "查看预约",
     "done": "完成",
     "claimHint": "用这个邮箱创建账号，即可在“我的预约”中保留此预约。"
+  },
+  "appointments": {
+    "metaTitle": "我的预约 — FadeUp",
+    "metaDescription": "你即将到来和过去的预约。",
+    "title": "我的预约",
+    "next": "下一个",
+    "upcoming": "即将到来",
+    "past": "已过去",
+    "signedOutTitle": "登录以查看预约",
+    "signedOutBody": "你的预约与 FadeUp 账号绑定。",
+    "emptyTitle": "还没有预约",
+    "emptyBody": "预约后会显示在这里。",
+    "queueBanner": "你正在实时排队中",
+    "cancel": "取消",
+    "cancelConfirm": "确认取消",
+    "cancelling": "取消中…",
+    "cancelFailed": "无法取消，请重试。",
+    "status": {
+      "pending": "已请求",
+      "confirmed": "已确认",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "no_show": "未到店"
+    }
+  },
+  "queue": {
+    "metaTitle": "实时排队 — FadeUp",
+    "metaDescription": "你在队伍中的真实位置，实时更新。",
+    "signedOutTitle": "登录以查看排队",
+    "emptyTitle": "你不在任何队伍中",
+    "emptyBody": "到店加入：在店内扫描 FadeUp 二维码。只能在店内附近加入。",
+    "ticketLabel": "{{name}}的排队票",
+    "youAreNext": "到你了",
+    "youAreNextSoon": "快到你了 — 请留在附近",
+    "inService": "理发中"
+  },
+  "account": {
+    "metaTitle": "我的 — FadeUp",
+    "metaDescription": "你的身份、Fade Passport 和动态。",
+    "signedOutTitle": "登录你的 FadeUp",
+    "signedOutBody": "你的 Passport、关注和动态都在这里。",
+    "passportOpen": "打开 Passport",
+    "following": "关注中",
+    "activity": "动态",
+    "markAllRead": "全部标为已读",
+    "noActivity": "暂无动态。",
+    "settings": "设置",
+    "signOut": "退出登录",
+    "followedShops_zero": "关注了 {{count}} 家理发店",
+    "followedShops_one": "关注了 {{count}} 家理发店",
+    "followedShops_two": "关注了 {{count}} 家理发店",
+    "followedShops_few": "关注了 {{count}} 家理发店",
+    "followedShops_many": "关注了 {{count}} 家理发店",
+    "followedShops_other": "关注了 {{count}} 家理发店"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "你的发型与偏好 — 由你决定是否分享。",
+    "emptyBody": "添加你的发型与偏好 — 理发师能准确了解什么适合你。",
+    "fields": {
+      "usualHaircut": "常剪发型",
+      "fadeType": "渐变",
+      "sideLength": "两侧",
+      "topLength": "顶部",
+      "beard": "胡须",
+      "notes": "备注"
+    },
+    "share": "用二维码分享",
+    "sharing": "创建中…",
+    "shareHint": "此码有效期 7 天，且仅在你保持其激活时可用。",
+    "qrAlt": "分享你 Fade Passport 的二维码",
+    "edit": "编辑信息",
+    "closeEdit": "关闭编辑",
+    "save": "保存",
+    "saving": "保存中…"
+  },
+  "book": {
+    "metaTitle": "预约 — FadeUp",
+    "metaDescription": "一键再次预约你的理发师，或寻找新的理发师。",
+    "title": "预约",
+    "emptyTitle": "暂时没有可再次预约的",
+    "emptyBody": "完成第一次到店后，一键再预约会出现在这里。"
   }
 }

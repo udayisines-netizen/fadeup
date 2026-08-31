@@ -258,5 +258,87 @@
     "viewBooking": "Ver reserva",
     "done": "Listo",
     "claimHint": "Crea una cuenta con este correo para guardar esta reserva en tus citas."
+  },
+  "appointments": {
+    "metaTitle": "Citas — FadeUp",
+    "metaDescription": "Tus reservas próximas y pasadas.",
+    "title": "Citas",
+    "next": "Próxima",
+    "upcoming": "Próximas",
+    "past": "Pasadas",
+    "signedOutTitle": "Inicia sesión para ver tus citas",
+    "signedOutBody": "Tus reservas viven con tu cuenta de FadeUp.",
+    "emptyTitle": "Aún no hay citas",
+    "emptyBody": "Reserva una silla y aparecerá aquí.",
+    "queueBanner": "Estás en una cola en directo",
+    "cancel": "Cancelar",
+    "cancelConfirm": "Confirmar cancelación",
+    "cancelling": "Cancelando…",
+    "cancelFailed": "No se pudo cancelar. Inténtalo de nuevo.",
+    "status": {
+      "pending": "Solicitada",
+      "confirmed": "Confirmada",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "no_show": "Perdida"
+    }
+  },
+  "queue": {
+    "metaTitle": "Cola en directo — FadeUp",
+    "metaDescription": "Tu lugar real en la cola, en directo.",
+    "signedOutTitle": "Inicia sesión para ver tu cola",
+    "emptyTitle": "No estás en ninguna cola",
+    "emptyBody": "Únete en el local: escanea el QR de FadeUp allí. Unirse solo funciona en la barbería, cerca.",
+    "ticketLabel": "Ticket de cola de {{name}}",
+    "youAreNext": "Es tu turno",
+    "youAreNextSoon": "Casi te toca — quédate cerca",
+    "inService": "En la silla"
+  },
+  "account": {
+    "metaTitle": "Perfil — FadeUp",
+    "metaDescription": "Tu identidad, tu Fade Passport y tu actividad.",
+    "signedOutTitle": "Inicia sesión en tu FadeUp",
+    "signedOutBody": "Tu Passport, tus seguimientos y tu actividad viven aquí.",
+    "passportOpen": "Abrir tu Passport",
+    "following": "Siguiendo",
+    "activity": "Actividad",
+    "markAllRead": "Marcar todo leído",
+    "noActivity": "Sin actividad todavía.",
+    "settings": "Ajustes",
+    "signOut": "Cerrar sesión",
+    "followedShops_zero": "{{count}} barberías seguidas",
+    "followedShops_one": "{{count}} barbería seguida",
+    "followedShops_two": "{{count}} barberías seguidas",
+    "followedShops_few": "{{count}} barberías seguidas",
+    "followedShops_many": "{{count}} barberías seguidas",
+    "followedShops_other": "{{count}} barberías seguidas"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "Tu corte, tus preferencias, tuyo para compartir.",
+    "emptyBody": "Añade tu corte y tus preferencias — tu barbero ve exactamente lo que funciona.",
+    "fields": {
+      "usualHaircut": "Corte habitual",
+      "fadeType": "Fade",
+      "sideLength": "Lados",
+      "topLength": "Arriba",
+      "beard": "Barba",
+      "notes": "Notas"
+    },
+    "share": "Compartir con código QR",
+    "sharing": "Creando…",
+    "shareHint": "Este código funciona 7 días y solo mientras lo mantengas activo.",
+    "qrAlt": "Código QR que comparte tu Fade Passport",
+    "edit": "Editar datos",
+    "closeEdit": "Cerrar edición",
+    "save": "Guardar",
+    "saving": "Guardando…"
+  },
+  "book": {
+    "metaTitle": "Reservar — FadeUp",
+    "metaDescription": "Vuelve a reservar a tu barbero en un toque, o encuentra uno nuevo.",
+    "title": "Reservar",
+    "emptyTitle": "Nada que reservar de nuevo todavía",
+    "emptyBody": "Tras tu primera visita completada, la reserva en un toque aparece aquí."
   }
 }

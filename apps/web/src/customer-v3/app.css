@@ -1121,3 +1121,400 @@
   gap: 0.625rem;
   inline-size: 100%;
 }
+
+/* ==========================================================================
+   APPOINTMENTS
+   ========================================================================== */
+
+.v3ap-page {
+  max-inline-size: 44rem;
+  margin-inline: auto;
+}
+
+.v3ap-next {
+  display: grid;
+  gap: 0.625rem;
+  padding: 1.25rem 1.375rem;
+}
+
+.v3ap-stage {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--v3-green-ink);
+}
+
+.v3ap-stage[data-tone='waiting'] {
+  color: var(--v3-ink-mute);
+}
+
+.v3ap-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+}
+
+.v3ap-row + .v3ap-row {
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3ap-row time {
+  display: grid;
+  justify-items: center;
+  min-inline-size: 3.25rem;
+}
+
+.v3ap-row time span:first-child {
+  font-size: 0.6875rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--v3-ink-mute);
+}
+
+.v3ap-row time span:last-child {
+  font-size: 1.0625rem;
+}
+
+.v3ap-cancel {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8438rem;
+  font-weight: 600;
+  color: var(--v3-ink-mute);
+  cursor: pointer;
+  min-block-size: 44px;
+}
+
+.v3ap-cancel[data-arming='true'] {
+  color: var(--v3-alert);
+}
+
+.v3ap-queue-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.125rem;
+  border-radius: var(--v3-radius-l);
+  background: var(--v3-green-tint);
+  color: var(--v3-green-ink);
+  font-size: 0.9063rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-block-end: 1rem;
+}
+
+/* ==========================================================================
+   QUEUE — the signature screen. BG-05; the ticket owns the viewport.
+   ========================================================================== */
+
+.v3q-scene {
+  min-block-size: calc(100dvh - 3.5rem - 5.5rem);
+  margin-block: -1.25rem;
+  margin-inline: calc(-1 * clamp(1rem, 3vw, 2rem));
+  padding: 2rem clamp(1rem, 3vw, 2rem) 3rem;
+  display: grid;
+  place-content: center;
+  gap: 1.25rem;
+}
+
+.v3q-ticket {
+  position: relative;
+  inline-size: min(21rem, calc(100vw - 2rem));
+  border-radius: 20px;
+  background: var(--v3-graphite-soft);
+  border: 1px solid rgb(232 240 234 / 0.14);
+  padding: 2.25rem 1.75rem 1.5rem;
+  display: grid;
+  gap: 0.375rem;
+  text-align: center;
+}
+
+.v3q-ticket::before,
+.v3q-ticket::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 66%;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 999px;
+  background: var(--v3-graphite);
+}
+
+.v3q-ticket::before {
+  inset-inline-start: -11px;
+}
+
+.v3q-ticket::after {
+  inset-inline-end: -11px;
+}
+
+.v3q-position {
+  color: #fff;
+  transition: opacity var(--v3-settle) var(--v3-ease);
+}
+
+.v3q-roll {
+  animation: v3q-roll var(--v3-scene) var(--v3-spring) both;
+}
+
+@keyframes v3q-roll {
+  from {
+    transform: translateY(0.4em);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v3q-roll {
+    animation: none;
+  }
+}
+
+.v3q-next {
+  font-family: var(--v3-font-display);
+  font-size: 2.25rem;
+  color: #fff;
+  line-height: 1.05;
+}
+
+.v3q-rule {
+  margin-block: 1.125rem 0.875rem;
+  border: 0;
+  border-block-start: 2px dashed rgb(232 240 234 / 0.2);
+}
+
+.v3q-empty {
+  max-inline-size: 24rem;
+  text-align: center;
+  display: grid;
+  gap: 0.625rem;
+  justify-items: center;
+}
+
+/* ==========================================================================
+   CUSTOMER PROFILE + ACTIVITY
+   ========================================================================== */
+
+.v3pr-page {
+  max-inline-size: 38rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.v3pr-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-block-start: 0.5rem;
+}
+
+.v3pr-avatar {
+  inline-size: 64px;
+  block-size: 64px;
+  border-radius: 999px;
+  background: radial-gradient(120% 120% at 30% 20%, var(--v3-sage) 0%, var(--v3-fill) 70%);
+  display: grid;
+  place-items: center;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--v3-green-ink);
+  flex-shrink: 0;
+}
+
+/* Passport entry — a miniature of the pass, never a text row. */
+.v3pr-pass-mini {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: 16px;
+  background:
+    linear-gradient(155deg, rgb(232 240 234 / 0.08) 0%, transparent 45%),
+    var(--v3-graphite-soft);
+  border: 1px solid rgb(232 240 234 / 0.16);
+  color: var(--v3-on-graphite);
+  text-decoration: none;
+}
+
+.v3pr-pass-mini-label {
+  font-size: 0.6563rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v3-on-graphite-dim);
+}
+
+.v3pr-pass-mini-name {
+  font-size: 1.125rem;
+  font-weight: 650;
+  color: #fff;
+}
+
+.v3pr-list {
+  display: grid;
+}
+
+.v3pr-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  color: inherit;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  inline-size: 100%;
+}
+
+.v3pr-item + .v3pr-item {
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3pr-item:hover {
+  background: var(--v3-ground);
+}
+
+.v3pr-note {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.75rem 1rem;
+}
+
+.v3pr-note + .v3pr-note {
+  border-block-start: 1px solid var(--v3-hairline);
+}
+
+.v3pr-note[data-unread='true'] {
+  background: var(--v3-green-tint);
+}
+
+/* ==========================================================================
+   FADE PASSPORT — BG-06 reveal; the pass is never a form.
+   ========================================================================== */
+
+.v3pp-scene {
+  margin-block: -1.25rem 1.5rem;
+  margin-inline: calc(-1 * clamp(1rem, 3vw, 2rem));
+  padding: 2.5rem clamp(1rem, 3vw, 2rem) 2.75rem;
+  display: grid;
+  place-items: center;
+}
+
+.v3pp-pass {
+  inline-size: min(24rem, 100%);
+  border-radius: 18px;
+  background:
+    linear-gradient(155deg, rgb(232 240 234 / 0.09) 0%, transparent 45%),
+    var(--v3-graphite-soft);
+  border: 1px solid rgb(232 240 234 / 0.16);
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+  color: var(--v3-on-graphite);
+  transform: perspective(900px) rotateX(2.5deg) rotateY(-2.5deg);
+  transition: transform var(--v3-settle) var(--v3-ease);
+}
+
+.v3pp-pass:hover {
+  transform: perspective(900px) rotateX(0) rotateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v3pp-pass,
+  .v3pp-pass:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+.v3pp-rows {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.v3pp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9063rem;
+}
+
+.v3pp-row dt {
+  color: var(--v3-on-graphite-dim);
+  font-size: 0.7813rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: center;
+}
+
+.v3pp-row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: end;
+}
+
+.v3pp-qr {
+  justify-self: center;
+  inline-size: 132px;
+  block-size: 132px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 6px;
+}
+
+.v3pp-qr img {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.v3pp-actions {
+  max-inline-size: 24rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 0.625rem;
+}
+
+/* Edit sheet — a plain form section under the pass, never on it. */
+.v3pp-form {
+  max-inline-size: 24rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 0.875rem;
+  padding-block: 1.25rem;
+}
+
+.v3q-ahead {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--v3-on-graphite-dim);
+}
+
+.v3q-venue {
+  display: grid;
+  gap: 0.125rem;
+  font-size: 0.9063rem;
+}
+
+.v3q-venue strong {
+  color: var(--v3-on-graphite);
+}
+
+.v3q-venue span {
+  color: var(--v3-on-graphite-dim);
+  font-size: 0.8125rem;
+}

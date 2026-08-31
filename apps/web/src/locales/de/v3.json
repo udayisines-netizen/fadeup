@@ -258,5 +258,87 @@
     "viewBooking": "Buchung ansehen",
     "done": "Fertig",
     "claimHint": "Erstelle ein Konto mit dieser E-Mail, um die Buchung in deinen Terminen zu behalten."
+  },
+  "appointments": {
+    "metaTitle": "Termine — FadeUp",
+    "metaDescription": "Deine kommenden und vergangenen Buchungen.",
+    "title": "Termine",
+    "next": "Nächster",
+    "upcoming": "Kommend",
+    "past": "Vergangen",
+    "signedOutTitle": "Melde dich an, um deine Termine zu sehen",
+    "signedOutBody": "Deine Buchungen gehören zu deinem FadeUp-Konto.",
+    "emptyTitle": "Noch keine Termine",
+    "emptyBody": "Buche einen Stuhl und er erscheint hier.",
+    "queueBanner": "Du bist in einer Live-Warteschlange",
+    "cancel": "Stornieren",
+    "cancelConfirm": "Stornierung bestätigen",
+    "cancelling": "Wird storniert…",
+    "cancelFailed": "Stornierung fehlgeschlagen. Versuche es erneut.",
+    "status": {
+      "pending": "Angefragt",
+      "confirmed": "Bestätigt",
+      "completed": "Abgeschlossen",
+      "cancelled": "Storniert",
+      "no_show": "Verpasst"
+    }
+  },
+  "queue": {
+    "metaTitle": "Live-Warteschlange — FadeUp",
+    "metaDescription": "Dein echter Platz in der Reihe, live.",
+    "signedOutTitle": "Melde dich an, um deine Warteschlange zu sehen",
+    "emptyTitle": "Du stehst in keiner Warteschlange",
+    "emptyBody": "Reihe dich im Shop ein: scanne dort den FadeUp-QR. Das geht nur vor Ort, in Reichweite.",
+    "ticketLabel": "Warteschlangen-Ticket für {{name}}",
+    "youAreNext": "Du bist dran",
+    "youAreNextSoon": "Gleich du — bleib in der Nähe",
+    "inService": "Auf dem Stuhl"
+  },
+  "account": {
+    "metaTitle": "Profil — FadeUp",
+    "metaDescription": "Deine Identität, dein Fade Passport und deine Aktivität.",
+    "signedOutTitle": "Melde dich bei deinem FadeUp an",
+    "signedOutBody": "Dein Passport, deine Follows und deine Aktivität leben hier.",
+    "passportOpen": "Passport öffnen",
+    "following": "Du folgst",
+    "activity": "Aktivität",
+    "markAllRead": "Alle gelesen",
+    "noActivity": "Noch keine Aktivität.",
+    "settings": "Einstellungen",
+    "signOut": "Abmelden",
+    "followedShops_zero": "{{count}} Barbershops gefolgt",
+    "followedShops_one": "{{count}} Barbershop gefolgt",
+    "followedShops_two": "{{count}} Barbershops gefolgt",
+    "followedShops_few": "{{count}} Barbershops gefolgt",
+    "followedShops_many": "{{count}} Barbershops gefolgt",
+    "followedShops_other": "{{count}} Barbershops gefolgt"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "Dein Schnitt, deine Vorlieben — deins zum Teilen.",
+    "emptyBody": "Füge Schnitt und Vorlieben hinzu — dein Barber sieht genau, was funktioniert.",
+    "fields": {
+      "usualHaircut": "Üblicher Schnitt",
+      "fadeType": "Fade",
+      "sideLength": "Seiten",
+      "topLength": "Oben",
+      "beard": "Bart",
+      "notes": "Notizen"
+    },
+    "share": "Per QR-Code teilen",
+    "sharing": "Wird erstellt…",
+    "shareHint": "Dieser Code gilt 7 Tage und nur solange du ihn aktiv lässt.",
+    "qrAlt": "QR-Code, der deinen Fade Passport teilt",
+    "edit": "Details bearbeiten",
+    "closeEdit": "Bearbeitung schließen",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…"
+  },
+  "book": {
+    "metaTitle": "Buchen — FadeUp",
+    "metaDescription": "Buche deinen Barber mit einem Tap erneut — oder finde einen neuen.",
+    "title": "Buchen",
+    "emptyTitle": "Noch nichts zum Wiederbuchen",
+    "emptyBody": "Nach deinem ersten abgeschlossenen Besuch erscheint hier die Ein-Tap-Wiederbuchung."
   }
 }

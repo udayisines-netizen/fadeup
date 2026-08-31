@@ -258,5 +258,87 @@
     "viewBooking": "View booking",
     "done": "Done",
     "claimHint": "Create an account with this email to keep this booking in your appointments."
+  },
+  "appointments": {
+    "metaTitle": "Appointments — FadeUp",
+    "metaDescription": "Your upcoming and past bookings.",
+    "title": "Appointments",
+    "next": "Next",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "signedOutTitle": "Sign in to see your appointments",
+    "signedOutBody": "Your bookings live with your FadeUp account.",
+    "emptyTitle": "No appointments yet",
+    "emptyBody": "Book a chair and it will appear here.",
+    "queueBanner": "You are in a live queue",
+    "cancel": "Cancel",
+    "cancelConfirm": "Confirm cancellation",
+    "cancelling": "Cancelling…",
+    "cancelFailed": "Could not cancel. Try again.",
+    "status": {
+      "pending": "Requested",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "no_show": "Missed"
+    }
+  },
+  "queue": {
+    "metaTitle": "Live queue — FadeUp",
+    "metaDescription": "Your real place in line, live.",
+    "signedOutTitle": "Sign in to see your queue",
+    "emptyTitle": "You are not in a queue",
+    "emptyBody": "Join at the shop: scan the FadeUp QR on site. Joining works only at the shop, within range.",
+    "ticketLabel": "Queue ticket for {{name}}",
+    "youAreNext": "You’re next",
+    "youAreNextSoon": "Almost you — stay close",
+    "inService": "In the chair"
+  },
+  "account": {
+    "metaTitle": "Profile — FadeUp",
+    "metaDescription": "Your identity, Fade Passport and activity.",
+    "signedOutTitle": "Sign in to your FadeUp",
+    "signedOutBody": "Your Passport, follows and activity live here.",
+    "passportOpen": "Open your Passport",
+    "following": "Following",
+    "activity": "Activity",
+    "markAllRead": "Mark all read",
+    "noActivity": "No activity yet.",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "followedShops_zero": "{{count}} barbershops followed",
+    "followedShops_one": "{{count}} barbershop followed",
+    "followedShops_two": "{{count}} barbershops followed",
+    "followedShops_few": "{{count}} barbershops followed",
+    "followedShops_many": "{{count}} barbershops followed",
+    "followedShops_other": "{{count}} barbershops followed"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "Your cut, your preferences, yours to share.",
+    "emptyBody": "Add your cut and preferences — your barber sees exactly what works.",
+    "fields": {
+      "usualHaircut": "Usual cut",
+      "fadeType": "Fade",
+      "sideLength": "Sides",
+      "topLength": "Top",
+      "beard": "Beard",
+      "notes": "Notes"
+    },
+    "share": "Share with a QR code",
+    "sharing": "Creating…",
+    "shareHint": "This code works for 7 days and only while you keep it active.",
+    "qrAlt": "QR code sharing your Fade Passport",
+    "edit": "Edit details",
+    "closeEdit": "Close editing",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "book": {
+    "metaTitle": "Book — FadeUp",
+    "metaDescription": "Rebook your barber in one tap, or find a new one.",
+    "title": "Book",
+    "emptyTitle": "Nothing to rebook yet",
+    "emptyBody": "After your first completed visit, one-tap rebooking appears here."
   }
 }

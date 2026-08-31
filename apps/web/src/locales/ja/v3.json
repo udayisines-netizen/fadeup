@@ -258,5 +258,87 @@
     "viewBooking": "予約を見る",
     "done": "完了",
     "claimHint": "このメールでアカウントを作成すると、この予約が予約一覧に保存されます。"
+  },
+  "appointments": {
+    "metaTitle": "予約一覧 — FadeUp",
+    "metaDescription": "今後と過去の予約。",
+    "title": "予約一覧",
+    "next": "次の予約",
+    "upcoming": "今後",
+    "past": "過去",
+    "signedOutTitle": "ログインして予約を確認",
+    "signedOutBody": "予約はFadeUpアカウントに保存されます。",
+    "emptyTitle": "まだ予約がありません",
+    "emptyBody": "予約するとここに表示されます。",
+    "queueBanner": "ライブ順番待ちに参加中",
+    "cancel": "キャンセル",
+    "cancelConfirm": "キャンセルを確定",
+    "cancelling": "キャンセル中…",
+    "cancelFailed": "キャンセルできませんでした。もう一度お試しください。",
+    "status": {
+      "pending": "リクエスト済み",
+      "confirmed": "確定",
+      "completed": "完了",
+      "cancelled": "キャンセル済み",
+      "no_show": "不参加"
+    }
+  },
+  "queue": {
+    "metaTitle": "ライブ順番待ち — FadeUp",
+    "metaDescription": "あなたの実際の順番を、リアルタイムで。",
+    "signedOutTitle": "ログインして順番を確認",
+    "emptyTitle": "順番待ちに入っていません",
+    "emptyBody": "店頭で参加：店内のFadeUp QRをスキャンしてください。参加は店頭の近くでのみ可能です。",
+    "ticketLabel": "{{name}}の順番待ちチケット",
+    "youAreNext": "あなたの番です",
+    "youAreNextSoon": "もうすぐです — 近くでお待ちください",
+    "inService": "施術中"
+  },
+  "account": {
+    "metaTitle": "プロフィール — FadeUp",
+    "metaDescription": "あなたのアイデンティティ、Fade Passport、アクティビティ。",
+    "signedOutTitle": "FadeUpにログイン",
+    "signedOutBody": "Passport、フォロー、アクティビティはここにあります。",
+    "passportOpen": "Passportを開く",
+    "following": "フォロー中",
+    "activity": "アクティビティ",
+    "markAllRead": "すべて既読にする",
+    "noActivity": "まだアクティビティはありません。",
+    "settings": "設定",
+    "signOut": "ログアウト",
+    "followedShops_zero": "{{count}}件のバーバーショップをフォロー中",
+    "followedShops_one": "{{count}}件のバーバーショップをフォロー中",
+    "followedShops_two": "{{count}}件のバーバーショップをフォロー中",
+    "followedShops_few": "{{count}}件のバーバーショップをフォロー中",
+    "followedShops_many": "{{count}}件のバーバーショップをフォロー中",
+    "followedShops_other": "{{count}}件のバーバーショップをフォロー中"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "あなたのカットと好み — 共有するかはあなた次第。",
+    "emptyBody": "カットと好みを追加すると、バーバーに正確に伝わります。",
+    "fields": {
+      "usualHaircut": "いつものカット",
+      "fadeType": "フェード",
+      "sideLength": "サイド",
+      "topLength": "トップ",
+      "beard": "ヒゲ",
+      "notes": "メモ"
+    },
+    "share": "QRコードで共有",
+    "sharing": "作成中…",
+    "shareHint": "このコードは7日間、有効にしている間だけ機能します。",
+    "qrAlt": "Fade Passportを共有するQRコード",
+    "edit": "詳細を編集",
+    "closeEdit": "編集を閉じる",
+    "save": "保存",
+    "saving": "保存中…"
+  },
+  "book": {
+    "metaTitle": "予約 — FadeUp",
+    "metaDescription": "ワンタップで再予約、または新しいバーバーを探す。",
+    "title": "予約",
+    "emptyTitle": "まだ再予約できるものがありません",
+    "emptyBody": "最初の来店が完了すると、ワンタップ再予約がここに表示されます。"
   }
 }

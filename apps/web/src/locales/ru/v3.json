@@ -258,5 +258,87 @@
     "viewBooking": "К записи",
     "done": "Готово",
     "claimHint": "Создайте аккаунт с этой почтой, чтобы запись появилась в ваших записях."
+  },
+  "appointments": {
+    "metaTitle": "Записи — FadeUp",
+    "metaDescription": "Ваши будущие и прошлые записи.",
+    "title": "Записи",
+    "next": "Ближайшая",
+    "upcoming": "Предстоящие",
+    "past": "Прошедшие",
+    "signedOutTitle": "Войдите, чтобы увидеть записи",
+    "signedOutBody": "Ваши записи живут вместе с аккаунтом FadeUp.",
+    "emptyTitle": "Записей пока нет",
+    "emptyBody": "Запишитесь — и запись появится здесь.",
+    "queueBanner": "Вы в живой очереди",
+    "cancel": "Отменить",
+    "cancelConfirm": "Подтвердить отмену",
+    "cancelling": "Отмена…",
+    "cancelFailed": "Не удалось отменить. Попробуйте ещё раз.",
+    "status": {
+      "pending": "Запрошена",
+      "confirmed": "Подтверждена",
+      "completed": "Завершена",
+      "cancelled": "Отменена",
+      "no_show": "Пропущена"
+    }
+  },
+  "queue": {
+    "metaTitle": "Живая очередь — FadeUp",
+    "metaDescription": "Ваше реальное место в очереди, вживую.",
+    "signedOutTitle": "Войдите, чтобы увидеть очередь",
+    "emptyTitle": "Вы не в очереди",
+    "emptyBody": "Встаньте в очередь на месте: отсканируйте QR FadeUp в барбершопе. Это работает только на месте, поблизости.",
+    "ticketLabel": "Билет очереди — {{name}}",
+    "youAreNext": "Ваша очередь",
+    "youAreNextSoon": "Почти вы — будьте рядом",
+    "inService": "В кресле"
+  },
+  "account": {
+    "metaTitle": "Профиль — FadeUp",
+    "metaDescription": "Ваша identity, Fade Passport и активность.",
+    "signedOutTitle": "Войдите в свой FadeUp",
+    "signedOutBody": "Ваш Passport, подписки и активность живут здесь.",
+    "passportOpen": "Открыть Passport",
+    "following": "Подписки",
+    "activity": "Активность",
+    "markAllRead": "Прочитать всё",
+    "noActivity": "Пока нет активности.",
+    "settings": "Настройки",
+    "signOut": "Выйти",
+    "followedShops_zero": "{{count}} барбершопа в подписках",
+    "followedShops_one": "{{count}} барбершоп в подписках",
+    "followedShops_two": "{{count}} барбершопа в подписках",
+    "followedShops_few": "{{count}} барбершопа в подписках",
+    "followedShops_many": "{{count}} барбершопов в подписках",
+    "followedShops_other": "{{count}} барбершопа в подписках"
+  },
+  "passport": {
+    "metaTitle": "Fade Passport — FadeUp",
+    "metaDescription": "Ваша стрижка и предпочтения — ваши, чтобы делиться.",
+    "emptyBody": "Добавьте стрижку и предпочтения — барбер увидит именно то, что вам подходит.",
+    "fields": {
+      "usualHaircut": "Обычная стрижка",
+      "fadeType": "Фейд",
+      "sideLength": "Бока",
+      "topLength": "Верх",
+      "beard": "Борода",
+      "notes": "Заметки"
+    },
+    "share": "Поделиться QR-кодом",
+    "sharing": "Создание…",
+    "shareHint": "Код действует 7 дней и только пока вы держите его активным.",
+    "qrAlt": "QR-код вашего Fade Passport",
+    "edit": "Изменить данные",
+    "closeEdit": "Закрыть редактирование",
+    "save": "Сохранить",
+    "saving": "Сохранение…"
+  },
+  "book": {
+    "metaTitle": "Запись — FadeUp",
+    "metaDescription": "Запишитесь к своему барберу в одно касание или найдите нового.",
+    "title": "Запись",
+    "emptyTitle": "Пока нечего повторить",
+    "emptyBody": "После первого завершённого визита здесь появится повторная запись в одно касание."
   }
 }
