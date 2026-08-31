@@ -287,7 +287,11 @@
       "notPlotted_few": "{{count}} results have no map position yet",
       "notPlotted_zero": "{{count}} results have no map position yet",
       "notPlotted_two": "{{count}} results have no map position yet",
-      "notPlotted_many": "{{count}} results have no map position yet"
+      "notPlotted_many": "{{count}} results have no map position yet",
+      "searchAction": "Search",
+      "listView": "List",
+      "mapView": "Map",
+      "tapAPin": "Tap a pin to see that place."
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

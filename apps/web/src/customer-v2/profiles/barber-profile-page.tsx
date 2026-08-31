@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BadgeCheck, ChevronLeft } from 'lucide-react'
@@ -94,6 +94,26 @@ export function CustomerV2BarberProfilePage() {
 
   const money = useMoney()
   const showSkeletons = useDelayedFlag(barber.isPending)
+
+  /*
+    Sticky Book (mobile, Design Pass A.1 §3): the page will grow long once a
+    real Work/portfolio contract fills the grid, and Book must stay one
+    thumb-reach away. IntersectionObserver on the identity section, so the
+    compact bar exists only while the header's own Book is genuinely off
+    screen — never two booking bars at once. Desktop keeps its layout.
+  */
+  const [stickyBook, setStickyBook] = useState(false)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const identityRef = (node: HTMLElement | null) => {
+    observerRef.current?.disconnect()
+    if (!node) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyBook(!entry.isIntersecting),
+      { rootMargin: '-56px 0px 0px 0px' },
+    )
+    observer.observe(node)
+    observerRef.current = observer
+  }
 
   const professionalId = barber.data?.professionalId ?? null
   const isFollowing = useMemo(
@@ -267,7 +287,7 @@ export function CustomerV2BarberProfilePage() {
         ) : null}
 
         {/* Book dominates; Follow is secondary and exists only for a claimed identity. */}
-        <div className="mt-4 flex items-center gap-2.5">
+        <div ref={identityRef} className="mt-4 flex items-center gap-2.5">
           <Link
             to={bookPath}
             className="v2-press inline-flex h-11 flex-1 items-center justify-center rounded-v2-2 bg-v2-green px-5 text-v2-body font-semibold text-v2-paper hover:bg-v2-green-deep"
@@ -387,6 +407,22 @@ export function CustomerV2BarberProfilePage() {
           {t('customer-app:v2.barberProfile.noWork')}
         </p>
       </section>
+
+      {stickyBook ? (
+        <div className="v2-book-bar lg:hidden">
+          <div className="mx-auto flex max-w-[40rem] items-center gap-3 px-4 py-2.5">
+            <p className="min-w-0 flex-1 truncate text-v2-meta font-semibold text-v2-ink">
+              <bdi>{profile.displayName}</bdi>
+            </p>
+            <Link
+              to={bookPath}
+              className="v2-press inline-flex h-11 shrink-0 items-center justify-center rounded-v2-2 bg-v2-green px-6 text-v2-body font-semibold text-v2-paper"
+            >
+              {t('customer-app:v2.result.book')}
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -193,6 +193,25 @@ export function CustomerV2HomePage() {
         </div>
       </div>
 
+      {/*
+        ════════════════════════════════════════════════════════════════════
+        HOME RAILS (Design Pass A.1 §6)
+        ════════════════════════════════════════════════════════════════════
+
+        Home is DISCOVERY, not search: no filter machinery, no result count
+        bookkeeping, an editorial section voice — deliberately distinct from
+        the Marketplace's functional list+map. Structurally this block is a
+        SEQUENCE OF RAILS, of which exactly one exists today because exactly
+        one truthful contract exists:
+
+          Near you            search_public_professionals  (live)
+          Popular around you  needs a real ranking contract     (future)
+          Fresh cuts          needs a work/media contract       (future)
+
+        A future rail is a sibling component appended here, fed by its own
+        real contract. None renders today, and none renders EMPTY ever — an
+        empty rail is a promise the backend has not made.
+      */}
       <DiscoverySection
         discovery={discovery}
         onClearFilters={() => {

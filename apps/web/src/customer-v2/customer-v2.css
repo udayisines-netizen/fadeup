@@ -354,38 +354,11 @@
 }
 
 /*
- * ---------------------------------------------------------------------------
- * SPLASH — the global loading identity (Design Pass A §1)
- * ---------------------------------------------------------------------------
- *
- * Light, on purpose: near-white canvas, the F mark's three segments arriving
- * in sequence — stem, top arm, mid arm — on a ~1s cycle. No spinner, no fake
- * progress, no percentage. Used ONLY for bootstrap-class waits (router
- * hydration of a lazy branch); ordinary refetches never show it.
+ * SPLASH (Design Pass A.1 §2): the loading animation lives INSIDE the brand
+ * asset — assets/brand/fadeup-loading-mark.svg — including its own
+ * reduced-motion static state, so any surface embedding the asset (splash,
+ * future PWA imagery) gets identical behavior with no CSS here.
  */
-.v2-splash-seg {
-  animation: v2-splash-seg 1000ms var(--v2-ease) infinite;
-  transform-origin: 24px 24px;
-}
-
-@keyframes v2-splash-seg {
-  0% {
-    opacity: 0.25;
-    transform: translateY(3px);
-  }
-  28% {
-    opacity: 1;
-    transform: none;
-  }
-  72% {
-    opacity: 1;
-    transform: none;
-  }
-  100% {
-    opacity: 0.25;
-    transform: translateY(3px);
-  }
-}
 
 /*
  * ---------------------------------------------------------------------------
@@ -427,6 +400,89 @@
 
 /*
  * ---------------------------------------------------------------------------
+ * MAP PINS — FadeUp markers, not Google teardrops (Design Pass A.1 §1/§5)
+ * ---------------------------------------------------------------------------
+ *
+ * Two shapes, both small. A result with a REAL starting price is a compact
+ * price pill; one without is a minimal dot. Selection swaps ink for green
+ * fill — the same emphasis vocabulary the list row uses, so pin and card
+ * visibly agree.
+ */
+.v2-pin {
+  cursor: pointer;
+  border: 1px solid var(--color-v2-edge);
+  background: var(--color-v2-paper);
+  color: var(--color-v2-ink);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-family: var(--font-v2);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.125rem;
+  white-space: nowrap;
+  transition:
+    background-color var(--v2-press) var(--v2-ease),
+    color var(--v2-press) var(--v2-ease),
+    border-color var(--v2-press) var(--v2-ease);
+}
+
+.v2-pin-dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--color-v2-green);
+  border: 2px solid var(--color-v2-paper);
+  outline: 1px solid var(--color-v2-edge);
+}
+
+.v2-pin[data-selected='true'] {
+  background: var(--color-v2-green);
+  border-color: var(--color-v2-green);
+  color: var(--color-v2-paper);
+}
+
+.v2-pin-dot[data-selected='true'] {
+  background: var(--color-v2-green-deep);
+  outline-color: var(--color-v2-green);
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * ACTIVE RESULT — the card half of the pin↔card agreement (§5)
+ * ---------------------------------------------------------------------------
+ *
+ * Subtle by direction: a green-tint wash and a 2px inline-start accent.
+ * No shadow, no thick border.
+ */
+.v2-row-active {
+  background-color: color-mix(in srgb, var(--color-v2-green-tint) 55%, transparent);
+  box-shadow: inset 2px 0 0 0 var(--color-v2-green);
+}
+
+[dir='rtl'] .v2-row-active {
+  box-shadow: inset -2px 0 0 0 var(--color-v2-green);
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * BRAND WELL — the no-media identity treatment (§7)
+ * ---------------------------------------------------------------------------
+ *
+ * The fade keeps carrying "no photo, by honest absence"; it now lands in the
+ * FadeUp green tint instead of neutral fill — a whisper of brand, not
+ * artwork. Initials over it are set in green ink by the tile.
+ */
+.v2-well-brand {
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-v2-paper) 0%,
+    var(--color-v2-green-tint) 92%
+  );
+}
+
+/*
+ * ---------------------------------------------------------------------------
  * REDUCED MOTION
  * ---------------------------------------------------------------------------
  *
@@ -461,23 +517,7 @@
     transition: none;
   }
 
-  /* Splash: static mark, the faintest opacity breath only (§1). */
-  .v2-splash-seg {
-    animation: v2-splash-breathe 1600ms ease-in-out infinite;
-    transform: none;
-  }
-
   [data-fu-v2] .v2-book-bar {
     animation: none;
-  }
-}
-
-@keyframes v2-splash-breathe {
-  0%,
-  100% {
-    opacity: 0.82;
-  }
-  50% {
-    opacity: 1;
   }
 }

@@ -3,51 +3,63 @@ import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useTranslation } from 'react-i18next'
 import type { MarketplaceProfessionalResult } from '@/lib/queries/marketplace'
+import { MAP_TILE_SOURCE } from '@/customer-v2/marketplace/map-config'
 
 /**
- * The map half of the Design Pass A marketplace (desktop LIST + MAP).
+ * The map half of the marketplace — desktop LIST + MAP, and the mobile Map
+ * view (Design Pass A.1 §1/§2/§5).
  *
- * Modeled directly on the proven `components/marketplace/results-map.tsx`:
- * raster OpenStreetMap tiles (no token; attribution via the style source, as
- * the OSM usage policy requires), markers that are real buttons, fitBounds
- * capped so one result never slams to street level. Restyled to the v2
- * language — FadeUp-green pins, hairline chrome (see customer-v2.css).
+ * Modeled on the proven `components/marketplace/results-map.tsx` (markers
+ * that are real buttons, fitBounds capped, aria-hidden canvas with semantics
+ * on the markers), with the Pass A.1 refinements:
  *
- * ONLY EVER IMPORTED LAZILY: maplibre is ~950kB pre-gzip and the map renders
- * only on desktop viewports that actually have plottable results.
+ * PINS ARE FADEUP MARKERS, NOT TEARDROPS. A result whose contract carries a
+ * REAL `starting_price_cents` renders as a compact price pill ("€25"); one
+ * without renders as a minimal green dot. Nothing else is drawn. Selection
+ * turns the pill green-filled / deepens the dot — the exact vocabulary the
+ * list row's `.v2-row-active` uses, so pin and card visibly agree.
  *
- * The map is never the only surface — the list beside it is the default and
- * stays rendered; a canvas of markers is not readable by a screen reader, so
- * the container is aria-hidden and the semantics live on the markers.
+ * COORDINATION IS TWO-WAY. `activeId` highlights the matching pin;
+ * `onSelect` reports a pin tap so the page can highlight/scroll/dock its
+ * card. Price formatting arrives via `priceLabelFor` because money needs
+ * the page's locale context and markers are plain DOM.
  *
- * TRUTH RULES. Pins exist for results whose `latitude`/`longitude` are real;
- * nothing is geocoded client-side, nothing is guessed. Results the backend
- * has not geocoded are counted under the map so the list and the map can
- * never silently disagree.
+ * TILE SOURCE lives in `map-config.ts` alone (§8) — this file knows the
+ * renderer, never the URL.
+ *
+ * ONLY EVER IMPORTED LAZILY: maplibre is ~950kB pre-gzip.
+ *
+ * TRUTH RULES. Pins exist only for results with real coordinates; nothing is
+ * geocoded or guessed client-side; non-geocoded results are counted under
+ * the map so list and map can never silently disagree.
  */
-
-const OSM_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
 
 export function V2ResultsMap({
   results,
+  activeId,
   onSelect,
+  priceLabelFor,
   className,
 }: {
   results: MarketplaceProfessionalResult[]
-  /** Tapping a pin selects that result in the list beside the map. */
+  /** The location id of the result currently emphasized by the page. */
+  activeId: string | null
+  /** A pin was chosen — the page highlights/docks the matching result. */
   onSelect: (result: MarketplaceProfessionalResult) => void
+  /** Real formatted starting price, or null when the contract has none. */
+  priceLabelFor: (result: MarketplaceProfessionalResult) => string | null
   className?: string
 }) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
-  const markersRef = useRef<maplibregl.Marker[]>([])
+  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
 
-  // `onSelect` is recreated per render; a ref keeps the marker effect keyed on
-  // the results alone so panning never rebuilds every pin.
+  // Recreated-per-render callbacks live in refs so marker effects key on data.
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
+  const priceLabelRef = useRef(priceLabelFor)
+  priceLabelRef.current = priceLabelFor
 
   const plottable = results.filter(
     (result): result is MarketplaceProfessionalResult & { latitude: number; longitude: number } =>
@@ -62,19 +74,11 @@ export function V2ResultsMap({
       container: containerRef.current,
       style: {
         version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: OSM_ATTRIBUTION,
-          },
-        },
+        sources: { osm: { type: 'raster', ...MAP_TILE_SOURCE } },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
       },
       center: [2.35, 48.86],
       zoom: 4,
-      // Restrained chrome: zoom only, added below; no rotation affordance.
       dragRotate: false,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
@@ -86,39 +90,31 @@ export function V2ResultsMap({
     }
   }, [])
 
+  /* Markers: rebuilt when the RESULT SET changes; selection is a cheap
+     attribute flip handled by the effect below. */
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
-    for (const marker of markersRef.current) marker.remove()
-    markersRef.current = []
-
-    // maplibre writes the colour onto the generated SVG as a presentation
-    // attribute, where a var() would silently fall back to default blue —
-    // resolve the token to its concrete value.
-    const green =
-      getComputedStyle(document.documentElement).getPropertyValue('--color-v2-green').trim() ||
-      '#0a7c4c'
+    for (const marker of markersRef.current.values()) marker.remove()
+    markersRef.current = new Map()
 
     for (const result of plottable) {
-      const marker = new maplibregl.Marker({ color: green, scale: 0.85 })
-        .setLngLat([result.longitude, result.latitude])
-        .addTo(map)
-
-      const element = marker.getElement()
-      element.setAttribute('role', 'button')
-      element.setAttribute('tabindex', '0')
+      const price = priceLabelRef.current(result)
+      const element = document.createElement('button')
+      element.type = 'button'
+      element.className = price ? 'v2-pin' : 'v2-pin v2-pin-dot'
+      if (price) element.textContent = price
       element.setAttribute('aria-label', result.organizationName)
-      element.style.cursor = 'pointer'
-      element.addEventListener('click', () => onSelectRef.current(result))
-      element.addEventListener('keydown', (event) => {
-        if (event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault()
-          onSelectRef.current(result)
-        }
+      element.addEventListener('click', (event) => {
+        event.stopPropagation()
+        onSelectRef.current(result)
       })
 
-      markersRef.current.push(marker)
+      const marker = new maplibregl.Marker({ element })
+        .setLngLat([result.longitude, result.latitude])
+        .addTo(map)
+      markersRef.current.set(result.locationId, marker)
     }
 
     if (plottable.length > 0) {
@@ -128,12 +124,19 @@ export function V2ResultsMap({
     }
   }, [plottable])
 
+  /* Selection flip — no marker rebuild, no camera movement. */
+  useEffect(() => {
+    for (const [locationId, marker] of markersRef.current) {
+      marker.getElement().setAttribute('data-selected', String(locationId === activeId))
+    }
+  }, [activeId, plottable])
+
   return (
     <div className={className}>
       <div
         ref={containerRef}
         aria-hidden="true"
-        className="h-full min-h-[28rem] w-full overflow-hidden rounded-v2-3 border border-v2-hairline"
+        className="h-full min-h-[20rem] w-full overflow-hidden rounded-v2-3 border border-v2-hairline"
       />
       {unplottable > 0 ? (
         <p role="status" className="mt-2 text-v2-caption text-v2-ink-mute">

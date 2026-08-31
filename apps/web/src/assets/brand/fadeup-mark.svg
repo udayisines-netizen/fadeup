@@ -1,0 +1,19 @@
+<!--
+  The FadeUp brand mark — STATIC canonical vector.
+  Geometry is copied verbatim from src/components/brand/fadeup-mark.tsx (the
+  drawn brand charter source: fluid F, emerald->mint). If an official logo
+  asset ever replaces the drawn mark, update the tsx AND these assets
+  together; nothing else in the product knows the paths.
+  Intended uses: PWA/startup imagery, any static brand placement.
+-->
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fu-grad" x1="6" y1="42" x2="42" y2="6" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17A36A"/>
+      <stop offset="1" stop-color="#3DDAA2"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 12a6 6 0 0 1 6-6h6v36a6 6 0 0 1-12 0V12Z" fill="url(#fu-grad)"/>
+  <path d="M20 6h14c5 0 8 2.4 8 6s-3 6-8 6H20V6Z" fill="url(#fu-grad)"/>
+  <path d="M20 21h9c4.4 0 7 2.2 7 5.5S33.4 32 29 32h-9V21Z" fill="url(#fu-grad)" opacity="0.86"/>
+</svg>

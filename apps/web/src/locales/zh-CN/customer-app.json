@@ -287,7 +287,11 @@
       "notPlotted_zero": "{{count}} 个结果暂无地图位置",
       "notPlotted_two": "{{count}} 个结果暂无地图位置",
       "notPlotted_one": "{{count}} 个结果暂无地图位置",
-      "notPlotted_many": "{{count}} 个结果暂无地图位置"
+      "notPlotted_many": "{{count}} 个结果暂无地图位置",
+      "searchAction": "搜索",
+      "listView": "列表",
+      "mapView": "地图",
+      "tapAPin": "点按图钉即可查看该店铺。"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

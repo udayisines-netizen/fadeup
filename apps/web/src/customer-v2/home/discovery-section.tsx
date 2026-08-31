@@ -162,8 +162,10 @@ function ListingPlate({ discovery }: { discovery: HomeDiscovery }) {
       section title as one quiet line, not a plate-within-the-page.
     */
     <section aria-labelledby={headingId}>
+      {/* Editorial voice — a lead-size rail title, unlike the Marketplace's
+          utilitarian count row. Part of what keeps Home ≠ Marketplace. */}
       <div className="flex items-baseline justify-between gap-3 py-2">
-        <h2 id={headingId} className="text-v2-title font-semibold text-v2-ink">
+        <h2 id={headingId} className="text-v2-lead font-semibold tracking-[-0.01em] text-v2-ink">
           {t('customer-app:v2.discovery.nearYou')}
         </h2>
         <p className="shrink-0 text-v2-caption tabular-nums text-v2-ink-mute">

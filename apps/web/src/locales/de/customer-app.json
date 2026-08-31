@@ -287,7 +287,11 @@
       "notPlotted_few": "{{count}} Ergebnisse ohne Kartenposition",
       "notPlotted_zero": "{{count}} Ergebnisse ohne Kartenposition",
       "notPlotted_two": "{{count}} Ergebnisse ohne Kartenposition",
-      "notPlotted_many": "{{count}} Ergebnisse ohne Kartenposition"
+      "notPlotted_many": "{{count}} Ergebnisse ohne Kartenposition",
+      "searchAction": "Suchen",
+      "listView": "Liste",
+      "mapView": "Karte",
+      "tapAPin": "Tippe auf einen Pin, um den Ort zu sehen."
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

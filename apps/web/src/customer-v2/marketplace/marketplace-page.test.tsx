@@ -149,3 +149,20 @@ describe('paging follows the server total', () => {
     expect(screen.getByRole('button', { name: 'Show more' })).toBeInTheDocument()
   })
 })
+
+describe('the Map affordance exists only when real coordinates do', () => {
+  it('offers no Map control while every result is ungeocoded', () => {
+    renderPage()
+    expect(screen.queryByRole('button', { name: 'Map' })).not.toBeInTheDocument()
+  })
+
+  it('offers the Map/List switch once a result carries real coordinates', () => {
+    renderPage({
+      listings: [
+        { result: row({ latitude: 48.75367, longitude: 2.29716 }), supplyType: 'barbershop' },
+      ],
+    })
+    expect(screen.getByRole('button', { name: 'Map' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'List' })).toBeInTheDocument()
+  })
+})

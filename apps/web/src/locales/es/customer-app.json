@@ -287,7 +287,11 @@
       "notPlotted_few": "{{count}} resultados sin posición en el mapa",
       "notPlotted_zero": "{{count}} resultados sin posición en el mapa",
       "notPlotted_two": "{{count}} resultados sin posición en el mapa",
-      "notPlotted_many": "{{count}} resultados sin posición en el mapa"
+      "notPlotted_many": "{{count}} resultados sin posición en el mapa",
+      "searchAction": "Buscar",
+      "listView": "Lista",
+      "mapView": "Mapa",
+      "tapAPin": "Toca un marcador para ver ese lugar."
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

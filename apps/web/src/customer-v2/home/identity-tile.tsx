@@ -136,9 +136,16 @@ export function IdentityTile({
         />
       ) : (
         <>
-          <span className="v2-well-empty absolute inset-0" />
+          {/* Design Pass A.1 §7: the honest-absence fade lands in the FadeUp
+              green tint when initials carry the identity — a whisper of brand,
+              not artwork — and stays neutral behind the last-resort glyph. */}
+          <span
+            className={
+              initials ? 'v2-well-brand absolute inset-0' : 'v2-well-empty absolute inset-0'
+            }
+          />
           {initials ? (
-            <span className="relative select-none text-[0.9em] font-semibold tracking-[0.02em] text-v2-ink-soft">
+            <span className="relative select-none text-[0.9em] font-semibold tracking-[0.02em] text-v2-green-ink">
               {initials}
             </span>
           ) : (

@@ -287,7 +287,11 @@
       "notPlotted_zero": "地図上の位置がない結果 {{count}}件",
       "notPlotted_two": "地図上の位置がない結果 {{count}}件",
       "notPlotted_one": "地図上の位置がない結果 {{count}}件",
-      "notPlotted_many": "地図上の位置がない結果 {{count}}件"
+      "notPlotted_many": "地図上の位置がない結果 {{count}}件",
+      "searchAction": "検索",
+      "listView": "リスト",
+      "mapView": "地図",
+      "tapAPin": "ピンをタップすると店舗が表示されます。"
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

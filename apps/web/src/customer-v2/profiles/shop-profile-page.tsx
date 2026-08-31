@@ -235,7 +235,7 @@ export function CustomerV2ShopProfilePage() {
         bans reserving media chrome no real media can fill; a venue gallery
         composition slots in above this block the day a media contract exists.
       */}
-      <section ref={identityRef} className="border-b border-v2-hairline pb-4 pt-1">
+      <section className="border-b border-v2-hairline pb-4 pt-1">
         <div className="flex items-start gap-4">
           <IdentityTile
             src={null}
@@ -290,7 +290,7 @@ export function CustomerV2ShopProfilePage() {
             </div>
           ) : null}
 
-          <div className="mt-4 flex items-center gap-2.5">
+          <div ref={identityRef} className="mt-4 flex items-center gap-2.5">
             <Link
               to={bookPath}
               className="v2-press inline-flex h-11 flex-1 items-center justify-center rounded-v2-2 bg-v2-green px-5 text-v2-body font-semibold text-v2-paper hover:bg-v2-green-deep"

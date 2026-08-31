@@ -287,7 +287,11 @@
       "notPlotted_two": "نتيجتان بلا موقع على الخريطة",
       "notPlotted_few": "{{count}} نتائج بلا موقع على الخريطة",
       "notPlotted_many": "{{count}} نتيجة بلا موقع على الخريطة",
-      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة"
+      "notPlotted_other": "{{count}} نتيجة بلا موقع على الخريطة",
+      "searchAction": "بحث",
+      "listView": "قائمة",
+      "mapView": "خريطة",
+      "tapAPin": "اضغط على علامة لرؤية ذلك المكان."
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",

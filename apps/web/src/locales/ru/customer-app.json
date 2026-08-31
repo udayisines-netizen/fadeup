@@ -287,7 +287,11 @@
       "notPlotted_many": "{{count}} результатов без позиции на карте",
       "notPlotted_other": "{{count}} результатов без позиции на карте",
       "notPlotted_zero": "{{count}} результатов без позиции на карте",
-      "notPlotted_two": "{{count}} результатов без позиции на карте"
+      "notPlotted_two": "{{count}} результатов без позиции на карте",
+      "searchAction": "Найти",
+      "listView": "Список",
+      "mapView": "Карта",
+      "tapAPin": "Нажмите на метку, чтобы увидеть это место."
     },
     "barberProfile": {
       "documentTitle": "{{name}} · FadeUp",
