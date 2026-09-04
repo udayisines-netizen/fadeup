@@ -38,7 +38,15 @@ export type ReadinessRequirement =
   | 'business_type'
   | 'currency'
   | 'location'
-  | 'location_address'
+  /*
+    B1 replaced 'location_address'. get_organization_readiness now accepts
+    EITHER a complete postal address on a physical_address location OR an
+    active service_area location, because MASTER_SPEC §8 makes the mobile
+    professional legitimate and forbids inventing a street for them. The key
+    was renamed rather than kept, so a wizard cannot go on telling a mobile
+    barber to type an address they do not have.
+  */
+  | 'location_address_or_service_area'
   | 'timezone'
   | 'professional'
   | 'service'
@@ -56,7 +64,10 @@ export interface OrganizationReadiness {
   hasBusinessType: boolean
   hasCurrency: boolean
   hasLocation: boolean
+  /** A complete postal address on at least one active physical_address location. */
   hasLocationAddress: boolean
+  /** At least one active service_area location — the mobile professional's answer to "where". */
+  hasServiceArea: boolean
   hasTimezone: boolean
   hasProfessional: boolean
   hasService: boolean
@@ -80,6 +91,7 @@ interface ReadinessRow {
   has_currency: boolean
   has_location: boolean
   has_location_address: boolean
+  has_service_area: boolean
   has_timezone: boolean
   has_professional: boolean
   has_service: boolean
@@ -103,6 +115,7 @@ function mapReadiness(row: ReadinessRow): OrganizationReadiness {
     hasCurrency: row.has_currency,
     hasLocation: row.has_location,
     hasLocationAddress: row.has_location_address,
+    hasServiceArea: row.has_service_area,
     hasTimezone: row.has_timezone,
     hasProfessional: row.has_professional,
     hasService: row.has_service,

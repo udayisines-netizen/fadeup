@@ -187,7 +187,7 @@
       "business_type": "business の種類を選ぶ",
       "currency": "通貨を選ぶ",
       "location": "住所を追加する",
-      "location_address": "住所と市区町村を追加する",
+      "location_address_or_service_area": "住所またはサービス提供エリアを追加する",
       "timezone": "タイムゾーンを設定する",
       "professional": "予約可能な professional を追加する",
       "service": "メニューを 1 つ以上追加する",

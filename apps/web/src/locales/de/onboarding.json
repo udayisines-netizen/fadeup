@@ -187,7 +187,7 @@
       "business_type": "Art des Betriebs wählen",
       "currency": "Währung wählen",
       "location": "Adresse hinzufügen",
-      "location_address": "Straße und Stadt hinzufügen",
+      "location_address_or_service_area": "Adresse oder Einsatzgebiet hinzufügen",
       "timezone": "Zeitzone festlegen",
       "professional": "Buchbare Fachkraft hinzufügen",
       "service": "Mindestens eine Leistung hinzufügen",

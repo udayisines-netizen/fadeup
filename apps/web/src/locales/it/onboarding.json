@@ -187,7 +187,7 @@
       "business_type": "Scegli un tipo di attività",
       "currency": "Scegli una valuta",
       "location": "Aggiungi un indirizzo",
-      "location_address": "Aggiungi indirizzo e città",
+      "location_address_or_service_area": "Aggiungi un indirizzo o una zona di servizio",
       "timezone": "Imposta un fuso orario",
       "professional": "Aggiungi un professionista prenotabile",
       "service": "Aggiungi almeno un servizio",

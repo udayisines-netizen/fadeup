@@ -69,7 +69,7 @@ describe('onboarding translation coverage', () => {
   it('translates every readiness requirement the server can return', () => {
     // Mirrors get_organization_readiness()'s missing_requirements[] values.
     const requirements = [
-      'business_type', 'currency', 'location', 'location_address', 'timezone',
+      'business_type', 'currency', 'location', 'location_address_or_service_area', 'timezone',
       'professional', 'service', 'service_at_location', 'service_for_professional',
       'location_hours', 'professional_hours', 'public_profile',
     ]

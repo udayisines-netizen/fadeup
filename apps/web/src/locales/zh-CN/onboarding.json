@@ -187,7 +187,7 @@
       "business_type": "选择店铺类型",
       "currency": "选择货币",
       "location": "添加地址",
-      "location_address": "填写街道地址和城市",
+      "location_address_or_service_area": "填写街道地址或服务区域",
       "timezone": "设置时区",
       "professional": "添加可预约的专业人员",
       "service": "至少添加一项服务",

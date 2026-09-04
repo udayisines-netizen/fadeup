@@ -187,7 +187,7 @@
       "business_type": "اختيار نوع النشاط",
       "currency": "اختيار عملة",
       "location": "إضافة عنوان",
-      "location_address": "إضافة العنوان والمدينة",
+      "location_address_or_service_area": "إضافة عنوان أو منطقة خدمة",
       "timezone": "تحديد منطقة زمنية",
       "professional": "إضافة محترف قابل للحجز",
       "service": "إضافة خدمة واحدة على الأقل",

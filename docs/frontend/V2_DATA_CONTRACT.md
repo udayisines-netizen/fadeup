@@ -8,6 +8,14 @@ postgres-meta du conteneur `fadeup-supabase-meta` — la CLI Supabase moderne
 exige Docker-in-Docker pour `gen types --db-url` et échoue ici ; même
 générateur, même sortie).
 
+> **Mis à jour le 2026-09-04 après B1** (`b1/public-read-integrity`). Le
+> schéma live porte désormais **108 tables, 189 fonctions, 59 enums, 302
+> policies RLS, 0 table sans RLS**. Les lignes touchées par B1 sont marquées
+> **B1** ci-dessous. Les décomptes de l'en-tête d'origine (186 fonctions, 58
+> enums, 307 policies) datent du dump du 2026-09-03 ; l'écart de policies
+> (307 → 302) est antérieur à B1, qui n'a créé aucune table et donc aucune
+> policy.
+
 Inventaire : **35 RPC de lecture** (`get_/list_/search_`), **94 fonctions
 d'écriture/trigger** hors préfixes internes, **148 `SECURITY DEFINER`**.
 Règle : une fonction `SECURITY DEFINER` exposée à `anon`/`authenticated` est
@@ -25,20 +33,20 @@ Légende : SD = SECURITY DEFINER ; auth = session requise ; écrans = consommate
 
 | RPC | Signature (résumé) | Retour | SD | Auth | Écran(s) |
 |---|---|---|---|---|---|
-| `search_public_professionals` | 14 params, tous optionnels (voir V6) | TABLE 25 col. : coordonnées, distance, prix « à partir de », `is_open_now`, `queue_waiting_count`, `total_count`, `marketplace_supply_type` | ✓ | non | P2 Recherche, Accueil |
-| `search_public_organizations` | pays/ville/texte/geo/rayon/pagination | TABLE 15 col. (sans barbers) | ✓ | non | P2 Recherche (variante orgs) |
+| `search_public_professionals` **B1** | 14 params, tous optionnels (voir V6) | TABLE **30** col. : + `location_kind`, `service_area_center_latitude/longitude`, `service_area_radius_km`, `covers_search_point` | ✓ | non | P2 Recherche, Accueil |
+| `search_public_organizations` **B1** | pays/ville/texte/geo/rayon/pagination | TABLE **18** col. : + `location_kind`, `service_area_radius_km`, `covers_search_point` | ✓ | non | P2 Recherche (variante orgs) |
 | `get_public_organization` | `p_slug` | id, name, slug, currency, country_code | ✓ | non | P2 Profil salon |
-| `list_public_locations` | `p_organization_slug` | adresses + timezone | ✓ | non | P2 Profil salon, Réservation |
+| `list_public_locations` **B1** | `p_organization_slug` | `kind` + adresse **ou** zone (centre + rayon) + timezone | ✓ | non | P2 Profil salon, Réservation |
 | `list_public_services` | slug, location | services + catégorie + durée + prix | ✓ | non | P2 Profil salon, Réservation |
 | `list_public_barbers` | slug, location, service | barbers aptes au service | ✓ | non | P2 Réservation (choix barber) |
 | `list_public_organization_barbers` | slug | équipe complète publique | ✓ | non | P2 Profil salon (équipe) |
 | `list_public_barber_services` | slug, barber | services d'un barber | ✓ | non | P2 Profil barber |
 | `get_public_barber` | slug, barber | identité + bio + avatar + location | ✓ | non | P2 Profil barber |
-| `get_public_professional` | professional_id | identité + `follower_count` | ✓ | non | P2 Profil barber (couche sociale) |
-| `get_public_professional_by_handle` | handle | idem | ✓ | non | P2 Profil barber par handle |
-| `get_public_external_professional` | professional_id | identité + `is_claimed` | ✓ | non | P2 Profil non revendiqué |
+| `get_public_professional` **B1** | professional_id | identité + **`claim_state`** + `is_claimed` + `follower_count`. Sert revendiqué **et** non revendiqué | ✓ | non | P2 Profil barber, profil non revendiqué |
+| `get_public_professional_by_handle` **B1** | handle | idem, même forme | ✓ | non | P2 Profil par handle |
+| ~~`get_public_external_professional`~~ | — | **SUPPRIMÉE par B1** : elle exigeait `unclaimed AND is_public`, combinaison que la contrainte R1B interdisait — elle n'a jamais pu renvoyer une ligne. Son contrat vit dans les deux RPC ci-dessus | — | — | — |
 | `get_public_available_slots` | slug, location, barber, service, date, pas | slots réels (start/end) | ✓ | non | P2 Réservation (heure) |
-| `get_public_service_state` | slug, location, barber? | mode effectif, `booking_accepting_new_entries`, `queue_accepting_new_entries` | ✓ | non | P2 Profils, Réservation, File |
+| `get_public_service_state` **B1** | slug, location, barber? | mode effectif, `booking_accepting_new_entries`, `queue_accepting_new_entries`. **Répondait 405 à tout appelant avant B1** ; ne contient plus aucune écriture | ✓ | non | P2 Profils, Réservation, File |
 | `get_public_queue_status` | slug, location | entrées file (prénom, position) | ✓ | non | P2 File publique |
 | `get_public_currencies` | org_ids[] | devise par org | ✓ | non | P2 cartes de résultat |
 | `get_shared_passport` | token | champs Passport partagés | ✓ | non | P2 Passport partagé |
@@ -65,7 +73,7 @@ Légende : SD = SECURITY DEFINER ; auth = session requise ; écrans = consommate
 | `get_service_mode_state` | modes par location/barber | ✓ | P3 TODAY/QUEUE, réglages |
 | `get_organization_entitlements` | **1 ligne** : plan, famille, statut, plafonds/usages, `live_capabilities text[]`, `packaged_capabilities text[]` | ✓ | Shell pro (gating), P3 Billing |
 | `my_organization_has_capability` | booléen par capacité | ✓ | Gating ponctuel |
-| `get_organization_readiness` | check-list de publication (`missing_requirements text[]`) | ✓ | P3 Onboarding |
+| `get_organization_readiness` **B1** | check-list de publication. Ajoute `has_service_area` ; `ready_to_publish` accepte **adresse OU zone de service** ; `missing_requirements` renvoie `location_address_or_service_area` (remplace `location_address`) | ✓ | P3 Onboarding |
 | `get_organization_analytics_summary` | fenêtré `p_from/p_to` : vues, funnel booking/queue, follows, clients uniques/récurrents, taux de conversion | ✓ | P3 Insights |
 | `get_organization_retention_cohort` | cohortes retour 30/60/90 j | ✓ | P3 Rétention |
 | `get_professional_analytics_summary` | stats du professionnel | ✓ | P3 Insights barber |
@@ -83,7 +91,7 @@ lectures `prospect_*`/`outreach_*`/`ml_*` restent hors périmètre frontend (non
 | `redeem_appointment_claim` | rattache un rendez-vous anonyme au compte | ✓ | oui | P2 post-inscription |
 | `cancel_my_appointment` | annulation client | ✓ | oui | P2 Réservations |
 | `reschedule_appointment` | report ; un report client repasse la ligne en `pending` (matrice de transition) | ✓ | oui | P2 Réservations |
-| `join_public_queue` | rejoint la file (⚠ sans QR/géofence — V8) | ✓ | non | P2 File |
+| `join_public_queue` **B1** | rejoint la file. **Exige le jeton QR de l'établissement et des coordonnées dans la géofence** (150 m par défaut, réglable par salon). Refus nommés via `DETAIL: fadeup_queue_refusal=<code>` — voir V8 | ✓ | non | P2 File |
 | `follow_professional` / `unfollow_professional` | graphe social pro (tombstone durable) | ✓ | oui | P2 Profils |
 | `follow_organization` / `unfollow_organization` | graphe social org | ✓ | oui | P2 Profil salon |
 | `favorite_shop` / `remove_favorite` | favoris | ✓ | oui | P2 Profils |
@@ -109,8 +117,16 @@ toutes org-scopées par `private.can_manage_*`/RLS. Écrans P3.
 
 `review_professional_application`, `review_professional_claim`,
 `assign_commercial_plan`, `create_platform_invitation`,
-`start/end_platform_support_session`, `publish_external_professional`,
+`start/end_platform_support_session`, `publish_external_professional`
+(**B1** : publie réellement — elle créait l'identité sans jamais la rendre
+visible), `withdraw_external_professional` (**B1**, nouvelle : dépublie une
+identité non revendiquée et l'audite ; refuse sur une identité revendiquée),
 `create_external_professional`, plus la famille prospect/outreach. Écrans P5.
+
+Côté Pro, **B1** ajoute `get_location_queue_check_in` (jeton QR + trois seuils
+de file, owner/manager/réceptionniste) et
+`regenerate_location_queue_check_in_token` (owner/manager : invalide toutes les
+copies imprimées). Écran P3 « imprimer le QR de la file » — à construire.
 
 ### Maintenance (jamais appelées par le front)
 
@@ -131,14 +147,14 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 | Écran | RPC principale | RPC secondaires | Realtime | Statut |
 |---|---|---|---|---|
 | Accueil | `get_my_appointments`, `get_my_queue_status` | `list_my_followed_professionals`, `search_public_professionals` (près de vous), `get_my_favorites` | notifications | **OK** |
-| Recherche / Marketplace | `search_public_professionals` (**`p_entity_type='shop'` obligatoire**, V6) | `get_public_currencies` | — | **OK** |
+| Recherche / Marketplace | `search_public_professionals` (**B1 : le défaut est désormais correct**, V6) | `get_public_currencies` | — | **OK** |
 | Profil salon | `get_public_organization` | `list_public_locations/services/organization_barbers`, `get_public_service_state`, `get_public_queue_status`, follows org | queue (poll public) | **OK** |
 | Profil barber | `get_public_barber` | `get_public_professional`, `list_public_barber_services`, `get_public_service_state` | — | **PARTIEL** — pas de portfolio (pas de tables posts), pas d'avis |
-| Profil non revendiqué | `get_public_external_professional` | — | — | **PARTIEL** — publication Worker OK ; le tunnel de demande `pending` n'existe pas (V1) |
+| Profil non revendiqué | `get_public_professional` / `_by_handle` (**B1**) | — | — | **PARTIEL** — la publication d'un profil non revendiqué fonctionne et `claim_state` est exposé (B1) ; le tunnel de demande `pending` n'existe toujours pas (V1, → B2) |
 | Réservation (flow) | `get_public_available_slots`, `book_public_appointment` | `list_public_services/barbers`, `get_public_service_state` | — | **OK** (confirmation immédiate uniquement) |
 | Écran « demande envoyée » (pending) | — | — | — | **BLOQUÉ** — aucune RPC ne crée de `pending` à la réservation (V1) |
 | Réservations | `get_my_appointments` | `cancel_my_appointment`, `reschedule_appointment` | notifications INSERT | **OK** |
-| File active | `get_my_queue_status` | `get_public_queue_status` | `queue_entries` (authentifié) / poll | **PARTIEL** — rejoindre sans QR/géofence (V8, écart spec) |
+| File active | `get_my_queue_status` | `get_public_queue_status`, `join_public_queue` | `queue_entries` (authentifié) / poll | **OK** — B1 livre la preuve de présence : l'écran doit lire le QR et demander la position, et savoir afficher les huit motifs de refus (V8) |
 | Fade Passport | `.from('customer_passports')` (RLS owner) | `create/revoke_passport_share`, `get_shared_passport` | — | **OK** |
 | Compte | `.from('profiles')`, `.from('customer_profiles')` (RLS own) | follows, favorites | — | **OK** |
 | Activité / notifications | `.from('notifications')` (RLS own) | `mark_*_read` | `notifications` INSERT | **OK** |
@@ -397,13 +413,35 @@ shop   | Side Agency | … | barbershop
 barber | Side Agency | Barber Test | barbershop      ← staff en résultat autonome
 ```
 
-**Par défaut (`p_entity_type = NULL`) un barber salarié sort comme résultat
-autonome — contraire à la spec.** La restriction existe :
-`p_entity_type = 'shop'` restreint à exactement Independent + Barbershop.
-Règle P2 : **tout écran marketplace appelle avec `p_entity_type='shop'`** ;
-recommandation backend (mineure) : inverser le défaut ou séparer la RPC.
+**CORRIGÉ PAR B1 (2026-09-04).** Le défaut, `NULL`, la chaîne vide et toute
+valeur non reconnue signifient désormais **`'shop'`** — exactement Independent
++ Barbershop. Un front qui oublie le paramètre ne peut plus enfreindre la loi
+produit du §2. Deux valeurs explicites restent disponibles : `'barber'` (les
+barbers salariés seuls) et `'all'` (l'union, l'ancien comportement, à demander
+par son nom). Une valeur inconnue retombe sur la réponse la plus étroite, à
+l'inverse de `p_sort` dont l'inconnu retombe sur le défaut le plus large —
+parce que le mode de défaillance de l'un est un tri surprenant et celui de
+l'autre est la publication d'une offre que FadeUp ne vend pas.
+
+Appelants inspectés avant de trancher : `features/demo/api/discovery.ts`
+(passe `'shop'`, inchangé) ; `lib/queries/marketplace.ts` (passe `null`
+explicitement — module sans importeur depuis la purge R5R, son comportement
+passe de faux à juste) ; **`/platform` n'appelle ni cette RPC ni
+`search_public_organizations`** ; le worker non plus.
 Le mapping `marketplace_supply_type` est en base, énuméré valeur par valeur,
 inconnu ⇒ NULL (jamais le cas commun) — le front n'expose jamais `business_type`.
+
+**B1 ajoute la géographie des zones de service.** `location_kind` vaut
+`physical_address` ou `service_area`. Sur une adresse, `latitude/longitude`
+portent l'établissement et les colonnes `service_area_*` sont NULL ; sur une
+zone c'est l'inverse — `latitude/longitude` sont **NULL, aucune adresse n'est
+inventée** (contrainte `locations_service_area_has_no_address`) — et la zone
+est décrite par `service_area_center_latitude/longitude` +
+`service_area_radius_km`. `distance_km` mesure jusqu'à l'adresse ou jusqu'au
+**centre de la zone** ; `covers_search_point` vaut `true` quand la zone du
+professionnel atteint le client, `NULL` s'il n'y a pas de zone ou pas de point
+de recherche. Le filtre `p_radius_km` garde une ligne dont la zone couvre le
+point **même si son centre est plus loin** (MASTER_SPEC §8).
 
 Paramètres (tous optionnels) : `p_country` (égalité), `p_city` (ilike préfixe,
 unaccent), `p_query` (nom org/ville/nom barber), `p_service_query` (nom de
@@ -437,10 +475,38 @@ grep -ciP 'geofence|qr_code|check_?in_radius'            → 0
 - **Avis natifs** : rien. À créer par le prompt P4 (tables `reviews` +
   agrégation réputation, conventions §18 de MASTER_SPEC).
 - **Passes Wallet** : rien. Prompt dédié post-P2 (dépend du Passport, déjà en base).
-- **QR + géofence de file** : rien — et `join_public_queue` accepte
-  aujourd'hui une entrée sans preuve de présence, contrairement à
-  MASTER_SPEC §5 (« rejoindre exige la présence physique : 150 m + QR »).
-  Écart majeur, contrat backend requis avant l'écran « rejoindre la file » de P2.
+- **QR + géofence de file** : ~~rien~~ — **LIVRÉ PAR B1 (2026-09-04)**.
+  `locations.queue_check_in_token` (32 hex, unique, régénérable par
+  owner/manager) porte le QR affiché en salon ;
+  `location_service_settings` porte les trois seuils, réglables par
+  établissement : `queue_geofence_meters` (150), `queue_call_grace_minutes`
+  (5, **stocké et exposé, pas encore balayé** — aucun sweep ne passe une
+  entrée appelée en absente), `queue_capacity_per_barber` (20, appliqué à la
+  porte publique seulement — un réceptionniste qui ajoute un walk-in au
+  comptoir n'est pas bloqué). La vérification de distance est **serveur** :
+  appeler l'API directement ne contourne rien.
+
+  **Limite honnête, à ne pas maquiller côté produit** : la géolocalisation
+  d'un navigateur est falsifiable et un QR affiché en salon peut être
+  photographié. Ce mécanisme réduit l'abus opportuniste ; il ne le supprime
+  pas. Rien en aval ne doit traiter une entrée en file comme la preuve qu'une
+  personne était physiquement présente.
+
+  **Cas mobile tranché** : une location `service_area` n'a aucun point
+  physique, donc aucune géofence honnête. **La file n'est pas disponible sur
+  une zone de service** — `queue_accepting_new_entries` vaut `false` et
+  `join_public_queue` refuse par `service_area_has_no_queue`. Le mode
+  `queue_only` reste représentable sur une telle location mais n'admet
+  personne : interdire la valeur aurait exigé des triggers de cohérence sur
+  deux tables et aurait fait échouer une simple conversion de location.
+
+  **Les huit motifs de refus**, distinguables par `DETAIL:
+  fadeup_queue_refusal=<code>` (PostgREST le remonte dans `details`) :
+  `service_area_has_no_queue`, `invalid_check_in_token`,
+  `location_not_geolocated` (l'établissement n'a pas publié ses coordonnées —
+  à corriger côté salon, pas côté client), `position_required`, `too_far`,
+  `queue_closed`, `queue_full`, `already_in_queue`. **P2 branche sur le code,
+  jamais sur le texte.**
 - Absents aussi, constatés au passage : tables de posts sociaux (P4),
   promotions plateforme (P5), Stripe (P3).
 
@@ -452,8 +518,13 @@ grep -ciP 'geofence|qr_code|check_?in_radius'            → 0
 | Première demande offerte non implémentée (V2) | majeur | même prompt backend | compteur/crédit au niveau org + garde dans `confirm_booking_request` |
 | Catalogue de plans ≠ spec : prix, noms, famille multi_salon, pas d'annuel, pas d'essai 14 j (V5) | **bloquant** (P3 Billing) | P3 + décision fondateur | trancher : la spec (0/20/35/49/69, par établissement) ou le catalogue — puis migrer les données, jamais coder en dur |
 | Stripe absent de la base (V5) | **bloquant** (P3 Billing self-service) | P3/backend | tables d'abonnement + webhooks avant tout écran Billing |
-| `search_public_professionals` retourne les staff par défaut (V6) | majeur (piège) | P2 (contournement : `p_entity_type='shop'`) | inverser le défaut en base à l'occasion |
-| `join_public_queue` sans QR ni géofence (V8) | majeur | backend file avant P2 file | contrat de preuve de présence (150 m + QR salon) |
+| ~~`search_public_professionals` retourne les staff par défaut (V6)~~ | ~~majeur~~ | **RÉSOLU — B1** | défaut inversé en base ; `'all'` est l'opt-in nommé |
+| ~~`join_public_queue` sans QR ni géofence (V8)~~ | ~~majeur~~ | **RÉSOLU — B1** | QR d'établissement + géofence serveur, seuils réglables, 8 motifs de refus nommés |
+| ~~Profils non revendiqués impubliables (contrainte `professionals_publication_eligibility`)~~ | ~~critique~~ | **RÉSOLU — B1** | contrainte resserrée sur le nom seul + garde `professionals_guard_publication` exigeant une ancre de corroboration pour un non revendiqué |
+| ~~`get_public_service_state` en 405 pour tout appelant~~ | ~~critique~~ | **RÉSOLU — B1** | l'écriture est sortie des deux lectures STABLE |
+| ~~Aucun modèle de zone de service (professionnel mobile)~~ | ~~majeur~~ | **RÉSOLU — B1** | `locations.kind` + centre/rayon, readiness accepte les deux, recherche géographique par couverture |
+| `TRUNCATE` accordé à `anon` (54 tables) et `authenticated` (87), hors RLS | **majeur** | lot de durcissement dédié | B1 a traité ses 4 tables ; les 83 autres restent. Voir BLOCKERS.md §4 |
+| Aucune organisation ne détient la capacité `booking` : toutes sont en `free` | **bloquant** (P2 réservation) | B2 / décision fondateur | c'est le tunnel `pending` (V1) qui doit répondre à ce cas, pas un refus sec |
 | Avis absents (V8) | majeur (assumé — « à créer entièrement ») | P4 | domaine `reviews` selon MASTER_SPEC §10/§18 |
 | Posts sociaux absents | majeur (assumé) | P4 | `posts/post_media/post_services/post_likes`, pas de `post_comments` |
 | Wallet/pkpass absent (V8) | mineur (post-lancement possible) | prompt dédié | — |

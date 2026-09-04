@@ -4,6 +4,13 @@ Deux blocages hors périmètre frontend, constatés et vérifiés pendant P1b.
 Ils ne sont PAS contournables côté code applicatif ; les écrans concernés
 sont livrés et affichent des erreurs traduites en attendant.
 
+> **État au 2026-09-04, après B1.** Le blocage n°3
+> (`get_public_service_state` en 405) est **RÉSOLU** — voir sa section, qui
+> conserve le diagnostic parce qu'il documente une classe d'erreur, pas un
+> incident. Les blocages n°1 (SMTP) et n°2 (WebKit) restent ouverts : B1 était
+> un chantier base de données et n'y a pas touché. B1 a par ailleurs ouvert
+> deux nouveaux points, n°4 et n°5.
+
 ---
 
 ## 1. Envoi d'e-mails GoTrue — **BLOQUANT POUR P2**
@@ -80,7 +87,27 @@ Chromium 390/1440 couvre aujourd'hui les 39 scénarios.
 
 ---
 
-## 3. `get_public_service_state` — cassée via l'API pour TOUT appelant (constaté en P1c, 2026-09-04)
+## 3. ~~`get_public_service_state` — cassée via l'API pour TOUT appelant~~ — **RÉSOLU par B1 (2026-09-04)**
+
+**Correctif livré** : `db/migrations/20260904160100_b1_service_state_read_only.sql`.
+Le `perform private.ensure_location_service_settings(...)` a été **retiré des
+deux lectures** — `get_public_service_state` et `get_service_mode_state`, qui
+portaient le même défaut — et remplacé par
+`private.location_service_settings_effective()`, jumelle en lecture seule qui
+renvoie la même valeur de compatibilité (`hybrid`, file ouverte) sans écrire.
+La fonction reste `STABLE`, ce qui est correct pour une lecture : passer en
+`VOLATILE` aurait fait disparaître le 405 en laissant une écriture sur le
+chemin de tout profil public.
+
+**Preuve** : `db/tests/probe_public_rpcs.sh --strict` — les 15 RPC publiques
+répondent **200** en rôle `anon` via Kong, dont
+`get_public_service_state` avec un corps exploitable. Ce script est le test de
+non-régression : il échoue si l'une d'elles cesse de répondre 200.
+
+Le diagnostic ci-dessous est conservé : il décrit une classe d'erreur que
+n'importe quelle future RPC publique peut reproduire.
+
+### Diagnostic d'origine (P1c)
 
 **Symptôme.** `POST /rest/v1/rpc/get_public_service_state` → **405** avec
 `25006 cannot execute INSERT in a read-only transaction`, pour anon comme
@@ -104,3 +131,81 @@ et désactivent Réserver tant que l'état est inconnu — jamais un état inven
 autorisée) : soit déclarer la fonction `VOLATILE` (PostgREST l'exécutera en
 lecture-écriture), soit sortir le `ensure_…` de la lecture (le déplacer vers
 les écritures qui créent la location). Re-tester ensuite en anon via Kong.
+
+---
+
+## 4. `TRUNCATE` accordé à `anon` et `authenticated` sur presque toute la base — **constaté en B1 (2026-09-04)**
+
+**Symptôme.** Mesuré sur la base de production, avant correction :
+
+```
+begin; set local role anon; truncate public.queue_entries;
+TRUNCATE TABLE
+```
+
+**Cause exacte.** `TRUNCATE` n'est **pas soumis à RLS**. Les politiques ne
+sont jamais consultées. Le privilège vient d'un `grant` de table, et il est
+généralisé :
+
+| Rôle | `TRUNCATE` / `TRIGGER` / `REFERENCES` |
+|---|---|
+| `anon` | **54 tables** |
+| `authenticated` | **87 tables** |
+
+`SELECT`, `INSERT`, `UPDATE` et `DELETE` restent correctement filtrés par RLS
+— un `insert` anonyme dans `locations` est refusé par
+`new row violates row-level security policy`, vérifié. C'est `TRUNCATE` qui
+passe à travers, et lui seul.
+
+**Exploitabilité réelle.** PostgREST n'expose aucun verbe `TRUNCATE`, donc ce
+n'est pas une porte ouverte depuis l'application. C'est un privilège latent —
+et « l'API ne propose pas ce verbe » n'est pas un modèle d'autorisation.
+
+**Ce que B1 a corrigé** : les quatre tables de son périmètre, dans
+`db/migrations/20260904160600_b1_anon_privilege_hardening.sql`. `anon` ne
+détient plus rien sur `locations`, `queue_entries`, `professionals` et
+`location_service_settings` ; `authenticated` y garde exactement les quatre
+verbes pour lesquels des politiques RLS existent et perd `TRUNCATE`,
+`TRIGGER`, `REFERENCES`.
+
+**Ce qui reste** : les 83 autres tables. Un balayage global mérite son propre
+lot, son propre script de retour arrière et sa propre campagne de tests — pas
+un passage clandestin dans un prompt sur les lectures publiques. **À traiter
+avant toute ouverture publique du produit.**
+
+---
+
+## 5. Les scripts `db/tests/verify_*.sql` hérités polluent la base sur laquelle on les lance — **constaté en B1 (2026-09-04)**
+
+**Symptôme.** B1 a lancé la suite `verify_*.sql` existante contre la base de
+**production** pour établir une ligne de base avant/après. Plusieurs de ces
+scripts **committent** leurs fixtures puis tentent de les supprimer, et la
+suppression est refusée :
+
+```
+ERROR: commercial_plan_changes is append-only: DELETE is not permitted
+```
+
+Leur nettoyage échoue donc et les fixtures restent. 31 organisations, 27
+lieux, 30 profils staff, 13 identités professionnelles, 4 clients et 5
+prospects ont été créés ainsi. Une seule a atteint le public :
+`wave1-boundary-a`, créée `marketplace_visible = true`, qui est apparue comme
+dixième résultat de `search_public_professionals()`.
+
+**C'était une erreur de B1**, pas un défaut de la base : `verify_b1.sql` est
+écrit pour faire `rollback` précisément pour cette raison, et les scripts plus
+anciens auraient dû être exécutés contre la base de restauration uniquement.
+
+**Remédiation appliquée** : `db/seeds/b1_fixture_residue_cleanup.sql` —
+`marketplace_visible = false`, lieux désactivés, organisations renommées selon
+la convention `ZZ dead …` déjà présente, prospects fictifs passés en
+`do_not_contact`. La marketplace publique est revenue à ses 9 lignes
+légitimes, vérifié. **Les lignes ne peuvent pas être supprimées** :
+`commercial_plan_changes` est append-only et son trigger l'énonce — « no role
+exemption, on purpose ». B1 n'affaiblit pas cette garantie pour ranger
+derrière lui.
+
+**Ce qui reste à faire** : réécrire les scripts hérités sur le modèle de
+`verify_b1.sql` (une transaction, un `rollback`), ou leur interdire
+explicitement toute base autre qu'une base jetable. En attendant : **ne jamais
+lancer `db/tests/verify_*.sql` — sauf `verify_b1.sql` — contre la production.**
