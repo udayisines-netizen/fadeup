@@ -3,10 +3,32 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    visualizer({ filename: 'dist/stats.html', gzipSize: true }),
+  ],
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // P1a §5 — forward-looking split points for the P1b+ feature tree,
+          // plus the two vendors that dominate today's bundle.
+          if (id.includes('/features/pro-')) return 'pro'
+          if (id.includes('/features/platform-')) return 'platform'
+          if (id.includes('/features/marketing')) return 'marketing'
+          if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
+          if (id.includes('node_modules/react')) return 'vendor-react'
+        },
+      },
+    },
+    chunkSizeWarningLimit: 180,
+  },
 
   resolve: {
     alias: {

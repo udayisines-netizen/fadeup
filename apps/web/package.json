@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -49,6 +50,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "jsdom": "^25.0.1",
     "oxlint": "^1.75.0",
+    "rollup-plugin-visualizer": "^7.1.1",
     "sharp": "^0.35.4",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",

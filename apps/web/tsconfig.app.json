@@ -17,6 +17,12 @@
       "@/*": ["./src/*"]
     },
 
+    /* Strictness (P1a): strict passes at zero cost on the retained tree.
+       noUncheckedIndexedAccess / noImplicitOverride / exactOptionalPropertyTypes
+       are the MASTER_SPEC target but cost 72–137 errors in kept platform code —
+       enabled in P1b together with the lint hardening pass. */
+    "strict": true,
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
