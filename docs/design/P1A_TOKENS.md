@@ -70,18 +70,25 @@ Les gris dérivent de l'encre par opacité sur blanc — aucune valeur arbitrair
 
 ### `--fu-radius-*` — hiérarchisé, jamais uniforme
 
+Valeurs ACTÉES par P1b (`apps/web/src/styles/theme.css`, tokens
+`--radius-*`) — le prompt P1b §5 a tranché au-dessus des propositions P1a
+initiales (control 6→8, card 10→12, media 14→4 : les médias prennent le
+rayon le plus discret, pas le plus généreux). Ce tableau EST la référence ;
+ne pas re-dériver depuis un ancien état de ce document.
+
 | Token | Valeur | Catégorie |
 |---|---|---|
-| `--fu-radius-control` | 6 px | boutons, champs, chips carrées |
-| `--fu-radius-card` | 10 px | objets réellement bornés (ticket, panneau de carte) |
-| `--fu-radius-media` | 14 px | médias réels |
-| `--fu-radius-modal` | 16 px | modales |
-| `--fu-radius-sheet` | 20 px (haut seulement) | feuilles |
-| `--fu-radius-avatar` | 9999 px | avatars, puces |
-| `--fu-radius-appicon` | dérivé P1c | icône d'application |
+| `--radius-control` | 8 px | boutons, champs, puces |
+| `--radius-card` | 12 px | rangées, cartes |
+| `--radius-media` | 4 px | photos, vidéos |
+| `--radius-modal` | 16 px | modales |
+| `--radius-sheet` | 20 px (coins hauts seulement) | feuilles |
+| `--radius-avatar` | 9999 px | avatars, points |
+| `--radius-appicon` | 22,37 % | squircle iOS (icône d'application) |
 
-Échelle strictement croissante par catégorie — la non-monotonie R5
-(`xl` 24 > `2xl` 16) est le contre-exemple à tester en lint/CI (P1b).
+La non-monotonie R5 (`xl` 24 > `2xl` 16) reste le contre-exemple ; la
+hiérarchie est ici portée par les CATÉGORIES (un média n'est jamais plus
+rond qu'un contrôle interactif), pas par une croissance numérique aveugle.
 
 ### `--fu-shadow-*` — cinq niveaux d'élévation
 
