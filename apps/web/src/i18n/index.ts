@@ -157,7 +157,9 @@ export function initI18n(): Promise<typeof i18n> {
   const initialLocale = resolveInitialLocale()
 
   initPromise = Promise.all(NAMESPACES.map((namespace) => loadNamespace(initialLocale, namespace))).then((bundles) => {
-    const initialResources = Object.fromEntries(NAMESPACES.map((namespace, i) => [namespace, bundles[i]]))
+    // `?? {}` is unreachable (bundles has exactly NAMESPACES.length entries) —
+    // it only satisfies `noUncheckedIndexedAccess` under the V2 tsconfig.
+    const initialResources = Object.fromEntries(NAMESPACES.map((namespace, i) => [namespace, bundles[i] ?? {}]))
     return i18n
       .use(initReactI18next)
       .init({

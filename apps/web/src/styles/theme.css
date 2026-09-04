@@ -1,0 +1,78 @@
+/*
+ * V2 shared scales — Tailwind 4 `@theme` (P1b §5).
+ *
+ * NAMESPACING, deliberately: the retained /platform surface is in production
+ * on the legacy tokens in index.css (`--font-sans` = Inter, default Tailwind
+ * `--text-*` sizes). Redefining those names here would silently reflow and
+ * re-typeset /platform — the exact collision P1b forbids. So every V2 scale
+ * token that would collide carries a `fu` segment instead:
+ *
+ *   --font-fu-sans  → class `font-fu-sans`     (Geist)
+ *   --font-fu-mono  → class `font-fu-mono`     (Geist Mono)
+ *   --text-fu-sm    → class `text-fu-sm`       (14px floor)
+ *
+ * Spacing needs no redefinition: Tailwind's default 4px scale already equals
+ * the P1b scale exactly (spacing-1: 4px … spacing-24: 96px).
+ *
+ * The three themes (consumer / pro / editorial) share these scales; only the
+ * color tokens change, in tokens-*.css.
+ */
+
+@theme {
+  --font-fu-sans: 'Geist', system-ui, sans-serif;
+  --font-fu-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* 12px is for badges and chips ONLY; 14px is the absolute floor for
+     readable text (MASTER_SPEC §17). */
+  --text-fu-xs: 12px;
+  --text-fu-xs--line-height: 16px;
+  --text-fu-sm: 14px;
+  --text-fu-sm--line-height: 20px;
+  --text-fu-base: 16px;
+  --text-fu-base--line-height: 24px;
+  --text-fu-lg: 20px;
+  --text-fu-lg--line-height: 28px;
+  --text-fu-xl: 24px;
+  --text-fu-xl--line-height: 32px;
+  --text-fu-2xl: 32px;
+  --text-fu-2xl--line-height: 38px;
+  --text-fu-3xl: 44px;
+  --text-fu-3xl--line-height: 50px;
+  --text-fu-4xl: 60px;
+  --text-fu-4xl--line-height: 64px;
+
+  /* Radius is HIERARCHISED — everything at 24px is the mark of a generated
+     interface. New names, no collision with legacy --radius-sm/md/lg/xl. */
+  --radius-control: 8px; /* buttons, fields, chips */
+  --radius-card: 12px; /* rows, cards */
+  --radius-media: 4px; /* photos, videos */
+  --radius-modal: 16px;
+  --radius-sheet: 20px; /* top corners only */
+  --radius-avatar: 9999px;
+  --radius-appicon: 22.37%; /* iOS squircle */
+}
+
+:root {
+  --fu-dur-instant: 120ms;
+  --fu-dur-state: 220ms;
+  --fu-dur-surface: 320ms;
+  --fu-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --fu-z-sticky: 10;
+  --fu-z-nav: 20;
+  --fu-z-overlay: 30;
+  --fu-z-modal: 40;
+  --fu-z-toast: 50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 100ms !important;
+    transition-property: opacity !important;
+    scroll-behavior: auto !important;
+  }
+}

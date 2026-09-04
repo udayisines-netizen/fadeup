@@ -1,0 +1,43 @@
+/*
+ * Consumer theme — direction A, éditorial minimal (P1A_VISUAL_DIRECTION).
+ * Hierarchy comes from hairline borders and typography, NOT from shadow.
+ * Exactly one shadow exists: the sticky action bar.
+ *
+ * Applied on <body data-theme="consumer"> (the legacy light/dark attribute
+ * stays on <html> for the retained /platform surface — the two never fight).
+ */
+
+[data-theme='consumer'] {
+  --fu-canvas: #ffffff;
+  --fu-surface: #ffffff;
+  --fu-surface-subtle: #fafbfa;
+  --fu-surface-brand: #e6fff3;
+
+  --fu-text-primary: #080f0d; /* 19,36:1 */
+  --fu-text-secondary: rgba(8, 15, 13, 0.62); /* 5,48:1 */
+  --fu-text-tertiary: rgba(8, 15, 13, 0.42);
+
+  --fu-border: rgba(8, 15, 13, 0.1); /* hairline */
+  --fu-border-strong: rgba(8, 15, 13, 0.18);
+
+  --fu-accent: #00c27a;
+  --fu-accent-hover: #00875a;
+  --fu-accent-fg: #080f0d; /* 8,30:1 — JAMAIS #FFFFFF (2,33:1) */
+  --fu-accent-soft: #e6fff3;
+  /* Green as TEXT on white needs the deep green (4,55:1) — raw #00C27A
+     fails at 2,33:1 (P1A_TOKENS). */
+  --fu-accent-text: #00875a;
+
+  --fu-success: #00875a; /* 4,55:1 — success stays in the green family */
+  --fu-danger: #b23f3c; /* error text on light, ≥4,5:1 (P1A_TOKENS note) */
+
+  --fu-focus: #00875a;
+  --fu-scrim: rgba(8, 15, 13, 0.48);
+
+  --fu-shadow-sticky:
+    0 -1px 0 rgba(8, 15, 13, 0.08), 0 -8px 24px rgba(8, 15, 13, 0.06);
+
+  background-color: var(--fu-canvas);
+  color: var(--fu-text-primary);
+  font-family: var(--font-fu-sans);
+}

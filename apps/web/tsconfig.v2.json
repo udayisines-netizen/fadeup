@@ -1,0 +1,16 @@
+{
+  /*
+   * P1b — `noUncheckedIndexedAccess` sur le périmètre V2 UNIQUEMENT
+   * (src/shared + src/features + src/app). Le code /platform conservé
+   * accumule 72 erreurs sous cette option (constat P1a) : il reste compilé
+   * par tsconfig.app.json sans elle, et n'est PAS cassé pour l'activer ici.
+   * `npm run typecheck` exécute les deux projets.
+   */
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.v2.tsbuildinfo",
+    "noUncheckedIndexedAccess": true,
+    "composite": false
+  },
+  "include": ["src/shared", "src/features", "src/app", "src/test"]
+}

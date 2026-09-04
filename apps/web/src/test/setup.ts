@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { initI18n } from '@/i18n'
+import { registerV2Bundles } from '@/shared/i18n'
 
 // jsdom doesn't implement matchMedia — src/lib/theme.tsx reads it to
 // resolve the "system" theme option.
@@ -66,3 +67,6 @@ if (!('IntersectionObserver' in globalThis)) {
 // throws if i18next hasn't initialized yet — in the real app main.tsx
 // awaits this before the first render, so tests must too.
 await initI18n()
+// The V2 (P1b) namespace rides the same instance — registered exactly like
+// main.tsx does.
+registerV2Bundles()

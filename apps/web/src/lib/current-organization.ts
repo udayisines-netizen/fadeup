@@ -42,7 +42,10 @@ export function resolveActiveOrganizationId<T extends { organizationId: string }
   memberships: readonly T[],
   preferredId: string | null | undefined,
 ): string | null {
-  if (memberships.length === 0) return null
+  // The [0] fallback is re-narrowed explicitly so this stays valid under
+  // `noUncheckedIndexedAccess` (the V2 tsconfig type-checks this file too).
+  const fallback = memberships[0]
+  if (!fallback) return null
   const preferred = memberships.find((membership) => membership.organizationId === preferredId)
-  return (preferred ?? memberships[0]).organizationId
+  return (preferred ?? fallback).organizationId
 }

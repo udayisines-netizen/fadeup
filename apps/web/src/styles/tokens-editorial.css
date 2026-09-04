@@ -1,0 +1,44 @@
+/*
+ * Editorial theme — marketing + platform shell (MASTER_SPEC §1: « sombre
+ * éditorial »). Same dark ground as Pro, but where Pro forbids brand
+ * spectacle, editorial is ALLOWED the green gradient and brand moments —
+ * this is where FadeUp sells itself. Coherent with direction A: typography
+ * leads, green is a signal, the single gradient token is reserved for brand
+ * moments (hero, Passport), never for interface chrome.
+ */
+
+[data-theme='editorial'] {
+  --fu-canvas: #080f0d;
+  --fu-surface: #0f1a16;
+  --fu-surface-subtle: #0b1311;
+  --fu-surface-hover: #17241f;
+  --fu-surface-brand: rgba(40, 225, 142, 0.14);
+
+  --fu-text-primary: #edefee; /* 15,48:1 */
+  --fu-text-secondary: rgba(237, 239, 238, 0.64); /* 6,55:1 */
+  --fu-text-tertiary: rgba(237, 239, 238, 0.4);
+
+  --fu-border: rgba(237, 239, 238, 0.1);
+  --fu-border-strong: rgba(237, 239, 238, 0.2);
+
+  --fu-accent: #00c27a;
+  --fu-accent-hover: #28e18e;
+  --fu-accent-fg: #080f0d; /* encre sur vert, 8,30:1 — jamais blanc */
+  --fu-accent-soft: rgba(40, 225, 142, 0.14);
+  --fu-accent-text: #28e18e;
+
+  --fu-success: #28e18e;
+  --fu-danger: #d9534f;
+
+  --fu-focus: #28e18e;
+  --fu-scrim: rgba(0, 0, 0, 0.64);
+  --fu-shadow-sticky: 0 -1px 0 rgba(0, 0, 0, 0.4);
+
+  /* The one brand gradient this theme may use — hero and Passport moments
+     only, never surfaces of the working interface. */
+  --fu-gradient-brand: linear-gradient(135deg, #00875a 0%, #00c27a 55%, #28e18e 100%);
+
+  background-color: var(--fu-canvas);
+  color: var(--fu-text-primary);
+  font-family: var(--font-fu-sans);
+}

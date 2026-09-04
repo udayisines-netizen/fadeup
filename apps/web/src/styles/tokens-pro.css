@@ -1,0 +1,43 @@
+/*
+ * Pro theme — dark, dense. Hierarchy by surface value and borders, never by
+ * shadow (MASTER_SPEC §17). Operational state colors are CONFINED to this
+ * theme — the consumer surface never sees warn/danger operational signals.
+ */
+
+[data-theme='pro'] {
+  --fu-canvas: #080f0d;
+  --fu-surface: #0f1a16;
+  --fu-surface-subtle: #0b1311;
+  --fu-surface-hover: #17241f;
+  --fu-surface-brand: rgba(40, 225, 142, 0.14);
+
+  --fu-text-primary: #edefee; /* 15,48:1 */
+  --fu-text-secondary: rgba(237, 239, 238, 0.64); /* 6,55:1 */
+  --fu-text-tertiary: rgba(237, 239, 238, 0.4);
+
+  --fu-border: rgba(237, 239, 238, 0.1);
+  --fu-border-strong: rgba(237, 239, 238, 0.2);
+
+  --fu-accent: #28e18e;
+  --fu-accent-hover: #4deba5;
+  --fu-accent-fg: #080f0d;
+  --fu-accent-soft: rgba(40, 225, 142, 0.14);
+  --fu-accent-text: #28e18e; /* 10,39:1 sur la surface sombre */
+
+  /* états opérationnels — CONFINÉS au Pro, jamais exposés au consumer */
+  --fu-state-ok: #28e18e;
+  --fu-state-warn: #e0a33e;
+  --fu-state-danger: #d9534f;
+  --fu-state-neutral: rgba(237, 239, 238, 0.36);
+
+  --fu-success: #28e18e;
+  --fu-danger: #d9534f;
+
+  --fu-focus: #28e18e;
+  --fu-scrim: rgba(0, 0, 0, 0.64);
+  --fu-shadow-sticky: 0 -1px 0 rgba(0, 0, 0, 0.4);
+
+  background-color: var(--fu-canvas);
+  color: var(--fu-text-primary);
+  font-family: var(--font-fu-sans);
+}

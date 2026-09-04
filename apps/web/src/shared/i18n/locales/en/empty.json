@@ -1,0 +1,57 @@
+{
+  "notBuilt": {
+    "title": "This page is coming soon",
+    "description": "This surface will be built by lot {{prompt}}.",
+    "action": "Go to home"
+  },
+  "home": {
+    "title": "Home arrives with P2",
+    "description": "Search, your next booking and followed profiles will be built by lot P2.",
+    "action": "See sign-in"
+  },
+  "search": {
+    "title": "Search arrives with P2",
+    "description": "Discovering barbers and shops near you will be built by lot P2.",
+    "action": "Go to home"
+  },
+  "feed": {
+    "title": "The feed arrives with P4",
+    "description": "Posts from profiles you follow and local discovery will be built by lot P4.",
+    "action": "Go to home"
+  },
+  "bookings": {
+    "title": "Your bookings arrive with P2",
+    "description": "Upcoming bookings, history and your active queue will be built by lot P2.",
+    "action": "Go to home"
+  },
+  "account": {
+    "title": "Account arrives with P2",
+    "description": "Profile, Fade Passport, favorites and preferences will be built by lot P2.",
+    "action": "Go to home"
+  },
+  "proProfile": {
+    "title": "Public profiles arrive with P2",
+    "description": "Public barber and shop profiles will be built by lot P2.",
+    "action": "Go to home"
+  },
+  "business": {
+    "title": "The business page arrives with P4",
+    "description": "FadeUp's pitch to professionals will be built by lot P4.",
+    "action": "Go to home"
+  },
+  "dashboard": {
+    "title": "The dashboard arrives with P3",
+    "description": "TODAY, agenda, queue and clients will be built by lot P3.",
+    "action": "Go to home"
+  },
+  "demo": {
+    "title": "No compositions yet",
+    "description": "P1c will fill this shell with the first three real compositions: result card, profile header, agenda row.",
+    "action": "See the primitive gallery"
+  },
+  "generic": {
+    "title": "Nothing to show yet",
+    "description": "This content will appear as soon as it exists.",
+    "action": "Back"
+  }
+}

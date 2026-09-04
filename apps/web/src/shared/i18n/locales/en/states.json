@@ -1,0 +1,47 @@
+{
+  "booking": {
+    "bookable": "Bookable",
+    "notBookable": "Booking unavailable",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "pendingRequest": "Awaiting confirmation",
+    "confirmed": "Confirmed"
+  },
+  "queue": {
+    "open": "Queue open",
+    "full": "Queue full",
+    "closed": "Queue closed",
+    "called": "You're up",
+    "missed": "Turn missed"
+  },
+  "connection": {
+    "offline": "Offline",
+    "reconnecting": "Reconnecting…",
+    "partialData": "Partial data"
+  },
+  "claim": {
+    "unclaimed": "Not yet managed on FadeUp",
+    "claimed": "Claimed profile",
+    "verified": "Verified profile"
+  },
+  "rating": {
+    "none": "No reviews yet",
+    "valueLabel": "Rating: {{value}} out of 5",
+    "countLabel_one": "{{count}} review",
+    "countLabel_other": "{{count}} reviews"
+  },
+  "metric": {
+    "followers": "Followers",
+    "verifiedClients": "Verified clients",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "likes": "Likes",
+    "noData": "—"
+  },
+  "media": {
+    "missing": "No photo yet"
+  },
+  "avatar": {
+    "fallback": "{{name}}'s initials"
+  }
+}

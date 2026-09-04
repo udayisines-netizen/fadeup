@@ -59,6 +59,13 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), '..')
       // Platform/ops surfaces legitimately administer the internal model.
       if (file.includes('/pages/platform-') || file.includes('/components/platform/') || file.includes('/components/acquisition/')) continue
       if (file.includes('/lib/')) continue
+      /*
+       * The PRO workspace (not the customer product) gates its Team nav on
+       * `business_type !== 'solo_professional'` — mandated by P1b §7. The
+       * value is never DISPLAYED; only `marketplace_supply_type` ever reaches
+       * a customer.
+       */
+      if (file.includes('/features/pro/') || file.includes('/app/shells/ProShell')) continue
 
       /*
         COMMENTS ARE EXEMPT, AND DELIBERATELY SO. Coupling is a thing code does.

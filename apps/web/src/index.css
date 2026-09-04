@@ -1,6 +1,17 @@
 @import 'tailwindcss';
 
 /*
+ * V2 (R5R / P1b) design system — shared scales, the three surface themes and
+ * the Geist faces. Namespaced (`fu`) so nothing here collides with the legacy
+ * tokens below that the retained /platform surface still renders with.
+ */
+@import './styles/fonts.css';
+@import './styles/theme.css';
+@import './styles/tokens-consumer.css';
+@import './styles/tokens-pro.css';
+@import './styles/tokens-editorial.css';
+
+/*
  * Instrument Serif — the marketing display face. `font-display: swap` so a
  * headline never blocks paint, and unicode-range subsetting so the latin-ext
  * file is only fetched by pages that actually need it.

@@ -32,6 +32,13 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), '..')
  * in-progress work; the pages listed here are the ones still being designed.
  */
 const EXEMPT = [
+  /*
+   * DEV-UI — the P1b primitive gallery only exists behind
+   * `import.meta.env.DEV` (route is compiled out of production). Its section
+   * headings are technical primitive names ("Button", "Sheet"), not product
+   * copy; every user-facing string INSIDE the primitives goes through t().
+   */
+  /features[/\\]dev-ui[/\\]/,
   /platform-acquisition-/,
   /platform-outreach-/,
   /platform-data-science-/,

@@ -1,0 +1,57 @@
+{
+  "notBuilt": {
+    "title": "Cette page arrive bientôt",
+    "description": "Cette surface sera construite par le lot {{prompt}}.",
+    "action": "Aller à l'accueil"
+  },
+  "home": {
+    "title": "L'accueil arrive avec P2",
+    "description": "Recherche, prochaine réservation et profils suivis seront construits par le lot P2.",
+    "action": "Voir la connexion"
+  },
+  "search": {
+    "title": "La recherche arrive avec P2",
+    "description": "La découverte des barbers et salons près de vous sera construite par le lot P2.",
+    "action": "Aller à l'accueil"
+  },
+  "feed": {
+    "title": "Le feed arrive avec P4",
+    "description": "Les publications des profils suivis et la découverte locale seront construites par le lot P4.",
+    "action": "Aller à l'accueil"
+  },
+  "bookings": {
+    "title": "Vos réservations arrivent avec P2",
+    "description": "Réservations à venir, historique et file en cours seront construits par le lot P2.",
+    "action": "Aller à l'accueil"
+  },
+  "account": {
+    "title": "Le compte arrive avec P2",
+    "description": "Profil, Fade Passport, favoris et préférences seront construits par le lot P2.",
+    "action": "Aller à l'accueil"
+  },
+  "proProfile": {
+    "title": "Les profils publics arrivent avec P2",
+    "description": "Le profil public des barbers et des salons sera construit par le lot P2.",
+    "action": "Aller à l'accueil"
+  },
+  "business": {
+    "title": "La page pro arrive avec P4",
+    "description": "La présentation de FadeUp pour les professionnels sera construite par le lot P4.",
+    "action": "Aller à l'accueil"
+  },
+  "dashboard": {
+    "title": "Le tableau de bord arrive avec P3",
+    "description": "TODAY, agenda, file et clients seront construits par le lot P3.",
+    "action": "Aller à l'accueil"
+  },
+  "demo": {
+    "title": "Aucune composition pour l'instant",
+    "description": "P1c remplira cette coquille avec les trois premières compositions réelles : carte de résultat, en-tête de profil, rangée d'agenda.",
+    "action": "Voir la galerie de primitives"
+  },
+  "generic": {
+    "title": "Rien à afficher pour l'instant",
+    "description": "Ce contenu apparaîtra dès qu'il existera.",
+    "action": "Retour"
+  }
+}

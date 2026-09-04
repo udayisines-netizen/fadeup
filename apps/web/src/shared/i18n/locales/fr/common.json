@@ -1,0 +1,49 @@
+{
+  "brand": {
+    "name": "FadeUp",
+    "logoAlt": "Logo FadeUp"
+  },
+  "action": {
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "back": "Retour",
+    "confirm": "Confirmer",
+    "continue": "Continuer",
+    "save": "Enregistrer",
+    "search": "Rechercher",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "openMenu": "Ouvrir le menu",
+    "dismiss": "Masquer",
+    "share": "Partager",
+    "filter": "Filtrer",
+    "seeAll": "Tout voir",
+    "goHome": "Aller à l'accueil"
+  },
+  "language": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "loading": {
+    "generic": "Chargement…"
+  },
+  "pagination": {
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "pageOf": "Page {{page}} sur {{total}}"
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu",
+    "closeDialog": "Fermer la fenêtre",
+    "loading": "Chargement en cours",
+    "required": "obligatoire"
+  },
+  "money": {
+    "from": "à partir de {{amount}}"
+  },
+  "datetime": {
+    "timezoneNote": "Heure locale du salon ({{timezone}})"
+  }
+}

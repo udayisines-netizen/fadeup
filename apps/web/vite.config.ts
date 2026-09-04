@@ -17,11 +17,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // P1a §5 — forward-looking split points for the P1b+ feature tree,
-          // plus the two vendors that dominate today's bundle.
-          if (id.includes('/features/pro-')) return 'pro'
-          if (id.includes('/features/platform-')) return 'platform'
-          if (id.includes('/features/marketing')) return 'marketing'
+          // P1b — split points for the real surfaces: pro/platform/marketing
+          // never ride in the consumer entry chunk. Legacy /platform pages
+          // and layouts fold into the same 'platform' chunk (packaging only —
+          // their code is untouched).
+          if (id.includes('/app/shells/ProShell') || id.includes('/features/pro/') || id.includes('/features/pro-'))
+            return 'pro'
+          if (
+            id.includes('/features/platform-') ||
+            id.includes('/pages/platform-') ||
+            id.includes('/routes/platform-') ||
+            id.includes('/app/shells/PlatformShell')
+          )
+            return 'platform'
+          if (id.includes('/features/marketing') || id.includes('/app/shells/MarketingShell')) return 'marketing'
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
           if (id.includes('node_modules/react')) return 'vendor-react'
         },
@@ -45,6 +54,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // Les specs Playwright (e2e/) ne sont pas des tests Vitest.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     setupFiles: ['./src/test/setup.ts'],
     env: {
       // Dummy values so lib/env.ts validation passes under test — no real

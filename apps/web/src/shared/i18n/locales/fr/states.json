@@ -1,0 +1,47 @@
+{
+  "booking": {
+    "bookable": "Réservable",
+    "notBookable": "Réservation indisponible",
+    "available": "Disponible",
+    "unavailable": "Indisponible",
+    "pendingRequest": "En attente de confirmation",
+    "confirmed": "Confirmé"
+  },
+  "queue": {
+    "open": "File ouverte",
+    "full": "File complète",
+    "closed": "File fermée",
+    "called": "C'est votre tour",
+    "missed": "Tour manqué"
+  },
+  "connection": {
+    "offline": "Hors ligne",
+    "reconnecting": "Reconnexion…",
+    "partialData": "Données partielles"
+  },
+  "claim": {
+    "unclaimed": "Pas encore géré sur FadeUp",
+    "claimed": "Profil revendiqué",
+    "verified": "Profil vérifié"
+  },
+  "rating": {
+    "none": "Pas encore d'avis",
+    "valueLabel": "Note : {{value}} sur 5",
+    "countLabel_one": "{{count}} avis",
+    "countLabel_other": "{{count}} avis"
+  },
+  "metric": {
+    "followers": "Abonnés",
+    "verifiedClients": "Clients vérifiés",
+    "rating": "Note",
+    "reviews": "Avis",
+    "likes": "J'aime",
+    "noData": "—"
+  },
+  "media": {
+    "missing": "Pas encore de photo"
+  },
+  "avatar": {
+    "fallback": "Initiales de {{name}}"
+  }
+}
