@@ -15,7 +15,7 @@ export function Chip({ children, selected = false, className, type, ref, ...rest
       type={type ?? 'button'}
       aria-pressed={selected}
       className={cn(
-        'inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] border px-3 text-fu-sm font-medium md:min-h-9',
+        'fu-press inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] border px-3 text-fu-sm font-medium md:min-h-9',
         'transition-colors duration-[var(--fu-dur-instant)] ease-[var(--fu-ease)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fu-canvas)]',
         selected

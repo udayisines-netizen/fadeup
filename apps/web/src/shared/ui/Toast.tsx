@@ -58,14 +58,13 @@ export function V2ToastProvider({ children }: { children: ReactNode }) {
         {items.map((item) => (
           <RadixToast.Root
             key={item.id}
-            data-fu-content
             onOpenChange={(open) => {
               if (!open) dismiss(item.id)
             }}
             // Les erreurs interrompent ; le reste attend son tour.
             type={item.tone === 'error' ? 'foreground' : 'background'}
             className={cn(
-              'flex items-start gap-3 rounded-[var(--radius-card)] border bg-[var(--fu-surface)] p-3',
+              'fu-rise-in flex items-start gap-3 rounded-[var(--radius-card)] border bg-[var(--fu-surface)] p-3',
               item.tone === 'error' ? 'border-[var(--fu-danger)]' : 'border-[var(--fu-border-strong)]',
             )}
           >

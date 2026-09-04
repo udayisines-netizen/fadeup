@@ -7,6 +7,8 @@ export interface MediaFrameProps {
   src?: string | null
   alt: string
   ratio?: 'portrait' | 'square' | 'landscape' | 'video'
+  /** Vignettes (< ~96 px) : icône seule, le libellé « pas de photo » n'y tient pas. */
+  compact?: boolean
   className?: string
   children?: React.ReactNode
 }
@@ -24,7 +26,7 @@ const RATIOS = {
  * honnête — libellé + icône, jamais une fausse image, jamais un dégradé posé
  * sur du vide.
  */
-export function MediaFrame({ src, alt, ratio = 'square', className, children }: MediaFrameProps) {
+export function MediaFrame({ src, alt, ratio = 'square', compact = false, className, children }: MediaFrameProps) {
   const { t } = useTranslation('v2')
   const [failed, setFailed] = useState(false)
   const showMedia = Boolean(src) && !failed
@@ -40,9 +42,13 @@ export function MediaFrame({ src, alt, ratio = 'square', className, children }: 
       {showMedia ? (
         <img src={src ?? undefined} alt={alt} onError={() => setFailed(true)} className="size-full object-cover" />
       ) : (
-        <div className="flex size-full flex-col items-center justify-center gap-1.5 border border-[var(--fu-border)] rounded-[var(--radius-media)]">
-          <IconCamera aria-hidden="true" className="size-5 text-[var(--fu-text-tertiary)]" />
-          <span className="text-fu-xs text-[var(--fu-text-secondary)]">{t('states.media.missing')}</span>
+        <div
+          className="flex size-full flex-col items-center justify-center gap-1.5 rounded-[var(--radius-media)] border border-[var(--fu-border)]"
+          role="img"
+          aria-label={t('states.media.missing')}
+        >
+          <IconCamera aria-hidden="true" className={cn('text-[var(--fu-text-tertiary)]', compact ? 'size-4' : 'size-5')} />
+          {!compact && <span className="text-fu-xs text-[var(--fu-text-secondary)]">{t('states.media.missing')}</span>}
         </div>
       )}
       {children}

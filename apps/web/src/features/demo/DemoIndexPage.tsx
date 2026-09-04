@@ -1,40 +1,37 @@
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
-import { EmptyState } from '@/shared/ui/EmptyState'
+import { Row } from '@/shared/ui/Row'
 
 /**
- * Coquille /demo — protégée par VITE_ENABLE_DEMO (RequireDemo), en noindex,
- * absente de toute navigation. VIDE en P1b : P1c la remplit avec les trois
- * compositions réelles branchées sur de vraies RPC.
+ * Index /demo — les trois études réelles de P1c. Protégé par
+ * VITE_ENABLE_DEMO (RequireDemo), en noindex, absent de toute navigation.
  */
 export function DemoIndexPage() {
   useApplySurfaceTheme('consumer')
   const { t } = useTranslation('v2')
+
+  const studies = [
+    { to: '/demo/discovery', title: t('demo.index.discoveryTitle'), lede: t('demo.index.discoveryLede') },
+    { to: '/demo/profile', title: t('demo.index.profileTitle'), lede: t('demo.index.profileLede') },
+    { to: '/demo/pro', title: t('demo.index.proTitle'), lede: t('demo.index.proLede') },
+  ]
+
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-2xl bg-[var(--fu-canvas)] px-4 py-8 font-fu-sans text-[var(--fu-text-primary)]">
-      <h1 className="text-fu-xl font-semibold text-[var(--fu-text-primary)]">{t('nav.demo.title')}</h1>
-      <EmptyState
-        title={t('empty.demo.title')}
-        description={t('empty.demo.description')}
-        action={
-          import.meta.env.DEV ? (
-            <Link
-              to="/dev/ui"
-              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--fu-border-strong)] px-4 text-fu-sm font-medium text-[var(--fu-text-primary)] hover:bg-[var(--fu-surface-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fu-canvas)]"
-            >
-              {t('empty.demo.action')}
-            </Link>
-          ) : (
-            <Link
-              to="/"
-              className="inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--fu-border-strong)] px-4 text-fu-sm font-medium text-[var(--fu-text-primary)] hover:bg-[var(--fu-surface-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fu-canvas)]"
-            >
-              {t('common.action.goHome')}
-            </Link>
-          )
-        }
-      />
+    <main
+      id="fu-main"
+      className="fu-page-in mx-auto min-h-dvh w-full max-w-2xl bg-[var(--fu-canvas)] px-4 py-10 font-fu-sans text-[var(--fu-text-primary)]"
+    >
+      <div className="flex items-center gap-3">
+        <img src="/brand/fadeup-mark-primary.png" alt={t('common.brand.logoAlt')} className="size-10" />
+        <h1 className="text-fu-xl font-semibold tracking-tight">{t('nav.demo.title')}</h1>
+      </div>
+      <p className="mt-2 max-w-prose text-fu-sm text-[var(--fu-text-secondary)]">{t('demo.index.lede')}</p>
+
+      <div className="mt-6 rounded-[var(--radius-card)] border border-[var(--fu-border)]">
+        {studies.map((study) => (
+          <Row key={study.to} as="link" to={study.to} title={study.title} subtitle={study.lede} chevron />
+        ))}
+      </div>
     </main>
   )
 }

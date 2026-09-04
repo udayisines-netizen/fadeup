@@ -16,11 +16,10 @@ export function Popover({ trigger, children, open, onOpenChange, align = 'center
       <RadixPopover.Trigger asChild>{trigger}</RadixPopover.Trigger>
       <RadixPopover.Portal>
         <RadixPopover.Content
-          data-fu-content
           align={align}
           sideOffset={6}
           className={cn(
-            'z-[var(--fu-z-overlay)] w-72 rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)] p-4',
+            'fu-rise-in z-[var(--fu-z-overlay)] w-72 rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)] p-4',
             'focus-visible:outline-none',
             className,
           )}

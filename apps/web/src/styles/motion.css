@@ -1,0 +1,219 @@
+/*
+ * V2 motion (P1c §4) — LE vocabulaire d'animation du produit.
+ *
+ * Durées et courbe : --fu-dur-instant 120 ms (retour immédiat),
+ * --fu-dur-state 220 ms (transition d'état), --fu-dur-surface 320 ms
+ * (feuille/modale/page), --fu-ease cubic-bezier(0.2, 0, 0, 1) — définis dans
+ * theme.css.
+ *
+ * PRINCIPES (non négociables) :
+ * - Un seul moment orchestré par écran.
+ * - La motion répond à une action et montre ce qui a changé — elle informe,
+ *   elle n'accompagne pas.
+ * - Les listes realtime n'animent que l'élément modifié.
+ * - Tout ce qui translate ou change d'échelle vit sous
+ *   `prefers-reduced-motion: no-preference` ; sous reduce, la règle globale
+ *   de theme.css neutralise animations et transitions (opacité < 100 ms).
+ *
+ * CSS + Web Animations API (shared/motion/index.ts). Pas de Framer Motion.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ── Pression — retour immédiat sur tout contrôle tactile ── */
+  .fu-press {
+    transition: transform var(--fu-dur-instant) var(--fu-ease);
+  }
+  .fu-press:active {
+    transform: scale(0.97);
+  }
+
+  /* ── Pop — bascule d'état sociale (Follow, Like) : l'objet confirme ── */
+  @keyframes fu-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.12);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .fu-pop {
+    animation: fu-pop var(--fu-dur-state) var(--fu-ease);
+  }
+
+  /* ── Révélation de contenu — UNE par écran, jamais par section ── */
+  @keyframes fu-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .fu-rise-in {
+    animation: fu-rise-in var(--fu-dur-state) var(--fu-ease) both;
+  }
+
+  /* ── Changement de page — fondu simple, jamais de glissement de page ── */
+  @keyframes fu-page-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .fu-page-in {
+    animation: fu-page-in var(--fu-dur-state) var(--fu-ease) both;
+  }
+
+  /* ── Feuille — entre par le bas (<768px) ou par le côté inline-end ── */
+  @keyframes fu-sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes fu-sheet-end-ltr {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes fu-sheet-end-rtl {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  .fu-sheet-in {
+    animation: fu-sheet-up var(--fu-dur-surface) var(--fu-ease) both;
+  }
+  @media (min-width: 768px) {
+    .fu-sheet-in {
+      animation-name: fu-sheet-end-ltr;
+    }
+    [dir='rtl'] .fu-sheet-in {
+      animation-name: fu-sheet-end-rtl;
+    }
+  }
+
+  /* ── Modale — présence, pas spectacle. Les keyframes PORTENT le centrage
+        (translate ±50 %) : un `transform: none` final décentrerait la boîte. ── */
+  @keyframes fu-modal-in-ltr {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes fu-modal-in-rtl {
+    from {
+      opacity: 0;
+      transform: translate(50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(50%, -50%) scale(1);
+    }
+  }
+  .fu-modal-in {
+    animation: fu-modal-in-ltr var(--fu-dur-surface) var(--fu-ease) both;
+  }
+  [dir='rtl'] .fu-modal-in {
+    animation-name: fu-modal-in-rtl;
+  }
+
+  /* ── Voile d'overlay ── */
+  @keyframes fu-scrim-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .fu-scrim-in {
+    animation: fu-scrim-in var(--fu-dur-surface) var(--fu-ease) both;
+  }
+
+  /* ── Mise à jour realtime — flash discret de L'ÉLÉMENT modifié ── */
+  @keyframes fu-update-flash {
+    0% {
+      background-color: var(--fu-surface-brand);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+  .fu-update-flash {
+    animation: fu-update-flash var(--fu-dur-surface) var(--fu-ease);
+  }
+
+  /* ── État appelé — le moment de marque de la file (Pro) ── */
+  @keyframes fu-called {
+    0% {
+      background-color: var(--fu-accent-soft);
+      box-shadow: inset 3px 0 0 var(--fu-accent);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 3px 0 0 var(--fu-accent);
+    }
+  }
+  .fu-called {
+    animation: fu-called 640ms var(--fu-ease);
+    box-shadow: inset 3px 0 0 var(--fu-accent);
+  }
+
+  /* ── Succès de réservation — LE moment orchestré de l'écran de
+        confirmation : la coche s'affirme, le reste suit en fondu ── */
+  @keyframes fu-success-mark {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    55% {
+      transform: scale(1.08);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .fu-success-mark {
+    animation: fu-success-mark var(--fu-dur-surface) var(--fu-ease) both;
+  }
+  .fu-success-follow {
+    animation: fu-page-in var(--fu-dur-state) var(--fu-ease) both;
+    animation-delay: 160ms;
+  }
+
+  /* ── Passport — révélation du moment de marque sombre ── */
+  @keyframes fu-passport-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .fu-passport-in {
+    animation: fu-passport-in var(--fu-dur-surface) var(--fu-ease) both;
+  }
+}

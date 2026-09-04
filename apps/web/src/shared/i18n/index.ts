@@ -7,16 +7,18 @@ import frNav from '@/shared/i18n/locales/fr/nav.json'
 import frErrors from '@/shared/i18n/locales/fr/errors.json'
 import frStates from '@/shared/i18n/locales/fr/states.json'
 import frEmpty from '@/shared/i18n/locales/fr/empty.json'
+import frDemo from '@/shared/i18n/locales/fr/demo.json'
 import enCommon from '@/shared/i18n/locales/en/common.json'
 import enAuth from '@/shared/i18n/locales/en/auth.json'
 import enNav from '@/shared/i18n/locales/en/nav.json'
 import enErrors from '@/shared/i18n/locales/en/errors.json'
 import enStates from '@/shared/i18n/locales/en/states.json'
 import enEmpty from '@/shared/i18n/locales/en/empty.json'
+import enDemo from '@/shared/i18n/locales/en/demo.json'
 
 const BUNDLES: Record<V2Locale, Record<V2Section, object>> = {
-  fr: { common: frCommon, auth: frAuth, nav: frNav, errors: frErrors, states: frStates, empty: frEmpty },
-  en: { common: enCommon, auth: enAuth, nav: enNav, errors: enErrors, states: enStates, empty: enEmpty },
+  fr: { common: frCommon, auth: frAuth, nav: frNav, errors: frErrors, states: frStates, empty: frEmpty, demo: frDemo },
+  en: { common: enCommon, auth: enAuth, nav: enNav, errors: enErrors, states: enStates, empty: enEmpty, demo: enDemo },
 }
 
 /**

@@ -77,3 +77,30 @@ Chromium 390/1440 couvre aujourd'hui les 39 scénarios.
 2. Puis : `P1B_WEBKIT=1 npm run e2e` — les specs existantes tournent
    telles quelles sur les quatre projets ; aucune modification de code
    n'est nécessaire.
+
+---
+
+## 3. `get_public_service_state` — cassée via l'API pour TOUT appelant (constaté en P1c, 2026-09-04)
+
+**Symptôme.** `POST /rest/v1/rpc/get_public_service_state` → **405** avec
+`25006 cannot execute INSERT in a read-only transaction`, pour anon comme
+pour authenticated, y compris sur `side-agency` (donc indépendant du seed
+de démonstration).
+
+**Cause exacte.** La fonction est déclarée `STABLE` mais exécute
+`perform private.ensure_location_service_settings(p_location_id)` — un
+INSERT (même `on conflict do nothing`, c'est une écriture). PostgREST
+exécute les fonctions STABLE en transaction lecture seule → refus
+systématique. En psql (P1a) elle fonctionnait, d'où la découverte tardive.
+
+**Impact.** L'état de service public (mode effectif, Réserver/File) est
+INDISPONIBLE côté front. **Bloquant P2** : profils publics, tunnel de
+réservation et file en dépendent. Les études /demo affichent `partial-data`
+et désactivent Réserver tant que l'état est inconnu — jamais un état inventé.
+`get_service_mode_state` (staff) partage probablement le même motif ensure —
+à vérifier au même moment.
+
+**Remédiation** (backend, hors périmètre P1c — aucune modification de schéma
+autorisée) : soit déclarer la fonction `VOLATILE` (PostgREST l'exécutera en
+lecture-écriture), soit sortir le `ensure_…` de la lecture (le déplacer vers
+les écritures qui créent la location). Re-tester ensuite en anon via Kong.

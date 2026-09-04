@@ -448,7 +448,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      /* /demo — drapeau + noindex ; coquille vide remplie en P1c. */
+      /* /demo — drapeau + noindex ; les trois études réelles de P1c. */
       {
         path: 'demo',
         element: <RequireDemo />,
@@ -458,6 +458,27 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { DemoIndexPage } = await import('@/features/demo/DemoIndexPage')
               return { Component: DemoIndexPage }
+            },
+          },
+          {
+            path: 'discovery',
+            lazy: async () => {
+              const { DemoDiscoveryPage } = await import('@/features/demo/DemoDiscoveryPage')
+              return { Component: DemoDiscoveryPage }
+            },
+          },
+          {
+            path: 'profile',
+            lazy: async () => {
+              const { DemoProfilePage } = await import('@/features/demo/DemoProfilePage')
+              return { Component: DemoProfilePage }
+            },
+          },
+          {
+            path: 'pro',
+            lazy: async () => {
+              const { DemoProPage } = await import('@/features/demo/DemoProPage')
+              return { Component: DemoProPage }
             },
           },
         ],

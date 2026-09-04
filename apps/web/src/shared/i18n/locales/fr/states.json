@@ -43,5 +43,9 @@
   },
   "avatar": {
     "fallback": "Initiales de {{name}}"
+  },
+  "opening": {
+    "open": "Ouvert",
+    "closed": "Fermé actuellement"
   }
 }

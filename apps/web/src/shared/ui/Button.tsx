@@ -56,7 +56,7 @@ export function Button({
       disabled={isDisabled}
       data-loading={loading || undefined}
       className={cn(
-        'relative inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] font-medium',
+        'fu-press relative inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] font-medium',
         'transition-colors duration-[var(--fu-dur-instant)] ease-[var(--fu-ease)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fu-canvas)]',
         'disabled:cursor-not-allowed',

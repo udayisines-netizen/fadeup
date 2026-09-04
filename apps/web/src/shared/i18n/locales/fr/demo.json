@@ -1,0 +1,76 @@
+{
+  "index": {
+    "lede": "Trois études réelles, alimentées par les RPC publiques de la base de production. Ni maquette, ni donnée en dur.",
+    "open": "Ouvrir l'étude",
+    "discoveryTitle": "Découverte client",
+    "discoveryLede": "La rangée à filet fin face à six résultats réels sur 390 px.",
+    "profileTitle": "Identité barber",
+    "profileLede": "La hiérarchie de profil du MASTER_SPEC §9, états vides honnêtes compris.",
+    "proTitle": "FadeUp Pro — TODAY",
+    "proLede": "L'accueil opérationnel sombre et dense : TODAY / NOW / NEXT / QUEUE."
+  },
+  "controls": {
+    "fullState": "État plein",
+    "emptyState": "État vide",
+    "emptyHint": "L'état vide est obtenu par une vraie recherche sans résultat — rien n'est simulé."
+  },
+  "discovery": {
+    "title": "Découverte",
+    "searchLabel": "Rechercher un barber, un salon, une ville",
+    "searchPlaceholder": "Fade, salon, ville…",
+    "openNow": "Ouvert maintenant",
+    "resultCount_one": "{{count}} résultat",
+    "resultCount_other": "{{count}} résultats",
+    "supplyIndependent": "Indépendant",
+    "supplyBarbershop": "Barbershop",
+    "mobileZone": "Zone de service",
+    "noResults": {
+      "title": "Aucun résultat pour cette recherche",
+      "description": "Élargissez la zone ou modifiez les termes — rien n'est inventé pour remplir la liste.",
+      "action": "Effacer la recherche"
+    },
+    "rpcNote": "search_public_professionals(p_entity_type => 'shop') — la restriction marketplace est forcée."
+  },
+  "profile": {
+    "pickTitle": "Choisir un profil réel",
+    "pickDescription": "Les profils ci-dessous sortent de la recherche publique — sélectionnez-en un pour l'étude.",
+    "worksAt": "Travaille chez {{salon}}",
+    "services": "Services",
+    "socialProof": "Preuve sociale",
+    "portfolio": "Réalisations",
+    "portfolioEmpty": "Aucune réalisation publiée pour l'instant.",
+    "reviews": "Avis",
+    "bookingClosed": "Ce professionnel n'accepte pas de réservation en ligne pour le moment.",
+    "queueOnlyNote": "Sur place uniquement : la file est le seul mode d'entrée.",
+    "handleProbe": "Recherche par handle (get_public_professional_by_handle)",
+    "handleProbeEmpty": "Aucun profil revendiqué ne porte ce handle — la RPC ne sert que les identités revendiquées et publiques."
+  },
+  "pro": {
+    "today": "Aujourd'hui",
+    "now": "MAINTENANT",
+    "next": "ENSUITE",
+    "queue": "FILE",
+    "nowEmpty": "Personne au fauteuil",
+    "nextEmpty": "Aucun rendez-vous à venir aujourd'hui",
+    "agendaEmpty": {
+      "title": "Agenda vide aujourd'hui",
+      "description": "Aucun rendez-vous réel n'existe en base pour cette organisation — et rien n'est fabriqué pour remplir l'écran.",
+      "action": "Voir l'agenda complet (P3)"
+    },
+    "queueEmpty": {
+      "title": "File vide",
+      "description": "Aucune entrée réelle en file. La file se remplit sur place, jamais dans une démo.",
+      "action": "Réglages de la file (P3)"
+    },
+    "needsPro": {
+      "title": "Session professionnelle requise",
+      "description": "L'agenda et la file sont des données privées d'organisation : connectez-vous avec un compte professionnel pour voir les données réelles. Sans session, cette étude montre la structure et les états vides — honnêtes.",
+      "action": "Se connecter"
+    },
+    "legend": "Vocabulaire des états opérationnels (légende — pas des données)",
+    "revenueNote": "Revenu calculé depuis les prix configurés — jamais saisi.",
+    "walkIn": "Walk-in",
+    "appointments_one": "{{count}} rendez-vous",
+    "appointments_other": "{{count}} rendez-vous"
+  }
+}

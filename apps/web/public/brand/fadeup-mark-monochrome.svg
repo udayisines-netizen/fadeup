@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="FadeUp">
+<!-- DÉRIVÉ MONOCHROME du logo FadeUp (P1c §3) : broderie, tampon, gravure,
+     fond à couleur unique. currentColor — se colore par le contexte.
+     Même géométrie trois-arcs que le micro-mark. -->
+  <path d="M 52.96 16.13 A 34 34 0 0 1 83.48 55.90" stroke="currentColor" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <path d="M 77.85 69.50 A 34 34 0 0 1 28.15 76.05" stroke="currentColor" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <path d="M 19.19 64.37 A 34 34 0 0 1 38.37 18.05" stroke="currentColor" stroke-width="24" stroke-linecap="round" fill="none"/>
+</svg>

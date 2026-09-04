@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { celebrateSuccess, flashUpdate, measureTop, playReorder, pop } from '@/shared/motion'
 import { useTheme, useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import type { SurfaceTheme } from '@/shared/theme/ThemeProvider'
 import { cn } from '@/shared/lib/cn'
@@ -59,6 +60,144 @@ const ALL_STATES: FadeUpState[] = [
 ]
 
 const METRICS: MetricValueProps['kind'][] = ['followers', 'verified-clients', 'rating', 'reviews', 'likes']
+
+/** §4 P1c — chaque comportement motion, déclenchable à la main. */
+function MotionSection() {
+  const { t } = useTranslation('v2')
+  const [followed, setFollowed] = useState(false)
+  const [liked, setLiked] = useState(false)
+  const [revealKey, setRevealKey] = useState(0)
+  const [pageKey, setPageKey] = useState(0)
+  const [passportKey, setPassportKey] = useState(0)
+  const [calledKey, setCalledKey] = useState(0)
+  const [order, setOrder] = useState<[number, number]>([1, 2])
+  const followRef = useRef<HTMLButtonElement | null>(null)
+  const likeRef = useRef<HTMLButtonElement | null>(null)
+  const rowRef = useRef<HTMLDivElement | null>(null)
+  const moverRef = useRef<HTMLDivElement | null>(null)
+  const successRef = useRef<HTMLSpanElement | null>(null)
+
+  return (
+    <Section title="Motion (P1c) — chaque geste répond à une action">
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Pression : maintenir n'importe quel bouton (classe fu-press). */}
+        <Button variant="primary">{t('common.action.confirm')}</Button>
+        <Button
+          ref={followRef}
+          variant="secondary"
+          iconStart={<Icons.IconFollow />}
+          aria-pressed={followed}
+          onClick={() => {
+            setFollowed((value) => !value)
+            if (followRef.current) pop(followRef.current)
+          }}
+        >
+          {t('states.metric.followers')}
+        </Button>
+        <IconButton
+          ref={likeRef}
+          aria-label={t('states.metric.likes')}
+          aria-pressed={liked}
+          variant="outline"
+          onClick={() => {
+            setLiked((value) => !value)
+            if (likeRef.current) pop(likeRef.current)
+          }}
+        >
+          <Icons.IconLike className={cn(liked && 'fill-current text-[var(--fu-accent-text)]')} />
+        </IconButton>
+        <Button variant="secondary" onClick={() => setRevealKey((key) => key + 1)}>
+          fu-rise-in
+        </Button>
+        <Button variant="secondary" onClick={() => setPageKey((key) => key + 1)}>
+          fu-page-in
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            if (rowRef.current) flashUpdate(rowRef.current)
+          }}
+        >
+          realtime flash
+        </Button>
+        <Button variant="secondary" onClick={() => setCalledKey((key) => key + 1)}>
+          called
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            const el = moverRef.current
+            if (!el) return
+            const top = measureTop(el)
+            setOrder(([a, b]) => [b, a])
+            requestAnimationFrame(() => playReorder(el, top))
+          }}
+        >
+          file : réordonner
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            if (successRef.current) celebrateSuccess(successRef.current)
+          }}
+        >
+          succès de réservation
+        </Button>
+        <Button variant="secondary" onClick={() => setPassportKey((key) => key + 1)}>
+          Passport
+        </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div key={revealKey} className="fu-rise-in">
+          <Card variant="subtle">
+            <p className="text-fu-sm text-[var(--fu-text-secondary)]">fu-rise-in — révélation, UNE par écran</p>
+          </Card>
+        </div>
+        <div key={pageKey} className="fu-page-in">
+          <Card variant="subtle">
+            <p className="text-fu-sm text-[var(--fu-text-secondary)]">fu-page-in — changement de page, fondu seul</p>
+          </Card>
+        </div>
+      </div>
+
+      <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)]">
+        <div ref={rowRef}>
+          <Row title={t('states.connection.partialData')} subtitle="realtime : seul l'élément modifié flashe" />
+        </div>
+        <div key={calledKey} className="fu-called">
+          <Row title={t('states.queue.called')} subtitle="fu-called — le moment de marque de la file" />
+        </div>
+        {order.map((n) => (
+          <div key={n} ref={n === 1 ? moverRef : undefined}>
+            <Row
+              title={`${t('nav.pro.queue')} ${n}`}
+              subtitle={n === 1 ? 'seul cet élément est animé (FLIP)' : '—'}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-6">
+        <span
+          ref={successRef}
+          className="inline-flex size-12 items-center justify-center rounded-[var(--radius-avatar)] bg-[var(--fu-accent)] text-[var(--fu-accent-fg)]"
+        >
+          <Icons.IconCheck aria-hidden="true" className="size-6" />
+        </span>
+        <div key={passportKey} className="fu-passport-in inline-block">
+          <div
+            data-theme="editorial"
+            className="rounded-[var(--radius-card)] bg-[var(--fu-canvas)] px-5 py-4 text-[var(--fu-text-primary)]"
+          >
+            <p className="font-fu-mono text-fu-xs tracking-widest text-[var(--fu-text-secondary)]">FADE PASSPORT</p>
+            <p className="mt-1 text-fu-base font-semibold">fu-passport-in</p>
+          </div>
+        </div>
+      </div>
+    </Section>
+  )
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -151,6 +290,8 @@ export function DevUiPage() {
     <main className="mx-auto w-full max-w-3xl bg-[var(--fu-canvas)] px-4 pb-32 font-fu-sans text-[var(--fu-text-primary)]">
       <h1 className="pt-6 text-fu-xl font-semibold">{t('nav.devui.title')}</h1>
       <GalleryControls reducedMotion={reducedMotion} onReducedMotion={setReducedMotion} />
+
+      <MotionSection />
 
       <Section title="Button">
         <div className="flex flex-wrap items-center gap-3">

@@ -7,6 +7,7 @@
  */
 @import './styles/fonts.css';
 @import './styles/theme.css';
+@import './styles/motion.css';
 @import './styles/tokens-consumer.css';
 @import './styles/tokens-pro.css';
 @import './styles/tokens-editorial.css';

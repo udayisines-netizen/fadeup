@@ -47,3 +47,20 @@ export const organizationKeys = {
   all: ['organizations'] as const,
   publicBySlug: (slug: string) => [...organizationKeys.all, 'public-slug', slug] as const,
 } as const
+
+/** Clés des compositions /demo (P1c) — mêmes règles que le produit. */
+export const demoKeys = {
+  all: ['demo'] as const,
+  discovery: (filters: Record<string, string | boolean | undefined>) => [...demoKeys.all, 'discovery', filters] as const,
+  organization: (slug: string) => [...demoKeys.all, 'org', slug] as const,
+  barber: (slug: string, barberId: string) => [...demoKeys.all, 'barber', slug, barberId] as const,
+  barberServices: (slug: string, barberId: string) => [...demoKeys.all, 'barber-services', slug, barberId] as const,
+  serviceState: (slug: string, locationId: string, barberId?: string) =>
+    [...demoKeys.all, 'service-state', slug, locationId, barberId ?? null] as const,
+  professional: (professionalId: string) => [...demoKeys.all, 'professional', professionalId] as const,
+  handleProbe: (handle: string) => [...demoKeys.all, 'handle', handle] as const,
+  proContext: () => [...demoKeys.all, 'pro-context'] as const,
+  proAgenda: (organizationId: string, day: string) => [...demoKeys.all, 'pro-agenda', organizationId, day] as const,
+  proQueue: (organizationId: string) => [...demoKeys.all, 'pro-queue', organizationId] as const,
+  proModes: (locationId: string) => [...demoKeys.all, 'pro-modes', locationId] as const,
+} as const

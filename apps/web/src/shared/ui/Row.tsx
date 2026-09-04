@@ -11,6 +11,8 @@ interface RowBaseProps {
   subtitle?: React.ReactNode
   /** Zone de fin : prix, état, action. */
   trailing?: React.ReactNode
+  /** Noms longs (résultats de recherche) : 2 lignes au lieu d'une troncature. */
+  clampTitle?: boolean
   /** Chevron directionnel (retourné en RTL par la logique CSS). */
   chevron?: boolean
   className?: string
@@ -31,13 +33,20 @@ type RowProps = RowBaseProps &
  * filet (`--fu-border`), de l'échelle typographique et de l'espace.
  */
 export function Row(props: RowProps) {
-  const { leading, title, subtitle, trailing, chevron = false, className, children } = props
+  const { leading, title, subtitle, trailing, chevron = false, clampTitle = false, className, children } = props
 
   const inner = (
     <>
       {leading != null && <div className="flex shrink-0 items-center">{leading}</div>}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-fu-base font-semibold text-[var(--fu-text-primary)]">{title}</div>
+        <div
+          className={cn(
+            'text-fu-base font-semibold text-[var(--fu-text-primary)]',
+            clampTitle ? 'line-clamp-2' : 'truncate',
+          )}
+        >
+          {title}
+        </div>
         {subtitle != null && <div className="mt-0.5 truncate text-fu-sm text-[var(--fu-text-secondary)]">{subtitle}</div>}
         {children}
       </div>

@@ -25,11 +25,15 @@ import { V2ToastProvider } from '@/shared/ui/Toast'
  * l'init i18next.
  */
 
-const ReactQueryDevtools = import.meta.env.DEV
-  ? lazy(() =>
-      import('@tanstack/react-query-devtools').then((mod) => ({ default: mod.ReactQueryDevtools })),
-    )
-  : null
+// Le bouton flottant des devtools déborde du viewport mobile et polluerait
+// les études /demo (captures QA, mesure de débordement) — il reste partout
+// ailleurs en DEV.
+const ReactQueryDevtools =
+  import.meta.env.DEV && !window.location.pathname.startsWith('/demo')
+    ? lazy(() =>
+        import('@tanstack/react-query-devtools').then((mod) => ({ default: mod.ReactQueryDevtools })),
+      )
+    : null
 
 export function Providers({ children }: { children: ReactNode }) {
   return (

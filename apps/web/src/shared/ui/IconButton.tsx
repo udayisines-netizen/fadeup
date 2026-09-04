@@ -26,7 +26,7 @@ export function IconButton({
       type={type ?? 'button'}
       disabled={isDisabled}
       className={cn(
-        'inline-flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-control)]',
+        'fu-press inline-flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-control)]',
         'text-[var(--fu-text-primary)] transition-colors duration-[var(--fu-dur-instant)] ease-[var(--fu-ease)]',
         'hover:bg-[var(--fu-surface-subtle)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fu-canvas)]',

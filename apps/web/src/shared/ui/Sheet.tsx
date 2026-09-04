@@ -25,11 +25,10 @@ export function Sheet({ open, onOpenChange, trigger, title, description, childre
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger != null && <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>}
       <RadixDialog.Portal>
-        <RadixDialog.Overlay data-fu-overlay className="fixed inset-0 z-[var(--fu-z-overlay)] bg-[var(--fu-scrim)]" />
+        <RadixDialog.Overlay className="fu-scrim-in fixed inset-0 z-[var(--fu-z-overlay)] bg-[var(--fu-scrim)]" />
         <RadixDialog.Content
-          data-fu-content
           className={cn(
-            'fixed z-[var(--fu-z-modal)] flex flex-col bg-[var(--fu-surface)]',
+            'fu-sheet-in fixed z-[var(--fu-z-modal)] flex flex-col bg-[var(--fu-surface)]',
             // < 768 px : bottom sheet
             'max-md:start-0 max-md:end-0 max-md:bottom-0 max-md:max-h-[85dvh] max-md:rounded-t-[var(--radius-sheet)]',
             'max-md:pb-[env(safe-area-inset-bottom)]',

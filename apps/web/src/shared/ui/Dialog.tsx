@@ -25,14 +25,10 @@ export function Dialog({ open, onOpenChange, trigger, title, description, childr
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger != null && <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>}
       <RadixDialog.Portal>
-        <RadixDialog.Overlay
-          data-fu-overlay
-          className="fixed inset-0 z-[var(--fu-z-overlay)] bg-[var(--fu-scrim)]"
-        />
+        <RadixDialog.Overlay className="fu-scrim-in fixed inset-0 z-[var(--fu-z-overlay)] bg-[var(--fu-scrim)]" />
         <RadixDialog.Content
-          data-fu-content
           className={cn(
-            'fixed start-1/2 top-1/2 z-[var(--fu-z-modal)] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2',
+            'fu-modal-in fixed start-1/2 top-1/2 z-[var(--fu-z-modal)] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2',
             'rounded-[var(--radius-modal)] border border-[var(--fu-border)] bg-[var(--fu-surface)] p-5',
             className,
           )}

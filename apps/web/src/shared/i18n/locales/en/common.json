@@ -19,7 +19,9 @@
     "share": "Share",
     "filter": "Filter",
     "seeAll": "See all",
-    "goHome": "Go to home"
+    "goHome": "Go to home",
+    "book": "Book",
+    "follow": "Follow"
   },
   "language": {
     "label": "Language",
