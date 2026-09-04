@@ -1,0 +1,572 @@
+=== RLS POLICIES ===
+?column? :: policyname :: cmd :: roles :: coalesce :: coalesce
+public.api_source_health :: api_source_health_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.api_source_health :: api_source_health_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.api_source_limits :: api_source_limits_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.api_source_limits :: api_source_limits_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.api_usage :: api_usage_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.api_usage :: api_usage_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.appointments :: appointments_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(appointments.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: -
+public.appointments :: appointments_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(appointments.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.appointments :: appointments_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(appointments.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.appointments :: appointments_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(appointments.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(appointments.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.appointments :: appointments_update_self :: UPDATE :: {authenticated} :: ( SELECT private.is_own_barber(appointments.barber_id) AS is_own_barber) :: ( SELECT private.is_own_barber(appointments.barber_id) AS is_own_barber)
+public.audit_logs :: audit_logs_select :: SELECT :: {authenticated} :: (((organization_id IS NOT NULL) AND ( SELECT private.has_org_role(audit_logs.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.barber_availability_exceptions :: barber_availability_exceptions_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(barber_availability_exceptions.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.barber_availability_exceptions :: barber_availability_exceptions_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(barber_availability_exceptions.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barber_availability_exceptions :: barber_availability_exceptions_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(barber_availability_exceptions.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.barber_availability_exceptions :: barber_availability_exceptions_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(barber_availability_exceptions.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(barber_availability_exceptions.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barber_services :: barber_services_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(barber_services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.barber_services :: barber_services_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(barber_services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barber_services :: barber_services_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(barber_services.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.barber_working_hours :: barber_working_hours_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(barber_working_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.barber_working_hours :: barber_working_hours_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(barber_working_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barber_working_hours :: barber_working_hours_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(barber_working_hours.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.barber_working_hours :: barber_working_hours_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(barber_working_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(barber_working_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barbers :: barbers_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(barbers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.barbers :: barbers_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(barbers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.barbers :: barbers_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(barbers.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.barbers :: barbers_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(barbers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(barbers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.booking_provider_observations :: booking_provider_observations_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.booking_provider_observations :: booking_provider_observations_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.booking_provider_observations :: booking_provider_observations_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.booking_provider_observations :: booking_provider_observations_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.booking_provider_observations :: booking_provider_observations_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.booking_providers :: booking_providers_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.booking_providers :: booking_providers_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.booking_providers :: booking_providers_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.booking_providers :: booking_providers_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.booking_providers :: booking_providers_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.chairs :: chairs_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(chairs.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.chairs :: chairs_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(chairs.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.chairs :: chairs_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(chairs.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.chairs :: chairs_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(chairs.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(chairs.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.commercial_capabilities :: commercial_capabilities_select :: SELECT :: {authenticated} :: true :: -
+public.commercial_plan_changes :: commercial_plan_changes_select :: SELECT :: {authenticated} :: (( SELECT private.has_org_role(commercial_plan_changes.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.commercial_plans :: commercial_plans_select :: SELECT :: {authenticated} :: true :: -
+public.customer_favorites :: customer_favorites_delete :: DELETE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_favorites :: customer_favorites_insert :: INSERT :: {authenticated} :: - :: (user_id = ( SELECT auth.uid() AS uid))
+public.customer_favorites :: customer_favorites_select :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_memberships :: customer_memberships_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.customer_memberships :: customer_memberships_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.customer_memberships :: customer_memberships_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(customer_memberships.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.customer_memberships :: customer_memberships_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.customer_passport_photos :: customer_passport_photos_delete :: DELETE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_passport_photos :: customer_passport_photos_insert :: INSERT :: {authenticated} :: - :: (user_id = ( SELECT auth.uid() AS uid))
+public.customer_passport_photos :: customer_passport_photos_select :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_passport_shares :: customer_passport_shares_delete :: DELETE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_passport_shares :: customer_passport_shares_select :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_passports :: customer_passports_insert :: INSERT :: {authenticated} :: - :: (user_id = ( SELECT auth.uid() AS uid))
+public.customer_passports :: customer_passports_select :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_passports :: customer_passports_update :: UPDATE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: (user_id = ( SELECT auth.uid() AS uid))
+public.customer_professional_relationships :: customer_professional_relationships_select :: SELECT :: {authenticated} :: ((customer_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin) OR ( SELECT private.is_own_professional(customer_professional_relationships.professional_id) AS is_own_professional) OR ( SELECT private.is_org_member(customer_professional_relationships.organization_id) AS is_org_member)) :: -
+public.customer_profiles :: customer_profiles_delete :: DELETE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_profiles :: customer_profiles_insert :: INSERT :: {authenticated} :: - :: (user_id = ( SELECT auth.uid() AS uid))
+public.customer_profiles :: customer_profiles_select :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.customer_profiles :: customer_profiles_update :: UPDATE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: (user_id = ( SELECT auth.uid() AS uid))
+public.customers :: customers_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(customers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: -
+public.customers :: customers_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(customers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.customers :: customers_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(customers.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.customers :: customers_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(customers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(customers.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.email_outbox :: email_outbox_select_platform :: SELECT :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.invitations :: invitations_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(invitations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.invitations :: invitations_insert :: INSERT :: {authenticated} :: - :: (( SELECT private.has_org_role(invitations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) AND (invited_by = ( SELECT auth.uid() AS uid)) AND ((role <> 'owner'::membership_role) OR ( SELECT private.has_org_role(invitations.organization_id, ARRAY['owner'::membership_role]) AS has_org_role)))
+public.invitations :: invitations_select :: SELECT :: {authenticated} :: (( SELECT private.has_org_role(invitations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.location_hours :: location_hours_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(location_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.location_hours :: location_hours_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(location_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.location_hours :: location_hours_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(location_hours.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.location_hours :: location_hours_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(location_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(location_hours.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.location_service_settings :: location_service_settings_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(location_service_settings.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.locations :: locations_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.locations :: locations_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.locations :: locations_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(locations.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.locations :: locations_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.membership_plans :: membership_plans_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(membership_plans.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.membership_plans :: membership_plans_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(membership_plans.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.membership_plans :: membership_plans_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(membership_plans.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.membership_plans :: membership_plans_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(membership_plans.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(membership_plans.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.memberships :: memberships_delete :: DELETE :: {authenticated} :: (( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) OR (user_id = ( SELECT auth.uid() AS uid))) :: -
+public.memberships :: memberships_insert :: INSERT :: {authenticated} :: - :: (( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) AND ((role <> 'owner'::membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role]) AS has_org_role)))
+public.memberships :: memberships_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(memberships.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.memberships :: memberships_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: (( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) AND ((role <> 'owner'::membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::membership_role]) AS has_org_role)))
+public.ml_datasets :: ml_datasets_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.ml_datasets :: ml_datasets_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.ml_feature_schemas :: ml_feature_schemas_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.ml_feature_schemas :: ml_feature_schemas_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.ml_metrics :: ml_metrics_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.ml_metrics :: ml_metrics_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.ml_model_versions :: ml_model_versions_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.ml_model_versions :: ml_model_versions_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.ml_model_versions :: ml_model_versions_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.ml_model_versions :: ml_model_versions_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.ml_model_versions :: ml_model_versions_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.ml_predictions :: ml_predictions_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.ml_predictions :: ml_predictions_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.ml_training_runs :: ml_training_runs_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.ml_training_runs :: ml_training_runs_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.notifications :: notifications_select_own :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.notifications :: notifications_update_own :: UPDATE :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: (user_id = ( SELECT auth.uid() AS uid))
+public.organization_commercial_state :: organization_commercial_state_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(organization_commercial_state.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.organization_dashboard_layouts :: organization_dashboard_layouts_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(organization_dashboard_layouts.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.organization_dashboard_layouts :: organization_dashboard_layouts_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(organization_dashboard_layouts.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.organization_dashboard_layouts :: organization_dashboard_layouts_select :: SELECT :: {authenticated} :: ( SELECT private.is_org_member(organization_dashboard_layouts.organization_id) AS is_org_member) :: -
+public.organization_dashboard_layouts :: organization_dashboard_layouts_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(organization_dashboard_layouts.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(organization_dashboard_layouts.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.organization_follows :: organization_follows_select_own :: SELECT :: {authenticated} :: (follower_user_id = ( SELECT auth.uid() AS uid)) :: -
+public.organizations :: organizations_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(organizations.id, ARRAY['owner'::membership_role]) AS has_org_role) :: -
+public.organizations :: organizations_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(organizations.id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.organizations :: organizations_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(organizations.id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(organizations.id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.outreach_assignments :: outreach_assignments_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.outreach_assignments :: outreach_assignments_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_campaigns :: outreach_campaigns_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.outreach_campaigns :: outreach_campaigns_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_campaigns :: outreach_campaigns_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_campaigns :: outreach_campaigns_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_campaigns :: outreach_campaigns_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_channel_policies :: outreach_channel_policies_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_channel_policies :: outreach_channel_policies_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_channel_policies :: outreach_channel_policies_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_channel_policies :: outreach_channel_policies_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.outreach_channel_policies :: outreach_channel_policies_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_events :: outreach_events_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.outreach_events :: outreach_events_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_experiment_arms :: outreach_experiment_arms_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_experiment_arms :: outreach_experiment_arms_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_experiment_arms :: outreach_experiment_arms_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_experiment_arms :: outreach_experiment_arms_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.outreach_experiment_arms :: outreach_experiment_arms_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_experiments :: outreach_experiments_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_experiments :: outreach_experiments_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_experiments :: outreach_experiments_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_experiments :: outreach_experiments_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.outreach_experiments :: outreach_experiments_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_recipients :: outreach_recipients_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.outreach_recipients :: outreach_recipients_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_recipients :: outreach_recipients_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_recipients :: outreach_recipients_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_recipients :: outreach_recipients_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_sales_angles :: outreach_sales_angles_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_sales_angles :: outreach_sales_angles_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.outreach_templates :: outreach_templates_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.outreach_templates :: outreach_templates_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.outreach_templates :: outreach_templates_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.outreach_templates :: outreach_templates_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.outreach_templates :: outreach_templates_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.plan_capabilities :: plan_capabilities_select :: SELECT :: {authenticated} :: true :: -
+public.platform_audit_log :: platform_audit_log_select :: SELECT :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.platform_invitations :: platform_invitations_select_admin :: SELECT :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.platform_members :: platform_members_select_admin :: SELECT :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.platform_members :: platform_members_select_own :: SELECT :: {authenticated} :: (user_id = ( SELECT auth.uid() AS uid)) :: -
+public.platform_notifications :: platform_notifications_select :: SELECT :: {authenticated} :: ((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role)) :: -
+public.platform_notifications :: platform_notifications_update_own :: UPDATE :: {authenticated} :: ((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role)) :: ((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role))
+public.platform_support_sessions :: platform_support_sessions_select :: SELECT :: {authenticated} :: ((platform_actor_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.professional_applications :: professional_applications_select :: SELECT :: {authenticated} :: ((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.professional_applications :: professional_applications_update_own :: UPDATE :: {authenticated} :: ((user_id = ( SELECT auth.uid() AS uid)) AND (status = 'pending_review'::professional_application_status)) :: ((user_id = ( SELECT auth.uid() AS uid)) AND (status = 'pending_review'::professional_application_status))
+public.professional_applications :: professional_applications_update_platform :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.professional_claims :: professional_claims_select :: SELECT :: {authenticated} :: ((claimant_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.professional_follows :: professional_follows_select :: SELECT :: {authenticated} :: ((follower_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.professionals :: professionals_select :: SELECT :: {authenticated} :: ((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin) OR (EXISTS ( SELECT 1
+   FROM barbers b
+  WHERE ((b.professional_id = professionals.id) AND ( SELECT private.is_org_member(b.organization_id) AS is_org_member))))) :: -
+public.professionals :: professionals_update_self :: UPDATE :: {authenticated} :: ((user_id = ( SELECT auth.uid() AS uid)) AND (claim_state = 'claimed'::professional_claim_state)) :: ((user_id = ( SELECT auth.uid() AS uid)) AND (claim_state = 'claimed'::professional_claim_state))
+public.profiles :: profiles_select_own :: SELECT :: {authenticated} :: (id = ( SELECT auth.uid() AS uid)) :: -
+public.profiles :: profiles_update_own :: UPDATE :: {authenticated} :: (id = ( SELECT auth.uid() AS uid)) :: (id = ( SELECT auth.uid() AS uid))
+public.prospect_contacts :: prospect_contacts_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_contacts :: prospect_contacts_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_data_quality :: prospect_data_quality_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_data_quality :: prospect_data_quality_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_duplicates :: prospect_duplicates_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_duplicates :: prospect_duplicates_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_duplicates :: prospect_duplicates_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_duplicates :: prospect_duplicates_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_events :: prospect_events_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_events :: prospect_events_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_features :: prospect_features_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_features :: prospect_features_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_fit_scores :: prospect_fit_scores_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_fit_scores :: prospect_fit_scores_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_identity_matches :: prospect_identity_matches_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_identity_matches :: prospect_identity_matches_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_identity_matches :: prospect_identity_matches_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_identity_matches :: prospect_identity_matches_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_identity_matches :: prospect_identity_matches_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_job_sources :: prospect_job_sources_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_job_sources :: prospect_job_sources_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_jobs :: prospect_jobs_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_jobs :: prospect_jobs_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_jobs :: prospect_jobs_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_locales :: prospect_locales_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_locales :: prospect_locales_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_locales :: prospect_locales_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_locales :: prospect_locales_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_locales :: prospect_locales_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_locations :: prospect_locations_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_locations :: prospect_locations_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_notes :: prospect_notes_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_notes :: prospect_notes_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_notes :: prospect_notes_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_notes :: prospect_notes_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_outreach :: prospect_outreach_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_outreach :: prospect_outreach_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_outreach :: prospect_outreach_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_outreach :: prospect_outreach_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_outreach_eligibility :: prospect_outreach_eligibility_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_outreach_eligibility :: prospect_outreach_eligibility_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_outreach_eligibility :: prospect_outreach_eligibility_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_outreach_eligibility :: prospect_outreach_eligibility_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_outreach_eligibility :: prospect_outreach_eligibility_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_professionals :: prospect_professionals_select_platform :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_professionals :: prospect_professionals_select_worker :: SELECT :: {prospect_worker} :: true :: -
+public.prospect_publication_eligibility :: prospect_publication_eligibility_select_platform :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_publication_eligibility :: prospect_publication_eligibility_select_worker :: SELECT :: {prospect_worker} :: true :: -
+public.prospect_score_rulesets :: prospect_score_rulesets_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_score_rulesets :: prospect_score_rulesets_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_score_rulesets :: prospect_score_rulesets_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_score_rulesets :: prospect_score_rulesets_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.prospect_score_rulesets :: prospect_score_rulesets_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_scores :: prospect_scores_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_scores :: prospect_scores_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_search_partitions :: prospect_search_partitions_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_search_partitions :: prospect_search_partitions_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_searches :: prospect_searches_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_searches :: prospect_searches_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_searches :: prospect_searches_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_searches :: prospect_searches_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_searches :: prospect_searches_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_segment_definitions :: prospect_segment_definitions_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_segment_definitions :: prospect_segment_definitions_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.prospect_segments :: prospect_segments_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_segments :: prospect_segments_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_social_profiles :: prospect_social_profiles_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_social_profiles :: prospect_social_profiles_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_source_records :: prospect_source_records_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospect_source_records :: prospect_source_records_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_sources :: prospect_sources_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_sources :: prospect_sources_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_sources :: prospect_sources_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.prospect_sources :: prospect_sources_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_sources :: prospect_sources_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_suppressions :: prospect_suppressions_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_suppressions :: prospect_suppressions_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_suppressions :: prospect_suppressions_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_suppressions :: prospect_suppressions_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_tags :: prospect_tags_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospect_tags :: prospect_tags_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospect_tags :: prospect_tags_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospect_tags :: prospect_tags_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospects :: prospects_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.prospects :: prospects_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.prospects :: prospects_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.prospects :: prospects_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.prospects :: prospects_write_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.queue_entries :: queue_entries_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(queue_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: -
+public.queue_entries :: queue_entries_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(queue_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.queue_entries :: queue_entries_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(queue_entries.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.queue_entries :: queue_entries_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(queue_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(queue_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.queue_entries :: queue_entries_update_self :: UPDATE :: {authenticated} :: ((barber_id IS NOT NULL) AND ( SELECT private.is_own_barber(queue_entries.barber_id) AS is_own_barber)) :: ((barber_id IS NOT NULL) AND ( SELECT private.is_own_barber(queue_entries.barber_id) AS is_own_barber))
+public.service_categories :: service_categories_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(service_categories.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.service_categories :: service_categories_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(service_categories.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.service_categories :: service_categories_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(service_categories.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.service_categories :: service_categories_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(service_categories.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(service_categories.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.service_locations :: service_locations_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(service_locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.service_locations :: service_locations_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(service_locations.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.service_locations :: service_locations_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(service_locations.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.service_mode_changes :: service_mode_changes_select :: SELECT :: {authenticated} :: (( SELECT private.has_org_role(service_mode_changes.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.service_mode_overrides :: service_mode_overrides_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(service_mode_overrides.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.services :: services_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.services :: services_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.services :: services_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(services.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.services :: services_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(services.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.staff_profiles :: staff_profiles_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: -
+public.staff_profiles :: staff_profiles_insert :: INSERT :: {authenticated} :: - :: (( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) AND (EXISTS ( SELECT 1
+   FROM memberships m
+  WHERE ((m.organization_id = m.organization_id) AND (m.user_id = m.user_id)))))
+public.staff_profiles :: staff_profiles_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(staff_profiles.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.staff_profiles :: staff_profiles_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role]) AS has_org_role)
+public.time_blocks :: time_blocks_delete :: DELETE :: {authenticated} :: (( SELECT private.can_manage_appointments(time_blocks.organization_id) AS can_manage_appointments) OR ( SELECT private.is_own_barber(time_blocks.barber_id) AS is_own_barber)) :: -
+public.time_blocks :: time_blocks_insert :: INSERT :: {authenticated} :: - :: (( SELECT private.can_manage_appointments(time_blocks.organization_id) AS can_manage_appointments) OR ( SELECT private.is_own_barber(time_blocks.barber_id) AS is_own_barber))
+public.time_blocks :: time_blocks_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(time_blocks.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.time_blocks :: time_blocks_update :: UPDATE :: {authenticated} :: (( SELECT private.can_manage_appointments(time_blocks.organization_id) AS can_manage_appointments) OR ( SELECT private.is_own_barber(time_blocks.barber_id) AS is_own_barber)) :: (( SELECT private.can_manage_appointments(time_blocks.organization_id) AS can_manage_appointments) OR ( SELECT private.is_own_barber(time_blocks.barber_id) AS is_own_barber))
+public.waitlist_entries :: waitlist_entries_delete :: DELETE :: {authenticated} :: ( SELECT private.has_org_role(waitlist_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: -
+public.waitlist_entries :: waitlist_entries_insert :: INSERT :: {authenticated} :: - :: ( SELECT private.has_org_role(waitlist_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.waitlist_entries :: waitlist_entries_select :: SELECT :: {authenticated} :: (( SELECT private.is_org_member(waitlist_entries.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)) :: -
+public.waitlist_entries :: waitlist_entries_update :: UPDATE :: {authenticated} :: ( SELECT private.has_org_role(waitlist_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role) :: ( SELECT private.has_org_role(waitlist_entries.organization_id, ARRAY['owner'::membership_role, 'manager'::membership_role, 'receptionist'::membership_role]) AS has_org_role)
+public.whatsapp_accounts :: whatsapp_accounts_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.whatsapp_accounts :: whatsapp_accounts_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.whatsapp_accounts :: whatsapp_accounts_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.whatsapp_accounts :: whatsapp_accounts_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.whatsapp_accounts :: whatsapp_accounts_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.whatsapp_conversations :: whatsapp_conversations_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.whatsapp_conversations :: whatsapp_conversations_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.whatsapp_messages :: whatsapp_messages_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.whatsapp_messages :: whatsapp_messages_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.whatsapp_template_mappings :: whatsapp_template_mappings_delete_platform_admin :: DELETE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: -
+public.whatsapp_template_mappings :: whatsapp_template_mappings_insert_platform_admin :: INSERT :: {authenticated} :: - :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.whatsapp_template_mappings :: whatsapp_template_mappings_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+public.whatsapp_template_mappings :: whatsapp_template_mappings_select_prospect_worker :: SELECT :: {prospect_worker} :: true :: -
+public.whatsapp_template_mappings :: whatsapp_template_mappings_update_platform_admin :: UPDATE :: {authenticated} :: ( SELECT private.is_platform_admin() AS is_platform_admin) :: ( SELECT private.is_platform_admin() AS is_platform_admin)
+public.whatsapp_webhook_events :: whatsapp_webhook_events_all_prospect_worker :: ALL :: {prospect_worker} :: true :: true
+public.whatsapp_webhook_events :: whatsapp_webhook_events_select_platform_staff :: SELECT :: {authenticated} :: ( SELECT private.has_platform_role(ARRAY['platform_owner'::platform_role, 'platform_admin'::platform_role, 'platform_support'::platform_role]) AS has_platform_role) :: -
+storage.objects :: passport_photos_delete_own :: DELETE :: {authenticated} :: ((bucket_id = 'passport-photos'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text)) :: -
+storage.objects :: passport_photos_insert_own :: INSERT :: {authenticated} :: - :: ((bucket_id = 'passport-photos'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text))
+storage.objects :: passport_photos_select_own :: SELECT :: {authenticated} :: ((bucket_id = 'passport-photos'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text)) :: -
+
+=== RLS ACTIVEE ? ===
+relname :: relrowsecurity
+analytics_event_definitions :: t
+analytics_events :: t
+analytics_ingestion_rejections :: t
+api_source_health :: t
+api_source_limits :: t
+api_usage :: t
+appointment_claim_tokens :: t
+appointments :: t
+audit_logs :: t
+barber_availability_exceptions :: t
+barber_services :: t
+barber_working_hours :: t
+barbers :: t
+booking_provider_observations :: t
+booking_providers :: t
+chairs :: t
+commercial_capabilities :: t
+commercial_plan_changes :: t
+commercial_plans :: t
+customer_favorites :: t
+customer_memberships :: t
+customer_passport_photos :: t
+customer_passport_shares :: t
+customer_passports :: t
+customer_professional_relationships :: t
+customer_profiles :: t
+customers :: t
+email_outbox :: t
+invitations :: t
+location_hours :: t
+location_service_settings :: t
+locations :: t
+membership_plans :: t
+memberships :: t
+ml_datasets :: t
+ml_feature_schemas :: t
+ml_metrics :: t
+ml_model_versions :: t
+ml_predictions :: t
+ml_training_runs :: t
+notifications :: t
+organization_commercial_state :: t
+organization_dashboard_layouts :: t
+organization_follows :: t
+organizations :: t
+outreach_assignments :: t
+outreach_campaigns :: t
+outreach_channel_policies :: t
+outreach_events :: t
+outreach_experiment_arms :: t
+outreach_experiments :: t
+outreach_recipients :: t
+outreach_sales_angles :: t
+outreach_templates :: t
+plan_capabilities :: t
+platform_audit_log :: t
+platform_invitations :: t
+platform_members :: t
+platform_notifications :: t
+platform_owner_bootstrap_tokens :: t
+platform_support_sessions :: t
+professional_applications :: t
+professional_claims :: t
+professional_follows :: t
+professionals :: t
+profiles :: t
+prospect_contacts :: t
+prospect_data_quality :: t
+prospect_duplicates :: t
+prospect_events :: t
+prospect_features :: t
+prospect_fit_scores :: t
+prospect_identity_matches :: t
+prospect_job_sources :: t
+prospect_jobs :: t
+prospect_locales :: t
+prospect_locations :: t
+prospect_notes :: t
+prospect_outreach :: t
+prospect_outreach_eligibility :: t
+prospect_professionals :: t
+prospect_publication_eligibility :: t
+prospect_score_rulesets :: t
+prospect_scores :: t
+prospect_search_partitions :: t
+prospect_searches :: t
+prospect_segment_definitions :: t
+prospect_segments :: t
+prospect_social_profiles :: t
+prospect_source_records :: t
+prospect_sources :: t
+prospect_suppressions :: t
+prospect_tags :: t
+prospects :: t
+queue_entries :: t
+service_categories :: t
+service_locations :: t
+service_mode_changes :: t
+service_mode_overrides :: t
+services :: t
+staff_profiles :: t
+time_blocks :: t
+waitlist_entries :: t
+whatsapp_accounts :: t
+whatsapp_conversations :: t
+whatsapp_messages :: t
+whatsapp_template_mappings :: t
+whatsapp_webhook_events :: t
+
+=== REALTIME ===
+pubname :: schemaname :: tablename
+supabase_realtime :: public :: appointments
+supabase_realtime :: public :: location_service_settings
+supabase_realtime :: public :: memberships
+supabase_realtime :: public :: notifications
+supabase_realtime :: public :: queue_entries
+supabase_realtime :: public :: service_mode_overrides
+supabase_realtime :: public :: time_blocks
+supabase_realtime_messages_publication :: realtime :: messages_2026_08_29
+supabase_realtime_messages_publication :: realtime :: messages_2026_08_30
+supabase_realtime_messages_publication :: realtime :: messages_2026_08_31
+supabase_realtime_messages_publication :: realtime :: messages_2026_09_01
+supabase_realtime_messages_publication :: realtime :: messages_2026_09_02
+supabase_realtime_messages_publication :: realtime :: messages_2026_09_03
+supabase_realtime_messages_publication :: realtime :: messages_2026_09_04
+
+=== STORAGE BUCKETS ===
+id :: public :: coalesce :: coalesce
+passport-photos :: f :: 5242880 :: {image/jpeg,image/png,image/webp}
+
+=== VOLUMETRIE ===
+relname :: n_live_tup
+analytics_events :: 389
+plan_capabilities :: 155
+api_usage :: 102
+prospect_source_records :: 96
+prospects :: 47
+prospect_locations :: 42
+analytics_event_definitions :: 40
+prospect_scores :: 38
+commercial_capabilities :: 30
+prospect_publication_eligibility :: 20
+prospect_job_sources :: 15
+prospect_jobs :: 13
+locations :: 10
+location_service_settings :: 10
+commercial_plans :: 8
+organization_commercial_state :: 8
+commercial_plan_changes :: 8
+api_source_health :: 8
+organizations :: 8
+barber_working_hours :: 7
+location_hours :: 7
+staff_profiles :: 4
+platform_notifications :: 3
+email_outbox :: 3
+platform_audit_log :: 3
+barber_services :: 3
+service_locations :: 3
+services :: 3
+barbers :: 2
+prospect_events :: 2
+professionals :: 1
+profiles :: 1
+prospect_social_profiles :: 1
+prospect_sources :: 1
+booking_provider_observations :: 1
+professional_applications :: 1
+platform_owner_bootstrap_tokens :: 1
+memberships :: 1
+platform_members :: 1
+api_source_limits :: 1
+outreach_channel_policies :: 0
+outreach_campaigns :: 0
+outreach_recipients :: 0
+outreach_events :: 0
+whatsapp_accounts :: 0
+whatsapp_template_mappings :: 0
+whatsapp_conversations :: 0
+whatsapp_messages :: 0
+whatsapp_webhook_events :: 0
+outreach_experiments :: 0
+outreach_experiment_arms :: 0
+outreach_assignments :: 0
+ml_feature_schemas :: 0
+ml_datasets :: 0
+ml_model_versions :: 0
+ml_training_runs :: 0
+ml_predictions :: 0
+ml_metrics :: 0
+notifications :: 0
+time_blocks :: 0
+professional_follows :: 0
+customer_professional_relationships :: 0
+prospect_professionals :: 0
+professional_claims :: 0
+service_mode_overrides :: 0
+service_mode_changes :: 0
+organization_follows :: 0
+analytics_ingestion_rejections :: 0
+organization_dashboard_layouts :: 0
+audit_logs :: 0
+invitations :: 0
+chairs :: 0
+service_categories :: 0
+barber_availability_exceptions :: 0
+appointments :: 0
+queue_entries :: 0
+customers :: 0
+waitlist_entries :: 0
+membership_plans :: 0
+customer_memberships :: 0
+platform_invitations :: 0
+platform_support_sessions :: 0
+prospect_contacts :: 0
+prospect_tags :: 0
+prospect_duplicates :: 0
+prospect_notes :: 0
+prospect_outreach :: 0
+prospect_suppressions :: 0
+customer_profiles :: 0
+customer_favorites :: 0
+customer_passports :: 0
+customer_passport_photos :: 0
+customer_passport_shares :: 0
+appointment_claim_tokens :: 0
+booking_providers :: 0
+prospect_identity_matches :: 0
+prospect_features :: 0
+prospect_data_quality :: 0
+prospect_fit_scores :: 0
+prospect_score_rulesets :: 0
+prospect_segments :: 0
+prospect_segment_definitions :: 0
+prospect_locales :: 0
+prospect_searches :: 0
+prospect_search_partitions :: 0
+outreach_sales_angles :: 0
+outreach_templates :: 0
+prospect_outreach_eligibility :: 0
+
+=== EXTENSIONS ===
+extname :: extversion
+btree_gist :: 1.7
+cube :: 1.5
+earthdistance :: 1.2
+pg_net :: 0.20.3
+pg_stat_statements :: 1.11
+pg_trgm :: 1.6
+pgcrypto :: 1.3
+plpgsql :: 1.0
+supabase_vault :: 0.3.1
+unaccent :: 1.1
+uuid-ossp :: 1.1
+
+=== AUTH : NB UTILISATEURS ===
+count
+22
