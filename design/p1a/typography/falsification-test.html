@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>P1a — Test de falsification typographique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Poppins:wght@400;500;600&display=block" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600&display=block" rel="stylesheet">
+<style>
+  :root{
+    --ink:#080F0D; --dark:#0F1A16; --green:#00C27A; --muted:#5a6862;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f6f7f6;color:var(--ink);padding:32px;font-family:system-ui}
+  h1{font-size:20px;margin-bottom:4px}
+  p.note{font-size:13px;color:var(--muted);margin-bottom:24px;max-width:70ch}
+  h2{font-size:15px;margin:32px 0 12px;border-bottom:1px solid #ddd;padding-bottom:6px}
+  .font-geist{font-family:'Geist',sans-serif}
+  .font-geist .mono{font-family:'Geist Mono',monospace}
+  .font-switzer{font-family:'Switzer',sans-serif}
+  .font-switzer .mono{font-family:'Switzer',sans-serif;font-variant-numeric:tabular-nums}
+  .font-poppins{font-family:'Poppins',sans-serif}
+  .font-poppins .mono{font-family:'Poppins',sans-serif;font-variant-numeric:tabular-nums}
+  .row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .cell{flex:0 0 auto}
+  .cell h3{font-family:system-ui;font-size:12px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+
+  /* Bloc 1 — ligne d'agenda pro : 14px, fond #0F1A16, colonne 320px */
+  .agenda{width:320px;background:var(--dark);color:#E9F1EC;border-radius:8px;
+    padding:10px 12px;font-size:14px;line-height:1.45}
+  .agenda .time{font-variant-numeric:tabular-nums;color:#7FF5C4;font-weight:500}
+  .agenda .price{font-variant-numeric:tabular-nums;float:right;font-weight:500}
+
+  /* Bloc 2 — carte de résultat : 358px */
+  .card{width:358px;background:#fff;border:1px solid #e4eae7;border-radius:12px;
+    padding:14px 16px}
+  .card .name{font-size:16px;font-weight:600;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .meta{font-size:13px;color:var(--muted);margin-top:4px}
+  .card .from{font-size:14px;font-weight:500;margin-top:8px}
+  .card .from b{font-variant-numeric:tabular-nums}
+
+  /* Bloc 3 — chiffres tabulaires */
+  .nums{display:grid;grid-template-columns:repeat(3,max-content);gap:2px 32px;
+    font-size:14px;background:#fff;border:1px solid #e4eae7;border-radius:8px;padding:12px 16px}
+  .nums span{font-variant-numeric:tabular-nums;text-align:right}
+</style>
+</head>
+<body>
+<h1>P1a §5 — Test de falsification : Geist Sans vs Switzer vs Poppins</h1>
+<p class="note">Critères pour Geist : la ligne d'agenda tient ou coupe sans tronquer le
+prix (14&nbsp;px, colonne 320&nbsp;px, fond #0F1A16) · le nom long tient sur 2 lignes max
+(carte 358&nbsp;px) · les chiffres s'alignent au pixel · confort à 14&nbsp;px sur sombre.
+Poppins n'est jamais éligible pour l'interface — témoin négatif.</p>
+
+<div id="app"></div>
+
+<script>
+const FONTS = [
+  ['font-geist','Geist Sans'],
+  ['font-switzer','Switzer'],
+  ['font-poppins','Poppins (témoin)'],
+];
+const LOCALES = {
+  fr: {
+    agenda: `<span class="time">09:30 – 10:15</span><span class="price">32,00 €</span> · Dégradé américain + contour barbe · Mohamed El Amrani · <span class="mono">45 min</span>`,
+    cardName: 'Salon de Coiffure Le Barbier de Saint-Germain-en-Laye',
+    cardMeta: 'Barbershop · Saint-Germain-en-Laye · 1,7 km · Ouvert',
+    cardFrom: 'À partir de <b>25,00 €</b>',
+    numsHead: ['Prix','Durée','Horaire'],
+    prices: ['9,00 €','12,50 €','25,00 €','32,00 €','40,00 €','45,50 €','58,00 €','79,00 €','110,00 €','249,00 €'],
+    durs: ['15 min','20 min','30 min','35 min','45 min','50 min','60 min','75 min','90 min','120 min'],
+    times: ['08:00','09:15','10:30','11:45','13:00','14:15','15:30','16:45','18:00','19:15'],
+  },
+  en: {
+    agenda: `<span class="time">09:30 – 10:15</span><span class="price">€32.00</span> · American fade + beard line-up · Mohamed El Amrani · <span class="mono">45 min</span>`,
+    cardName: 'Salon de Coiffure Le Barbier de Saint-Germain-en-Laye',
+    cardMeta: 'Barbershop · Saint-Germain-en-Laye · 1.1 mi · Open now',
+    cardFrom: 'From <b>€25.00</b>',
+    numsHead: ['Price','Duration','Time'],
+    prices: ['€9.00','€12.50','€25.00','€32.00','€40.00','€45.50','€58.00','€79.00','€110.00','€249.00'],
+    durs: ['15 min','20 min','30 min','35 min','45 min','50 min','60 min','75 min','90 min','120 min'],
+    times: ['08:00','09:15','10:30','11:45','13:00','14:15','15:30','16:45','18:00','19:15'],
+  },
+};
+let html = '';
+for (const [lang, L] of Object.entries(LOCALES)) {
+  html += `<h2>Bloc 1 — ligne d'agenda pro (${lang.toUpperCase()}) — 14px · 320px · #0F1A16</h2><div class="row">`;
+  for (const [cls, label] of FONTS) html += `<div class="cell ${cls}"><h3>${label}</h3><div class="agenda">${L.agenda}</div></div>`;
+  html += `</div><h2>Bloc 2 — carte de résultat (${lang.toUpperCase()}) — 358px</h2><div class="row">`;
+  for (const [cls, label] of FONTS) html += `<div class="cell ${cls}"><h3>${label}</h3><div class="card"><div class="name">${L.cardName}</div><div class="meta">${L.cardMeta}</div><div class="from">${L.cardFrom}</div></div></div>`;
+  html += `</div><h2>Bloc 3 — chiffres tabulaires (${lang.toUpperCase()})</h2><div class="row">`;
+  for (const [cls, label] of FONTS) {
+    html += `<div class="cell ${cls}"><h3>${label}</h3><div class="nums mono">`;
+    for (let i=0;i<10;i++) html += `<span>${L.prices[i]}</span><span>${L.durs[i]}</span><span>${L.times[i]}</span>`;
+    html += `</div></div>`;
+  }
+  html += `</div>`;
+}
+document.getElementById('app').innerHTML = html;
+</script>
+</body>
+</html>

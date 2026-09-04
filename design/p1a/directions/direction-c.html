@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>P1a — Direction C · Luxe produit</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  /* ============ DIRECTION C — LUXE PRODUIT ============
+     Poli d'application consumer · élévation subtile unique · surfaces
+     posées sur un fond légèrement teinté · rayons continus hiérarchisés
+     (surface 20 / contrôle 12 / puce 999) · vert = CTA et état actif. */
+  :root{
+    --ground:#F7F9F8; --surface:#FFFFFF; --ink:#080F0D;
+    --ink-2:rgba(8,15,13,.60); --ink-3:rgba(8,15,13,.38);
+    --hairline:rgba(8,15,13,.08);
+    --green:#00C27A; --green-deep:#00875A; --green-soft:#E6FFF3;
+    --lift:0 1px 2px rgba(8,15,13,.05), 0 4px 16px rgba(8,15,13,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#EDEFEE;font-family:'Geist',sans-serif;color:var(--ink);padding:40px;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}
+  .bench{display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap}
+  .stage h2{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 10px}
+  .frame{width:390px;background:var(--ground);outline:1px solid rgba(8,15,13,.14);
+    padding-bottom:20px}
+  .caption{width:390px;font-size:12px;line-height:1.5;color:var(--ink-2);margin-top:10px}
+  .brand{display:flex;align-items:center;gap:9px;padding:18px 20px 14px}
+  .brand img{width:26px;height:26px}
+  .brand span{font-size:15px;font-weight:700;letter-spacing:-.015em}
+
+  /* ---- Carte de résultat : surface posée, une seule élévation ---- */
+  .card{margin:2px 16px 0;background:var(--surface);border-radius:20px;box-shadow:var(--lift);
+    padding:18px}
+  .row1{display:flex;align-items:center;gap:12px}
+  .c-ava{width:52px;height:52px;border-radius:14px;background:var(--green-soft);
+    display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;
+    color:var(--green-deep)}
+  .name{font-size:19px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+  .kind{font-size:13px;color:var(--ink-2);margin-top:2px}
+  .addr{font-size:13px;color:var(--ink-2);margin-top:12px}
+  .state{font-size:13px;color:var(--ink-2);margin-top:3px}
+  .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:14px;
+    padding-top:12px;border-top:1px solid var(--hairline)}
+  .from{font-size:13px;color:var(--ink-2)}
+  .from .mono{font-size:16px;font-weight:500;color:var(--ink);margin-inline-start:4px}
+  .cta{padding:11px 20px;border-radius:12px;background:var(--green);color:#04170F;
+    font-size:14px;font-weight:600;text-decoration:none}
+
+  /* ---- Profil : identité posée, actions natives ---- */
+  .p-card{margin:2px 16px 0;background:var(--surface);border-radius:20px;box-shadow:var(--lift);
+    padding:20px}
+  .p-top{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .p-ava{width:84px;height:84px;border-radius:50%;background:var(--green-soft);
+    color:var(--green-deep);display:flex;align-items:center;justify-content:center;
+    font-size:26px;font-weight:600}
+  .p-name{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:12px}
+  .p-title{font-size:14px;color:var(--ink-2);margin-top:2px}
+  .p-org{font-size:14px;margin-top:10px}
+  .p-org a{color:var(--green-deep);font-weight:500;text-decoration:none}
+  .p-city{font-size:13px;color:var(--ink-3);margin-top:2px}
+  .p-book{display:block;margin-top:16px;text-align:center;padding:14px;border-radius:12px;
+    background:rgba(8,15,13,.05);color:var(--ink-3);font-size:15px;font-weight:600;
+    text-decoration:none}
+  .p-bookstate{font-size:12px;color:var(--ink-2);text-align:center;margin-top:8px}
+  .p-queue{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;
+    font-size:13px;color:var(--ink-2)}
+  .p-queue .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .p-group{margin:16px 16px 0;background:var(--surface);border-radius:20px;box-shadow:var(--lift);
+    padding:6px 18px}
+  .p-group .h{font-size:13px;font-weight:600;padding:12px 0 4px}
+  .svc{display:flex;justify-content:space-between;align-items:baseline;padding:13px 0;
+    border-top:1px solid var(--hairline);font-size:15px}
+  .svc:first-of-type{border-top:0}
+  .svc .d{color:var(--ink-3);font-size:13px;margin-inline-start:10px}
+  .svc .p{font-weight:500}
+  .empty{font-size:13px;color:var(--ink-3);padding:12px 0 14px}
+</style>
+</head>
+<body>
+<div class="bench">
+  <div class="stage">
+    <h2>Direction C · Luxe produit — carte de résultat (390&nbsp;px)</h2>
+    <div class="frame">
+      <div class="brand"><img src="../../../apps/web/public/brand/fadeup-mark-primary.png" alt="FadeUp"><span>FadeUp</span></div>
+      <div class="card">
+        <div class="row1">
+          <div class="c-ava">SA</div>
+          <div>
+            <div class="name">Side Agency</div>
+            <div class="kind">Barbershop</div>
+          </div>
+        </div>
+        <div class="addr">19 rue Danton — Antony (92)</div>
+        <div class="state">Fermé actuellement</div>
+        <div class="bottom">
+          <span class="from">à partir de<span class="mono">25,00&nbsp;€</span></span>
+          <a class="cta" href="#">Voir le salon</a>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Une seule élévation, réservée à la surface qui porte l'action.
+    Monogramme, jamais de fausse photo ; note et file absentes car absentes en base.
+    Données réelles (`search_public_professionals`, `p_entity_type='shop'`).</p>
+  </div>
+  <div class="stage">
+    <h2>Direction C · Luxe produit — en-tête de profil barber (390&nbsp;px)</h2>
+    <div class="frame">
+      <div class="brand"><img src="../../../apps/web/public/brand/fadeup-mark-primary.png" alt="FadeUp"><span>FadeUp</span></div>
+      <div class="p-card">
+        <div class="p-top">
+          <div class="p-ava">BT</div>
+          <div class="p-name">Barber Test</div>
+          <div class="p-title">Barbr Test</div>
+          <div class="p-org">Travaille chez <a href="#">Side Agency</a></div>
+          <div class="p-city">Antony (92)</div>
+        </div>
+        <a class="p-book" href="#" aria-disabled="true">Réserver</a>
+        <div class="p-bookstate">La réservation en ligne est indisponible pour le moment</div>
+        <div class="p-queue"><span class="dot"></span>File ouverte — rejoindre sur place</div>
+      </div>
+      <div class="p-group">
+        <div class="h">Prestations</div>
+        <div class="svc"><span>Coupe<span class="d mono">30&nbsp;min</span></span><span class="p mono">25,00&nbsp;€</span></div>
+        <div class="svc"><span>Coupe + barbe<span class="d mono">60&nbsp;min</span></span><span class="p mono">40,00&nbsp;€</span></div>
+        <div class="svc"><span>Taper<span class="d mono">30&nbsp;min</span></span><span class="p mono">25,00&nbsp;€</span></div>
+      </div>
+      <div class="p-group">
+        <div class="h">Réalisations</div>
+        <div class="empty">Rien de publié pour l'instant.</div>
+      </div>
+    </div>
+    <p class="caption">Groupes de surface à la manière d'une app native ; le vert reste
+    l'action et l'état vivant. Profil professionnel non public → pas de couche sociale.
+    États Réserver/file réels (`get_public_service_state`).</p>
+  </div>
+</div>
+</body>
+</html>

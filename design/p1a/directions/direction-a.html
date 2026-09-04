@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>P1a — Direction A · Éditorial minimal</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  /* ============ DIRECTION A — ÉDITORIAL MINIMAL ============
+     Blanc tournant fort · conduite typographique · vert très retenu ·
+     précision presque mode · hairlines, pas de boîtes · rayon minimal
+     hiérarchisé (contrôle 6 / avatar plein) · zéro ombre. */
+  :root{
+    --canvas:#FFFFFF; --ink:#080F0D; --ink-2:rgba(8,15,13,.62); --ink-3:rgba(8,15,13,.40);
+    --hairline:rgba(8,15,13,.10); --hairline-strong:rgba(8,15,13,.22);
+    --green:#00C27A; --green-deep:#00875A; --green-soft:#E6FFF3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#F2F3F2;font-family:'Geist',sans-serif;color:var(--ink);padding:40px;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}
+  .bench{display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap}
+  .stage h2{font-size:13px;font-weight:500;color:var(--ink-2);margin:0 0 10px}
+  .frame{width:390px;background:var(--canvas);outline:1px solid var(--hairline-strong)}
+  .caption{width:390px;font-size:12px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:390px}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 20px 14px}
+  .brand img{width:26px;height:26px}
+  .brand span{font-size:15px;font-weight:700;letter-spacing:-.01em}
+
+  /* ---- Carte de résultat : rangée hairline sur canvas, pas une boîte ---- */
+  .result{padding:20px;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)}
+  .result .name{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+  .result .kind{font-size:13px;color:var(--ink-2);margin-top:6px}
+  .result .addr{font-size:13px;color:var(--ink-2);margin-top:2px}
+  .result .stateline{display:flex;align-items:baseline;justify-content:space-between;
+    margin-top:16px;padding-top:12px;border-top:1px solid var(--hairline)}
+  .result .state{font-size:13px;color:var(--ink-2)}
+  .result .from{font-size:14px;font-weight:500}
+  .result .from .mono{font-size:15px}
+  .result .cta{display:block;margin-top:14px;text-align:center;padding:12px;
+    border:1px solid var(--ink);border-radius:6px;font-size:14px;font-weight:600;
+    color:var(--ink);text-decoration:none}
+
+  /* ---- Profil barber : conduite typographique ---- */
+  .profile{padding:6px 20px 22px}
+  .p-ava{width:64px;height:64px;border-radius:50%;background:var(--ink);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;
+    letter-spacing:.02em;margin-top:12px}
+  .p-name{font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1.05;margin-top:14px}
+  .p-title{font-size:14px;color:var(--ink-2);margin-top:4px}
+  .p-org{font-size:14px;margin-top:12px}
+  .p-org a{color:var(--ink);font-weight:500;text-decoration:underline;
+    text-decoration-color:var(--green);text-underline-offset:3px}
+  .p-city{font-size:13px;color:var(--ink-3);margin-top:2px}
+  .p-book{display:block;margin-top:18px;text-align:center;padding:14px;border-radius:6px;
+    background:var(--ink);color:#fff;font-size:15px;font-weight:600;text-decoration:none;opacity:.45}
+  .p-bookstate{font-size:12px;color:var(--ink-2);text-align:center;margin-top:8px}
+  .p-queue{font-size:13px;margin-top:14px;padding:10px 0;border-top:1px solid var(--hairline);
+    color:var(--ink-2)}
+  .p-queue .dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--green);margin-inline-end:7px;vertical-align:1px}
+  .p-h{font-size:12px;font-weight:500;color:var(--ink-3);margin-top:22px;
+    padding-top:14px;border-top:1px solid var(--hairline)}
+  .svc{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;
+    border-bottom:1px solid var(--hairline);font-size:15px}
+  .svc .d{color:var(--ink-3);font-size:13px;margin-inline-start:10px}
+  .svc .p{font-weight:500}
+  .empty{font-size:13px;color:var(--ink-3);padding:14px 0}
+</style>
+</head>
+<body>
+<div class="bench">
+  <div class="stage">
+    <h2>Direction A · Éditorial minimal — carte de résultat (390&nbsp;px)</h2>
+    <div class="frame">
+      <div class="brand"><img src="../../../apps/web/public/brand/fadeup-mark-primary.png" alt="FadeUp"><span>FadeUp</span></div>
+      <div class="result">
+        <div class="name">Side Agency</div>
+        <div class="kind">Barbershop</div>
+        <div class="addr">19 rue Danton — Antony (92)</div>
+        <div class="stateline">
+          <span class="state">Fermé actuellement</span>
+          <span class="from">à partir de <span class="mono">25,00&nbsp;€</span></span>
+        </div>
+        <a class="cta" href="#">Voir le salon</a>
+      </div>
+    </div>
+    <p class="caption">Données réelles (`search_public_professionals`, `p_entity_type='shop'`).
+    Absents et donc non rendus&nbsp;: note (aucun avis en base), distance (pas de géoloc fournie),
+    photo (aucun média), file (0 en attente). Fermé = état réel.</p>
+  </div>
+  <div class="stage">
+    <h2>Direction A · Éditorial minimal — en-tête de profil barber (390&nbsp;px)</h2>
+    <div class="frame">
+      <div class="brand"><img src="../../../apps/web/public/brand/fadeup-mark-primary.png" alt="FadeUp"><span>FadeUp</span></div>
+      <div class="profile">
+        <div class="p-ava">BT</div>
+        <div class="p-name">Barber Test</div>
+        <div class="p-title">Barbr Test</div>
+        <div class="p-org">Travaille chez <a href="#">Side Agency</a></div>
+        <div class="p-city">Antony (92)</div>
+        <a class="p-book" href="#" aria-disabled="true">Réserver</a>
+        <div class="p-bookstate">La réservation en ligne est indisponible pour le moment</div>
+        <div class="p-queue"><span class="dot"></span>File ouverte — rejoindre sur place</div>
+        <div class="p-h">Prestations</div>
+        <div class="svc"><span>Coupe<span class="d mono">30&nbsp;min</span></span><span class="p mono">25,00&nbsp;€</span></div>
+        <div class="svc"><span>Coupe + barbe<span class="d mono">60&nbsp;min</span></span><span class="p mono">40,00&nbsp;€</span></div>
+        <div class="svc"><span>Taper<span class="d mono">30&nbsp;min</span></span><span class="p mono">25,00&nbsp;€</span></div>
+        <div class="p-h">Réalisations</div>
+        <div class="empty">Rien de publié pour l'instant.</div>
+      </div>
+    </div>
+    <p class="caption">Données réelles (`get_public_barber`, `list_public_barber_services`,
+    `get_public_service_state`). Le profil professionnel n'est pas public →
+    pas de handle, pas d'abonnés, pas de bouton Suivre. Réserver affiche l'état réel
+    (`booking_accepting_new_entries=false`) ; la file est réellement ouverte (`queue_open=true`).</p>
+  </div>
+</div>
+</body>
+</html>
