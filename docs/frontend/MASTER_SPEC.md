@@ -138,8 +138,13 @@ Un pro revendiqué avec disponibilité opérationnelle **produit une confirmatio
 
 **Données personnelles avant vérification** : prénom ou initiale, service, horaire. **Jamais le téléphone ni l'e-mail complet.**
 
-**Première demande offerte** : après revendication, une demande acceptée gratuitement, puis le mur payant tombe.
-> **MANQUANT constaté en P1a.** Aucune logique de ce type ; `confirm_booking_request` ne consulte ni plan ni compteur.
+**Pas de demandes offertes.** L'ancienne règle — une, puis cinq demandes acceptées gratuitement après revendication — est **abandonnée**. Aucun compteur, aucune garde de quota dans `confirm_booking_request`.
+
+Le crochet de conversion est ailleurs, et il est plus fort : **la revendication est gratuite et instantanée, et la demande en attente est visible immédiatement après.** Le professionnel voit son client réel avant de choisir quoi que ce soit. C'est ça qui convertit, pas un nombre d'acceptations offertes.
+
+Ensuite, un chemin unique : **l'essai de 14 jours sans carte bancaire**, qui ouvre le produit complet — agenda, file, CRM, statistiques. Un quota d'acceptations n'aurait prouvé qu'une chose, que FadeUp amène des clients ; l'essai prouve tout le reste, c'est-à-dire ce pour quoi le professionnel paiera.
+
+Motif d'abandon, à ne pas ré-arbitrer sans raison nouvelle : un compteur crée une falaise — à la demande de trop, le pro découvre le mur payant en même temps qu'il perd un client réel. Une échéance se voit venir et se décide à froid. Et une mécanique unique se raconte en une phrase dans l'e-mail au prospect ; deux mécaniques non cumulables demandent un paragraphe et une FAQ, au pire endroit possible du tunnel.
 
 **Non-réponse** : « La demande n'a pas été confirmée à temps », puis des alternatives proches capables d'assurer un service équivalent. **Jamais présenté comme une confirmation ni comme un no-show.**
 
@@ -526,7 +531,6 @@ Manquent :
 - **Preuve de présence en file** : QR et géofence.
 - **Wallet** : passes Apple et Google.
 - **Création de `pending`** dans le tunnel d'acquisition.
-- **Première demande offerte.**
 - **Alignement du catalogue tarifaire et tables Stripe.**
 
 **Conventions à respecter** — le schéma existant est cohérent : nommage des contraintes en `<table>_<règle>`, trigger `set_updated_at` sur toute table datée, fonction de garde `check_<table>_consistency` quand une ligne référence deux entités devant appartenir à la même organisation, accès public par RPC `security definer` nommée `get_public_*` / `list_public_*` / `search_public_*`, **RLS activée sans exception**.
@@ -549,5 +553,5 @@ Manquent :
 ## 23. Décisions du fondateur en attente
 
 1. ~~Grille tarifaire~~ — **TRANCHÉ** : le catalogue en base fait foi (0/19/29/49/79 € + famille multi_salon). Restent à construire : annuel, essai 14 jours, tables Stripe.
-2. **Priorité du chantier base** : création du `pending`, première demande offerte, défaut de `search_public_professionals`, preuve de présence en file. **Le premier conditionne toute la boucle d'acquisition.**
+2. **Priorité du chantier base** : création du `pending`, défaut de `search_public_professionals`, preuve de présence en file. **Le premier conditionne toute la boucle d'acquisition.**
 3. **Formule du score FadeUp**, mécanique de la mise en avant sponsorisée, modèle d'estimation du temps d'attente. Architecture modulaire exigée dès maintenant, implémentation plus tard.
