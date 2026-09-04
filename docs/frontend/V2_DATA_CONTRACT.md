@@ -8,9 +8,10 @@ postgres-meta du conteneur `fadeup-supabase-meta` — la CLI Supabase moderne
 exige Docker-in-Docker pour `gen types --db-url` et échoue ici ; même
 générateur, même sortie).
 
-> **Mis à jour le 2026-09-04 après B1** (`b1/public-read-integrity`). Le
-> schéma live porte désormais **108 tables, 189 fonctions, 59 enums, 302
-> policies RLS, 0 table sans RLS**. Les lignes touchées par B1 sont marquées
+> **Mis à jour le 2026-09-04 après B2** (`b2/acquisition-funnel`). Le schéma
+> live porte désormais **113 tables, 200 fonctions, 62 enums, 307 policies
+> RLS, 0 table sans RLS**. Les lignes marquées **B2** sont celles de ce lot ;
+> celles marquées **B1** viennent du précédent. Les lignes touchées par B1 sont marquées
 > **B1** ci-dessous. Les décomptes de l'en-tête d'origine (186 fonctions, 58
 > enums, 307 policies) datent du dump du 2026-09-03 ; l'écart de policies
 > (307 → 302) est antérieur à B1, qui n'a créé aucune table et donc aucune
@@ -87,7 +88,11 @@ lectures `prospect_*`/`outreach_*`/`ml_*` restent hors périmètre frontend (non
 
 | RPC | Effet | SD | Auth | Écran(s) |
 |---|---|---|---|---|
-| `book_public_appointment` | crée un rendez-vous **`confirmed`** (voir V1) ; retourne `id, starts_at, ends_at, status, claim_token` | ✓ | non (token de revendication si anonyme) | P2 Réservation |
+| `book_public_appointment` **B2** | **Deux issues selon la capacité commerciale** : avec `booking` → `confirmed` ; sans → **`pending`** avec échéance. Retourne `id, starts_at, ends_at, status, is_request, expires_at, claim_token` | ✓ | non (token de revendication si anonyme) | P2 Réservation, P2 « demande envoyée » |
+| `create_professional_interest_request` **B2** | demande envoyée à un profil **non revendiqué** (qui n'a ni organisation, ni agenda). Retourne `id, status, preferred_starts_at, expires_at, professional_display_name` | ✓ | non | P2 Profil non revendiqué |
+| `get_public_booking_alternatives` **B2** | alternatives proches après expiration ; `accepts_immediate_booking` dit si l'organisation peut confirmer ou seulement recevoir une demande | ✓ | non | P2 « demande expirée » |
+| `unsubscribe_prospect_outreach` **B2** | désabonnement en un clic depuis un e-mail de prospection ; définitif | ✓ | non | lien e-mail, hors app |
+| `get_my_interest_requests` **B2** | les demandes d'intérêt du client connecté | ✓ | oui | P2 Réservations |
 | `redeem_appointment_claim` | rattache un rendez-vous anonyme au compte | ✓ | oui | P2 post-inscription |
 | `cancel_my_appointment` | annulation client | ✓ | oui | P2 Réservations |
 | `reschedule_appointment` | report ; un report client repasse la ligne en `pending` (matrice de transition) | ✓ | oui | P2 Réservations |
@@ -150,9 +155,9 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 | Recherche / Marketplace | `search_public_professionals` (**B1 : le défaut est désormais correct**, V6) | `get_public_currencies` | — | **OK** |
 | Profil salon | `get_public_organization` | `list_public_locations/services/organization_barbers`, `get_public_service_state`, `get_public_queue_status`, follows org | queue (poll public) | **OK** |
 | Profil barber | `get_public_barber` | `get_public_professional`, `list_public_barber_services`, `get_public_service_state` | — | **PARTIEL** — pas de portfolio (pas de tables posts), pas d'avis |
-| Profil non revendiqué | `get_public_professional` / `_by_handle` (**B1**) | — | — | **PARTIEL** — la publication d'un profil non revendiqué fonctionne et `claim_state` est exposé (B1) ; le tunnel de demande `pending` n'existe toujours pas (V1, → B2) |
+| Profil non revendiqué | `get_public_professional` / `_by_handle` (**B1**) | `create_professional_interest_request` (**B2**) | — | **OK** — le cul-de-sac est levé : une demande est envoyable, elle part en `pending`, elle expire, et les relances au professionnel sont portées par le scheduler |
 | Réservation (flow) | `get_public_available_slots`, `book_public_appointment` | `list_public_services/barbers`, `get_public_service_state` | — | **OK** (confirmation immédiate uniquement) |
-| Écran « demande envoyée » (pending) | — | — | — | **BLOQUÉ** — aucune RPC ne crée de `pending` à la réservation (V1) |
+| Écran « demande envoyée » (pending) | `book_public_appointment` (**B2**, `is_request = true`) | `get_public_booking_alternatives` à l'expiration | notifications | **OK** — la RPC retourne `is_request` et `expires_at` ; l'écran ne doit JAMAIS afficher « Réservé » sur `is_request` |
 | Réservations | `get_my_appointments` | `cancel_my_appointment`, `reschedule_appointment` | notifications INSERT | **OK** |
 | File active | `get_my_queue_status` | `get_public_queue_status`, `join_public_queue` | `queue_entries` (authentifié) / poll | **OK** — B1 livre la preuve de présence : l'écran doit lire le QR et demander la position, et savoir afficher les huit motifs de refus (V8) |
 | Fade Passport | `.from('customer_passports')` (RLS owner) | `create/revoke_passport_share`, `get_shared_passport` | — | **OK** |
@@ -167,7 +172,7 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 |---|---|---|---|---|
 | TODAY / NOW / NEXT / QUEUE | `get_calendar_appointments` | `get_service_mode_state`, queue org (`.from('queue_entries')` RLS), `complete_appointment`, `mark_appointment_no_show` | `appointments`, `queue_entries` | **OK** |
 | Agenda (jour/semaine) | `get_calendar_appointments` | `reschedule_appointment`, `set_appointment_blocked_range`, `get_available_slots` | `appointments`, `time_blocks` | **OK** |
-| Demandes | `get_booking_requests` | `confirm_booking_request`, `decline_booking_request` | `appointments` | **OK** (mais flux vide tant que rien ne crée de `pending` hors reports — V1) |
+| Demandes | `get_booking_requests` | `confirm_booking_request`, `decline_booking_request` | `appointments` | **OK** — **B2** alimente enfin ce flux : toute réservation sur une organisation sans capacité `booking` y arrive |
 | File pro | `.from('queue_entries')` org (RLS) | `set_location_queue_open`, modes | `queue_entries` | **OK** |
 | Catalogue | `.from('services')` etc. (RLS org) | `apply_starter_services` | — | **OK** |
 | Équipe | `.from('staff_profiles')`, `.from('memberships')` | invitations, `offboard_barber` | `memberships` | **OK** |
@@ -200,7 +205,8 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 | Arbitrage claims concurrents | `review_professional_claim` | **OK** |
 | Promotions de lancement | — | **BLOQUÉ** — aucune table de promotion/remise |
 | Réglages globaux produit (limites réservation, capacité file…) | — | **BLOQUÉ** — valeurs en colonnes org (`booking_request_ttl_minutes`) mais pas de table de réglages plateforme |
-| Retrait marketplace (72 h) | `set_organization_marketplace_visible` | **PARTIEL** — pas de workflow de demande datée |
+| Retrait marketplace (72 h) | `request_marketplace_withdrawal`, `list_marketplace_withdrawal_requests`, `complete_marketplace_withdrawal` (**B2**) | **OK** — demande datée, échéance à 72 h, `is_overdue` pour l'alerte, exécution auditée, non-republication garantie |
+| File d'e-mails et gabarits | `.from('email_outbox')`, `.from('email_templates')` (RLS platform-admin) | **OK** — **B2** : un écran de supervision de la délivrance est possible ; `status = 'sent'` signifie « accepté par Resend », pas « délivré » (BLOCKERS §7) |
 
 ---
 
@@ -247,7 +253,26 @@ directe de cache réservée à la file ; fallback poll obligatoire.
 
 ## 5. Vérifications V1 à V8
 
-### V1 — Le tunnel `pending` — **ÉCART MAJEUR : non implémenté à la création**
+### V1 — Le tunnel `pending` — ~~ÉCART MAJEUR~~ **RÉSOLU PAR B2 (2026-09-04)**
+
+> `book_public_appointment` branche désormais sur la capacité commerciale :
+> `booking` présente → `confirmed` (comportement R1A intact), absente →
+> `pending`. La seule ligne changée dans `enforce_booking_service_mode` est
+> l'assertion de capacité, rendue conditionnelle à `status <> 'pending'` — le
+> mode de service, lui, reste opposable aux demandes.
+>
+> Le `pending` ne contourne AUCUNE vérification : lieu actif, service offert
+> ici, barbier apte, horaire dans les heures d'ouverture, créneau libre. Une
+> ligne `pending` participe à `appointments_barber_no_overlap`, donc elle
+> retient bien le créneau qu'elle demande.
+>
+> Et pour les profils **non revendiqués**, qui n'ont ni organisation ni
+> agenda, B2 ajoute `professional_interest_requests` : une demande d'intérêt
+> qui ne retient aucun créneau et n'affirme aucune disponibilité.
+>
+> Le constat d'origine est conservé ci-dessous.
+
+#### Constat d'origine (P1a)
 
 `book_public_appointment` insère **inconditionnellement en `confirmed`** :
 
@@ -297,7 +322,15 @@ n'a pas de support. **Bloquant pour l'écran « demande envoyée » de P2 et pou
 l'e-mail prospect.** Recommandation : contrat backend dédié (hors P1) — voie
 de demande vers profils non revendiqués sortant en `pending` + e-mail.
 
-### V2 — Première demande offerte — **MANQUANT CONFIRMÉ**
+### V2 — Première demande offerte — **ABANDONNÉE, PAS MANQUANTE**
+
+> MASTER_SPEC §5 a tranché : « Pas de demandes offertes. L'ancienne règle est
+> **abandonnée**. Aucun compteur, aucune garde de quota dans
+> `confirm_booking_request`. » Le constat ci-dessous décrit donc une absence
+> **conforme**, et B2 n'a rien ajouté : le crochet de conversion est la
+> revendication gratuite et la demande visible immédiatement après.
+
+#### Constat d'origine (P1a)
 
 ```
 grep -niP 'free_(request|booking|accept)|first_(request|booking)|trial_booking|grace' SCHEMA.sql
@@ -523,6 +556,13 @@ grep -ciP 'geofence|qr_code|check_?in_radius'            → 0
 | ~~Profils non revendiqués impubliables (contrainte `professionals_publication_eligibility`)~~ | ~~critique~~ | **RÉSOLU — B1** | contrainte resserrée sur le nom seul + garde `professionals_guard_publication` exigeant une ancre de corroboration pour un non revendiqué |
 | ~~`get_public_service_state` en 405 pour tout appelant~~ | ~~critique~~ | **RÉSOLU — B1** | l'écriture est sortie des deux lectures STABLE |
 | ~~Aucun modèle de zone de service (professionnel mobile)~~ | ~~majeur~~ | **RÉSOLU — B1** | `locations.kind` + centre/rayon, readiness accepte les deux, recherche géographique par couverture |
+| ~~Tunnel `pending` inexistant à la création (V1)~~ | ~~bloquant~~ | **RÉSOLU — B2** | branche sur la capacité commerciale + `professional_interest_requests` pour les non revendiqués |
+| ~~Aucune organisation ne détient la capacité `booking`~~ | ~~bloquant~~ | **RÉSOLU — B2** | ce n'était pas un défaut à corriger mais le cas que le `pending` devait traiter |
+| ~~`email_outbox` sans expéditeur~~ | ~~bloquant~~ | **RÉSOLU — B2** | pg_net + vault + Resend, réconciliation asynchrone, 26 gabarits FR/EN |
+| ~~Retrait marketplace 72 h sans déclencheur~~ | ~~majeur~~ | **RÉSOLU — B2** | demande datée, échéance suivie, exécution auditée |
+| Un seul domaine d'envoi vérifié : prospection et transactionnel partagent la réputation | **majeur** | DNS / décision fondateur | BLOCKERS §6 — un `UPDATE` d'une ligne le jour où un second domaine est vérifié |
+| Clé Resend restreinte à l'envoi : rebonds et plaintes invisibles | majeur | webhook Resend | BLOCKERS §7 — `sent` signifie « accepté », pas « délivré » |
+| ~~`TRUNCATE` accordé à `anon` sur `email_outbox`~~ | ~~majeur~~ | **RÉSOLU — B2** | 82 tables restent, voir BLOCKERS §4 |
 | `TRUNCATE` accordé à `anon` (54 tables) et `authenticated` (87), hors RLS | **majeur** | lot de durcissement dédié | B1 a traité ses 4 tables ; les 83 autres restent. Voir BLOCKERS.md §4 |
 | Aucune organisation ne détient la capacité `booking` : toutes sont en `free` | **bloquant** (P2 réservation) | B2 / décision fondateur | c'est le tunnel `pending` (V1) qui doit répondre à ce cas, pas un refus sec |
 | Avis absents (V8) | majeur (assumé — « à créer entièrement ») | P4 | domaine `reviews` selon MASTER_SPEC §10/§18 |

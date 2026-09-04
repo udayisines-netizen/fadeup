@@ -4,16 +4,52 @@ Deux blocages hors périmètre frontend, constatés et vérifiés pendant P1b.
 Ils ne sont PAS contournables côté code applicatif ; les écrans concernés
 sont livrés et affichent des erreurs traduites en attendant.
 
-> **État au 2026-09-04, après B1.** Le blocage n°3
-> (`get_public_service_state` en 405) est **RÉSOLU** — voir sa section, qui
-> conserve le diagnostic parce qu'il documente une classe d'erreur, pas un
-> incident. Les blocages n°1 (SMTP) et n°2 (WebKit) restent ouverts : B1 était
-> un chantier base de données et n'y a pas touché. B1 a par ailleurs ouvert
-> deux nouveaux points, n°4 et n°5.
+> **État au 2026-09-04, après B2.** Blocages n°1 (SMTP) et n°3
+> (`get_public_service_state`) **RÉSOLUS**. Restent ouverts : n°2 (WebKit),
+> n°4 (`TRUNCATE`, réduit de 4 tables par B1 puis d'une par B2, il en reste
+> 82), n°5 (scripts `verify_*` hérités). B2 ajoute n°6, la séparation des
+> domaines d'envoi, et n°7, la clé Resend restreinte à l'envoi.
 
 ---
 
-## 1. Envoi d'e-mails GoTrue — **BLOQUANT POUR P2**
+## 1. ~~Envoi d'e-mails GoTrue~~ — **RÉSOLU par B2 (2026-09-04)**
+
+**Correctif** : GoTrue est configuré en SMTP sur Resend
+(`smtp.resend.com:587`, utilisateur `resend`, expéditeur
+`FadeUp <bonjour@contact.fade-up.com>`), et le conteneur
+`fadeup-supabase-auth` porte bien ces valeurs — vérifié dans son
+environnement, pas seulement dans `.env`.
+
+**Preuve mesurée** :
+
+```
+POST /auth/v1/otp  ->  HTTP 200   (durée 1,79 s = l'aller-retour SMTP réel)
+audit GoTrue       ->  user_recovery_requested
+```
+
+L'échec d'origine était un `500 unexpected_failure` immédiat sur
+`lookup supabase-mail ... server misbehaving`. Une réponse 200 après un
+aller-retour de 1,8 s est une poignée de main SMTP qui a abouti.
+
+**Envoi applicatif également livré** : `email_outbox` avait une machine
+d'état complète depuis R1A et **aucun expéditeur** — 15 messages y
+attendaient. B2 branche pg_net + le vault sur l'API Resend. Preuve de bout en
+bout sur la base de production : `status = sent`,
+`provider_message_id = 242894b7-bf65-4d32-8b2a-03680d72dfbd`.
+
+**Ce qui n'est pas prouvé et ne peut pas l'être ici** : la RÉCEPTION en boîte.
+Voir le point n°7 — la clé API est restreinte à l'envoi, donc l'état de
+délivrance n'est pas interrogeable. Le fondateur confirme en ouvrant sa boîte.
+
+**`SITE_URL` — traité, pas contourné.** `GOTRUE_SITE_URL` reste
+`https://fade-up.com` et `GOTRUE_URI_ALLOW_LIST` contient déjà
+`http://localhost:5173/**`. Pour tester en local, passer `redirect_to` vers
+une origine autorisée ; **ne pas** ajouter d'hôte local à
+`GOTRUE_MAILER_EXTERNAL_HOSTS`, qui laisserait un en-tête `Host` forgé
+détourner un lien magique. L'avertissement « external host ... not added »
+dans les logs est donc le comportement voulu.
+
+### Diagnostic d'origine (P1b)
 
 **Symptôme.** Tout envoi d'e-mail d'authentification échoue : lien magique
 (`POST /auth/v1/otp`), réinitialisation de mot de passe
@@ -209,3 +245,73 @@ derrière lui.
 `verify_b1.sql` (une transaction, un `rollback`), ou leur interdire
 explicitement toute base autre qu'une base jetable. En attendant : **ne jamais
 lancer `db/tests/verify_*.sql` — sauf `verify_b1.sql` — contre la production.**
+
+
+---
+
+## 6. Séparation des flux d'envoi — **UN SEUL DOMAINE VÉRIFIÉ** (constaté en B2, 2026-09-04)
+
+**Ce que la spec demande.** B2 §3 : deux domaines d'envoi distincts,
+transactionnel et prospection, pour qu'une réputation abîmée par du démarchage
+à froid ne fasse pas tomber les liens magiques.
+
+**Ce qui est mesuré** (sonde contre l'API Resend, 2026-09-04) :
+
+| Domaine | Réponse |
+|---|---|
+| `contact.fade-up.com` | accepté, identifiant retourné |
+| `pro.fade-up.com` | **403** « domain is not verified » |
+| `fade-up.com` | non sondé (le 403 ci-dessus suffit à établir le point) |
+
+**Le risque, en clair.** Aujourd'hui les relances de prospection et les liens
+magiques partent du même domaine. Une vague de plaintes sur les premières
+dégrade la délivrabilité des seconds. **Un client qui ne reçoit pas son lien
+magique est un client perdu**, et il l'est à cause d'e-mails qui ne le
+concernaient pas.
+
+**Ce que B2 a fait en attendant.** Les deux flux sont modélisés
+(`public.email_streams`), avec des adresses distinctes — `bonjour@` et `pro@`
+— et des en-têtes `List-Unsubscribe` / `List-Unsubscribe-Post` (RFC 8058) sur
+la seule prospection. Des adresses distinctes aident le destinataire et le
+routage des réponses ; elles n'aident **en rien** la réputation, qui se
+calcule par domaine.
+
+**Remédiation** (DNS, décision fondateur) :
+1. ajouter et vérifier un second domaine chez Resend, par exemple
+   `pro.fade-up.com` : enregistrements SPF, DKIM et DMARC ;
+2. puis, en base, une seule ligne :
+   `update public.email_streams set from_address = 'pro@pro.fade-up.com' where stream = 'prospecting';`
+
+Aucune migration n'est nécessaire : le modèle a été construit pour que ce jour
+coûte un `UPDATE`.
+
+---
+
+## 7. Clé API Resend restreinte à l'envoi — **la délivrance n'est pas observable** (constaté en B2, 2026-09-04)
+
+**Symptôme.** `GET /domains` et `GET /emails/{id}` répondent :
+
+```
+401 {"name":"restricted_api_key","message":"This API key is restricted to only send emails"}
+```
+
+**Conséquence.** `POST /emails` fonctionne — c'est ce qui compte — mais FadeUp
+ne peut pas relire l'état d'un message. `email_outbox.status = 'sent'`
+signifie donc exactement « **Resend a accepté le message** », et rien de plus :
+ni délivré, ni ouvert, ni rebondi. La colonne `provider_message_id` permet de
+retrouver le message dans le tableau de bord Resend, à la main.
+
+**Ce que cela empêche** : détecter automatiquement une adresse invalide, un
+rebond dur, une plainte pour spam. Sur un domaine d'envoi neuf, ce sont
+précisément les signaux qu'il faudrait surveiller.
+
+**Remédiation**, au choix :
+1. un webhook Resend (`email.delivered`, `email.bounced`, `email.complained`)
+   vers une Edge Function qui met à jour `email_outbox` — c'est la voie
+   propre, et elle ne demande pas d'élargir la clé ;
+2. une clé à accès complet, qui rendrait `GET /emails/{id}` interrogeable
+   depuis le tick de réconciliation. Plus simple, moins bon : une clé plus
+   large vit alors dans le vault d'une base applicative.
+
+**Recommandation : l'option 1.** La sonde de rebond est ce qui protège la
+réputation partagée décrite au point n°6.

@@ -1429,14 +1429,19 @@ export type Database = {
         Row: {
           attempts: number
           created_at: string
+          dedupe_key: string | null
+          dispatched_at: string | null
           id: string
           last_error: string | null
           locale: string
           locked_at: string | null
+          net_request_id: number | null
           next_attempt_at: string
           payload: Json
+          provider_message_id: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["email_delivery_status"]
+          stream: Database["public"]["Enums"]["email_stream"]
           template: string
           to_email: string
           updated_at: string
@@ -1444,14 +1449,19 @@ export type Database = {
         Insert: {
           attempts?: number
           created_at?: string
+          dedupe_key?: string | null
+          dispatched_at?: string | null
           id?: string
           last_error?: string | null
           locale?: string
           locked_at?: string | null
+          net_request_id?: number | null
           next_attempt_at?: string
           payload?: Json
+          provider_message_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["email_delivery_status"]
+          stream?: Database["public"]["Enums"]["email_stream"]
           template: string
           to_email: string
           updated_at?: string
@@ -1459,19 +1469,97 @@ export type Database = {
         Update: {
           attempts?: number
           created_at?: string
+          dedupe_key?: string | null
+          dispatched_at?: string | null
           id?: string
           last_error?: string | null
           locale?: string
           locked_at?: string | null
+          net_request_id?: number | null
           next_attempt_at?: string
           payload?: Json
+          provider_message_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["email_delivery_status"]
+          stream?: Database["public"]["Enums"]["email_stream"]
           template?: string
           to_email?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      email_streams: {
+        Row: {
+          created_at: string
+          from_address: string
+          from_name: string
+          is_enabled: boolean
+          reply_to: string | null
+          requires_unsubscribe: boolean
+          stream: Database["public"]["Enums"]["email_stream"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_address: string
+          from_name?: string
+          is_enabled?: boolean
+          reply_to?: string | null
+          requires_unsubscribe?: boolean
+          stream: Database["public"]["Enums"]["email_stream"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_address?: string
+          from_name?: string
+          is_enabled?: boolean
+          reply_to?: string | null
+          requires_unsubscribe?: boolean
+          stream?: Database["public"]["Enums"]["email_stream"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string
+          created_at: string
+          locale: string
+          stream: Database["public"]["Enums"]["email_stream"]
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body_html: string
+          body_text: string
+          created_at?: string
+          locale: string
+          stream: Database["public"]["Enums"]["email_stream"]
+          subject: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          body_text?: string
+          created_at?: string
+          locale?: string
+          stream?: Database["public"]["Enums"]["email_stream"]
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_stream_fkey"
+            columns: ["stream"]
+            referencedRelation: "email_streams"
+            referencedColumns: ["stream"]
+          },
+        ]
       }
       invitations: {
         Row: {
@@ -1704,6 +1792,58 @@ export type Database = {
             foreignKeyName: "locations_organization_id_fkey"
             columns: ["organization_id"]
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_withdrawal_requests: {
+        Row: {
+          created_at: string
+          deadline_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          professional_id: string
+          requested_at: string
+          requested_via: string
+          requester_note: string | null
+          status: Database["public"]["Enums"]["marketplace_withdrawal_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deadline_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          professional_id: string
+          requested_at?: string
+          requested_via: string
+          requester_note?: string | null
+          status?: Database["public"]["Enums"]["marketplace_withdrawal_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deadline_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          professional_id?: string
+          requested_at?: string
+          requested_via?: string
+          requester_note?: string | null
+          status?: Database["public"]["Enums"]["marketplace_withdrawal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_withdrawal_requests_professional_id_fkey"
+            columns: ["professional_id"]
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
         ]
@@ -3411,6 +3551,92 @@ export type Database = {
           },
         ]
       }
+      professional_interest_request_contacts: {
+        Row: {
+          booked_by_user_id: string | null
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          request_id: string
+          updated_at: string
+        }
+        Insert: {
+          booked_by_user_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          request_id: string
+          updated_at?: string
+        }
+        Update: {
+          booked_by_user_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          request_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_interest_request_contacts_request_id_fkey"
+            columns: ["request_id"]
+            referencedRelation: "professional_interest_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_interest_requests: {
+        Row: {
+          created_at: string
+          customer_display_name: string
+          expires_at: string
+          id: string
+          locale: string
+          notes: string | null
+          preferred_starts_at: string
+          professional_id: string
+          resolved_at: string | null
+          service_label: string
+          status: Database["public"]["Enums"]["interest_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_display_name: string
+          expires_at: string
+          id?: string
+          locale?: string
+          notes?: string | null
+          preferred_starts_at: string
+          professional_id: string
+          resolved_at?: string | null
+          service_label: string
+          status?: Database["public"]["Enums"]["interest_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_display_name?: string
+          expires_at?: string
+          id?: string
+          locale?: string
+          notes?: string | null
+          preferred_starts_at?: string
+          professional_id?: string
+          resolved_at?: string | null
+          service_label?: string
+          status?: Database["public"]["Enums"]["interest_request_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_interest_requests_professional_id_fkey"
+            columns: ["professional_id"]
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professionals: {
         Row: {
           avatar_url: string | null
@@ -5029,6 +5255,7 @@ export type Database = {
             | Database["public"]["Enums"]["prospect_fit_class"]
             | null
           migration_potential_score: number | null
+          outreach_unsubscribe_token: string
           parent_group_id: string | null
           phone_e164: string | null
           rating: number | null
@@ -5064,6 +5291,7 @@ export type Database = {
             | Database["public"]["Enums"]["prospect_fit_class"]
             | null
           migration_potential_score?: number | null
+          outreach_unsubscribe_token?: string
           parent_group_id?: string | null
           phone_e164?: string | null
           rating?: number | null
@@ -5099,6 +5327,7 @@ export type Database = {
             | Database["public"]["Enums"]["prospect_fit_class"]
             | null
           migration_potential_score?: number | null
+          outreach_unsubscribe_token?: string
           parent_group_id?: string | null
           phone_e164?: string | null
           rating?: number | null
@@ -6315,7 +6544,9 @@ export type Database = {
         Returns: {
           claim_token: string
           ends_at: string
+          expires_at: string
           id: string
+          is_request: boolean
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
         }[]
@@ -6535,6 +6766,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      complete_marketplace_withdrawal: {
+        Args: { p_decision_note?: string; p_request_id: string }
+        Returns: {
+          completed_at: string
+          hours_taken: number
+          professional_id: string
+        }[]
+      }
       complete_onboarding: {
         Args: { p_organization_id: string; p_publish?: boolean }
         Returns: {
@@ -6646,6 +6885,25 @@ export type Database = {
           raw_token: string
         }[]
       }
+      create_professional_interest_request: {
+        Args: {
+          p_customer_email?: string
+          p_customer_name: string
+          p_customer_phone?: string
+          p_locale?: string
+          p_notes?: string
+          p_preferred_starts_at: string
+          p_professional_id: string
+          p_service_label: string
+        }
+        Returns: {
+          expires_at: string
+          id: string
+          preferred_starts_at: string
+          professional_display_name: string
+          status: Database["public"]["Enums"]["interest_request_status"]
+        }[]
+      }
       create_prospect_discovery_job: {
         Args: {
           p_job_type: string
@@ -6752,6 +7010,7 @@ export type Database = {
         }
         Returns: string
       }
+      expire_interest_requests: { Args: { p_limit?: number }; Returns: number }
       expire_pending_appointments: {
         Args: { p_limit?: number }
         Returns: number
@@ -6906,6 +7165,20 @@ export type Database = {
           organization_id: string
           organization_name: string
           organization_slug: string
+        }[]
+      }
+      get_my_interest_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          expires_at: string
+          id: string
+          preferred_starts_at: string
+          professional_display_name: string
+          professional_handle: string
+          professional_id: string
+          service_label: string
+          status: Database["public"]["Enums"]["interest_request_status"]
         }[]
       }
       get_my_professional_application: {
@@ -7090,6 +7363,31 @@ export type Database = {
           title: string
         }[]
       }
+      get_public_booking_alternatives: {
+        Args: {
+          p_exclude_organization_id?: string
+          p_latitude?: number
+          p_limit?: number
+          p_longitude?: number
+          p_radius_km?: number
+          p_service_query?: string
+        }
+        Returns: {
+          accepts_immediate_booking: boolean
+          city: string
+          covers_search_point: boolean
+          distance_km: number
+          is_open_now: boolean
+          location_id: string
+          location_kind: Database["public"]["Enums"]["location_kind"]
+          location_name: string
+          marketplace_supply_type: string
+          organization_id: string
+          organization_name: string
+          organization_slug: string
+          starting_price_cents: number
+        }[]
+      }
       get_public_currencies: {
         Args: { p_organization_ids: string[] }
         Returns: {
@@ -7212,6 +7510,23 @@ export type Database = {
           created_at: string
           id: string
           status: Database["public"]["Enums"]["queue_status"]
+        }[]
+      }
+      list_marketplace_withdrawal_requests: {
+        Args: { p_include_completed?: boolean }
+        Returns: {
+          deadline_at: string
+          decided_at: string
+          hours_remaining: number
+          id: string
+          is_overdue: boolean
+          is_still_public: boolean
+          professional_display_name: string
+          professional_handle: string
+          professional_id: string
+          requested_at: string
+          requested_via: string
+          status: Database["public"]["Enums"]["marketplace_withdrawal_status"]
         }[]
       }
       list_my_followed_organizations: {
@@ -7505,6 +7820,17 @@ export type Database = {
         }[]
       }
       remove_favorite: { Args: { p_favorite_id: string }; Returns: undefined }
+      request_marketplace_withdrawal: {
+        Args: {
+          p_professional_id: string
+          p_requested_via: string
+          p_requester_note?: string
+        }
+        Returns: {
+          deadline_at: string
+          id: string
+        }[]
+      }
       reschedule_appointment: {
         Args: {
           p_appointment_id: string
@@ -7689,10 +8015,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      run_acquisition_maintenance: {
+        Args: never
+        Returns: {
+          expired_requests: number
+          outreach_queued: number
+        }[]
+      }
       run_booking_maintenance: {
         Args: never
         Returns: {
           expired_requests: number
+        }[]
+      }
+      run_email_delivery: {
+        Args: never
+        Returns: {
+          dispatched: number
+          reconciled: number
         }[]
       }
       save_business_profile: {
@@ -8152,6 +8492,12 @@ export type Database = {
         Args: { p_professional_id: string }
         Returns: undefined
       }
+      unsubscribe_prospect_outreach: {
+        Args: { p_token: string }
+        Returns: {
+          unsubscribed: boolean
+        }[]
+      }
       withdraw_external_professional: {
         Args: { p_note?: string; p_professional_id: string }
         Returns: string
@@ -8233,11 +8579,14 @@ export type Database = {
         | "long"
         | "beard_focus"
         | "other"
-      email_delivery_status: "queued" | "sent" | "failed"
+      email_delivery_status: "queued" | "sent" | "failed" | "sending"
+      email_stream: "transactional" | "prospecting"
       entitlement_source: "early_access" | "platform_grant" | "billing"
       follow_source: "manual" | "auto"
       follow_state: "following" | "unfollowed"
+      interest_request_status: "pending" | "expired" | "withdrawn"
       location_kind: "physical_address" | "service_area"
+      marketplace_withdrawal_status: "pending" | "completed" | "rejected"
       membership_role: "owner" | "manager" | "receptionist" | "barber"
       ml_model_target:
         | "reply"
@@ -8631,11 +8980,14 @@ export const Constants = {
         "beard_focus",
         "other",
       ],
-      email_delivery_status: ["queued", "sent", "failed"],
+      email_delivery_status: ["queued", "sent", "failed", "sending"],
+      email_stream: ["transactional", "prospecting"],
       entitlement_source: ["early_access", "platform_grant", "billing"],
       follow_source: ["manual", "auto"],
       follow_state: ["following", "unfollowed"],
+      interest_request_status: ["pending", "expired", "withdrawn"],
       location_kind: ["physical_address", "service_area"],
+      marketplace_withdrawal_status: ["pending", "completed", "rejected"],
       membership_role: ["owner", "manager", "receptionist", "barber"],
       ml_model_target: [
         "reply",

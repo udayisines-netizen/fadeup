@@ -8,6 +8,15 @@ dist/
 **/.env.development
 
 !**/.env.example
+# Sauvegardes et variantes de .env. Constaté en B2 : trois fichiers
+# (.env.old, .env.backup-*, .env.bak2-*) contenaient la clé API Resend et le
+# JWT_SECRET en clair et n'étaient couverts par AUCUNE règle — un `git add .`
+# les aurait commis. La règle `**/.env` ne couvre pas `.env.quelquechose`.
+# L'exception `!**/.env.example` ci-dessus reste prioritaire, elle est déclarée
+# avant.
+**/.env.*
+!**/.env.example
+
 
 infra/supabase/volumes/db/data/
 infra/supabase/volumes/storage/
