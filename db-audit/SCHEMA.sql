@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict WeCePo1aejI6tGdoqEHlqmVodcZqPke1NtCdZOnSq1p4IyPtPi4kcqbXO3MagEW
+\restrict QvcsvexUeV91vcKVYeOLwFJUd4IebqlQU6P1GwGwkZxPZzB0nzs2gd1nXfpUXzk
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -303,7 +303,18 @@ CREATE TYPE public.customer_style_preference AS ENUM (
 CREATE TYPE public.email_delivery_status AS ENUM (
     'queued',
     'sent',
-    'failed'
+    'failed',
+    'sending'
+);
+
+
+--
+-- Name: email_stream; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.email_stream AS ENUM (
+    'transactional',
+    'prospecting'
 );
 
 
@@ -346,6 +357,24 @@ CREATE TYPE public.follow_state AS ENUM (
 
 
 --
+-- Name: interest_request_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.interest_request_status AS ENUM (
+    'pending',
+    'expired',
+    'withdrawn'
+);
+
+
+--
+-- Name: TYPE interest_request_status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.interest_request_status IS 'Cycle de vie d''une demande d''intérêt vers un profil NON REVENDIQUÉ. Trois états seulement, et pas d''état « acceptée » : accepter suppose un professionnel qui a revendiqué son profil, créé son organisation et son catalogue — c''est la conversion, elle appartient au flux de revendication et B2 ne la modélise pas plutôt que d''inventer un état inatteignable.';
+
+
+--
 -- Name: location_kind; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -360,6 +389,17 @@ CREATE TYPE public.location_kind AS ENUM (
 --
 
 COMMENT ON TYPE public.location_kind IS 'What a locations row IS. physical_address: a place a customer travels to. service_area: a zone a professional travels within, with no address and no physical position. The two are exclusive and the CHECK constraints on locations make the other kind''s columns unrepresentable.';
+
+
+--
+-- Name: marketplace_withdrawal_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.marketplace_withdrawal_status AS ENUM (
+    'pending',
+    'completed',
+    'rejected'
+);
 
 
 --
@@ -1000,6 +1040,11 @@ CREATE TABLE public.email_outbox (
     locked_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    stream public.email_stream DEFAULT 'transactional'::public.email_stream NOT NULL,
+    net_request_id bigint,
+    provider_message_id text,
+    dedupe_key text,
+    dispatched_at timestamp with time zone,
     CONSTRAINT email_outbox_attempts_sane CHECK ((attempts >= 0)),
     CONSTRAINT email_outbox_to_email_not_blank CHECK ((btrim(to_email) <> ''::text))
 );
@@ -1012,6 +1057,27 @@ ALTER TABLE ONLY public.email_outbox FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.email_outbox IS 'Durable queue for transactional email. Enqueued inside the same transaction as the state change it describes, delivered separately, so a mail outage can never roll back an approval — and a failed send stays visible and retryable instead of vanishing. Contains no secrets and no auth tokens.';
+
+
+--
+-- Name: COLUMN email_outbox.stream; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.stream IS 'Quel flux envoie ce message. Défaut transactionnel : toutes les lignes écrites avant B2 sont des accusés de réservation et des invitations d''équipe, qui le sont.';
+
+
+--
+-- Name: COLUMN email_outbox.net_request_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.net_request_id IS 'L''identifiant de requête pg_net, posé au moment de l''appel et relu au tick suivant dans net._http_response. C''est ce qui rend l''envoi asynchrone réconciliable : une ligne « sending » sans réponse encore arrivée n''est ni perdue ni renvoyée.';
+
+
+--
+-- Name: COLUMN email_outbox.dedupe_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.dedupe_key IS 'Clé d''idempotence. Deux lignes de même clé ne peuvent pas coexister, donc un scheduler redémarré au milieu d''un lot ne produit jamais un doublon d''envoi. NULL autorisé : les écritures antérieures à B2 n''en portent pas, et un index unique partiel ne contraint que les lignes qui en ont une.';
 
 
 --
@@ -2673,7 +2739,7 @@ COMMENT ON FUNCTION public.assign_commercial_plan(p_organization_id uuid, p_plan
 -- Name: book_public_appointment(text, uuid, uuid, uuid, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text DEFAULT NULL::text, p_customer_email text DEFAULT NULL::text, p_notes text DEFAULT NULL::text) RETURNS TABLE(id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, claim_token text)
+CREATE FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text DEFAULT NULL::text, p_customer_email text DEFAULT NULL::text, p_notes text DEFAULT NULL::text) RETURNS TABLE(id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, is_request boolean, expires_at timestamp with time zone, claim_token text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -2688,6 +2754,7 @@ declare
   v_user_id uuid;
   v_customer_id uuid;
   v_claim_token text;
+  v_status public.appointment_status;
 begin
   if btrim(coalesce(p_customer_name, '')) = '' then
     raise exception 'customer_name is required';
@@ -2740,6 +2807,8 @@ begin
   v_ends_at := p_starts_at + make_interval(mins => v_duration_minutes);
 
   -- The client is never trusted to have only ever requested a time we offered.
+  -- Cette ligne vaut pour les DEUX branches : une demande en attente sur un
+  -- horaire hors ouverture n'est pas une demande, c'est une fausse promesse.
   if not private.slot_is_within_hours(p_barber_id, p_location_id, p_starts_at, v_ends_at, v_timezone) then
     raise exception 'requested time is outside available hours';
   end if;
@@ -2754,17 +2823,28 @@ begin
     );
   end if;
 
-  -- CONFIRMED, not pending. Everything above has already established that the
-  -- shop works this time, at this place, for this service, with this
-  -- professional — there is no further question for a human to answer.
+  -- LA BRANCHE. La question est commerciale et une seule fois posée, par le
+  -- helper de R2 : ce fichier ne connaît aucun nom de plan.
   --
-  -- decided_at/decided_by stay NULL on purpose: nobody decided. That is what
-  -- distinguishes an auto-confirmed booking from one a receptionist accepted,
-  -- and it is worth being able to tell them apart later.
-  --
+  -- decided_at/decided_by restent NULL dans les deux cas et pour deux raisons
+  -- différentes : sur une confirmation automatique personne n'a décidé, sur
+  -- une demande personne n'a ENCORE décidé. confirm_booking_request les
+  -- remplira dans le second cas, et c'est ce qui permettra de distinguer plus
+  -- tard une confirmation automatique d'une acceptation humaine.
+  v_status := case
+    when (select private.org_has_capability(v_organization_id, 'booking')) then 'confirmed'
+    else 'pending'
+  end;
+
   -- appointments_check_time_blocks (LOT D) runs before the insert lands, and
   -- the GiST exclusion constraints remain the final race-free authority: two
-  -- visitors racing this exact slot still produce exactly one appointment.
+  -- visitors racing this exact slot still produce exactly one appointment —
+  -- et une ligne `pending` participe à cette exclusion, donc une demande
+  -- retient bien le créneau qu'elle demande.
+  --
+  -- expires_at n'est pas passé : set_appointment_request_expiry le dérive du
+  -- TTL de l'organisation et le plafonne par least(expires_at, starts_at). Le
+  -- calculer ici en dupliquerait la règle à deux endroits.
   insert into public.appointments (
     organization_id, location_id, barber_id, service_id, customer_id,
     customer_name, customer_phone, customer_email,
@@ -2775,11 +2855,15 @@ begin
     v_organization_id, p_location_id, p_barber_id, p_service_id, v_customer_id,
     btrim(p_customer_name), nullif(btrim(coalesce(p_customer_phone, '')), ''), nullif(btrim(coalesce(p_customer_email, '')), ''),
     p_starts_at, v_ends_at, v_buffer_before_minutes, v_buffer_after_minutes,
-    'confirmed', p_notes, null, v_user_id
+    v_status, p_notes, null, v_user_id
   )
   returning * into v_appointment;
 
   -- Anonymous booking: issue the one-time proof-of-booking token. (LOT 13.)
+  -- Émis pour les deux branches : un visiteur anonyme qui envoie une demande
+  -- doit pouvoir la rattacher à son compte après inscription, exactement comme
+  -- une réservation confirmée — c'est même plus important ici, puisque la
+  -- réponse arrivera plus tard.
   if v_user_id is null then
     v_claim_token := encode(extensions.gen_random_bytes(32), 'hex');
     insert into public.appointment_claim_tokens (appointment_id, token_hash, expires_at)
@@ -2790,7 +2874,36 @@ begin
     );
   end if;
 
-  return query select v_appointment.id, v_appointment.starts_at, v_appointment.ends_at, v_appointment.status, v_claim_token;
+  -- L'aval existait déjà et n'attendait qu'une ligne à traiter : le
+  -- professionnel est prévenu, le client reçoit son accusé. Les deux
+  -- notifications portent des types déjà définis dans l'enum.
+  if v_status = 'pending' then
+    perform private.emit_booking_notification(
+      v_appointment, 'booking_request_created', 'business',
+      'Nouvelle demande de réservation',
+      null, 'booking_request_created'
+    );
+    perform private.emit_booking_notification(
+      v_appointment, 'booking_request_created', 'customer',
+      'Votre demande a été envoyée',
+      null, 'booking_request_sent'
+    );
+  else
+    perform private.emit_booking_notification(
+      v_appointment, 'booking_confirmed', 'customer',
+      'Votre réservation est confirmée',
+      null, 'booking_confirmed'
+    );
+  end if;
+
+  return query select
+    v_appointment.id,
+    v_appointment.starts_at,
+    v_appointment.ends_at,
+    v_appointment.status,
+    v_appointment.status = 'pending',
+    v_appointment.expires_at,
+    v_claim_token;
 end;
 $$;
 
@@ -2799,7 +2912,16 @@ $$;
 -- Name: FUNCTION book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) IS 'Anon-callable: the only path to create an appointment without a session. Creates status=CONFIRMED — the shop already answered by publishing the slot. Every id is re-validated against the organization resolved from the slug, the window is re-derived server-side through private.slot_is_within_hours, time blocks are enforced by trigger, and the LOT 8 GiST exclusion constraints remain the final race-free conflict guarantee. Signed-in bookers get customer_id stamped; anonymous ones get a single-use 72h claim_token.';
+COMMENT ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) IS 'Anon-callable. Le seul chemin public de réservation. Deux issues, décidées par la capacité commerciale de l''organisation et par elle seule :
+
+  capacité `booking`  -> status = ''confirmed'', is_request = false, expires_at NULL
+  pas de capacité     -> status = ''pending'',   is_request = true,  expires_at renseigné
+
+`is_request` et `expires_at` sont retournés pour que l''interface n''ait jamais à DÉDUIRE laquelle des deux elle affiche. MASTER_SPEC §5 : le client doit savoir qu''il envoie une demande, pas qu''il a un rendez-vous — un écran qui infère cela d''un enum est un écran qui finira par afficher « Réservé » sur une attente.
+
+Le `pending` ne contourne AUCUNE vérification : lieu actif, service offert ici, barbier apte, horaire dans les heures d''ouverture, créneau libre, mode de service autorisant la réservation. Seule la question commerciale s''efface, parce qu''apporter un client à un professionnel qui n''a pas encore payé est le modèle, pas une faille.
+
+`claim_token` est émis pour tout appelant anonyme, sur les deux branches.';
 
 
 --
@@ -3716,6 +3838,100 @@ COMMENT ON FUNCTION public.complete_appointment(p_appointment_id uuid) IS 'Marks
 
 
 --
+-- Name: complete_marketplace_withdrawal(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text DEFAULT NULL::text) RETURNS TABLE(professional_id uuid, completed_at timestamp with time zone, hours_taken numeric)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid;
+  v_row public.marketplace_withdrawal_requests;
+begin
+  v_actor := (select auth.uid());
+  if v_actor is null or not (select private.is_platform_admin()) then
+    raise exception 'only FadeUp platform administrators can complete a withdrawal'
+      using errcode = '42501';
+  end if;
+
+  select * into v_row from public.marketplace_withdrawal_requests
+  where id = p_request_id for update;
+
+  if not found then
+    raise exception 'withdrawal request not found' using errcode = '42704';
+  end if;
+
+  if v_row.status <> 'pending' then
+    raise exception 'this withdrawal request is already %', v_row.status
+      using errcode = '42501';
+  end if;
+
+  -- 1. Dépublier. B1 a écrit cette fonction, elle audite déjà son geste.
+  perform public.withdraw_external_professional(v_row.professional_id, p_decision_note);
+
+  -- 2. Couper toute relance future. C'est la moitié du retrait que la simple
+  --    dépublication ne couvre pas : un profil invisible qui continue de
+  --    recevoir des e-mails de prospection n'est pas retiré, il est caché.
+  update public.prospects pr
+  set do_not_contact = true
+  from public.prospect_professionals pp
+  where pp.prospect_id = pr.id
+    and pp.professional_id = v_row.professional_id
+    and not pr.do_not_contact;
+
+  insert into public.prospect_suppressions (scope, prospect_id, reason)
+  select 'prospect', pp.prospect_id, 'marketplace_withdrawal'
+  from public.prospect_professionals pp
+  where pp.professional_id = v_row.professional_id
+  on conflict do nothing;
+
+  -- 3. Les demandes d'intérêt en cours n'ont plus de destinataire. Les laisser
+  --    « pending » ferait attendre un client une réponse qui ne viendra
+  --    jamais, et la troisième relance partirait vers quelqu'un qui a demandé
+  --    à sortir.
+  -- La table est nommée en entier dans le WHERE : la clause RETURNS TABLE de
+  -- cette fonction déclare une variable `professional_id`, qui masquerait la
+  -- colonne et ferait échouer l'UPDATE sur « column reference is ambiguous ».
+  update public.professional_interest_requests r
+  set status = 'withdrawn', resolved_at = now()
+  where r.professional_id = v_row.professional_id and r.status = 'pending';
+
+  update public.marketplace_withdrawal_requests
+  set status = 'completed', decided_at = now(), decided_by = v_actor,
+      decision_note = nullif(btrim(coalesce(p_decision_note, '')), '')
+  where id = p_request_id
+  returning * into v_row;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'marketplace_withdrawal_completed', 'professionals', v_row.professional_id,
+          jsonb_build_object('request_id', v_row.id,
+                             'requested_at', v_row.requested_at,
+                             'deadline_at', v_row.deadline_at,
+                             'within_deadline', v_row.decided_at <= v_row.deadline_at));
+
+  return query select
+    v_row.professional_id,
+    v_row.decided_at,
+    round(extract(epoch from (v_row.decided_at - v_row.requested_at)) / 3600.0, 1);
+end;
+$$;
+
+
+--
+-- Name: FUNCTION complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text) IS 'Platform-admin. Exécute un retrait de marketplace, en quatre gestes qui vont ensemble :
+  1. dépublication (withdraw_external_professional, écrite par B1) ;
+  2. do_not_contact + suppression durable sur le prospect — un profil invisible qui reçoit encore des relances n''est pas retiré, il est caché ;
+  3. les demandes d''intérêt en cours passent en `withdrawn`, pour ne pas faire attendre un client une réponse qui ne viendra pas ;
+  4. l''audit, avec within_deadline, qui dit si l''engagement des 72 h a été tenu.
+
+Retourne hours_taken pour que la mesure du délai soit une donnée, pas une impression.';
+
+
+--
 -- Name: complete_onboarding(uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4164,6 +4380,136 @@ COMMENT ON FUNCTION public.create_platform_invitation(p_role public.platform_rol
 
 
 --
+-- Name: create_professional_interest_request(uuid, text, text, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text DEFAULT NULL::text, p_customer_phone text DEFAULT NULL::text, p_notes text DEFAULT NULL::text, p_locale text DEFAULT 'fr'::text) RETURNS TABLE(id uuid, status public.interest_request_status, preferred_starts_at timestamp with time zone, expires_at timestamp with time zone, professional_display_name text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_professional public.professionals;
+  v_request public.professional_interest_requests;
+  v_user_id uuid;
+begin
+  if btrim(coalesce(p_customer_name, '')) = '' then
+    raise exception 'customer_name is required';
+  end if;
+
+  if btrim(coalesce(p_service_label, '')) = '' then
+    raise exception 'service_label is required';
+  end if;
+
+  if coalesce(btrim(p_customer_email), '') = '' and coalesce(btrim(p_customer_phone), '') = '' then
+    raise exception 'at least one of customer_email or customer_phone is required'
+      using detail = 'fadeup_interest_refusal=no_contact_channel';
+  end if;
+
+  if p_preferred_starts_at <= now() then
+    raise exception 'preferred_starts_at must be in the future'
+      using detail = 'fadeup_interest_refusal=past_time';
+  end if;
+
+  -- Jusqu'à 90 jours à l'avance, la même fenêtre que la réservation
+  -- (MASTER_SPEC §6). Au-delà, ce n'est plus une intention, c'est du bruit.
+  if p_preferred_starts_at > now() + interval '90 days' then
+    raise exception 'preferred_starts_at is too far in the future'
+      using detail = 'fadeup_interest_refusal=too_far_ahead';
+  end if;
+
+  select p.* into v_professional
+  from public.professionals p
+  where p.id = p_professional_id;
+
+  if not found or not v_professional.is_public then
+    -- Même refus pour « inexistant » et « non publié » : un refus distinct
+    -- laisserait sonder quelles identités existent.
+    raise exception 'this profile is not open to requests'
+      using errcode = '42501',
+            detail = 'fadeup_interest_refusal=profile_not_public';
+  end if;
+
+  -- Un profil REVENDIQUÉ n'a rien à faire ici : son propriétaire a un compte,
+  -- une organisation et un agenda, et la demande doit passer par
+  -- book_public_appointment, qui vérifie une disponibilité réelle. Envoyer une
+  -- demande d'intérêt à quelqu'un qui a un vrai agenda serait lui faire
+  -- retaper à la main ce que la base sait déjà.
+  if v_professional.claim_state = 'claimed' then
+    raise exception 'this professional is on FadeUp; book a real slot instead'
+      using errcode = '42501',
+            detail = 'fadeup_interest_refusal=professional_is_claimed';
+  end if;
+
+  -- Un profil retiré de la marketplace ou marqué do_not_contact ne reçoit
+  -- plus rien. La garde vit ici, à la porte d'entrée, en plus de celle des
+  -- relances : une demande créée après un retrait produirait un e-mail que la
+  -- relance refuserait ensuite d'envoyer, donc une demande morte-née.
+  if exists (
+    select 1
+    from public.prospect_professionals pp
+    join public.prospects pr on pr.id = pp.prospect_id
+    where pp.professional_id = p_professional_id
+      and pr.do_not_contact
+  ) then
+    raise exception 'this profile is not open to requests'
+      using errcode = '42501',
+            detail = 'fadeup_interest_refusal=profile_withdrawn';
+  end if;
+
+  v_user_id := (select auth.uid());
+
+  insert into public.professional_interest_requests (
+    professional_id, customer_display_name, service_label,
+    preferred_starts_at, notes, locale, status, expires_at
+  )
+  values (
+    p_professional_id,
+    private.reduce_customer_display_name(p_customer_name),
+    btrim(p_service_label),
+    p_preferred_starts_at,
+    nullif(btrim(coalesce(p_notes, '')), ''),
+    case when lower(coalesce(p_locale, 'fr')) = 'en' then 'en' else 'fr' end,
+    'pending',
+    -- Valeur provisoire : le trigger la dérive et la plafonne. La colonne est
+    -- NOT NULL, il faut bien poser quelque chose.
+    p_preferred_starts_at
+  )
+  returning * into v_request;
+
+  insert into public.professional_interest_request_contacts (
+    request_id, customer_email, customer_phone, booked_by_user_id
+  )
+  values (
+    v_request.id,
+    nullif(btrim(coalesce(p_customer_email, '')), ''),
+    nullif(btrim(coalesce(p_customer_phone, '')), ''),
+    v_user_id
+  );
+
+  return query select
+    v_request.id,
+    v_request.status,
+    v_request.preferred_starts_at,
+    v_request.expires_at,
+    v_professional.display_name;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text) IS 'Anon-callable. Envoie une demande à un profil professionnel NON REVENDIQUÉ publié par le Worker — le geste qui lève le cul-de-sac que B1 avait constaté et documenté.
+
+Ce n''est PAS une réservation et la RPC ne prétend pas le contraire : elle ne retourne ni ends_at, ni barbier, ni lieu, parce qu''aucun de ces faits n''existe. preferred_starts_at est ce que le client souhaite.
+
+Refuse, avec un motif nommé dans DETAIL fadeup_interest_refusal=<code> : profile_not_public, professional_is_claimed (réserve un vrai créneau), profile_withdrawn, no_contact_channel, past_time, too_far_ahead.
+
+Le nom du client est réduit à « Prénom I. » AVANT stockage, et ses coordonnées vont dans une table séparée que la composition d''e-mail ne lit pas.';
+
+
+--
 -- Name: create_prospect_discovery_job(text, jsonb, text[], integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4464,17 +4810,31 @@ declare
   v_mode public.service_mode;
   v_source text;
 begin
+  -- THE LOCK. Shared, taken before the mode is read, released at commit.
+  -- B1 a retiré l'appel ensure_… des LECTURES ; ici on est dans une écriture,
+  -- où matérialiser la ligne est légitime — et le verrou a besoin d'une ligne
+  -- à verrouiller.
   perform private.ensure_location_service_settings(new.location_id);
 
-  -- THE LOCK. Shared, taken before the mode is read, released at commit.
   perform 1
   from public.location_service_settings s
   where s.location_id = new.location_id
   for share;
 
-  -- The commercial question first, and through R2's own helper — this file
-  -- adds no commercial logic and knows no plan names.
-  perform private.assert_org_capability(new.organization_id, 'booking');
+  -- LA SEULE LIGNE QUE B2 CHANGE.
+  --
+  -- Une DEMANDE n'est pas une réservation : elle ne consomme pas l'agenda du
+  -- professionnel, elle attend qu'un humain réponde, et elle est précisément
+  -- ce que MASTER_SPEC §5 veut voir arriver chez un profil Free. Lui opposer
+  -- la capacité commerciale, c'est refuser d'apporter un client à quelqu'un
+  -- pour la raison qu'il n'a pas encore payé pour en recevoir — l'inverse
+  -- exact du modèle d'acquisition.
+  --
+  -- Une CONFIRMATION reste soumise à la capacité, sans exception : c'est elle
+  -- qui pose un rendez-vous ferme dans un agenda, et c'est elle qui se paie.
+  if new.status <> 'pending' then
+    perform private.assert_org_capability(new.organization_id, 'booking');
+  end if;
 
   select m.mode, m.source into v_mode, v_source
   from private.effective_service_mode(new.location_id, new.barber_id) m;
@@ -4503,7 +4863,7 @@ $$;
 -- Name: FUNCTION enforce_booking_service_mode(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.enforce_booking_service_mode() IS 'BEFORE INSERT on appointments: the ONE place a new reservation is admitted or refused. Fires for every writer — the anon RPC, a direct PostgREST insert by staff, service_role and postgres alike — because RLS would exempt the privileged ones. Composes the R2 booking entitlement with the effective service mode; adds no commercial logic of its own. INSERT only, deliberately: every existing appointment keeps its full R1A lifecycle in every mode, and reschedule_appointment UPDATEs rather than inserting, so it neither reaches this trigger nor needs a bypass flag.';
+COMMENT ON FUNCTION public.enforce_booking_service_mode() IS 'BEFORE INSERT sur appointments. Deux verrous distincts : le mode de service, opposable à TOUTE insertion, et la capacité commerciale `booking`, opposable aux seules lignes non-`pending`. B2 a ouvert le second pour les demandes : une demande en attente est le tunnel d''acquisition de MASTER_SPEC §5, pas une vente. Une confirmation reste payante.';
 
 
 --
@@ -4966,6 +5326,45 @@ $$;
 --
 
 COMMENT ON FUNCTION public.ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text) IS 'Idempotently makes the calling owner/manager a bookable professional at a location: upserts their staff_profiles row (never blanking a field the caller omitted) and ensures a bookable barbers row. Returns the barber id. Running it twice produces one professional, not two.';
+
+
+--
+-- Name: expire_interest_requests(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.expire_interest_requests(p_limit integer DEFAULT 500) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_id uuid;
+  v_count integer := 0;
+begin
+  for v_id in
+    select r.id from public.professional_interest_requests r
+    where r.status = 'pending' and r.expires_at <= now()
+    order by r.expires_at
+    limit greatest(p_limit, 0)
+    for update skip locked
+  loop
+    update public.professional_interest_requests
+      set status = 'expired', resolved_at = now()
+      where id = v_id and status = 'pending';
+    if found then
+      v_count := v_count + 1;
+    end if;
+  end loop;
+
+  return v_count;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION expire_interest_requests(p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.expire_interest_requests(p_limit integer) IS 'Passe en `expired` les demandes d''intérêt dont l''échéance est atteinte. Appelée par le conteneur fadeup-scheduler, jamais par un client. FOR UPDATE SKIP LOCKED et re-vérification du statut sous verrou, comme expire_pending_appointments.';
 
 
 --
@@ -5485,6 +5884,32 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_my_favorites() IS 'Authenticated-only: the caller''s own favorited shops/barbers, joined with curated public display fields.';
+
+
+--
+-- Name: get_my_interest_requests(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_my_interest_requests() RETURNS TABLE(id uuid, professional_id uuid, professional_display_name text, professional_handle text, service_label text, preferred_starts_at timestamp with time zone, status public.interest_request_status, expires_at timestamp with time zone, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select r.id, r.professional_id, p.display_name, p.handle,
+         r.service_label, r.preferred_starts_at, r.status, r.expires_at, r.created_at
+  from public.professional_interest_requests r
+  join public.professional_interest_request_contacts c on c.request_id = r.id
+  join public.professionals p on p.id = r.professional_id
+  where c.booked_by_user_id = (select auth.uid())
+    and (select auth.uid()) is not null
+  order by r.created_at desc;
+$$;
+
+
+--
+-- Name: FUNCTION get_my_interest_requests(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_my_interest_requests() IS 'Les demandes d''intérêt du client connecté. Ne retourne rien à un appelant anonyme : sans compte il n''y a rien à rattacher, et l''écran « demande envoyée » de P2 lui montre le retour de create_professional_interest_request.';
 
 
 --
@@ -6231,6 +6656,64 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_public_barber(p_organization_slug text, p_barber_id uuid) IS 'Anon-callable operational barber profile scoped through organization_slug. professional_id is returned only when the linked durable Professional is claimed; NULL otherwise. No private follow state, customer data, claim workflow or acquisition provenance is exposed.';
+
+
+--
+-- Name: get_public_booking_alternatives(double precision, double precision, text, uuid, double precision, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_booking_alternatives(p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_service_query text DEFAULT NULL::text, p_exclude_organization_id uuid DEFAULT NULL::uuid, p_radius_km double precision DEFAULT 10, p_limit integer DEFAULT 5) RETURNS TABLE(organization_id uuid, organization_name text, organization_slug text, marketplace_supply_type text, location_id uuid, location_name text, location_kind public.location_kind, city text, distance_km double precision, covers_search_point boolean, starting_price_cents integer, is_open_now boolean, accepts_immediate_booking boolean)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    s.organization_id,
+    s.organization_name,
+    s.organization_slug,
+    s.marketplace_supply_type,
+    s.location_id,
+    s.location_name,
+    s.location_kind,
+    s.city,
+    s.distance_km,
+    s.covers_search_point,
+    s.starting_price_cents,
+    s.is_open_now,
+    coalesce(private.org_has_capability(s.organization_id, 'booking'), false)
+  from public.search_public_professionals(
+    p_service_query => nullif(btrim(coalesce(p_service_query, '')), ''),
+    p_latitude      => p_latitude,
+    p_longitude     => p_longitude,
+    -- MASTER_SPEC §8 : 10 km par défaut en zone urbaine. Le rayon reste
+    -- réglable parce qu'une expiration en zone peu dense mérite d'élargir
+    -- plutôt que de rendre une liste vide.
+    p_radius_km     => p_radius_km,
+    -- L'offre marketplace, et rien d'autre : un barbier salarié n'est pas une
+    -- alternative autonome (MASTER_SPEC §2). Le défaut corrigé par B1 le
+    -- ferait déjà, mais l'écrire ici évite qu'un futur changement de défaut
+    -- passe inaperçu dans cette fonction-ci.
+    p_entity_type   => 'shop',
+    p_sort          => 'nearest',
+    -- On demande plus large que p_limit puis on filtre l'organisation
+    -- d'origine : filtrer APRÈS la pagination rendrait parfois quatre
+    -- alternatives au lieu de cinq, sans raison visible.
+    p_limit         => greatest(p_limit, 0) + 1
+  ) s
+  where p_exclude_organization_id is null
+     or s.organization_id <> p_exclude_organization_id
+  limit greatest(p_limit, 0);
+$$;
+
+
+--
+-- Name: FUNCTION get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer) IS 'Anon-callable. Les alternatives proposées après l''expiration d''une demande (MASTER_SPEC §5) : établissements de l''offre marketplace, proches du point donné, offrant un service dont le nom correspond, l''organisation d''origine exclue, triés par distance.
+
+Ne promet AUCUNE disponibilité et n''en vérifie aucune : elle retourne `accepts_immediate_booking`, qui dit si l''organisation détient la capacité `booking` et peut donc confirmer, ou si elle recevra une nouvelle demande. Une interface qui affiche « réservez ici » sur une ligne à false envoie le client vers une seconde attente juste après la première.
+
+Un professionnel en zone de service apparaît si sa zone couvre le point cherché, avec covers_search_point = true et sans adresse inventée.';
 
 
 --
@@ -7315,6 +7798,37 @@ $$;
 --
 
 COMMENT ON FUNCTION public.link_customer_from_contact_info() IS 'BEFORE INSERT trigger: find-or-create a customers row matched by phone then email, and set customer_id. Only fires when customer_id is null; validates an explicitly-supplied customer_id belongs to the same org instead. INSERT-only, not a general resync — a later contact-info edit does not retroactively relink.';
+
+
+--
+-- Name: list_marketplace_withdrawal_requests(boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed boolean DEFAULT false) RETURNS TABLE(id uuid, professional_id uuid, professional_display_name text, professional_handle text, is_still_public boolean, requested_via text, requested_at timestamp with time zone, deadline_at timestamp with time zone, hours_remaining numeric, is_overdue boolean, status public.marketplace_withdrawal_status, decided_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    w.id, w.professional_id, p.display_name, p.handle, p.is_public,
+    w.requested_via, w.requested_at, w.deadline_at,
+    round(extract(epoch from (w.deadline_at - now())) / 3600.0, 1),
+    w.status = 'pending' and w.deadline_at < now(),
+    w.status, w.decided_at
+  from public.marketplace_withdrawal_requests w
+  join public.professionals p on p.id = w.professional_id
+  where (select private.is_platform_admin())
+    and (p_include_completed or w.status = 'pending')
+  -- Les retards en premier : une liste triée par date de demande enterre
+  -- l'urgence sous l'historique.
+  order by (w.status = 'pending' and w.deadline_at < now()) desc, w.deadline_at;
+$$;
+
+
+--
+-- Name: FUNCTION list_marketplace_withdrawal_requests(p_include_completed boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed boolean) IS 'Platform-admin. Les demandes de retrait, les retards d''abord. hours_remaining passe en négatif quand l''engagement des 72 h de MASTER_SPEC §5 est dépassé, et is_overdue le dit sans calcul — c''est la colonne sur laquelle un écran /platform doit alerter. Retourne zéro ligne à un appelant non habilité plutôt que de lever : c''est une lecture de liste, pas une action.';
 
 
 --
@@ -9034,6 +9548,64 @@ COMMENT ON FUNCTION public.remove_favorite(p_favorite_id uuid) IS 'Authenticated
 
 
 --
+-- Name: request_marketplace_withdrawal(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text DEFAULT NULL::text) RETURNS TABLE(id uuid, deadline_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid;
+  v_row public.marketplace_withdrawal_requests;
+  v_claim_state public.professional_claim_state;
+begin
+  v_actor := (select auth.uid());
+  if v_actor is null or not (select private.is_platform_admin()) then
+    raise exception 'only FadeUp platform administrators can record a withdrawal request'
+      using errcode = '42501';
+  end if;
+
+  select p.claim_state into v_claim_state
+  from public.professionals p where p.id = p_professional_id;
+
+  if not found then
+    raise exception 'professional not found' using errcode = '42704';
+  end if;
+
+  if v_claim_state = 'claimed' then
+    -- Un profil revendiqué se retire tout seul : son propriétaire contrôle sa
+    -- visibilité depuis Pro. Passer par ce chemin serait retirer le profil de
+    -- quelqu'un à sa place.
+    raise exception 'this profile is claimed; its owner controls its visibility'
+      using errcode = '42501',
+            detail = 'fadeup_withdrawal_refusal=professional_is_claimed';
+  end if;
+
+  insert into public.marketplace_withdrawal_requests
+    (professional_id, requested_via, requester_note)
+  values
+    (p_professional_id, p_requested_via, nullif(btrim(coalesce(p_requester_note, '')), ''))
+  returning * into v_row;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'marketplace_withdrawal_requested', 'professionals', p_professional_id,
+          jsonb_build_object('request_id', v_row.id, 'requested_via', p_requested_via,
+                             'deadline_at', v_row.deadline_at));
+
+  return query select v_row.id, v_row.deadline_at;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text) IS 'Platform-admin. Enregistre la demande de retrait d''un professionnel non revendiqué et démarre le décompte de 72 h (MASTER_SPEC §5). Refuse sur un profil revendiqué : son propriétaire contrôle déjà sa visibilité, et le retirer à sa place serait agir pour lui.';
+
+
+--
 -- Name: reschedule_appointment(uuid, timestamp with time zone, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9855,6 +10427,29 @@ COMMENT ON FUNCTION public.revoke_platform_invitation(p_id uuid) IS 'Platform ow
 
 
 --
+-- Name: run_acquisition_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_acquisition_maintenance() RETURNS TABLE(expired_requests integer, outreach_queued integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  -- Expirer d'abord : une demande échue ne doit pas recevoir sa troisième
+  -- touche une seconde plus tard.
+  return query select public.expire_interest_requests(500), private.enqueue_prospect_outreach(100);
+end;
+$$;
+
+
+--
+-- Name: FUNCTION run_acquisition_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_acquisition_maintenance() IS 'Le tick d''acquisition, appelé par le conteneur fadeup-scheduler : expire les demandes d''intérêt échues, puis met en file les relances dues. Ne fait rien d''autre, et surtout n''envoie rien lui-même — l''envoi est run_email_delivery, séparé pour qu''une panne de Resend n''empêche pas les expirations.';
+
+
+--
 -- Name: run_booking_maintenance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9873,6 +10468,30 @@ $$;
 --
 
 COMMENT ON FUNCTION public.run_booking_maintenance() IS 'The scheduler''s single entry point. Kept separate from the acquisition job queue so booking lifecycle never depends on Worker V2.';
+
+
+--
+-- Name: run_email_delivery(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_email_delivery() RETURNS TABLE(dispatched integer, reconciled integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  -- Réconcilier D'ABORD : les réponses des envois du tick précédent sont
+  -- arrivées pendant l'intervalle, et les conclure avant d'en émettre de
+  -- nouvelles garde la table lisible et le nombre de lignes « sending » borné.
+  return query select private.email_dispatch_batch(25), private.email_reconcile_batch(100);
+end;
+$$;
+
+
+--
+-- Name: FUNCTION run_email_delivery(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_email_delivery() IS 'Le tick d''envoi, appelé par le conteneur fadeup-scheduler. Réconcilie les envois du tick précédent puis en dépêche de nouveaux. Ne fait rien du tout si aucune clé Resend n''est installée dans le vault, ce qui est le cas normal d''une base de test ou d''une restauration.';
 
 
 --
@@ -10497,6 +11116,27 @@ $$;
 --
 
 COMMENT ON FUNCTION public.set_barber_service_mode_override(p_barber_id uuid, p_mode public.service_mode) IS 'Sets a barber placement''s PERSISTENT service mode. owner/manager of that organization, or that barber themselves (resolved from auth.uid(), never from the supplied id). p_mode NULL is the documented way to return to inheriting the establishment default — there is no separate clear function, because clearing IS setting it to inherit. Takes the establishment mutex, so it orders against location mode changes and concurrent admissions. Existing appointments and queue entries are never affected.';
+
+
+--
+-- Name: set_interest_request_expiry(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_interest_request_expiry() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if new.status = 'pending' then
+    if new.expires_at is null or (tg_op = 'UPDATE' and old.status is distinct from 'pending') then
+      new.expires_at := now() + interval '24 hours';
+    end if;
+    -- La même règle que le tunnel appointments, pour la même raison.
+    new.expires_at := least(new.expires_at, new.preferred_starts_at);
+  end if;
+  return new;
+end;
+$$;
 
 
 --
@@ -11833,6 +12473,54 @@ COMMENT ON FUNCTION public.unfollow_professional(p_professional_id uuid) IS 'Aut
 
 
 --
+-- Name: unsubscribe_prospect_outreach(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.unsubscribe_prospect_outreach(p_token text) RETURNS TABLE(unsubscribed boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_prospect_id uuid;
+begin
+  select id into v_prospect_id
+  from public.prospects
+  where outreach_unsubscribe_token = lower(btrim(coalesce(p_token, '')))
+  for update;
+
+  if not found then
+    -- Jeton inconnu, jeton déjà utilisé, jeton inventé : même réponse. Un
+    -- refus distinct laisserait énumérer les prospects.
+    return query select true;
+    return;
+  end if;
+
+  update public.prospects
+  set do_not_contact = true
+  where id = v_prospect_id and not do_not_contact;
+
+  -- La suppression durable, pour que la déduplication du Worker la voie aussi :
+  -- do_not_contact protège CE prospect, une suppression protège aussi ses
+  -- futurs doublons découverts sous un autre nom.
+  insert into public.prospect_suppressions (scope, prospect_id, reason)
+  values ('prospect', v_prospect_id, 'unsubscribed_from_outreach')
+  on conflict do nothing;
+
+  return query select true;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION unsubscribe_prospect_outreach(p_token text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.unsubscribe_prospect_outreach(p_token text) IS 'Anon-callable, appelée par le lien de désabonnement des e-mails de prospection. Pose do_not_contact ET une suppression durable : le premier arrête les relances vers ce prospect, la seconde protège aussi les doublons que le Worker découvrirait plus tard sous un autre nom.
+
+Répond toujours true, y compris sur un jeton inconnu : une réponse distincte permettrait d''énumérer les prospects. Le désabonnement est DÉFINITIF — aucune nouvelle demande client ne le contourne, create_professional_interest_request refuse un profil dont le prospect est do_not_contact.';
+
+
+--
 -- Name: withdraw_external_professional(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -12548,6 +13236,7 @@ CREATE TABLE public.prospects (
     rating numeric(3,2),
     review_count integer,
     estimated_barber_count integer,
+    outreach_unsubscribe_token text DEFAULT encode(extensions.gen_random_bytes(16), 'hex'::text) NOT NULL,
     CONSTRAINT prospects_canonical_name_check CHECK ((btrim(canonical_name) <> ''::text)),
     CONSTRAINT prospects_country_check CHECK ((country ~ '^[A-Z]{2}$'::text)),
     CONSTRAINT prospects_current_score_check CHECK (((current_score >= 0) AND (current_score <= 100))),
@@ -12581,6 +13270,13 @@ COMMENT ON COLUMN public.prospects.current_booking_provider_id IS 'Denormalized 
 --
 
 COMMENT ON COLUMN public.prospects.rating IS 'Provider-reported rating (0-5). NULL is unknown and must not be scored as 0.';
+
+
+--
+-- Name: COLUMN prospects.outreach_unsubscribe_token; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.prospects.outreach_unsubscribe_token IS 'Le jeton du lien « ne plus recevoir ces messages ». Porté par le PROSPECT et non par la demande : on se désabonne d''un émetteur, et un lien reçu il y a trois mois doit encore fonctionner. Jamais retourné par une RPC de lecture — il ne circule que dans le corps des e-mails de prospection.';
 
 
 --
@@ -12869,6 +13565,57 @@ COMMENT ON COLUMN public.customers.user_id IS 'Bridge to the customer''s own por
 
 
 --
+-- Name: email_streams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_streams (
+    stream public.email_stream NOT NULL,
+    from_address text NOT NULL,
+    from_name text DEFAULT 'FadeUp'::text NOT NULL,
+    reply_to text,
+    requires_unsubscribe boolean DEFAULT false NOT NULL,
+    is_enabled boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT email_streams_from_address_shape CHECK ((from_address ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text))
+);
+
+
+--
+-- Name: TABLE email_streams; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.email_streams IS 'Un flux d''envoi = une adresse d''expédition + une politique de désabonnement. Deux lignes : transactionnel et prospection. Elles partagent aujourd''hui le domaine contact.fade-up.com, le seul vérifié chez Resend — la séparation de réputation que MASTER_SPEC et B2 demandent n''existera que quand un second domaine sera vérifié, et ce jour-là elle se fera par un UPDATE de from_address ici.';
+
+
+--
+-- Name: email_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_templates (
+    template_key text NOT NULL,
+    locale text NOT NULL,
+    stream public.email_stream NOT NULL,
+    subject text NOT NULL,
+    body_text text NOT NULL,
+    body_html text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT email_templates_body_html_not_blank CHECK ((btrim(body_html) <> ''::text)),
+    CONSTRAINT email_templates_body_text_not_blank CHECK ((btrim(body_text) <> ''::text)),
+    CONSTRAINT email_templates_locale_valid CHECK ((locale = ANY (ARRAY['fr'::text, 'en'::text]))),
+    CONSTRAINT email_templates_subject_not_blank CHECK ((btrim(subject) <> ''::text))
+);
+
+
+--
+-- Name: TABLE email_templates; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.email_templates IS 'Sujet, texte brut et HTML par gabarit et par langue. FR et EN sont les deux seules langues product-ready (MASTER_SPEC §1) ; la contrainte le dit plutôt que de laisser une traduction partielle s''installer. Les substitutions sont des {{jetons}} remplacés par private.render_email_template à partir du payload de la ligne d''outbox.';
+
+
+--
 -- Name: outreach_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -13139,6 +13886,36 @@ COMMENT ON CONSTRAINT locations_service_area_has_no_address ON public.locations 
 --
 
 COMMENT ON CONSTRAINT locations_service_area_radius_range ON public.locations IS 'A zone with a zero radius is not a zone, and one wider than 100 km is not a service area a barber travels — it is a way of appearing in every search in the country. The upper bound is a product judgement, not a physical one, and MASTER_SPEC §8''s 10 km urban default sits comfortably inside it.';
+
+
+--
+-- Name: marketplace_withdrawal_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.marketplace_withdrawal_requests (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    professional_id uuid NOT NULL,
+    requested_via text NOT NULL,
+    requester_note text,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL,
+    deadline_at timestamp with time zone DEFAULT (now() + '72:00:00'::interval) NOT NULL,
+    status public.marketplace_withdrawal_status DEFAULT 'pending'::public.marketplace_withdrawal_status NOT NULL,
+    decided_at timestamp with time zone,
+    decided_by uuid,
+    decision_note text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT marketplace_withdrawal_requests_deadline_after_request CHECK ((deadline_at > requested_at)),
+    CONSTRAINT marketplace_withdrawal_requests_decision_matches_status CHECK (((status = 'pending'::public.marketplace_withdrawal_status) = (decided_at IS NULL))),
+    CONSTRAINT marketplace_withdrawal_requests_via_valid CHECK ((requested_via = ANY (ARRAY['email'::text, 'phone'::text, 'platform_operator'::text, 'legal'::text, 'other'::text])))
+);
+
+
+--
+-- Name: TABLE marketplace_withdrawal_requests; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.marketplace_withdrawal_requests IS 'Une demande de retrait de la marketplace, datée, avec son échéance de 72 h (MASTER_SPEC §5). Une seule demande en cours par profil à la fois — index unique partiel ci-dessous. Le retrait lui-même reste withdraw_external_professional ; cette table est ce qui le DÉCLENCHE et ce qui rend le délai visible.';
 
 
 --
@@ -13709,6 +14486,74 @@ COMMENT ON COLUMN public.professional_follows.followed_at IS 'When following beg
 --
 
 COMMENT ON COLUMN public.professional_follows.unfollowed_at IS 'The customer''s explicit decision to stop, and the timestamp of it. Preserved across repeat unfollows: the first refusal is the truthful one.';
+
+
+--
+-- Name: professional_interest_request_contacts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.professional_interest_request_contacts (
+    request_id uuid NOT NULL,
+    customer_email text,
+    customer_phone text,
+    booked_by_user_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT professional_interest_request_contacts_reachable CHECK (((NULLIF(btrim(COALESCE(customer_email, ''::text)), ''::text) IS NOT NULL) OR (NULLIF(btrim(COALESCE(customer_phone, ''::text)), ''::text) IS NOT NULL)))
+);
+
+
+--
+-- Name: TABLE professional_interest_request_contacts; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.professional_interest_request_contacts IS 'Les coordonnées du client d''une demande d''intérêt, DÉLIBÉRÉMENT séparées de la demande elle-même. La séparation est la garde technique exigée par MASTER_SPEC §5 : la fonction qui compose l''e-mail de prospection lit professional_interest_requests, où ces colonnes n''existent pas. Elle ne se retient pas de les lire — elle ne peut pas.';
+
+
+--
+-- Name: professional_interest_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.professional_interest_requests (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    professional_id uuid NOT NULL,
+    customer_display_name text NOT NULL,
+    service_label text NOT NULL,
+    preferred_starts_at timestamp with time zone NOT NULL,
+    notes text,
+    locale text DEFAULT 'fr'::text NOT NULL,
+    status public.interest_request_status DEFAULT 'pending'::public.interest_request_status NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    resolved_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT professional_interest_requests_display_name_not_blank CHECK ((btrim(customer_display_name) <> ''::text)),
+    CONSTRAINT professional_interest_requests_expiry_not_after_start CHECK ((expires_at <= preferred_starts_at)),
+    CONSTRAINT professional_interest_requests_locale_valid CHECK ((locale = ANY (ARRAY['fr'::text, 'en'::text]))),
+    CONSTRAINT professional_interest_requests_resolution_matches_status CHECK (((status = 'pending'::public.interest_request_status) = (resolved_at IS NULL))),
+    CONSTRAINT professional_interest_requests_service_label_not_blank CHECK ((btrim(service_label) <> ''::text))
+);
+
+
+--
+-- Name: TABLE professional_interest_requests; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.professional_interest_requests IS 'Une demande envoyée par un client à un profil professionnel NON REVENDIQUÉ, publié par le Worker. Ce n''est pas un rendez-vous : aucun créneau n''est retenu, aucune disponibilité n''est affirmée, preferred_starts_at est la préférence du client. C''est l''amont de la boucle d''acquisition de MASTER_SPEC §5, et l''argument de vente montré au professionnel quand il revendique. NE CONTIENT AUCUN CONTACT CLIENT — voir professional_interest_request_contacts et l''en-tête de cette migration.';
+
+
+--
+-- Name: COLUMN professional_interest_requests.customer_display_name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.professional_interest_requests.customer_display_name IS 'Prénom + initiale, réduit à l''ÉCRITURE par private.reduce_customer_display_name. MASTER_SPEC §5 limite ce qu''un professionnel non vérifié peut voir d''un client ; stocker la forme réduite plutôt que de la calculer à l''affichage rend la règle non contournable par un gabarit.';
+
+
+--
+-- Name: COLUMN professional_interest_requests.preferred_starts_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.professional_interest_requests.preferred_starts_at IS 'L''heure que le CLIENT souhaite. Jamais une heure que le professionnel a offerte — il n''a publié aucun horaire. Toute interface qui présente cette valeur comme un créneau confirmé ment.';
 
 
 --
@@ -15388,6 +16233,22 @@ ALTER TABLE ONLY public.email_outbox
 
 
 --
+-- Name: email_streams email_streams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_streams
+    ADD CONSTRAINT email_streams_pkey PRIMARY KEY (stream);
+
+
+--
+-- Name: email_templates email_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_pkey PRIMARY KEY (template_key, locale);
+
+
+--
 -- Name: invitations invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15433,6 +16294,14 @@ ALTER TABLE ONLY public.location_service_settings
 
 ALTER TABLE ONLY public.locations
     ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: marketplace_withdrawal_requests marketplace_withdrawal_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketplace_withdrawal_requests
+    ADD CONSTRAINT marketplace_withdrawal_requests_pkey PRIMARY KEY (id);
 
 
 --
@@ -15817,6 +16686,22 @@ ALTER TABLE ONLY public.professional_follows
 
 ALTER TABLE ONLY public.professional_follows
     ADD CONSTRAINT professional_follows_unique UNIQUE (follower_user_id, professional_id);
+
+
+--
+-- Name: professional_interest_request_contacts professional_interest_request_contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_interest_request_contacts
+    ADD CONSTRAINT professional_interest_request_contacts_pkey PRIMARY KEY (request_id);
+
+
+--
+-- Name: professional_interest_requests professional_interest_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_interest_requests
+    ADD CONSTRAINT professional_interest_requests_pkey PRIMARY KEY (id);
 
 
 --
@@ -16725,10 +17610,31 @@ CREATE INDEX customers_user_id_idx ON public.customers USING btree (user_id) WHE
 
 
 --
+-- Name: email_outbox_dedupe_key_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX email_outbox_dedupe_key_unique ON public.email_outbox USING btree (dedupe_key) WHERE (dedupe_key IS NOT NULL);
+
+
+--
+-- Name: email_outbox_dispatchable_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX email_outbox_dispatchable_idx ON public.email_outbox USING btree (next_attempt_at) WHERE (status = 'queued'::public.email_delivery_status);
+
+
+--
 -- Name: email_outbox_pending_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX email_outbox_pending_idx ON public.email_outbox USING btree (next_attempt_at) WHERE (status = 'queued'::public.email_delivery_status);
+
+
+--
+-- Name: email_outbox_reconcilable_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX email_outbox_reconcilable_idx ON public.email_outbox USING btree (net_request_id) WHERE (net_request_id IS NOT NULL);
 
 
 --
@@ -16785,6 +17691,20 @@ CREATE UNIQUE INDEX locations_queue_check_in_token_unique ON public.locations US
 --
 
 CREATE INDEX locations_service_area_idx ON public.locations USING btree (id) WHERE (kind = 'service_area'::public.location_kind);
+
+
+--
+-- Name: marketplace_withdrawal_requests_deadline_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX marketplace_withdrawal_requests_deadline_idx ON public.marketplace_withdrawal_requests USING btree (deadline_at) WHERE (status = 'pending'::public.marketplace_withdrawal_status);
+
+
+--
+-- Name: marketplace_withdrawal_requests_one_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX marketplace_withdrawal_requests_one_pending ON public.marketplace_withdrawal_requests USING btree (professional_id) WHERE (status = 'pending'::public.marketplace_withdrawal_status);
 
 
 --
@@ -17135,6 +18055,20 @@ CREATE INDEX professional_follows_follower_idx ON public.professional_follows US
 --
 
 CREATE INDEX professional_follows_professional_idx ON public.professional_follows USING btree (professional_id) WHERE (state = 'following'::public.follow_state);
+
+
+--
+-- Name: professional_interest_requests_pending_expiry_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX professional_interest_requests_pending_expiry_idx ON public.professional_interest_requests USING btree (expires_at) WHERE (status = 'pending'::public.interest_request_status);
+
+
+--
+-- Name: professional_interest_requests_professional_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX professional_interest_requests_professional_idx ON public.professional_interest_requests USING btree (professional_id, created_at DESC);
 
 
 --
@@ -17520,6 +18454,13 @@ CREATE INDEX prospects_fadeup_fit_idx ON public.prospects USING btree (fadeup_fi
 --
 
 CREATE INDEX prospects_migration_potential_idx ON public.prospects USING btree (migration_potential_score DESC NULLS LAST);
+
+
+--
+-- Name: prospects_outreach_unsubscribe_token_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX prospects_outreach_unsubscribe_token_unique ON public.prospects USING btree (outreach_unsubscribe_token);
 
 
 --
@@ -18167,6 +19108,20 @@ CREATE TRIGGER email_outbox_set_updated_at BEFORE UPDATE ON public.email_outbox 
 
 
 --
+-- Name: email_streams email_streams_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER email_streams_set_updated_at BEFORE UPDATE ON public.email_streams FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: email_templates email_templates_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER email_templates_set_updated_at BEFORE UPDATE ON public.email_templates FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
 -- Name: invitations invitations_check_location_consistency; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -18234,6 +19189,13 @@ CREATE TRIGGER locations_enforce_establishment_capacity BEFORE INSERT OR UPDATE 
 --
 
 CREATE TRIGGER locations_set_updated_at BEFORE UPDATE ON public.locations FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: marketplace_withdrawal_requests marketplace_withdrawal_requests_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER marketplace_withdrawal_requests_set_updated_at BEFORE UPDATE ON public.marketplace_withdrawal_requests FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -18437,6 +19399,27 @@ CREATE TRIGGER professional_follows_analytics AFTER INSERT OR UPDATE ON public.p
 --
 
 CREATE TRIGGER professional_follows_set_updated_at BEFORE UPDATE ON public.professional_follows FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: professional_interest_request_contacts professional_interest_request_contacts_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER professional_interest_request_contacts_set_updated_at BEFORE UPDATE ON public.professional_interest_request_contacts FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: professional_interest_requests professional_interest_requests_set_expiry; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER professional_interest_requests_set_expiry BEFORE INSERT OR UPDATE ON public.professional_interest_requests FOR EACH ROW EXECUTE FUNCTION public.set_interest_request_expiry();
+
+
+--
+-- Name: professional_interest_requests professional_interest_requests_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER professional_interest_requests_set_updated_at BEFORE UPDATE ON public.professional_interest_requests FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -19298,6 +20281,14 @@ ALTER TABLE ONLY public.customers
 
 
 --
+-- Name: email_templates email_templates_stream_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_stream_fkey FOREIGN KEY (stream) REFERENCES public.email_streams(stream);
+
+
+--
 -- Name: invitations invitations_invited_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -19359,6 +20350,22 @@ ALTER TABLE ONLY public.location_service_settings
 
 ALTER TABLE ONLY public.locations
     ADD CONSTRAINT locations_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: marketplace_withdrawal_requests marketplace_withdrawal_requests_decided_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketplace_withdrawal_requests
+    ADD CONSTRAINT marketplace_withdrawal_requests_decided_by_fkey FOREIGN KEY (decided_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: marketplace_withdrawal_requests marketplace_withdrawal_requests_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketplace_withdrawal_requests
+    ADD CONSTRAINT marketplace_withdrawal_requests_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
 
 
 --
@@ -19927,6 +20934,30 @@ ALTER TABLE ONLY public.professional_follows
 
 ALTER TABLE ONLY public.professional_follows
     ADD CONSTRAINT professional_follows_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: professional_interest_request_contacts professional_interest_request_contacts_booked_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_interest_request_contacts
+    ADD CONSTRAINT professional_interest_request_contacts_booked_by_user_id_fkey FOREIGN KEY (booked_by_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: professional_interest_request_contacts professional_interest_request_contacts_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_interest_request_contacts
+    ADD CONSTRAINT professional_interest_request_contacts_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.professional_interest_requests(id) ON DELETE CASCADE;
+
+
+--
+-- Name: professional_interest_requests professional_interest_requests_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_interest_requests
+    ADD CONSTRAINT professional_interest_requests_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
 
 
 --
@@ -21341,6 +22372,32 @@ CREATE POLICY email_outbox_select_platform ON public.email_outbox FOR SELECT TO 
 
 
 --
+-- Name: email_streams; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.email_streams ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: email_streams email_streams_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY email_streams_select ON public.email_streams FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
+-- Name: email_templates; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: email_templates email_templates_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY email_templates_select ON public.email_templates FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
 -- Name: invitations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -21446,6 +22503,19 @@ CREATE POLICY locations_select ON public.locations FOR SELECT TO authenticated U
 --
 
 CREATE POLICY locations_update ON public.locations FOR UPDATE TO authenticated USING (( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role)) WITH CHECK (( SELECT private.has_org_role(locations.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role));
+
+
+--
+-- Name: marketplace_withdrawal_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.marketplace_withdrawal_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: marketplace_withdrawal_requests marketplace_withdrawal_requests_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY marketplace_withdrawal_requests_select ON public.marketplace_withdrawal_requests FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
 
 
 --
@@ -22219,6 +23289,34 @@ ALTER TABLE public.professional_follows ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY professional_follows_select ON public.professional_follows FOR SELECT TO authenticated USING (((follower_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+
+
+--
+-- Name: professional_interest_request_contacts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.professional_interest_request_contacts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: professional_interest_request_contacts professional_interest_request_contacts_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY professional_interest_request_contacts_select ON public.professional_interest_request_contacts FOR SELECT TO authenticated USING ((( SELECT private.is_platform_admin() AS is_platform_admin) OR (booked_by_user_id = ( SELECT auth.uid() AS uid))));
+
+
+--
+-- Name: professional_interest_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.professional_interest_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: professional_interest_requests professional_interest_requests_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY professional_interest_requests_select ON public.professional_interest_requests FOR SELECT TO authenticated USING ((( SELECT private.is_platform_admin() AS is_platform_admin) OR (EXISTS ( SELECT 1
+   FROM public.professional_interest_request_contacts c
+  WHERE ((c.request_id = professional_interest_requests.id) AND (c.booked_by_user_id = ( SELECT auth.uid() AS uid)))))));
 
 
 --
@@ -23459,5 +24557,5 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WeCePo1aejI6tGdoqEHlqmVodcZqPke1NtCdZOnSq1p4IyPtPi4kcqbXO3MagEW
+\unrestrict QvcsvexUeV91vcKVYeOLwFJUd4IebqlQU6P1GwGwkZxPZzB0nzs2gd1nXfpUXzk
 
