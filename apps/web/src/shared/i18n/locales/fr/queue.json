@@ -1,0 +1,239 @@
+{
+  "public": {
+    "summaryLabel": "État de la file d'attente",
+    "waitingCount_one": "personne en attente",
+    "waitingCount_other": "personnes en attente",
+    "estimatedWait": "Environ {{minutes}} min d'attente",
+    "viewProfile": "Voir le profil du salon",
+    "pickLocation": "Choisissez un établissement",
+    "closedHint": "La file est fermée pour le moment. Revenez pendant les heures d'ouverture.",
+    "joinCta": "Rejoindre la file",
+    "serviceArea": {
+      "title": "Pas de file d'attente ici",
+      "description": "Ce professionnel se déplace chez ses clients : il n'a pas de salle d'attente. Réservez un créneau à la place.",
+      "action": "Voir le profil et réserver"
+    },
+    "notFound": {
+      "title": "Salon introuvable",
+      "description": "Ce lien ne correspond à aucun salon FadeUp."
+    },
+    "error": {
+      "title": "Impossible de charger la file",
+      "description": "Vérifiez votre connexion, puis réessayez."
+    }
+  },
+  "join": {
+    "title": "Rejoindre la file",
+    "presenceHint": "Il faut être au salon pour rejoindre : le QR affiché sur place et votre position le confirment.",
+    "scanHint": "Visez le QR code affiché dans le salon.",
+    "nameLabel": "Votre prénom",
+    "nameHint": "Il sera affiché au comptoir, avec l'initiale de votre nom seulement.",
+    "nameRequired": "Indiquez votre prénom pour rejoindre la file.",
+    "emailLabel": "E-mail (facultatif)",
+    "emailHint": "Pour retrouver votre place depuis n'importe quel appareil — un code à usage unique, pas de mot de passe.",
+    "otpSent": "Un code à 6 chiffres a été envoyé à {{email}}.",
+    "otpLabel": "Code reçu par e-mail",
+    "confirmCode": "Valider le code",
+    "submit": "Rejoindre — ma position sera vérifiée",
+    "scanCta": "Scanner le QR du salon",
+    "tokenExplainer": "Le QR affiché dans le salon prouve que vous êtes sur place. Votre position n'est demandée qu'à ce moment-là.",
+    "issue": {
+      "geo-denied": "Sans votre position, impossible de vérifier que vous êtes au salon. Autorisez la localisation puis réessayez.",
+      "geo-unavailable": "Votre position n'a pas pu être déterminée. Rapprochez-vous d'une fenêtre ou réessayez.",
+      "scan-failed": "Ce QR code n'est pas celui de ce salon. Scannez celui affiché sur place.",
+      "otp-failed": "Ce code n'est pas valide ou a expiré. Vérifiez le dernier e-mail reçu.",
+      "email-send-failed": "L'e-mail n'a pas pu être envoyé. Vérifiez l'adresse, ou continuez sans compte."
+    }
+  },
+  "refusal": {
+    "service_area_has_no_queue": "Ce professionnel se déplace chez ses clients : il n'y a pas de file d'attente. Réservez un créneau à la place.",
+    "invalid_check_in_token": "Ce QR code n'est plus valide. Scannez celui affiché dans le salon.",
+    "location_not_geolocated": "Ce salon n'a pas encore publié sa position : la file ne peut admettre personne pour l'instant. Signalez-le au comptoir.",
+    "position_required": "Votre position est nécessaire pour rejoindre : il faut être au salon. Autorisez la localisation puis réessayez.",
+    "too_far": "Vous êtes trop loin du salon pour rejoindre sa file. Rapprochez-vous et réessayez sur place.",
+    "queue_closed": "La file n'accepte personne pour le moment. Adressez-vous au comptoir ou revenez plus tard.",
+    "queue_full": "La file est pleine. Revenez un peu plus tard, ou réservez un créneau.",
+    "already_in_queue": "Vous êtes déjà dans une file. Terminez ou quittez-la avant d'en rejoindre une autre."
+  },
+  "track": {
+    "yourPosition": "Votre position",
+    "peopleAhead_one": "{{count}} personne devant vous",
+    "peopleAhead_other": "{{count}} personnes devant vous",
+    "peopleAhead_zero": "Vous êtes le prochain",
+    "enableNotifications": "M'alerter quand c'est mon tour",
+    "notificationTitle": "C'est votre tour !",
+    "notificationBody": "{{organization}} vous attend. Vous avez quelques minutes pour vous présenter.",
+    "called": {
+      "title": "C'est votre tour",
+      "description": "Présentez-vous au comptoir de {{organization}} — votre place est gardée quelques minutes."
+    },
+    "inService": {
+      "title": "Au fauteuil — bonne coupe !"
+    },
+    "gone": {
+      "title": "Vous n'êtes plus dans la file",
+      "description": "Votre passage est terminé, ou votre place a expiré après l'appel. Si la file est ouverte, vous pouvez la rejoindre à nouveau.",
+      "action": "Revoir la file"
+    }
+  },
+  "pro": {
+    "title": "File d'attente",
+    "locationLabel": "Établissement",
+    "capacityPerBarber": "Capacité : {{count}} par barber",
+    "openSwitch": "File ouverte",
+    "modeTitle": "Mode de service",
+    "mode": {
+      "hybrid": "RDV + file",
+      "reservation_only": "RDV seuls",
+      "queue_only": "File seule",
+      "unavailable": "Indisponible"
+    },
+    "qrRow": {
+      "title": "QR du salon",
+      "subtitle": "Afficher en grand, imprimer, régénérer"
+    },
+    "listTitle": "En file",
+    "empty": {
+      "title": "Personne n'attend",
+      "openHint": "La file est ouverte : les clients qui scannent le QR du salon apparaîtront ici.",
+      "closedHint": "La file est fermée — personne ne peut la rejoindre.",
+      "openAction": "Ouvrir la file",
+      "qrAction": "Afficher le QR du salon"
+    },
+    "callNext": "Appeler {{name}}",
+    "callNextEmpty": "Personne à appeler",
+    "toast": {
+      "opened": "File ouverte — les clients peuvent la rejoindre.",
+      "closed": "File fermée — les clients en attente restent en file."
+    },
+    "noLocation": {
+      "title": "Aucun établissement",
+      "description": "Créez d'abord votre établissement dans l'installation."
+    },
+    "serviceArea": {
+      "title": "Pas de file en zone de service",
+      "description": "Un professionnel qui se déplace n'a pas de salle d'attente : la file n'existe que sur une adresse physique."
+    },
+    "graceElapsed": "Grâce écoulée — à vous de décider",
+    "graceRemainingLabel": "{{minutes}} minutes et {{seconds}} secondes de grâce restantes",
+    "inServiceSince": "Au fauteuil depuis {{minutes}} min",
+    "waitingFor": "Attend depuis {{minutes}} min",
+    "actions": {
+      "call": "Appeler",
+      "arrived": "Arrivé",
+      "noShow": "Absent",
+      "complete": "Terminé"
+    },
+    "calledAtLabel": "Appelé à",
+    "modeOverrideLabel": "Dérogation active : {{mode}} jusqu’à"
+  },
+  "qr": {
+    "title": "Le QR de votre file",
+    "description": "Les clients le scannent pour rejoindre la file — depuis l'écran ou l'affiche au mur.",
+    "backToQueue": "Retour à la file",
+    "print": "Imprimer l'affiche (A5)",
+    "regenerate": "Régénérer le QR",
+    "regenerateHint": "À utiliser si vous pensez que le QR circule hors du salon : toutes les copies imprimées deviennent immédiatement invalides.",
+    "unavailable": {
+      "title": "QR non disponible",
+      "description": "L'affichage du QR est réservé au propriétaire, au manager et à la réception."
+    },
+    "confirm": {
+      "title": "Régénérer le QR ?",
+      "description": "Toutes les affiches imprimées cesseront de fonctionner immédiatement. Il faudra réimprimer.",
+      "action": "Oui, régénérer",
+      "done": "Nouveau QR émis — réimprimez l'affiche."
+    }
+  },
+  "poster": {
+    "instruction": "Scannez pour rejoindre la file d'attente",
+    "qrLabel": "QR code de la file d'attente de {{organization}}",
+    "footer": "fade-up.com"
+  },
+  "setup": {
+    "title": "Installer FadeUp",
+    "subtitle": "Du compte à une file ouverte, en moins de vingt minutes.",
+    "continue": "Enregistrer et continuer",
+    "savedToast": "Étape enregistrée",
+    "goToQueue": "Aller à la file d'attente",
+    "steps": {
+      "salon": {
+        "title": "Le salon",
+        "description": "Son nom et son adresse web FadeUp. Tout reste modifiable ensuite."
+      },
+      "you": {
+        "title": "Le premier barber",
+        "description": "Le nom affiché aux clients. Le reste de l'équipe pourra être invité plus tard."
+      },
+      "address": {
+        "title": "L'adresse et la position",
+        "description": "La position sert à vérifier qu'un client est bien sur place avant d'entrer en file."
+      },
+      "services": {
+        "title": "Les services",
+        "description": "Un catalogue de départ, modifiable à tout moment. Ajustez les prix."
+      },
+      "hours": {
+        "title": "Les horaires",
+        "description": "Les jours et heures d'ouverture de la semaine type."
+      },
+      "activate": {
+        "title": "L'essai gratuit",
+        "description": "14 jours, sans carte bancaire. C'est lui qui active la file d'attente."
+      },
+      "open": {
+        "title": "Ouvrir la file",
+        "description": "Le geste du matin : la file accepte les clients."
+      },
+      "qr": {
+        "title": "Le QR au mur",
+        "description": "Imprimez l'affiche A5 et collez-la bien en vue. C'est terminé."
+      }
+    },
+    "salon": {
+      "nameLabel": "Nom du salon",
+      "slugLabel": "Adresse FadeUp",
+      "slugHint": "fade-up.com/q/…  — en minuscules, sans espaces.",
+      "typeLabel": "Type d'activité",
+      "typeShop": "Barbershop",
+      "typeSolo": "Indépendant"
+    },
+    "you": {
+      "nameLabel": "Nom affiché",
+      "nameHint": "Celui que les clients verront."
+    },
+    "address": {
+      "lineLabel": "Adresse",
+      "postalLabel": "Code postal",
+      "cityLabel": "Ville",
+      "captureCta": "Utiliser ma position",
+      "captured": "Position enregistrée",
+      "geoIssue": "Position introuvable. Autorisez la localisation, en étant dans le salon.",
+      "whyPosition": "À faire depuis le salon : cette position sert de porte à la file — un client trop éloigné ne peut pas la rejoindre."
+    },
+    "services": {
+      "nameLabel": "Service",
+      "durationLabel": "Min",
+      "priceLabel": "Prix €"
+    },
+    "hours": {
+      "daysLabel": "Jours d'ouverture",
+      "day0": "Dim",
+      "day1": "Lun",
+      "day2": "Mar",
+      "day3": "Mer",
+      "day4": "Jeu",
+      "day5": "Ven",
+      "day6": "Sam",
+      "openLabel": "Ouverture",
+      "closeLabel": "Fermeture"
+    },
+    "activate": {
+      "cta": "Terminer l'installation et démarrer l'essai",
+      "hint": "L'essai ouvre le produit complet 14 jours, sans carte. À l'échéance sans abonnement : retour au gratuit, aucune donnée perdue."
+    },
+    "open": {
+      "cta": "Ouvrir la file maintenant"
+    }
+  }
+}
