@@ -68,6 +68,17 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), '..')
       if (file.includes('/features/pro/') || file.includes('/app/shells/ProShell')) continue
 
       /*
+       * F1 : le contexte organisation du Pro a déménagé vers shared/data
+       * (features/X n'importe jamais features/Y, et le shell comme
+       * pro-queue/pro-onboarding en dépendent) — même règle P1b §7, même
+       * garantie : la valeur gate le workspace PRO, elle n'est jamais
+       * affichée, et seul `marketplace_supply_type` atteint un client.
+       * L'installation (pro-onboarding) ADMINISTRE le modèle interne — elle
+       * écrit `business_type` via save_business_profile, comme /platform.
+       */
+      if (file.includes('/shared/data/organization') || file.includes('/features/pro-onboarding/')) continue
+
+      /*
         COMMENTS ARE EXEMPT, AND DELIBERATELY SO. Coupling is a thing code does.
         Prose explaining WHY the internal enum is not used here is exactly what
         should survive, and banning the words from it would delete the reasoning
