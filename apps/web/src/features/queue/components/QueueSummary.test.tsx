@@ -23,6 +23,11 @@ describe('QueueSummary — la réponse de /q/:slug', () => {
     expect(screen.getByTestId('queue-estimated-wait')).toHaveTextContent('25')
   })
 
+  it('une estimation de ZÉRO ne s’affiche pas — l’absence d’attente se lit dans le compte', () => {
+    render(<QueueSummary waitingCount={0} queueState="open" estimatedWaitMinutes={0} />)
+    expect(screen.queryByTestId('queue-estimated-wait')).not.toBeInTheDocument()
+  })
+
   it('une estimation invalide est traitée comme absente', () => {
     render(<QueueSummary waitingCount={7} queueState="open" estimatedWaitMinutes={Number.NaN} />)
     expect(screen.queryByTestId('queue-estimated-wait')).not.toBeInTheDocument()

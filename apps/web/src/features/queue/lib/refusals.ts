@@ -1,13 +1,18 @@
 /**
- * Les HUIT motifs de refus de `join_public_queue` (B1). La base les émet via
+ * Les motifs de refus nommés de la Live Queue. La base les émet via
  * `DETAIL: fadeup_queue_refusal=<code>` — PostgREST le remonte dans
  * `error.details`. On branche sur le CODE, jamais sur le texte anglais du
  * message (V2_DATA_CONTRACT §V8).
  *
- * Chaque code a son message distinct et actionnable : « vous êtes trop
- * loin » n'est pas « le QR est invalide » n'est pas « la file est pleine ».
- * Aucun seuil n'est codé en dur dans les libellés — la géofence exacte est
- * un réglage par salon que le contrat public n'expose pas au client.
+ * B1 en a posé huit (join). F1b en ajoute sept :
+ *   - `barber_queue_disabled` — join/changement vers un barber sans file ;
+ *   - `entry_not_found`, `not_entry_owner`, `entry_already_closed`,
+ *     `entry_in_service` — leave_public_queue / get_queue_entry_tracking ;
+ *   - `entry_not_waiting`, `already_in_that_queue` — change_queue_entry_barber.
+ *
+ * Chaque code a son message distinct et actionnable. Aucun seuil n'est codé
+ * en dur dans les libellés — la géofence comme la grâce sont des réglages
+ * par salon que le contrat public n'expose pas au client.
  */
 
 export const QUEUE_REFUSAL_CODES = [
@@ -16,9 +21,16 @@ export const QUEUE_REFUSAL_CODES = [
   'location_not_geolocated',
   'position_required',
   'too_far',
+  'barber_queue_disabled',
   'queue_closed',
   'queue_full',
   'already_in_queue',
+  'entry_not_found',
+  'not_entry_owner',
+  'entry_already_closed',
+  'entry_in_service',
+  'entry_not_waiting',
+  'already_in_that_queue',
 ] as const
 
 export type QueueRefusalCode = (typeof QUEUE_REFUSAL_CODES)[number]
@@ -44,8 +56,8 @@ export function parseQueueRefusal(raw: unknown): QueueRefusalCode | null {
 }
 
 /**
- * Clé i18n (namespace `v2`) du message associé à un code. Huit codes, huit
- * messages distincts — vérifié par test.
+ * Clé i18n (namespace `v2`) du message associé à un code. Quinze codes,
+ * quinze messages distincts — vérifié par test.
  */
 export function refusalMessageKey(code: QueueRefusalCode): string {
   return `queue.refusal.${code}`

@@ -7,18 +7,27 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { Row } from '@/shared/ui/Row'
 import { SkeletonRect } from '@/shared/ui/Skeleton'
 import { StickyActionBar } from '@/shared/ui/StickyActionBar'
+import { useToast } from '@/shared/ui/Toast'
 import { IconLocation, IconShop } from '@/shared/ui/icons'
 import {
   usePublicOrganizationName,
   usePublicQueueServiceState,
+  usePublicQueues,
   usePublicQueueStatus,
   useMyQueueStatus,
   useQueuePublicLocations,
+  useQueueEntryTracking,
+  useLeaveQueue,
+  useChangeQueueBarber,
+  QueueJoinRefusedError,
   type JoinQueueResult,
+  type PublicQueueFile,
 } from '@/features/queue/api/publicQueue'
+import { refusalMessageKey } from '@/features/queue/lib/refusals'
 import { JoinQueueSheet } from '@/features/queue/components/JoinQueueSheet'
+import { QueueList } from '@/features/queue/components/QueueList'
 import { QueueSummary, type PublicQueueState } from '@/features/queue/components/QueueSummary'
-import { QueueTracking, type TrackedEntry } from '@/features/queue/components/QueueTracking'
+import { QueueTracking } from '@/features/queue/components/QueueTracking'
 import {
   clearLocalQueueEntry,
   readLocalQueueEntry,
@@ -28,14 +37,19 @@ import {
 
 /**
  * /q/:slug — l'écran qu'un client ouvre depuis son canapé. PUBLIC : ni
- * authentification, ni géolocalisation, ni jeton pour CONSULTER (vérifié
- * dans le schéma, F1 §2). C'est ce lien que le QR du salon encode, avec
- * `?l=<lieu>&t=<jeton>` en plus pour rejoindre.
+ * authentification, ni géolocalisation, ni jeton pour CONSULTER. C'est ce
+ * lien que le QR du salon encode, avec `?l=<lieu>&t=<jeton>` pour rejoindre.
  *
- * Une seule question : y a-t-il du monde ? — puis un seul geste : rejoindre.
+ * F1b : un barbershop expose UNE FILE PAR BARBER, « premier disponible » en
+ * tête (le choix du barber est une possibilité, pas une obligation). Un
+ * salon à un seul barber garde l'écran F1 d'origine — lui proposer de
+ * « choisir » son unique barber serait du bruit. Le suivi de place passe par
+ * `get_queue_entry_tracking` : position dans SA file, échéance d'appel,
+ * estimation, sortie, changement de barber.
  */
 export function PublicQueuePage() {
   const { t } = useTranslation('v2')
+  const { toast } = useToast()
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
   const { session } = useSession()
@@ -58,41 +72,35 @@ export function PublicQueuePage() {
   const isServiceArea = resolvedLocation?.kind === 'service_area'
 
   const [joinOpen, setJoinOpen] = useState(false)
+  const [joinTarget, setJoinTarget] = useState<PublicQueueFile | null>(null)
   const [localEntry, setLocalEntry] = useState<LocalQueueEntry | null>(() => readLocalQueueEntry())
-
-  const serviceState = usePublicQueueServiceState(slug, isServiceArea ? null : locationId)
-  const queueStatus = usePublicQueueStatus(slug, isServiceArea ? null : locationId, {
-    // Un client qui SUIT SA PLACE garde son poll actif même onglet caché :
-    // c'est ce qui porte l'appel et sa notification.
-    pollInBackground: Boolean(localEntry && localEntry.slug === slug),
-  })
-  const myQueue = useMyQueueStatus(Boolean(session))
 
   // Une entrée locale d'un AUTRE salon ne concerne pas cet écran.
   const relevantLocal = localEntry && localEntry.slug === slug && localEntry.locationId === locationId ? localEntry : null
 
-  const trackedFromAccount: TrackedEntry | null = useMemo(() => {
-    if (!session) return null
-    const row = (myQueue.data ?? []).find((entry) => entry.location_id === locationId)
-    if (!row) return null
-    return { id: row.id, status: row.status, queuePosition: row.queue_position }
-  }, [session, myQueue.data, locationId])
+  const serviceState = usePublicQueueServiceState(slug, isServiceArea ? null : locationId)
+  const queues = usePublicQueues(slug, isServiceArea ? null : locationId, {
+    pollInBackground: Boolean(relevantLocal),
+  })
+  // Le tableau public reste la source du compte global (résumé solo).
+  const queueStatus = usePublicQueueStatus(slug, isServiceArea ? null : locationId, {})
+  const myQueue = useMyQueueStatus(Boolean(session))
 
-  const trackedFromLocal: TrackedEntry | null = useMemo(() => {
-    if (!relevantLocal) return null
-    const row = (queueStatus.data ?? []).find((entry) => entry.id === relevantLocal.entryId)
-    if (!row) return null
-    return { id: row.id, status: row.status, queuePosition: row.queue_position }
-  }, [relevantLocal, queueStatus.data])
+  // L'identifiant de la PROPRE entrée : trace locale d'abord (elle survit à
+  // la déconnexion), sinon la file active du compte sur ce lieu (autre
+  // appareil du même client connecté).
+  const trackedEntryId =
+    relevantLocal?.entryId ??
+    (session ? ((myQueue.data ?? []).find((entry) => entry.location_id === locationId)?.id ?? null) : null)
 
-  const tracked = trackedFromAccount ?? trackedFromLocal
-  // « Disparue » = l'entrée suivie n'est plus dans les états actifs — servie,
-  // sortie après grâce, ou retirée. Jamais déclaré avant la première réponse.
+  const tracking = useQueueEntryTracking(trackedEntryId)
+  const leave = useLeaveQueue()
+  const change = useChangeQueueBarber()
+
+  // « Disparue » = le serveur ne connaît plus cette entrée (entry_not_found),
+  // ou elle appartient à un autre compte (session changée sur cet appareil).
   const trackedGone = Boolean(
-    !tracked &&
-      relevantLocal &&
-      queueStatus.isSuccess &&
-      (!session || myQueue.isSuccess),
+    trackedEntryId && tracking.isError && tracking.error instanceof QueueJoinRefusedError,
   )
 
   const handleJoined = useCallback(
@@ -100,7 +108,7 @@ export function PublicQueuePage() {
       if (!locationId) return
       const record: LocalQueueEntry = { entryId: entry.id, slug, locationId, joinedAt: entry.created_at }
       // Même connectés, on garde la trace locale : le suivi survit à une
-      // déconnexion et le poll public répond sans session.
+      // déconnexion et la RPC de suivi répond sans session.
       saveLocalQueueEntry(record)
       setLocalEntry(record)
       if (authenticated) void myQueue.refetch()
@@ -113,11 +121,54 @@ export function PublicQueuePage() {
     setLocalEntry(null)
   }, [])
 
+  const surfaceQueueError = useCallback(
+    (error: unknown) => {
+      toast({
+        title:
+          error instanceof QueueJoinRefusedError
+            ? t(refusalMessageKey(error.code))
+            : t('errors.data.unknown'),
+        tone: 'error',
+      })
+    },
+    [toast, t],
+  )
+
+  const handleLeave = useCallback(() => {
+    if (!trackedEntryId) return
+    leave.mutate(trackedEntryId, { onError: surfaceQueueError })
+  }, [trackedEntryId, leave, surfaceQueueError])
+
+  const handleChangeBarber = useCallback(
+    (toBarberId: string | null) => {
+      if (!trackedEntryId || !locationId) return
+      change.mutate(
+        { entryId: trackedEntryId, toBarberId },
+        {
+          onSuccess: (row) => {
+            // L'entrée a été RÉINSÉRÉE : nouvel identifiant, nouvelle trace.
+            const record: LocalQueueEntry = { entryId: row.id, slug, locationId, joinedAt: row.created_at }
+            saveLocalQueueEntry(record)
+            setLocalEntry(record)
+          },
+          onError: surfaceQueueError,
+        },
+      )
+    },
+    [trackedEntryId, locationId, change, slug, surfaceQueueError],
+  )
+
   // Titre de l'onglet : le nom réel du salon.
   useEffect(() => {
     const name = organization.data?.name
     if (name) document.title = `${name} — FadeUp`
   }, [organization.data?.name])
+
+  const queueFiles = queues.data ?? []
+  // Un salon à UN barber garde l'expérience F1 : un résumé, un geste.
+  const barberFiles = queueFiles.filter((file) => file.barber_id !== null)
+  const multiBarber = barberFiles.length > 1
+  const firstAvailable = queueFiles.find((file) => file.barber_id === null) ?? null
 
   const waitingCount = (queueStatus.data ?? []).filter((entry) => entry.status === 'waiting').length
   const state = serviceState.data
@@ -128,7 +179,13 @@ export function PublicQueuePage() {
         ? 'open'
         : 'closed'
       : 'unknown'
-  const canJoin = queueState === 'open' && !tracked && !isServiceArea && Boolean(locationId)
+  const isTracking = Boolean((trackedEntryId && !tracking.isError) || trackedGone)
+  const canJoin = queueState === 'open' && !isTracking && !isServiceArea && Boolean(locationId)
+
+  const openJoin = useCallback((target: PublicQueueFile | null) => {
+    setJoinTarget(target)
+    setJoinOpen(true)
+  }, [])
 
   if (organization.isSuccess && !organization.data) {
     return (
@@ -210,14 +267,18 @@ export function PublicQueuePage() {
 
       {resolvedLocation && !isServiceArea && (
         <>
-          {tracked || trackedGone ? (
+          {isTracking ? (
             <QueueTracking
-              entry={tracked}
+              entry={tracking.data ?? null}
               gone={trackedGone}
               organizationName={organization.data?.name ?? ''}
+              queues={queueFiles}
+              busy={leave.isPending || change.isPending}
+              onLeave={handleLeave}
+              onChangeBarber={handleChangeBarber}
               onDismiss={dismissTracking}
             />
-          ) : queueStatus.isPending || serviceState.isPending ? (
+          ) : queueStatus.isPending || serviceState.isPending || queues.isPending ? (
             <div className="mt-8 flex flex-col items-center gap-3" aria-busy="true">
               <SkeletonRect className="h-16 w-24" />
               <SkeletonRect className="h-4 w-40" />
@@ -233,26 +294,40 @@ export function PublicQueuePage() {
                 </Button>
               }
             />
+          ) : multiBarber ? (
+            /* F1b : les files du salon — « premier disponible » en tête,
+               puis les barbers du plus court au plus long. Toucher une file
+               ouvre le geste « rejoindre » sur CETTE file. */
+            <section aria-label={t('queue.public.queuesLabel')} className="mt-6">
+              <QueueSummary
+                waitingCount={waitingCount}
+                queueState={queueState}
+                estimatedWaitMinutes={null}
+              />
+              <QueueList queues={queueFiles} onPick={canJoin ? openJoin : undefined} />
+            </section>
           ) : (
             <QueueSummary
               waitingCount={waitingCount}
               queueState={queueState}
-              /* Aucune RPC publique ne fournit d'estimation fiable : null,
-                 donc rien d'affiché — jamais une minute inventée. */
-              estimatedWaitMinutes={null}
+              /* Salon solo : l'estimation de la file « premier disponible »
+                 vient de l'estimateur F1b — null tant qu'elle n'est pas
+                 fiable, et alors RIEN n'est affiché. */
+              estimatedWaitMinutes={firstAvailable?.estimated_wait_minutes ?? null}
             />
           )}
 
-          {queueState === 'closed' && !tracked && !trackedGone && (
+          {queueState === 'closed' && !isTracking && (
             <p className="text-center text-fu-sm text-[var(--fu-text-secondary)]">{t('queue.public.closedHint')}</p>
           )}
 
           {canJoin && (
             /* Sous 768 px la nav basse consumer occupe le bord de l'écran
                (3,5 rem + safe-area) : la barre d'action se pose AU-DESSUS,
-               jamais dessous — premier écran à combiner les deux. */
+               jamais dessous. Le CTA collant rejoint « premier disponible » —
+               beaucoup de clients veulent juste être servis. */
             <StickyActionBar className="bottom-14 pb-3 md:bottom-0 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-              <Button variant="primary" size="lg" onClick={() => setJoinOpen(true)} data-testid="queue-join-cta">
+              <Button variant="primary" size="lg" onClick={() => openJoin(firstAvailable)} data-testid="queue-join-cta">
                 {t('queue.public.joinCta')}
               </Button>
             </StickyActionBar>
@@ -261,10 +336,14 @@ export function PublicQueuePage() {
           {locationId && (
             <JoinQueueSheet
               open={joinOpen}
-              onOpenChange={setJoinOpen}
+              onOpenChange={(next) => {
+                setJoinOpen(next)
+                if (!next) setJoinTarget(null)
+              }}
               slug={slug}
               locationId={locationId}
               initialToken={urlToken}
+              targetQueue={joinTarget}
               onJoined={handleJoined}
             />
           )}
