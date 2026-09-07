@@ -485,6 +485,12 @@ services:
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       # TODO: Allow configuring VERIFY_JWT per function.
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
+      # B3 — Stripe. Références seulement : les valeurs vivent dans .env, non
+      # suivi par git. La clé secrète sert à stripe-billing (Checkout, portail,
+      # changement de plan) ; le secret de signature à stripe-webhook. Jamais
+      # de variable VITE_* : rien de tout ça n'atteint le navigateur.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     command:
       [
         "start",

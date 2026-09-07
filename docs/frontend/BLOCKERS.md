@@ -20,6 +20,12 @@ sont livrés et affichent des erreurs traduites en attendant.
 > en `supabase_admin` : le grantor est `supabase_storage_admin` et un REVOKE
 > par `postgres` est un no-op silencieux). Les 82 tables public restent à
 > balayer dans le lot de durcissement dédié.
+> **Mise à jour B3 (2026-09-07).** Le blocage Billing du V2_DATA_CONTRACT
+> (« catalogue ≠ spec + zéro Stripe ») est **RÉSOLU** : catalogue Stripe
+> synchronisé en mode test, essai 14 jours, souscription/portail/changements
+> de plan, webhooks + grâce 7 j, paliers multi-établissements. B3 ajoute
+> n°8 (passage en mode réel Stripe — décision fondateur) et n°9 (redéfinition
+> des fonctions possédées par `supabase_admin`).
 
 ---
 
@@ -326,3 +332,37 @@ précisément les signaux qu'il faudrait surveiller.
 
 **Recommandation : l'option 1.** La sonde de rebond est ce qui protège la
 réputation partagée décrite au point n°6.
+---
+
+## 8. Stripe en mode TEST — le passage en mode réel est une décision du fondateur (B3, 2026-09-07)
+
+**Tout B3 est construit et prouvé en mode test Stripe** : catalogue (produits
+`fadeup_*`, prix mensuels et annuels), webhook endpoint
+(`https://fade-up.com/functions/v1/stripe-webhook`), portail client, tunnel de
+souscription complet (carte 4242, TVA Stripe Tax active). Aucun objet n'existe
+en mode réel.
+
+**Ce que le passage en mode réel demandera** (jamais une étape automatisée) :
+clés réelles dans `infra/supabase/.env` (le script de synchronisation REFUSE
+toute clé non `sk_test_` tant que `private.billing_livemode()` rend `false`),
+migration d'une ligne pour basculer `private.billing_livemode()` à `true`,
+re-exécution de `db/seeds/b3_configure_stripe.sh` et
+`db/seeds/b3_sync_stripe_catalog.sh` (adaptés au garde-fou), un webhook
+endpoint de mode réel avec son propre secret, et surtout : CGV, mentions
+légales, politique de remboursement — rien de tout cela n'existe.
+
+## 9. Fonctions possédées par `supabase_admin` — non redéfinissables par une migration `postgres` (constaté en B3, 2026-09-07)
+
+42 fonctions de `public`/`private` appartiennent à `supabase_admin` (héritage
+des lots MASTER appliqués sous ce rôle), dont `get_organization_readiness` et
+`complete_onboarding`. Une migration appliquée en tant que `postgres` ne peut
+ni les redéfinir ni même les commenter — le bac d'essai fidèle de B3 l'a
+refusé, exactement comme il devait.
+
+Conséquence pour B3 : le démarrage d'essai n'a PAS pu être inséré dans
+`complete_onboarding` ; il passe par le balayage `run_trial_maintenance`
+(latence ≤ 60 s) et par la RPC `start_organization_trial`. Conséquence
+générale : tout lot futur qui doit toucher ces 42 fonctions devra soit
+s'appliquer en `supabase_admin`, soit faire précéder la migration d'un
+`ALTER FUNCTION ... OWNER TO postgres` décidé et tracé. À trancher une fois,
+proprement, plutôt que lot par lot.

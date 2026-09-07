@@ -1,7 +1,7 @@
 #!/bin/sh
 # FadeUp booking scheduler loop.
 #
-# Three jobs now, on the same fixed interval:
+# Six jobs now, on the same fixed interval:
 #
 #   run_booking_maintenance()      expire unanswered booking requests so the
 #                                  slot is released, whether or not anybody has
@@ -11,8 +11,18 @@
 #                                  the prospect follow-ups that are due.
 #   run_email_delivery()           reconcile the previous tick's sends and
 #                                  dispatch new ones through Resend.
+#   run_trial_maintenance()        B3: start 14-day trials for organizations
+#                                  that just became bookable, queue the J-3 and
+#                                  J-1 reminders, expire finished trials.
+#   run_billing_maintenance()      B3: process queued Stripe webhook events,
+#                                  run the 7-day grace dunning, expire graces,
+#                                  push scheduled plan changes to Stripe.
+#   run_establishment_tier_maintenance()
+#                                  B3: detect multi-location organizations that
+#                                  outgrew their tier, schedule the switch for
+#                                  the NEXT period and announce it by email.
 #
-# They are three calls and not one on purpose: a Resend outage must not stop
+# They are separate calls and not one on purpose: a Resend outage must not stop
 # slots being released, and a slow expiry sweep must not delay a confirmation
 # email. Each is independently idempotent, so a tick that dies between two of
 # them costs a minute, never a duplicate.
@@ -65,14 +75,20 @@ while true; do
   # errors instead of swallowing them.
   if output=$(psql -v ON_ERROR_STOP=1 -At \
         -c "select b.expired_requests || '|' || a.expired_requests || '|' || a.outreach_queued || '|' || e.dispatched || '|' || e.reconciled
+              || '|' || t.trials_started || '|' || t.reminders_queued || '|' || t.trials_expired
+              || '|' || m.events_processed || '|' || m.dunning_queued || '|' || m.graces_expired || '|' || m.changes_dispatched
+              || '|' || et.tier_changes_scheduled || '|' || et.quotes_opened
             from public.run_booking_maintenance() b,
                  public.run_acquisition_maintenance() a,
-                 public.run_email_delivery() e;" 2>&1); then
+                 public.run_email_delivery() e,
+                 public.run_trial_maintenance() t,
+                 public.run_billing_maintenance() m,
+                 public.run_establishment_tier_maintenance() et;" 2>&1); then
     date +%s > "$HEARTBEAT"
     # Only say something when something happened. A quiet log is a readable log,
     # and this runs 1,440 times a day.
-    if [ "$output" != "0|0|0|0|0" ]; then
-      echo "$(date -u +%FT%TZ) fadeup-scheduler: bookings_expired|interest_expired|outreach_queued|emails_sent|emails_reconciled = ${output}"
+    if [ "$output" != "0|0|0|0|0|0|0|0|0|0|0|0|0|0" ]; then
+      echo "$(date -u +%FT%TZ) fadeup-scheduler: bookings_expired|interest_expired|outreach_queued|emails_sent|emails_reconciled|trials_started|trial_reminders|trials_expired|stripe_events|dunning|graces_expired|changes_dispatched|tier_switches|quotes = ${output}"
     fi
   else
     echo "$(date -u +%FT%TZ) fadeup-scheduler: tick failed: ${output}" >&2

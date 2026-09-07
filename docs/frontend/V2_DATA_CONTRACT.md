@@ -16,6 +16,16 @@ générateur, même sortie).
 > `review_reputation`, `feed_ranking_weights`), toutes en RLS forcée, aucune
 > exposée à `anon`. `db-audit/SCHEMA.sql` et `database.types.ts` sont des
 > instantanés de la production et incluent donc B3.
+> **Mis à jour le 2026-09-07 après B3** (`b3/monetization`). La monétisation
+> existe : 6 tables (`billing_stripe_products`, `billing_stripe_prices`,
+> `organization_billing`, `billing_quote_requests`, `organization_trials`,
+> `stripe_webhook_events`, toutes RLS forcée), le catalogue porte l'annuel
+> (`annual_price_minor` générée = 10 × mensuel) et les bornes de paliers,
+> `private.effective_plan_key` apprend l'essai, trois passes scheduler de plus
+> (`run_trial_maintenance`, `run_billing_maintenance`,
+> `run_establishment_tier_maintenance`), deux fonctions Edge
+> (`stripe-webhook`, `stripe-billing`). **Tout en mode test Stripe.**
+> `database.types.ts` régénéré (9 878 lignes).
 >
 > **Mis à jour le 2026-09-04 après B2** (`b2/acquisition-funnel`). Le schéma
 > live porte désormais **113 tables, 200 fonctions, 62 enums, 307 policies
@@ -188,7 +198,7 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 | CRM | `.from('customers')` (RLS org) | `link_customer_from_contact_info` | — | **OK** (pas de « total dépensé » — aucun montant encaissé, par design) |
 | Insights | `get_organization_analytics_summary` | `get_professional_analytics_summary`, `get_organization_retention_cohort` | — | **OK** |
 | Rétention | `get_organization_retention_cohort` | `.from('customer_memberships')` | — | **PARTIEL** — pas de campagnes/promotions en base |
-| Billing | `get_organization_entitlements` | `.from('commercial_plans')` (SELECT authenticated) | — | **BLOQUÉ** — catalogue live ≠ spec (V5) + aucune intégration Stripe en base (0 occurrence) |
+| Billing | `get_billing_catalog` (prix + bornes + prix Stripe actifs), `get_organization_entitlements`, `.from('organization_billing')` (RLS owner), `.from('organization_trials')` (RLS owner) | `start_organization_trial`, fonction Edge `stripe-billing` (actions `checkout`/`portal`/`change_plan`/`cancel` — chacune gardée par RPC propriétaire : `prepare_billing_checkout`, `prepare_billing_portal`, `request_plan_change`, `request_billing_cancellation`), `request_billing_quote` | `organization_billing` | **OK — B3** (mode test Stripe ; le passage en mode réel est une décision fondateur) |
 | Réglages / modes | `get_service_mode_state` | `set_*_service_mode*` | `location_service_settings`, `service_mode_overrides` | **OK** |
 | Onboarding pro | `get_organization_readiness` | `create_organization`, `complete_organization_onboarding`, `apply_weekly_hours`, `apply_starter_services` | — | **OK** |
 | Éditeur de profil public | `save_business_profile`, `.from('staff_profiles')` | `set_organization_marketplace_visible` | — | **OK** |
@@ -416,7 +426,16 @@ Fade Passport ». Nuance : l'émission suit la création de `customer_profiles`
 (l'onboarding client), pas la création du compte auth brut — acceptable, à
 énoncer tel quel dans l'UI.
 
-### V5 — Plans et capacités — **ÉCART BLOQUANT pour P3 Billing**
+### V5 — Plans et capacités — **RÉSOLU PAR B3** (l'audit d'origine suit, pour l'histoire)
+
+> **B3 (2026-09-07).** Le catalogue en base fait autorité et Stripe le reflète
+> (mode test) : produits + prix mensuels ET annuels (annuel = colonne générée
+> `annual_price_minor` = 10 × mensuel), essai 14 jours sans carte
+> (`organization_trials`, unique par organisation, niveau Shop Pro / solo),
+> webhooks + cycle de vie complet (`stripe_webhook_events`,
+> `organization_billing`, grâce 7 j), paliers multi_salon 2-3 / 4-6 / 7-15
+> paramétrables (`min/max_establishments`), niveau Pro des paliers par
+> `feature_tier_plan_key`. Ce qui suit décrivait l'état d'avant B3.
 
 Catalogue live (`commercial_plans`, 2026-09-04) :
 
@@ -571,8 +590,8 @@ grep -ciP 'geofence|qr_code|check_?in_radius'            → 0   (au 2026-09-04)
 |---|---|---|---|
 | Tunnel `pending` d'acquisition inexistant à la création (V1) | **bloquant** (pour la boucle d'acquisition, écran « demande envoyée », e-mails prospect) | backend dédié avant P2 | RPC de demande vers profils Free/non revendiqués sortant en `pending` ; l'aval existe déjà |
 | Première demande offerte non implémentée (V2) | majeur | même prompt backend | compteur/crédit au niveau org + garde dans `confirm_booking_request` |
-| Catalogue de plans ≠ spec : prix, noms, famille multi_salon, pas d'annuel, pas d'essai 14 j (V5) | **bloquant** (P3 Billing) | P3 + décision fondateur | trancher : la spec (0/20/35/49/69, par établissement) ou le catalogue — puis migrer les données, jamais coder en dur |
-| Stripe absent de la base (V5) | **bloquant** (P3 Billing self-service) | P3/backend | tables d'abonnement + webhooks avant tout écran Billing |
+| ~~Catalogue de plans ≠ spec : pas d'annuel, pas d'essai 14 j (V5)~~ | ~~bloquant~~ | **RÉSOLU — B3** | le catalogue en base fait autorité (décision déjà actée au MASTER_SPEC) ; annuel = 10 mois en colonne générée ; essai 14 j sans carte via `organization_trials` + `effective_plan_key` |
+| ~~Stripe absent de la base (V5)~~ | ~~bloquant~~ | **RÉSOLU — B3** | catalogue synchronisé (mode test), Checkout + portail, webhooks signés + journal idempotent, grâce 7 j, changements de plan, paliers multi |
 | ~~`search_public_professionals` retourne les staff par défaut (V6)~~ | ~~majeur~~ | **RÉSOLU — B1** | défaut inversé en base ; `'all'` est l'opt-in nommé |
 | ~~`join_public_queue` sans QR ni géofence (V8)~~ | ~~majeur~~ | **RÉSOLU — B1** | QR d'établissement + géofence serveur, seuils réglables, 8 motifs de refus nommés |
 | ~~Profils non revendiqués impubliables (contrainte `professionals_publication_eligibility`)~~ | ~~critique~~ | **RÉSOLU — B1** | contrainte resserrée sur le nom seul + garde `professionals_guard_publication` exigeant une ancre de corroboration pour un non revendiqué |

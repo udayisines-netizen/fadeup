@@ -8,6 +8,12 @@ volumes/functions/main/**
 !volumes/functions/locale-detect/
 volumes/functions/locale-detect/**
 !volumes/functions/locale-detect/index.ts
+!volumes/functions/stripe-webhook/
+volumes/functions/stripe-webhook/**
+!volumes/functions/stripe-webhook/index.ts
+!volumes/functions/stripe-billing/
+volumes/functions/stripe-billing/**
+!volumes/functions/stripe-billing/index.ts
 .env
 test.http
 docker-compose.override.yml
