@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XACLzIUG4kuvIyy94QcTw37WnQ5cpoePGQh7EHZtrpQdMKHT6S8mLEaxIrRFPvo
+\restrict qUiEKTyUgqW79aONI5Fe6uBvQh6udmMfQ41HAHm9IKQcnJctkPA6FN2LX0u5E6p
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -2837,6 +2837,10 @@ begin
     raise exception 'at least one of customer_phone or customer_email is required';
   end if;
 
+  if p_starts_at is null then
+    raise exception 'starts_at is required';
+  end if;
+
   if p_starts_at <= now() then
     raise exception 'starts_at must be in the future';
   end if;
@@ -4899,6 +4903,11 @@ begin
   if coalesce(btrim(p_customer_email), '') = '' and coalesce(btrim(p_customer_phone), '') = '' then
     raise exception 'at least one of customer_email or customer_phone is required'
       using detail = 'fadeup_interest_refusal=no_contact_channel';
+  end if;
+
+  if p_preferred_starts_at is null then
+    raise exception 'preferred_starts_at is required'
+      using detail = 'fadeup_interest_refusal=missing_time';
   end if;
 
   if p_preferred_starts_at <= now() then
@@ -7586,6 +7595,32 @@ COMMENT ON FUNCTION public.get_public_organization(p_slug text) IS 'Public shop 
 
 
 --
+-- Name: get_public_organization_follower_count(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) RETURNS integer
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select count(*)::integer
+  from (
+    select 1
+    from public.organization_follows f
+    where f.organization_id = p_organization_id
+      and f.is_following
+    limit 10000
+  ) capped;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_organization_follower_count(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) IS 'F2 — public follower count of an organization, capped at 10000 like private.professional_follower_count. Followers are public by product law (MASTER_SPEC §9); the professional side has carried this since B1, the organization side gets it here.';
+
+
+--
 -- Name: get_public_professional(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -7634,6 +7669,53 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_public_professional_by_handle(p_handle text) IS 'Anon-callable. Same contract and same shape as get_public_professional, addressed by the public handle. Serves claimed and unclaimed identities alike and returns claim_state with them.';
+
+
+--
+-- Name: get_public_professional_workplace(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_professional_workplace(p_professional_id uuid) RETURNS TABLE(organization_id uuid, organization_name text, organization_slug text, marketplace_supply_type text, barber_id uuid, location_id uuid, location_name text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    o.id,
+    o.name,
+    o.slug,
+    -- LE mapping, copié à l'identique de search_public_professionals (B1) :
+    -- énuméré valeur par valeur, un type ajouté plus tard rend NULL.
+    case o.business_type
+      when 'solo_professional' then 'independent'
+      when 'barbershop'        then 'barbershop'
+      when 'hair_salon'        then 'barbershop'
+      when 'mixed_salon'       then 'barbershop'
+      when 'multi_location'    then 'barbershop'
+      else null
+    end::text,
+    b.id,
+    sp.location_id,
+    l.name
+  from public.barbers b
+  join public.professionals p on p.id = b.professional_id
+  join public.organizations o on o.id = b.organization_id
+  join public.staff_profiles sp on sp.id = b.staff_profile_id
+  left join public.locations l on l.id = sp.location_id and l.is_active
+  where b.professional_id = p_professional_id
+    and p.claim_state = 'claimed'
+    and p.is_public
+    and b.is_bookable
+    and sp.is_active
+    and sp.is_public
+  order by b.created_at;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_professional_workplace(p_professional_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) IS 'F2 — resolves a public, claimed professional identity to its public workplace(s): the reverse of list_public_organization_barbers.professional_id. Unclaimed identities resolve to zero rows, mirroring get_public_barber''s NULL professional_id (the staff<->identity link is public only after claim).';
 
 
 --
@@ -8164,7 +8246,11 @@ begin
     return new;
   end if;
 
-  if (select auth.uid()) is null or (select private.is_platform_admin()) then
+  -- X3 : l'absence de JWT n'exempte que les sessions serveur — jamais le
+  -- rôle-claim 'anon' d'un client PostgREST.
+  if ((select auth.uid()) is null
+      and coalesce((select auth.role()), '') not in ('anon', 'authenticated'))
+     or (select private.is_platform_admin()) then
     return new;
   end if;
 
@@ -8201,6 +8287,12 @@ begin
   -- as guard_professional_application_update() and the organization-creation
   -- guard — never a client request.
   if (select auth.uid()) is null then
+    -- X3 : même durcissement que les autres gardes — l'échappatoire ne vaut
+    -- que pour les sessions serveur, pas pour un rôle-claim client.
+    if coalesce((select auth.role()), '') in ('anon', 'authenticated') then
+      raise exception 'marketplace publication requires an authenticated session'
+        using errcode = '42501';
+    end if;
     return new;
   end if;
 
@@ -8283,6 +8375,12 @@ begin
   -- the EXECUTE grants are what keep anon/authenticated out of this path in
   -- the first place.
   if (select auth.uid()) is null then
+    -- X3 : sessions serveur et cascades FK seulement — un client PostgREST
+    -- porte toujours un rôle-claim, et 'anon'/'authenticated' sont refusés.
+    if coalesce((select auth.role()), '') in ('anon', 'authenticated') then
+      raise exception 'only a platform reviewer can change the review state of an application'
+        using errcode = '42501';
+    end if;
     return new;
   end if;
 
@@ -9102,6 +9200,37 @@ $$;
 --
 
 COMMENT ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) IS 'Anon-callable: bookable, public staff_profiles-visible barbers eligible (via barber_services) for p_service_id, whose primary location is p_location_id, by organization slug.';
+
+
+--
+-- Name: list_public_location_hours(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) RETURNS TABLE(day_of_week smallint, is_closed boolean, open_time time without time zone, close_time time without time zone, second_open_time time without time zone, second_close_time time without time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    h.day_of_week,
+    h.is_closed,
+    h.open_time,
+    h.close_time,
+    h.second_open_time,
+    h.second_close_time
+  from public.location_hours h
+  join public.locations l on l.id = h.location_id and l.is_active
+  join public.organizations o on o.id = h.organization_id
+  where o.slug = p_organization_slug
+    and h.location_id = p_location_id
+  order by h.day_of_week;
+$$;
+
+
+--
+-- Name: FUNCTION list_public_location_hours(p_organization_slug text, p_location_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) IS 'F2 — public weekly opening hours of an active location. The search RPCs already derive is_open_now from these rows; this exposes the week itself for the shop profile (MASTER_SPEC §9: week plus open/closed now, in the location timezone).';
 
 
 --
@@ -11815,9 +11944,11 @@ begin
   end if;
 
   v_is_business := (select private.can_manage_appointments(v_appointment.organization_id));
-  v_is_customer := v_appointment.customer_id in (
+  -- X3 : coalesce anti-NULL — un rendez-vous walk-in (customer_id NULL) rendait
+  -- la comparaison IN NULL, et « if not (false or NULL) » ne levait pas.
+  v_is_customer := coalesce(v_appointment.customer_id in (
     select c.id from public.customers c where c.user_id = (select auth.uid())
-  );
+  ), false);
 
   if not (v_is_business or v_is_customer) then
     raise exception 'not authorized to reschedule this booking' using errcode = '42501';
@@ -11825,6 +11956,10 @@ begin
 
   if v_appointment.status not in ('pending', 'confirmed') then
     raise exception 'this appointment can no longer be rescheduled' using errcode = '22023';
+  end if;
+
+  if p_starts_at is null then
+    raise exception 'the new time is required' using errcode = '22023';
   end if;
 
   if p_starts_at <= now() then
@@ -23015,6 +23150,13 @@ CREATE TRIGGER email_templates_set_updated_at BEFORE UPDATE ON public.email_temp
 
 
 --
+-- Name: staff_profiles enforce_staff_profile_identity; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER enforce_staff_profile_identity BEFORE UPDATE ON public.staff_profiles FOR EACH ROW EXECUTE FUNCTION private.enforce_staff_profile_identity();
+
+
+--
 -- Name: invitations invitations_check_location_consistency; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -27658,10 +27800,10 @@ CREATE POLICY post_likes_insert_self ON public.post_likes FOR INSERT TO authenti
 
 
 --
--- Name: post_likes post_likes_select_all; Type: POLICY; Schema: public; Owner: -
+-- Name: post_likes post_likes_select_visible; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY post_likes_select_all ON public.post_likes FOR SELECT TO authenticated USING (true);
+CREATE POLICY post_likes_select_visible ON public.post_likes FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR private.can_view_post(post_id)));
 
 
 --
@@ -28710,7 +28852,7 @@ ALTER TABLE public.queue_entry_moves ENABLE ROW LEVEL SECURITY;
 -- Name: queue_entry_moves queue_entry_moves_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY queue_entry_moves_select ON public.queue_entry_moves FOR SELECT USING (( SELECT private.is_org_member(queue_entry_moves.organization_id) AS is_org_member));
+CREATE POLICY queue_entry_moves_select ON public.queue_entry_moves FOR SELECT TO authenticated USING (( SELECT private.is_org_member(queue_entry_moves.organization_id) AS is_org_member));
 
 
 --
@@ -28811,7 +28953,7 @@ ALTER TABLE public.service_duration_samples ENABLE ROW LEVEL SECURITY;
 -- Name: service_duration_samples service_duration_samples_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY service_duration_samples_select ON public.service_duration_samples FOR SELECT USING (( SELECT private.is_org_member(service_duration_samples.organization_id) AS is_org_member));
+CREATE POLICY service_duration_samples_select ON public.service_duration_samples FOR SELECT TO authenticated USING (( SELECT private.is_org_member(service_duration_samples.organization_id) AS is_org_member));
 
 
 --
@@ -28918,9 +29060,9 @@ CREATE POLICY staff_profiles_delete ON public.staff_profiles FOR DELETE TO authe
 -- Name: staff_profiles staff_profiles_insert; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY staff_profiles_insert ON public.staff_profiles FOR INSERT TO authenticated WITH CHECK ((( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND (EXISTS ( SELECT 1
+CREATE POLICY staff_profiles_insert ON public.staff_profiles FOR INSERT TO authenticated WITH CHECK ((( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND ((user_id IS NULL) OR (EXISTS ( SELECT 1
    FROM public.memberships m
-  WHERE ((m.organization_id = m.organization_id) AND (m.user_id = m.user_id))))));
+  WHERE ((m.organization_id = staff_profiles.organization_id) AND (m.user_id = staff_profiles.user_id)))))));
 
 
 --
@@ -29176,7 +29318,7 @@ GRANT USAGE ON SCHEMA public TO fadeup_scheduler;
 -- Name: TABLE email_outbox; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,MAINTAIN ON TABLE public.email_outbox TO authenticated;
+GRANT SELECT ON TABLE public.email_outbox TO authenticated;
 GRANT ALL ON TABLE public.email_outbox TO service_role;
 
 
@@ -29184,8 +29326,8 @@ GRANT ALL ON TABLE public.email_outbox TO service_role;
 -- Name: TABLE prospect_jobs; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_jobs TO anon;
-GRANT ALL ON TABLE public.prospect_jobs TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_jobs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_jobs TO authenticated;
 GRANT ALL ON TABLE public.prospect_jobs TO service_role;
 GRANT SELECT,INSERT ON TABLE public.prospect_jobs TO prospect_worker;
 
@@ -29194,8 +29336,8 @@ GRANT SELECT,INSERT ON TABLE public.prospect_jobs TO prospect_worker;
 -- Name: TABLE appointments; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.appointments TO anon;
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.appointments TO authenticated;
+GRANT SELECT,DELETE ON TABLE public.appointments TO anon;
+GRANT SELECT,DELETE ON TABLE public.appointments TO authenticated;
 GRANT ALL ON TABLE public.appointments TO service_role;
 
 
@@ -29378,7 +29520,7 @@ GRANT INSERT(rescheduled_to),UPDATE(rescheduled_to) ON TABLE public.appointments
 -- Name: TABLE queue_entries; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,DELETE,MAINTAIN ON TABLE public.queue_entries TO authenticated;
+GRANT SELECT,DELETE ON TABLE public.queue_entries TO authenticated;
 GRANT ALL ON TABLE public.queue_entries TO service_role;
 
 
@@ -29498,8 +29640,8 @@ GRANT INSERT(customer_id),UPDATE(customer_id) ON TABLE public.queue_entries TO a
 -- Name: TABLE memberships; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.memberships TO anon;
-GRANT ALL ON TABLE public.memberships TO authenticated;
+GRANT SELECT ON TABLE public.memberships TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.memberships TO authenticated;
 GRANT ALL ON TABLE public.memberships TO service_role;
 
 
@@ -29516,8 +29658,8 @@ GRANT ALL ON FUNCTION public.accept_invitation(p_token text) TO service_role;
 -- Name: TABLE platform_members; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_members TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_members TO authenticated;
+GRANT SELECT ON TABLE public.platform_members TO anon;
+GRANT SELECT ON TABLE public.platform_members TO authenticated;
 GRANT ALL ON TABLE public.platform_members TO service_role;
 
 
@@ -29660,8 +29802,7 @@ GRANT ALL ON FUNCTION public.apply_weekly_hours(p_organization_id uuid, p_locati
 -- Name: FUNCTION appointments_auto_follow(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.appointments_auto_follow() TO anon;
-GRANT ALL ON FUNCTION public.appointments_auto_follow() TO authenticated;
+REVOKE ALL ON FUNCTION public.appointments_auto_follow() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.appointments_auto_follow() TO service_role;
 
 
@@ -29669,8 +29810,7 @@ GRANT ALL ON FUNCTION public.appointments_auto_follow() TO service_role;
 -- Name: FUNCTION appointments_record_relationship(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.appointments_record_relationship() TO anon;
-GRANT ALL ON FUNCTION public.appointments_record_relationship() TO authenticated;
+REVOKE ALL ON FUNCTION public.appointments_record_relationship() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.appointments_record_relationship() TO service_role;
 
 
@@ -29679,7 +29819,7 @@ GRANT ALL ON FUNCTION public.appointments_record_relationship() TO service_role;
 --
 
 GRANT ALL ON TABLE public.outreach_templates TO postgres;
-GRANT ALL ON TABLE public.outreach_templates TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_templates TO authenticated;
 GRANT ALL ON TABLE public.outreach_templates TO service_role;
 GRANT SELECT ON TABLE public.outreach_templates TO prospect_worker;
 
@@ -29698,8 +29838,7 @@ GRANT ALL ON FUNCTION public.approve_outreach_template(p_template_id uuid) TO se
 -- Name: FUNCTION assign_barber_professional(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.assign_barber_professional() TO anon;
-GRANT ALL ON FUNCTION public.assign_barber_professional() TO authenticated;
+REVOKE ALL ON FUNCTION public.assign_barber_professional() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assign_barber_professional() TO service_role;
 
 
@@ -29763,8 +29902,7 @@ GRANT ALL ON FUNCTION public.change_queue_entry_barber(p_entry_id uuid, p_to_bar
 -- Name: FUNCTION check_appointment_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_appointment_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_appointment_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_appointment_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_appointment_consistency() TO service_role;
 
 
@@ -29772,9 +29910,8 @@ GRANT ALL ON FUNCTION public.check_appointment_consistency() TO service_role;
 -- Name: FUNCTION check_appointment_time_blocks(); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.check_appointment_time_blocks() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO postgres;
-GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO anon;
-GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO authenticated;
 GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO service_role;
 
 
@@ -29782,8 +29919,7 @@ GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO service_role;
 -- Name: FUNCTION check_barber_exception_barber_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_barber_exception_barber_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_barber_exception_barber_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_barber_exception_barber_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_barber_exception_barber_consistency() TO service_role;
 
 
@@ -29791,8 +29927,7 @@ GRANT ALL ON FUNCTION public.check_barber_exception_barber_consistency() TO serv
 -- Name: FUNCTION check_barber_service_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_barber_service_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_barber_service_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_barber_service_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_barber_service_consistency() TO service_role;
 
 
@@ -29800,8 +29935,7 @@ GRANT ALL ON FUNCTION public.check_barber_service_consistency() TO service_role;
 -- Name: FUNCTION check_barber_staff_profile_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_barber_staff_profile_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_barber_staff_profile_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_barber_staff_profile_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_barber_staff_profile_consistency() TO service_role;
 
 
@@ -29809,8 +29943,7 @@ GRANT ALL ON FUNCTION public.check_barber_staff_profile_consistency() TO service
 -- Name: FUNCTION check_barber_working_hours_barber_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() TO service_role;
 
 
@@ -29818,8 +29951,7 @@ GRANT ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() TO 
 -- Name: FUNCTION check_chair_location_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_chair_location_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_chair_location_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_chair_location_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_chair_location_consistency() TO service_role;
 
 
@@ -29827,8 +29959,7 @@ GRANT ALL ON FUNCTION public.check_chair_location_consistency() TO service_role;
 -- Name: FUNCTION check_customer_membership_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_customer_membership_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_customer_membership_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_customer_membership_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_customer_membership_consistency() TO service_role;
 
 
@@ -29836,8 +29967,7 @@ GRANT ALL ON FUNCTION public.check_customer_membership_consistency() TO service_
 -- Name: FUNCTION check_invitation_location_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_invitation_location_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_invitation_location_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_invitation_location_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_invitation_location_consistency() TO service_role;
 
 
@@ -29845,8 +29975,7 @@ GRANT ALL ON FUNCTION public.check_invitation_location_consistency() TO service_
 -- Name: FUNCTION check_location_hours_location_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_location_hours_location_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_location_hours_location_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_location_hours_location_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_location_hours_location_consistency() TO service_role;
 
 
@@ -29862,8 +29991,7 @@ GRANT ALL ON FUNCTION public.check_location_service_settings_consistency() TO se
 -- Name: FUNCTION check_post_has_media(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_post_has_media() TO anon;
-GRANT ALL ON FUNCTION public.check_post_has_media() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_post_has_media() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_post_has_media() TO service_role;
 
 
@@ -29871,8 +29999,7 @@ GRANT ALL ON FUNCTION public.check_post_has_media() TO service_role;
 -- Name: FUNCTION check_post_media_limit(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_post_media_limit() TO anon;
-GRANT ALL ON FUNCTION public.check_post_media_limit() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_post_media_limit() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_post_media_limit() TO service_role;
 
 
@@ -29880,8 +30007,7 @@ GRANT ALL ON FUNCTION public.check_post_media_limit() TO service_role;
 -- Name: FUNCTION check_post_services_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_post_services_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_post_services_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_post_services_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_post_services_consistency() TO service_role;
 
 
@@ -29889,8 +30015,7 @@ GRANT ALL ON FUNCTION public.check_post_services_consistency() TO service_role;
 -- Name: FUNCTION check_posts_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_posts_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_posts_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_posts_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_posts_consistency() TO service_role;
 
 
@@ -29898,8 +30023,7 @@ GRANT ALL ON FUNCTION public.check_posts_consistency() TO service_role;
 -- Name: FUNCTION check_queue_entry_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_queue_entry_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_queue_entry_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_queue_entry_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_queue_entry_consistency() TO service_role;
 
 
@@ -29907,8 +30031,7 @@ GRANT ALL ON FUNCTION public.check_queue_entry_consistency() TO service_role;
 -- Name: FUNCTION check_reviews_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_reviews_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_reviews_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_reviews_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_reviews_consistency() TO service_role;
 
 
@@ -29916,8 +30039,7 @@ GRANT ALL ON FUNCTION public.check_reviews_consistency() TO service_role;
 -- Name: FUNCTION check_service_category_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_service_category_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_service_category_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_service_category_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_service_category_consistency() TO service_role;
 
 
@@ -29925,8 +30047,7 @@ GRANT ALL ON FUNCTION public.check_service_category_consistency() TO service_rol
 -- Name: FUNCTION check_service_location_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_service_location_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_service_location_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_service_location_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_service_location_consistency() TO service_role;
 
 
@@ -29942,8 +30063,7 @@ GRANT ALL ON FUNCTION public.check_service_mode_override_consistency() TO servic
 -- Name: FUNCTION check_staff_profile_location_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_staff_profile_location_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_staff_profile_location_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_staff_profile_location_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_staff_profile_location_consistency() TO service_role;
 
 
@@ -29951,9 +30071,8 @@ GRANT ALL ON FUNCTION public.check_staff_profile_location_consistency() TO servi
 -- Name: FUNCTION check_time_block_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.check_time_block_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_time_block_consistency() TO postgres;
-GRANT ALL ON FUNCTION public.check_time_block_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_time_block_consistency() TO authenticated;
 GRANT ALL ON FUNCTION public.check_time_block_consistency() TO service_role;
 
 
@@ -29961,8 +30080,7 @@ GRANT ALL ON FUNCTION public.check_time_block_consistency() TO service_role;
 -- Name: FUNCTION check_waitlist_entry_consistency(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.check_waitlist_entry_consistency() TO anon;
-GRANT ALL ON FUNCTION public.check_waitlist_entry_consistency() TO authenticated;
+REVOKE ALL ON FUNCTION public.check_waitlist_entry_consistency() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.check_waitlist_entry_consistency() TO service_role;
 
 
@@ -29980,7 +30098,7 @@ GRANT ALL ON FUNCTION public.claim_platform_owner_bootstrap(p_token text) TO ser
 --
 
 GRANT ALL ON TABLE public.outreach_recipients TO postgres;
-GRANT ALL ON TABLE public.outreach_recipients TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_recipients TO authenticated;
 GRANT ALL ON TABLE public.outreach_recipients TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_recipients TO prospect_worker;
 
@@ -30065,8 +30183,8 @@ GRANT ALL ON FUNCTION public.create_external_professional(p_prospect_id uuid) TO
 -- Name: TABLE organizations; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.organizations TO anon;
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.organizations TO authenticated;
+GRANT SELECT,DELETE,UPDATE ON TABLE public.organizations TO anon;
+GRANT SELECT,DELETE,UPDATE ON TABLE public.organizations TO authenticated;
 GRANT ALL ON TABLE public.organizations TO service_role;
 
 
@@ -30137,8 +30255,7 @@ GRANT ALL ON FUNCTION public.create_prospect_discovery_job(p_job_type text, p_pa
 -- Name: FUNCTION customer_profiles_issue_passport(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.customer_profiles_issue_passport() TO anon;
-GRANT ALL ON FUNCTION public.customer_profiles_issue_passport() TO authenticated;
+REVOKE ALL ON FUNCTION public.customer_profiles_issue_passport() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.customer_profiles_issue_passport() TO service_role;
 
 
@@ -30164,8 +30281,8 @@ GRANT ALL ON FUNCTION public.delete_post(p_post_id uuid) TO service_role;
 -- Name: TABLE platform_support_sessions; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_support_sessions TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_support_sessions TO authenticated;
+GRANT SELECT ON TABLE public.platform_support_sessions TO anon;
+GRANT SELECT ON TABLE public.platform_support_sessions TO authenticated;
 GRANT ALL ON TABLE public.platform_support_sessions TO service_role;
 
 
@@ -30182,8 +30299,7 @@ GRANT ALL ON FUNCTION public.end_platform_support_session(p_id uuid) TO service_
 -- Name: FUNCTION enforce_appointment_transition(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.enforce_appointment_transition() TO anon;
-GRANT ALL ON FUNCTION public.enforce_appointment_transition() TO authenticated;
+REVOKE ALL ON FUNCTION public.enforce_appointment_transition() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_appointment_transition() TO service_role;
 
 
@@ -30223,8 +30339,7 @@ GRANT ALL ON FUNCTION public.enforce_establishment_capacity() TO service_role;
 -- Name: FUNCTION enforce_professional_claim_transition(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.enforce_professional_claim_transition() TO anon;
-GRANT ALL ON FUNCTION public.enforce_professional_claim_transition() TO authenticated;
+REVOKE ALL ON FUNCTION public.enforce_professional_claim_transition() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_professional_claim_transition() TO service_role;
 
 
@@ -30248,8 +30363,7 @@ GRANT ALL ON FUNCTION public.enforce_queue_service_mode() TO service_role;
 -- Name: FUNCTION enforce_queue_transition(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.enforce_queue_transition() TO anon;
-GRANT ALL ON FUNCTION public.enforce_queue_transition() TO authenticated;
+REVOKE ALL ON FUNCTION public.enforce_queue_transition() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_queue_transition() TO service_role;
 
 
@@ -30571,6 +30685,16 @@ GRANT ALL ON FUNCTION public.get_public_organization(p_slug text) TO service_rol
 
 
 --
+-- Name: FUNCTION get_public_organization_follower_count(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO service_role;
+
+
+--
 -- Name: FUNCTION get_public_professional(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
 --
 
@@ -30588,6 +30712,16 @@ REVOKE ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) F
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO anon;
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO authenticated;
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_professional_workplace(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO service_role;
 
 
 --
@@ -30672,8 +30806,7 @@ GRANT ALL ON FUNCTION public.get_shared_passport(p_token text) TO service_role;
 -- Name: FUNCTION guard_customer_professional_relationship(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_customer_professional_relationship() TO anon;
-GRANT ALL ON FUNCTION public.guard_customer_professional_relationship() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_customer_professional_relationship() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_customer_professional_relationship() TO service_role;
 
 
@@ -30681,8 +30814,7 @@ GRANT ALL ON FUNCTION public.guard_customer_professional_relationship() TO servi
 -- Name: FUNCTION guard_customers_identity(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_customers_identity() TO anon;
-GRANT ALL ON FUNCTION public.guard_customers_identity() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_customers_identity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_customers_identity() TO service_role;
 
 
@@ -30690,9 +30822,8 @@ GRANT ALL ON FUNCTION public.guard_customers_identity() TO service_role;
 -- Name: FUNCTION guard_marketplace_publication(); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.guard_marketplace_publication() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO postgres;
-GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO anon;
-GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO service_role;
 
 
@@ -30700,8 +30831,7 @@ GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO service_role;
 -- Name: FUNCTION guard_passport_identity(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_passport_identity() TO anon;
-GRANT ALL ON FUNCTION public.guard_passport_identity() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_passport_identity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_passport_identity() TO service_role;
 
 
@@ -30709,8 +30839,7 @@ GRANT ALL ON FUNCTION public.guard_passport_identity() TO service_role;
 -- Name: FUNCTION guard_professional_application_update(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_professional_application_update() TO anon;
-GRANT ALL ON FUNCTION public.guard_professional_application_update() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_professional_application_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_professional_application_update() TO service_role;
 
 
@@ -30718,8 +30847,7 @@ GRANT ALL ON FUNCTION public.guard_professional_application_update() TO service_
 -- Name: FUNCTION guard_professional_identity(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_professional_identity() TO anon;
-GRANT ALL ON FUNCTION public.guard_professional_identity() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_professional_identity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_professional_identity() TO service_role;
 
 
@@ -30727,8 +30855,7 @@ GRANT ALL ON FUNCTION public.guard_professional_identity() TO service_role;
 -- Name: FUNCTION guard_professional_publication(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.guard_professional_publication() TO anon;
-GRANT ALL ON FUNCTION public.guard_professional_publication() TO authenticated;
+REVOKE ALL ON FUNCTION public.guard_professional_publication() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_professional_publication() TO service_role;
 
 
@@ -30744,8 +30871,7 @@ GRANT ALL ON FUNCTION public.handle_new_location_service_settings() TO service_r
 -- Name: FUNCTION handle_new_membership(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.handle_new_membership() TO anon;
-GRANT ALL ON FUNCTION public.handle_new_membership() TO authenticated;
+REVOKE ALL ON FUNCTION public.handle_new_membership() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.handle_new_membership() TO service_role;
 
 
@@ -30753,8 +30879,7 @@ GRANT ALL ON FUNCTION public.handle_new_membership() TO service_role;
 -- Name: FUNCTION handle_new_organization(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.handle_new_organization() TO anon;
-GRANT ALL ON FUNCTION public.handle_new_organization() TO authenticated;
+REVOKE ALL ON FUNCTION public.handle_new_organization() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.handle_new_organization() TO service_role;
 
 
@@ -30770,8 +30895,7 @@ GRANT ALL ON FUNCTION public.handle_new_organization_commercial_state() TO servi
 -- Name: FUNCTION handle_new_user(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.handle_new_user() TO anon;
-GRANT ALL ON FUNCTION public.handle_new_user() TO authenticated;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.handle_new_user() TO service_role;
 
 
@@ -30808,8 +30932,7 @@ GRANT ALL ON FUNCTION public.like_post(p_post_id uuid) TO service_role;
 -- Name: FUNCTION link_customer_from_contact_info(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.link_customer_from_contact_info() TO anon;
-GRANT ALL ON FUNCTION public.link_customer_from_contact_info() TO authenticated;
+REVOKE ALL ON FUNCTION public.link_customer_from_contact_info() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.link_customer_from_contact_info() TO service_role;
 
 
@@ -30861,6 +30984,16 @@ GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_loc
 
 
 --
+-- Name: FUNCTION list_public_location_hours(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO service_role;
+
+
+--
 -- Name: FUNCTION list_public_locations(p_organization_slug text); Type: ACL; Schema: public; Owner: -
 --
 
@@ -30904,8 +31037,7 @@ GRANT ALL ON FUNCTION public.list_public_services(p_organization_slug text, p_lo
 -- Name: FUNCTION maintain_post_like_count(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.maintain_post_like_count() TO anon;
-GRANT ALL ON FUNCTION public.maintain_post_like_count() TO authenticated;
+REVOKE ALL ON FUNCTION public.maintain_post_like_count() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.maintain_post_like_count() TO service_role;
 
 
@@ -30913,8 +31045,7 @@ GRANT ALL ON FUNCTION public.maintain_post_like_count() TO service_role;
 -- Name: FUNCTION maintain_review_reputation(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.maintain_review_reputation() TO anon;
-GRANT ALL ON FUNCTION public.maintain_review_reputation() TO authenticated;
+REVOKE ALL ON FUNCTION public.maintain_review_reputation() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.maintain_review_reputation() TO service_role;
 
 
@@ -31003,8 +31134,7 @@ GRANT ALL ON FUNCTION public.my_organization_has_capability(p_organization_id uu
 -- Name: FUNCTION normalize_invitation_email(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.normalize_invitation_email() TO anon;
-GRANT ALL ON FUNCTION public.normalize_invitation_email() TO authenticated;
+REVOKE ALL ON FUNCTION public.normalize_invitation_email() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.normalize_invitation_email() TO service_role;
 
 
@@ -31012,6 +31142,7 @@ GRANT ALL ON FUNCTION public.normalize_invitation_email() TO service_role;
 -- Name: FUNCTION normalize_phone_number(p_raw text, p_country text); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO anon;
 GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO authenticated;
 GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO service_role;
@@ -31021,8 +31152,7 @@ GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) 
 -- Name: FUNCTION notify_new_appointment(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_new_appointment() TO anon;
-GRANT ALL ON FUNCTION public.notify_new_appointment() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_new_appointment() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_new_appointment() TO service_role;
 
 
@@ -31030,8 +31160,7 @@ GRANT ALL ON FUNCTION public.notify_new_appointment() TO service_role;
 -- Name: FUNCTION notify_new_invitation(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_new_invitation() TO anon;
-GRANT ALL ON FUNCTION public.notify_new_invitation() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_new_invitation() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_new_invitation() TO service_role;
 
 
@@ -31039,8 +31168,7 @@ GRANT ALL ON FUNCTION public.notify_new_invitation() TO service_role;
 -- Name: FUNCTION notify_organization_follow(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_organization_follow() TO anon;
-GRANT ALL ON FUNCTION public.notify_organization_follow() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_organization_follow() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_organization_follow() TO service_role;
 
 
@@ -31048,8 +31176,7 @@ GRANT ALL ON FUNCTION public.notify_organization_follow() TO service_role;
 -- Name: FUNCTION notify_post_like(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_post_like() TO anon;
-GRANT ALL ON FUNCTION public.notify_post_like() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_post_like() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_post_like() TO service_role;
 
 
@@ -31057,8 +31184,7 @@ GRANT ALL ON FUNCTION public.notify_post_like() TO service_role;
 -- Name: FUNCTION notify_professional_follow(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_professional_follow() TO anon;
-GRANT ALL ON FUNCTION public.notify_professional_follow() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_professional_follow() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_professional_follow() TO service_role;
 
 
@@ -31066,8 +31192,7 @@ GRANT ALL ON FUNCTION public.notify_professional_follow() TO service_role;
 -- Name: FUNCTION notify_review_received(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_review_received() TO anon;
-GRANT ALL ON FUNCTION public.notify_review_received() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_review_received() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_review_received() TO service_role;
 
 
@@ -31075,8 +31200,7 @@ GRANT ALL ON FUNCTION public.notify_review_received() TO service_role;
 -- Name: FUNCTION notify_review_reply(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.notify_review_reply() TO anon;
-GRANT ALL ON FUNCTION public.notify_review_reply() TO authenticated;
+REVOKE ALL ON FUNCTION public.notify_review_reply() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notify_review_reply() TO service_role;
 
 
@@ -31105,7 +31229,7 @@ GRANT ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel
 --
 
 GRANT ALL ON TABLE public.booking_provider_observations TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.booking_provider_observations TO authenticated;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.booking_provider_observations TO authenticated;
 GRANT ALL ON TABLE public.booking_provider_observations TO service_role;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.booking_provider_observations TO prospect_worker;
 
@@ -31125,7 +31249,7 @@ GRANT ALL ON FUNCTION public.override_prospect_booking_provider(p_prospect_id uu
 --
 
 GRANT ALL ON TABLE public.prospect_locales TO postgres;
-GRANT ALL ON TABLE public.prospect_locales TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locales TO authenticated;
 GRANT ALL ON TABLE public.prospect_locales TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locales TO prospect_worker;
 
@@ -31144,8 +31268,7 @@ GRANT ALL ON FUNCTION public.override_prospect_locale(p_prospect_id uuid, p_loca
 -- Name: FUNCTION posts_guard_immutable_author(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.posts_guard_immutable_author() TO anon;
-GRANT ALL ON FUNCTION public.posts_guard_immutable_author() TO authenticated;
+REVOKE ALL ON FUNCTION public.posts_guard_immutable_author() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.posts_guard_immutable_author() TO service_role;
 
 
@@ -31172,7 +31295,7 @@ GRANT ALL ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) TO s
 --
 
 GRANT ALL ON TABLE public.ml_model_versions TO postgres;
-GRANT ALL ON TABLE public.ml_model_versions TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_model_versions TO authenticated;
 GRANT ALL ON TABLE public.ml_model_versions TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_model_versions TO prospect_worker;
 
@@ -31221,8 +31344,7 @@ GRANT ALL ON FUNCTION public.publish_external_professional(p_prospect_id uuid, p
 -- Name: FUNCTION queue_entries_auto_follow(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.queue_entries_auto_follow() TO anon;
-GRANT ALL ON FUNCTION public.queue_entries_auto_follow() TO authenticated;
+REVOKE ALL ON FUNCTION public.queue_entries_auto_follow() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.queue_entries_auto_follow() TO service_role;
 
 
@@ -31230,8 +31352,7 @@ GRANT ALL ON FUNCTION public.queue_entries_auto_follow() TO service_role;
 -- Name: FUNCTION queue_entries_record_relationship(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.queue_entries_record_relationship() TO anon;
-GRANT ALL ON FUNCTION public.queue_entries_record_relationship() TO authenticated;
+REVOKE ALL ON FUNCTION public.queue_entries_record_relationship() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.queue_entries_record_relationship() TO service_role;
 
 
@@ -31434,8 +31555,7 @@ GRANT ALL ON FUNCTION public.resolve_review_report(p_report_id uuid, p_status te
 -- Name: FUNCTION restrict_appointment_self_update(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.restrict_appointment_self_update() TO anon;
-GRANT ALL ON FUNCTION public.restrict_appointment_self_update() TO authenticated;
+REVOKE ALL ON FUNCTION public.restrict_appointment_self_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.restrict_appointment_self_update() TO service_role;
 
 
@@ -31443,8 +31563,7 @@ GRANT ALL ON FUNCTION public.restrict_appointment_self_update() TO service_role;
 -- Name: FUNCTION restrict_queue_entry_self_update(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.restrict_queue_entry_self_update() TO anon;
-GRANT ALL ON FUNCTION public.restrict_queue_entry_self_update() TO authenticated;
+REVOKE ALL ON FUNCTION public.restrict_queue_entry_self_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.restrict_queue_entry_self_update() TO service_role;
 
 
@@ -31462,8 +31581,8 @@ GRANT ALL ON FUNCTION public.retire_ml_model(p_model_version_id uuid) TO service
 -- Name: TABLE professional_applications; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.professional_applications TO anon;
-GRANT ALL ON TABLE public.professional_applications TO authenticated;
+GRANT INSERT,DELETE,UPDATE ON TABLE public.professional_applications TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.professional_applications TO authenticated;
 GRANT ALL ON TABLE public.professional_applications TO service_role;
 
 
@@ -31734,8 +31853,7 @@ GRANT ALL ON FUNCTION public.review_professional_claim(p_claim_id uuid, p_decisi
 -- Name: FUNCTION reviews_guard_immutable(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.reviews_guard_immutable() TO anon;
-GRANT ALL ON FUNCTION public.reviews_guard_immutable() TO authenticated;
+REVOKE ALL ON FUNCTION public.reviews_guard_immutable() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reviews_guard_immutable() TO service_role;
 
 
@@ -31743,8 +31861,8 @@ GRANT ALL ON FUNCTION public.reviews_guard_immutable() TO service_role;
 -- Name: TABLE invitations; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.invitations TO anon;
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.invitations TO authenticated;
+GRANT SELECT,INSERT,DELETE ON TABLE public.invitations TO anon;
+GRANT SELECT,INSERT,DELETE ON TABLE public.invitations TO authenticated;
 GRANT ALL ON TABLE public.invitations TO service_role;
 
 
@@ -31880,8 +31998,7 @@ GRANT ALL ON FUNCTION public.search_public_professionals(p_country text, p_city 
 -- Name: FUNCTION set_appointment_blocked_range(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.set_appointment_blocked_range() TO anon;
-GRANT ALL ON FUNCTION public.set_appointment_blocked_range() TO authenticated;
+REVOKE ALL ON FUNCTION public.set_appointment_blocked_range() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_appointment_blocked_range() TO service_role;
 
 
@@ -31889,8 +32006,7 @@ GRANT ALL ON FUNCTION public.set_appointment_blocked_range() TO service_role;
 -- Name: FUNCTION set_appointment_request_expiry(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.set_appointment_request_expiry() TO anon;
-GRANT ALL ON FUNCTION public.set_appointment_request_expiry() TO authenticated;
+REVOKE ALL ON FUNCTION public.set_appointment_request_expiry() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_appointment_request_expiry() TO service_role;
 
 
@@ -31898,8 +32014,8 @@ GRANT ALL ON FUNCTION public.set_appointment_request_expiry() TO service_role;
 -- Name: TABLE barbers; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.barbers TO anon;
-GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.barbers TO authenticated;
+GRANT SELECT,DELETE ON TABLE public.barbers TO anon;
+GRANT SELECT,DELETE ON TABLE public.barbers TO authenticated;
 GRANT ALL ON TABLE public.barbers TO service_role;
 
 
@@ -31967,8 +32083,7 @@ GRANT ALL ON FUNCTION public.set_barber_service_mode_override(p_barber_id uuid, 
 -- Name: FUNCTION set_interest_request_expiry(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.set_interest_request_expiry() TO anon;
-GRANT ALL ON FUNCTION public.set_interest_request_expiry() TO authenticated;
+REVOKE ALL ON FUNCTION public.set_interest_request_expiry() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_interest_request_expiry() TO service_role;
 
 
@@ -32021,7 +32136,7 @@ GRANT ALL ON FUNCTION public.set_organization_marketplace_visible(p_organization
 --
 
 GRANT ALL ON TABLE public.outreach_campaigns TO postgres;
-GRANT ALL ON TABLE public.outreach_campaigns TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_campaigns TO authenticated;
 GRANT ALL ON TABLE public.outreach_campaigns TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_campaigns TO prospect_worker;
 
@@ -32050,8 +32165,8 @@ GRANT ALL ON FUNCTION public.set_outreach_template_paused(p_template_id uuid, p_
 -- Name: TABLE prospect_sources; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_sources TO anon;
-GRANT ALL ON TABLE public.prospect_sources TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_sources TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_sources TO authenticated;
 GRANT ALL ON TABLE public.prospect_sources TO service_role;
 GRANT SELECT ON TABLE public.prospect_sources TO prospect_worker;
 
@@ -32069,8 +32184,8 @@ GRANT ALL ON FUNCTION public.set_prospect_source_enabled(p_key text, p_enabled b
 -- Name: TABLE api_source_health; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.api_source_health TO anon;
-GRANT ALL ON TABLE public.api_source_health TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_health TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_health TO authenticated;
 GRANT ALL ON TABLE public.api_source_health TO service_role;
 GRANT SELECT,UPDATE ON TABLE public.api_source_health TO prospect_worker;
 
@@ -32105,8 +32220,7 @@ GRANT ALL ON FUNCTION public.set_service_mode_temporary_override(p_scope public.
 -- Name: FUNCTION set_updated_at(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.set_updated_at() TO anon;
-GRANT ALL ON FUNCTION public.set_updated_at() TO authenticated;
+REVOKE ALL ON FUNCTION public.set_updated_at() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_updated_at() TO service_role;
 
 
@@ -32114,8 +32228,7 @@ GRANT ALL ON FUNCTION public.set_updated_at() TO service_role;
 -- Name: FUNCTION stamp_passport_identity(); Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON FUNCTION public.stamp_passport_identity() TO anon;
-GRANT ALL ON FUNCTION public.stamp_passport_identity() TO authenticated;
+REVOKE ALL ON FUNCTION public.stamp_passport_identity() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.stamp_passport_identity() TO service_role;
 
 
@@ -32168,6 +32281,7 @@ GRANT ALL ON FUNCTION public.submit_review(p_appointment_id uuid, p_rating integ
 -- Name: FUNCTION suggested_currency_for_country(p_country_code text); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO postgres;
 GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO anon;
 GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO authenticated;
@@ -32178,6 +32292,7 @@ GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text)
 -- Name: FUNCTION suggested_timezone_for_country(p_country_code text); Type: ACL; Schema: public; Owner: -
 --
 
+REVOKE ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO postgres;
 GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO anon;
 GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO authenticated;
@@ -32302,8 +32417,8 @@ GRANT ALL ON TABLE public.analytics_ingestion_rejections TO service_role;
 -- Name: TABLE api_source_limits; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.api_source_limits TO anon;
-GRANT ALL ON TABLE public.api_source_limits TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_limits TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_limits TO authenticated;
 GRANT ALL ON TABLE public.api_source_limits TO service_role;
 GRANT SELECT,UPDATE ON TABLE public.api_source_limits TO prospect_worker;
 
@@ -32312,8 +32427,8 @@ GRANT SELECT,UPDATE ON TABLE public.api_source_limits TO prospect_worker;
 -- Name: TABLE api_usage; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.api_usage TO anon;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.api_usage TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.api_usage TO anon;
+GRANT SELECT,INSERT ON TABLE public.api_usage TO authenticated;
 GRANT ALL ON TABLE public.api_usage TO service_role;
 GRANT SELECT,INSERT ON TABLE public.api_usage TO prospect_worker;
 
@@ -32322,8 +32437,8 @@ GRANT SELECT,INSERT ON TABLE public.api_usage TO prospect_worker;
 -- Name: TABLE appointment_claim_tokens; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.appointment_claim_tokens TO anon;
-GRANT ALL ON TABLE public.appointment_claim_tokens TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.appointment_claim_tokens TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.appointment_claim_tokens TO authenticated;
 GRANT ALL ON TABLE public.appointment_claim_tokens TO service_role;
 
 
@@ -32331,8 +32446,8 @@ GRANT ALL ON TABLE public.appointment_claim_tokens TO service_role;
 -- Name: TABLE audit_logs; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.audit_logs TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.audit_logs TO authenticated;
+GRANT SELECT ON TABLE public.audit_logs TO anon;
+GRANT SELECT ON TABLE public.audit_logs TO authenticated;
 GRANT ALL ON TABLE public.audit_logs TO service_role;
 
 
@@ -32340,8 +32455,8 @@ GRANT ALL ON TABLE public.audit_logs TO service_role;
 -- Name: TABLE barber_availability_exceptions; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.barber_availability_exceptions TO anon;
-GRANT ALL ON TABLE public.barber_availability_exceptions TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_availability_exceptions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_availability_exceptions TO authenticated;
 GRANT ALL ON TABLE public.barber_availability_exceptions TO service_role;
 
 
@@ -32349,8 +32464,8 @@ GRANT ALL ON TABLE public.barber_availability_exceptions TO service_role;
 -- Name: TABLE barber_services; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.barber_services TO anon;
-GRANT ALL ON TABLE public.barber_services TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_services TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_services TO authenticated;
 GRANT ALL ON TABLE public.barber_services TO service_role;
 
 
@@ -32358,8 +32473,8 @@ GRANT ALL ON TABLE public.barber_services TO service_role;
 -- Name: TABLE barber_working_hours; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.barber_working_hours TO anon;
-GRANT ALL ON TABLE public.barber_working_hours TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_working_hours TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_working_hours TO authenticated;
 GRANT ALL ON TABLE public.barber_working_hours TO service_role;
 
 
@@ -32392,7 +32507,7 @@ GRANT SELECT ON TABLE public.billing_stripe_products TO authenticated;
 --
 
 GRANT ALL ON TABLE public.booking_providers TO postgres;
-GRANT ALL ON TABLE public.booking_providers TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.booking_providers TO authenticated;
 GRANT ALL ON TABLE public.booking_providers TO service_role;
 GRANT SELECT ON TABLE public.booking_providers TO prospect_worker;
 
@@ -32401,8 +32516,8 @@ GRANT SELECT ON TABLE public.booking_providers TO prospect_worker;
 -- Name: TABLE chairs; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.chairs TO anon;
-GRANT ALL ON TABLE public.chairs TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.chairs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.chairs TO authenticated;
 GRANT ALL ON TABLE public.chairs TO service_role;
 
 
@@ -32434,8 +32549,8 @@ GRANT SELECT ON TABLE public.commercial_plans TO authenticated;
 -- Name: TABLE prospects; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospects TO anon;
-GRANT ALL ON TABLE public.prospects TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO authenticated;
 GRANT ALL ON TABLE public.prospects TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO prospect_worker;
 
@@ -32454,8 +32569,8 @@ GRANT SELECT ON TABLE public.competitor_analytics TO prospect_worker;
 -- Name: TABLE customer_favorites; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.customer_favorites TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.customer_favorites TO authenticated;
+GRANT SELECT ON TABLE public.customer_favorites TO anon;
+GRANT SELECT ON TABLE public.customer_favorites TO authenticated;
 GRANT ALL ON TABLE public.customer_favorites TO service_role;
 
 
@@ -32463,8 +32578,8 @@ GRANT ALL ON TABLE public.customer_favorites TO service_role;
 -- Name: TABLE customer_memberships; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.customer_memberships TO anon;
-GRANT ALL ON TABLE public.customer_memberships TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_memberships TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_memberships TO authenticated;
 GRANT ALL ON TABLE public.customer_memberships TO service_role;
 
 
@@ -32472,8 +32587,8 @@ GRANT ALL ON TABLE public.customer_memberships TO service_role;
 -- Name: TABLE customer_passport_photos; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.customer_passport_photos TO anon;
-GRANT ALL ON TABLE public.customer_passport_photos TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_photos TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_photos TO authenticated;
 GRANT ALL ON TABLE public.customer_passport_photos TO service_role;
 
 
@@ -32481,8 +32596,8 @@ GRANT ALL ON TABLE public.customer_passport_photos TO service_role;
 -- Name: TABLE customer_passport_shares; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.customer_passport_shares TO anon;
-GRANT ALL ON TABLE public.customer_passport_shares TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_shares TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_shares TO authenticated;
 GRANT ALL ON TABLE public.customer_passport_shares TO service_role;
 
 
@@ -32490,8 +32605,8 @@ GRANT ALL ON TABLE public.customer_passport_shares TO service_role;
 -- Name: TABLE customer_passports; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.customer_passports TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.customer_passports TO authenticated;
+GRANT SELECT ON TABLE public.customer_passports TO anon;
+GRANT SELECT ON TABLE public.customer_passports TO authenticated;
 GRANT ALL ON TABLE public.customer_passports TO service_role;
 
 
@@ -32577,8 +32692,8 @@ GRANT SELECT ON TABLE public.customer_professional_relationships TO authenticate
 -- Name: TABLE customer_profiles; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.customer_profiles TO anon;
-GRANT ALL ON TABLE public.customer_profiles TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_profiles TO authenticated;
 GRANT ALL ON TABLE public.customer_profiles TO service_role;
 
 
@@ -32586,8 +32701,8 @@ GRANT ALL ON TABLE public.customer_profiles TO service_role;
 -- Name: TABLE customers; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.customers TO anon;
-GRANT ALL ON TABLE public.customers TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customers TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customers TO authenticated;
 GRANT ALL ON TABLE public.customers TO service_role;
 
 
@@ -32612,7 +32727,7 @@ GRANT SELECT ON TABLE public.email_templates TO authenticated;
 --
 
 GRANT ALL ON TABLE public.outreach_assignments TO postgres;
-GRANT ALL ON TABLE public.outreach_assignments TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_assignments TO authenticated;
 GRANT ALL ON TABLE public.outreach_assignments TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_assignments TO prospect_worker;
 
@@ -32622,7 +32737,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_assignments TO prospe
 --
 
 GRANT ALL ON TABLE public.outreach_experiment_arms TO postgres;
-GRANT ALL ON TABLE public.outreach_experiment_arms TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_experiment_arms TO authenticated;
 GRANT ALL ON TABLE public.outreach_experiment_arms TO service_role;
 GRANT SELECT ON TABLE public.outreach_experiment_arms TO prospect_worker;
 
@@ -32632,7 +32747,7 @@ GRANT SELECT ON TABLE public.outreach_experiment_arms TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.outreach_experiments TO postgres;
-GRANT ALL ON TABLE public.outreach_experiments TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_experiments TO authenticated;
 GRANT ALL ON TABLE public.outreach_experiments TO service_role;
 GRANT SELECT ON TABLE public.outreach_experiments TO prospect_worker;
 
@@ -32657,8 +32772,8 @@ GRANT ALL ON TABLE public.feed_ranking_weights TO service_role;
 -- Name: TABLE location_hours; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.location_hours TO anon;
-GRANT ALL ON TABLE public.location_hours TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.location_hours TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.location_hours TO authenticated;
 GRANT ALL ON TABLE public.location_hours TO service_role;
 
 
@@ -32666,7 +32781,7 @@ GRANT ALL ON TABLE public.location_hours TO service_role;
 -- Name: TABLE locations; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,INSERT,DELETE,MAINTAIN,UPDATE ON TABLE public.locations TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.locations TO authenticated;
 GRANT ALL ON TABLE public.locations TO service_role;
 
 
@@ -32682,8 +32797,8 @@ GRANT SELECT ON TABLE public.marketplace_withdrawal_requests TO authenticated;
 -- Name: TABLE membership_plans; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.membership_plans TO anon;
-GRANT ALL ON TABLE public.membership_plans TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.membership_plans TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.membership_plans TO authenticated;
 GRANT ALL ON TABLE public.membership_plans TO service_role;
 
 
@@ -32692,7 +32807,7 @@ GRANT ALL ON TABLE public.membership_plans TO service_role;
 --
 
 GRANT ALL ON TABLE public.ml_datasets TO postgres;
-GRANT ALL ON TABLE public.ml_datasets TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_datasets TO authenticated;
 GRANT ALL ON TABLE public.ml_datasets TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_datasets TO prospect_worker;
 
@@ -32702,7 +32817,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_datasets TO prospect_worker
 --
 
 GRANT ALL ON TABLE public.ml_feature_schemas TO postgres;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.ml_feature_schemas TO authenticated;
+GRANT SELECT ON TABLE public.ml_feature_schemas TO authenticated;
 GRANT ALL ON TABLE public.ml_feature_schemas TO service_role;
 GRANT SELECT ON TABLE public.ml_feature_schemas TO prospect_worker;
 
@@ -32712,7 +32827,7 @@ GRANT SELECT ON TABLE public.ml_feature_schemas TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.ml_metrics TO postgres;
-GRANT ALL ON TABLE public.ml_metrics TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_metrics TO authenticated;
 GRANT ALL ON TABLE public.ml_metrics TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_metrics TO prospect_worker;
 
@@ -32722,7 +32837,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_metrics TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.ml_predictions TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.ml_predictions TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.ml_predictions TO authenticated;
 GRANT ALL ON TABLE public.ml_predictions TO service_role;
 GRANT SELECT,INSERT ON TABLE public.ml_predictions TO prospect_worker;
 
@@ -32732,7 +32847,7 @@ GRANT SELECT,INSERT ON TABLE public.ml_predictions TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.ml_training_runs TO postgres;
-GRANT ALL ON TABLE public.ml_training_runs TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_training_runs TO authenticated;
 GRANT ALL ON TABLE public.ml_training_runs TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_training_runs TO prospect_worker;
 
@@ -32741,8 +32856,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_training_runs TO prospect_w
 -- Name: TABLE notifications; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.notifications TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.notifications TO authenticated;
+GRANT SELECT,UPDATE ON TABLE public.notifications TO anon;
+GRANT SELECT,UPDATE ON TABLE public.notifications TO authenticated;
 GRANT ALL ON TABLE public.notifications TO service_role;
 
 
@@ -32805,7 +32920,7 @@ GRANT SELECT ON TABLE public.organization_trials TO authenticated;
 --
 
 GRANT ALL ON TABLE public.outreach_channel_policies TO postgres;
-GRANT ALL ON TABLE public.outreach_channel_policies TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_channel_policies TO authenticated;
 GRANT ALL ON TABLE public.outreach_channel_policies TO service_role;
 GRANT SELECT ON TABLE public.outreach_channel_policies TO prospect_worker;
 
@@ -32815,7 +32930,7 @@ GRANT SELECT ON TABLE public.outreach_channel_policies TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.outreach_events TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.outreach_events TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.outreach_events TO authenticated;
 GRANT ALL ON TABLE public.outreach_events TO service_role;
 GRANT SELECT,INSERT ON TABLE public.outreach_events TO prospect_worker;
 
@@ -32835,7 +32950,7 @@ GRANT SELECT ON TABLE public.outreach_funnel_stats TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.outreach_sales_angles TO postgres;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.outreach_sales_angles TO authenticated;
+GRANT SELECT ON TABLE public.outreach_sales_angles TO authenticated;
 GRANT ALL ON TABLE public.outreach_sales_angles TO service_role;
 GRANT SELECT ON TABLE public.outreach_sales_angles TO prospect_worker;
 
@@ -32852,8 +32967,8 @@ GRANT SELECT ON TABLE public.plan_capabilities TO authenticated;
 -- Name: TABLE platform_audit_log; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_audit_log TO anon;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.platform_audit_log TO authenticated;
+GRANT SELECT ON TABLE public.platform_audit_log TO anon;
+GRANT SELECT ON TABLE public.platform_audit_log TO authenticated;
 GRANT ALL ON TABLE public.platform_audit_log TO service_role;
 
 
@@ -32861,8 +32976,8 @@ GRANT ALL ON TABLE public.platform_audit_log TO service_role;
 -- Name: TABLE platform_notifications; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.platform_notifications TO anon;
-GRANT ALL ON TABLE public.platform_notifications TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.platform_notifications TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.platform_notifications TO authenticated;
 GRANT ALL ON TABLE public.platform_notifications TO service_role;
 
 
@@ -33064,8 +33179,8 @@ GRANT SELECT(updated_at) ON TABLE public.professionals TO authenticated;
 -- Name: TABLE profiles; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.profiles TO anon;
-GRANT ALL ON TABLE public.profiles TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.profiles TO authenticated;
 GRANT ALL ON TABLE public.profiles TO service_role;
 
 
@@ -33073,8 +33188,8 @@ GRANT ALL ON TABLE public.profiles TO service_role;
 -- Name: TABLE prospect_contacts; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_contacts TO anon;
-GRANT ALL ON TABLE public.prospect_contacts TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO authenticated;
 GRANT ALL ON TABLE public.prospect_contacts TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO prospect_worker;
 
@@ -33084,7 +33199,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO prospect_
 --
 
 GRANT ALL ON TABLE public.prospect_data_quality TO postgres;
-GRANT ALL ON TABLE public.prospect_data_quality TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_data_quality TO authenticated;
 GRANT ALL ON TABLE public.prospect_data_quality TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_data_quality TO prospect_worker;
 
@@ -33093,8 +33208,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_data_quality TO prosp
 -- Name: TABLE prospect_duplicates; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_duplicates TO anon;
-GRANT ALL ON TABLE public.prospect_duplicates TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_duplicates TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_duplicates TO authenticated;
 GRANT ALL ON TABLE public.prospect_duplicates TO service_role;
 
 
@@ -33102,8 +33217,8 @@ GRANT ALL ON TABLE public.prospect_duplicates TO service_role;
 -- Name: TABLE prospect_events; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.prospect_events TO anon;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.prospect_events TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.prospect_events TO anon;
+GRANT SELECT,INSERT ON TABLE public.prospect_events TO authenticated;
 GRANT ALL ON TABLE public.prospect_events TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_events TO prospect_worker;
 
@@ -33113,7 +33228,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_events TO prospect_wo
 --
 
 GRANT ALL ON TABLE public.prospect_features TO postgres;
-GRANT ALL ON TABLE public.prospect_features TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_features TO authenticated;
 GRANT ALL ON TABLE public.prospect_features TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_features TO prospect_worker;
 
@@ -33123,7 +33238,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_features TO prospect_
 --
 
 GRANT ALL ON TABLE public.prospect_fit_scores TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.prospect_fit_scores TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.prospect_fit_scores TO authenticated;
 GRANT ALL ON TABLE public.prospect_fit_scores TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_fit_scores TO prospect_worker;
 
@@ -33133,7 +33248,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_fit_scores TO prospec
 --
 
 GRANT ALL ON TABLE public.prospect_identity_matches TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.prospect_identity_matches TO authenticated;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_identity_matches TO authenticated;
 GRANT ALL ON TABLE public.prospect_identity_matches TO service_role;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_identity_matches TO prospect_worker;
 
@@ -33142,8 +33257,8 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_identity_matches TO prospect
 -- Name: TABLE prospect_job_sources; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_job_sources TO anon;
-GRANT ALL ON TABLE public.prospect_job_sources TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_job_sources TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_job_sources TO authenticated;
 GRANT ALL ON TABLE public.prospect_job_sources TO service_role;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_job_sources TO prospect_worker;
 
@@ -33152,8 +33267,8 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_job_sources TO prospect_work
 -- Name: TABLE prospect_locations; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_locations TO anon;
-GRANT ALL ON TABLE public.prospect_locations TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO authenticated;
 GRANT ALL ON TABLE public.prospect_locations TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO prospect_worker;
 
@@ -33162,8 +33277,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO prospect
 -- Name: TABLE prospect_notes; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_notes TO anon;
-GRANT ALL ON TABLE public.prospect_notes TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_notes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_notes TO authenticated;
 GRANT ALL ON TABLE public.prospect_notes TO service_role;
 
 
@@ -33171,8 +33286,8 @@ GRANT ALL ON TABLE public.prospect_notes TO service_role;
 -- Name: TABLE prospect_outreach; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_outreach TO anon;
-GRANT ALL ON TABLE public.prospect_outreach TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach TO authenticated;
 GRANT ALL ON TABLE public.prospect_outreach TO service_role;
 
 
@@ -33181,7 +33296,7 @@ GRANT ALL ON TABLE public.prospect_outreach TO service_role;
 --
 
 GRANT ALL ON TABLE public.prospect_outreach_eligibility TO postgres;
-GRANT ALL ON TABLE public.prospect_outreach_eligibility TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach_eligibility TO authenticated;
 GRANT ALL ON TABLE public.prospect_outreach_eligibility TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach_eligibility TO prospect_worker;
 
@@ -33216,7 +33331,7 @@ GRANT SELECT ON TABLE public.prospect_score_distribution TO authenticated;
 --
 
 GRANT ALL ON TABLE public.prospect_score_rulesets TO postgres;
-GRANT ALL ON TABLE public.prospect_score_rulesets TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_score_rulesets TO authenticated;
 GRANT ALL ON TABLE public.prospect_score_rulesets TO service_role;
 GRANT SELECT ON TABLE public.prospect_score_rulesets TO prospect_worker;
 
@@ -33225,8 +33340,8 @@ GRANT SELECT ON TABLE public.prospect_score_rulesets TO prospect_worker;
 -- Name: TABLE prospect_scores; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_scores TO anon;
-GRANT ALL ON TABLE public.prospect_scores TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO authenticated;
 GRANT ALL ON TABLE public.prospect_scores TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO prospect_worker;
 
@@ -33236,7 +33351,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO prospect_wo
 --
 
 GRANT ALL ON TABLE public.prospect_search_partitions TO postgres;
-GRANT ALL ON TABLE public.prospect_search_partitions TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_search_partitions TO authenticated;
 GRANT ALL ON TABLE public.prospect_search_partitions TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_search_partitions TO prospect_worker;
 
@@ -33246,7 +33361,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_search_partitions TO 
 --
 
 GRANT ALL ON TABLE public.prospect_searches TO postgres;
-GRANT ALL ON TABLE public.prospect_searches TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_searches TO authenticated;
 GRANT ALL ON TABLE public.prospect_searches TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_searches TO prospect_worker;
 
@@ -33256,7 +33371,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_searches TO prospect_
 --
 
 GRANT ALL ON TABLE public.prospect_segment_definitions TO postgres;
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.prospect_segment_definitions TO authenticated;
+GRANT SELECT ON TABLE public.prospect_segment_definitions TO authenticated;
 GRANT ALL ON TABLE public.prospect_segment_definitions TO service_role;
 GRANT SELECT ON TABLE public.prospect_segment_definitions TO prospect_worker;
 
@@ -33266,7 +33381,7 @@ GRANT SELECT ON TABLE public.prospect_segment_definitions TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.prospect_segments TO postgres;
-GRANT ALL ON TABLE public.prospect_segments TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_segments TO authenticated;
 GRANT ALL ON TABLE public.prospect_segments TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_segments TO prospect_worker;
 
@@ -33275,8 +33390,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_segments TO prospect_
 -- Name: TABLE prospect_social_profiles; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_social_profiles TO anon;
-GRANT ALL ON TABLE public.prospect_social_profiles TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO authenticated;
 GRANT ALL ON TABLE public.prospect_social_profiles TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO prospect_worker;
 
@@ -33285,8 +33400,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO pr
 -- Name: TABLE prospect_source_records; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_source_records TO anon;
-GRANT ALL ON TABLE public.prospect_source_records TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO authenticated;
 GRANT ALL ON TABLE public.prospect_source_records TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO prospect_worker;
 
@@ -33295,8 +33410,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO pro
 -- Name: TABLE prospect_suppressions; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_suppressions TO anon;
-GRANT ALL ON TABLE public.prospect_suppressions TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_suppressions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_suppressions TO authenticated;
 GRANT ALL ON TABLE public.prospect_suppressions TO service_role;
 
 
@@ -33304,8 +33419,8 @@ GRANT ALL ON TABLE public.prospect_suppressions TO service_role;
 -- Name: TABLE prospect_tags; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.prospect_tags TO anon;
-GRANT ALL ON TABLE public.prospect_tags TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_tags TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_tags TO authenticated;
 GRANT ALL ON TABLE public.prospect_tags TO service_role;
 
 
@@ -33345,8 +33460,8 @@ GRANT SELECT ON TABLE public.review_reputation TO authenticated;
 -- Name: TABLE service_categories; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.service_categories TO anon;
-GRANT ALL ON TABLE public.service_categories TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_categories TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_categories TO authenticated;
 GRANT ALL ON TABLE public.service_categories TO service_role;
 
 
@@ -33362,8 +33477,8 @@ GRANT SELECT ON TABLE public.service_duration_samples TO authenticated;
 -- Name: TABLE service_locations; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.service_locations TO anon;
-GRANT ALL ON TABLE public.service_locations TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_locations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_locations TO authenticated;
 GRANT ALL ON TABLE public.service_locations TO service_role;
 
 
@@ -33379,8 +33494,8 @@ GRANT SELECT ON TABLE public.service_mode_changes TO authenticated;
 -- Name: TABLE services; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.services TO anon;
-GRANT ALL ON TABLE public.services TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.services TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.services TO authenticated;
 GRANT ALL ON TABLE public.services TO service_role;
 
 
@@ -33388,8 +33503,8 @@ GRANT ALL ON TABLE public.services TO service_role;
 -- Name: TABLE staff_profiles; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.staff_profiles TO anon;
-GRANT ALL ON TABLE public.staff_profiles TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.staff_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.staff_profiles TO authenticated;
 GRANT ALL ON TABLE public.staff_profiles TO service_role;
 
 
@@ -33416,8 +33531,8 @@ GRANT SELECT ON TABLE public.template_performance TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.time_blocks TO postgres;
-GRANT ALL ON TABLE public.time_blocks TO anon;
-GRANT ALL ON TABLE public.time_blocks TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.time_blocks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.time_blocks TO authenticated;
 GRANT ALL ON TABLE public.time_blocks TO service_role;
 
 
@@ -33425,8 +33540,8 @@ GRANT ALL ON TABLE public.time_blocks TO service_role;
 -- Name: TABLE waitlist_entries; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT ALL ON TABLE public.waitlist_entries TO anon;
-GRANT ALL ON TABLE public.waitlist_entries TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.waitlist_entries TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.waitlist_entries TO authenticated;
 GRANT ALL ON TABLE public.waitlist_entries TO service_role;
 
 
@@ -33435,7 +33550,7 @@ GRANT ALL ON TABLE public.waitlist_entries TO service_role;
 --
 
 GRANT ALL ON TABLE public.whatsapp_accounts TO postgres;
-GRANT ALL ON TABLE public.whatsapp_accounts TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_accounts TO authenticated;
 GRANT ALL ON TABLE public.whatsapp_accounts TO service_role;
 GRANT SELECT ON TABLE public.whatsapp_accounts TO prospect_worker;
 
@@ -33445,7 +33560,7 @@ GRANT SELECT ON TABLE public.whatsapp_accounts TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.whatsapp_conversations TO postgres;
-GRANT ALL ON TABLE public.whatsapp_conversations TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_conversations TO authenticated;
 GRANT ALL ON TABLE public.whatsapp_conversations TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_conversations TO prospect_worker;
 
@@ -33455,7 +33570,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_conversations TO pros
 --
 
 GRANT ALL ON TABLE public.whatsapp_messages TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.whatsapp_messages TO authenticated;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.whatsapp_messages TO authenticated;
 GRANT ALL ON TABLE public.whatsapp_messages TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_messages TO prospect_worker;
 
@@ -33465,7 +33580,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_messages TO prospect_
 --
 
 GRANT ALL ON TABLE public.whatsapp_template_mappings TO postgres;
-GRANT ALL ON TABLE public.whatsapp_template_mappings TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_template_mappings TO authenticated;
 GRANT ALL ON TABLE public.whatsapp_template_mappings TO service_role;
 GRANT SELECT ON TABLE public.whatsapp_template_mappings TO prospect_worker;
 
@@ -33475,7 +33590,7 @@ GRANT SELECT ON TABLE public.whatsapp_template_mappings TO prospect_worker;
 --
 
 GRANT ALL ON TABLE public.whatsapp_webhook_events TO postgres;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.whatsapp_webhook_events TO authenticated;
+GRANT SELECT,INSERT ON TABLE public.whatsapp_webhook_events TO authenticated;
 GRANT ALL ON TABLE public.whatsapp_webhook_events TO service_role;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.whatsapp_webhook_events TO prospect_worker;
 
@@ -33505,8 +33620,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON S
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
 
 
@@ -33515,8 +33628,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIO
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
 
 
@@ -33525,8 +33636,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON F
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO postgres;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 
 
@@ -33535,8 +33646,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES 
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO postgres;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO anon;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 
 
@@ -33544,5 +33655,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XACLzIUG4kuvIyy94QcTw37WnQ5cpoePGQh7EHZtrpQdMKHT6S8mLEaxIrRFPvo
+\unrestrict qUiEKTyUgqW79aONI5Fe6uBvQh6udmMfQ41HAHm9IKQcnJctkPA6FN2LX0u5E6p
 
