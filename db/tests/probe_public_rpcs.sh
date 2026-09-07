@@ -96,6 +96,10 @@ probe get_public_professional_by_handle  "{\"p_handle\":\"${HANDLE}\"}"
 probe get_public_available_slots         "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\",\"p_barber_id\":\"${BARBER_ID}\",\"p_service_id\":\"${SERVICE_ID}\",\"p_date\":\"${TODAY}\"}"
 probe get_public_service_state           "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\"}"
 probe get_public_queue_status            "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\"}"
+# F1b : la liste des files par barber. Les RPC à capacité (suivi, sortie,
+# changement) ne se sondent pas avec un id inventé — un refus nommé serait
+# indistinguable d'une panne ; elles sont couvertes par la suite e2e.
+probe list_public_queues                 "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\"}"
 probe get_public_currencies              "{\"p_organization_ids\":[\"${ORG_ID}\"]}"
 probe search_public_organizations        '{"p_city":"Paris"}'
 probe search_public_professionals        '{}'
