@@ -9630,6 +9630,7 @@ export type Database = {
           covers_search_point: boolean
           distance_km: number
           entity_type: string
+          is_managed: boolean
           is_open_now: boolean
           latitude: number
           location_id: string

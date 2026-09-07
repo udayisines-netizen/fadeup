@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fiKDuKuaPTum2WJNrnGXflQ3U0We9wffvjh73yabeogv09lRqOHwZ2ztanN7m6O
+\restrict ShmUE3z94zBC1aAPUagWyLbsZHWtZjZCVkYeVJoTuL6lfVGG0g5kJZ43gfi9zgu
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -13528,7 +13528,7 @@ COMMENT ON FUNCTION public.search_public_organizations(p_country text, p_city te
 -- Name: search_public_professionals(text, text, text, text, double precision, double precision, double precision, integer, integer, boolean, text, integer, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::text, p_city text DEFAULT NULL::text, p_query text DEFAULT NULL::text, p_service_query text DEFAULT NULL::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT NULL::double precision, p_min_price_cents integer DEFAULT NULL::integer, p_max_price_cents integer DEFAULT NULL::integer, p_open_now_only boolean DEFAULT false, p_entity_type text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_sort text DEFAULT 'recommended'::text) RETURNS TABLE(entity_type text, organization_id uuid, organization_name text, organization_slug text, barber_id uuid, professional_id uuid, barber_display_name text, barber_avatar_url text, barber_title text, location_id uuid, location_name text, location_kind public.location_kind, address_line1 text, city text, region text, postal_code text, country text, latitude double precision, longitude double precision, service_area_center_latitude double precision, service_area_center_longitude double precision, service_area_radius_km double precision, covers_search_point boolean, timezone text, distance_km double precision, starting_price_cents integer, is_open_now boolean, queue_waiting_count integer, total_count bigint, marketplace_supply_type text)
+CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::text, p_city text DEFAULT NULL::text, p_query text DEFAULT NULL::text, p_service_query text DEFAULT NULL::text, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision, p_radius_km double precision DEFAULT NULL::double precision, p_min_price_cents integer DEFAULT NULL::integer, p_max_price_cents integer DEFAULT NULL::integer, p_open_now_only boolean DEFAULT false, p_entity_type text DEFAULT NULL::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_sort text DEFAULT 'recommended'::text) RETURNS TABLE(entity_type text, organization_id uuid, organization_name text, organization_slug text, barber_id uuid, professional_id uuid, barber_display_name text, barber_avatar_url text, barber_title text, location_id uuid, location_name text, location_kind public.location_kind, address_line1 text, city text, region text, postal_code text, country text, latitude double precision, longitude double precision, service_area_center_latitude double precision, service_area_center_longitude double precision, service_area_radius_km double precision, covers_search_point boolean, timezone text, distance_km double precision, starting_price_cents integer, is_open_now boolean, queue_waiting_count integer, total_count bigint, marketplace_supply_type text, is_managed boolean)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -13577,6 +13577,15 @@ CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::
         coalesce(l.latitude, l.service_area_center_latitude),
         coalesce(l.longitude, l.service_area_center_longitude)
       ) as distance_km
+      ,
+      -- F3. "Managed on FadeUp" for an establishment row: someone with a real
+      -- FadeUp account is a member of the organization. The scraped supply
+      -- published by the acquisition pipeline has zero memberships, which is
+      -- exactly what the neutral ClaimBadge on a search result must say
+      -- (MASTER_SPEC §5/§9 — unclaimed is the common launch case).
+      exists (
+        select 1 from public.memberships m where m.organization_id = o.id
+      ) as is_managed
     from public.organizations o
     join public.locations l on l.organization_id = o.id
     where o.marketplace_visible
@@ -13645,6 +13654,12 @@ CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::
         coalesce(l.latitude, l.service_area_center_latitude),
         coalesce(l.longitude, l.service_area_center_longitude)
       ) as distance_km
+      ,
+      -- F3. A barber row is "managed" when its durable identity is claimed —
+      -- the same boundary get_public_barber draws for professional_id. The
+      -- coalesce is the X3 invariant: a barber with NO linked identity is
+      -- not-managed (false), never unknown (NULL).
+      coalesce(p.claim_state = 'claimed', false) as is_managed
     from public.barbers b
     left join public.professionals p on p.id = b.professional_id
     join public.staff_profiles sp on sp.id = b.staff_profile_id
@@ -13778,7 +13793,8 @@ CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::
     f.is_open_now,
     f.queue_waiting_count,
     count(*) over () as total_count,
-    f.marketplace_supply_type
+    f.marketplace_supply_type,
+    f.is_managed
   from filtered f
   order by
     -- NEAREST. A row with no distance sorts last rather than first: "nearest"
@@ -13823,7 +13839,9 @@ Parameters, all optional:
   p_offset           int     0      page offset, floored at 0
   p_sort             text    ''recommended''  ''recommended'' | ''nearest'' | ''price''; unknown values fall back to recommended
 
-Geography. location_kind is ''physical_address'' or ''service_area''. On a physical address, latitude/longitude are the establishment and the service_area_* columns are NULL. On a service area it is the reverse: latitude/longitude are NULL — there is no address and none is invented — and the zone is described by service_area_center_latitude/longitude plus service_area_radius_km. distance_km is the distance to the address or to the ZONE CENTRE respectively, and covers_search_point tells a service-area row apart from a nearby one: true when the professional''s own zone reaches the customer, NULL when there is no zone or no search point.';
+Geography. location_kind is ''physical_address'' or ''service_area''. On a physical address, latitude/longitude are the establishment and the service_area_* columns are NULL. On a service area it is the reverse: latitude/longitude are NULL — there is no address and none is invented — and the zone is described by service_area_center_latitude/longitude plus service_area_radius_km. distance_km is the distance to the address or to the ZONE CENTRE respectively, and covers_search_point tells a service-area row apart from a nearby one: true when the professional''s own zone reaches the customer, NULL when there is no zone or no search point.
+
+F3 adds is_managed: for a shop row, true when the organization has at least one FadeUp membership (the scraped, not-yet-claimed supply has none — the neutral ClaimBadge case); for a barber row, true when the durable identity is claimed (the same boundary as get_public_barber.professional_id).';
 
 
 --
@@ -29306,5 +29324,5 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fiKDuKuaPTum2WJNrnGXflQ3U0We9wffvjh73yabeogv09lRqOHwZ2ztanN7m6O
+\unrestrict ShmUE3z94zBC1aAPUagWyLbsZHWtZjZCVkYeVJoTuL6lfVGG0g5kJZ43gfi9zgu
 
