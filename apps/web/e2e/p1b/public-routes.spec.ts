@@ -10,8 +10,10 @@ test.describe('routes publiques sans session', () => {
     test(`${path} rend sans redirection vers /auth`, async ({ page }) => {
       await page.goto(path)
       await expect(page).not.toHaveURL(/\/auth\//)
-      // Un EmptyState avec titre + action, pas une page blanche.
-      await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
+      // Un titre et un contenu réels, pas une page blanche. (F3 : / et
+      // /search sont désormais de vraies surfaces à h1, chargées
+      // paresseusement — l'attente porte sur n'importe quel titre rendu.)
+      await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 20_000 })
       await expect(page.getByRole('main')).not.toBeEmpty()
     })
   }
@@ -20,6 +22,10 @@ test.describe('routes publiques sans session', () => {
     void isMobile
     await page.goto('/')
     const nav = page.locator('nav').last()
+    // F3 : l'accueil est une route paresseuse — attendre que le shell et sa
+    // navigation soient RENDUS avant de compter (allTextContents ne patiente
+    // pas).
+    await nav.locator('a').first().waitFor({ state: 'attached', timeout: 20_000 })
     const labels = await nav.locator('a').allTextContents()
     const compact = labels.map((label) => label.trim()).filter(Boolean)
     expect(compact.length).toBeGreaterThanOrEqual(5)

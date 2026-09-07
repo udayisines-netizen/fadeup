@@ -37,12 +37,28 @@ export default defineConfig({
           )
             return 'platform'
           if (id.includes('/features/marketing') || id.includes('/app/shells/MarketingShell')) return 'marketing'
+          // F3 — maplibre est partagé entre la carte consumer (onglet Carte
+          // de /search, paresseux) et la carte legacy /platform : sans cette
+          // règle il se fondait dans le chunk 'platform' (466 Ko gzip) que
+          // l'onglet Carte aurait téléchargé en entier. Les DEUX modules JS
+          // sont nommés explicitement : un filtre large sur le paquet attrape
+          // aussi son CSS (id suffixé d'une requête, donc pas de endsWith
+          // possible) et rolldown abandonne alors le groupe EN SILENCE —
+          // mesuré pendant F3.
+          if (id.includes('maplibre-gl.mjs') || id.includes('maplibre-gl-shared.mjs')) return 'maplibre'
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
           if (id.includes('node_modules/react')) return 'vendor-react'
         },
       },
     },
     chunkSizeWarningLimit: 180,
+  },
+
+  // F3 — maplibre charge son worker comme un module frère ; pré-bundlé par
+  // l'optimiseur dev, ce worker n'existe pas (404 maplibre-gl-worker.mjs,
+  // mesuré). Exclu, il se résout depuis la source. Build de prod inchangée.
+  optimizeDeps: {
+    exclude: ['maplibre-gl'],
   },
 
   resolve: {

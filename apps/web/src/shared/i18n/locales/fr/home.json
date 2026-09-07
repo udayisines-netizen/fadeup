@@ -1,0 +1,26 @@
+{
+  "search": {
+    "title": "Trouvez votre barber",
+    "label": "Rechercher un barber ou un salon",
+    "placeholder": "Nom, style, ville…"
+  },
+  "queue": {
+    "title": "Votre file chez {{organization}}",
+    "anonymousTitle": "Votre file en cours",
+    "positionLabel": "dans la file",
+    "cta": "Suivre ma place"
+  },
+  "next": {
+    "title": "Prochaine réservation"
+  },
+  "rebook": {
+    "title": "Réserver à nouveau",
+    "cta": "Reprendre avec {{barber}}"
+  },
+  "followed": {
+    "title": "Profils suivis"
+  },
+  "discover": {
+    "title": "À découvrir"
+  }
+}

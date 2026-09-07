@@ -1,4 +1,8 @@
 /**
+ * (Déplacé de features/queue par F3 : l'accueil montre la file active d'un
+ * client anonyme — `features/X` n'importe jamais `features/Y`, même motif que
+ * le déplacement F2 de publicQueue.)
+ *
  * Mémoire locale de l'entrée en file d'un client ANONYME. `join_public_queue`
  * retourne l'id de l'entrée ; un client connecté la retrouve par
  * `get_my_queue_status`, un anonyme n'a que cet id — on le garde pour que

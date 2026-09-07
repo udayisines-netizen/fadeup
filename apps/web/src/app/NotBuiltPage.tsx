@@ -4,8 +4,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { Button } from '@/shared/ui/Button'
 
 export type NotBuiltZone =
-  | 'home'
-  | 'search'
+  /* 'home' et 'search' ont été construits par F3 et retirés d'ici. */
   | 'feed'
   | 'bookings'
   | 'account'
@@ -21,8 +20,8 @@ export type NotBuiltZone =
 // Une fonction plutôt qu'un Record constant : la garde
 // no-untranslated-status-maps interdit les maps de chaînes — et ces valeurs
 // sont des routes, pas de la copie.
-function actionTarget(zone: NotBuiltZone): string {
-  return zone === 'home' ? '/auth/login' : '/'
+function actionTarget(_zone: NotBuiltZone): string {
+  return '/'
 }
 
 /**

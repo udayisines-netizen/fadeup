@@ -4,16 +4,6 @@
     "description": "Cette surface sera construite par le lot {{prompt}}.",
     "action": "Aller à l'accueil"
   },
-  "home": {
-    "title": "L'accueil arrive avec P2",
-    "description": "Recherche, prochaine réservation et profils suivis seront construits par le lot P2.",
-    "action": "Voir la connexion"
-  },
-  "search": {
-    "title": "La recherche arrive avec P2",
-    "description": "La découverte des barbers et salons près de vous sera construite par le lot P2.",
-    "action": "Aller à l'accueil"
-  },
   "feed": {
     "title": "Le feed arrive avec P4",
     "description": "Les publications des profils suivis et la découverte locale seront construites par le lot P4.",
