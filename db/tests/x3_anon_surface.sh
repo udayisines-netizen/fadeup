@@ -256,7 +256,10 @@ else
   # (policies using(true) to authenticated, par conception), et ses PROPRES
   # lignes d'identité (policies « col = auth.uid() » : le balayage vérifie la
   # présence de lignes, pas leur appartenance — celle-ci est garantie par la
-  # policy elle-même, auditée au chantier 1).
+  # policy elle-même, auditée au chantier 1). Plus les publications
+  # publiques : private.can_view_post autorise la lecture quand
+  # visibility = 'public' — un portfolio est fait pour être lu par tous,
+  # connecté ou non. Le balayage anonyme les lit d'ailleurs sans se plaindre.
   ALLOW_AUTHED_ROWS="billing_stripe_prices
 billing_stripe_products
 commercial_capabilities
@@ -266,7 +269,9 @@ membership_plans
 review_reputation
 profiles
 customer_profiles
-customer_passports"
+customer_passports
+posts
+post_media"
   sweep_reads  "$USER_JWT" "authed-sans-droit lecture tables" "$ALLOW_AUTHED_ROWS"
   sweep_writes "$USER_JWT" "authed-sans-droit écriture tables"
 
