@@ -485,6 +485,13 @@ export const router = createBrowserRouter([
                           return { Component: ProQueueQrPage }
                         },
                       },
+                      {
+                        path: 'queue/durations',
+                        lazy: async () => {
+                          const { ProQueueDurationsPage } = await import('@/features/pro-queue/routes/ProQueueDurationsPage')
+                          return { Component: ProQueueDurationsPage }
+                        },
+                      },
                     ],
                   },
                   { path: '*', element: <NotBuiltPage zone="dashboard" /> },

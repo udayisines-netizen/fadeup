@@ -1,15 +1,6 @@
-import { useEffect, useState } from 'react'
-
 /**
- * Horloge partagée d'un écran : re-rend à intervalle fixe pour les durées
- * qui défilent (attente écoulée, grâce). Un seul timer par usage, nettoyé
- * au démontage.
+ * Déplacé vers shared/hooks (F1b) : la face client a désormais son propre
+ * compte à rebours (échéance d'appel) et `features/X` n'importe jamais
+ * `features/Y`. Ré-export de compatibilité.
  */
-export function useNow(intervalMs: number): Date {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), intervalMs)
-    return () => window.clearInterval(timer)
-  }, [intervalMs])
-  return now
-}
+export { useNow } from '@/shared/hooks/useNow'
