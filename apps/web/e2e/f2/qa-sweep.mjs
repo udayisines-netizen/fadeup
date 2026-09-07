@@ -20,6 +20,16 @@ const PAGES = [
   ['shop-sofian-servicearea', '/shop/demo-sofian-cuts'],
   ['shop-barber-corner', '/shop/demo-barber-corner'],
   ['shop-notfound', '/shop/slug-inconnu'],
+  // Non-régression visuelle du correctif cn.ts (twMerge apprend text-fu-*) :
+  // un échantillon des surfaces qui mêlent text-fu-* et text-[var(...)].
+  ['home', '/'],
+  ['auth-login', '/auth/login'],
+  ['auth-signup', '/auth/signup'],
+  ['queue-maison-kais', '/q/demo-maison-kais'],
+  ['queue-sofian-servicearea', '/q/demo-sofian-cuts'],
+  ['demo-discovery', '/demo/discovery'],
+  ['demo-profile', '/demo/profile?org=demo-maison-kais'],
+  ['dev-ui', '/dev/ui'],
 ]
 
 const WIDTHS = [

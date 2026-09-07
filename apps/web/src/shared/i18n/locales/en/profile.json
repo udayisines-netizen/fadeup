@@ -1,7 +1,6 @@
 {
   "header": {
     "worksAt": "Works at {{salon}}",
-    "avatarLabel": "Profile photo of {{name}}",
     "coverLabel": "Cover photo of {{name}}"
   },
   "cta": {
@@ -34,15 +33,12 @@
   },
   "portfolio": {
     "title": "Work",
-    "emptyTitle": "No work posted yet",
     "emptyDescription": "Photos of their work will appear here.",
-    "postedAt": "Posted at {{salon}}",
     "loadMore": "Show more",
     "mediaLabel": "Work by {{name}}"
   },
   "services": {
     "title": "Services",
-    "emptyTitle": "No services yet",
     "emptyDescription": "Services and prices will appear here."
   },
   "reviews": {
@@ -52,13 +48,11 @@
     "anonymous": "FadeUp client"
   },
   "location": {
-    "serviceArea": "Comes to you — {{city}} and around",
-    "serviceAreaShort": "Service area"
+    "serviceArea": "Comes to you — {{city}} and around"
   },
   "shop": {
     "teamTitle": "The team",
     "teamMemberAria": "View {{name}}'s profile",
-    "teamEmptyTitle": "Team not listed",
     "teamEmptyDescription": "Team members will appear here.",
     "queueTitle": "Live queue",
     "queueLink": "See the queue and join",
@@ -70,7 +64,8 @@
     "servicesTitle": "Services",
     "bookMember": "Book",
     "notFoundTitle": "Shop not found",
-    "notFoundDescription": "This link does not match any FadeUp shop."
+    "notFoundDescription": "This link does not match any FadeUp shop.",
+    "hoursUnknownDay": "Not listed"
   },
   "notFound": {
     "title": "Profile not found",

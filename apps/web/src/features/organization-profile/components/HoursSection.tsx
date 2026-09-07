@@ -48,27 +48,30 @@ export function HoursSection({ rows, timezone }: HoursSectionProps) {
         </p>
       )}
       <dl className="mt-3">
-        {orderedWeek(rows).map((row) => {
-          const first = interval(row.open_time, row.close_time)
-          const second = interval(row.second_open_time, row.second_close_time)
-          const isToday = row.day_of_week === today
+        {orderedWeek(rows).map(({ day, row }) => {
+          const first = row ? interval(row.open_time, row.close_time) : null
+          const second = row ? interval(row.second_open_time, row.second_close_time) : null
+          const isToday = day === today
           return (
             <div
-              key={row.day_of_week}
+              key={day}
               className={cn(
                 'flex items-baseline justify-between gap-4 border-b border-[var(--fu-border)] py-2 last:border-b-0',
                 isToday && 'font-medium text-[var(--fu-text-primary)]',
               )}
             >
               <dt className={cn('text-fu-sm capitalize', !isToday && 'text-[var(--fu-text-secondary)]')}>
-                {weekdayName(row.day_of_week, locale)}
+                {weekdayName(day, locale)}
               </dt>
               <dd className="font-fu-mono text-fu-sm tabular-nums">
-                {row.is_closed || !first
-                  ? t('profile.shop.hoursClosedDay')
-                  : second
-                    ? `${first}, ${second}`
-                    : first}
+                {/* Jour absent = NON RENSEIGNÉ — jamais affiché « fermé ». */}
+                {row === null
+                  ? t('profile.shop.hoursUnknownDay')
+                  : row.is_closed || !first
+                    ? t('profile.shop.hoursClosedDay')
+                    : second
+                      ? `${first}, ${second}`
+                      : first}
               </dd>
             </div>
           )

@@ -67,6 +67,13 @@ describe('openingHours — l’état se calcule dans le fuseau du LIEU', () => {
 
   it('orderedWeek commence lundi et finit dimanche', () => {
     const week = orderedWeek([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)))
-    expect(week.map((row) => row.day_of_week)).toEqual([1, 2, 3, 4, 5, 6, 0])
+    expect(week.map((entry) => entry.day)).toEqual([1, 2, 3, 4, 5, 6, 0])
+  })
+
+  it('orderedWeek rend TOUJOURS 7 jours — un jour absent est null, pas « fermé »', () => {
+    const week = orderedWeek([day(2), day(5)])
+    expect(week).toHaveLength(7)
+    expect(week.find((entry) => entry.day === 2)?.row).not.toBeNull()
+    expect(week.find((entry) => entry.day === 3)?.row).toBeNull()
   })
 })

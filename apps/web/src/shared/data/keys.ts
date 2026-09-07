@@ -97,6 +97,8 @@ export const organizationKeys = {
   reputation: (organizationId: string) => [...organizationKeys.all, 'reputation', organizationId] as const,
   reviews: (organizationId: string) => [...organizationKeys.all, 'reviews', organizationId] as const,
   posts: (slug: string) => [...organizationKeys.all, 'posts', slug] as const,
+  /** F2 — handle public d'un membre d'équipe revendiqué. */
+  memberHandle: (professionalId: string) => [...organizationKeys.all, 'member-handle', professionalId] as const,
   /** F2 — mes follows organisation (état du bouton Suivre). */
   myFollowed: () => [...organizationKeys.all, 'my-followed'] as const,
 } as const

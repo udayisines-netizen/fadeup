@@ -5,6 +5,7 @@ import { useSession } from '@/shared/hooks/useSession'
 import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { deviceTimezone } from '@/shared/lib/format'
 import { Avatar } from '@/shared/ui/Avatar'
 import { Button } from '@/shared/ui/Button'
 import { ClaimBadge } from '@/shared/ui/ClaimBadge'
@@ -74,13 +75,34 @@ export function ProfessionalProfilePage() {
   const barber = usePublicBarber(slug, barberId)
   const services = useBarberServices(slug, barberId)
   const locations = usePublicLocations(slug)
-  const locationId = barber.data?.location_id ?? workplace?.location_id ?? null
+  /* Le lieu du barber, sinon celui du rattachement, sinon le PREMIER lieu
+     actif de l'organisation — staff_profiles.location_id est nullable et un
+     barber sans lieu épinglé reste un barber de son organisation (revue F2 :
+     sans ce repli, son profil affichait « données partielles » à jamais). */
+  const locationId =
+    barber.data?.location_id ??
+    workplace?.location_id ??
+    (locations.isSuccess ? (locations.data?.[0]?.id ?? null) : null)
   const location = (locations.data ?? []).find((row) => row.id === locationId) ?? null
 
   const serviceState = useProfileServiceState(slug, locationId, barberId)
+  /* EN COURS tant que la chaîne handle -> rattachement -> lieu -> état n'a
+     pas répondu : on n'affirme ni panne ni fermeture pendant un chargement. */
+  const ctaResolving =
+    workplaces.isPending ||
+    (Boolean(workplace) && (locations.isPending || (Boolean(locationId) && serviceState.isPending)))
+  /* Rattachement résolu mais AUCUN lieu actif : rien n'est réservable — un
+     fait, pas une panne. (Sans ce cas, l'état resterait « loading » à vie.) */
+  const noActiveLocation = Boolean(workplace) && locations.isSuccess && !locationId
   const cta = useMemo(
-    () => deriveProfileCta(serviceState.data, { isError: serviceState.isError }),
-    [serviceState.data, serviceState.isError],
+    () =>
+      noActiveLocation
+        ? { kind: 'closed' as const, queueOpen: false, temporaryUntil: null }
+        : deriveProfileCta(serviceState.data, {
+            isError: serviceState.isError,
+            isLoading: ctaResolving,
+          }),
+    [noActiveLocation, serviceState.data, serviceState.isError, ctaResolving],
   )
   const queues = useLocationQueues(slug, locationId, cta.queueOpen)
   const myQueueFile = (queues.data ?? []).find((file) => file.barber_id === barberId) ?? null
@@ -93,7 +115,7 @@ export function ProfessionalProfilePage() {
   const following = Boolean(
     professionalId && (myFollows.data ?? []).some((row) => row.id === professionalId),
   )
-  const follow = useFollowProfessional(professionalId)
+  const follow = useFollowProfessional(professionalId, professional.data?.handle ?? null)
 
   const [claimOpen, setClaimOpen] = useState(false)
 
@@ -152,18 +174,22 @@ export function ProfessionalProfilePage() {
   const allPosts = (posts.data?.pages ?? []).flat()
   const reviewRows = reviews.data ?? []
   const reputationRow = reputation.data ?? null
-  const timezone = location?.timezone ?? 'Europe/Paris'
+  /* Sans lieu connu, le repli est le fuseau de l'APPAREIL — DateTime signale
+     de lui-même tout écart ; un fuseau de ville codé en dur mentirait. */
+  const timezone = location?.timezone ?? deviceTimezone()
   /* La devise vient de l'organisation (contrat V2) — jamais codée en dur. */
   const currency = organization.data?.currency ?? 'EUR'
 
   const operationalState =
-    cta.kind === 'unknown'
-      ? ('partial-data' as const)
-      : cta.kind === 'bookable'
-        ? ('bookable' as const)
-        : cta.kind === 'queue-only'
-          ? ('queue-open' as const)
-          : ('not-bookable' as const)
+    cta.kind === 'loading'
+      ? null // en cours de résolution : aucun badge, rien d'affirmé
+      : cta.kind === 'unknown'
+        ? ('partial-data' as const)
+        : cta.kind === 'bookable'
+          ? ('bookable' as const)
+          : cta.kind === 'queue-only'
+            ? ('queue-open' as const)
+            : ('not-bookable' as const)
 
   const toggleFollow = () => {
     if (!session) {
@@ -236,7 +262,7 @@ export function ProfessionalProfilePage() {
           )}
 
           {/* 9. Signaux opérationnels RÉELS — seulement quand un lieu existe. */}
-          {workplace && (
+          {workplace && operationalState && (
             <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="operational-signals">
               <StateBadge state={operationalState} size="sm" />
               {cta.queueOpen && myQueueFile && queueLink && (
@@ -269,9 +295,16 @@ export function ProfessionalProfilePage() {
               )}
             </>
           ) : (
-            <p className="mt-2 text-fu-sm text-[var(--fu-text-secondary)]" data-testid="portfolio-empty">
-              {t('profile.portfolio.emptyDescription')}
-            </p>
+            <div className="mt-2" data-testid="portfolio-empty">
+              <p className="text-fu-sm text-[var(--fu-text-secondary)]">{t('profile.portfolio.emptyDescription')}</p>
+              {/* Un état vide propose une action (§20) : suivre, pour être
+                  là quand le travail arrivera. */}
+              {!following && (
+                <Button variant="secondary" size="sm" className="mt-3" onClick={toggleFollow} loading={follow.isPending}>
+                  {t('common.action.follow')}
+                </Button>
+              )}
+            </div>
           )}
         </section>
 
@@ -329,7 +362,13 @@ export function ProfessionalProfilePage() {
       {/* 7–8. RÉSERVER (vert plein, LE CTA dominant) + Suivre (secondaire).
           État réel ; non revendiqué = pas de capacité fabriquée. */}
       <ProfileCtaBar
-        cta={workplace ? cta : { kind: 'closed', queueOpen: false, temporaryUntil: null }}
+        cta={
+          workplaces.isPending
+            ? { kind: 'loading', queueOpen: false, temporaryUntil: null }
+            : workplace
+              ? cta
+              : { kind: 'closed', queueOpen: false, temporaryUntil: null }
+        }
         name={identity.display_name}
         bookTo={bookLink}
         queueTo={queueLink}
@@ -337,7 +376,14 @@ export function ProfessionalProfilePage() {
         following={following}
         followBusy={follow.isPending}
         onToggleFollow={toggleFollow}
-        noteOverride={!workplace ? t('profile.unclaimed.bookingUnavailable') : undefined}
+        /* La note « rejoindra FadeUp » n'est affirmée qu'une fois la
+           résolution TERMINÉE, et seulement pour un non revendiqué — jamais
+           pendant un chargement (revue F2, B1). */
+        noteOverride={
+          workplaces.isSuccess && !workplace && isUnclaimed
+            ? t('profile.unclaimed.bookingUnavailable')
+            : undefined
+        }
       />
 
       {isUnclaimed && professionalId && (

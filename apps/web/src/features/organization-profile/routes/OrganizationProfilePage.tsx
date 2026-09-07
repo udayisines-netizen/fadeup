@@ -5,6 +5,8 @@ import { useSession } from '@/shared/hooks/useSession'
 import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { deviceTimezone } from '@/shared/lib/format'
+import { isOpenNow } from '@/shared/lib/openingHours'
 import { Button } from '@/shared/ui/Button'
 import { Duration } from '@/shared/ui/Duration'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -70,9 +72,20 @@ export function OrganizationProfilePage() {
   const team = useOrganizationTeam(slug)
   const hours = useLocationHours(slug, locationId)
   const serviceState = useShopServiceState(slug, locationId)
+  /* EN COURS tant que lieux/état n'ont pas répondu — jamais « panne » ni
+     « fermé » pendant un chargement (revue F2). Lieu inexistant une fois
+     résolu : rien n'est réservable, un fait. */
+  const ctaResolving = locations.isPending || (Boolean(locationId) && serviceState.isPending)
+  const noActiveLocation = locations.isSuccess && !locationId
   const cta = useMemo(
-    () => deriveProfileCta(serviceState.data, { isError: serviceState.isError }),
-    [serviceState.data, serviceState.isError],
+    () =>
+      noActiveLocation
+        ? { kind: 'closed' as const, queueOpen: false, temporaryUntil: null }
+        : deriveProfileCta(serviceState.data, {
+            isError: serviceState.isError,
+            isLoading: ctaResolving,
+          }),
+    [noActiveLocation, serviceState.data, serviceState.isError, ctaResolving],
   )
   const queues = useShopQueues(slug, isServiceArea ? null : locationId, cta.queueOpen)
 
@@ -137,7 +150,11 @@ export function OrganizationProfilePage() {
   const reputationRow = reputation.data ?? null
   const reviewRows = reviews.data ?? []
   const postRows = posts.data ?? []
-  const timezone = location?.timezone ?? 'Europe/Paris'
+  /* Repli : fuseau de l'appareil — DateTime signale l'écart de lui-même. */
+  const timezone = location?.timezone ?? deviceTimezone()
+  /* « Ouvert / Fermé maintenant » appartient à l'EN-TÊTE, à côté de
+     l'adresse (MASTER_SPEC §9 — position 4) ; la section Horaires détaille. */
+  const openNow = location && !isServiceArea ? isOpenNow(hours.data ?? [], timezone) : null
   const queueLink = locationId ? `/q/${encodeURIComponent(slug)}?l=${locationId}` : null
   const bookLink = `/book/${encodeURIComponent(slug)}?l=${locationId ?? ''}`
   const hasCategories = (services.data ?? []).some((row) => row.category_name)
@@ -175,6 +192,14 @@ export function OrganizationProfilePage() {
               {isServiceArea
                 ? t('profile.location.serviceArea', { city: location.city ?? '' })
                 : [location.address_line1, location.city].filter(Boolean).join(', ')}
+              {openNow !== null && (
+                <span
+                  data-testid="header-open-now"
+                  className={openNow ? 'font-medium text-[var(--fu-accent-text)]' : 'font-medium text-[var(--fu-text-primary)]'}
+                >
+                  {openNow ? t('states.opening.open') : t('states.opening.closed')}
+                </span>
+              )}
             </p>
           )}
 

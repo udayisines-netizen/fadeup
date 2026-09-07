@@ -32,7 +32,12 @@ export function ClaimSheet({ open, onOpenChange, professionalId }: ClaimSheetPro
   return (
     <Sheet
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => {
+        // Rouvrir la feuille repart d'un état neuf — sans ce reset, un
+        // second passage réaffichait « Demande envoyée » à tort.
+        if (!next) submit.reset()
+        onOpenChange(next)
+      }}
       title={t('profile.unclaimed.claimTitle')}
       description={t('profile.unclaimed.claimDescription')}
     >

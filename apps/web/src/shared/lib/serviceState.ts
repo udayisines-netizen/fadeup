@@ -22,7 +22,15 @@ export interface PublicServiceStateRow {
 }
 
 export type ProfileCtaKind =
-  /** L'état n'a pas pu être lu — rien n'est affirmé, Réserver est désactivé. */
+  /**
+   * L'état est EN COURS de résolution (requêtes pending) — rien n'est
+   * affirmé, ni panne ni fermeture : le CTA charge, sans note. Confondre ce
+   * cas avec `unknown` faisait affirmer « l'état n'a pas pu être vérifié »
+   * pendant chaque chargement — un mensonge de quelques secondes sur le
+   * chemin d'arrivée mobile (attrapé par la revue F2).
+   */
+  | 'loading'
+  /** L'état n'a pas pu être lu (échec RÉEL) — rien n'est affirmé, Réserver est désactivé. */
   | 'unknown'
   /** La réservation accepte : RÉSERVER est actif. */
   | 'bookable'
@@ -46,10 +54,15 @@ export interface ProfileCtaState {
 
 export function deriveProfileCta(
   state: PublicServiceStateRow | null | undefined,
-  options: { isError?: boolean } = {},
+  options: { isError?: boolean; isLoading?: boolean } = {},
 ): ProfileCtaState {
-  if (options.isError || !state) {
+  if (options.isError) {
     return { kind: 'unknown', queueOpen: false, temporaryUntil: null }
+  }
+  if (options.isLoading || !state) {
+    // Pas encore de réponse (ou pas encore de lieu résolu) : on CHARGE,
+    // on n'affirme rien.
+    return { kind: 'loading', queueOpen: false, temporaryUntil: null }
   }
 
   const bookingOpen = Boolean(state.booking_accepting_new_entries)

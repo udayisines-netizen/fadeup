@@ -47,30 +47,45 @@ test.describe('F2 — profil barber public', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Maison Kaïs')
   })
 
-  test('Book en vert plein, Follow en secondaire — l’écart est lisible', async ({ page }) => {
+  test('Book ACTIF en vert plein (état réel : la réservation accepte), Follow en secondaire', async ({ page }) => {
     await page.goto(KAIS)
     await waitForProfile(page)
     const book = page.getByTestId('profile-book-cta')
     const follow = page.getByTestId('profile-follow-cta')
+    // Maison Kaïs détient un plan accordé : booking_accepting est VRAI en
+    // base — le CTA doit être actif, pas seulement stylé.
+    await expect(book).toBeEnabled({ timeout: 15_000 })
     // Book porte le fond accent (vert plein) et l'encre par token.
     await expect(book).toHaveClass(/bg-\[var\(--fu-accent\)\]/)
     await expect(book).toHaveClass(/text-\[color:var\(--fu-accent-fg\)\]/)
     // Follow n'est JAMAIS vert plein : contour, fond de surface.
     await expect(follow).not.toHaveClass(/bg-\[var\(--fu-accent\)\]/)
     await expect(follow).toHaveClass(/border/)
+    // Le signal opérationnel réel dit « réservable ».
+    await expect(page.locator('[data-testid="operational-signals"] [data-state="bookable"]')).toBeVisible()
+    // Et le tap mène à la destination du CTA (l'écran nomme son lot — le
+    // tunnel est un lot ultérieur), puis le retour ramène au profil.
+    await book.click()
+    await expect(page).toHaveURL(/\/book\/demo-maison-kais/)
+    await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
   })
 
   test('réservation indisponible : le profil reste ENTIER, le CTA dit l’état réel', async ({ page }) => {
-    await page.goto(KAIS)
+    // Atelier Fadel est en Free : ni réservation ni file — l'état fermé RÉEL.
+    await page.goto('/pro/demo.fadel')
     await waitForProfile(page)
-    // L'état réel du jeu démo : la réservation n'accepte pas -> désactivé + note.
     const book = page.getByTestId('profile-book-cta')
-    await expect(book).toBeDisabled()
+    await expect(book).toBeDisabled({ timeout: 15_000 })
     await expect(page.getByTestId('cta-note')).toBeVisible()
+    // Jamais la note « n'a pas pu être vérifié » : l'état est CONNU (fermé).
+    await expect(page.getByTestId('cta-note')).not.toHaveText(/pas pu être vérifié|could not be checked/i)
     // Le profil reste entier : Suivre actif, portfolio et services rendus.
     await expect(page.getByTestId('profile-follow-cta')).toBeEnabled()
     await expect(page.getByTestId('portfolio-empty').or(page.getByTestId('post-grid'))).toBeVisible()
     await expect(page.getByTestId('operational-signals')).toBeVisible()
+    // Indépendant : sa page EST sa vitrine — pas de « Travaille chez ».
+    await expect(page.getByTestId('works-at-link')).toHaveCount(0)
+    await expect(page.getByTestId('profile-location')).toBeVisible()
   })
 
   test('les cinq métriques sont présentes et distinctes', async ({ page }) => {
@@ -144,11 +159,15 @@ test.describe('F2 — profil barber public', () => {
     await expect(page.getByRole('dialog').getByRole('link')).toHaveAttribute('href', /\/auth\/login\?redirect=/)
   })
 
-  test('professionnel mobile : AUCUNE adresse sur son profil barber', async ({ page }) => {
+  test('professionnel mobile non revendiqué : AUCUN lieu, AUCUNE adresse inventée', async ({ page }) => {
+    // HONNÊTETÉ DU TEST : demo.sofian.cuts est NON revendiqué — son absence
+    // d'adresse vient de l'absence de lieu public (frontière B1), pas de la
+    // branche zone-de-service du composant. Cette branche-là est couverte
+    // côté salon (« zone de service : AUCUNE adresse ») ; le cas /pro d'un
+    // REVENDIQUÉ en zone de service n'existe pas dans le jeu démo — écart
+    // déclaré au rapport, pas maquillé ici.
     await page.goto('/pro/demo.sofian.cuts')
     await waitForProfile(page)
-    // Identité rendue ; pas de ligne d'adresse (identité non revendiquée :
-    // pas de lieu public du tout — rien d'inventé).
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Sofian')
     await expect(page.getByTestId('profile-location')).toHaveCount(0)
     const body = await page.locator('body').innerText()
@@ -178,13 +197,32 @@ test.describe('F2 — profil salon public', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kaïs Bellamine')
   })
 
-  test('CTA de réservation par membre SEULEMENT pour les réservables', async ({ page }) => {
+  test('CTA de réservation par membre SEULEMENT pour les réservables — les deux faces', async ({ page }) => {
+    // Face POSITIVE : Maison Kaïs accepte -> le membre réservable a son bouton.
     await page.goto(SHOP)
     await waitForProfile(page)
-    // L'état réel du jeu démo : la réservation n'accepte pas -> aucun bouton
+    await expect(page.getByTestId('team-list')).toBeVisible()
+    await expect(page.getByTestId('team-book')).toHaveCount(1, { timeout: 15_000 })
+    await page.getByTestId('team-book').click()
+    await expect(page).toHaveURL(/\/book\/demo-maison-kais\?.*b=de300601/)
+    // Face NÉGATIVE : Barber Corner (Free) n'accepte pas -> aucun bouton
     // « Réserver » par membre n'est fabriqué.
+    await page.goto('/shop/demo-barber-corner')
+    await waitForProfile(page)
     await expect(page.getByTestId('team-list')).toBeVisible()
     await expect(page.getByTestId('team-book')).toHaveCount(0)
+  })
+
+  test('mode file actif : les files F1b et le pont évident vers /q', async ({ page }) => {
+    await page.goto(SHOP)
+    await waitForProfile(page)
+    // La file de Maison Kaïs accepte (fait vérifiable en base) : la section
+    // rend le QueueList de F1b et le lien vers la file en direct.
+    await expect(page.getByTestId('queue-list')).toBeVisible({ timeout: 15_000 })
+    const link = page.getByTestId('shop-queue-link')
+    await expect(link).toBeVisible()
+    await link.click()
+    await expect(page).toHaveURL(/\/q\/demo-maison-kais/)
   })
 
   test('horaires : semaine + état ouvert/fermé, dans le fuseau du lieu', async ({ page }) => {

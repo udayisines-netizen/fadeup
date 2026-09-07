@@ -58,7 +58,9 @@ export function ProfileCtaBar({
   const navigate = useNavigate()
 
   const derivedNote =
-    cta.kind === 'unknown'
+    cta.kind === 'loading'
+      ? null
+      : cta.kind === 'unknown'
       ? t('profile.cta.unknownNote')
       : cta.kind === 'queue-only'
         ? t('profile.cta.queueNote')
@@ -82,7 +84,19 @@ export function ProfileCtaBar({
           </p>
         )}
         <div className="flex gap-2 [&>*:first-child]:flex-[2] [&>*:last-child]:flex-1">
-          {cta.kind === 'queue-only' && queueTo ? (
+          {cta.kind === 'loading' ? (
+            /* Résolution en cours : le CTA charge — il n'affirme NI panne ni
+               fermeture (largeur et couleur conservées par le Button). */
+            <Button
+              variant="primary"
+              size="lg"
+              data-testid="profile-book-cta"
+              aria-label={t('profile.cta.bookAria', { name })}
+              loading
+            >
+              {t('common.action.book')}
+            </Button>
+          ) : cta.kind === 'queue-only' && queueTo ? (
             /* L'alternative réelle : la file existe et accepte (pont F1). */
             <Button
               variant="primary"

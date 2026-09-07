@@ -1,7 +1,6 @@
 {
   "header": {
     "worksAt": "Travaille chez {{salon}}",
-    "avatarLabel": "Photo de profil de {{name}}",
     "coverLabel": "Photo de couverture de {{name}}"
   },
   "cta": {
@@ -34,15 +33,12 @@
   },
   "portfolio": {
     "title": "Réalisations",
-    "emptyTitle": "Pas encore de réalisations",
     "emptyDescription": "Les photos de son travail apparaîtront ici.",
-    "postedAt": "Publié chez {{salon}}",
     "loadMore": "Voir plus",
     "mediaLabel": "Réalisation de {{name}}"
   },
   "services": {
     "title": "Services",
-    "emptyTitle": "Pas encore de services",
     "emptyDescription": "La liste des services et des tarifs apparaîtra ici."
   },
   "reviews": {
@@ -52,13 +48,11 @@
     "anonymous": "Client FadeUp"
   },
   "location": {
-    "serviceArea": "Se déplace chez ses clients — {{city}} et alentours",
-    "serviceAreaShort": "Zone de service"
+    "serviceArea": "Se déplace chez ses clients — {{city}} et alentours"
   },
   "shop": {
     "teamTitle": "L'équipe",
     "teamMemberAria": "Voir le profil de {{name}}",
-    "teamEmptyTitle": "Équipe non renseignée",
     "teamEmptyDescription": "Les membres de l'équipe apparaîtront ici.",
     "queueTitle": "File d'attente en direct",
     "queueLink": "Voir la file et rejoindre",
@@ -70,7 +64,8 @@
     "servicesTitle": "Services",
     "bookMember": "Réserver",
     "notFoundTitle": "Salon introuvable",
-    "notFoundDescription": "Ce lien ne correspond à aucun salon FadeUp."
+    "notFoundDescription": "Ce lien ne correspond à aucun salon FadeUp.",
+    "hoursUnknownDay": "Non renseigné"
   },
   "notFound": {
     "title": "Profil introuvable",

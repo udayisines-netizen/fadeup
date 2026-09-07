@@ -15,7 +15,13 @@ function row(overrides: Partial<PublicServiceStateRow> = {}): PublicServiceState
 describe('deriveProfileCta — le mappage F1/F2 des états de service', () => {
   it('RPC en échec => unknown : rien n’est affirmé, jamais un état inventé', () => {
     expect(deriveProfileCta(null, { isError: true }).kind).toBe('unknown')
-    expect(deriveProfileCta(undefined).kind).toBe('unknown')
+  })
+
+  it('pas encore de réponse => loading, PAS une panne (revue F2, B1)', () => {
+    expect(deriveProfileCta(undefined).kind).toBe('loading')
+    expect(deriveProfileCta(null, { isLoading: true }).kind).toBe('loading')
+    // isError prime : une vraie panne reste une panne même « en cours ».
+    expect(deriveProfileCta(null, { isLoading: true, isError: true }).kind).toBe('unknown')
   })
 
   it('réservation ouverte => bookable, la file reste visible', () => {

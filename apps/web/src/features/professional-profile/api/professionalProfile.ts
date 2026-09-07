@@ -278,7 +278,7 @@ export function useMyFollowedProfessionals(enabled: boolean) {
  * d'acquisition, MASTER_SPEC §5). Pas d'écriture optimiste ici : le compteur
  * public vient du serveur, l'invalidation suffit et reste honnête.
  */
-export function useFollowProfessional(professionalId: string | null) {
+export function useFollowProfessional(professionalId: string | null, handle: string | null) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (next: 'follow' | 'unfollow') => {
@@ -288,11 +288,11 @@ export function useFollowProfessional(professionalId: string | null) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: profileKeys.myFollowedProfessionals() })
-      if (professionalId) {
-        void queryClient.invalidateQueries({ queryKey: profileKeys.workplace(professionalId) })
+      // Le follower_count vit dans la réponse by_handle : invalidation
+      // CIBLÉE — pas tout profileKeys.all (le portfolio n'a pas changé).
+      if (handle) {
+        void queryClient.invalidateQueries({ queryKey: profileKeys.publicByHandle(handle) })
       }
-      // Le follower_count vit dans la réponse by_handle : rafraîchir l'identité.
-      void queryClient.invalidateQueries({ queryKey: profileKeys.all, refetchType: 'active' })
     },
   })
 }

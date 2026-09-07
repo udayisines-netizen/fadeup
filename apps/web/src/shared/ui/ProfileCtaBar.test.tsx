@@ -52,6 +52,14 @@ describe('ProfileCtaBar — Book dominant, Follow secondaire, état RÉEL', () =
     expect(screen.getByTestId('cta-note')).toBeInTheDocument()
   })
 
+  it('chargement : le CTA charge — AUCUNE note, aucune affirmation', () => {
+    renderBar({ kind: 'loading', queueOpen: false, temporaryUntil: null })
+    const book = screen.getByTestId('profile-book-cta')
+    expect(book).toBeDisabled()
+    expect(book).toHaveAttribute('data-loading', 'true')
+    expect(screen.queryByTestId('cta-note')).not.toBeInTheDocument()
+  })
+
   it('état inconnu : désactivé, jamais un état inventé', () => {
     renderBar({ kind: 'unknown', queueOpen: false, temporaryUntil: null })
     expect(screen.getByTestId('profile-book-cta')).toBeDisabled()

@@ -99,7 +99,7 @@ export function useOrganizationTeam(slug: string | null) {
  */
 export function useMemberHandle(professionalId: string | null) {
   return useQuery({
-    queryKey: [...organizationKeys.all, 'member-handle', professionalId ?? ''] as const,
+    queryKey: organizationKeys.memberHandle(professionalId ?? ''),
     queryFn: async (): Promise<string | null> => {
       const { data, error } = await getSupabase().rpc('get_public_professional', {
         p_professional_id: professionalId ?? '',

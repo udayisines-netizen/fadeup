@@ -100,11 +100,15 @@ export function formatWallTime(time: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(date)
 }
 
+/** Une entrée de semaine : la ligne réelle, ou `null` = jour NON RENSEIGNÉ
+ *  (distinct de « fermé » — on n'invente pas la fermeture d'un jour absent). */
+export interface WeekEntry {
+  day: number
+  row: PublicLocationHoursRow | null
+}
+
 /** Les 7 jours dans l'ordre local (lundi d'abord en fr/en — convention produit). */
-export function orderedWeek(rows: readonly PublicLocationHoursRow[]): PublicLocationHoursRow[] {
+export function orderedWeek(rows: readonly PublicLocationHoursRow[]): WeekEntry[] {
   const byDay = new Map(rows.map((row) => [row.day_of_week, row]))
-  const order = [1, 2, 3, 4, 5, 6, 0]
-  return order
-    .map((day) => byDay.get(day))
-    .filter((row): row is PublicLocationHoursRow => row !== undefined)
+  return [1, 2, 3, 4, 5, 6, 0].map((day) => ({ day, row: byDay.get(day) ?? null }))
 }
