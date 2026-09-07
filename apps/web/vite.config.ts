@@ -14,6 +14,12 @@ export default defineConfig({
   ],
 
   build: {
+    // X1 — cartes source : jamais dans une build servie (le Dockerfile copie
+    // tout dist/, un .map présent serait public). 'hidden' n'est activé que
+    // par scripts/sentry-sourcemaps.mjs, qui téléverse puis SUPPRIME les
+    // .map ; 'hidden' n'ajoute pas de commentaire sourceMappingURL, le JS
+    // émis reste donc identique octet pour octet à la build de production.
+    sourcemap: process.env.SENTRY_SOURCEMAPS === '1' ? 'hidden' : false,
     rollupOptions: {
       output: {
         manualChunks(id) {
