@@ -1,7 +1,8 @@
 #!/bin/sh
 # FadeUp booking scheduler loop.
 #
-# Six jobs now, on the same fixed interval:
+# Six jobs in the main statement, plus one separate call (F1b queue grace
+# sweep, further down), on the same fixed interval:
 #
 #   run_booking_maintenance()      expire unanswered booking requests so the
 #                                  slot is released, whether or not anybody has
@@ -92,6 +93,22 @@ while true; do
     fi
   else
     echo "$(date -u +%FT%TZ) fadeup-scheduler: tick failed: ${output}" >&2
+  fi
+
+  # F1b: the queue grace sweep is a SEPARATE psql call on purpose — the six
+  # jobs above share one statement, so one failing domain fails them all
+  # together; the queue sweep must not join that blast radius (B2's rule:
+  # a broken domain must not stop another). It only acts on locations that
+  # explicitly enabled it (queue_grace_sweep_enabled, default off), and the
+  # called -> no_show transition is terminal, so a restart never sweeps the
+  # same entry twice.
+  if sweep=$(psql -v ON_ERROR_STOP=1 -At \
+        -c "select entries_swept from public.run_queue_grace_maintenance();" 2>&1); then
+    if [ "$sweep" != "0" ]; then
+      echo "$(date -u +%FT%TZ) fadeup-scheduler: queue_grace_swept = ${sweep}"
+    fi
+  else
+    echo "$(date -u +%FT%TZ) fadeup-scheduler: queue grace sweep failed: ${sweep}" >&2
   fi
 
   sleep "$INTERVAL"
