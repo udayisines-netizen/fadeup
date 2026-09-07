@@ -86,7 +86,11 @@ export function SearchResultRow({ row, currencyByOrganization, availability, cla
         )}
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1" data-availability={availability}>
+      <div
+        className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1"
+        data-availability={availability}
+        data-org={row.organization_slug}
+      >
         {price ? (
           <Money cents={price.cents} currency={price.currency} from className="text-fu-sm" />
         ) : (
