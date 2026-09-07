@@ -6,6 +6,7 @@ import { ConsumerShell } from '@/app/shells/ConsumerShell'
 import { RequireAuth } from '@/app/guards/RequireAuth'
 import { RequirePro } from '@/app/guards/RequirePro'
 import { RequireDemo } from '@/app/guards/RequireDemo'
+import { RequireCapability } from '@/app/guards/RequireCapability'
 import { NotBuiltPage, NotFoundPage } from '@/app/NotBuiltPage'
 
 /**
@@ -403,6 +404,15 @@ export const router = createBrowserRouter([
           { path: 'feed', element: <NotBuiltPage zone="feed" /> },
           { path: 'pro/:handle', element: <NotBuiltPage zone="proProfile" /> },
           { path: 'shop/:slug', element: <NotBuiltPage zone="proProfile" /> },
+          /* F1 — la file publique : consulter sans auth ni géoloc ; le QR du
+             salon encode ce lien avec ?l=<lieu>&t=<jeton>. */
+          {
+            path: 'q/:slug',
+            lazy: async () => {
+              const { PublicQueuePage } = await import('@/features/queue/routes/PublicQueuePage')
+              return { Component: PublicQueuePage }
+            },
+          },
           {
             element: <RequireAuth />,
             children: [
@@ -424,6 +434,22 @@ export const router = createBrowserRouter([
         children: [{ index: true, element: <NotBuiltPage zone="business" /> }],
       },
 
+      /* F1 — l'installation en vingt minutes : compte → file ouverte → QR.
+         Auth seule (un compte neuf n'a pas encore d'organisation, donc pas
+         de porte RequirePro possible ici). */
+      {
+        element: <RequireAuth />,
+        children: [
+          {
+            path: 'setup',
+            lazy: async () => {
+              const { SetupPage } = await import('@/features/pro-onboarding/routes/SetupPage')
+              return { Component: SetupPage }
+            },
+          },
+        ],
+      },
+
       /* Pro OS — auth + pro ; les entrées du menu se conditionnent aux
          entitlements dans le shell lui-même. */
       {
@@ -440,6 +466,27 @@ export const router = createBrowserRouter([
                 },
                 children: [
                   { index: true, element: <NotBuiltPage zone="dashboard" /> },
+                  /* F1 — file pro, conditionnée à la capacité RÉELLE
+                     `liveQueue` (live_capabilities) : absente = non rendue. */
+                  {
+                    element: <RequireCapability capability="liveQueue" />,
+                    children: [
+                      {
+                        path: 'queue',
+                        lazy: async () => {
+                          const { ProQueuePage } = await import('@/features/pro-queue/routes/ProQueuePage')
+                          return { Component: ProQueuePage }
+                        },
+                      },
+                      {
+                        path: 'queue/qr',
+                        lazy: async () => {
+                          const { ProQueueQrPage } = await import('@/features/pro-queue/routes/ProQueueQrPage')
+                          return { Component: ProQueueQrPage }
+                        },
+                      },
+                    ],
+                  },
                   { path: '*', element: <NotBuiltPage zone="dashboard" /> },
                 ],
               },
