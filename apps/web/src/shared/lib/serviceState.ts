@@ -14,6 +14,14 @@
 
 export interface PublicServiceStateRow {
   booking_accepting_new_entries: boolean
+  /**
+   * Le MODE accepte-t-il la réservation ? C'est la porte du TUNNEL depuis F4 :
+   * `booking_accepting_new_entries` (B1) exige en plus la capacité commerciale
+   * `booking`, or B2 a fait de la capacité la frontière confirmed/pending —
+   * pas une frontière d'admission. Une organisation gratuite dont le mode
+   * accepte reçoit une DEMANDE ; le mode reste seul opposable (B2 §2).
+   */
+  mode_allows_booking: boolean
   queue_accepting_new_entries: boolean
   effective_service_mode: 'hybrid' | 'reservation_only' | 'queue_only' | 'unavailable'
   /** Fin d'un mode temporaire (override daté), ISO UTC — null sinon. */
@@ -65,7 +73,9 @@ export function deriveProfileCta(
     return { kind: 'loading', queueOpen: false, temporaryUntil: null }
   }
 
-  const bookingOpen = Boolean(state.booking_accepting_new_entries)
+  // F4 : la porte du CTA est le MODE — une organisation sans capacité
+  // commerciale reçoit une demande (`pending`), le tunnel annonce laquelle.
+  const bookingOpen = Boolean(state.mode_allows_booking)
   const queueOpen = Boolean(state.queue_accepting_new_entries)
   // Une échéance passée n'est plus une échéance — le serveur balaie les
   // overrides expirés, mais un poll de 30 s peut voir la fenêtre morte.

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ShmUE3z94zBC1aAPUagWyLbsZHWtZjZCVkYeVJoTuL6lfVGG0g5kJZ43gfi9zgu
+\restrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -2817,6 +2817,10 @@ CREATE FUNCTION public.book_public_appointment(p_organization_slug text, p_locat
     SET search_path TO ''
     AS $$
 declare
+  -- MASTER_SPEC §6 : réservations futures simultanées, 5 par défaut. Réglable
+  -- depuis /platform le jour où la table de réglages plateforme existera —
+  -- elle n'existe pas encore, la constante vit ici et nulle part ailleurs.
+  c_max_future_bookings constant integer := 5;
   v_organization_id uuid;
   v_timezone text;
   v_duration_minutes integer;
@@ -2830,31 +2834,37 @@ declare
   v_status public.appointment_status;
 begin
   if btrim(coalesce(p_customer_name, '')) = '' then
-    raise exception 'customer_name is required';
+    raise exception 'customer_name is required'
+      using detail = 'fadeup_booking_refusal=missing_name';
   end if;
 
   if coalesce(btrim(p_customer_phone), '') = '' and coalesce(btrim(p_customer_email), '') = '' then
-    raise exception 'at least one of customer_phone or customer_email is required';
+    raise exception 'at least one of customer_phone or customer_email is required'
+      using detail = 'fadeup_booking_refusal=missing_contact';
   end if;
 
   if p_starts_at is null then
-    raise exception 'starts_at is required';
+    raise exception 'starts_at is required'
+      using detail = 'fadeup_booking_refusal=missing_time';
   end if;
 
   if p_starts_at <= now() then
-    raise exception 'starts_at must be in the future';
+    raise exception 'starts_at must be in the future'
+      using detail = 'fadeup_booking_refusal=past_time';
   end if;
 
   select o.id into v_organization_id from public.organizations o where o.slug = p_organization_slug;
   if not found then
-    raise exception 'unknown organization';
+    raise exception 'unknown organization'
+      using detail = 'fadeup_booking_refusal=unknown_organization';
   end if;
 
   select l.timezone into v_timezone
     from public.locations l
     where l.id = p_location_id and l.organization_id = v_organization_id and l.is_active;
   if not found then
-    raise exception 'location is not available for booking';
+    raise exception 'location is not available for booking'
+      using detail = 'fadeup_booking_refusal=location_unavailable';
   end if;
 
   select s.duration_minutes, s.buffer_before_minutes, s.buffer_after_minutes
@@ -2863,7 +2873,8 @@ begin
     where s.id = p_service_id and s.organization_id = v_organization_id and s.is_active
       and exists (select 1 from public.service_locations sl where sl.service_id = s.id and sl.location_id = p_location_id);
   if not found then
-    raise exception 'service is not available for booking at this location';
+    raise exception 'service is not available for booking at this location'
+      using detail = 'fadeup_booking_refusal=service_unavailable';
   end if;
 
   if not exists (
@@ -2878,7 +2889,8 @@ begin
       and sp.is_public
       and sp.location_id = p_location_id
   ) then
-    raise exception 'barber is not available for this service at this location';
+    raise exception 'barber is not available for this service at this location'
+      using detail = 'fadeup_booking_refusal=barber_unavailable';
   end if;
 
   v_ends_at := p_starts_at + make_interval(mins => v_duration_minutes);
@@ -2887,7 +2899,8 @@ begin
   -- Cette ligne vaut pour les DEUX branches : une demande en attente sur un
   -- horaire hors ouverture n'est pas une demande, c'est une fausse promesse.
   if not private.slot_is_within_hours(p_barber_id, p_location_id, p_starts_at, v_ends_at, v_timezone) then
-    raise exception 'requested time is outside available hours';
+    raise exception 'requested time is outside available hours'
+      using detail = 'fadeup_booking_refusal=outside_hours';
   end if;
 
   -- Signed-in booker: resolve (or create) their own CRM row for this shop so
@@ -2895,6 +2908,21 @@ begin
   -- v_customer_id stays null and a claim token is issued below. (LOT 13.)
   v_user_id := (select auth.uid());
   if v_user_id is not null then
+    -- Le plafond se vérifie AVANT de matérialiser la ligne CRM : un client au
+    -- plafond ne doit laisser aucune trace d'écriture. Demandes et rendez-vous
+    -- comptent ensemble : une demande retient un créneau (contrainte
+    -- d'exclusion), elle occupe donc bien un des cinq emplacements.
+    if (
+      select count(*)
+      from public.appointments a
+      where a.booked_by_user_id = v_user_id
+        and a.status in ('pending', 'confirmed')
+        and a.starts_at > now()
+    ) >= c_max_future_bookings then
+      raise exception 'this account already has the maximum number of upcoming bookings'
+        using detail = 'fadeup_booking_refusal=too_many_future_bookings';
+    end if;
+
     v_customer_id := private.resolve_customer_for_user(
       v_organization_id, v_user_id, p_customer_name, p_customer_phone, p_customer_email
     );
@@ -3076,7 +3104,8 @@ begin
   for update;
 
   if not found then
-    raise exception 'appointment not found';
+    raise exception 'appointment not found'
+      using detail = 'fadeup_booking_refusal=appointment_not_found';
   end if;
 
   if v_appointment.status = 'cancelled' then
@@ -3084,7 +3113,8 @@ begin
   end if;
 
   if v_appointment.status not in ('pending', 'confirmed') then
-    raise exception 'this appointment can no longer be cancelled';
+    raise exception 'this appointment can no longer be cancelled'
+      using detail = 'fadeup_booking_refusal=no_longer_cancellable';
   end if;
 
   update public.appointments
@@ -5373,6 +5403,7 @@ begin
     raise exception 'new reservations are not being accepted (service mode: %)',
       coalesce(v_mode::text, 'unknown')
       using errcode = '42501',
+            detail = 'fadeup_booking_refusal=service_mode_closed',
             hint = format(
               'The effective service mode comes from %s. Existing appointments are unaffected.',
               coalesce(v_source, 'no configured establishment')
@@ -7547,6 +7578,30 @@ COMMENT ON FUNCTION public.get_public_booking_alternatives(p_latitude double pre
 Ne promet AUCUNE disponibilité et n''en vérifie aucune : elle retourne `accepts_immediate_booking`, qui dit si l''organisation détient la capacité `booking` et peut donc confirmer, ou si elle recevra une nouvelle demande. Une interface qui affiche « réservez ici » sur une ligne à false envoie le client vers une seconde attente juste après la première.
 
 Un professionnel en zone de service apparaît si sa zone couvre le point cherché, avec covers_search_point = true et sans adresse inventée.';
+
+
+--
+-- Name: get_public_booking_capability(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_booking_capability(p_organization_slug text) RETURNS TABLE(accepts_immediate_booking boolean)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  -- Même prédicat que get_public_organization (le slug seul) : le tunnel les
+  -- appelle ensemble et les deux doivent voir le même monde. Une organisation
+  -- inconnue rend ZÉRO ligne — ce que get_public_organization révèle déjà.
+  select private.org_has_capability(o.id, 'booking')
+  from public.organizations o
+  where o.slug = p_organization_slug;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_booking_capability(p_organization_slug text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_booking_capability(p_organization_slug text) IS 'F4 — le tunnel annonce avant le geste : confirmation immédiate ou demande. Même sémantique que get_public_booking_alternatives.accepts_immediate_booking.';
 
 
 --
@@ -11940,7 +11995,9 @@ declare
 begin
   select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
   if not found then
-    raise exception 'appointment not found' using errcode = '42704';
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
   end if;
 
   v_is_business := (select private.can_manage_appointments(v_appointment.organization_id));
@@ -11951,19 +12008,27 @@ begin
   ), false);
 
   if not (v_is_business or v_is_customer) then
-    raise exception 'not authorized to reschedule this booking' using errcode = '42501';
+    raise exception 'not authorized to reschedule this booking'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
   end if;
 
   if v_appointment.status not in ('pending', 'confirmed') then
-    raise exception 'this appointment can no longer be rescheduled' using errcode = '22023';
+    raise exception 'this appointment can no longer be rescheduled'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=no_longer_reschedulable';
   end if;
 
   if p_starts_at is null then
-    raise exception 'the new time is required' using errcode = '22023';
+    raise exception 'the new time is required'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=missing_time';
   end if;
 
   if p_starts_at <= now() then
-    raise exception 'the new time must be in the future' using errcode = '22023';
+    raise exception 'the new time must be in the future'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=past_time';
   end if;
 
   v_barber_id := coalesce(p_barber_id, v_appointment.barber_id);
@@ -11980,7 +12045,9 @@ begin
         and b.organization_id = v_appointment.organization_id
         and b.is_bookable and sp.is_active and sp.is_public
     ) then
-      raise exception 'that professional is not available for this service' using errcode = '22023';
+      raise exception 'that professional is not available for this service'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=barber_unavailable';
     end if;
   end if;
 
@@ -11997,7 +12064,9 @@ begin
   -- time, because a customer move became a request. Nobody sees it now, so
   -- the destination has to be genuinely bookable — not merely unoccupied.
   if not private.slot_is_within_hours(v_barber_id, v_appointment.location_id, p_starts_at, v_ends_at, v_timezone) then
-    raise exception 'requested time is outside available hours' using errcode = '22023';
+    raise exception 'requested time is outside available hours'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=outside_hours';
   end if;
 
   -- The status is PRESERVED. A confirmed appointment moved to another valid
@@ -29335,5 +29404,5 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ShmUE3z94zBC1aAPUagWyLbsZHWtZjZCVkYeVJoTuL6lfVGG0g5kJZ43gfi9zgu
+\unrestrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
 

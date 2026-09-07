@@ -33,7 +33,10 @@ describe('startingPrice — le minimum réel ou rien', () => {
 
 describe('deriveRowAvailability — « disponible maintenant » = servir dans les 60 min', () => {
   const state = (booking: boolean, queue: boolean) => ({
+    // F4 : le MODE est la porte du tunnel ; la capacité ne décide que
+    // confirmed vs pending. « booking » ici, c'est donc le mode.
     booking_accepting_new_entries: booking,
+    mode_allows_booking: booking,
     queue_accepting_new_entries: queue,
     effective_service_mode: 'hybrid' as const,
     mode_expires_at: null,
