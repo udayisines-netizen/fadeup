@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rankResults } from '@/features/discovery/lib/ranking'
+import { rankResults } from '@/shared/lib/searchRanking'
 import type { ProfessionalSearchRow, ResultAvailability } from '@/shared/data/discovery'
 
 function row(locationId: string, distanceKm: number | null): ProfessionalSearchRow {

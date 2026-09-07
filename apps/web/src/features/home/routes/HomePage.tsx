@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
+  rowAvailability,
   useProfessionalSearchSlice,
   useResultCurrencies,
   useResultServiceStates,
+  type ResultAvailability,
 } from '@/shared/data/discovery'
+import { rankResults } from '@/shared/lib/searchRanking'
 import { discoveryKeys } from '@/shared/data/keys'
 import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
 import { useNow } from '@/shared/hooks/useNow'
@@ -17,6 +20,7 @@ import { DateTime } from '@/shared/ui/DateTime'
 import { Input } from '@/shared/ui/Input'
 import { Row } from '@/shared/ui/Row'
 import { SearchResultRow } from '@/shared/ui/SearchResultRow'
+import { SkeletonRow } from '@/shared/ui/Skeleton'
 import { StateBadge } from '@/shared/ui/StateBadge'
 import { IconSearch } from '@/shared/ui/icons'
 import {
@@ -89,6 +93,20 @@ export function HomePage() {
   )
   const currencies = useResultCurrencies(
     useMemo(() => discoverRows.map((row) => row.organization_id), [discoverRows]),
+  )
+  const discoverAvailability = useMemo(() => {
+    const map: Record<string, ResultAvailability> = {}
+    for (const row of discoverRows) map[row.location_id] = rowAvailability(row, serviceStates)
+    return map
+  }, [discoverRows, serviceStates])
+  /* Classé UNE FOIS les états résolus (celui qui peut servir dans l'heure
+     remonte — même module de poids que /search, revue F3 M6) ; avant, des
+     squelettes : six lignes se résolvent vite, et rien ne se rebrasse sous
+     le doigt. */
+  const discoverReady = discover.isSuccess && serviceStates.settled
+  const rankedDiscover = useMemo(
+    () => rankResults(discoverRows, discoverAvailability, 'recommended', false),
+    [discoverRows, discoverAvailability],
   )
 
   const queueHref = (slug: string, locationId: string) =>
@@ -245,7 +263,9 @@ export function HomePage() {
       )}
 
       {/* Découverte locale — de vrais établissements ; le chemin complet est
-          /search. Rien ne se rend tant qu'il n'y a rien à montrer. */}
+          /search. Rien ne se rend tant qu'il n'y a rien à montrer, et la
+          liste est classée UNE FOIS les états résolus (celui qui peut servir
+          dans l'heure remonte) — jamais rebrassée sous le doigt. */}
       {discoverRows.length > 0 && (
         <section data-testid="home-discover">
           <div className="mb-2 flex items-center justify-between">
@@ -257,15 +277,26 @@ export function HomePage() {
               {t('common.action.seeAll')}
             </Link>
           </div>
-          <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
-            {discoverRows.map((row) => (
-              <SearchResultRow
-                key={row.location_id}
-                row={row}
-                currencyByOrganization={currencies.data}
-                availability={serviceStates.byLocation[row.location_id] ?? 'loading'}
-              />
-            ))}
+          <div
+            className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]"
+            aria-busy={!discoverReady}
+          >
+            {discoverReady ? (
+              rankedDiscover.map((row) => (
+                <SearchResultRow
+                  key={row.location_id}
+                  row={row}
+                  currencyByOrganization={currencies.data}
+                  availability={discoverAvailability[row.location_id] ?? 'loading'}
+                />
+              ))
+            ) : (
+              <>
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+              </>
+            )}
           </div>
         </section>
       )}

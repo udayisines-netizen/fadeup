@@ -124,16 +124,26 @@ test.describe('F3 — /search', () => {
   })
 
   test('un texte de style sans homonyme passe par les services réels, dans une section déclarée', async ({ page }) => {
-    // « barbe " est un nom de SERVICE du jeu démo, pas un nom de salon : la
-    // liste principale est vide, le repli par service est étiqueté.
-    await page.goto('/search?q=barbe')
+    // « taper » est un nom de SERVICE réel du jeu démo et ne matche aucun nom
+    // d'organisation ni de ville : la liste principale est vide, le repli
+    // par service est étiqueté — assertion INCONDITIONNELLE.
+    await page.goto('/search?q=taper')
     await waitForResults(page)
+    await expect(page.getByTestId('result-count')).toHaveText(/^0/)
     const fallback = page.getByTestId('service-fallback')
-    const mainCount = await page.getByTestId('result-count').textContent()
-    if (mainCount?.trim().startsWith('0')) {
-      await expect(fallback).toBeVisible({ timeout: 20_000 })
-      await expect(fallback.getByTestId('result-link').first()).toBeVisible()
-    }
+    await expect(fallback).toBeVisible({ timeout: 20_000 })
+    await expect(fallback.getByTestId('result-link').first()).toBeVisible()
+  })
+
+  test('une ligne sans coordonnées ne compte pas comme « dans la zone » : le zéro se dit, la ligne s’affiche à part', async ({ page }) => {
+    // Marseille : rien dans un rayon de 10 km. side-agency (lieu sans
+    // coordonnées) est conservée par la RPC — elle ne doit NI remplir la
+    // liste principale NI empêcher l'état vide (revue F3, M3).
+    await page.goto('/search?lat=43.2965&lng=5.3698')
+    await expect(page.getByTestId('search-empty')).toBeVisible({ timeout: 20_000 })
+    const unlocated = page.getByTestId('unlocated-results')
+    await expect(unlocated).toBeVisible()
+    await expect(unlocated.locator('[data-org="side-agency"]')).toHaveCount(1)
   })
 
   test('un professionnel mobile n’affiche aucune adresse — la zone se dit', async ({ page }) => {
@@ -149,14 +159,19 @@ test.describe('F3 — /search', () => {
   test('un résultat non revendiqué porte son badge neutre ; un établissement géré n’en porte pas', async ({ page }) => {
     await page.goto('/search')
     await waitForResults(page)
-    // demo-* : non gérés — badge neutre présent (contrat is_managed F3).
-    const unmanagedRow = page.locator('[data-org="demo-maison-kais"]')
+    // demo-barber-corner : ni membre ni identité revendiquée — badge neutre
+    // présent (contrat is_managed v2, F3).
+    const unmanagedRow = page.locator('[data-org="demo-barber-corner"]')
     await expect(unmanagedRow).toHaveCount(1)
     await expect(unmanagedRow.locator('[data-state="unclaimed"]')).toBeVisible()
-    // side-agency : géré — AUCUN badge de revendication.
-    const managedRow = page.locator('[data-org="side-agency"]')
-    await expect(managedRow).toHaveCount(1)
-    await expect(managedRow.locator('[data-state="unclaimed"]')).toHaveCount(0)
+    // side-agency (membre) et demo-maison-kais (identité revendiquée
+    // rattachée — la cohérence avec /pro/demo.kais.bellamine « Revendiqué »,
+    // revue F3 B1) : AUCUN badge de revendication.
+    for (const slug of ['side-agency', 'demo-maison-kais']) {
+      const managedRow = page.locator(`[data-org="${slug}"]`)
+      await expect(managedRow).toHaveCount(1)
+      await expect(managedRow.locator('[data-state="unclaimed"]')).toHaveCount(0)
+    }
   })
 
   test('la géolocalisation n’est demandée qu’au geste qui en dépend, et la position active la distance', async ({ page, context }) => {

@@ -1,5 +1,5 @@
 import type { ProfessionalSearchArgs } from '@/shared/data/discovery'
-import { SORT_OPTIONS, type SortOption } from '@/features/discovery/lib/ranking'
+import { SORT_OPTIONS, type SortOption } from '@/shared/lib/searchRanking'
 
 /**
  * F3 — L'ÉTAT DE LA RECHERCHE VIT DANS L'URL (MASTER_SPEC §3) : une recherche

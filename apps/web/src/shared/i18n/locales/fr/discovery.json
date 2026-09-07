@@ -5,7 +5,7 @@
   },
   "search": {
     "label": "Rechercher",
-    "placeholder": "Nom, style (fade, taper…), service",
+    "placeholder": "Nom, style, service…",
     "cityLabel": "Ville ou quartier",
     "cityPlaceholder": "Ville ou quartier"
   },
@@ -21,7 +21,10 @@
   },
   "map": {
     "label": "Carte des résultats",
-    "openProfile": "Voir le profil"
+    "openProfile": "Voir le profil",
+    "empty": "Aucun résultat à afficher sur la carte.",
+    "unlocated_one": "{{count}} résultat sans position connue ne figure pas sur la carte.",
+    "unlocated_other": "{{count}} résultats sans position connue ne figurent pas sur la carte."
   },
   "filters": {
     "title": "Filtres",
@@ -38,7 +41,8 @@
     "sort": "Trier par",
     "reset": "Réinitialiser les filtres",
     "showResults_one": "Afficher {{count}} résultat",
-    "showResults_other": "Afficher {{count}} résultats"
+    "showResults_other": "Afficher {{count}} résultats",
+    "showResultsPlain": "Afficher les résultats"
   },
   "sort": {
     "recommended": "Recommandé",
@@ -48,14 +52,19 @@
   "results": {
     "count_one": "{{count}} résultat",
     "count_other": "{{count}} résultats",
-    "loadMore": "Afficher plus de résultats"
+    "loadMore": "Afficher plus de résultats",
+    "countAvailable_one": "{{count}} peut servir dans l’heure",
+    "countAvailable_other": "{{count}} peuvent servir dans l’heure",
+    "countAvailablePartial_one": "{{count}} peut servir dans l’heure, parmi les {{loaded}} premiers résultats",
+    "countAvailablePartial_other": "{{count}} peuvent servir dans l’heure, parmi les {{loaded}} premiers résultats"
   },
   "row": {
     "supplyIndependent": "Indépendant",
     "supplyBarbershop": "Barbershop",
     "serviceArea": "Se déplace — zone autour de {{city}}",
     "queueCount_one": "{{count}} personne en file",
-    "queueCount_other": "{{count}} personnes en file"
+    "queueCount_other": "{{count}} personnes en file",
+    "noPrice": "Prix non renseigné"
   },
   "empty": {
     "title": "Aucun résultat dans cette zone",
@@ -65,12 +74,17 @@
     "descriptionAvailability": "Personne ne peut servir dans l'heure pour le moment dans cette zone.",
     "clearQuery": "Effacer la recherche",
     "clearAvailability": "Retirer « disponible maintenant »",
-    "searchEverywhere": "Chercher au-delà de cette ville"
+    "searchEverywhere": "Chercher au-delà de cette ville",
+    "descriptionAvailabilityPartial": "Personne ne peut servir dans l’heure parmi les {{loaded}} premiers résultats. Chargez la suite, ou retirez le filtre."
   },
   "fallback": {
     "title": "Professionnels proposant « {{query}} » comme service"
   },
   "widen": {
     "title": "À moins de {{km}} km"
+  },
+  "unlocated": {
+    "title": "À distance inconnue",
+    "note": "Ces établissements existent mais n’ont pas de position exploitable : leur distance est inconnue — ils ne comptent pas comme « dans la zone »."
   }
 }

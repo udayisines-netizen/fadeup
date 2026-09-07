@@ -75,8 +75,26 @@ export default function SearchMapView({ rows, searchPoint }: SearchMapViewProps)
 
     const accent =
       getComputedStyle(document.body).getPropertyValue('--fu-accent').trim() || undefined
+    const ink = getComputedStyle(document.body).getPropertyValue('--fu-text-primary').trim()
     const bounds = new maplibregl.LngLatBounds()
     let hasPoint = false
+
+    // Le point de recherche du client : un point discret, distinct des
+    // résultats — il situe « moi » sur la carte, il ne prétend rien d'autre.
+    if (searchPoint) {
+      const dot = document.createElement('span')
+      dot.style.display = 'block'
+      dot.style.width = '14px'
+      dot.style.height = '14px'
+      dot.style.borderRadius = '9999px'
+      dot.style.background = ink || 'currentColor'
+      dot.style.border = '3px solid var(--fu-canvas)'
+      dot.style.boxShadow = '0 0 0 1px var(--fu-border-strong)'
+      const selfMarker = new maplibregl.Marker({ element: dot })
+        .setLngLat([searchPoint.longitude, searchPoint.latitude])
+      selfMarker.addTo(map)
+      markersRef.current.push(selfMarker)
+    }
 
     rows.forEach((row) => {
       const point = markerPoint(row)
@@ -110,13 +128,30 @@ export default function SearchMapView({ rows, searchPoint }: SearchMapViewProps)
     if (hasPoint || searchPoint) map.fitBounds(bounds, { padding: 48, maxZoom: 14, animate: false })
   }, [rows, searchPoint, navigate, t])
 
+  const locatedCount = rows.filter((row) => markerPoint(row) !== null).length
+  const unlocatedCount = rows.length - locatedCount
+
   return (
-    <div
-      ref={containerRef}
-      role="region"
-      aria-label={t('discovery.map.label')}
-      data-testid="search-map"
-      className="h-[60dvh] w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--fu-border)]"
-    />
+    <div className="flex flex-col gap-2">
+      {/* La carte ne se tait jamais : zéro marqueur se dit, et une ligne
+          sans coordonnées est déclarée plutôt qu'escamotée. */}
+      {locatedCount === 0 && (
+        <p role="status" className="text-fu-sm text-[var(--fu-text-secondary)]" data-testid="map-empty-note">
+          {t('discovery.map.empty')}
+        </p>
+      )}
+      {unlocatedCount > 0 && (
+        <p role="status" className="text-fu-sm text-[var(--fu-text-secondary)]" data-testid="map-unlocated-note">
+          {t('discovery.map.unlocated', { count: unlocatedCount })}
+        </p>
+      )}
+      <div
+        ref={containerRef}
+        role="region"
+        aria-label={t('discovery.map.label')}
+        data-testid="search-map"
+        className="h-[60dvh] w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--fu-border)]"
+      />
+    </div>
   )
 }

@@ -13578,13 +13578,24 @@ CREATE FUNCTION public.search_public_professionals(p_country text DEFAULT NULL::
         coalesce(l.longitude, l.service_area_center_longitude)
       ) as distance_km
       ,
-      -- F3. "Managed on FadeUp" for an establishment row: someone with a real
-      -- FadeUp account is a member of the organization. The scraped supply
-      -- published by the acquisition pipeline has zero memberships, which is
-      -- exactly what the neutral ClaimBadge on a search result must say
-      -- (MASTER_SPEC §5/§9 — unclaimed is the common launch case).
-      exists (
-        select 1 from public.memberships m where m.organization_id = o.id
+      -- F3 v2 (après revue indépendante). "Managed on FadeUp" pour un
+      -- établissement : un MEMBRE réel (memberships — tout chemin produit de
+      -- création d'organisation en pose un), OU une identité professionnelle
+      -- REVENDIQUÉE rattachée (la frontière B1 exacte — celle que /pro
+      -- affiche « Revendiqué »). Sans ce second bras, la recherche disait
+      -- « Pas encore géré sur FadeUp » sous un établissement dont le barber
+      -- revendiqué affichait « Revendiqué » sur son propre profil —
+      -- contradiction mesurée par la revue F3 sur demo-maison-kais.
+      (
+        exists (
+          select 1 from public.memberships m where m.organization_id = o.id
+        )
+        or exists (
+          select 1
+          from public.barbers b2
+          join public.professionals p2 on p2.id = b2.professional_id
+          where b2.organization_id = o.id and p2.claim_state = 'claimed'
+        )
       ) as is_managed
     from public.organizations o
     join public.locations l on l.organization_id = o.id

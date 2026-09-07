@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { DEFAULT_RADIUS_KM, type SearchState } from '@/features/discovery/lib/searchParams'
-import { SORT_OPTIONS } from '@/features/discovery/lib/ranking'
+import { SORT_OPTIONS } from '@/shared/lib/searchRanking'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
@@ -94,10 +94,14 @@ export function FiltersPanel({ state, onChange, onReset }: FiltersPanelProps) {
         label={t('discovery.filters.sort')}
         value={state.sort}
         onValueChange={(sort) => onChange({ sort: sort as SearchState['sort'] })}
-        options={SORT_OPTIONS.map((option) => ({
-          value: option,
-          label: t(`discovery.sort.${option}`),
-        }))}
+        options={SORT_OPTIONS
+          /* « Le plus proche » sans point de recherche est un contrôle sans
+             effet (aucune distance n'existe) : il n'est pas proposé. */
+          .filter((option) => option !== 'nearest' || hasPoint)
+          .map((option) => ({
+            value: option,
+            label: t(`discovery.sort.${option}`),
+          }))}
       />
 
       <Button variant="tertiary" onClick={onReset} data-testid="filters-reset">

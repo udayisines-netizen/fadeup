@@ -1,12 +1,14 @@
-import { Suspense, lazy, useMemo, useState } from 'react'
+import { Suspense, lazy, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
+  rowAvailability,
   useProfessionalSearch,
   useProfessionalSearchSlice,
   useResultCurrencies,
   useResultServiceStates,
   type ProfessionalSearchRow,
+  type ResultAvailability,
 } from '@/shared/data/discovery'
 import { discoveryKeys } from '@/shared/data/keys'
 import { errorMessageKey, toAppError } from '@/shared/data/errors'
@@ -22,7 +24,7 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { Tabs } from '@/shared/ui/Tabs'
 import { IconFilter, IconLocation, IconSearch } from '@/shared/ui/icons'
 import { FiltersPanel } from '@/features/discovery/components/FiltersPanel'
-import { rankResults } from '@/features/discovery/lib/ranking'
+import { rankResults } from '@/shared/lib/searchRanking'
 import {
   DEFAULT_SEARCH_STATE,
   WIDENING_RADII_KM,
@@ -43,12 +45,18 @@ import { useGeolocation } from '@/features/discovery/lib/useGeolocation'
  *   le refus laisse la recherche par ville pleinement utilisable.
  * · Zéro résultat SE DIT, puis s'élargit progressivement (25 puis 50 km,
  *   sections étiquetées avec les distances réelles) — jamais un résultat
- *   hors sujet glissé dans une page vide.
+ *   hors sujet glissé dans une page vide. Une ligne SANS coordonnées ne
+ *   compte pas comme « dans la zone » : elle s'affiche à part, étiquetée
+ *   « distance inconnue » (revue F3, M3).
  * · Recherche par style : le texte libre passe par p_query (noms, villes) ;
  *   s'il ne rend rien, le MÊME texte est retenté comme nom de SERVICE
  *   (p_service_query — « fade », « taper » vivent dans les noms de services
  *   réels). Aucune taxonomie de styles n'existe en base : dit au rapport.
- * · Le classement vient de lib/ranking.ts — les poids n'habitent pas ici.
+ * · Le classement vient de lib/ranking.ts, appliqué UNE FOIS les états de
+ *   service résolus (revue F3, M1) — jamais un rebrassage sous le doigt.
+ * · Le filtre « disponible maintenant » est un filtre CLIENT sur les pages
+ *   chargées : tout ce qu'il affirme est borné aux résultats chargés, et
+ *   « charger plus » reste accessible (revue F3, M2).
  */
 
 const SearchMapView = lazy(() => import('@/features/discovery/components/SearchMapView'))
@@ -74,7 +82,18 @@ export function SearchPage() {
   const args = useMemo(() => buildSearchArgs(state), [state])
 
   const search = useProfessionalSearch(args)
-  const rows = useMemo(() => flattenPages(search.data?.pages), [search.data])
+  const allRows = useMemo(() => flattenPages(search.data?.pages), [search.data])
+  /* Une recherche PAR RAYON ne peut rien affirmer d'une ligne sans
+     coordonnées (la RPC la conserve, « distance inconnue est gardée ») :
+     elle sort de la zone et s'affiche à part, étiquetée. */
+  const rows = useMemo(
+    () => (hasPoint ? allRows.filter((row) => row.distance_km !== null) : allRows),
+    [allRows, hasPoint],
+  )
+  const unlocatedRows = useMemo(
+    () => (hasPoint ? allRows.filter((row) => row.distance_km === null) : []),
+    [allRows, hasPoint],
+  )
   const totalCount = search.data?.pages[0]?.[0]?.total_count ?? 0
   const isZero = search.isSuccess && rows.length === 0
 
@@ -103,17 +122,19 @@ export function SearchPage() {
     widen50Args,
     { enabled: isZero && hasPoint && widen25.isSuccess && (widen25.data ?? []).length === 0 },
   )
+  const pickWidened = (candidate: ProfessionalSearchRow[] | undefined) =>
+    (candidate ?? []).filter((row) => row.distance_km !== null)
   const widened =
-    (widen25.data ?? []).length > 0
-      ? { radiusKm: WIDENING_RADII_KM[0], rows: widen25.data ?? [] }
-      : (widen50.data ?? []).length > 0
-        ? { radiusKm: WIDENING_RADII_KM[1], rows: widen50.data ?? [] }
+    pickWidened(widen25.data).length > 0
+      ? { radiusKm: WIDENING_RADII_KM[0], rows: pickWidened(widen25.data) }
+      : pickWidened(widen50.data).length > 0
+        ? { radiusKm: WIDENING_RADII_KM[1], rows: pickWidened(widen50.data) }
         : null
 
   /* --- États de service et devises pour TOUT ce qui s'affiche. ----------- */
   const displayedRows = useMemo(
-    () => [...rows, ...fallbackRows, ...(widened?.rows ?? [])],
-    [rows, fallbackRows, widened],
+    () => [...rows, ...unlocatedRows, ...fallbackRows, ...(widened?.rows ?? [])],
+    [rows, unlocatedRows, fallbackRows, widened],
   )
   const serviceStates = useResultServiceStates(
     useMemo(
@@ -125,16 +146,42 @@ export function SearchPage() {
     useMemo(() => displayedRows.map((row) => row.organization_id), [displayedRows]),
   )
 
-  const ranked = useMemo(
-    () => rankResults(rows, serviceStates.byLocation, state.sort, hasPoint),
-    [rows, serviceStates.byLocation, state.sort, hasPoint],
+  const availabilityByLocation = useMemo(() => {
+    const map: Record<string, ResultAvailability> = {}
+    for (const row of displayedRows) map[row.location_id] = rowAvailability(row, serviceStates)
+    return map
+  }, [displayedRows, serviceStates])
+
+  /* Classement client (sans point uniquement) appliqué quand les états sont
+     RÉSOLUS ; entre-temps, le dernier ordre stable — jamais un rebrassage
+     ligne à ligne sous le doigt (revue F3, M1). */
+  const lastRankedIds = useRef<string[] | null>(null)
+  const ranked = useMemo(() => {
+    if (serviceStates.settled) {
+      const result = rankResults(rows, availabilityByLocation, state.sort, hasPoint)
+      lastRankedIds.current = result.map((row) => row.location_id)
+      return result
+    }
+    const previous = lastRankedIds.current
+    if (!previous) return rows
+    const byId = new Map(rows.map((row) => [row.location_id, row]))
+    const kept = previous.map((id) => byId.get(id)).filter((row): row is ProfessionalSearchRow => Boolean(row))
+    const keptIds = new Set(previous)
+    return [...kept, ...rows.filter((row) => !keptIds.has(row.location_id))]
+  }, [rows, availabilityByLocation, state.sort, hasPoint, serviceStates.settled])
+
+  const visibleRows = useMemo(
+    () =>
+      state.availableNow
+        ? ranked.filter((row) => availabilityByLocation[row.location_id] === 'available-now')
+        : ranked,
+    [ranked, availabilityByLocation, state.availableNow],
   )
-  // « Disponible maintenant » filtre sur l'état RÉEL — tant que les états de
-  // la page ne sont pas résolus, on montre l'attente, pas une liste affirmée.
-  const visibleRows = state.availableNow
-    ? ranked.filter((row) => serviceStates.byLocation[row.location_id] === 'available-now')
-    : ranked
-  const availabilityFilterPending = state.availableNow && !serviceStates.settled
+  /* Le filtre de disponibilité ne peut ni affirmer un vide ni afficher une
+     liste sûre tant que les états ne sont pas résolus — mais une liste déjà
+     affichée n'est jamais remplacée par des squelettes (revue F3, M2.4). */
+  const availabilityResolving = state.availableNow && !serviceStates.settled
+  const showSkeletons = search.isPending || (availabilityResolving && visibleRows.length === 0)
 
   const onNearMe = async () => {
     if (hasPoint) {
@@ -150,7 +197,7 @@ export function SearchPage() {
       key={`${row.location_id}`}
       row={row}
       currencyByOrganization={currencies.data}
-      availability={serviceStates.byLocation[row.location_id] ?? 'loading'}
+      availability={availabilityByLocation[row.location_id] ?? 'loading'}
     />
   )
 
@@ -232,21 +279,36 @@ export function SearchPage() {
     </div>
   )
 
-  const emptyDescription = hasPoint
-    ? t('discovery.empty.descriptionRadius', { km: state.radiusKm })
-    : state.city
-      ? t('discovery.empty.descriptionCity', { city: state.city })
-      : t('discovery.empty.description')
+  const emptyDescription = state.availableNow
+    ? search.hasNextPage
+      ? t('discovery.empty.descriptionAvailabilityPartial', { loaded: rows.length })
+      : t('discovery.empty.descriptionAvailability')
+    : hasPoint
+      ? t('discovery.empty.descriptionRadius', { km: state.radiusKm })
+      : state.city
+        ? t('discovery.empty.descriptionCity', { city: state.city })
+        : t('discovery.empty.description')
+
+  const countLine = state.availableNow
+    ? serviceStates.settled
+      ? search.hasNextPage
+        ? t('discovery.results.countAvailablePartial', { count: visibleRows.length, loaded: rows.length })
+        : t('discovery.results.countAvailable', { count: visibleRows.length })
+      : null
+    : // Par rayon, le total serveur compte aussi les lignes sans coordonnées
+      // (affichées à part) : quand tout est chargé, le compte de la zone est
+      // le compte RÉEL de la liste.
+      t('discovery.results.count', { count: hasPoint && !search.hasNextPage ? rows.length : totalCount })
 
   const listContent = (
-    <div aria-busy={search.isPending || availabilityFilterPending}>
-      {!search.isPending && !search.isError && (
+    <div aria-busy={showSkeletons}>
+      {!search.isPending && !search.isError && countLine !== null && (
         <p role="status" className="mb-2 text-fu-sm text-[var(--fu-text-secondary)]" data-testid="result-count">
-          {t('discovery.results.count', { count: state.availableNow && serviceStates.settled ? visibleRows.length : totalCount })}
+          {countLine}
         </p>
       )}
       <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
-        {search.isPending || availabilityFilterPending ? (
+        {showSkeletons ? (
           <>
             <SkeletonRow />
             <SkeletonRow />
@@ -265,41 +327,43 @@ export function SearchPage() {
           />
         ) : visibleRows.length === 0 ? (
           <div data-testid="search-empty">
-          <EmptyState
-            title={t('discovery.empty.title')}
-            description={state.availableNow ? t('discovery.empty.descriptionAvailability') : emptyDescription}
-            action={
-              <div className="flex flex-wrap justify-center gap-2">
-                {state.query && (
-                  <Button variant="secondary" onClick={() => update({ query: '' })}>
-                    {t('discovery.empty.clearQuery')}
-                  </Button>
-                )}
-                {state.availableNow && (
-                  <Button variant="secondary" onClick={() => update({ availableNow: false })}>
-                    {t('discovery.empty.clearAvailability')}
-                  </Button>
-                )}
-                {state.city && (
-                  <Button variant="secondary" onClick={() => update({ city: '' })} data-testid="search-everywhere">
-                    {t('discovery.empty.searchEverywhere')}
-                  </Button>
-                )}
-                {!state.query && !state.city && !state.availableNow && (
-                  <Button variant="secondary" onClick={() => update(DEFAULT_SEARCH_STATE)}>
-                    {t('discovery.filters.reset')}
-                  </Button>
-                )}
-              </div>
-            }
-          />
+            <EmptyState
+              title={t('discovery.empty.title')}
+              description={emptyDescription}
+              action={
+                <div className="flex flex-wrap justify-center gap-2">
+                  {state.query && (
+                    <Button variant="secondary" onClick={() => update({ query: '' })}>
+                      {t('discovery.empty.clearQuery')}
+                    </Button>
+                  )}
+                  {state.availableNow && (
+                    <Button variant="secondary" onClick={() => update({ availableNow: false })}>
+                      {t('discovery.empty.clearAvailability')}
+                    </Button>
+                  )}
+                  {state.city && (
+                    <Button variant="secondary" onClick={() => update({ city: '' })} data-testid="search-everywhere">
+                      {t('discovery.empty.searchEverywhere')}
+                    </Button>
+                  )}
+                  {!state.query && !state.city && !state.availableNow && (
+                    <Button variant="secondary" onClick={() => update(DEFAULT_SEARCH_STATE)}>
+                      {t('discovery.filters.reset')}
+                    </Button>
+                  )}
+                </div>
+              }
+            />
           </div>
         ) : (
           visibleRows.map(renderRow)
         )}
       </div>
 
-      {search.hasNextPage && visibleRows.length > 0 && (
+      {/* « Charger plus » reste accessible même quand le filtre de
+          disponibilité vide la page courante (revue F3, M2.2). */}
+      {search.hasNextPage && !showSkeletons && (
         <div className="mt-4 flex justify-center">
           <Button
             variant="secondary"
@@ -332,6 +396,19 @@ export function SearchPage() {
           </h2>
           <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
             {widened.rows.map(renderRow)}
+          </div>
+        </section>
+      )}
+
+      {/* Lignes sans coordonnées lors d'une recherche par rayon : réelles,
+          mais leur distance est INCONNUE — dites à part, jamais comptées
+          comme « dans la zone » (revue F3, M3). */}
+      {!search.isPending && unlocatedRows.length > 0 && (
+        <section className="mt-6" data-testid="unlocated-results">
+          <h2 className="mb-2 text-fu-base font-semibold">{t('discovery.unlocated.title')}</h2>
+          <p className="mb-2 text-fu-sm text-[var(--fu-text-secondary)]">{t('discovery.unlocated.note')}</p>
+          <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
+            {unlocatedRows.map(renderRow)}
           </div>
         </section>
       )}
@@ -394,7 +471,9 @@ export function SearchPage() {
             onReset={() => update({ ...DEFAULT_SEARCH_STATE, view: state.view })}
           />
           <Button variant="primary" onClick={() => setFiltersOpen(false)} data-testid="filters-apply">
-            {t('discovery.filters.showResults', { count: state.availableNow && serviceStates.settled ? visibleRows.length : totalCount })}
+            {state.availableNow
+              ? t('discovery.filters.showResultsPlain')
+              : t('discovery.filters.showResults', { count: totalCount })}
           </Button>
         </div>
       </Sheet>

@@ -6,9 +6,9 @@ import {
   type ProfessionalSearchRow,
   type ResultAvailability,
 } from '@/shared/data/discovery'
+import { Avatar } from '@/shared/ui/Avatar'
 import { Badge } from '@/shared/ui/Badge'
 import { ClaimBadge } from '@/shared/ui/ClaimBadge'
-import { MediaFrame } from '@/shared/ui/MediaFrame'
 import { Money } from '@/shared/ui/Money'
 import { Row } from '@/shared/ui/Row'
 import { StateBadge } from '@/shared/ui/StateBadge'
@@ -57,7 +57,12 @@ export function SearchResultRow({ row, currencyByOrganization, availability, cla
     <Row
       clampTitle
       className={cn('relative', className)}
-      leading={<MediaFrame alt="" ratio="square" compact className="w-14 shrink-0" />}
+      leading={
+        /* Aucun contrat d'imagerie d'établissement n'existe dans la
+           recherche : l'avatar à initiales déterministes (P1 §13) — jamais
+           une colonne de cadres « pas de photo » répétée vingt fois. */
+        <Avatar name={row.organization_name} size="lg" />
+      }
       title={
         <Link
           to={`/shop/${encodeURIComponent(row.organization_slug)}`}
@@ -95,8 +100,12 @@ export function SearchResultRow({ row, currencyByOrganization, availability, cla
           <Money cents={price.cents} currency={price.currency} from className="text-fu-sm" />
         ) : (
           /* Pas de minimum réel publié (ou devise non résolue) : « — », jamais
-             une estimation. */
-          <span aria-hidden="true" className="text-fu-sm text-[var(--fu-text-secondary)]" data-testid="result-no-price">
+             une estimation — et un lecteur d'écran entend l'absence. */
+          <span
+            aria-label={t('discovery.row.noPrice')}
+            className="text-fu-sm text-[var(--fu-text-secondary)]"
+            data-testid="result-no-price"
+          >
             {t('states.metric.noData')}
           </span>
         )}

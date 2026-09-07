@@ -106,25 +106,45 @@ export function useResultCurrencies(organizationIds: readonly string[]) {
 /**
  * « Disponible maintenant » = l'entité peut réellement servir dans les 60
  * prochaines minutes, par créneau ou par file ACCESSIBLE (MASTER_SPEC §8).
- * Être ouvert ne suffit pas. La seule preuve publique dont un écran de liste
- * dispose est `get_public_service_state` : une file qui accepte = on peut s'y
- * mettre maintenant. Une réservation qui accepte ne prouve PAS un créneau
- * dans l'heure (aucune lecture groupée de créneaux n'existe) : elle se dit
- * « réservable », jamais « disponible maintenant ».
+ * Être ouvert ne suffit pas — ET une file qui accepte ne suffit pas non
+ * plus : un établissement FERMÉ (horaires) ne sert pas dans l'heure, quel
+ * que soit l'état de son drapeau de file (revue F3, B2 — la file de
+ * demo-maison-kais acceptait pendant que ses horaires disaient fermé).
+ * L'affirmation exige donc les DEUX preuves : `is_open_now === true`
+ * (horaires du lieu, calculées serveur) et la file accessible. Une
+ * réservation qui accepte ne prouve pas un créneau dans l'heure (aucune
+ * lecture groupée de créneaux n'existe) : elle se dit « réservable »,
+ * jamais « disponible maintenant ».
  */
 export type ResultAvailability = 'loading' | 'unknown' | 'available-now' | 'bookable' | 'closed'
 
-export function toResultAvailability(cta: ProfileCtaState): ResultAvailability {
+export function deriveRowAvailability(
+  isOpenNow: boolean | null | undefined,
+  cta: ProfileCtaState,
+): ResultAvailability {
   if (cta.kind === 'loading') return 'loading'
   if (cta.kind === 'unknown') return 'unknown'
-  if (cta.queueOpen) return 'available-now'
+  if (cta.queueOpen && isOpenNow === true) return 'available-now'
   if (cta.kind === 'bookable') return 'bookable'
+  // File acceptante mais lieu fermé (ou horaires inconnues) : rien n'est
+  // affirmé sur la rangée — le badge d'horaires dit déjà « fermé », le
+  // profil porte l'état complet.
   return 'closed'
 }
 
+/** La disponibilité d'une rangée : ses horaires serveur + son état de service. */
+export function rowAvailability(
+  row: Pick<ProfessionalSearchRow, 'location_id' | 'is_open_now'>,
+  states: ResultServiceStates,
+): ResultAvailability {
+  const cta = states.byLocation[row.location_id]
+  if (!cta) return 'loading'
+  return deriveRowAvailability(row.is_open_now, cta)
+}
+
 export interface ResultServiceStates {
-  /** location_id -> disponibilité dérivée de l'état de service réel. */
-  byLocation: Record<string, ResultAvailability>
+  /** location_id -> l'état de service dérivé (le CTA-mappage F2 partagé). */
+  byLocation: Record<string, ProfileCtaState>
   /** Toutes les réponses de la page sont arrivées (succès ou échec dit). */
   settled: boolean
 }
@@ -156,9 +176,7 @@ export function useResultServiceStates(
       byLocation: Object.fromEntries(
         results.map((result, index) => [
           unique[index]?.locationId ?? '',
-          toResultAvailability(
-            deriveProfileCta(result.data, { isError: result.isError, isLoading: result.isPending }),
-          ),
+          deriveProfileCta(result.data, { isError: result.isError, isLoading: result.isPending }),
         ]),
       ),
       settled: results.every((result) => !result.isPending),

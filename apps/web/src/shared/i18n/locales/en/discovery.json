@@ -5,7 +5,7 @@
   },
   "search": {
     "label": "Search",
-    "placeholder": "Name, style (fade, taper…), service",
+    "placeholder": "Name, style, service…",
     "cityLabel": "City or neighbourhood",
     "cityPlaceholder": "City or neighbourhood"
   },
@@ -21,7 +21,10 @@
   },
   "map": {
     "label": "Results map",
-    "openProfile": "View profile"
+    "openProfile": "View profile",
+    "empty": "No results to show on the map.",
+    "unlocated_one": "{{count}} result with no known position is not on the map.",
+    "unlocated_other": "{{count}} results with no known position are not on the map."
   },
   "filters": {
     "title": "Filters",
@@ -38,7 +41,8 @@
     "sort": "Sort by",
     "reset": "Reset filters",
     "showResults_one": "Show {{count}} result",
-    "showResults_other": "Show {{count}} results"
+    "showResults_other": "Show {{count}} results",
+    "showResultsPlain": "Show results"
   },
   "sort": {
     "recommended": "Recommended",
@@ -48,14 +52,19 @@
   "results": {
     "count_one": "{{count}} result",
     "count_other": "{{count}} results",
-    "loadMore": "Show more results"
+    "loadMore": "Show more results",
+    "countAvailable_one": "{{count}} can serve within the hour",
+    "countAvailable_other": "{{count}} can serve within the hour",
+    "countAvailablePartial_one": "{{count}} can serve within the hour, among the first {{loaded}} results",
+    "countAvailablePartial_other": "{{count}} can serve within the hour, among the first {{loaded}} results"
   },
   "row": {
     "supplyIndependent": "Independent",
     "supplyBarbershop": "Barbershop",
     "serviceArea": "Mobile — serves the {{city}} area",
     "queueCount_one": "{{count}} person in line",
-    "queueCount_other": "{{count}} people in line"
+    "queueCount_other": "{{count}} people in line",
+    "noPrice": "No price listed"
   },
   "empty": {
     "title": "No results in this area",
@@ -65,12 +74,17 @@
     "descriptionAvailability": "No one can serve within the hour right now in this area.",
     "clearQuery": "Clear search",
     "clearAvailability": "Remove “available now”",
-    "searchEverywhere": "Search beyond this city"
+    "searchEverywhere": "Search beyond this city",
+    "descriptionAvailabilityPartial": "No one can serve within the hour among the first {{loaded}} results. Load more, or remove the filter."
   },
   "fallback": {
     "title": "Professionals offering “{{query}}” as a service"
   },
   "widen": {
     "title": "Within {{km}} km"
+  },
+  "unlocated": {
+    "title": "Distance unknown",
+    "note": "These establishments are real but have no usable position: their distance is unknown — they don’t count as “in this area”."
   }
 }
