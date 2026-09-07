@@ -7,7 +7,10 @@ est impossible, et comment ne plus grossir le tas.
 
 ## 1. L'état exact (production, 2026-09-07)
 
-81 organisations en base, dont **72 mortes de test** et 9 légitimes :
+Au début de X3 : 81 organisations en base, dont **72 mortes de test** et
+9 légitimes. Après les campagnes e2e de fin de lot (X3 et F2) : **85 dont
+76 mortes** — +2 `qa-f1-*` par campagne complète, le motif connu §12.2 de
+BLOCKERS. Détail au début du lot :
 
 | Origine | Compte | Marquage |
 |---|---|---|
@@ -46,6 +49,13 @@ de créer.** Préfixe obligatoire : slug `qa-<lot>-…`, e-mails
 après la campagne : un crash au milieu laisserait des lignes non marquées).
 Le préfixe `zz`/« ZZ dead » les relègue en fin de tri ; `@fadeup.test` ne
 délivre jamais.
+
+**Règle 2b — une seule campagne e2e à la fois sur `qa-f1b-shared`.** Les
+tests F1b mutent l'état de l'organisation partagée (join/leave/move,
+activation de file) : deux campagnes simultanées se cassent mutuellement —
+mesuré le 2026-09-07 quand les campagnes X3 et F2 ont tourné en même temps
+(2 échecs de chaque côté, 100 % vert en isolé). Convenu entre lots,
+consigné des deux côtés.
 
 **Règle 3 — réutiliser, ne pas accumuler.** Le modèle F1b : UNE organisation
 partagée (`qa-f1b-shared`), réactivée puis neutralisée à chaque campagne,
