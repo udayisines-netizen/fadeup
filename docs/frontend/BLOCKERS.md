@@ -187,7 +187,21 @@ les écritures qui créent la location). Re-tester ensuite en anon via Kong.
 
 ---
 
-## 4. `TRUNCATE` accordé à `anon` et `authenticated` sur presque toute la base — **constaté en B1 (2026-09-04)**
+## 4. ~~`TRUNCATE` accordé à `anon` et `authenticated` sur presque toute la base~~ — **RÉSOLU par X3 (2026-09-07)**
+
+**Résolution X3.** `TRUNCATE`, `TRIGGER`, `REFERENCES` et `MAINTAIN` retirés à
+`anon` et `authenticated` sur TOUTES les tables de `public` et `storage`
+(migration `20260907171000`, appliquée en `supabase_admin` — le superuser
+révoque en tant que propriétaire, atteignant les trois concédants sans
+no-op ; `storage.buckets_analytics`, oubliée de B4, alignée lecture seule).
+Les ACL PAR DÉFAUT sont durcies aussi (`20260907173000`) : une table neuve ne
+renaît plus avec ces verbes, une fonction neuve de `public` ne naît plus
+exécutable par `anon`/`authenticated`/`PUBLIC` — **toute migration créant une
+RPC cliente doit désormais écrire ses `grant execute` explicites**
+(doctrine : `docs/frontend/DB_OWNERSHIP.md`). Vérifié : `verify_x3.sql`
+(24 assertions, prod + restauration fidèle), retour arrière prouvé ACL
+comparées, `db/tests/x3_anon_surface.sh --strict` vert. Texte d'origine
+conservé ci-dessous pour l'histoire.
 
 **Symptôme.** Mesuré sur la base de production, avant correction :
 
@@ -351,7 +365,16 @@ re-exécution de `db/seeds/b3_configure_stripe.sh` et
 endpoint de mode réel avec son propre secret, et surtout : CGV, mentions
 légales, politique de remboursement — rien de tout cela n'existe.
 
-## 9. Fonctions possédées par `supabase_admin` — non redéfinissables par une migration `postgres` (constaté en B3, 2026-09-07)
+## 9. Fonctions possédées par `supabase_admin` — **TRANCHÉ par X3 (2026-09-07)** : doctrine écrite, pas d'uniformisation
+
+**Résolution X3.** Le « à trancher une fois, proprement » est fait :
+`docs/frontend/DB_OWNERSHIP.md` fixe la doctrine (rôle d'application par
+défaut `postgres` ; vérification du `proowner` avant toute redéfinition ;
+migration entière en `supabase_admin` quand elle touche un objet
+`supabase_admin` ou des grants `storage.*`). L'uniformisation de propriété
+est REFUSÉE, argumentée (transférer 42 fonctions SECURITY DEFINER d'un
+superuser vers un non-superuser changerait leur sémantique d'exécution).
+Texte d'origine ci-dessous.
 
 42 fonctions de `public`/`private` appartiennent à `supabase_admin` (héritage
 des lots MASTER appliqués sous ce rôle), dont `get_organization_readiness` et
@@ -420,3 +443,22 @@ Sans échec de transition silencieux désormais : l'écran pro remonte un toast.
    UNE organisation partagée `qa-f1b-shared` (+1 compte barber). Réécrire le
    test d'installation F1 pour borner l'accumulation est un chantier de
    suite de tests à part.
+
+## 13. Nouveaux invariants X3, constatés en X3 (2026-09-07)
+
+1. **Les grants d'une RPC neuve sont explicites, ou elle est morte.** Depuis
+   `20260907173000`, une fonction neuve de `public` naît sans EXECUTE
+   `anon`/`authenticated`/`PUBLIC`. Le lot F2 (en vol pendant X3, prévenu et
+   synchronisé en direct) écrivait déjà ses grants explicitement ; tout lot
+   suivant doit faire pareil. L'oubli = 401 immédiat, listé par
+   `db/tests/x3_anon_surface.sh --strict` (contrat de surface anon : 41 RPC
+   consacrées) et par `probe_public_rpcs.sh --strict`.
+2. **`anon` garde des INSERT/UPDATE/DELETE latents sur ~40 tables** (RLS les
+   neutralise — aucune policy anon en écriture n'existe ; mesuré 0 ligne
+   atteignable par le balayage HTTP). Hors périmètre X3 (le prompt préservait
+   les quatre verbes RLS-gouvernés) ; un futur lot peut réduire au strict
+   nécessaire, table par table. Idem le grant `anon` EXECUTE sans objet sur
+   `apply_appointment_no_show_rule` (INVOKER : 0 ligne modifiable en anon).
+3. **`pg_default_acl` des SÉQUENCES** : `anon`/`authenticated` reçoivent
+   encore `rwU` par défaut sur les séquences neuves de `public`/`storage`
+   (aucune n'existe aujourd'hui avec ces grants). Non traité — signalé.
