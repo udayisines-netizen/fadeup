@@ -4,6 +4,11 @@ import './index.css'
 import App from './App.tsx'
 import { initI18n } from './i18n'
 import { registerV2Bundles } from './shared/i18n'
+import { initErrorReporting } from './shared/observability/errorReporting'
+
+// X1 — suivi d'erreurs. No-op sans VITE_SENTRY_DSN ; sinon, import dynamique
+// du SDK dans son propre chunk (l'entrée consumer ne le porte jamais).
+initErrorReporting()
 
 // Resolving the initial locale is synchronous (localStorage/browser only —
 // see src/lib/locale.ts), so this only waits on loading that one locale's

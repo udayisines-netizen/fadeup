@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
+import { reportError } from '@/shared/observability/errorReporting'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -20,6 +21,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Unhandled application error', error, info.componentStack)
+    reportError(error, 'error-boundary')
   }
 
   render() {

@@ -5,6 +5,7 @@ import { Container } from '@/components/ui/container'
 import { Alert } from '@/components/ui/alert'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { useTranslation } from 'react-i18next'
+import { reportError } from '@/shared/observability/errorReporting'
 
 /**
  * The router's errorElement.
@@ -34,6 +35,11 @@ export function RouteErrorBoundary() {
     // quieter than any other unhandled error just because the router caught
     // them first.
     console.error('Unhandled route error', error)
+    // Un 404 est une navigation, pas un défaut — le signaler noierait les
+    // vraies erreurs de rendu de route (celles des quatre shells).
+    if (!(isRouteErrorResponse(error) && error.status === 404)) {
+      reportError(error, 'route-error-boundary')
+    }
   }, [error])
 
   const isNotFound = isRouteErrorResponse(error) && error.status === 404

@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { getSupabase } from '@/shared/lib/supabase'
 import { RealtimeContext, type ChannelStatus } from '@/shared/realtime/RealtimeProvider'
+import { reportError } from '@/shared/observability/errorReporting'
 
 /**
  * THE way V2 subscribes to Postgres Changes. One channel per CONTEXT (a
@@ -110,6 +111,16 @@ export function useChannel(options: UseChannelOptions): void {
 
         if (subscribeStatus === 'CHANNEL_ERROR' || subscribeStatus === 'TIMED_OUT' || subscribeStatus === 'CLOSED') {
           setStatus(everConnected ? 'reconnecting' : 'offline')
+          // X1 — un raté isolé est un aléa réseau ; trois échecs consécutifs
+          // sur le même canal sont une panne realtime, et jusqu'ici aucune
+          // trace n'en sortait du navigateur. Le nom logique du canal est une
+          // étiquette technique (table + id), pas du contenu utilisateur.
+          if (attempt === 2) {
+            reportError(
+              new Error(`realtime channel failed to subscribe: table=${table} status=${subscribeStatus}`),
+              'realtime',
+            )
+          }
           // Exponential backoff, capped at 30 s.
           const delay = Math.min(BACKOFF_BASE_MS * 2 ** attempt, BACKOFF_CAP_MS)
           attempt += 1
