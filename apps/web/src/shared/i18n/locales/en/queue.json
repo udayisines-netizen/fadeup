@@ -20,7 +20,14 @@
     "error": {
       "title": "Could not load the queue",
       "description": "Check your connection and try again."
-    }
+    },
+    "queuesLabel": "The shop's queues",
+    "firstAvailable": "First available",
+    "firstAvailableHint": "The first free barber takes care of you",
+    "queueWait": "≈ {{minutes}} min",
+    "queueNoWait": "No wait",
+    "queueBusy": "In the chair",
+    "joinThisQueue": "Join this queue"
   },
   "join": {
     "title": "Join the queue",
@@ -43,7 +50,8 @@
       "scan-failed": "That QR code is not this shop's. Scan the one displayed on site.",
       "otp-failed": "That code is invalid or has expired. Check the latest email you received.",
       "email-send-failed": "The email could not be sent. Check the address, or continue without an account."
-    }
+    },
+    "queueLabel": "Chosen queue: {{name}}"
   },
   "refusal": {
     "service_area_has_no_queue": "This professional travels to their clients: there is no live queue. Book a slot instead.",
@@ -53,7 +61,14 @@
     "too_far": "You are too far from the shop to join its queue. Get closer and try again on site.",
     "queue_closed": "The queue is not taking anyone right now. Ask at the counter or come back later.",
     "queue_full": "The queue is full. Come back a little later, or book a slot.",
-    "already_in_queue": "You are already in a queue. Finish or leave it before joining another."
+    "already_in_queue": "You are already in a queue. Finish or leave it before joining another.",
+    "barber_queue_disabled": "This barber doesn't take a walk-in queue. Pick “First available” or another barber.",
+    "entry_not_found": "This spot no longer exists. If the queue is open, you can join again.",
+    "not_entry_owner": "This spot belongs to another account. Sign in with the account that joined the queue.",
+    "entry_already_closed": "This spot is already over: there is nothing left to leave.",
+    "entry_in_service": "You're in the chair — talk to your barber directly.",
+    "entry_not_waiting": "Your spot is no longer waiting: switching queues isn't possible anymore.",
+    "already_in_that_queue": "You're already in that queue."
   },
   "track": {
     "yourPosition": "Your position",
@@ -73,6 +88,47 @@
     "gone": {
       "title": "You are no longer in the queue",
       "description": "Your visit is done, or your spot expired after being called. If the queue is open, you can join again.",
+      "action": "Back to the queue"
+    },
+    "queueName": "Queue: {{name}}",
+    "queueFirstAvailable": "Queue: first available",
+    "estimatedWait": "About {{minutes}} min of waiting ahead of you",
+    "deadlineCountdown": "Your spot is held for another {{time}}",
+    "deadlinePassed": "The window has passed — come to the counter, the shop decides.",
+    "movedNotice": "You are now in {{name}}'s queue.",
+    "movedNoticeFirstAvailable": "You are now in the “first available” queue.",
+    "leaveCta": "Leave the queue",
+    "leaveConfirm": {
+      "title": "Leave the queue?",
+      "description": "Your spot will be lost. To come back, you'll join at the end of the line.",
+      "calledDescription": "You've been called: if you leave now, the shop will know and your spot will be lost.",
+      "confirm": "Yes, leave",
+      "cancel": "Stay in line"
+    },
+    "changeCta": "Change barber",
+    "changeSheet": {
+      "title": "Change barber",
+      "warning": "Switching queues loses your current spot: you'll start again at the end of the new queue.",
+      "confirm": "Switch to {{name}}",
+      "confirmFirstAvailable": "Switch to “first available”"
+    },
+    "ended": {
+      "completed": {
+        "title": "All done — thank you!",
+        "description": "Your visit is recorded. See you soon."
+      },
+      "left": {
+        "title": "You left the queue",
+        "description": "Your spot is released. If you change your mind, join at the end of the line."
+      },
+      "removedAuto": {
+        "title": "You're out of the queue",
+        "description": "The window after your call had passed, so your spot was released. You can join again while the queue is open."
+      },
+      "removedManual": {
+        "title": "Your spot was closed",
+        "description": "The shop closed your spot after the call. If the queue is open, you can join again."
+      },
       "action": "Back to the queue"
     }
   },
@@ -125,7 +181,30 @@
       "complete": "Done"
     },
     "calledAtLabel": "Called at",
-    "modeOverrideLabel": "Override active: {{mode}} until"
+    "modeOverrideLabel": "Override active: {{mode}} until",
+    "fileHeaderFirstAvailable": "First available",
+    "moveAction": "Move",
+    "moveSheet": {
+      "title": "Move {{name}}",
+      "description": "The customer keeps their seniority in the new queue, and their screen tells them about the change.",
+      "toFirstAvailable": "First available"
+    },
+    "movedToast": "Customer moved.",
+    "settingsTitle": "Queue settings",
+    "barberQueues": {
+      "title": "Queues per barber",
+      "hint": "A barber without a queue is not shown to customers and receives no one.",
+      "toggleLabel": "{{name}}'s queue"
+    },
+    "graceSweep": {
+      "label": "Automatic removal after the grace window",
+      "hint": "Off: you decide, call by call. On: a called customer who doesn't show within the window leaves the queue, and their phone tells them — without blame."
+    },
+    "durationsRow": {
+      "title": "Durations: declared vs observed",
+      "subtitle": "What FadeUp learned from your services"
+    },
+    "removedAutoBadge": "Removed automatically"
   },
   "qr": {
     "title": "Your queue's QR",
@@ -234,6 +313,22 @@
     },
     "open": {
       "cta": "Open the queue now"
+    }
+  },
+  "durations": {
+    "title": "Durations: declared vs observed",
+    "description": "Service after service, FadeUp measures real duration per barber and per service. The estimate shown to customers shifts from declared to observed as measurements accumulate.",
+    "back": "Back to the queue",
+    "declared": "Declared",
+    "observed": "Observed",
+    "samples_one": "{{count}} measurement",
+    "samples_other": "{{count}} measurements",
+    "firstAvailable": "No assigned barber",
+    "cappedBadge": "Gap capped",
+    "cappedHint": "The gap between declared and observed exceeds ±50%: the display is bounded. Fix the declared duration, or check that “Done” is tapped at the right moment.",
+    "empty": {
+      "title": "No measurements yet",
+      "description": "As soon as a service is completed — walk-in or appointment — its real duration shows up here."
     }
   }
 }

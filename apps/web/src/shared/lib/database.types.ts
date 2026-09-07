@@ -242,6 +242,7 @@ export type Database = {
           {
             foreignKeyName: "api_source_health_source_id_fkey"
             columns: ["source_id"]
+            isOneToOne: true
             referencedRelation: "prospect_sources"
             referencedColumns: ["id"]
           },
@@ -279,6 +280,7 @@ export type Database = {
           {
             foreignKeyName: "api_source_limits_source_id_fkey"
             columns: ["source_id"]
+            isOneToOne: true
             referencedRelation: "prospect_sources"
             referencedColumns: ["id"]
           },
@@ -322,12 +324,14 @@ export type Database = {
           {
             foreignKeyName: "api_usage_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "api_usage_source_id_fkey"
             columns: ["source_id"]
+            isOneToOne: false
             referencedRelation: "prospect_sources"
             referencedColumns: ["id"]
           },
@@ -365,6 +369,7 @@ export type Database = {
           {
             foreignKeyName: "appointment_claim_tokens_appointment_id_fkey"
             columns: ["appointment_id"]
+            isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
@@ -471,42 +476,49 @@ export type Database = {
           {
             foreignKeyName: "appointments_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_chair_id_fkey"
             columns: ["chair_id"]
+            isOneToOne: false
             referencedRelation: "chairs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_rescheduled_to_fkey"
             columns: ["rescheduled_to"]
+            isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -547,6 +559,7 @@ export type Database = {
           {
             foreignKeyName: "audit_logs_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -593,12 +606,14 @@ export type Database = {
           {
             foreignKeyName: "barber_availability_exceptions_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barber_availability_exceptions_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -627,18 +642,21 @@ export type Database = {
           {
             foreignKeyName: "barber_services_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barber_services_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barber_services_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -688,12 +706,14 @@ export type Database = {
           {
             foreignKeyName: "barber_working_hours_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barber_working_hours_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -706,6 +726,7 @@ export type Database = {
           is_bookable: boolean
           organization_id: string
           professional_id: string | null
+          queue_enabled: boolean
           service_mode_override:
             | Database["public"]["Enums"]["service_mode"]
             | null
@@ -718,6 +739,7 @@ export type Database = {
           is_bookable?: boolean
           organization_id: string
           professional_id?: string | null
+          queue_enabled?: boolean
           service_mode_override?:
             | Database["public"]["Enums"]["service_mode"]
             | null
@@ -730,6 +752,7 @@ export type Database = {
           is_bookable?: boolean
           organization_id?: string
           professional_id?: string | null
+          queue_enabled?: boolean
           service_mode_override?:
             | Database["public"]["Enums"]["service_mode"]
             | null
@@ -740,18 +763,21 @@ export type Database = {
           {
             foreignKeyName: "barbers_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barbers_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "barbers_staff_profile_id_fkey"
             columns: ["staff_profile_id"]
+            isOneToOne: true
             referencedRelation: "staff_profiles"
             referencedColumns: ["id"]
           },
@@ -795,6 +821,7 @@ export type Database = {
           {
             foreignKeyName: "billing_quote_requests_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -841,6 +868,7 @@ export type Database = {
           {
             foreignKeyName: "billing_stripe_prices_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -872,6 +900,7 @@ export type Database = {
           {
             foreignKeyName: "billing_stripe_products_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: true
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -930,30 +959,35 @@ export type Database = {
           {
             foreignKeyName: "booking_provider_observations_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "booking_provider_observations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "booking_provider_observations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "booking_provider_observations_provider_id_fkey"
             columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "booking_providers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "booking_provider_observations_provider_id_fkey"
             columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "competitor_analytics"
             referencedColumns: ["provider_id"]
           },
@@ -1036,12 +1070,14 @@ export type Database = {
           {
             foreignKeyName: "chairs_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "chairs_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1121,18 +1157,21 @@ export type Database = {
           {
             foreignKeyName: "commercial_plan_changes_new_plan_key_fkey"
             columns: ["new_plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
           {
             foreignKeyName: "commercial_plan_changes_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "commercial_plan_changes_previous_plan_key_fkey"
             columns: ["previous_plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -1197,6 +1236,7 @@ export type Database = {
           {
             foreignKeyName: "commercial_plans_feature_tier_fkey"
             columns: ["feature_tier_plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -1228,12 +1268,14 @@ export type Database = {
           {
             foreignKeyName: "customer_favorites_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "customer_favorites_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1289,18 +1331,21 @@ export type Database = {
           {
             foreignKeyName: "customer_memberships_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "customer_memberships_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "customer_memberships_plan_id_fkey"
             columns: ["plan_id"]
+            isOneToOne: false
             referencedRelation: "membership_plans"
             referencedColumns: ["id"]
           },
@@ -1446,12 +1491,14 @@ export type Database = {
           {
             foreignKeyName: "customer_professional_relationships_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "customer_professional_relationships_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -1558,6 +1605,7 @@ export type Database = {
           {
             foreignKeyName: "customers_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1694,6 +1742,7 @@ export type Database = {
           {
             foreignKeyName: "email_templates_stream_fkey"
             columns: ["stream"]
+            isOneToOne: false
             referencedRelation: "email_streams"
             referencedColumns: ["stream"]
           },
@@ -1764,12 +1813,14 @@ export type Database = {
           {
             foreignKeyName: "invitations_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invitations_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1819,12 +1870,14 @@ export type Database = {
           {
             foreignKeyName: "location_hours_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "location_hours_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1839,6 +1892,7 @@ export type Database = {
           queue_call_grace_minutes: number
           queue_capacity_per_barber: number
           queue_geofence_meters: number
+          queue_grace_sweep_enabled: boolean
           queue_open: boolean
           updated_at: string
         }
@@ -1850,6 +1904,7 @@ export type Database = {
           queue_call_grace_minutes?: number
           queue_capacity_per_barber?: number
           queue_geofence_meters?: number
+          queue_grace_sweep_enabled?: boolean
           queue_open?: boolean
           updated_at?: string
         }
@@ -1861,6 +1916,7 @@ export type Database = {
           queue_call_grace_minutes?: number
           queue_capacity_per_barber?: number
           queue_geofence_meters?: number
+          queue_grace_sweep_enabled?: boolean
           queue_open?: boolean
           updated_at?: string
         }
@@ -1868,12 +1924,14 @@ export type Database = {
           {
             foreignKeyName: "location_service_settings_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: true
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "location_service_settings_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1950,6 +2008,7 @@ export type Database = {
           {
             foreignKeyName: "locations_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2002,6 +2061,7 @@ export type Database = {
           {
             foreignKeyName: "marketplace_withdrawal_requests_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -2045,6 +2105,7 @@ export type Database = {
           {
             foreignKeyName: "membership_plans_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2079,6 +2140,7 @@ export type Database = {
           {
             foreignKeyName: "memberships_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2134,6 +2196,7 @@ export type Database = {
           {
             foreignKeyName: "ml_datasets_feature_schema_version_fkey"
             columns: ["feature_schema_version"]
+            isOneToOne: false
             referencedRelation: "ml_feature_schemas"
             referencedColumns: ["version"]
           },
@@ -2198,6 +2261,7 @@ export type Database = {
           {
             foreignKeyName: "ml_metrics_model_version_id_fkey"
             columns: ["model_version_id"]
+            isOneToOne: false
             referencedRelation: "ml_model_versions"
             referencedColumns: ["id"]
           },
@@ -2268,12 +2332,14 @@ export type Database = {
           {
             foreignKeyName: "ml_model_versions_feature_schema_version_fkey"
             columns: ["feature_schema_version"]
+            isOneToOne: false
             referencedRelation: "ml_feature_schemas"
             referencedColumns: ["version"]
           },
           {
             foreignKeyName: "ml_model_versions_training_dataset_version_fkey"
             columns: ["training_dataset_version"]
+            isOneToOne: false
             referencedRelation: "ml_datasets"
             referencedColumns: ["version"]
           },
@@ -2329,42 +2395,49 @@ export type Database = {
           {
             foreignKeyName: "ml_predictions_campaign_id_fkey"
             columns: ["campaign_id"]
+            isOneToOne: false
             referencedRelation: "outreach_campaigns"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ml_predictions_campaign_id_fkey"
             columns: ["campaign_id"]
+            isOneToOne: false
             referencedRelation: "outreach_funnel_stats"
             referencedColumns: ["campaign_id"]
           },
           {
             foreignKeyName: "ml_predictions_model_version_id_fkey"
             columns: ["model_version_id"]
+            isOneToOne: false
             referencedRelation: "ml_model_versions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ml_predictions_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "ml_predictions_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ml_predictions_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ml_predictions_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
@@ -2426,12 +2499,14 @@ export type Database = {
           {
             foreignKeyName: "ml_training_runs_dataset_version_fkey"
             columns: ["dataset_version"]
+            isOneToOne: false
             referencedRelation: "ml_datasets"
             referencedColumns: ["version"]
           },
           {
             foreignKeyName: "ml_training_runs_model_version_id_fkey"
             columns: ["model_version_id"]
+            isOneToOne: false
             referencedRelation: "ml_model_versions"
             referencedColumns: ["id"]
           },
@@ -2478,12 +2553,14 @@ export type Database = {
           {
             foreignKeyName: "notifications_appointment_id_fkey"
             columns: ["appointment_id"]
+            isOneToOne: false
             referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "notifications_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2578,18 +2655,21 @@ export type Database = {
           {
             foreignKeyName: "organization_billing_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "organization_billing_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
           {
             foreignKeyName: "organization_billing_scheduled_plan_key_fkey"
             columns: ["scheduled_plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -2642,12 +2722,14 @@ export type Database = {
           {
             foreignKeyName: "organization_commercial_state_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "organization_commercial_state_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -2676,6 +2758,7 @@ export type Database = {
           {
             foreignKeyName: "organization_dashboard_layouts_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2713,6 +2796,7 @@ export type Database = {
           {
             foreignKeyName: "organization_follows_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2759,12 +2843,14 @@ export type Database = {
           {
             foreignKeyName: "organization_trials_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "organization_trials_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -2847,42 +2933,49 @@ export type Database = {
           {
             foreignKeyName: "outreach_assignments_arm_id_fkey"
             columns: ["arm_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["arm_id"]
           },
           {
             foreignKeyName: "outreach_assignments_arm_id_fkey"
             columns: ["arm_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiment_arms"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_assignments_experiment_id_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["experiment_id"]
           },
           {
             foreignKeyName: "outreach_assignments_experiment_id_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_assignments_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "outreach_assignments_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_assignments_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "outreach_recipients"
             referencedColumns: ["id"]
           },
@@ -2944,18 +3037,21 @@ export type Database = {
           {
             foreignKeyName: "outreach_campaigns_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["experiment_id"]
           },
           {
             foreignKeyName: "outreach_campaigns_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_campaigns_whatsapp_account_fkey"
             columns: ["whatsapp_account_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_accounts"
             referencedColumns: ["id"]
           },
@@ -3032,18 +3128,21 @@ export type Database = {
           {
             foreignKeyName: "outreach_events_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "outreach_events_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_events_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "outreach_recipients"
             referencedColumns: ["id"]
           },
@@ -3081,24 +3180,28 @@ export type Database = {
           {
             foreignKeyName: "outreach_experiment_arms_experiment_id_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["experiment_id"]
           },
           {
             foreignKeyName: "outreach_experiment_arms_experiment_id_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_experiment_arms_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_experiment_arms_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
@@ -3175,18 +3278,21 @@ export type Database = {
           {
             foreignKeyName: "outreach_experiments_cohort_booking_provider_id_fkey"
             columns: ["cohort_booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "booking_providers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_experiments_cohort_booking_provider_id_fkey"
             columns: ["cohort_booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "competitor_analytics"
             referencedColumns: ["provider_id"]
           },
           {
             foreignKeyName: "outreach_experiments_cohort_segment_key_fkey"
             columns: ["cohort_segment_key"]
+            isOneToOne: false
             referencedRelation: "prospect_segment_definitions"
             referencedColumns: ["key"]
           },
@@ -3281,60 +3387,70 @@ export type Database = {
           {
             foreignKeyName: "outreach_recipients_campaign_id_fkey"
             columns: ["campaign_id"]
+            isOneToOne: false
             referencedRelation: "outreach_campaigns"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_campaign_id_fkey"
             columns: ["campaign_id"]
+            isOneToOne: false
             referencedRelation: "outreach_funnel_stats"
             referencedColumns: ["campaign_id"]
           },
           {
             foreignKeyName: "outreach_recipients_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["experiment_id"]
           },
           {
             foreignKeyName: "outreach_recipients_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_ml_prediction_fkey"
             columns: ["ml_prediction_id"]
+            isOneToOne: false
             referencedRelation: "ml_predictions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "outreach_recipients_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_sales_angle_fkey"
             columns: ["sales_angle"]
+            isOneToOne: false
             referencedRelation: "outreach_sales_angles"
             referencedColumns: ["key"]
           },
           {
             foreignKeyName: "outreach_recipients_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
@@ -3432,24 +3548,28 @@ export type Database = {
           {
             foreignKeyName: "outreach_templates_booking_provider_id_fkey"
             columns: ["booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "booking_providers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_templates_booking_provider_id_fkey"
             columns: ["booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "competitor_analytics"
             referencedColumns: ["provider_id"]
           },
           {
             foreignKeyName: "outreach_templates_sales_angle_fkey"
             columns: ["sales_angle"]
+            isOneToOne: false
             referencedRelation: "outreach_sales_angles"
             referencedColumns: ["key"]
           },
           {
             foreignKeyName: "outreach_templates_segment_key_fkey"
             columns: ["segment_key"]
+            isOneToOne: false
             referencedRelation: "prospect_segment_definitions"
             referencedColumns: ["key"]
           },
@@ -3475,12 +3595,14 @@ export type Database = {
           {
             foreignKeyName: "plan_capabilities_capability_key_fkey"
             columns: ["capability_key"]
+            isOneToOne: false
             referencedRelation: "commercial_capabilities"
             referencedColumns: ["capability_key"]
           },
           {
             foreignKeyName: "plan_capabilities_plan_key_fkey"
             columns: ["plan_key"]
+            isOneToOne: false
             referencedRelation: "commercial_plans"
             referencedColumns: ["plan_key"]
           },
@@ -3680,6 +3802,7 @@ export type Database = {
           {
             foreignKeyName: "platform_support_sessions_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -3705,6 +3828,7 @@ export type Database = {
           {
             foreignKeyName: "post_likes_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -3748,6 +3872,7 @@ export type Database = {
           {
             foreignKeyName: "post_media_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -3773,12 +3898,14 @@ export type Database = {
           {
             foreignKeyName: "post_services_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "post_services_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -3825,18 +3952,21 @@ export type Database = {
           {
             foreignKeyName: "posts_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "posts_posted_at_organization_id_fkey"
             columns: ["posted_at_organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "posts_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -3928,6 +4058,7 @@ export type Database = {
           {
             foreignKeyName: "professional_applications_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -3977,6 +4108,7 @@ export type Database = {
           {
             foreignKeyName: "professional_claims_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -4020,6 +4152,7 @@ export type Database = {
           {
             foreignKeyName: "professional_follows_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -4054,6 +4187,7 @@ export type Database = {
           {
             foreignKeyName: "professional_interest_request_contacts_request_id_fkey"
             columns: ["request_id"]
+            isOneToOne: true
             referencedRelation: "professional_interest_requests"
             referencedColumns: ["id"]
           },
@@ -4106,6 +4240,7 @@ export type Database = {
           {
             foreignKeyName: "professional_interest_requests_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -4227,12 +4362,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_contacts_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_contacts_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4288,12 +4425,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_data_quality_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_data_quality_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4337,24 +4476,28 @@ export type Database = {
           {
             foreignKeyName: "prospect_duplicates_duplicate_of_prospect_id_fkey"
             columns: ["duplicate_of_prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_duplicates_duplicate_of_prospect_id_fkey"
             columns: ["duplicate_of_prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_duplicates_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_duplicates_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4389,12 +4532,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_events_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_events_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4453,12 +4598,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_features_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_features_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4508,18 +4655,21 @@ export type Database = {
           {
             foreignKeyName: "prospect_fit_scores_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_fit_scores_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_fit_scores_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4584,30 +4734,35 @@ export type Database = {
           {
             foreignKeyName: "prospect_identity_matches_candidate_prospect_id_fkey"
             columns: ["candidate_prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_identity_matches_candidate_prospect_id_fkey"
             columns: ["candidate_prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_identity_matches_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_identity_matches_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_identity_matches_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4654,12 +4809,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_job_sources_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_job_sources_source_id_fkey"
             columns: ["source_id"]
+            isOneToOne: false
             referencedRelation: "prospect_sources"
             referencedColumns: ["id"]
           },
@@ -4736,12 +4893,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_jobs_partition_id_fkey"
             columns: ["partition_id"]
+            isOneToOne: false
             referencedRelation: "prospect_search_partitions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_jobs_search_id_fkey"
             columns: ["search_id"]
+            isOneToOne: false
             referencedRelation: "prospect_searches"
             referencedColumns: ["id"]
           },
@@ -4806,12 +4965,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_locales_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_locales_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4864,12 +5025,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_locations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_locations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4904,12 +5067,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_notes_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_notes_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -4950,12 +5115,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_outreach_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_outreach_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5017,12 +5184,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_outreach_eligibility_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_outreach_eligibility_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5057,18 +5226,21 @@ export type Database = {
           {
             foreignKeyName: "prospect_professionals_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: true
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_professionals_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_professionals_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5109,12 +5281,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_publication_eligibility_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_publication_eligibility_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: true
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5188,12 +5362,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_scores_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_scores_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5294,18 +5470,21 @@ export type Database = {
           {
             foreignKeyName: "prospect_search_partitions_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_search_partitions_parent_partition_id_fkey"
             columns: ["parent_partition_id"]
+            isOneToOne: false
             referencedRelation: "prospect_search_partitions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_search_partitions_search_id_fkey"
             columns: ["search_id"]
+            isOneToOne: false
             referencedRelation: "prospect_searches"
             referencedColumns: ["id"]
           },
@@ -5451,12 +5630,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_segments_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_segments_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5506,12 +5687,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_social_profiles_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_social_profiles_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5564,24 +5747,28 @@ export type Database = {
           {
             foreignKeyName: "prospect_source_records_job_id_fkey"
             columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "prospect_jobs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_source_records_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_source_records_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospect_source_records_source_id_fkey"
             columns: ["source_id"]
+            isOneToOne: false
             referencedRelation: "prospect_sources"
             referencedColumns: ["id"]
           },
@@ -5655,12 +5842,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_suppressions_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_suppressions_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5692,12 +5881,14 @@ export type Database = {
           {
             foreignKeyName: "prospect_tags_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospect_tags_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5816,30 +6007,35 @@ export type Database = {
           {
             foreignKeyName: "prospects_converted_organization_id_fkey"
             columns: ["converted_organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospects_current_booking_provider_id_fkey"
             columns: ["current_booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "booking_providers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "prospects_current_booking_provider_id_fkey"
             columns: ["current_booking_provider_id"]
+            isOneToOne: false
             referencedRelation: "competitor_analytics"
             referencedColumns: ["provider_id"]
           },
           {
             foreignKeyName: "prospects_parent_group_id_fkey"
             columns: ["parent_group_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "prospects_parent_group_id_fkey"
             columns: ["parent_group_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
@@ -5847,6 +6043,7 @@ export type Database = {
       }
       queue_entries: {
         Row: {
+          auto_marked_no_show_at: string | null
           barber_id: string | null
           booked_by_user_id: string | null
           called_at: string | null
@@ -5866,6 +6063,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_marked_no_show_at?: string | null
           barber_id?: string | null
           booked_by_user_id?: string | null
           called_at?: string | null
@@ -5885,6 +6083,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_marked_no_show_at?: string | null
           barber_id?: string | null
           booked_by_user_id?: string | null
           called_at?: string | null
@@ -5907,31 +6106,118 @@ export type Database = {
           {
             foreignKeyName: "queue_entries_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "queue_entries_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "queue_entries_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "queue_entries_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "queue_entries_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      queue_entry_moves: {
+        Row: {
+          created_at: string
+          entry_id: string
+          from_barber_id: string | null
+          id: string
+          kind: string
+          location_id: string
+          moved_by: string | null
+          new_entry_id: string | null
+          organization_id: string
+          to_barber_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          from_barber_id?: string | null
+          id?: string
+          kind: string
+          location_id: string
+          moved_by?: string | null
+          new_entry_id?: string | null
+          organization_id: string
+          to_barber_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          from_barber_id?: string | null
+          id?: string
+          kind?: string
+          location_id?: string
+          moved_by?: string | null
+          new_entry_id?: string | null
+          organization_id?: string
+          to_barber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "queue_entry_moves_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "queue_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_entry_moves_from_barber_id_fkey"
+            columns: ["from_barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_entry_moves_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_entry_moves_new_entry_id_fkey"
+            columns: ["new_entry_id"]
+            isOneToOne: false
+            referencedRelation: "queue_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_entry_moves_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "queue_entry_moves_to_barber_id_fkey"
+            columns: ["to_barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
         ]
@@ -5965,6 +6251,7 @@ export type Database = {
           {
             foreignKeyName: "review_photos_review_id_fkey"
             columns: ["review_id"]
+            isOneToOne: true
             referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
@@ -6011,6 +6298,7 @@ export type Database = {
           {
             foreignKeyName: "review_reports_review_id_fkey"
             columns: ["review_id"]
+            isOneToOne: false
             referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
@@ -6108,18 +6396,21 @@ export type Database = {
           {
             foreignKeyName: "reviews_appointment_id_fkey"
             columns: ["appointment_id"]
+            isOneToOne: true
             referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "reviews_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "reviews_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -6157,7 +6448,79 @@ export type Database = {
           {
             foreignKeyName: "service_categories_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_duration_samples: {
+        Row: {
+          barber_id: string | null
+          created_at: string
+          duration_minutes: number | null
+          ended_at: string
+          id: string
+          location_id: string
+          organization_id: string
+          service_id: string
+          source: string
+          source_entry_id: string
+          started_at: string
+        }
+        Insert: {
+          barber_id?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at: string
+          id?: string
+          location_id: string
+          organization_id: string
+          service_id: string
+          source: string
+          source_entry_id: string
+          started_at: string
+        }
+        Update: {
+          barber_id?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string
+          id?: string
+          location_id?: string
+          organization_id?: string
+          service_id?: string
+          source?: string
+          source_entry_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_duration_samples_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_duration_samples_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_duration_samples_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_duration_samples_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -6185,18 +6548,21 @@ export type Database = {
           {
             foreignKeyName: "service_locations_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_locations_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_locations_service_id_fkey"
             columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -6252,18 +6618,21 @@ export type Database = {
           {
             foreignKeyName: "service_mode_changes_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_mode_changes_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_mode_changes_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6319,18 +6688,21 @@ export type Database = {
           {
             foreignKeyName: "service_mode_overrides_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_mode_overrides_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "service_mode_overrides_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6383,12 +6755,14 @@ export type Database = {
           {
             foreignKeyName: "services_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
             referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "services_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6441,12 +6815,14 @@ export type Database = {
           {
             foreignKeyName: "staff_profiles_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "staff_profiles_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6529,18 +6905,21 @@ export type Database = {
           {
             foreignKeyName: "time_blocks_barber_id_fkey"
             columns: ["barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "time_blocks_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "time_blocks_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6599,30 +6978,35 @@ export type Database = {
           {
             foreignKeyName: "waitlist_entries_customer_id_fkey"
             columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "waitlist_entries_desired_barber_id_fkey"
             columns: ["desired_barber_id"]
+            isOneToOne: false
             referencedRelation: "barbers"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "waitlist_entries_desired_service_id_fkey"
             columns: ["desired_service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "waitlist_entries_location_id_fkey"
             columns: ["location_id"]
+            isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "waitlist_entries_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -6702,18 +7086,21 @@ export type Database = {
           {
             foreignKeyName: "whatsapp_conversations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "whatsapp_conversations_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_conversations_whatsapp_account_id_fkey"
             columns: ["whatsapp_account_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_accounts"
             referencedColumns: ["id"]
           },
@@ -6805,42 +7192,49 @@ export type Database = {
           {
             foreignKeyName: "whatsapp_messages_conversation_id_fkey"
             columns: ["conversation_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_conversations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_messages_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospect_publication_queue"
             referencedColumns: ["prospect_id"]
           },
           {
             foreignKeyName: "whatsapp_messages_prospect_id_fkey"
             columns: ["prospect_id"]
+            isOneToOne: false
             referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_messages_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "outreach_recipients"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_messages_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_messages_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
           {
             foreignKeyName: "whatsapp_messages_whatsapp_account_id_fkey"
             columns: ["whatsapp_account_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_accounts"
             referencedColumns: ["id"]
           },
@@ -6887,18 +7281,21 @@ export type Database = {
           {
             foreignKeyName: "whatsapp_template_mappings_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "whatsapp_template_mappings_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
           {
             foreignKeyName: "whatsapp_template_mappings_whatsapp_account_id_fkey"
             columns: ["whatsapp_account_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_accounts"
             referencedColumns: ["id"]
           },
@@ -6948,6 +7345,7 @@ export type Database = {
           {
             foreignKeyName: "whatsapp_webhook_events_whatsapp_account_id_fkey"
             columns: ["whatsapp_account_id"]
+            isOneToOne: false
             referencedRelation: "whatsapp_accounts"
             referencedColumns: ["id"]
           },
@@ -7026,30 +7424,35 @@ export type Database = {
           {
             foreignKeyName: "outreach_recipients_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "experiment_results"
             referencedColumns: ["experiment_id"]
           },
           {
             foreignKeyName: "outreach_recipients_experiment_fkey"
             columns: ["experiment_id"]
+            isOneToOne: false
             referencedRelation: "outreach_experiments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_sales_angle_fkey"
             columns: ["sales_angle"]
+            isOneToOne: false
             referencedRelation: "outreach_sales_angles"
             referencedColumns: ["key"]
           },
           {
             foreignKeyName: "outreach_recipients_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "outreach_templates"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "outreach_recipients_template_id_fkey"
             columns: ["template_id"]
+            isOneToOne: false
             referencedRelation: "template_performance"
             referencedColumns: ["template_id"]
           },
@@ -7122,12 +7525,14 @@ export type Database = {
           {
             foreignKeyName: "outreach_templates_sales_angle_fkey"
             columns: ["sales_angle"]
+            isOneToOne: false
             referencedRelation: "outreach_sales_angles"
             referencedColumns: ["key"]
           },
           {
             foreignKeyName: "outreach_templates_segment_key_fkey"
             columns: ["segment_key"]
+            isOneToOne: false
             referencedRelation: "prospect_segment_definitions"
             referencedColumns: ["key"]
           },
@@ -7362,6 +7767,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      change_queue_entry_barber: {
+        Args: { p_entry_id: string; p_to_barber_id?: string }
+        Returns: {
+          barber_id: string
+          created_at: string
+          id: string
+          status: Database["public"]["Enums"]["queue_status"]
+        }[]
       }
       claim_platform_owner_bootstrap: {
         Args: { p_token: string }
@@ -7891,6 +8305,7 @@ export type Database = {
           queue_capacity_per_barber: number
           queue_check_in_token: string
           queue_geofence_meters: number
+          queue_grace_sweep_enabled: boolean
         }[]
       }
       get_my_access: {
@@ -8267,6 +8682,7 @@ export type Database = {
         Args: { p_location_id: string; p_organization_slug: string }
         Returns: {
           barber_display_name: string
+          barber_id: string
           display_name: string
           id: string
           queue_position: number
@@ -8319,6 +8735,33 @@ export type Database = {
           queue_open: boolean
         }[]
       }
+      get_queue_entry_tracking: {
+        Args: { p_entry_id: string }
+        Returns: {
+          barber_display_name: string
+          barber_id: string
+          called_deadline_at: string
+          estimated_wait_minutes: number
+          id: string
+          people_ahead: number
+          queue_position: number
+          removed_automatically: boolean
+          status: Database["public"]["Enums"]["queue_status"]
+        }[]
+      }
+      get_service_duration_insights: {
+        Args: { p_location_id: string }
+        Returns: {
+          barber_display_name: string
+          barber_id: string
+          declared_minutes: number
+          estimate_capped: boolean
+          observed_minutes: number
+          sample_count: number
+          service_id: string
+          service_name: string
+        }[]
+      }
       get_service_mode_state: {
         Args: { p_location_id: string }
         Returns: {
@@ -8365,6 +8808,13 @@ export type Database = {
         }
         Returns: {
           created_at: string
+          id: string
+          status: Database["public"]["Enums"]["queue_status"]
+        }[]
+      }
+      leave_public_queue: {
+        Args: { p_entry_id: string }
+        Returns: {
           id: string
           status: Database["public"]["Enums"]["queue_status"]
         }[]
@@ -8456,6 +8906,17 @@ export type Database = {
           location_name: string
           professional_id: string
           title: string
+        }[]
+      }
+      list_public_queues: {
+        Args: { p_location_id: string; p_organization_slug: string }
+        Returns: {
+          avatar_url: string
+          barber_id: string
+          busy: boolean
+          display_name: string
+          estimated_wait_minutes: number
+          waiting_count: number
         }[]
       }
       list_public_services: {
@@ -8550,6 +9011,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      move_queue_entry: {
+        Args: { p_entry_id: string; p_to_barber_id?: string }
+        Returns: {
+          barber_id: string
+          id: string
+          status: Database["public"]["Enums"]["queue_status"]
+        }[]
       }
       my_organization_has_capability: {
         Args: { p_capability: string; p_organization_id: string }
@@ -9032,6 +9501,12 @@ export type Database = {
           tier_changes_scheduled: number
         }[]
       }
+      run_queue_grace_maintenance: {
+        Args: never
+        Returns: {
+          entries_swept: number
+        }[]
+      }
       run_trial_maintenance: {
         Args: never
         Returns: {
@@ -9150,6 +9625,28 @@ export type Database = {
           total_count: number
         }[]
       }
+      set_barber_queue_enabled: {
+        Args: { p_barber_id: string; p_enabled: boolean }
+        Returns: {
+          created_at: string
+          id: string
+          is_bookable: boolean
+          organization_id: string
+          professional_id: string | null
+          queue_enabled: boolean
+          service_mode_override:
+            | Database["public"]["Enums"]["service_mode"]
+            | null
+          staff_profile_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "barbers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_barber_service_mode_override: {
         Args: {
           p_barber_id: string
@@ -9161,6 +9658,7 @@ export type Database = {
           is_bookable: boolean
           organization_id: string
           professional_id: string | null
+          queue_enabled: boolean
           service_mode_override:
             | Database["public"]["Enums"]["service_mode"]
             | null
@@ -9170,6 +9668,27 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "barbers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_location_queue_grace_sweep: {
+        Args: { p_enabled: boolean; p_location_id: string }
+        Returns: {
+          created_at: string
+          default_service_mode: Database["public"]["Enums"]["service_mode"]
+          location_id: string
+          organization_id: string
+          queue_call_grace_minutes: number
+          queue_capacity_per_barber: number
+          queue_geofence_meters: number
+          queue_grace_sweep_enabled: boolean
+          queue_open: boolean
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "location_service_settings"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -9184,6 +9703,7 @@ export type Database = {
           queue_call_grace_minutes: number
           queue_capacity_per_barber: number
           queue_geofence_meters: number
+          queue_grace_sweep_enabled: boolean
           queue_open: boolean
           updated_at: string
         }
@@ -9207,6 +9727,7 @@ export type Database = {
           queue_call_grace_minutes: number
           queue_capacity_per_barber: number
           queue_geofence_meters: number
+          queue_grace_sweep_enabled: boolean
           queue_open: boolean
           updated_at: string
         }
@@ -9658,6 +10179,7 @@ export type Database = {
         | "post_liked"
         | "review_received"
         | "review_reply"
+        | "queue_grace_removed"
       outreach_campaign_status:
         | "draft"
         | "preparing"
@@ -10065,6 +10587,7 @@ export const Constants = {
         "post_liked",
         "review_received",
         "review_reply",
+        "queue_grace_removed",
       ],
       outreach_campaign_status: [
         "draft",

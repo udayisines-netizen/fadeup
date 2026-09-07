@@ -20,7 +20,14 @@
     "error": {
       "title": "Impossible de charger la file",
       "description": "Vérifiez votre connexion, puis réessayez."
-    }
+    },
+    "queuesLabel": "Les files du salon",
+    "firstAvailable": "Premier disponible",
+    "firstAvailableHint": "Le premier barber libre s'occupe de vous",
+    "queueWait": "≈ {{minutes}} min",
+    "queueNoWait": "Sans attente",
+    "queueBusy": "Au fauteuil",
+    "joinThisQueue": "Rejoindre cette file"
   },
   "join": {
     "title": "Rejoindre la file",
@@ -43,7 +50,8 @@
       "scan-failed": "Ce QR code n'est pas celui de ce salon. Scannez celui affiché sur place.",
       "otp-failed": "Ce code n'est pas valide ou a expiré. Vérifiez le dernier e-mail reçu.",
       "email-send-failed": "L'e-mail n'a pas pu être envoyé. Vérifiez l'adresse, ou continuez sans compte."
-    }
+    },
+    "queueLabel": "File choisie : {{name}}"
   },
   "refusal": {
     "service_area_has_no_queue": "Ce professionnel se déplace chez ses clients : il n'y a pas de file d'attente. Réservez un créneau à la place.",
@@ -53,7 +61,14 @@
     "too_far": "Vous êtes trop loin du salon pour rejoindre sa file. Rapprochez-vous et réessayez sur place.",
     "queue_closed": "La file n'accepte personne pour le moment. Adressez-vous au comptoir ou revenez plus tard.",
     "queue_full": "La file est pleine. Revenez un peu plus tard, ou réservez un créneau.",
-    "already_in_queue": "Vous êtes déjà dans une file. Terminez ou quittez-la avant d'en rejoindre une autre."
+    "already_in_queue": "Vous êtes déjà dans une file. Terminez ou quittez-la avant d'en rejoindre une autre.",
+    "barber_queue_disabled": "Ce barber ne prend pas de file d'attente. Choisissez « Premier disponible » ou un autre barber.",
+    "entry_not_found": "Cette place n'existe plus. Si la file est ouverte, vous pouvez la rejoindre à nouveau.",
+    "not_entry_owner": "Cette place appartient à un autre compte. Connectez-vous avec le compte qui a rejoint la file.",
+    "entry_already_closed": "Cette place est déjà terminée : il n'y a plus rien à quitter.",
+    "entry_in_service": "Vous êtes au fauteuil : voyez directement avec votre barber.",
+    "entry_not_waiting": "Votre place n'est plus en attente : changer de file n'est plus possible.",
+    "already_in_that_queue": "Vous êtes déjà dans cette file."
   },
   "track": {
     "yourPosition": "Votre position",
@@ -73,6 +88,47 @@
     "gone": {
       "title": "Vous n'êtes plus dans la file",
       "description": "Votre passage est terminé, ou votre place a expiré après l'appel. Si la file est ouverte, vous pouvez la rejoindre à nouveau.",
+      "action": "Revoir la file"
+    },
+    "queueName": "File : {{name}}",
+    "queueFirstAvailable": "File : premier disponible",
+    "estimatedWait": "Environ {{minutes}} min d'attente devant vous",
+    "deadlineCountdown": "Votre place est gardée encore {{time}}",
+    "deadlinePassed": "Le délai est écoulé — présentez-vous au comptoir, le salon décide.",
+    "movedNotice": "Vous êtes maintenant dans la file de {{name}}.",
+    "movedNoticeFirstAvailable": "Vous êtes maintenant dans la file « premier disponible ».",
+    "leaveCta": "Quitter la file",
+    "leaveConfirm": {
+      "title": "Quitter la file ?",
+      "description": "Votre place sera perdue. Pour revenir, il faudra rejoindre en fin de file.",
+      "calledDescription": "Vous avez été appelé : si vous partez, le salon en sera informé et votre place sera perdue.",
+      "confirm": "Oui, quitter",
+      "cancel": "Rester dans la file"
+    },
+    "changeCta": "Changer de barber",
+    "changeSheet": {
+      "title": "Changer de barber",
+      "warning": "Changer de file vous fait perdre votre place actuelle : vous repartirez en fin de la nouvelle file.",
+      "confirm": "Changer pour {{name}}",
+      "confirmFirstAvailable": "Passer en « premier disponible »"
+    },
+    "ended": {
+      "completed": {
+        "title": "C'est terminé — merci !",
+        "description": "Votre passage est enregistré. À bientôt."
+      },
+      "left": {
+        "title": "Vous avez quitté la file",
+        "description": "Votre place est libérée. Si vous changez d'avis, rejoignez en fin de file."
+      },
+      "removedAuto": {
+        "title": "Vous êtes sorti de la file",
+        "description": "Le délai après votre appel était écoulé, votre place a été libérée. Vous pouvez rejoindre à nouveau tant que la file est ouverte."
+      },
+      "removedManual": {
+        "title": "Votre place a été close",
+        "description": "Le salon a clos votre place après l'appel. Si la file est ouverte, vous pouvez la rejoindre à nouveau."
+      },
       "action": "Revoir la file"
     }
   },
@@ -125,7 +181,30 @@
       "complete": "Terminé"
     },
     "calledAtLabel": "Appelé à",
-    "modeOverrideLabel": "Dérogation active : {{mode}} jusqu’à"
+    "modeOverrideLabel": "Dérogation active : {{mode}} jusqu’à",
+    "fileHeaderFirstAvailable": "Premier disponible",
+    "moveAction": "Déplacer",
+    "moveSheet": {
+      "title": "Déplacer {{name}}",
+      "description": "Le client garde son ancienneté dans la nouvelle file, et son écran l'informe du changement.",
+      "toFirstAvailable": "Premier disponible"
+    },
+    "movedToast": "Client déplacé.",
+    "settingsTitle": "Réglages de la file",
+    "barberQueues": {
+      "title": "Files par barber",
+      "hint": "Un barber sans file n'apparaît pas côté client et ne reçoit personne.",
+      "toggleLabel": "File de {{name}}"
+    },
+    "graceSweep": {
+      "label": "Sortie automatique après le délai de grâce",
+      "hint": "Désactivée : c'est vous qui décidez, appel par appel. Activée : un client appelé qui ne se présente pas dans le délai sort de la file, et son téléphone le lui dit — sans reproche."
+    },
+    "durationsRow": {
+      "title": "Durées : annoncé vs observé",
+      "subtitle": "Ce que FadeUp a appris de vos prestations"
+    },
+    "removedAutoBadge": "Sorti automatiquement"
   },
   "qr": {
     "title": "Le QR de votre file",
@@ -234,6 +313,22 @@
     },
     "open": {
       "cta": "Ouvrir la file maintenant"
+    }
+  },
+  "durations": {
+    "title": "Durées : annoncé vs observé",
+    "description": "Prestation après prestation, FadeUp mesure la durée réelle par barber et par service. L'estimation affichée aux clients bascule du déclaré vers l'observé à mesure que les mesures s'accumulent.",
+    "back": "Retour à la file",
+    "declared": "Annoncé",
+    "observed": "Observé",
+    "samples_one": "{{count}} mesure",
+    "samples_other": "{{count}} mesures",
+    "firstAvailable": "Sans barber attitré",
+    "cappedBadge": "Écart plafonné",
+    "cappedHint": "L'écart entre annoncé et observé dépasse ±50 % : l'affichage est borné. Corrigez la durée annoncée, ou vérifiez que « Terminé » est pointé au bon moment.",
+    "empty": {
+      "title": "Encore aucune mesure",
+      "description": "Dès qu'une prestation est terminée — en file ou sur rendez-vous —, sa durée réelle apparaît ici."
     }
   }
 }

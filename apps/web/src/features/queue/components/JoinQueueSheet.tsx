@@ -7,7 +7,7 @@ import { OTPInput } from '@/shared/ui/OTPInput'
 import { QRScanner, type QRScanError } from '@/shared/ui/QRScanner'
 import { Sheet } from '@/shared/ui/Sheet'
 import { IconInfo, IconQr } from '@/shared/ui/icons'
-import { useJoinQueue, QueueJoinRefusedError, type JoinQueueResult } from '@/features/queue/api/publicQueue'
+import { useJoinQueue, QueueJoinRefusedError, type JoinQueueResult, type PublicQueueFile } from '@/features/queue/api/publicQueue'
 import { requestQueueOtp, verifyQueueOtp } from '@/features/queue/api/lightAuth'
 import { parseQueueLink } from '@/shared/lib/queueLink'
 import { refusalIsRetryable, refusalMessageKey, type QueueRefusalCode } from '@/features/queue/lib/refusals'
@@ -38,6 +38,8 @@ interface JoinQueueSheetProps {
   locationId: string
   /** Jeton lu dans l'URL quand l'écran vient du QR ; sinon scan en séance. */
   initialToken: string | null
+  /** File visée (F1b) — null ou barber_id null = « premier disponible ». */
+  targetQueue: PublicQueueFile | null
   onJoined: (entry: JoinQueueResult, authenticated: boolean) => void
 }
 
@@ -51,7 +53,7 @@ function getPosition(): Promise<GeolocationPosition> {
   })
 }
 
-export function JoinQueueSheet({ open, onOpenChange, slug, locationId, initialToken, onJoined }: JoinQueueSheetProps) {
+export function JoinQueueSheet({ open, onOpenChange, slug, locationId, initialToken, targetQueue, onJoined }: JoinQueueSheetProps) {
   const { t } = useTranslation('v2')
   const { session } = useSession()
   const join = useJoinQueue()
@@ -96,6 +98,7 @@ export function JoinQueueSheet({ open, onOpenChange, slug, locationId, initialTo
         slug,
         locationId,
         customerName: name.trim(),
+        barberId: targetQueue?.barber_id ?? null,
         checkInToken: activeToken,
         latitude,
         longitude,
@@ -247,6 +250,11 @@ export function JoinQueueSheet({ open, onOpenChange, slug, locationId, initialTo
             void submitDetails()
           }}
         >
+          {targetQueue && targetQueue.barber_id !== null && (
+            <p className="text-fu-sm font-medium text-[var(--fu-text-primary)]" data-testid="queue-join-target">
+              {t('queue.join.queueLabel', { name: targetQueue.display_name ?? '' })}
+            </p>
+          )}
           <Input
             label={t('queue.join.nameLabel')}
             hint={t('queue.join.nameHint')}

@@ -15,7 +15,7 @@ import type { ProQueueEntry } from '@/features/pro-queue/api/proQueue'
 
 interface ProQueueEntryRowProps {
   entry: ProQueueEntry
-  /** Position dans la file d'attente (1-indexée), null hors attente. */
+  /** Position dans SA file (1-indexée, F1b), null hors attente. */
   position: number | null
   graceMinutes: number | null
   /** Fuseau du lieu (heures de service). */
@@ -26,6 +26,8 @@ interface ProQueueEntryRowProps {
   onArrived: (entryId: string) => void
   onNoShow: (entryId: string) => void
   onComplete: (entryId: string) => void
+  /** F1b — déplacer vers une autre file ; absent = pas de geste (salon solo). */
+  onMove?: (entry: ProQueueEntry) => void
 }
 
 export function ProQueueEntryRow({
@@ -39,6 +41,7 @@ export function ProQueueEntryRow({
   onArrived,
   onNoShow,
   onComplete,
+  onMove,
 }: ProQueueEntryRowProps) {
   const { t } = useTranslation('v2')
   const waitedMinutes = elapsedWaitMinutes(entry.created_at, now)
@@ -99,9 +102,28 @@ export function ProQueueEntryRow({
       title={formatMinimalName(entry.customer_name)}
       subtitle={t('queue.pro.waitingFor', { minutes: waitedMinutes })}
       trailing={
-        <Button variant="secondary" size="sm" disabled={busy} onClick={() => onCall(entry.id)}>
-          {t('queue.pro.actions.call')}
-        </Button>
+        <>
+          {onMove && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              disabled={busy}
+              onClick={() => onMove(entry)}
+              data-testid={`pro-queue-move-${entry.id}`}
+            >
+              {t('queue.pro.moveAction')}
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={() => onCall(entry.id)}
+            data-testid={`pro-queue-call-${entry.id}`}
+          >
+            {t('queue.pro.actions.call')}
+          </Button>
+        </>
       }
     />
   )

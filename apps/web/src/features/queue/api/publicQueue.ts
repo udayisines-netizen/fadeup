@@ -32,7 +32,45 @@ export interface PublicQueueEntry {
   display_name: string
   status: 'waiting' | 'called' | 'in_service' | 'completed' | 'cancelled' | 'no_show'
   queue_position: number | null
+  barber_id: string | null
   barber_display_name: string | null
+}
+
+/** Une file de l'établissement — `barber_id` null = « premier disponible ». */
+export interface PublicQueueFile {
+  barber_id: string | null
+  display_name: string | null
+  avatar_url: string | null
+  waiting_count: number
+  busy: boolean
+  /** Estimation F1b, ou null = rien d'affichable (jamais une minute inventée). */
+  estimated_wait_minutes: number | null
+}
+
+/**
+ * F1b — les files par barber d'un lieu, « premier disponible » en tête puis
+ * tri par nombre en attente (fait, pas prédiction). Même poll que la file.
+ */
+export function usePublicQueues(
+  slug: string | null,
+  locationId: string | null,
+  options: { pollInBackground?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: queueKeys.publicQueues(slug ?? '', locationId ?? ''),
+    queryFn: async (): Promise<PublicQueueFile[]> => {
+      const { data, error } = await getSupabase().rpc('list_public_queues', {
+        p_organization_slug: slug ?? '',
+        p_location_id: locationId ?? '',
+      })
+      if (error) throw error
+      return (data ?? []) as PublicQueueFile[]
+    },
+    enabled: Boolean(slug && locationId),
+    refetchInterval: QUEUE_POLL_MS,
+    refetchIntervalInBackground: options.pollInBackground ?? false,
+    staleTime: 0,
+  })
 }
 
 export function usePublicQueueStatus(
@@ -113,14 +151,21 @@ export function usePublicOrganizationName(slug: string | null) {
   })
 }
 
-/** Échec de `join_public_queue` : un des huit refus nommés, ou une erreur générique. */
+/** Échec d'une RPC de file : un des refus nommés, ou une erreur générique. */
 export class QueueJoinRefusedError extends Error {
   readonly code: QueueRefusalCode
   constructor(code: QueueRefusalCode) {
-    super(`queue join refused: ${code}`)
+    super(`queue action refused: ${code}`)
     this.name = 'QueueJoinRefusedError'
     this.code = code
   }
+}
+
+/** Relève un refus nommé, sinon relance l'erreur brute vers `toAppError`. */
+function throwQueueError(error: unknown): never {
+  const refusal = parseQueueRefusal(error)
+  if (refusal) throw new QueueJoinRefusedError(refusal)
+  throw error as Error
 }
 
 export interface JoinQueueInput {
@@ -128,6 +173,8 @@ export interface JoinQueueInput {
   locationId: string
   customerName: string
   customerPhone?: string
+  /** File choisie — null = « premier disponible » (F1b §2). */
+  barberId: string | null
   checkInToken: string | null
   latitude: number | null
   longitude: number | null
@@ -153,15 +200,12 @@ export function useJoinQueue() {
         p_location_id: input.locationId,
         p_customer_name: input.customerName,
         p_customer_phone: input.customerPhone ?? undefined,
+        p_barber_id: input.barberId ?? undefined,
         p_check_in_token: input.checkInToken ?? undefined,
         p_latitude: input.latitude ?? undefined,
         p_longitude: input.longitude ?? undefined,
       })
-      if (error) {
-        const refusal = parseQueueRefusal(error)
-        if (refusal) throw new QueueJoinRefusedError(refusal)
-        throw error
-      }
+      if (error) throwQueueError(error)
       const row = data?.[0]
       if (!row) throw new Error('join_public_queue returned no row')
       return row as JoinQueueResult
@@ -170,7 +214,88 @@ export function useJoinQueue() {
       // Jamais d'optimisme sur une entrée en file (contrat P1 §17) : on
       // invalide et la RPC publique fait autorité au prochain poll immédiat.
       void queryClient.invalidateQueries({ queryKey: queueKeys.publicStatus(input.slug, input.locationId) })
+      void queryClient.invalidateQueries({ queryKey: queueKeys.publicQueues(input.slug, input.locationId) })
       void queryClient.invalidateQueries({ queryKey: queueKeys.mine() })
+    },
+  })
+}
+
+/** Le suivi F1b de la PROPRE entrée du client — `get_queue_entry_tracking`. */
+export interface QueueEntryTracking {
+  id: string
+  status: 'waiting' | 'called' | 'in_service' | 'completed' | 'cancelled' | 'no_show'
+  barber_id: string | null
+  barber_display_name: string | null
+  queue_position: number | null
+  people_ahead: number | null
+  /** Échéance ABSOLUE d'appel (UTC), calculée serveur — jamais la grâce brute. */
+  called_deadline_at: string | null
+  estimated_wait_minutes: number | null
+  /** true = sorti par le balayage de grâce, pas par un geste du salon. */
+  removed_automatically: boolean
+}
+
+/**
+ * Position dans SA file, échéance, estimation, nature d'une sortie.
+ * L'identifiant d'entrée fait capacité (modèle claim_token) ; poll aligné sur
+ * la file, ACTIF onglet caché — l'appel doit atteindre un téléphone rangé.
+ */
+export function useQueueEntryTracking(entryId: string | null) {
+  return useQuery({
+    queryKey: queueKeys.tracking(entryId ?? ''),
+    queryFn: async (): Promise<QueueEntryTracking | null> => {
+      const { data, error } = await getSupabase().rpc('get_queue_entry_tracking', {
+        p_entry_id: entryId ?? '',
+      })
+      if (error) throwQueueError(error)
+      return (data?.[0] as QueueEntryTracking | undefined) ?? null
+    },
+    enabled: Boolean(entryId),
+    refetchInterval: QUEUE_POLL_MS,
+    refetchIntervalInBackground: true,
+    staleTime: 0,
+    // Un refus nommé (entrée inconnue, compte tiers) ne se répare pas en
+    // réessayant : l'écran branche dessus immédiatement.
+    retry: (failureCount, error) => !(error instanceof QueueJoinRefusedError) && failureCount < 2,
+  })
+}
+
+/** Quitter la file (F1b §4) — transition -> cancelled uniquement. */
+export function useLeaveQueue() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (entryId: string) => {
+      const { data, error } = await getSupabase().rpc('leave_public_queue', { p_entry_id: entryId })
+      if (error) throwQueueError(error)
+      return data?.[0] ?? null
+    },
+    onSuccess: (_row, entryId) => {
+      void queryClient.invalidateQueries({ queryKey: queueKeys.tracking(entryId) })
+      void queryClient.invalidateQueries({ queryKey: queueKeys.all, refetchType: 'active' })
+    },
+  })
+}
+
+/**
+ * Changer de barber, à l'initiative du client (F1b §2) : l'entrée est
+ * annulée et RÉINSÉRÉE en fin de nouvelle file — l'appelant reçoit le nouvel
+ * identifiant et doit remplacer le sien.
+ */
+export function useChangeQueueBarber() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { entryId: string; toBarberId: string | null }): Promise<JoinQueueResult & { barber_id: string | null }> => {
+      const { data, error } = await getSupabase().rpc('change_queue_entry_barber', {
+        p_entry_id: input.entryId,
+        p_to_barber_id: input.toBarberId ?? undefined,
+      })
+      if (error) throwQueueError(error)
+      const row = data?.[0]
+      if (!row) throw new Error('change_queue_entry_barber returned no row')
+      return row as JoinQueueResult & { barber_id: string | null }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queueKeys.all, refetchType: 'active' })
     },
   })
 }

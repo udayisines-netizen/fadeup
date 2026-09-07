@@ -243,6 +243,127 @@ export function useSetQueueOpen(locationId: string | null) {
   })
 }
 
+/** Un barber du lieu, avec l'état de SA file (F1b). */
+export interface ProQueueBarber {
+  id: string
+  queue_enabled: boolean
+  is_bookable: boolean
+  display_name: string
+}
+
+/**
+ * Les barbers du lieu, côté pro — lecture RLS directe (org member), y
+ * compris les non publics : le comptoir déplace vers qui travaille vraiment.
+ */
+export function useProQueueBarbers(locationId: string | null) {
+  return useQuery({
+    queryKey: queueKeys.proBarbers(locationId ?? ''),
+    queryFn: async (): Promise<ProQueueBarber[]> => {
+      const { data, error } = await getSupabase()
+        .from('barbers')
+        .select('id, queue_enabled, is_bookable, staff_profiles!inner(display_name, location_id, is_active)')
+        .eq('staff_profiles.location_id', locationId ?? '')
+        .eq('staff_profiles.is_active', true)
+      if (error) throw error
+      return (data ?? [])
+        .map((row) => ({
+          id: row.id as string,
+          queue_enabled: row.queue_enabled as boolean,
+          is_bookable: row.is_bookable as boolean,
+          display_name: (row.staff_profiles as unknown as { display_name: string }).display_name,
+        }))
+        .sort((a, b) => a.display_name.localeCompare(b.display_name))
+    },
+    enabled: Boolean(locationId),
+    staleTime: 60_000,
+  })
+}
+
+/**
+ * Déplacer un client vers une autre file (owner/manager/réceptionniste ET
+ * barber — F1b §2). Le client garde son ancienneté ; la trace part en base
+ * (queue_entry_moves). Pas d'optimisme : on invalide, le serveur fait foi.
+ */
+export function useMoveQueueEntry(locationId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { entryId: string; toBarberId: string | null }) => {
+      const { data, error } = await getSupabase().rpc('move_queue_entry', {
+        p_entry_id: input.entryId,
+        p_to_barber_id: input.toBarberId ?? undefined,
+      })
+      if (error) throw error
+      return data?.[0] ?? null
+    },
+    onSuccess: () => {
+      if (locationId) void queryClient.invalidateQueries({ queryKey: queueKeys.pro(locationId) })
+    },
+  })
+}
+
+/** Couper ou rouvrir la file d'UN barber (owner/manager — F1b §2). */
+export function useSetBarberQueueEnabled(locationId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { barberId: string; enabled: boolean }) => {
+      const { data, error } = await getSupabase().rpc('set_barber_queue_enabled', {
+        p_barber_id: input.barberId,
+        p_enabled: input.enabled,
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      if (locationId) void queryClient.invalidateQueries({ queryKey: queueKeys.proBarbers(locationId) })
+    },
+  })
+}
+
+/** Balayage de grâce du lieu : off par défaut, décision du patron (F1b §6). */
+export function useSetGraceSweep(locationId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { data, error } = await getSupabase().rpc('set_location_queue_grace_sweep', {
+        p_location_id: locationId ?? '',
+        p_enabled: enabled,
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      if (locationId) void queryClient.invalidateQueries({ queryKey: queueKeys.checkIn(locationId) })
+    },
+  })
+}
+
+/** Transparence F1b : déclaré vs observé, par barber et par service. */
+export interface DurationInsight {
+  barber_id: string | null
+  barber_display_name: string | null
+  service_id: string
+  service_name: string
+  declared_minutes: number
+  observed_minutes: number | null
+  sample_count: number
+  estimate_capped: boolean
+}
+
+export function useDurationInsights(locationId: string | null) {
+  return useQuery({
+    queryKey: queueKeys.durationInsights(locationId ?? ''),
+    queryFn: async (): Promise<DurationInsight[]> => {
+      const { data, error } = await getSupabase().rpc('get_service_duration_insights', {
+        p_location_id: locationId ?? '',
+      })
+      if (error) throw error
+      return (data ?? []) as DurationInsight[]
+    },
+    enabled: Boolean(locationId),
+    staleTime: 60_000,
+  })
+}
+
 export type ServiceMode = 'hybrid' | 'reservation_only' | 'queue_only' | 'unavailable'
 
 export function useSetServiceMode(locationId: string | null) {

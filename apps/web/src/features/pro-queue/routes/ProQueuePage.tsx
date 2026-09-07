@@ -12,18 +12,25 @@ import { SkeletonRow } from '@/shared/ui/Skeleton'
 import { StateBadge } from '@/shared/ui/StateBadge'
 import { Switch } from '@/shared/ui/Switch'
 import { useToast } from '@/shared/ui/Toast'
-import { IconQr, IconQueue } from '@/shared/ui/icons'
+import { IconPending, IconQr, IconQueue } from '@/shared/ui/icons'
 import {
   useCompleteAndCallNext,
+  useDurationInsights,
+  useMoveQueueEntry,
   useProQueue,
+  useProQueueBarbers,
   useProQueueChannel,
   useQueueCheckIn,
   useQueueTransition,
   useServiceModeState,
+  useSetBarberQueueEnabled,
+  useSetGraceSweep,
   useSetQueueOpen,
   useSetServiceMode,
+  type ProQueueEntry,
   type ServiceMode,
 } from '@/features/pro-queue/api/proQueue'
+import { Sheet } from '@/shared/ui/Sheet'
 import { ProQueueEntryRow } from '@/features/pro-queue/components/ProQueueEntryRow'
 import { useNow } from '@/features/pro-queue/lib/useNow'
 
@@ -59,16 +66,51 @@ export function ProQueuePage() {
   useProQueueChannel(isServiceArea ? null : locationId)
   const checkIn = useQueueCheckIn(isServiceArea ? null : locationId)
   const modes = useServiceModeState(locationId)
+  const barbers = useProQueueBarbers(isServiceArea ? null : locationId)
+  const insights = useDurationInsights(isServiceArea ? null : locationId)
   const transition = useQueueTransition(locationId)
   const completeAndNext = useCompleteAndCallNext(locationId)
+  const moveEntry = useMoveQueueEntry(locationId)
   const setQueueOpen = useSetQueueOpen(locationId)
   const setServiceMode = useSetServiceMode(locationId)
+  const setBarberQueue = useSetBarberQueueEnabled(locationId)
+  const setGraceSweep = useSetGraceSweep(locationId)
   const now = useNow(1_000)
+
+  const [movingEntry, setMovingEntry] = useState<ProQueueEntry | null>(null)
 
   const entries = queue.data ?? []
   const inService = entries.filter((entry) => entry.status === 'in_service')
   const called = entries.filter((entry) => entry.status === 'called')
   const waiting = entries.filter((entry) => entry.status === 'waiting')
+
+  // F1b — les files : « premier disponible » puis chaque barber. Le
+  // regroupement n'apparaît que si PLUSIEURS barbers prennent la file ; un
+  // salon solo garde la liste plate de F1.
+  const barberRows = barbers.data ?? []
+  const queueCapableBarbers = barberRows.filter((row) => row.queue_enabled && row.is_bookable)
+  const multiFile = queueCapableBarbers.length > 1
+  const barberNameById = useMemo(
+    () => new Map(barberRows.map((row) => [row.id, row.display_name])),
+    [barberRows],
+  )
+  const waitingFiles = useMemo(() => {
+    if (!multiFile) return null
+    const groups: { barberId: string | null; name: string | null; entries: typeof waiting }[] = []
+    const firstAvailable = waiting.filter((entry) => entry.barber_id === null)
+    if (firstAvailable.length > 0) groups.push({ barberId: null, name: null, entries: firstAvailable })
+    const seen = new Set<string>()
+    for (const entry of waiting) {
+      if (entry.barber_id === null || seen.has(entry.barber_id)) continue
+      seen.add(entry.barber_id)
+      groups.push({
+        barberId: entry.barber_id,
+        name: barberNameById.get(entry.barber_id) ?? null,
+        entries: waiting.filter((row) => row.barber_id === entry.barber_id),
+      })
+    }
+    return groups
+  }, [multiFile, waiting, barberNameById])
 
   const locationMode = useMemo(() => (modes.data ?? []).find((row) => row.scope === 'location'), [modes.data])
   const queueOpen = locationMode?.queue_open ?? null
@@ -269,24 +311,163 @@ export function ProQueuePage() {
                 onComplete={(id) => completeAndNext.mutate({ entryId: id }, surfaceError)}
               />
             ))}
-            {waiting.map((entry, index) => (
-              <ProQueueEntryRow
-                key={entry.id}
-                entry={entry}
-                position={index + 1}
-                graceMinutes={graceMinutes}
-                timezone={location.timezone}
-                now={now}
-                busy={busy}
-                onCall={(id) => transition.mutate({ entryId: id, status: 'called' }, surfaceError)}
-                onArrived={(id) => transition.mutate({ entryId: id, status: 'in_service' }, surfaceError)}
-                onNoShow={(id) => transition.mutate({ entryId: id, status: 'no_show' }, surfaceError)}
-                onComplete={(id) => completeAndNext.mutate({ entryId: id }, surfaceError)}
-              />
-            ))}
+            {waitingFiles ? (
+              /* F1b — l'attente PAR FILE : « premier disponible » d'abord,
+                 position calculée dans la file, geste « Déplacer » par rangée. */
+              waitingFiles.map((file) => (
+                <div key={file.barberId ?? 'first-available'} data-testid="pro-queue-file">
+                  <h3 className="mt-3 font-fu-mono text-fu-xs font-medium tracking-widest text-[var(--fu-text-secondary)]">
+                    {(file.barberId === null ? t('queue.pro.fileHeaderFirstAvailable') : (file.name ?? '')).toLocaleUpperCase()}
+                    {' · '}
+                    {file.entries.length}
+                  </h3>
+                  {file.entries.map((entry, index) => (
+                    <ProQueueEntryRow
+                      key={entry.id}
+                      entry={entry}
+                      position={index + 1}
+                      graceMinutes={graceMinutes}
+                      timezone={location.timezone}
+                      now={now}
+                      busy={busy}
+                      onCall={(id) => transition.mutate({ entryId: id, status: 'called' }, surfaceError)}
+                      onArrived={(id) => transition.mutate({ entryId: id, status: 'in_service' }, surfaceError)}
+                      onNoShow={(id) => transition.mutate({ entryId: id, status: 'no_show' }, surfaceError)}
+                      onComplete={(id) => completeAndNext.mutate({ entryId: id }, surfaceError)}
+                      onMove={setMovingEntry}
+                    />
+                  ))}
+                </div>
+              ))
+            ) : (
+              waiting.map((entry, index) => (
+                <ProQueueEntryRow
+                  key={entry.id}
+                  entry={entry}
+                  position={index + 1}
+                  graceMinutes={graceMinutes}
+                  timezone={location.timezone}
+                  now={now}
+                  busy={busy}
+                  onCall={(id) => transition.mutate({ entryId: id, status: 'called' }, surfaceError)}
+                  onArrived={(id) => transition.mutate({ entryId: id, status: 'in_service' }, surfaceError)}
+                  onNoShow={(id) => transition.mutate({ entryId: id, status: 'no_show' }, surfaceError)}
+                  onComplete={(id) => completeAndNext.mutate({ entryId: id }, surfaceError)}
+                />
+              ))
+            )}
           </div>
         )}
       </section>
+
+      {/* F1b — durées : ce que FadeUp a appris. Visible dès qu'une mesure existe. */}
+      {(insights.data?.length ?? 0) > 0 && (
+        <Row
+          as="link"
+          to="/dashboard/queue/durations"
+          leading={<IconPending aria-hidden="true" className="size-5 text-[var(--fu-text-secondary)]" />}
+          title={t('queue.pro.durationsRow.title')}
+          subtitle={t('queue.pro.durationsRow.subtitle')}
+          chevron
+          className="rounded-[var(--radius-card)] border border-[var(--fu-border)]"
+        />
+      )}
+
+      {/* F1b — réglages : files par barber (owner/manager) et balayage de
+          grâce. Les RPC refusent un rôle non habilité ; l'échec remonte. */}
+      {(multiFile || checkIn.data) && (
+        <section className="rounded-[var(--radius-card)] bg-[var(--fu-surface)] p-4" data-testid="pro-queue-settings">
+          <h2 className="mb-1 font-fu-mono text-fu-xs font-medium tracking-widest text-[var(--fu-text-secondary)]">
+            {t('queue.pro.settingsTitle').toLocaleUpperCase()}
+          </h2>
+          {checkIn.data && (
+            <div className="border-b border-[var(--fu-border)] py-3">
+              <Switch
+                label={t('queue.pro.graceSweep.label')}
+                checked={checkIn.data.queue_grace_sweep_enabled ?? false}
+                disabled={setGraceSweep.isPending}
+                onCheckedChange={(enabled) => setGraceSweep.mutate(enabled, surfaceError)}
+              />
+              <p className="mt-1 text-fu-xs text-[var(--fu-text-secondary)]">{t('queue.pro.graceSweep.hint')}</p>
+            </div>
+          )}
+          {barberRows.length > 1 && (
+            <div className="pt-3">
+              <p className="text-fu-sm font-medium">{t('queue.pro.barberQueues.title')}</p>
+              <p className="mb-2 text-fu-xs text-[var(--fu-text-secondary)]">{t('queue.pro.barberQueues.hint')}</p>
+              {barberRows.map((barber) => (
+                <div key={barber.id} className="py-1.5">
+                  <Switch
+                    label={t('queue.pro.barberQueues.toggleLabel', { name: barber.display_name })}
+                    checked={barber.queue_enabled}
+                    disabled={setBarberQueue.isPending || !barber.is_bookable}
+                    onCheckedChange={(enabled) => setBarberQueue.mutate({ barberId: barber.id, enabled }, surfaceError)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* F1b — la feuille « Déplacer » : vers « premier disponible » ou vers
+          la file d'un autre barber. Le client garde son ancienneté. */}
+      <Sheet
+        open={movingEntry !== null}
+        onOpenChange={(next) => {
+          if (!next) setMovingEntry(null)
+        }}
+        title={movingEntry ? t('queue.pro.moveSheet.title', { name: movingEntry.customer_name.split(' ')[0] }) : ''}
+        description={t('queue.pro.moveSheet.description')}
+      >
+        <div className="flex flex-col" data-testid="pro-queue-move-sheet">
+          {movingEntry?.barber_id !== null && (
+            <Row
+              as="button"
+              onClick={() => {
+                if (!movingEntry) return
+                moveEntry.mutate(
+                  { entryId: movingEntry.id, toBarberId: null },
+                  {
+                    onSuccess: () => {
+                      setMovingEntry(null)
+                      toast({ title: t('queue.pro.movedToast'), tone: 'success' })
+                    },
+                    onError: () => toast({ title: t('errors.data.unknown'), tone: 'error' }),
+                  },
+                )
+              }}
+              disabled={moveEntry.isPending}
+              title={t('queue.pro.moveSheet.toFirstAvailable')}
+              chevron
+            />
+          )}
+          {queueCapableBarbers
+            .filter((barber) => barber.id !== movingEntry?.barber_id)
+            .map((barber) => (
+              <Row
+                key={barber.id}
+                as="button"
+                onClick={() => {
+                  if (!movingEntry) return
+                  moveEntry.mutate(
+                    { entryId: movingEntry.id, toBarberId: barber.id },
+                    {
+                      onSuccess: () => {
+                        setMovingEntry(null)
+                        toast({ title: t('queue.pro.movedToast'), tone: 'success' })
+                      },
+                      onError: () => toast({ title: t('errors.data.unknown'), tone: 'error' }),
+                    },
+                  )
+                }}
+                disabled={moveEntry.isPending}
+                title={barber.display_name}
+                chevron
+              />
+            ))}
+        </div>
+      </Sheet>
 
       {/* LE geste le plus fréquent de la journée — au pouce, sans défilement.
           Pro : filet, PAS d'ombre (P1 §7). */}

@@ -1,29 +1,41 @@
 /**
- * Loi produit (MASTER_SPEC §7, F1 §3) : le temps d'attente estimé ne
- * s'affiche QUE si la base en fournit un fiable. Aujourd'hui, AUCUNE RPC
- * publique n'en fournit — ni `get_public_queue_status`, ni
- * `get_public_service_state`. Le modèle d'estimation est une décision
- * fondateur en attente (MASTER_SPEC §23.3).
+ * Loi produit (MASTER_SPEC §7, F1 §3, F1b §3) : le temps d'attente estimé ne
+ * s'affiche QUE si la base en fournit un fiable. Depuis F1b, la base en
+ * fournit un — l'estimateur « déclaré puis appris » de
+ * `private.estimated_service_duration_minutes`, exposé par
+ * `list_public_queues.estimated_wait_minutes` et
+ * `get_queue_entry_tracking.estimated_wait_minutes`. `null` reste la réponse
+ * honnête chaque fois que rien de fiable n'existe.
  *
- * Vit dans shared/lib : les faces client (features/queue) et pro (features/pro-queue) partagent la même loi. Ce module est l'unique point de vérité : tant que `estimatedMinutes`
- * est `null`, RIEN n'est rendu — pas d'« environ », pas d'estimation
- * optimiste, pas de minute inventée. Le jour où la base livre une
- * estimation, elle passe ici et s'affiche.
+ * Vit dans shared/lib : les faces client (features/queue) et pro
+ * (features/pro-queue) partagent la même loi. Ce module est l'unique point de
+ * vérité : tant que `estimatedMinutes` est `null`, RIEN n'est rendu — pas
+ * d'« environ », pas d'estimation optimiste, pas de minute inventée.
  */
 
 export interface WaitTimeDisplay {
-  /** Minutes à afficher, déjà validées. */
+  /** Minutes à afficher, déjà validées et arrondies au pas produit. */
   minutes: number
 }
 
 /**
+ * Pas d'affichage : cinq minutes (F1b §3). Une précision à la minute qu'on
+ * n'a pas est un mensonge poli. Arrondi VERS LE HAUT : promettre un peu plus
+ * et servir plus tôt vaut mieux que l'inverse.
+ */
+const DISPLAY_STEP_MINUTES = 5
+
+/**
  * `null` = ne rien afficher. Toute valeur absente, négative ou non finie est
- * traitée comme « pas de temps fiable ».
+ * traitée comme « pas de temps fiable ». Une estimation positive est arrondie
+ * au multiple de cinq supérieur ; zéro reste zéro (file vide = sans attente,
+ * pas « 5 min »).
  */
 export function formatEstimatedWait(estimatedMinutes: number | null | undefined): WaitTimeDisplay | null {
   if (estimatedMinutes === null || estimatedMinutes === undefined) return null
   if (!Number.isFinite(estimatedMinutes) || estimatedMinutes < 0) return null
-  return { minutes: Math.round(estimatedMinutes) }
+  if (estimatedMinutes === 0) return { minutes: 0 }
+  return { minutes: Math.ceil(estimatedMinutes / DISPLAY_STEP_MINUTES) * DISPLAY_STEP_MINUTES }
 }
 
 /**

@@ -385,22 +385,38 @@ sur elle. Latent depuis B1 : F1 est le premier écran à exercer ce chemin.
 fidèle (`pre-f1-20260907-034902.dump`, up/down vérifiés ACL à l'appui).
 Sans échec de transition silencieux désormais : l'écran pro remonte un toast.
 
-## 11. La face client de la file — deux contrats manquants, constatés en F1 (2026-09-07)
+## 11. ~~La face client de la file — deux contrats manquants~~ — **RÉSOLUS par F1b (2026-09-07)**
 
-1. **Quitter la file** : aucun chemin. Les policies UPDATE de
-   `queue_entries` ne couvrent que les rôles org et le barber propriétaire ;
-   aucune RPC `leave_public_queue`/`cancel_my_queue_entry` n'existe. Un
-   client (anonyme OU connecté) ne peut pas sortir de la file — seul le
-   comptoir peut l'annuler. Correction proposée : RPC SECURITY DEFINER
-   `leave_public_queue(p_entry_id uuid)` — l'id d'entrée (uuid non
-   devinable, retourné au seul créateur) sert de capacité pour l'anonyme,
-   `booked_by_user_id`/`customer_id` pour le connecté ; transition
-   `→ cancelled` uniquement.
-2. **Compte à rebours de grâce côté client** : ni `called_at` ni
-   `queue_call_grace_minutes` ne sont exposés par une RPC publique
-   (`get_public_queue_status` n'a ni l'un ni l'autre ;
-   `get_location_queue_check_in` est réservée aux rôles org). L'écran client
-   rend l'appel impossible à manquer (panneau orchestré, notification) mais
-   SANS minute inventée — le compte à rebours attend que le contrat expose,
-   p. ex., un `called_deadline_at` calculé serveur sur la propre entrée du
-   client. Côté pro, le compte à rebours existe (seuils lus en base).
+1. **Quitter la file — LIVRÉ** : `leave_public_queue(p_entry_id uuid)`
+   (migration `20260907154000`), exactement sur le modèle proposé — l'uuid
+   d'entrée fait capacité pour l'anonyme (modèle claim_token B2), la session
+   fait foi pour une entrée de compte (`booked_by_user_id`, avec le
+   `coalesce` anti-NULL : un anonyme muni de l'uuid ne peut PAS agir sur une
+   entrée de compte — défaut attrapé par l'e2e F1b et couvert par
+   `verify_f1b.sql`). `waiting` et `called` → `cancelled` uniquement ; refus
+   nommés `fadeup_queue_refusal=entry_not_found | not_entry_owner |
+   entry_already_closed | entry_in_service`.
+2. **Compte à rebours côté client — LIVRÉ** : `get_queue_entry_tracking`
+   expose `called_deadline_at` (échéance ABSOLUE UTC calculée serveur) sur
+   la propre entrée seulement — jamais la durée de grâce brute. F1b ajoute
+   aussi le balayage de grâce (`run_queue_grace_maintenance`, désactivé par
+   défaut, activable par salon), la trace `auto_marked_no_show_at`, et la
+   passe scheduler dédiée dans `infra/scheduler/tick.sh` — **le tick.sh de
+   production ne l'exécutera qu'à la fusion** ; d'ici là la fonction existe
+   en base et ne fait rien (aucun salon ne l'a activée).
+
+## 12. Restes F1b, constatés en F1b (2026-09-07)
+
+1. **Pas de choix de service au join public** : `join_public_queue` accepte
+   `p_service_id` mais l'écran client ne le demande pas (décision F1 : coût
+   d'interaction minimal). Conséquence honnête : une entrée sans service n'a
+   pas de durée estimable — l'estimation F1b affiche alors RIEN pour cette
+   file (repli « rien », loi produit). Le jour où le join demandera le
+   service (une ligne de plus dans la feuille), l'estimation s'allumera
+   partout ; la collecte, elle, tourne déjà (file + rendez-vous).
+2. **La suite e2e F1 historique crée 2 organisations `qa-f1-*` par
+   campagne complète** (une par projet Chromium — son premier test EST le
+   parcours d'installation, qui exige un compte neuf). F1b, elle, réutilise
+   UNE organisation partagée `qa-f1b-shared` (+1 compte barber). Réécrire le
+   test d'installation F1 pour borner l'accumulation est un chantier de
+   suite de tests à part.

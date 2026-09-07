@@ -42,6 +42,14 @@ export const queueKeys = {
   checkIn: (locationId: string) => [...queueKeys.all, 'check-in', locationId] as const,
   /** Modes de service côté pro. */
   proModes: (locationId: string) => [...queueKeys.all, 'pro-modes', locationId] as const,
+  /** F1b — les files par barber d'un lieu, « premier disponible » en tête. */
+  publicQueues: (slug: string, locationId: string) => [...queueKeys.all, 'public-queues', slug, locationId] as const,
+  /** F1b — suivi de la PROPRE entrée du client (position, échéance, estimation). */
+  tracking: (entryId: string) => [...queueKeys.all, 'tracking', entryId] as const,
+  /** F1b — barbers du lieu côté pro (files, déplacement, réglages). */
+  proBarbers: (locationId: string) => [...queueKeys.all, 'pro-barbers', locationId] as const,
+  /** F1b — transparence des durées : déclaré vs observé. */
+  durationInsights: (locationId: string) => [...queueKeys.all, 'duration-insights', locationId] as const,
 } as const
 
 export const setupKeys = {

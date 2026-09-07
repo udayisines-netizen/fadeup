@@ -13,10 +13,15 @@ describe('formatEstimatedWait — jamais un temps inventé', () => {
     expect(formatEstimatedWait(-3)).toBeNull()
   })
 
-  it('affiche une estimation fournie et valide, arrondie', () => {
+  it('arrondit au pas de CINQ minutes, vers le haut (F1b §3)', () => {
+    expect(formatEstimatedWait(1)).toEqual({ minutes: 5 })
+    expect(formatEstimatedWait(12.4)).toEqual({ minutes: 15 })
+    expect(formatEstimatedWait(15)).toEqual({ minutes: 15 })
+    expect(formatEstimatedWait(16)).toEqual({ minutes: 20 })
+  })
+
+  it('zéro reste zéro : une file vide est « sans attente », pas « 5 min »', () => {
     expect(formatEstimatedWait(0)).toEqual({ minutes: 0 })
-    expect(formatEstimatedWait(12.4)).toEqual({ minutes: 12 })
-    expect(formatEstimatedWait(12.6)).toEqual({ minutes: 13 })
   })
 })
 

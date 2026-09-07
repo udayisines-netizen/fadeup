@@ -36,7 +36,9 @@ export function QueueSummary({ waitingCount, queueState, estimatedWaitMinutes }:
       <p className="text-fu-base text-[var(--fu-text-secondary)]">
         {t('queue.public.waitingCount', { count: waitingCount })}
       </p>
-      {wait && (
+      {/* Une file vide n'affiche pas « 0 min » : l'absence d'attente se lit
+          dans le compte. Les minutes n'apparaissent qu'au-dessus de zéro. */}
+      {wait && wait.minutes > 0 && (
         <p className="text-fu-sm text-[var(--fu-text-secondary)]" data-testid="queue-estimated-wait">
           {t('queue.public.estimatedWait', { minutes: wait.minutes })}
         </p>
