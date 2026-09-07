@@ -25,3 +25,18 @@ the script says so in its header and depublishes rather than deletes.
 B1's five down scripts were each executed against a database restored from
 `backups/pre-b1-*.dump`, in reverse order, before the corresponding migration
 was applied to production. A rollback that has not been run does not exist.
+
+## B4 (2026-09-07)
+
+Sept downs, chacun exécuté avec succès contre une restauration fidèle de
+`backups/pre-b4-*.dump` (pg_restore -U supabase_admin, sans `--no-owner`),
+en ordre inverse, avant l'application en production. Particularités :
+
+- `20260907120150_*.down.sql` doit tourner en **supabase_admin** (grantor
+  `supabase_storage_admin`), comme son aller.
+- `20260907120300_*.down.sql` (enum) refuse de tourner tant que des
+  notifications sociales existent — il énonce le DELETE à faire au lieu de
+  détruire ; il reconstruit le type et recrée
+  `private.emit_booking_notification` dont la signature porte l'enum.
+- Les deux downs de buckets ne vident jamais un bucket : un bucket non vide
+  est laissé en place et signalé.

@@ -100,6 +100,17 @@ probe get_public_currencies              "{\"p_organization_ids\":[\"${ORG_ID}\"
 probe search_public_organizations        '{"p_city":"Paris"}'
 probe search_public_professionals        '{}'
 
+# --- B4 : lectures sociales. Toutes doivent répondre 200 en anon — le corps
+# peut être vide (aucun post/avis en base n'est PAS une erreur, et rien n'est
+# fabriqué pour le remplir). Un non-200 ici rejouerait la classe d'erreur du
+# 405 de B1 (STABLE qui écrit).
+probe get_feed                           '{"p_limit":5}'
+probe get_professional_posts             "{\"p_handle\":\"${HANDLE}\"}"
+probe get_professional_posts_by_id       "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
+probe get_organization_posts             "{\"p_slug\":\"${ORG_SLUG}\"}"
+probe get_public_reviews                 "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
+probe get_public_reputation              "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
+
 echo
 if [[ "$fail" -eq 0 ]]; then
   echo "ALL PUBLIC READ RPCs: 200"

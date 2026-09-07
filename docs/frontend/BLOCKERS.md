@@ -9,6 +9,17 @@ sont livrés et affichent des erreurs traduites en attendant.
 > n°4 (`TRUNCATE`, réduit de 4 tables par B1 puis d'une par B2, il en reste
 > 82), n°5 (scripts `verify_*` hérités). B2 ajoute n°6, la séparation des
 > domaines d'envoi, et n°7, la clé Resend restreinte à l'envoi.
+>
+> **Mise à jour B4 (2026-09-07)** sur le n°4 : les 9 tables sociales de B4
+> naissent durcies (`anon` : rien ; `authenticated` : jamais
+> TRUNCATE/TRIGGER/REFERENCES/MAINTAIN), et B4 a trouvé puis retiré le même
+> motif sur **`storage.objects` et `storage.buckets`** — `anon` y détenait
+> `arwdDxtm`, TRUNCATE compris, c'est-à-dire le pouvoir de vider les
+> métadonnées de tous les fichiers du produit
+> (`db/migrations/20260907120150_b4_storage_grant_hardening.sql`, à appliquer
+> en `supabase_admin` : le grantor est `supabase_storage_admin` et un REVOKE
+> par `postgres` est un no-op silencieux). Les 82 tables public restent à
+> balayer dans le lot de durcissement dédié.
 
 ---
 

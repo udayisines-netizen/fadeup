@@ -1,4 +1,3 @@
-/* GÉNÉRÉ — ne jamais éditer à la main. Régénérer via P1a §4.3. */
 export type Json =
   | string
   | number
@@ -758,6 +757,126 @@ export type Database = {
           },
         ]
       }
+      billing_quote_requests: {
+        Row: {
+          created_at: string
+          establishments_requested: number
+          id: string
+          note: string | null
+          organization_id: string
+          requested_by: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          establishments_requested: number
+          id?: string
+          note?: string | null
+          organization_id: string
+          requested_by?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          establishments_requested?: number
+          id?: string
+          note?: string | null
+          organization_id?: string
+          requested_by?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_quote_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_stripe_prices: {
+        Row: {
+          archived_at: string | null
+          billing_interval: Database["public"]["Enums"]["stripe_billing_interval"]
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          livemode: boolean
+          plan_key: string
+          stripe_price_id: string
+          unit_amount_minor: number
+        }
+        Insert: {
+          archived_at?: string | null
+          billing_interval: Database["public"]["Enums"]["stripe_billing_interval"]
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          livemode?: boolean
+          plan_key: string
+          stripe_price_id: string
+          unit_amount_minor: number
+        }
+        Update: {
+          archived_at?: string | null
+          billing_interval?: Database["public"]["Enums"]["stripe_billing_interval"]
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          livemode?: boolean
+          plan_key?: string
+          stripe_price_id?: string
+          unit_amount_minor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_stripe_prices_plan_key_fkey"
+            columns: ["plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
+          },
+        ]
+      }
+      billing_stripe_products: {
+        Row: {
+          created_at: string
+          livemode: boolean
+          plan_key: string
+          stripe_product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          livemode?: boolean
+          plan_key: string
+          stripe_product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          livemode?: boolean
+          plan_key?: string
+          stripe_product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_stripe_products_plan_key_fkey"
+            columns: ["plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
+          },
+        ]
+      }
       booking_provider_observations: {
         Row: {
           booking_status: Database["public"]["Enums"]["booking_availability_status"]
@@ -1021,13 +1140,17 @@ export type Database = {
       }
       commercial_plans: {
         Row: {
+          annual_months_charged: number
+          annual_price_minor: number | null
           commercial_family: Database["public"]["Enums"]["commercial_family"]
           created_at: string
           display_name: string
+          feature_tier_plan_key: string | null
           is_available: boolean
           is_recommended: boolean
           max_establishments: number
           max_operational_professionals: number | null
+          min_establishments: number
           plan_key: string
           price_currency: string
           price_minor: number
@@ -1035,13 +1158,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          annual_months_charged?: number
+          annual_price_minor?: number | null
           commercial_family: Database["public"]["Enums"]["commercial_family"]
           created_at?: string
           display_name: string
+          feature_tier_plan_key?: string | null
           is_available?: boolean
           is_recommended?: boolean
           max_establishments: number
           max_operational_professionals?: number | null
+          min_establishments?: number
           plan_key: string
           price_currency?: string
           price_minor: number
@@ -1049,20 +1176,31 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          annual_months_charged?: number
+          annual_price_minor?: number | null
           commercial_family?: Database["public"]["Enums"]["commercial_family"]
           created_at?: string
           display_name?: string
+          feature_tier_plan_key?: string | null
           is_available?: boolean
           is_recommended?: boolean
           max_establishments?: number
           max_operational_professionals?: number | null
+          min_establishments?: number
           plan_key?: string
           price_currency?: string
           price_minor?: number
           tier?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "commercial_plans_feature_tier_fkey"
+            columns: ["feature_tier_plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
+          },
+        ]
       }
       customer_favorites: {
         Row: {
@@ -1560,6 +1698,27 @@ export type Database = {
             referencedColumns: ["stream"]
           },
         ]
+      }
+      feed_ranking_weights: {
+        Row: {
+          description: string | null
+          signal: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          description?: string | null
+          signal: string
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          description?: string | null
+          signal?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
       }
       invitations: {
         Row: {
@@ -2330,6 +2489,112 @@ export type Database = {
           },
         ]
       }
+      organization_billing: {
+        Row: {
+          billing_interval:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          grace_until: string | null
+          livemode: boolean
+          organization_id: string
+          plan_key: string | null
+          scheduled_dispatched_at: string | null
+          scheduled_effective_at: string | null
+          scheduled_interval:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          scheduled_plan_key: string | null
+          scheduled_reason: string | null
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          stripe_subscription_item_id: string | null
+          subscription_status: string | null
+          tax_id_type: string | null
+          tax_id_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_interval?:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          grace_until?: string | null
+          livemode?: boolean
+          organization_id: string
+          plan_key?: string | null
+          scheduled_dispatched_at?: string | null
+          scheduled_effective_at?: string | null
+          scheduled_interval?:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          scheduled_plan_key?: string | null
+          scheduled_reason?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_item_id?: string | null
+          subscription_status?: string | null
+          tax_id_type?: string | null
+          tax_id_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          grace_until?: string | null
+          livemode?: boolean
+          organization_id?: string
+          plan_key?: string | null
+          scheduled_dispatched_at?: string | null
+          scheduled_effective_at?: string | null
+          scheduled_interval?:
+            | Database["public"]["Enums"]["stripe_billing_interval"]
+            | null
+          scheduled_plan_key?: string | null
+          scheduled_reason?: string | null
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_item_id?: string | null
+          subscription_status?: string | null
+          tax_id_type?: string | null
+          tax_id_value?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_billing_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_billing_plan_key_fkey"
+            columns: ["plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
+          },
+          {
+            foreignKeyName: "organization_billing_scheduled_plan_key_fkey"
+            columns: ["scheduled_plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
+          },
+        ]
+      }
       organization_commercial_state: {
         Row: {
           assigned_at: string
@@ -2450,6 +2715,58 @@ export type Database = {
             columns: ["organization_id"]
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_trials: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          ends_at: string
+          expired_at: string | null
+          organization_id: string
+          plan_key: string
+          started_at: string
+          started_from: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          ends_at: string
+          expired_at?: string | null
+          organization_id: string
+          plan_key: string
+          started_at?: string
+          started_from?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          ends_at?: string
+          expired_at?: string | null
+          organization_id?: string
+          plan_key?: string
+          started_at?: string
+          started_from?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_trials_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_trials_plan_key_fkey"
+            columns: ["plan_key"]
+            referencedRelation: "commercial_plans"
+            referencedColumns: ["plan_key"]
           },
         ]
       }
@@ -3364,6 +3681,163 @@ export type Database = {
             foreignKeyName: "platform_support_sessions_organization_id_fkey"
             columns: ["organization_id"]
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_media: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          height: number | null
+          id: string
+          media_type: string
+          position: number
+          post_id: string
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          height?: number | null
+          id?: string
+          media_type?: string
+          position?: number
+          post_id: string
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          height?: number | null
+          id?: string
+          media_type?: string
+          position?: number
+          post_id?: string
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_media_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_services: {
+        Row: {
+          created_at: string
+          post_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_services_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_services_service_id_fkey"
+            columns: ["service_id"]
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_kind: string
+          caption: string | null
+          created_at: string
+          id: string
+          like_count: number
+          organization_id: string | null
+          posted_at_organization_id: string | null
+          professional_id: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          author_kind: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          like_count?: number
+          organization_id?: string | null
+          posted_at_organization_id?: string | null
+          professional_id?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          author_kind?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          like_count?: number
+          organization_id?: string | null
+          posted_at_organization_id?: string | null
+          professional_id?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_posted_at_organization_id_fkey"
+            columns: ["posted_at_organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_professional_id_fkey"
+            columns: ["professional_id"]
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
         ]
@@ -5462,6 +5936,195 @@ export type Database = {
           },
         ]
       }
+      review_photos: {
+        Row: {
+          consent_publish: boolean
+          consent_social_reuse: boolean
+          created_at: string
+          id: string
+          review_id: string
+          storage_path: string
+        }
+        Insert: {
+          consent_publish: boolean
+          consent_social_reuse?: boolean
+          created_at?: string
+          id?: string
+          review_id: string
+          storage_path: string
+        }
+        Update: {
+          consent_publish?: boolean
+          consent_social_reuse?: boolean
+          created_at?: string
+          id?: string
+          review_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_photos_review_id_fkey"
+            columns: ["review_id"]
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_reports: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          reason: string
+          reporter_user_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          review_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason: string
+          reporter_user_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason?: string
+          reporter_user_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_reputation: {
+        Row: {
+          rating_count: number
+          rating_sum: number
+          subject_id: string
+          subject_kind: string
+          updated_at: string
+        }
+        Insert: {
+          rating_count?: number
+          rating_sum?: number
+          subject_id: string
+          subject_kind: string
+          updated_at?: string
+        }
+        Update: {
+          rating_count?: number
+          rating_sum?: number
+          subject_id?: string
+          subject_kind?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          appointment_id: string
+          comment: string | null
+          created_at: string
+          customer_user_id: string
+          external_attribution: Json | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          organization_id: string
+          professional_id: string
+          rating: number
+          replied_at: string | null
+          replied_by_user_id: string | null
+          reply_body: string | null
+          reviewer_display_name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          comment?: string | null
+          created_at?: string
+          customer_user_id: string
+          external_attribution?: Json | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          organization_id: string
+          professional_id: string
+          rating: number
+          replied_at?: string | null
+          replied_by_user_id?: string | null
+          reply_body?: string | null
+          reviewer_display_name: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_user_id?: string
+          external_attribution?: Json | null
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          organization_id?: string
+          professional_id?: string
+          rating?: number
+          replied_at?: string | null
+          replied_by_user_id?: string | null
+          reply_body?: string | null
+          reviewer_display_name?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_appointment_id_fkey"
+            columns: ["appointment_id"]
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string
@@ -5788,6 +6451,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_webhook_events: {
+        Row: {
+          attempts: number
+          error: string | null
+          event_id: string
+          event_type: string
+          livemode: boolean
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          error?: string | null
+          event_id: string
+          event_type: string
+          livemode: boolean
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          livemode?: boolean
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       time_blocks: {
         Row: {
@@ -6885,6 +7584,35 @@ export type Database = {
           raw_token: string
         }[]
       }
+      create_post: {
+        Args: {
+          p_author_kind: string
+          p_caption?: string
+          p_media: Json
+          p_organization_id?: string
+          p_posted_at_organization_id?: string
+          p_service_ids?: string[]
+          p_visibility?: string
+        }
+        Returns: {
+          author_kind: string
+          caption: string | null
+          created_at: string
+          id: string
+          like_count: number
+          organization_id: string | null
+          posted_at_organization_id: string | null
+          professional_id: string | null
+          updated_at: string
+          visibility: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "posts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_professional_interest_request: {
         Args: {
           p_customer_email?: string
@@ -6981,6 +7709,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      delete_post: { Args: { p_post_id: string }; Returns: undefined }
       end_platform_support_session: {
         Args: { p_id: string }
         Returns: {
@@ -7038,6 +7767,27 @@ export type Database = {
           slot_start: string
         }[]
       }
+      get_billing_catalog: {
+        Args: never
+        Returns: {
+          annual_months_charged: number
+          annual_price_minor: number
+          annual_stripe_price_id: string
+          commercial_family: Database["public"]["Enums"]["commercial_family"]
+          display_name: string
+          is_available: boolean
+          is_recommended: boolean
+          live_capabilities: string[]
+          max_establishments: number
+          max_operational_professionals: number
+          min_establishments: number
+          monthly_stripe_price_id: string
+          plan_key: string
+          price_currency: string
+          price_minor: number
+          tier: number
+        }[]
+      }
       get_booking_requests: {
         Args: { p_organization_id: string }
         Returns: {
@@ -7088,6 +7838,36 @@ export type Database = {
           service_name: string
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
+      get_feed: {
+        Args: {
+          p_cursor?: string
+          p_latitude?: number
+          p_limit?: number
+          p_longitude?: number
+        }
+        Returns: {
+          author_kind: string
+          caption: string
+          created_at: string
+          feed_source: string
+          like_count: number
+          liked_by_me: boolean
+          media: Json
+          organization_id: string
+          organization_name: string
+          organization_slug: string
+          post_id: string
+          posted_at_organization_id: string
+          posted_at_organization_name: string
+          posted_at_organization_slug: string
+          professional_avatar_url: string
+          professional_display_name: string
+          professional_handle: string
+          professional_id: string
+          score: number
+          services: Json
         }[]
       }
       get_invitation_by_token: {
@@ -7262,6 +8042,24 @@ export type Database = {
           used_operational_professionals: number
         }[]
       }
+      get_organization_posts: {
+        Args: { p_cursor?: string; p_limit?: number; p_slug: string }
+        Returns: {
+          author_kind: string
+          caption: string
+          created_at: string
+          like_count: number
+          liked_by_me: boolean
+          media: Json
+          post_id: string
+          professional_avatar_url: string
+          professional_display_name: string
+          professional_handle: string
+          professional_id: string
+          services: Json
+          visibility: string
+        }[]
+      }
       get_organization_readiness: {
         Args: { p_organization_id: string }
         Returns: {
@@ -7335,6 +8133,38 @@ export type Database = {
           unique_customers: number
           window_from: string
           window_to: string
+        }[]
+      }
+      get_professional_posts: {
+        Args: { p_cursor?: string; p_handle: string; p_limit?: number }
+        Returns: {
+          caption: string
+          created_at: string
+          like_count: number
+          liked_by_me: boolean
+          media: Json
+          post_id: string
+          posted_at_organization_id: string
+          posted_at_organization_name: string
+          posted_at_organization_slug: string
+          services: Json
+          visibility: string
+        }[]
+      }
+      get_professional_posts_by_id: {
+        Args: { p_cursor?: string; p_limit?: number; p_professional_id: string }
+        Returns: {
+          caption: string
+          created_at: string
+          like_count: number
+          liked_by_me: boolean
+          media: Json
+          post_id: string
+          posted_at_organization_id: string
+          posted_at_organization_name: string
+          posted_at_organization_slug: string
+          services: Json
+          visibility: string
         }[]
       }
       get_public_available_slots: {
@@ -7443,6 +8273,33 @@ export type Database = {
           status: Database["public"]["Enums"]["queue_status"]
         }[]
       }
+      get_public_reputation: {
+        Args: { p_organization_id?: string; p_professional_id?: string }
+        Returns: {
+          rating_average: number
+          rating_count: number
+        }[]
+      }
+      get_public_reviews: {
+        Args: {
+          p_cursor?: string
+          p_limit?: number
+          p_organization_id?: string
+          p_professional_id?: string
+        }
+        Returns: {
+          comment: string
+          created_at: string
+          organization_id: string
+          photo_storage_path: string
+          professional_id: string
+          rating: number
+          replied_at: string
+          reply_body: string
+          review_id: string
+          reviewer_display_name: string
+        }[]
+      }
       get_public_service_state: {
         Args: {
           p_barber_id?: string
@@ -7512,6 +8369,7 @@ export type Database = {
           status: Database["public"]["Enums"]["queue_status"]
         }[]
       }
+      like_post: { Args: { p_post_id: string }; Returns: undefined }
       list_marketplace_withdrawal_requests: {
         Args: { p_include_completed?: boolean }
         Returns: {
@@ -7663,6 +8521,36 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: undefined
       }
+      moderate_review: {
+        Args: { p_reason?: string; p_review_id: string; p_status: string }
+        Returns: {
+          appointment_id: string
+          comment: string | null
+          created_at: string
+          customer_user_id: string
+          external_attribution: Json | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          organization_id: string
+          professional_id: string
+          rating: number
+          replied_at: string | null
+          replied_by_user_id: string | null
+          reply_body: string | null
+          reviewer_display_name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       my_organization_has_capability: {
         Args: { p_capability: string; p_organization_id: string }
         Returns: boolean
@@ -7731,6 +8619,28 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      prepare_billing_checkout: {
+        Args: {
+          p_interval?: Database["public"]["Enums"]["stripe_billing_interval"]
+          p_organization_id: string
+          p_plan_key: string
+        }
+        Returns: {
+          livemode: boolean
+          organization_id: string
+          organization_name: string
+          owner_email: string
+          stripe_customer_id: string
+          stripe_price_id: string
+        }[]
+      }
+      prepare_billing_portal: {
+        Args: { p_organization_id: string }
+        Returns: {
+          livemode: boolean
+          stripe_customer_id: string
+        }[]
+      }
       promote_ml_model: {
         Args: { p_evaluation_notes: string; p_model_version_id: string }
         Returns: {
@@ -7779,6 +8689,10 @@ export type Database = {
           rows_written: number
         }[]
       }
+      record_billing_customer: {
+        Args: { p_organization_id: string; p_stripe_customer_id: string }
+        Returns: undefined
+      }
       recover_stale_prospect_job_leases: { Args: never; Returns: number }
       redeem_appointment_claim: {
         Args: { p_token: string }
@@ -7820,6 +8734,55 @@ export type Database = {
         }[]
       }
       remove_favorite: { Args: { p_favorite_id: string }; Returns: undefined }
+      reply_to_review: {
+        Args: { p_body: string; p_review_id: string }
+        Returns: {
+          appointment_id: string
+          comment: string | null
+          created_at: string
+          customer_user_id: string
+          external_attribution: Json | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          organization_id: string
+          professional_id: string
+          rating: number
+          replied_at: string | null
+          replied_by_user_id: string | null
+          reply_body: string | null
+          reviewer_display_name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      report_review: {
+        Args: { p_detail?: string; p_reason: string; p_review_id: string }
+        Returns: undefined
+      }
+      request_billing_cancellation: {
+        Args: { p_organization_id: string }
+        Returns: {
+          effective_at: string
+          stripe_subscription_id: string
+        }[]
+      }
+      request_billing_quote: {
+        Args: {
+          p_establishments: number
+          p_note?: string
+          p_organization_id: string
+        }
+        Returns: string
+      }
       request_marketplace_withdrawal: {
         Args: {
           p_professional_id: string
@@ -7829,6 +8792,20 @@ export type Database = {
         Returns: {
           deadline_at: string
           id: string
+        }[]
+      }
+      request_plan_change: {
+        Args: {
+          p_new_interval?: Database["public"]["Enums"]["stripe_billing_interval"]
+          p_new_plan_key: string
+          p_organization_id: string
+        }
+        Returns: {
+          decision: string
+          effective_at: string
+          stripe_price_id: string
+          stripe_subscription_id: string
+          stripe_subscription_item_id: string
         }[]
       }
       reschedule_appointment: {
@@ -7875,6 +8852,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      resolve_review_report: {
+        Args: { p_report_id: string; p_status: string }
+        Returns: undefined
       }
       retire_ml_model: {
         Args: { p_model_version_id: string }
@@ -8022,6 +9003,15 @@ export type Database = {
           outreach_queued: number
         }[]
       }
+      run_billing_maintenance: {
+        Args: never
+        Returns: {
+          changes_dispatched: number
+          dunning_queued: number
+          events_processed: number
+          graces_expired: number
+        }[]
+      }
       run_booking_maintenance: {
         Args: never
         Returns: {
@@ -8033,6 +9023,21 @@ export type Database = {
         Returns: {
           dispatched: number
           reconciled: number
+        }[]
+      }
+      run_establishment_tier_maintenance: {
+        Args: never
+        Returns: {
+          quotes_opened: number
+          tier_changes_scheduled: number
+        }[]
+      }
+      run_trial_maintenance: {
+        Args: never
+        Returns: {
+          reminders_queued: number
+          trials_expired: number
+          trials_started: number
         }[]
       }
       save_business_profile: {
@@ -8371,6 +9376,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      start_organization_trial: {
+        Args: { p_organization_id: string }
+        Returns: {
+          ends_at: string
+          plan_key: string
+          started_at: string
+        }[]
+      }
       start_platform_support_session: {
         Args: {
           p_organization_id: string
@@ -8449,6 +9462,42 @@ export type Database = {
         Args: { p_evidence?: string; p_professional_id: string }
         Returns: string
       }
+      submit_review: {
+        Args: {
+          p_appointment_id: string
+          p_comment?: string
+          p_photo_consent_publish?: boolean
+          p_photo_storage_path?: string
+          p_rating: number
+        }
+        Returns: {
+          appointment_id: string
+          comment: string | null
+          created_at: string
+          customer_user_id: string
+          external_attribution: Json | null
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          organization_id: string
+          professional_id: string
+          rating: number
+          replied_at: string | null
+          replied_by_user_id: string | null
+          reply_body: string | null
+          reviewer_display_name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       suggested_currency_for_country: {
         Args: { p_country_code: string }
         Returns: string
@@ -8469,6 +9518,7 @@ export type Database = {
           prospect_id: string
         }[]
       }
+      sync_plan_feature_tier: { Args: { p_plan_key: string }; Returns: number }
       track_analytics_event: {
         Args: {
           p_barber_id?: string
@@ -8492,6 +9542,7 @@ export type Database = {
         Args: { p_professional_id: string }
         Returns: undefined
       }
+      unlike_post: { Args: { p_post_id: string }; Returns: undefined }
       unsubscribe_prospect_outreach: {
         Args: { p_token: string }
         Returns: {
@@ -8603,6 +9654,10 @@ export type Database = {
         | "booking_cancelled"
         | "booking_rescheduled"
         | "team_invitation"
+        | "new_follower"
+        | "post_liked"
+        | "review_received"
+        | "review_reply"
       outreach_campaign_status:
         | "draft"
         | "preparing"
@@ -8760,6 +9815,7 @@ export type Database = {
         | "temporary_override_cleared"
         | "queue_open"
       service_mode_scope: "location" | "barber"
+      stripe_billing_interval: "month" | "year"
       waitlist_status:
         | "waiting"
         | "notified"
@@ -9005,6 +10061,10 @@ export const Constants = {
         "booking_cancelled",
         "booking_rescheduled",
         "team_invitation",
+        "new_follower",
+        "post_liked",
+        "review_received",
+        "review_reply",
       ],
       outreach_campaign_status: [
         "draft",
@@ -9182,6 +10242,7 @@ export const Constants = {
         "queue_open",
       ],
       service_mode_scope: ["location", "barber"],
+      stripe_billing_interval: ["month", "year"],
       waitlist_status: [
         "waiting",
         "notified",

@@ -8,6 +8,15 @@ postgres-meta du conteneur `fadeup-supabase-meta` — la CLI Supabase moderne
 exige Docker-in-Docker pour `gen types --db-url` et échoue ici ; même
 générateur, même sortie).
 
+> **Mis à jour le 2026-09-07 après B4** (`b4/social-schema`). Le schéma live
+> porte **128 tables** : les 113 de B2, **6 tables billing de B3** (lot
+> parallèle, `b3/monetization` — leurs migrations vivent sur cette branche-là)
+> et les **9 tables sociales de B4** (`posts`, `post_media`, `post_services`,
+> `post_likes`, `reviews`, `review_photos`, `review_reports`,
+> `review_reputation`, `feed_ranking_weights`), toutes en RLS forcée, aucune
+> exposée à `anon`. `db-audit/SCHEMA.sql` et `database.types.ts` sont des
+> instantanés de la production et incluent donc B3.
+>
 > **Mis à jour le 2026-09-04 après B2** (`b2/acquisition-funnel`). Le schéma
 > live porte désormais **113 tables, 200 fonctions, 62 enums, 307 policies
 > RLS, 0 table sans RLS**. Les lignes marquées **B2** sont celles de ce lot ;
@@ -187,14 +196,22 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 
 ### P4 — Social & avis
 
+> **Débloqué par B4 (2026-09-07, `b4/social-schema`).** Tables
+> `posts/post_media/post_services/post_likes`, domaine avis complet
+> (`reviews/review_photos/review_reports/review_reputation`), buckets privés
+> `post-media` et `review-photos` à URL signées, quatre types de notification
+> sociaux. Aucune table sociale dans la publication realtime :
+> rafraîchissement à la demande, décision B4 §8.
+
 | Écran | RPC principale | RPC secondaires | Realtime | Statut |
 |---|---|---|---|---|
-| Publication (composer) | — | — | — | **BLOQUÉ** — tables `posts/post_media/post_services/post_likes` absentes (MASTER_SPEC §18) |
-| Portfolio sur profils | — | — | — | **BLOQUÉ** — idem |
-| Viewer de post + like | — | — | — | **BLOQUÉ** — idem |
+| Feed | `get_feed` (curseur temporel, dédupliqué, poids en table `feed_ranking_weights`) | — | — | **OK (B4)** |
+| Publication (composer) | `create_post` | `delete_post` ; upload direct bucket `post-media` sous `{user_id}/…` | — | **OK (B4)** — 1 à 10 médias exigés, vidéo ≤ 60 s, service lié = même organisation |
+| Portfolio sur profils | `get_professional_posts` (handle) / `get_professional_posts_by_id` (les identités pré-R6 n'ont pas de handle) | `get_organization_posts` — un post de pro rattaché apparaît sur les DEUX profils, rattachement figé | — | **OK (B4)** |
+| Viewer de post + like | `get_feed` / RPC portfolio (média = `storage_path`, à signer via Storage API — l'anon signe un média de post public) | `like_post`, `unlike_post` | — | **OK (B4)** — `like_count` par trigger, jamais côté client |
 | Follows (gestion) | `list_my_followed_*`, `unfollow_*` | — | — | **OK** |
-| Avis (dépôt, réponse pro, signalement) | — | — | — | **BLOQUÉ** — domaine entier à créer (V8) |
-| Réputation agrégée | — | — | — | **BLOQUÉ** — dépend des avis |
+| Avis (dépôt, réponse pro, signalement) | `submit_review` (prestation `completed` du compte réservataire, fenêtre 30 j, un avis par prestation, photo avec consentement explicite) | `reply_to_review` (une seule), `report_review`, `get_public_reviews` ; modération plateforme : `moderate_review`, `resolve_review_report` | — | **OK (B4)** |
+| Réputation agrégée | `get_public_reputation` — **`rating_average` est `null` sans avis, jamais 0** ; le composant Rating affiche « Pas encore d'avis » | — | — | **OK (B4)** |
 
 ### P5 — Platform
 
@@ -497,16 +514,21 @@ FR et EN sont autorisés ✓. Le sélecteur de lancement n'expose que `fr`/`en` 
 les huit autres valeurs restent légales en base (moteur international
 préservé, RTL `ar` compris). `profiles.theme` ∈ {light, dark, system}.
 
-### V8 — Systèmes absents — **CONFIRMÉ ABSENTS (3/3)**
+### V8 — Systèmes absents — ~~CONFIRMÉ ABSENTS (3/3)~~ **2/3 LIVRÉS depuis**
 
 ```
-grep -ciP 'create table public\.(reviews|ratings)'      → 0
+grep -ciP 'create table public\.(reviews|ratings)'      → 0   (au 2026-09-04)
 grep -ciP 'wallet|pkpass|apple_pass|google_pass'         → 0
-grep -ciP 'geofence|qr_code|check_?in_radius'            → 0
+grep -ciP 'geofence|qr_code|check_?in_radius'            → 0   (au 2026-09-04)
 ```
 
-- **Avis natifs** : rien. À créer par le prompt P4 (tables `reviews` +
-  agrégation réputation, conventions §18 de MASTER_SPEC).
+- **Avis natifs** : ~~rien~~ — **LIVRÉ PAR B4 (2026-09-07)**. `reviews`
+  (1–5, commentaire facultatif, un avis par prestation `completed` du compte
+  réservataire, fenêtre 30 j), `review_photos` (consentement de publication
+  exigé par contrainte, `consent_social_reuse` distinct et jamais déduit),
+  `review_reports`, `review_reputation` maintenue par trigger — **`null` sans
+  avis, jamais 0**. `source` contraint à `'fadeup'` : un avis Google est
+  irreprésentable sans nouvelle migration. Voir la cartographie P4 §2.
 - **Passes Wallet** : rien. Prompt dédié post-P2 (dépend du Passport, déjà en base).
 - **QR + géofence de file** : ~~rien~~ — **LIVRÉ PAR B1 (2026-09-04)**.
   `locations.queue_check_in_token` (32 hex, unique, régénérable par
@@ -587,8 +609,8 @@ grep -ciP 'geofence|qr_code|check_?in_radius'            → 0
 ## 8. Systèmes à créer
 
 1. **Tunnel de demande d'acquisition** (V1+V2) : demande `pending` vers profils Free/non revendiqués, e-mails prospect (3 touches max, e-mail uniquement), première acceptation offerte, exposition minimale des données personnelles avant vérification. L'aval (TTL, sweep scheduler, confirm/decline, notifications) existe.
-2. **Avis** (P4) : `reviews` 1–5 + commentaire facultatif, lien au rendez-vous `completed`, rattachement barber **et** org, réponse publique, signalement, fenêtre 30 j, agrégation de réputation. Conventions : contraintes `<table>_<règle>`, `set_updated_at`, `check_<table>_consistency`, accès public par `get_public_*`, RLS forcée.
-3. **Publications sociales** (P4) : `posts`, `post_media` (≤10, vidéo ≤60 s), `post_services`, `post_likes` ; bucket `post-media` non public à URL signées (modèle `passport-photos`). Pas de commentaires, pas de hashtags.
+2. ~~**Avis** (P4)~~ — **LIVRÉ PAR B4 (2026-09-07)**, conventions respectées (contraintes `<table>_<règle>`, `set_updated_at`, gardes trigger, `get_public_*`, RLS forcée).
+3. ~~**Publications sociales** (P4)~~ — **LIVRÉ PAR B4 (2026-09-07)** : `posts`, `post_media` (1–10, vidéo ≤ 60 s), `post_services`, `post_likes` ; buckets `post-media` et `review-photos` non publics à URL signées (modèle `passport-photos`). Pas de `post_comments`, pas de hashtags.
 4. **Présence physique en file** (avant P2 file) : QR du salon + géofence 150 m dans `join_public_queue`.
 5. **Billing réel** (P3) : réconciliation du catalogue avec la décision tarifaire, annuel 10/12, essai 14 j sans carte, intégration Stripe (webhooks → `organization_commercial_state`, `entitlement_source='billing'`).
 6. **Wallet/pkpass** (post-P2) : passes Apple/Google adossées au Passport.

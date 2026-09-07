@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QvcsvexUeV91vcKVYeOLwFJUd4IebqlQU6P1GwGwkZxPZzB0nzs2gd1nXfpUXzk
+\restrict B5d0SeECzQCTIQXQOV0qQgcfb78Zp16YqH8d0wvbfJcPfhzgZTTbfhYcbJKxbcP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -453,7 +453,11 @@ CREATE TYPE public.notification_type AS ENUM (
     'booking_expired',
     'booking_cancelled',
     'booking_rescheduled',
-    'team_invitation'
+    'team_invitation',
+    'new_follower',
+    'post_liked',
+    'review_received',
+    'review_reply'
 );
 
 
@@ -972,6 +976,16 @@ CREATE TYPE public.service_mode_scope AS ENUM (
 --
 
 COMMENT ON TYPE public.service_mode_scope IS 'What a service-mode override applies to: an entire establishment, or one barber placement within it. Fixed at two values for V1 — organization-wide overrides are deliberately absent, because a multi-salon organization must never be forced to operate every salon identically.';
+
+
+--
+-- Name: stripe_billing_interval; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.stripe_billing_interval AS ENUM (
+    'month',
+    'year'
+);
 
 
 --
@@ -3352,6 +3366,102 @@ $$;
 
 
 --
+-- Name: check_post_has_media(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_post_has_media() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+declare
+  v_post_id uuid;
+begin
+  -- Deux IF, pas un CASE : sur posts (INSERT) le record OLD n'a pas de champ
+  -- post_id et un CASE le résoudrait quand même à l'analyse.
+  if tg_table_name = 'posts' then
+    v_post_id := new.id;
+  else
+    v_post_id := old.post_id;
+  end if;
+  if exists (select 1 from public.posts p where p.id = v_post_id)
+     and not exists (select 1 from public.post_media m where m.post_id = v_post_id) then
+    raise exception 'a post must carry at least one media (post %)', v_post_id;
+  end if;
+  return null;
+end;
+$$;
+
+
+--
+-- Name: check_post_media_limit(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_post_media_limit() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if (select count(*) from public.post_media m where m.post_id = new.post_id) > 10 then
+    raise exception 'a post carries at most 10 media (post %)', new.post_id;
+  end if;
+  return null;
+end;
+$$;
+
+
+--
+-- Name: check_post_services_consistency(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_post_services_consistency() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+declare
+  v_org uuid;
+begin
+  select coalesce(p.organization_id, p.posted_at_organization_id) into v_org
+  from public.posts p where p.id = new.post_id;
+
+  if v_org is null then
+    raise exception 'post_services requires the post to be attached to an organization (services belong to organizations)';
+  end if;
+
+  if not exists (
+    select 1 from public.services s
+    where s.id = new.service_id and s.organization_id = v_org
+  ) then
+    raise exception 'post_services.service_id must belong to the post''s organization';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
+-- Name: check_posts_consistency(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_posts_consistency() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if new.author_kind = 'professional'
+     and new.posted_at_organization_id is not null
+     and not exists (
+       select 1 from public.barbers b
+       where b.professional_id = new.professional_id
+         and b.organization_id = new.posted_at_organization_id
+     ) then
+    raise exception 'posts.posted_at_organization_id must be an organization where the professional currently holds a barbers row';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
 -- Name: check_queue_entry_consistency(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3381,6 +3491,62 @@ begin
     raise exception 'queue_entries.service_id must belong to the same organization_id';
   end if;
 
+  return new;
+end;
+$$;
+
+
+--
+-- Name: check_reviews_consistency(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_reviews_consistency() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+declare
+  v_appt public.appointments;
+begin
+  select * into v_appt from public.appointments a where a.id = new.appointment_id;
+
+  if not found then
+    raise exception 'reviews.appointment_id must reference an existing appointment';
+  end if;
+  if v_appt.status <> 'completed' or v_appt.completed_at is null then
+    -- Un completed_at NULL est un « terminé à date inconnue » pré-R1A : sans
+    -- horodatage fiable, la fenêtre de 30 jours est invérifiable, donc
+    -- l'avis est refusé plutôt que fondé sur une date inventée.
+    raise exception 'a review requires a completed appointment with a trustworthy completion time'
+      using errcode = '23514';
+  end if;
+  if v_appt.booked_by_user_id is null or v_appt.booked_by_user_id <> new.customer_user_id then
+    raise exception 'a review can only be left by the account that itself booked the appointment'
+      using errcode = '42501';
+  end if;
+  if now() > v_appt.completed_at + interval '30 days' then
+    raise exception 'the 30-day review window for this appointment has closed'
+      using errcode = '23514';
+  end if;
+  if new.organization_id <> v_appt.organization_id then
+    raise exception 'reviews.organization_id must match the appointment''s organization';
+  end if;
+  if not exists (
+    select 1 from public.barbers b
+    where b.id = v_appt.barber_id and b.professional_id = new.professional_id
+  ) then
+    raise exception 'reviews.professional_id must be the professional behind the appointment''s barber';
+  end if;
+  -- Corroboration par la vérité matérialisée des prestations réelles.
+  if not exists (
+    select 1 from public.customer_professional_relationships r
+    where r.customer_user_id = new.customer_user_id
+      and r.professional_id = new.professional_id
+      and r.organization_id = new.organization_id
+      and r.completed_interaction_count > 0
+  ) then
+    raise exception 'no verifiable completed relationship between this customer and this professional'
+      using errcode = '23514';
+  end if;
   return new;
 end;
 $$;
@@ -4380,6 +4546,165 @@ COMMENT ON FUNCTION public.create_platform_invitation(p_role public.platform_rol
 
 
 --
+-- Name: posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.posts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    author_kind text NOT NULL,
+    professional_id uuid,
+    organization_id uuid,
+    posted_at_organization_id uuid,
+    caption text,
+    visibility text DEFAULT 'public'::text NOT NULL,
+    like_count integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT posts_attachment_professional_only CHECK (((author_kind = 'professional'::text) OR (posted_at_organization_id IS NULL))),
+    CONSTRAINT posts_author_consistency CHECK ((((author_kind = 'professional'::text) AND (professional_id IS NOT NULL) AND (organization_id IS NULL)) OR ((author_kind = 'organization'::text) AND (organization_id IS NOT NULL) AND (professional_id IS NULL)))),
+    CONSTRAINT posts_author_kind_valid CHECK ((author_kind = ANY (ARRAY['professional'::text, 'organization'::text]))),
+    CONSTRAINT posts_caption_length CHECK (((caption IS NULL) OR (char_length(caption) <= 2200))),
+    CONSTRAINT posts_like_count_nonnegative CHECK ((like_count >= 0)),
+    CONSTRAINT posts_visibility_valid CHECK ((visibility = ANY (ARRAY['public'::text, 'followers'::text, 'hidden'::text])))
+);
+
+ALTER TABLE ONLY public.posts FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE posts; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.posts IS 'Publication d''un professionnel (identité portable) ou d''une organisation (galerie du lieu). Jamais d''un client — un client contribue une photo en tant qu''avis, avec consentement (review_photos). posted_at_organization_id est le salon où le travail a été fait, FIGÉ à la publication : un départ du salon ne retire pas les posts du profil du salon. like_count est maintenu par trigger depuis post_likes, jamais par un client.';
+
+
+--
+-- Name: COLUMN posts.posted_at_organization_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.posts.posted_at_organization_id IS 'Rattachement au salon au moment de la publication, validé contre barbers à l''INSERT puis IMMUABLE (posts_guard_immutable_author). Distinct du rattachement courant qui vit dans barbers. on delete set null : la disparition du salon ne supprime pas le travail du professionnel.';
+
+
+--
+-- Name: COLUMN posts.visibility; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.posts.visibility IS 'public = lisible de tous (y compris anon, via RPC) ; followers = réservé aux abonnés du profil auteur ; hidden = visible du seul auteur.';
+
+
+--
+-- Name: create_post(text, jsonb, text, text, uuid, uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_post(p_author_kind text, p_media jsonb, p_caption text DEFAULT NULL::text, p_visibility text DEFAULT 'public'::text, p_organization_id uuid DEFAULT NULL::uuid, p_posted_at_organization_id uuid DEFAULT NULL::uuid, p_service_ids uuid[] DEFAULT NULL::uuid[]) RETURNS public.posts
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_professional_id uuid;
+  v_organization_id uuid;
+  v_posted_at uuid;
+  v_post public.posts;
+  v_item jsonb;
+  v_count integer;
+  v_path text;
+  v_position smallint := 0;
+  v_service uuid;
+begin
+  if v_uid is null then
+    raise exception 'authentication required to publish' using errcode = '42501';
+  end if;
+
+  if p_author_kind = 'professional' then
+    select p.id into v_professional_id
+    from public.professionals p
+    where p.user_id = v_uid;
+    if v_professional_id is null then
+      raise exception 'no professional identity is attached to this account' using errcode = '42501';
+    end if;
+    v_organization_id := null;
+
+    if p_posted_at_organization_id is not null then
+      v_posted_at := p_posted_at_organization_id; -- validé par posts_check_consistency
+    else
+      -- Rattachement courant : dérivé quand il est sans ambiguïté.
+      select min(b.organization_id::text)::uuid into v_posted_at
+      from public.barbers b
+      where b.professional_id = v_professional_id
+      having count(distinct b.organization_id) = 1;
+    end if;
+
+  elsif p_author_kind = 'organization' then
+    if p_organization_id is null then
+      raise exception 'p_organization_id is required for an organization post';
+    end if;
+    if not private.has_org_role(p_organization_id, array['owner','manager']::public.membership_role[]) then
+      raise exception 'only an owner or manager publishes for an organization' using errcode = '42501';
+    end if;
+    v_organization_id := p_organization_id;
+    v_posted_at := null;
+  else
+    raise exception 'author_kind must be professional or organization';
+  end if;
+
+  v_count := coalesce(jsonb_array_length(p_media), 0);
+  if v_count < 1 then
+    raise exception 'a post requires at least one media' using errcode = '23514';
+  end if;
+  if v_count > 10 then
+    raise exception 'a post carries at most 10 media' using errcode = '23514';
+  end if;
+
+  insert into public.posts (author_kind, professional_id, organization_id,
+                            posted_at_organization_id, caption, visibility)
+  values (p_author_kind, v_professional_id, v_organization_id,
+          v_posted_at, p_caption, coalesce(p_visibility, 'public'))
+  returning * into v_post;
+
+  for v_item in select * from jsonb_array_elements(p_media)
+  loop
+    v_path := v_item->>'storage_path';
+    if v_path is null or left(v_path, length(v_uid::text) + 1) <> v_uid::text || '/' then
+      -- Le chemin doit vivre dans le dossier de l'appelant : on ne publie pas
+      -- le fichier d'un autre.
+      raise exception 'media storage_path must live under the caller''s folder' using errcode = '42501';
+    end if;
+    insert into public.post_media (post_id, storage_path, media_type, width, height, duration_ms, position)
+    values (
+      v_post.id,
+      v_path,
+      coalesce(v_item->>'media_type', 'image'),
+      nullif(v_item->>'width', '')::integer,
+      nullif(v_item->>'height', '')::integer,
+      nullif(v_item->>'duration_ms', '')::integer,
+      v_position
+    );
+    v_position := v_position + 1;
+  end loop;
+
+  if p_service_ids is not null then
+    foreach v_service in array p_service_ids
+    loop
+      insert into public.post_services (post_id, service_id)
+      values (v_post.id, v_service)
+      on conflict do nothing; -- la cohérence d'organisation est tranchée par trigger
+    end loop;
+  end if;
+
+  return v_post;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]) IS 'Publie un post. Professionnel : identité résolue depuis auth.uid(), jamais depuis un id fourni ; rattachement au salon figé — explicite, ou dérivé quand le professionnel n''a qu''un seul employeur. Organisation : owner/manager seulement. Gardes : 1 à 10 médias, chemins dans le dossier de l''appelant, services de la même organisation (trigger). p_media : tableau de {storage_path, media_type, width, height, duration_ms}.';
+
+
+--
 -- Name: create_professional_interest_request(uuid, text, text, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4631,6 +4956,26 @@ $$;
 --
 
 COMMENT ON FUNCTION public.decline_booking_request(p_appointment_id uuid, p_note text) IS 'Declines a pending booking request and frees the slot. The optional note is shown to the customer, so it is length-checked and never required.';
+
+
+--
+-- Name: delete_post(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_post(p_post_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if not private.can_manage_post(p_post_id) then
+    raise exception 'not authorized to delete this post' using errcode = '42501';
+  end if;
+  -- Les fichiers du bucket ne sont volontairement pas touchés ici : leur
+  -- suppression passe par le Storage API sous l'identité de l'uploader
+  -- (policy delete own-folder), pas par un DELETE SQL silencieux.
+  delete from public.posts where id = p_post_id;
+end;
+$$;
 
 
 --
@@ -4948,6 +5293,7 @@ CREATE FUNCTION public.enforce_establishment_capacity() RETURNS trigger
     AS $$
 declare
   v_plan text;
+  v_family public.commercial_family;
   v_max integer;
   v_used integer;
 begin
@@ -4982,7 +5328,7 @@ begin
 
   v_plan := private.effective_plan_key(new.organization_id);
 
-  select p.max_establishments into v_max
+  select p.max_establishments, p.commercial_family into v_max, v_family
   from public.commercial_plans p
   where p.plan_key = v_plan;
 
@@ -5001,6 +5347,14 @@ begin
   v_used := private.org_active_establishments(new.organization_id);
 
   if v_used + 1 > v_max then
+    -- B3 : la famille multi_salon grandit toujours. Le dépassement déclenche
+    -- la bascule de palier (annoncée avant d'être facturée, appliquée à la
+    -- période suivante) ou la demande de devis au-delà du palier haut —
+    -- run_establishment_tier_maintenance s'en charge au tick suivant.
+    if v_family = 'multi_salon' then
+      return new;
+    end if;
+
     raise exception
       'the % plan covers % active establishment(s); this organization already operates %',
       v_plan, v_max, v_used
@@ -5638,6 +5992,50 @@ COMMENT ON FUNCTION public.get_available_slots(p_organization_id uuid, p_locatio
 
 
 --
+-- Name: get_billing_catalog(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_billing_catalog() RETURNS TABLE(plan_key text, commercial_family public.commercial_family, display_name text, tier integer, is_recommended boolean, is_available boolean, price_minor integer, annual_price_minor integer, annual_months_charged smallint, price_currency text, min_establishments integer, max_establishments integer, max_operational_professionals integer, monthly_stripe_price_id text, annual_stripe_price_id text, live_capabilities text[])
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    p.plan_key,
+    p.commercial_family,
+    p.display_name,
+    p.tier,
+    p.is_recommended,
+    p.is_available,
+    p.price_minor,
+    p.annual_price_minor,
+    p.annual_months_charged,
+    p.price_currency,
+    p.min_establishments,
+    p.max_establishments,
+    p.max_operational_professionals,
+    (select sp.stripe_price_id from public.billing_stripe_prices sp
+      where sp.plan_key = p.plan_key and sp.billing_interval = 'month' and sp.is_active),
+    (select sp.stripe_price_id from public.billing_stripe_prices sp
+      where sp.plan_key = p.plan_key and sp.billing_interval = 'year' and sp.is_active),
+    coalesce((
+      select array_agg(pc.capability_key order by pc.capability_key)
+      from public.plan_capabilities pc
+      join public.commercial_capabilities c on c.capability_key = pc.capability_key
+      where pc.plan_key = p.plan_key and c.status = 'live'
+    ), array[]::text[])
+  from public.commercial_plans p
+  order by p.commercial_family, p.tier;
+$$;
+
+
+--
+-- Name: FUNCTION get_billing_catalog(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_billing_catalog() IS 'Le catalogue tarifaire complet : prix mensuel et annuel HT, bornes d''établissements, capacités livrées et identifiants de prix Stripe actifs. Un écran de tarifs n''a aucune raison de coder un prix en dur ; celui-ci lui donne tout.';
+
+
+--
 -- Name: get_booking_requests(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5710,6 +6108,151 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) IS 'Range-bounded, pre-joined calendar read. Returns nothing — rather than raising — for a non-member, so it is safe to call from a shared layout. Carries the organization''s currency so a group operating in several countries prices each shop''s calendar correctly. Still deliberately omits customer_email and customer_id.';
+
+
+--
+-- Name: get_feed(timestamp with time zone, integer, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_feed(p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_limit integer DEFAULT 20, p_latitude double precision DEFAULT NULL::double precision, p_longitude double precision DEFAULT NULL::double precision) RETURNS TABLE(post_id uuid, author_kind text, professional_id uuid, professional_display_name text, professional_handle text, professional_avatar_url text, organization_id uuid, organization_name text, organization_slug text, posted_at_organization_id uuid, posted_at_organization_name text, posted_at_organization_slug text, caption text, created_at timestamp with time zone, like_count integer, liked_by_me boolean, media jsonb, services jsonb, feed_source text, score numeric)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  with me as (
+    select auth.uid() as uid
+  ),
+  w as (
+    select
+      coalesce((select fw.weight from public.feed_ranking_weights fw where fw.signal = 'relationship'), 0) as rel,
+      coalesce((select fw.weight from public.feed_ranking_weights fw where fw.signal = 'proximity'),    0) as prox,
+      coalesce((select fw.weight from public.feed_ranking_weights fw where fw.signal = 'freshness'),    0) as fresh,
+      coalesce((select fw.weight from public.feed_ranking_weights fw where fw.signal = 'engagement'),   0) as eng,
+      coalesce((select fw.weight from public.feed_ranking_weights fw where fw.signal = 'bookability'),  0) as book
+  ),
+  -- LA TRANCHE : les N posts visibles les plus récents avant le curseur.
+  -- La visibilité de l'auteur est exigée aussi : un post public d'un profil
+  -- retiré du public ne fuit pas par le feed.
+  slice as (
+    select p.*
+    from public.posts p
+    where p.created_at < coalesce(p_cursor, 'infinity'::timestamptz)
+      and (
+        (p.author_kind = 'professional'
+         and exists (select 1 from public.professionals pr
+                     where pr.id = p.professional_id and pr.is_public))
+        or
+        (p.author_kind = 'organization'
+         and (exists (select 1 from public.organizations o
+                      where o.id = p.organization_id and o.marketplace_visible)
+              or exists (select 1 from public.organization_follows f, me
+                         where f.organization_id = p.organization_id
+                           and f.follower_user_id = me.uid and f.is_following)))
+      )
+      and (
+        p.visibility = 'public'
+        or (p.visibility = 'followers' and (
+          (p.author_kind = 'professional' and exists (
+            select 1 from public.professional_follows f, me
+            where f.professional_id = p.professional_id
+              and f.follower_user_id = me.uid and f.state = 'following'))
+          or (p.author_kind = 'organization' and exists (
+            select 1 from public.organization_follows f, me
+            where f.organization_id = p.organization_id
+              and f.follower_user_id = me.uid and f.is_following))
+        ))
+      )
+    order by p.created_at desc
+    limit least(greatest(coalesce(p_limit, 20), 1), 50)
+  ),
+  -- LES SIGNAUX, calculés une fois par post de la tranche.
+  scored as (
+    select
+      s.*,
+      case
+        when s.author_kind = 'professional' and exists (
+          select 1 from public.professional_follows f, me
+          where f.professional_id = s.professional_id
+            and f.follower_user_id = me.uid and f.state = 'following')
+        then 'followed_professional'
+        when exists (
+          select 1 from public.organization_follows f, me
+          where f.organization_id = coalesce(s.organization_id, s.posted_at_organization_id)
+            and f.follower_user_id = me.uid and f.is_following)
+        then 'followed_organization'
+        else 'discovery'
+      end as rel_source,
+      greatest(0.0, 1.0 - extract(epoch from (now() - s.created_at)) / 604800.0) as sig_fresh,
+      least(s.like_count, 50) / 50.0 as sig_eng,
+      case when exists (select 1 from public.post_services ps where ps.post_id = s.id)
+           then 1.0 else 0.0 end as sig_book,
+      case
+        when p_latitude is null or p_longitude is null then 0.0
+        else coalesce((
+          select max(1.0 / (1.0 + extensions.earth_distance(
+                   extensions.ll_to_earth(p_latitude, p_longitude),
+                   extensions.ll_to_earth(l.latitude, l.longitude)) / 10000.0))
+          from public.locations l
+          where l.organization_id = coalesce(s.organization_id, s.posted_at_organization_id)
+            and l.latitude is not null and l.longitude is not null
+        ), 0.0)
+      end as sig_prox
+    from slice s
+  )
+  select
+    sc.id,
+    sc.author_kind,
+    sc.professional_id,
+    pr.display_name,
+    pr.handle,
+    pr.avatar_url,
+    sc.organization_id,
+    ao.name,
+    ao.slug,
+    sc.posted_at_organization_id,
+    po.name,
+    po.slug,
+    sc.caption,
+    sc.created_at,
+    sc.like_count,
+    exists (select 1 from public.post_likes pl, me
+            where pl.post_id = sc.id and pl.user_id = me.uid),
+    coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', m.id, 'storage_path', m.storage_path, 'media_type', m.media_type,
+               'width', m.width, 'height', m.height, 'duration_ms', m.duration_ms,
+               'position', m.position)
+             order by m.position, m.created_at)
+      from public.post_media m where m.post_id = sc.id
+    ), '[]'::jsonb),
+    coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', sv.id, 'name', sv.name, 'price_cents', sv.price_cents,
+               'duration_minutes', sv.duration_minutes, 'is_active', sv.is_active))
+      from public.post_services ps
+      join public.services sv on sv.id = ps.service_id
+      where ps.post_id = sc.id
+    ), '[]'::jsonb),
+    sc.rel_source,
+    round((
+        (select rel   from w) * case when sc.rel_source <> 'discovery' then 1.0 else 0.0 end
+      + (select prox  from w) * sc.sig_prox
+      + (select fresh from w) * sc.sig_fresh
+      + (select eng   from w) * sc.sig_eng
+      + (select book  from w) * sc.sig_book
+    )::numeric, 4)
+  from scored sc
+  left join public.professionals pr on pr.id = sc.professional_id
+  left join public.organizations ao on ao.id = sc.organization_id
+  left join public.organizations po on po.id = sc.posted_at_organization_id
+  order by 20 desc, sc.created_at desc, sc.id desc;
+$$;
+
+
+--
+-- Name: FUNCTION get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision) IS 'Feed social : abonnements et découverte locale entremêlés. Une page est une tranche de temps (curseur temporel exact, jamais d''offset), classée par score à l''intérieur. Un post n''apparaît qu''une fois même quand le lecteur suit le professionnel ET son salon — la sélection porte sur les posts, pas sur les arêtes de suivi. Les poids vivent dans feed_ranking_weights. Le curseur de la page suivante est le plus petit created_at retourné. p_latitude/p_longitude sont optionnels et n''alimentent que le signal de proximité. Anonyme : découverte publique seule. Ne fabrique rien : un feed vide est un feed vide.';
 
 
 --
@@ -6172,6 +6715,64 @@ COMMENT ON FUNCTION public.get_organization_entitlements(p_organization_id uuid)
 
 
 --
+-- Name: get_organization_posts(text, timestamp with time zone, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_limit integer DEFAULT 30) RETURNS TABLE(post_id uuid, author_kind text, professional_id uuid, professional_display_name text, professional_handle text, professional_avatar_url text, caption text, visibility text, created_at timestamp with time zone, like_count integer, liked_by_me boolean, media jsonb, services jsonb)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    p.id,
+    p.author_kind,
+    p.professional_id,
+    pr.display_name,
+    pr.handle,
+    pr.avatar_url,
+    p.caption,
+    p.visibility,
+    p.created_at,
+    p.like_count,
+    exists (select 1 from public.post_likes pl
+            where pl.post_id = p.id and pl.user_id = (select auth.uid())),
+    coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', m.id, 'storage_path', m.storage_path, 'media_type', m.media_type,
+               'width', m.width, 'height', m.height, 'duration_ms', m.duration_ms,
+               'position', m.position)
+             order by m.position, m.created_at)
+      from public.post_media m where m.post_id = p.id
+    ), '[]'::jsonb),
+    coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', sv.id, 'name', sv.name, 'price_cents', sv.price_cents,
+               'duration_minutes', sv.duration_minutes, 'is_active', sv.is_active))
+      from public.post_services ps
+      join public.services sv on sv.id = ps.service_id
+      where ps.post_id = p.id
+    ), '[]'::jsonb)
+  from public.organizations o
+  join public.posts p
+    on (p.organization_id = o.id or p.posted_at_organization_id = o.id)
+  left join public.professionals pr on pr.id = p.professional_id
+  where o.slug = p_slug
+    and p.created_at < coalesce(p_cursor, 'infinity'::timestamptz)
+    and (p.author_kind = 'organization'
+         or (pr.id is not null and pr.is_public))
+    and private.can_view_post(p.id)
+  order by p.created_at desc
+  limit least(greatest(coalesce(p_limit, 30), 1), 50);
+$$;
+
+
+--
+-- Name: FUNCTION get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer) IS 'Réalisations du profil salon : posts de l''organisation ET posts des professionnels rattachés au moment de leur publication (posted_at_organization_id, figé). Un post apparaît donc sur les deux profils, et le départ du professionnel ne vide pas la galerie du salon. Un post par ligne : jointure sur OR, jamais d''union dupliquante.';
+
+
+--
 -- Name: get_organization_readiness(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6562,6 +7163,52 @@ COMMENT ON FUNCTION public.get_professional_analytics_summary(p_professional_id 
 
 
 --
+-- Name: get_professional_posts(text, timestamp with time zone, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_limit integer DEFAULT 30) RETURNS TABLE(post_id uuid, caption text, visibility text, posted_at_organization_id uuid, posted_at_organization_name text, posted_at_organization_slug text, created_at timestamp with time zone, like_count integer, liked_by_me boolean, media jsonb, services jsonb)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select pp.*
+  from public.professionals pr
+  cross join lateral private.professional_posts_page(pr.id, p_cursor, p_limit) pp
+  where pr.handle = p_handle
+    and pr.is_public;
+$$;
+
+
+--
+-- Name: FUNCTION get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer) IS 'Portfolio public d''un professionnel par handle. Première tranche de 30 (MASTER_SPEC §9), curseur temporel. Posts followers inclus pour un abonné, posts hidden pour le seul auteur — via can_view_post. Profil non public : zéro ligne.';
+
+
+--
+-- Name: get_professional_posts_by_id(uuid, timestamp with time zone, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_limit integer DEFAULT 30) RETURNS TABLE(post_id uuid, caption text, visibility text, posted_at_organization_id uuid, posted_at_organization_name text, posted_at_organization_slug text, created_at timestamp with time zone, like_count integer, liked_by_me boolean, media jsonb, services jsonb)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select pp.*
+  from public.professionals pr
+  cross join lateral private.professional_posts_page(pr.id, p_cursor, p_limit) pp
+  where pr.id = p_professional_id
+    and pr.is_public;
+$$;
+
+
+--
+-- Name: FUNCTION get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) IS 'Même contrat que get_professional_posts, par id — parce que handle est nullable (non rétro-rempli, décision R2) et qu''un portfolio ne doit pas dépendre d''un handle qui n''existe pas encore. Miroir du couple get_public_professional / _by_handle.';
+
+
+--
 -- Name: get_public_available_slots(text, uuid, uuid, uuid, date, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6849,6 +7496,94 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_public_queue_status(p_organization_slug text, p_location_id uuid) IS 'Anon-callable TV-mode display: active (waiting/called/in_service) queue entries for one location, with customer identity reduced to first-name + last-initial for public-screen privacy. Position is derived, not stored.';
+
+
+--
+-- Name: get_public_reputation(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_reputation(p_professional_id uuid DEFAULT NULL::uuid, p_organization_id uuid DEFAULT NULL::uuid) RETURNS TABLE(rating_average numeric, rating_count integer)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_kind text;
+  v_id uuid;
+begin
+  if (p_professional_id is null) = (p_organization_id is null) then
+    raise exception 'get_public_reputation expects exactly one of p_professional_id, p_organization_id';
+  end if;
+
+  if p_professional_id is not null then
+    v_kind := 'professional'; v_id := p_professional_id;
+  else
+    v_kind := 'organization'; v_id := p_organization_id;
+  end if;
+
+  -- NULL et 0 ne veulent pas dire la même chose : une entité sans avis rend
+  -- rating_average NULL (« Pas encore d''avis »), jamais zéro étoile.
+  return query
+  select
+    case when coalesce(rr.rating_count, 0) > 0
+         then round(rr.rating_sum::numeric / rr.rating_count, 2)
+         else null::numeric end,
+    coalesce(rr.rating_count, 0)
+  from (select 1) as one
+  left join public.review_reputation rr
+    on rr.subject_kind = v_kind and rr.subject_id = v_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_reputation(p_professional_id uuid, p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_reputation(p_professional_id uuid, p_organization_id uuid) IS 'Réputation agrégée, maintenue par trigger — jamais recalculée ici. rating_average est NULL tant qu''aucun avis publié n''existe : le composant Rating affiche « Pas encore d''avis », jamais zéro étoile. rating_count vaut alors 0, et c''est un vrai zéro, pas une invention.';
+
+
+--
+-- Name: get_public_reviews(uuid, uuid, timestamp with time zone, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_reviews(p_professional_id uuid DEFAULT NULL::uuid, p_organization_id uuid DEFAULT NULL::uuid, p_cursor timestamp with time zone DEFAULT NULL::timestamp with time zone, p_limit integer DEFAULT 20) RETURNS TABLE(review_id uuid, rating smallint, comment text, reviewer_display_name text, created_at timestamp with time zone, reply_body text, replied_at timestamp with time zone, photo_storage_path text, professional_id uuid, organization_id uuid)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if (p_professional_id is null) = (p_organization_id is null) then
+    raise exception 'get_public_reviews expects exactly one of p_professional_id, p_organization_id';
+  end if;
+
+  return query
+  select
+    r.id,
+    r.rating,
+    r.comment,
+    r.reviewer_display_name,
+    r.created_at,
+    r.reply_body,
+    r.replied_at,
+    rp.storage_path,
+    r.professional_id,
+    r.organization_id
+  from public.reviews r
+  left join public.review_photos rp on rp.review_id = r.id
+  where r.status = 'published'
+    and (p_professional_id is null or r.professional_id = p_professional_id)
+    and (p_organization_id is null or r.organization_id = p_organization_id)
+    and r.created_at < coalesce(p_cursor, 'infinity'::timestamptz)
+  order by r.created_at desc
+  limit least(greatest(coalesce(p_limit, 20), 1), 50);
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer) IS 'Avis publiés d''un professionnel OU d''une organisation, paginés au curseur temporel. Le nom du client est la forme réduite gravée à l''écriture — cette fonction ne joint jamais customer_profiles. La photo n''apparaît que si elle existe (consentement de publication exigé par contrainte à l''écriture).';
 
 
 --
@@ -7717,6 +8452,30 @@ COMMENT ON FUNCTION public.join_public_queue(p_organization_slug text, p_locatio
 
 
 --
+-- Name: like_post(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.like_post(p_post_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'authentication required to like' using errcode = '42501';
+  end if;
+  if not private.can_view_post(p_post_id) then
+    raise exception 'post not found' using errcode = '42501';
+  end if;
+  insert into public.post_likes (post_id, user_id)
+  values (p_post_id, v_uid)
+  on conflict (post_id, user_id) do nothing;
+end;
+$$;
+
+
+--
 -- Name: link_customer_from_contact_info(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -8045,6 +8804,51 @@ COMMENT ON FUNCTION public.list_public_services(p_organization_slug text, p_loca
 
 
 --
+-- Name: maintain_post_like_count(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.maintain_post_like_count() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  perform set_config('fadeup.like_count_maintenance', 'on', true);
+  if tg_op = 'INSERT' then
+    update public.posts set like_count = like_count + 1 where id = new.post_id;
+  elsif tg_op = 'DELETE' then
+    update public.posts set like_count = greatest(like_count - 1, 0) where id = old.post_id;
+  end if;
+  perform set_config('fadeup.like_count_maintenance', '', true);
+  return null;
+end;
+$$;
+
+
+--
+-- Name: maintain_review_reputation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.maintain_review_reputation() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  -- Un avis ne compte que publié. Les deux sujets bougent ensemble : le même
+  -- acte d'avis alimente le professionnel ET l'organisation.
+  if tg_op in ('UPDATE','DELETE') and old.status = 'published' then
+    perform private.apply_reputation_delta('professional', old.professional_id, -old.rating, -1);
+    perform private.apply_reputation_delta('organization', old.organization_id, -old.rating, -1);
+  end if;
+  if tg_op in ('INSERT','UPDATE') and new.status = 'published' then
+    perform private.apply_reputation_delta('professional', new.professional_id, new.rating, 1);
+    perform private.apply_reputation_delta('organization', new.organization_id, new.rating, 1);
+  end if;
+  return null;
+end;
+$$;
+
+
+--
 -- Name: mark_all_notifications_read(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -8178,6 +8982,93 @@ $$;
 --
 
 COMMENT ON FUNCTION public.mark_platform_notification_read(p_notification_id uuid) IS 'Marks one of the caller''s own notifications read. security invoker on purpose — the RLS update policy is the check.';
+
+
+--
+-- Name: reviews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reviews (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    appointment_id uuid NOT NULL,
+    customer_user_id uuid NOT NULL,
+    professional_id uuid NOT NULL,
+    organization_id uuid NOT NULL,
+    rating smallint NOT NULL,
+    comment text,
+    reviewer_display_name text NOT NULL,
+    status text DEFAULT 'published'::text NOT NULL,
+    moderation_reason text,
+    moderated_at timestamp with time zone,
+    moderated_by uuid,
+    reply_body text,
+    replied_at timestamp with time zone,
+    replied_by_user_id uuid,
+    source text DEFAULT 'fadeup'::text NOT NULL,
+    external_attribution jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT reviews_comment_length CHECK (((comment IS NULL) OR (char_length(comment) <= 2000))),
+    CONSTRAINT reviews_moderation_reason_valid CHECK (((moderation_reason IS NULL) OR (moderation_reason = ANY (ARRAY['fraud'::text, 'abusive_content'::text, 'personal_data'::text, 'hate_speech'::text, 'conflict_of_interest'::text])))),
+    CONSTRAINT reviews_moderation_stamped CHECK ((((status = 'published'::text) AND (moderated_at IS NULL) AND (moderation_reason IS NULL)) OR ((status = ANY (ARRAY['under_review'::text, 'removed'::text])) AND (moderated_at IS NOT NULL)))),
+    CONSTRAINT reviews_rating_range CHECK (((rating >= 1) AND (rating <= 5))),
+    CONSTRAINT reviews_removed_needs_reason CHECK (((status <> 'removed'::text) OR (moderation_reason IS NOT NULL))),
+    CONSTRAINT reviews_reply_consistency CHECK (((reply_body IS NULL) = (replied_at IS NULL))),
+    CONSTRAINT reviews_reply_length CHECK (((reply_body IS NULL) OR (char_length(reply_body) <= 1000))),
+    CONSTRAINT reviews_reviewer_name_not_blank CHECK ((btrim(reviewer_display_name) <> ''::text)),
+    CONSTRAINT reviews_source_fadeup_only CHECK (((source = 'fadeup'::text) AND (external_attribution IS NULL))),
+    CONSTRAINT reviews_status_valid CHECK ((status = ANY (ARRAY['published'::text, 'under_review'::text, 'removed'::text])))
+);
+
+ALTER TABLE ONLY public.reviews FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE reviews; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.reviews IS 'Avis natifs FadeUp. Un par prestation terminée (unique appointment_id), déposé par le compte qui a lui-même réservé, dans les 30 jours suivant completed_at (check_reviews_consistency). Alimente la réputation du professionnel ET de l''organisation via review_reputation. Jamais supprimé parce que la note est mauvaise : les seuls motifs de retrait sont fraud/abusive_content/personal_data/hate_speech/conflict_of_interest. Les avis Google ne sont jamais intégrés ici (reviews_source_fadeup_only).';
+
+
+--
+-- Name: COLUMN reviews.reviewer_display_name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.reviews.reviewer_display_name IS 'Nom public du client, RÉDUIT À L''ÉCRITURE (« Prénom I. », motif B2) : la lecture publique n''a jamais à joindre customer_profiles.';
+
+
+--
+-- Name: moderate_review(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.moderate_review(p_review_id uuid, p_status text, p_reason text DEFAULT NULL::text) RETURNS public.reviews
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_review public.reviews;
+begin
+  if not private.is_platform_admin() then
+    raise exception 'platform moderation only' using errcode = '42501';
+  end if;
+  if p_status not in ('published','under_review','removed') then
+    raise exception 'invalid moderation status';
+  end if;
+  -- « La note est mauvaise » n'est pas un motif : seuls les cinq motifs de
+  -- la contrainte reviews_moderation_reason_valid sont représentables.
+  update public.reviews
+     set status = p_status,
+         moderation_reason = case when p_status = 'published' then null else p_reason end,
+         moderated_at = case when p_status = 'published' then null else now() end,
+         moderated_by = case when p_status = 'published' then null else (select auth.uid()) end
+   where id = p_review_id
+  returning * into v_review;
+  if not found then
+    raise exception 'review not found';
+  end if;
+  return v_review;
+end;
+$$;
 
 
 --
@@ -8375,6 +9266,243 @@ $$;
 --
 
 COMMENT ON FUNCTION public.notify_new_invitation() IS 'AFTER INSERT on invitations: queues the invitation email. Deliberately omits the raw token from the payload — platform staff can read email_outbox to observe delivery failures, and an invitation token is not theirs to see.';
+
+
+--
+-- Name: notify_organization_follow(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_organization_follow() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_member record;
+begin
+  if not new.is_following then
+    return null;
+  end if;
+  if tg_op = 'UPDATE' and old.is_following then
+    return null;
+  end if;
+  for v_member in
+    select m.user_id from public.memberships m
+    where m.organization_id = new.organization_id
+      and m.role in ('owner','manager')
+      and m.user_id <> new.follower_user_id
+  loop
+    perform private.notify_social(
+      v_member.user_id, 'new_follower',
+      'Nouveau follower',
+      'Quelqu''un suit désormais votre établissement.',
+      new.organization_id,
+      'new_follower:organization:' || new.organization_id || ':' || new.follower_user_id || ':' || v_member.user_id
+    );
+  end loop;
+  return null;
+end;
+$$;
+
+
+--
+-- Name: notify_post_like(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_post_like() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_post public.posts;
+  v_target uuid;
+begin
+  select * into v_post from public.posts p where p.id = new.post_id;
+  if not found then
+    return null;
+  end if;
+  if v_post.author_kind = 'professional' then
+    select p.user_id into v_target from public.professionals p where p.id = v_post.professional_id;
+    if v_target is not null and v_target <> new.user_id then
+      perform private.notify_social(
+        v_target, 'post_liked',
+        'Nouveau like',
+        'Votre publication a été aimée.',
+        v_post.posted_at_organization_id,
+        'post_liked:' || new.post_id || ':' || new.user_id
+      );
+    end if;
+  else
+    -- Publication d'organisation : les owners sont prévenus, dédupliqué par
+    -- destinataire.
+    perform private.notify_social(
+      m.user_id, 'post_liked',
+      'Nouveau like',
+      'La publication de votre établissement a été aimée.',
+      v_post.organization_id,
+      'post_liked:' || new.post_id || ':' || new.user_id || ':' || m.user_id
+    )
+    from public.memberships m
+    where m.organization_id = v_post.organization_id
+      and m.role = 'owner'
+      and m.user_id <> new.user_id;
+  end if;
+  return null;
+end;
+$$;
+
+
+--
+-- Name: notify_professional_follow(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_professional_follow() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_target uuid;
+begin
+  if new.state <> 'following' then
+    return null;
+  end if;
+  if tg_op = 'UPDATE' and old.state = 'following' then
+    return null;
+  end if;
+  select p.user_id into v_target from public.professionals p where p.id = new.professional_id;
+  if v_target is null or v_target = new.follower_user_id then
+    return null;
+  end if;
+  perform private.notify_social(
+    v_target, 'new_follower',
+    'Nouveau follower',
+    'Quelqu''un suit désormais votre profil.',
+    null,
+    'new_follower:professional:' || new.professional_id || ':' || new.follower_user_id
+  );
+  return null;
+end;
+$$;
+
+
+--
+-- Name: notify_review_received(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_review_received() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_target uuid;
+  v_email text;
+  v_locale text;
+  v_org_name text;
+  v_pro_name text;
+  v_member record;
+begin
+  select p.user_id, p.display_name into v_target, v_pro_name
+  from public.professionals p where p.id = new.professional_id;
+  select o.name into v_org_name from public.organizations o where o.id = new.organization_id;
+
+  if v_target is not null then
+    perform private.notify_social(
+      v_target, 'review_received',
+      'Nouvel avis reçu',
+      new.reviewer_display_name || ' a laissé un avis ' || new.rating || '/5.',
+      new.organization_id,
+      'review_received:' || new.id || ':' || v_target
+    );
+    select u.email into v_email from auth.users u where u.id = v_target;
+    select pr.locale into v_locale from public.profiles pr where pr.id = v_target;
+    if v_email is not null then
+      insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+      values (
+        v_email, 'review_received',
+        case when lower(coalesce(v_locale, 'fr')) = 'en' then 'en' else 'fr' end,
+        jsonb_build_object(
+          'professional_name', coalesce(v_pro_name, ''),
+          'organization_name', coalesce(v_org_name, ''),
+          'reviewer_name', new.reviewer_display_name,
+          'rating', new.rating,
+          'comment_excerpt', left(coalesce(new.comment, ''), 300)
+        ),
+        'transactional',
+        'review_received:' || new.id || ':' || v_target
+      )
+      on conflict (dedupe_key) where dedupe_key is not null do nothing;
+    end if;
+  end if;
+
+  -- Les owners de l'organisation : in-app seulement, sans doubler le
+  -- professionnel quand c'est le même compte.
+  for v_member in
+    select m.user_id from public.memberships m
+    where m.organization_id = new.organization_id
+      and m.role = 'owner'
+      and m.user_id is distinct from v_target
+  loop
+    perform private.notify_social(
+      v_member.user_id, 'review_received',
+      'Nouvel avis reçu',
+      new.reviewer_display_name || ' a laissé un avis ' || new.rating || '/5 sur ' || coalesce(v_org_name, 'votre établissement') || '.',
+      new.organization_id,
+      'review_received:' || new.id || ':' || v_member.user_id
+    );
+  end loop;
+  return null;
+end;
+$$;
+
+
+--
+-- Name: notify_review_reply(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_review_reply() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_email text;
+  v_locale text;
+  v_pro_name text;
+  v_org_name text;
+begin
+  if old.reply_body is not null or new.reply_body is null then
+    return null;
+  end if;
+  select p.display_name into v_pro_name from public.professionals p where p.id = new.professional_id;
+  select o.name into v_org_name from public.organizations o where o.id = new.organization_id;
+
+  perform private.notify_social(
+    new.customer_user_id, 'review_reply',
+    'Réponse à votre avis',
+    coalesce(v_pro_name, v_org_name, 'Le professionnel') || ' a répondu à votre avis.',
+    new.organization_id,
+    'review_reply:' || new.id
+  );
+
+  select u.email into v_email from auth.users u where u.id = new.customer_user_id;
+  select pr.locale into v_locale from public.profiles pr where pr.id = new.customer_user_id;
+  if v_email is not null then
+    insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+    values (
+      v_email, 'review_reply',
+      case when lower(coalesce(v_locale, 'fr')) = 'en' then 'en' else 'fr' end,
+      jsonb_build_object(
+        'professional_name', coalesce(v_pro_name, ''),
+        'organization_name', coalesce(v_org_name, ''),
+        'rating', new.rating,
+        'reply_excerpt', left(new.reply_body, 300)
+      ),
+      'transactional',
+      'review_reply:' || new.id
+    )
+    on conflict (dedupe_key) where dedupe_key is not null do nothing;
+  end if;
+  return null;
+end;
+$$;
 
 
 --
@@ -8681,6 +9809,157 @@ begin
   return v_row;
 end;
 $_$;
+
+
+--
+-- Name: posts_guard_immutable_author(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.posts_guard_immutable_author() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if new.author_kind is distinct from old.author_kind
+     or new.professional_id is distinct from old.professional_id
+     or new.organization_id is distinct from old.organization_id
+     or new.posted_at_organization_id is distinct from old.posted_at_organization_id then
+    raise exception 'posts author identity and posted_at_organization_id are immutable';
+  end if;
+  if new.like_count is distinct from old.like_count
+     and coalesce(current_setting('fadeup.like_count_maintenance', true), '') <> 'on' then
+    raise exception 'posts.like_count is maintained by trigger only';
+  end if;
+  if new.created_at is distinct from old.created_at then
+    raise exception 'posts.created_at is immutable';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
+-- Name: prepare_billing_checkout(uuid, text, public.stripe_billing_interval); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval DEFAULT 'month'::public.stripe_billing_interval) RETURNS TABLE(organization_id uuid, organization_name text, stripe_customer_id text, stripe_price_id text, owner_email text, livemode boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_plan public.commercial_plans;
+  v_price text;
+  v_used_est integer;
+  v_used_pro integer;
+  v_sub_status text;
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  select * into v_plan from public.commercial_plans p
+  where p.plan_key = p_plan_key and p.is_available and p.price_minor > 0;
+
+  if v_plan.plan_key is null then
+    raise exception 'unknown, unavailable or non-payable plan: %', coalesce(p_plan_key, '(null)')
+      using errcode = '22023';
+  end if;
+
+  -- Un abonnement vivant ne se double pas : on en change.
+  select b.subscription_status into v_sub_status
+  from public.organization_billing b
+  where b.organization_id = p_organization_id;
+
+  if v_sub_status in ('active', 'trialing', 'past_due') then
+    raise exception 'this organization already has a subscription — use request_plan_change or the customer portal'
+      using errcode = 'P0001';
+  end if;
+
+  -- La faisabilité, AVANT le paiement : souscrire un plan qui ne couvre pas
+  -- l'activité réelle produirait une organisation en infraction dès la
+  -- première seconde.
+  v_used_est := private.org_active_establishments(p_organization_id);
+  v_used_pro := private.org_active_professionals(p_organization_id);
+
+  if v_used_est > v_plan.max_establishments then
+    raise exception 'cannot subscribe to %: it covers % establishment(s) and this organization operates %',
+      p_plan_key, v_plan.max_establishments, v_used_est
+      using errcode = 'P0001',
+            hint = 'Pick a Multi-salons tier that covers every active establishment.';
+  end if;
+
+  if v_plan.max_operational_professionals is not null
+     and v_used_pro > v_plan.max_operational_professionals then
+    raise exception 'cannot subscribe to %: it covers % professional(s) and this organization rosters %',
+      p_plan_key, v_plan.max_operational_professionals, v_used_pro
+      using errcode = 'P0001',
+            hint = 'Pick a plan that covers the whole team — team size is included in shop plans.';
+  end if;
+
+  select sp.stripe_price_id into v_price
+  from public.billing_stripe_prices sp
+  where sp.plan_key = p_plan_key
+    and sp.billing_interval = p_interval
+    and sp.livemode = private.billing_livemode()
+    and sp.is_active;
+
+  if v_price is null then
+    raise exception 'no active Stripe price for % / % — run the catalog sync first', p_plan_key, p_interval
+      using errcode = 'P0001';
+  end if;
+
+  return query
+  select
+    p_organization_id,
+    o.name,
+    b.stripe_customer_id,
+    v_price,
+    (select r.email from private.org_owner_recipient(p_organization_id) r),
+    private.billing_livemode()
+  from public.organizations o
+  left join public.organization_billing b on b.organization_id = o.id
+  where o.id = p_organization_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval) IS 'Autorise et prépare une session Stripe Checkout : propriétaire uniquement, plan payant disponible, faisabilité vérifiée AVANT paiement, prix résolu depuis billing_stripe_prices — jamais un montant passé en argument. La fonction Edge stripe-billing consomme ce retour pour créer la session.';
+
+
+--
+-- Name: prepare_billing_portal(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.prepare_billing_portal(p_organization_id uuid) RETURNS TABLE(stripe_customer_id text, livemode boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_customer text;
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  select b.stripe_customer_id into v_customer
+  from public.organization_billing b
+  where b.organization_id = p_organization_id;
+
+  if v_customer is null then
+    raise exception 'no Stripe customer for this organization yet — subscribe first'
+      using errcode = 'P0001';
+  end if;
+
+  return query select v_customer, private.billing_livemode();
+end;
+$$;
+
+
+--
+-- Name: FUNCTION prepare_billing_portal(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) IS 'Autorise l''ouverture du portail client Stripe (moyen de paiement, factures, résiliation en libre-service) : propriétaire uniquement, même garde que tout le reste de la facturation.';
 
 
 --
@@ -9147,6 +10426,37 @@ COMMENT ON FUNCTION public.reconcile_customer_professional_relationships(p_profe
 
 
 --
+-- Name: record_billing_customer(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_billing_customer(p_organization_id uuid, p_stripe_customer_id text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  if p_stripe_customer_id is null or p_stripe_customer_id !~ '^cus_[A-Za-z0-9]+$' then
+    raise exception 'malformed Stripe customer id' using errcode = '22023';
+  end if;
+
+  insert into public.organization_billing (organization_id, stripe_customer_id, livemode)
+  values (p_organization_id, p_stripe_customer_id, private.billing_livemode())
+  on conflict (organization_id) do update
+    set stripe_customer_id = coalesce(public.organization_billing.stripe_customer_id,
+                                      excluded.stripe_customer_id);
+end;
+$_$;
+
+
+--
+-- Name: FUNCTION record_billing_customer(p_organization_id uuid, p_stripe_customer_id text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_billing_customer(p_organization_id uuid, p_stripe_customer_id text) IS 'Enregistre le client Stripe créé par la fonction Edge au moment du premier Checkout. Ne remplace jamais un client déjà lié — un identifiant client ne change pas de son plein gré.';
+
+
+--
 -- Name: recover_stale_prospect_job_leases(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9548,6 +10858,149 @@ COMMENT ON FUNCTION public.remove_favorite(p_favorite_id uuid) IS 'Authenticated
 
 
 --
+-- Name: reply_to_review(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reply_to_review(p_review_id uuid, p_body text) RETURNS public.reviews
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_review public.reviews;
+begin
+  select * into v_review from public.reviews r where r.id = p_review_id;
+  if not found then
+    raise exception 'review not found' using errcode = '42501';
+  end if;
+  if not (private.is_own_professional(v_review.professional_id)
+          or private.has_org_role(v_review.organization_id, array['owner','manager']::public.membership_role[])) then
+    raise exception 'not authorized to reply to this review' using errcode = '42501';
+  end if;
+  if v_review.reply_body is not null then
+    raise exception 'this review already has its public reply' using errcode = '23505';
+  end if;
+  if nullif(btrim(coalesce(p_body, '')), '') is null then
+    raise exception 'reply body must not be blank';
+  end if;
+
+  update public.reviews
+     set reply_body = btrim(p_body),
+         replied_at = now(),
+         replied_by_user_id = (select auth.uid())
+   where id = p_review_id
+  returning * into v_review;
+
+  return v_review;
+end;
+$$;
+
+
+--
+-- Name: report_review(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.report_review(p_review_id uuid, p_reason text, p_detail text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if v_uid is null then
+    raise exception 'authentication required to report' using errcode = '42501';
+  end if;
+  if not exists (select 1 from public.reviews r where r.id = p_review_id) then
+    raise exception 'review not found' using errcode = '42501';
+  end if;
+  insert into public.review_reports (review_id, reporter_user_id, reason, detail)
+  values (p_review_id, v_uid, p_reason, nullif(btrim(coalesce(p_detail, '')), ''));
+exception
+  when unique_violation then
+    raise exception 'you already reported this review' using errcode = '23505';
+end;
+$$;
+
+
+--
+-- Name: request_billing_cancellation(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_billing_cancellation(p_organization_id uuid) RETURNS TABLE(stripe_subscription_id text, effective_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_billing public.organization_billing;
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  select * into v_billing from public.organization_billing b
+  where b.organization_id = p_organization_id
+  for update;
+
+  if v_billing.stripe_subscription_id is null
+     or v_billing.subscription_status not in ('active', 'trialing', 'past_due') then
+    raise exception 'no live subscription to cancel' using errcode = 'P0001';
+  end if;
+
+  -- La fonction Edge pose cancel_at_period_end chez Stripe ; le webhook
+  -- confirmera. À l'échéance : retour au Free — profil, réputation, relations
+  -- et historique conservés. La suppression définitive est une procédure
+  -- RGPD distincte, hors de ce chantier.
+  return query select v_billing.stripe_subscription_id, v_billing.current_period_end;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION request_billing_cancellation(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.request_billing_cancellation(p_organization_id uuid) IS 'Autorise la résiliation (propriétaire uniquement) : l''abonnement court jusqu''à la fin de la période payée, puis retour au Free avec tout l''historique conservé. Aussi disponible en libre-service dans le portail Stripe.';
+
+
+--
+-- Name: request_billing_quote(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_id uuid;
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  if p_establishments is null or p_establishments <= 0 then
+    raise exception 'establishments must be a positive number' using errcode = '22023';
+  end if;
+
+  insert into public.billing_quote_requests
+    (organization_id, requested_by, establishments_requested, note)
+  values
+    (p_organization_id, (select auth.uid()), p_establishments, p_note)
+  on conflict (organization_id) where status = 'open' do nothing
+  returning id into v_id;
+
+  if v_id is null then
+    select q.id into v_id from public.billing_quote_requests q
+    where q.organization_id = p_organization_id and q.status = 'open';
+  end if;
+
+  return v_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text) IS 'Le chemin « sur devis » au-delà de quinze établissements : le propriétaire ouvre (ou retrouve) sa demande. Une seule ouverte à la fois — trois clics ne font pas trois dossiers.';
+
+
+--
 -- Name: request_marketplace_withdrawal(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9603,6 +11056,130 @@ $$;
 --
 
 COMMENT ON FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text) IS 'Platform-admin. Enregistre la demande de retrait d''un professionnel non revendiqué et démarre le décompte de 72 h (MASTER_SPEC §5). Refuse sur un profil revendiqué : son propriétaire contrôle déjà sa visibilité, et le retirer à sa place serait agir pour lui.';
+
+
+--
+-- Name: request_plan_change(uuid, text, public.stripe_billing_interval); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval DEFAULT 'month'::public.stripe_billing_interval) RETURNS TABLE(decision text, effective_at timestamp with time zone, stripe_subscription_id text, stripe_subscription_item_id text, stripe_price_id text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_billing public.organization_billing;
+  v_new public.commercial_plans;
+  v_current public.commercial_plans;
+  v_price text;
+  v_used_est integer;
+  v_used_pro integer;
+  v_upgrade boolean;
+begin
+  perform private.assert_billing_owner(p_organization_id);
+
+  select * into v_billing from public.organization_billing b
+  where b.organization_id = p_organization_id
+  for update;
+
+  if v_billing.stripe_subscription_id is null
+     or v_billing.subscription_status not in ('active', 'trialing', 'past_due') then
+    raise exception 'no live subscription to change — subscribe first'
+      using errcode = 'P0001';
+  end if;
+
+  select * into v_new from public.commercial_plans p
+  where p.plan_key = p_new_plan_key and p.is_available and p.price_minor > 0;
+
+  if v_new.plan_key is null then
+    raise exception 'unknown, unavailable or non-payable plan: %', coalesce(p_new_plan_key, '(null)')
+      using errcode = '22023';
+  end if;
+
+  select * into v_current from public.commercial_plans p
+  where p.plan_key = v_billing.plan_key;
+
+  if v_new.plan_key = v_billing.plan_key and p_new_interval = v_billing.billing_interval then
+    raise exception 'the organization is already on % (%)', p_new_plan_key, p_new_interval
+      using errcode = 'P0001';
+  end if;
+
+  -- LA FAISABILITÉ, AVANT TOUT. Un refus est un motif, jamais une donnée
+  -- cassée : rien n'a été écrit quand on lève ici.
+  v_used_est := private.org_active_establishments(p_organization_id);
+  v_used_pro := private.org_active_professionals(p_organization_id);
+
+  if v_used_est > v_new.max_establishments then
+    raise exception 'cannot move to %: it covers % establishment(s) and this organization operates %',
+      p_new_plan_key, v_new.max_establishments, v_used_est
+      using errcode = 'P0001',
+            hint = 'Deactivate the establishments no longer in use first, or pick a tier that covers them. FadeUp never removes an establishment to satisfy a plan change.';
+  end if;
+
+  if v_new.max_operational_professionals is not null
+     and v_used_pro > v_new.max_operational_professionals then
+    raise exception 'cannot move to %: it covers % professional(s) and this organization rosters %',
+      p_new_plan_key, v_new.max_operational_professionals, v_used_pro
+      using errcode = 'P0001',
+            hint = 'Offboard the professionals no longer working here first — their identity, followers and history are preserved either way.';
+  end if;
+
+  select sp.stripe_price_id into v_price
+  from public.billing_stripe_prices sp
+  where sp.plan_key = p_new_plan_key
+    and sp.billing_interval = p_new_interval
+    and sp.livemode = private.billing_livemode()
+    and sp.is_active;
+
+  if v_price is null then
+    raise exception 'no active Stripe price for % / %', p_new_plan_key, p_new_interval
+      using errcode = 'P0001';
+  end if;
+
+  -- LA DIRECTION. Montée = prix mensuel supérieur, ou passage à l'annuel à
+  -- plan égal ou supérieur. Tout le reste attend la fin de la période payée.
+  v_upgrade :=
+    v_new.price_minor > v_current.price_minor
+    or (v_new.price_minor >= v_current.price_minor
+        and p_new_interval = 'year' and v_billing.billing_interval = 'month');
+
+  if v_upgrade then
+    -- Immédiat. La fonction Edge applique chez Stripe avec proratisation ;
+    -- le webhook subscription.updated mettra l'état à jour. Un programmé
+    -- antérieur (une descente en attente) est annulé : la dernière décision
+    -- du propriétaire gagne.
+    update public.organization_billing
+    set scheduled_plan_key = null, scheduled_interval = null,
+        scheduled_effective_at = null, scheduled_dispatched_at = null,
+        scheduled_reason = null
+    where organization_id = p_organization_id;
+
+    return query select
+      'immediate'::text, now(),
+      v_billing.stripe_subscription_id, v_billing.stripe_subscription_item_id, v_price;
+  else
+    -- Fin de période. Il a payé jusqu'au bout, il garde jusqu'au bout — une
+    -- descente qui coupe une capacité déjà payée est un litige.
+    update public.organization_billing
+    set scheduled_plan_key = p_new_plan_key,
+        scheduled_interval = p_new_interval,
+        scheduled_effective_at = v_billing.current_period_end,
+        scheduled_dispatched_at = null,
+        scheduled_reason = 'owner_request'
+    where organization_id = p_organization_id;
+
+    return query select
+      'scheduled'::text, v_billing.current_period_end,
+      v_billing.stripe_subscription_id, v_billing.stripe_subscription_item_id, v_price;
+  end if;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval) IS 'Changement de plan : propriétaire uniquement, faisabilité vérifiée avant toute écriture (refus motivé, données intactes). Montée — et passage mensuel->annuel — immédiate avec proratisation Stripe ; descente — et retour annuel->mensuel — programmée à la fin de la période payée, transmise à Stripe par le balayage, sans proratisation.';
 
 
 --
@@ -9721,6 +11298,33 @@ $$;
 --
 
 COMMENT ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid) IS 'Moves an appointment and PRESERVES its status — a confirmed booking moved to another genuinely available slot stays confirmed, for customers as well as staff. The destination is validated against real opening/working hours (private.slot_is_within_hours), against blocked time (the LOT D trigger) and finally against the GiST exclusion constraint, which leaves the original row untouched if the destination is taken. The dedupe suffix carries the new start time so a customer moving twice is notified twice.';
+
+
+--
+-- Name: resolve_review_report(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_review_report(p_report_id uuid, p_status text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if not private.is_platform_admin() then
+    raise exception 'platform moderation only' using errcode = '42501';
+  end if;
+  if p_status not in ('reviewed','dismissed','actioned') then
+    raise exception 'invalid report resolution';
+  end if;
+  update public.review_reports
+     set status = p_status,
+         resolved_at = now(),
+         resolved_by = (select auth.uid())
+   where id = p_report_id;
+  if not found then
+    raise exception 'report not found';
+  end if;
+end;
+$$;
 
 
 --
@@ -10258,6 +11862,38 @@ COMMENT ON FUNCTION public.review_professional_claim(p_claim_id uuid, p_decision
 
 
 --
+-- Name: reviews_guard_immutable(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reviews_guard_immutable() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if new.appointment_id  is distinct from old.appointment_id
+     or new.customer_user_id is distinct from old.customer_user_id
+     or new.professional_id  is distinct from old.professional_id
+     or new.organization_id  is distinct from old.organization_id
+     or new.rating           is distinct from old.rating
+     or new.comment          is distinct from old.comment
+     or new.reviewer_display_name is distinct from old.reviewer_display_name
+     or new.source           is distinct from old.source
+     or new.external_attribution is distinct from old.external_attribution
+     or new.created_at       is distinct from old.created_at then
+    raise exception 'review core fields are immutable once submitted';
+  end if;
+  if old.reply_body is not null
+     and (new.reply_body is distinct from old.reply_body
+          or new.replied_at is distinct from old.replied_at
+          or new.replied_by_user_id is distinct from old.replied_by_user_id) then
+    raise exception 'a review reply is written once — one public reply per review';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
 -- Name: invitations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -10450,6 +12086,181 @@ COMMENT ON FUNCTION public.run_acquisition_maintenance() IS 'Le tick d''acquisit
 
 
 --
+-- Name: run_billing_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_billing_maintenance() RETURNS TABLE(events_processed integer, dunning_queued integer, graces_expired integer, changes_dispatched integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_events integer := 0;
+  v_dunning integer := 0;
+  v_graces integer := 0;
+  v_dispatched integer := 0;
+  v_id text;
+  v_row record;
+  v_recipient record;
+  v_touch integer;
+  v_key text;
+  v_price text;
+begin
+  -- 6a. Les événements en attente, dans l'ordre d'arrivée.
+  for v_id in
+    select e.event_id from public.stripe_webhook_events e
+    where e.status = 'queued'
+    order by e.received_at
+    limit 50
+  loop
+    perform private.process_stripe_event(v_id);
+    v_events := v_events + 1;
+  end loop;
+
+  -- 6b. Les relances de grâce : J+1, J+3, J+6 après le premier échec.
+  -- Idempotentes par dedupe_key, fenêtres ouvertes vers le haut pour qu'un
+  -- scheduler resté muet rattrape la relance en retard plutôt que de la
+  -- sauter.
+  for v_row in
+    select b.organization_id, b.grace_until, o.name as organization_name,
+           extract(day from now() - (b.grace_until - interval '7 days'))::integer as day_in_grace
+    from public.organization_billing b
+    join public.organizations o on o.id = b.organization_id
+    where b.grace_until is not null and b.grace_until > now()
+  loop
+    v_touch := case
+      when v_row.day_in_grace >= 6 then 6
+      when v_row.day_in_grace >= 3 then 3
+      when v_row.day_in_grace >= 1 then 1
+      else 0 end;
+    if v_touch = 0 then
+      continue; -- J0 est envoyé par le traitement de l'événement lui-même.
+    end if;
+
+    v_key := 'grace:' || v_row.organization_id::text || ':'
+             || to_char(v_row.grace_until, 'YYYYMMDD') || ':' || v_touch::text;
+
+    select * into v_recipient from private.org_owner_recipient(v_row.organization_id);
+    if v_recipient.email is null then
+      continue;
+    end if;
+
+    insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+    values (
+      v_recipient.email, 'payment_failed_notice', v_recipient.locale,
+      jsonb_build_object(
+        'owner_name', v_recipient.owner_name,
+        'organization_name', v_row.organization_name,
+        'grace_until_fr', to_char(v_row.grace_until at time zone 'Europe/Paris', 'DD/MM/YYYY'),
+        'grace_until_en', to_char(v_row.grace_until at time zone 'Europe/Paris', 'FMMonth DD, YYYY'),
+        'billing_url', 'https://fade-up.com/pro/billing'),
+      'transactional', v_key)
+    on conflict (dedupe_key) where dedupe_key is not null do nothing;
+
+    if found then
+      v_dunning := v_dunning + 1;
+    end if;
+  end loop;
+
+  -- 6c. La grâce échue : retour au Free (status canceled), et l'abonnement
+  -- Stripe est résilié — sans quoi Stripe continuerait de facturer un client
+  -- redevenu Free. La résiliation part par pg_net, fire-and-forget : le
+  -- webhook subscription.deleted confirmera. La clé peut manquer (base de
+  -- test restaurée) : l'état FadeUp dégrade quand même, c'est lui qui compte.
+  for v_row in
+    select b.organization_id, b.stripe_subscription_id
+    from public.organization_billing b
+    join public.organization_commercial_state s on s.organization_id = b.organization_id
+    where b.grace_until is not null and b.grace_until <= now()
+  loop
+    perform private.apply_billing_state(
+      v_row.organization_id,
+      (select s.plan_key from public.organization_commercial_state s
+       where s.organization_id = v_row.organization_id),
+      'canceled',
+      'grace period expired without payment');
+
+    update public.organization_billing
+    set grace_until = null
+    where organization_id = v_row.organization_id;
+
+    if v_row.stripe_subscription_id is not null
+       and private.stripe_secret_key() is not null then
+      perform net.http_delete(
+        url := 'https://api.stripe.com/v1/subscriptions/' || v_row.stripe_subscription_id,
+        headers := jsonb_build_object(
+          'Authorization', 'Bearer ' || private.stripe_secret_key()),
+        timeout_milliseconds := 15000);
+    end if;
+
+    v_graces := v_graces + 1;
+  end loop;
+
+  -- 6d. Les changements programmés arrivés à terme (descente de gamme, retour
+  -- au mensuel, bascule de palier) : transmis à Stripe par pg_net, SANS
+  -- proratisation — la période qui commence est facturée au nouveau tarif,
+  -- celle qui s'achève ne bouge pas. Le webhook subscription.updated
+  -- confirmera et effacera le programmé ; en attendant, scheduled_dispatched_at
+  -- évite la répétition, avec une re-tentative au bout de six heures.
+  for v_row in
+    select b.organization_id, b.stripe_subscription_id, b.stripe_subscription_item_id,
+           b.scheduled_plan_key, b.scheduled_interval
+    from public.organization_billing b
+    where b.scheduled_plan_key is not null
+      and b.scheduled_effective_at is not null
+      and b.scheduled_effective_at <= now()
+      and (b.scheduled_dispatched_at is null
+           or b.scheduled_dispatched_at < now() - interval '6 hours')
+      and b.stripe_subscription_id is not null
+      and b.stripe_subscription_item_id is not null
+  loop
+    if private.stripe_secret_key() is null then
+      exit; -- environnement sans clé : rien à transmettre, pas de bruit.
+    end if;
+
+    select sp.stripe_price_id into v_price
+    from public.billing_stripe_prices sp
+    where sp.plan_key = v_row.scheduled_plan_key
+      and sp.billing_interval = coalesce(v_row.scheduled_interval, 'month')
+      and sp.livemode = private.billing_livemode()
+      and sp.is_active;
+
+    if v_price is null then
+      continue;
+    end if;
+
+    -- Les paramètres passent dans la CHAÎNE DE REQUÊTE : pg_net ne sait
+    -- poster que du JSON, que l'API Stripe refuse, mais Stripe accepte ses
+    -- paramètres en query string sur un POST — vérifié contre l'API de test.
+    -- Les identifiants (si_..., price_...) sont de l'ASCII sûr, rien à encoder.
+    perform net.http_post(
+      url := 'https://api.stripe.com/v1/subscriptions/' || v_row.stripe_subscription_id
+          || '?items[0][id]=' || v_row.stripe_subscription_item_id
+          || '&items[0][price]=' || v_price
+          || '&proration_behavior=none',
+      headers := jsonb_build_object(
+        'Authorization', 'Bearer ' || private.stripe_secret_key()),
+      timeout_milliseconds := 15000);
+
+    update public.organization_billing
+    set scheduled_dispatched_at = now()
+    where organization_id = v_row.organization_id;
+
+    v_dispatched := v_dispatched + 1;
+  end loop;
+
+  return query select v_events, v_dunning, v_graces, v_dispatched;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION run_billing_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_billing_maintenance() IS 'Passe dédiée du scheduler (même règle que B2 : un domaine en panne ne bloque pas les autres) : traite les webhooks en file, relance la grâce à J+1/J+3/J+6, clôt la grâce échue (retour au Free + résiliation Stripe), transmet à Stripe les changements de plan programmés arrivés à terme.';
+
+
+--
 -- Name: run_booking_maintenance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -10492,6 +12303,235 @@ $$;
 --
 
 COMMENT ON FUNCTION public.run_email_delivery() IS 'Le tick d''envoi, appelé par le conteneur fadeup-scheduler. Réconcilie les envois du tick précédent puis en dépêche de nouveaux. Ne fait rien du tout si aucune clé Resend n''est installée dans le vault, ce qui est le cas normal d''une base de test ou d''une restauration.';
+
+
+--
+-- Name: run_establishment_tier_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_establishment_tier_maintenance() RETURNS TABLE(tier_changes_scheduled integer, quotes_opened integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_scheduled integer := 0;
+  v_quotes integer := 0;
+  v_row record;
+  v_target public.commercial_plans;
+  v_recipient record;
+begin
+  -- Les organisations avec un abonnement multi_salon vivant dont le nombre
+  -- d'établissements actifs déborde le palier payé.
+  for v_row in
+    select b.organization_id, b.plan_key, b.billing_interval, b.current_period_end,
+           o.name as organization_name,
+           private.org_active_establishments(b.organization_id) as used,
+           p.max_establishments as cur_max
+    from public.organization_billing b
+    join public.commercial_plans p on p.plan_key = b.plan_key
+    join public.organizations o on o.id = b.organization_id
+    where b.subscription_status in ('active', 'trialing', 'past_due')
+      and p.commercial_family = 'multi_salon'
+      and private.org_active_establishments(b.organization_id) > p.max_establishments
+  loop
+    -- Le palier qui COUVRE le nouveau nombre d'établissements. Bornes lues en
+    -- base — jamais codées en dur.
+    select * into v_target
+    from public.commercial_plans p
+    where p.commercial_family = 'multi_salon' and p.is_available
+      and p.max_establishments >= v_row.used
+    order by p.tier asc
+    limit 1;
+
+    if v_target.plan_key is null then
+      -- AU-DELÀ DU PALIER HAUT : sur devis, jamais un blocage silencieux.
+      -- Une demande s'ouvre (une seule à la fois par organisation) ; en
+      -- attendant, l'organisation reste sur le palier haut et rien n'est
+      -- bloqué.
+      insert into public.billing_quote_requests
+        (organization_id, requested_by, establishments_requested, note)
+      values
+        (v_row.organization_id, null, v_row.used,
+         'ouverte automatiquement : ' || v_row.used || ' établissements actifs, au-delà du palier haut')
+      on conflict (organization_id) where status = 'open' do nothing;
+      if found then
+        v_quotes := v_quotes + 1;
+      end if;
+      continue;
+    end if;
+
+    if v_target.plan_key = v_row.plan_key then
+      continue;
+    end if;
+
+    -- Programmé pour la PÉRIODE SUIVANTE, jamais rétroactif. On n'écrase pas
+    -- un programmé déjà posé (une descente demandée par le propriétaire, une
+    -- bascule déjà annoncée).
+    update public.organization_billing b
+    set scheduled_plan_key = v_target.plan_key,
+        scheduled_interval = b.billing_interval,
+        scheduled_effective_at = b.current_period_end,
+        scheduled_dispatched_at = null,
+        scheduled_reason = 'establishment_tier'
+    where b.organization_id = v_row.organization_id
+      and b.scheduled_plan_key is null;
+
+    if not found then
+      continue;
+    end if;
+
+    v_scheduled := v_scheduled + 1;
+
+    -- ANNONCÉ AVANT D'ÊTRE FACTURÉ. Une hausse découverte sur la facture est
+    -- un motif de résiliation ; celle-ci arrive par e-mail avec la date et le
+    -- montant, pendant que la période en cours reste au tarif payé.
+    select * into v_recipient from private.org_owner_recipient(v_row.organization_id);
+    if v_recipient.email is not null then
+      insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+      values (
+        v_recipient.email, 'tier_switch_notice', v_recipient.locale,
+        jsonb_build_object(
+          'owner_name', v_recipient.owner_name,
+          'organization_name', v_row.organization_name,
+          'establishments', v_row.used,
+          'new_plan_name', v_target.display_name,
+          'new_price_eur', (case when coalesce(v_row.billing_interval, 'month') = 'year'
+                                 then v_target.annual_price_minor else v_target.price_minor end / 100)::text,
+          'interval_fr', case when coalesce(v_row.billing_interval, 'month') = 'year' then 'an' else 'mois' end,
+          'interval_en', case when coalesce(v_row.billing_interval, 'month') = 'year' then 'year' else 'month' end,
+          'effective_at_fr', to_char(v_row.current_period_end at time zone 'Europe/Paris', 'DD/MM/YYYY'),
+          'effective_at_en', to_char(v_row.current_period_end at time zone 'Europe/Paris', 'FMMonth DD, YYYY'),
+          'billing_url', 'https://fade-up.com/pro/billing'),
+        'transactional',
+        'tier:' || v_row.organization_id::text || ':' || v_target.plan_key
+          || ':' || to_char(v_row.current_period_end, 'YYYYMMDD'))
+      on conflict (dedupe_key) where dedupe_key is not null do nothing;
+    end if;
+  end loop;
+
+  return query select v_scheduled, v_quotes;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION run_establishment_tier_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_establishment_tier_maintenance() IS 'Passe dédiée du scheduler : détecte les organisations multi_salon dont les établissements actifs débordent le palier payé, programme la bascule vers le palier couvrant pour la PÉRIODE SUIVANTE (bornes lues en base), l''annonce par e-mail AVANT facturation, et ouvre une demande de devis au-delà du palier haut. Ne bloque jamais rien.';
+
+
+--
+-- Name: run_trial_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_trial_maintenance() RETURNS TABLE(trials_started integer, reminders_queued integer, trials_expired integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_started integer := 0;
+  v_reminders integer := 0;
+  v_expired integer := 0;
+  v_org record;
+  v_trial record;
+  v_recipient record;
+  v_touch text;
+  v_template text;
+begin
+  -- 9a. DÉMARRAGE des essais devenus éligibles.
+  --
+  -- Le seuil '2026-09-07' est la date de mise en production de B3, en dur et
+  -- assumé : les organisations dont l'onboarding s'est terminé AVANT vivaient
+  -- déjà sans essai, et le démarrer d'office aurait brûlé leurs quatorze
+  -- jours à leur insu. Elles passent par start_organization_trial.
+  --
+  -- Le filtre SQL est volontairement large (pas de calcul de readiness ici) ;
+  -- start_trial_if_eligible re-vérifie tout, ligne par ligne.
+  for v_org in
+    select o.id
+    from public.organizations o
+    join public.organization_commercial_state s on s.organization_id = o.id
+    where o.onboarding_completed_at >= timestamptz '2026-09-07 00:00:00+00'
+      and s.plan_key = 'free'
+      and not exists (select 1 from public.organization_trials t
+                      where t.organization_id = o.id)
+    limit 50
+  loop
+    if private.start_trial_if_eligible(v_org.id, 'onboarding') then
+      v_started := v_started + 1;
+    end if;
+  end loop;
+
+  -- 9b. RAPPELS à J-3 et J-1.
+  --
+  -- Idempotents par email_outbox.dedupe_key — le motif B2, index unique
+  -- partiel : le rejeu d'un tick ne peut pas produire deux rappels. Les
+  -- fenêtres se recouvrent volontairement vers le bas (un scheduler resté
+  -- muet 12 h envoie le rappel en retard plutôt que jamais) et le rappel J-1
+  -- remplace J-3 si les deux seraient dus en même temps.
+  for v_trial in
+    select t.organization_id, t.ends_at, o.name as organization_name
+    from public.organization_trials t
+    join public.organizations o on o.id = t.organization_id
+    where t.status = 'active'
+      and t.ends_at > now()
+      and t.ends_at <= now() + interval '3 days'
+  loop
+    if v_trial.ends_at <= now() + interval '1 day' then
+      v_touch := 'reminder_1d';
+      v_template := 'trial_ending_final';
+    else
+      v_touch := 'reminder_3d';
+      v_template := 'trial_ending_soon';
+    end if;
+
+    select * into v_recipient
+    from private.org_owner_recipient(v_trial.organization_id);
+    if v_recipient.email is null then
+      continue;
+    end if;
+
+    insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+    values (
+      v_recipient.email,
+      v_template,
+      v_recipient.locale,
+      jsonb_build_object(
+        'owner_name', v_recipient.owner_name,
+        'organization_name', v_trial.organization_name,
+        'ends_at_fr', to_char(v_trial.ends_at at time zone 'Europe/Paris', 'DD/MM/YYYY à HH24hMI'),
+        'ends_at_en', to_char(v_trial.ends_at at time zone 'Europe/Paris', 'FMMonth DD, YYYY at HH24:MI'),
+        'billing_url', 'https://fade-up.com/pro/billing'
+      ),
+      'transactional',
+      'trial:' || v_trial.organization_id::text || ':' || v_touch
+    )
+    on conflict (dedupe_key) where dedupe_key is not null do nothing;
+
+    if found then
+      v_reminders := v_reminders + 1;
+    end if;
+  end loop;
+
+  -- 9c. EXPIRATION. La seule écriture est le statut : le retour au Free est
+  -- déjà effectif — effective_plan_key ne regarde que « actif et non échu ».
+  -- Aucune donnée n'est touchée, le profil reste publié.
+  update public.organization_trials t
+  set status = 'expired', expired_at = now()
+  where t.status = 'active' and t.ends_at <= now();
+  get diagnostics v_expired = row_count;
+
+  return query select v_started, v_reminders, v_expired;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION run_trial_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_trial_maintenance() IS 'Passe dédiée du scheduler (leçon B2 : un domaine en panne ne bloque pas les autres) : démarre les essais devenus éligibles depuis la mise en production de B3, met en file les rappels J-3 et J-1 (idempotents par dedupe_key), clôt les essais échus. Le retour au Free est implicite : un essai non actif ne surclasse plus rien.';
 
 
 --
@@ -11807,6 +13847,68 @@ COMMENT ON FUNCTION public.stamp_passport_identity() IS 'BEFORE INSERT on custom
 
 
 --
+-- Name: start_organization_trial(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.start_organization_trial(p_organization_id uuid) RETURNS TABLE(plan_key text, started_at timestamp with time zone, ends_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if (select auth.uid()) is null then
+    raise exception 'starting a trial requires an authenticated session'
+      using errcode = '42501';
+  end if;
+
+  -- Propriétaire uniquement. La facturation — et l'essai en est l'antichambre
+  -- — n'appartient ni au manager, ni à la réceptionniste, ni au barber.
+  if not (select private.has_org_role(p_organization_id, array['owner']::public.membership_role[])) then
+    raise exception 'only the organization owner may start the trial'
+      using errcode = '42501';
+  end if;
+
+  -- Les refus disent POURQUOI : l'interface a besoin d'un motif exploitable.
+  if exists (select 1 from public.organization_trials t
+             where t.organization_id = p_organization_id) then
+    raise exception 'this organization already used its trial'
+      using errcode = 'P0001',
+            hint = 'A trial is unique per organization and cannot be restarted, even after returning to Free.';
+  end if;
+
+  if private.effective_plan_key(p_organization_id) is distinct from 'free' then
+    raise exception 'a trial can only start from the Free plan'
+      using errcode = 'P0001';
+  end if;
+
+  if not coalesce(private.org_ready_to_publish(p_organization_id), false) then
+    raise exception 'the organization is not ready: complete onboarding first'
+      using errcode = 'P0001',
+            hint = 'get_organization_readiness lists exactly what is missing.';
+  end if;
+
+  if not private.start_trial_if_eligible(p_organization_id, 'owner_request') then
+    -- Tous les motifs lisibles ont été testés au-dessus ; s'il reste un refus,
+    -- c'est une course avec un autre démarrage. Le dire tel quel.
+    raise exception 'the trial could not be started — it may have just been started elsewhere'
+      using errcode = 'P0001';
+  end if;
+
+  return query
+  select t.plan_key, t.started_at, t.ends_at
+  from public.organization_trials t
+  where t.organization_id = p_organization_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION start_organization_trial(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.start_organization_trial(p_organization_id uuid) IS 'Démarrage explicite de l''essai par le propriétaire. Le démarrage normal est automatique à la fin de l''onboarding ; cette RPC existe pour les organisations installées avant B3 et pour toute reprise en main. Refus motivés : déjà consommé, pas sur Free, pas prête.';
+
+
+--
 -- Name: start_platform_support_session(uuid, text, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -12039,6 +14141,96 @@ COMMENT ON FUNCTION public.submit_professional_claim(p_professional_id uuid, p_e
 
 
 --
+-- Name: submit_review(uuid, integer, text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_review(p_appointment_id uuid, p_rating integer, p_comment text DEFAULT NULL::text, p_photo_storage_path text DEFAULT NULL::text, p_photo_consent_publish boolean DEFAULT false) RETURNS public.reviews
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_appt public.appointments;
+  v_professional_id uuid;
+  v_display text;
+  v_reduced text;
+  v_review public.reviews;
+begin
+  if v_uid is null then
+    raise exception 'authentication required to review' using errcode = '42501';
+  end if;
+
+  select * into v_appt from public.appointments a where a.id = p_appointment_id;
+  if not found or v_appt.booked_by_user_id is distinct from v_uid then
+    -- Même réponse que l'inexistence : ne pas confirmer à un tiers qu'un
+    -- rendez-vous existe.
+    raise exception 'appointment not found for this account' using errcode = '42501';
+  end if;
+  if v_appt.status <> 'completed' or v_appt.completed_at is null then
+    raise exception 'only a completed service can be reviewed' using errcode = '23514';
+  end if;
+  if now() > v_appt.completed_at + interval '30 days' then
+    raise exception 'the 30-day review window has closed' using errcode = '23514';
+  end if;
+  if exists (select 1 from public.reviews r where r.appointment_id = p_appointment_id) then
+    raise exception 'this service has already been reviewed' using errcode = '23505';
+  end if;
+
+  select b.professional_id into v_professional_id
+  from public.barbers b where b.id = v_appt.barber_id;
+  if v_professional_id is null then
+    raise exception 'no professional identity behind this appointment';
+  end if;
+
+  -- Nom public réduit À L'ÉCRITURE (« Prénom I. », motif B2) : la lecture
+  -- publique n'aura jamais à joindre customer_profiles.
+  select cp.display_name into v_display
+  from public.customer_profiles cp where cp.user_id = v_uid;
+  v_display := nullif(btrim(coalesce(v_display, '')), '');
+  if v_display is null then
+    v_reduced := 'Client';
+  else
+    v_reduced := split_part(v_display, ' ', 1)
+                 || case when split_part(v_display, ' ', 2) <> ''
+                         then ' ' || left(split_part(v_display, ' ', 2), 1) || '.'
+                         else '' end;
+  end if;
+
+  if p_photo_storage_path is not null then
+    if not p_photo_consent_publish then
+      raise exception 'a review photo requires explicit publication consent' using errcode = '23514';
+    end if;
+    if left(p_photo_storage_path, length(v_uid::text) + 1) <> v_uid::text || '/' then
+      raise exception 'photo storage_path must live under the caller''s folder' using errcode = '42501';
+    end if;
+  end if;
+
+  insert into public.reviews (appointment_id, customer_user_id, professional_id,
+                              organization_id, rating, comment, reviewer_display_name)
+  values (p_appointment_id, v_uid, v_professional_id,
+          v_appt.organization_id, p_rating, nullif(btrim(coalesce(p_comment, '')), ''), v_reduced)
+  returning * into v_review;
+
+  if p_photo_storage_path is not null then
+    insert into public.review_photos (review_id, storage_path, consent_publish)
+    values (v_review.id, p_photo_storage_path, true);
+    -- consent_social_reuse reste false : c'est un accord DISTINCT, jamais
+    -- déduit du consentement de publication.
+  end if;
+
+  return v_review;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean) IS 'Dépose l''unique avis d''une prestation terminée : compte réservataire seulement, fenêtre de 30 jours, 1 à 5 étoiles, commentaire facultatif, photo facultative avec consentement de publication explicite. Alimente la réputation du professionnel ET de l''organisation (trigger). Les gardes sont aussi portées par check_reviews_consistency — aucune écriture ne les contourne.';
+
+
+--
 -- Name: suggested_currency_for_country(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -12183,6 +14375,53 @@ $$;
 --
 
 COMMENT ON FUNCTION public.sweep_prospect_publication_eligibility(p_limit integer) IS 'Re-evaluates a bounded batch of prospects, least recently evaluated first and never-evaluated first of all. Deliberately re-checks BLOCKED prospects too: a prospect blocked on unresolved_duplicate or insufficient_source_evidence becomes eligible when the duplicate is reviewed or a second source lands, and nothing else in the system would notice. Hard-capped at 1000 per call so a bad argument cannot turn into a table scan of function calls.';
+
+
+--
+-- Name: sync_plan_feature_tier(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_plan_feature_tier(p_plan_key text) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_source text;
+  v_added integer;
+begin
+  select p.feature_tier_plan_key into v_source
+  from public.commercial_plans p where p.plan_key = p_plan_key;
+
+  if v_source is null then
+    -- Pas d'erreur : un plan sans niveau de référence est le cas normal du
+    -- catalogue. Zéro capacité ajoutée est la bonne réponse.
+    return 0;
+  end if;
+
+  -- ADDITIVE. `on conflict do nothing` et aucun DELETE : cette fonction ne
+  -- peut pas retirer une capacité à un plan sur lequel des organisations sont
+  -- installées. Retirer une capacité est une décision qui s'annonce, pas un
+  -- effet de bord d'une synchronisation.
+  with inserted as (
+    insert into public.plan_capabilities (plan_key, capability_key)
+    select p_plan_key, pc.capability_key
+    from public.plan_capabilities pc
+    where pc.plan_key = v_source
+    on conflict (plan_key, capability_key) do nothing
+    returning 1
+  )
+  select count(*) into v_added from inserted;
+
+  return v_added;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION sync_plan_feature_tier(p_plan_key text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.sync_plan_feature_tier(p_plan_key text) IS 'Recopie sur le plan les capacités du plan nommé par feature_tier_plan_key. ADDITIVE : n''enlève jamais rien. Rend le niveau fonctionnel d''un palier paramétrable — ouvrir le niveau Scale sur multi_growth est un UPDATE de la colonne suivi d''un appel ici.';
 
 
 --
@@ -12470,6 +14709,21 @@ $$;
 --
 
 COMMENT ON FUNCTION public.unfollow_professional(p_professional_id uuid) IS 'Authenticated-only. Idempotent, and durable even with no prior edge — it writes a tombstone that later auto-follow attempts collide with. Repeat calls preserve the original unfollowed_at.';
+
+
+--
+-- Name: unlike_post(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.unlike_post(p_post_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  delete from public.post_likes
+  where post_id = p_post_id and user_id = (select auth.uid());
+end;
+$$;
 
 
 --
@@ -13004,6 +15258,95 @@ COMMENT ON COLUMN public.barber_working_hours.second_start_time IS 'Optional aft
 
 
 --
+-- Name: billing_quote_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_quote_requests (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    requested_by uuid,
+    establishments_requested integer NOT NULL,
+    note text,
+    status text DEFAULT 'open'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    resolved_at timestamp with time zone,
+    CONSTRAINT billing_quote_requests_count_sane CHECK ((establishments_requested > 0)),
+    CONSTRAINT billing_quote_requests_status_known CHECK ((status = ANY (ARRAY['open'::text, 'contacted'::text, 'closed'::text])))
+);
+
+ALTER TABLE ONLY public.billing_quote_requests FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE billing_quote_requests; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.billing_quote_requests IS 'Demandes de devis au-delà du palier haut (15 établissements). Existe pour qu''un dépassement de palier soit un chemin et non un blocage silencieux.';
+
+
+--
+-- Name: billing_stripe_prices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_stripe_prices (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    plan_key text NOT NULL,
+    billing_interval public.stripe_billing_interval NOT NULL,
+    stripe_price_id text NOT NULL,
+    unit_amount_minor integer NOT NULL,
+    currency text DEFAULT 'EUR'::text NOT NULL,
+    livemode boolean DEFAULT false NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    archived_at timestamp with time zone,
+    CONSTRAINT billing_stripe_prices_amount_sane CHECK ((unit_amount_minor >= 0)),
+    CONSTRAINT billing_stripe_prices_archive_coherent CHECK (((is_active AND (archived_at IS NULL)) OR ((NOT is_active) AND (archived_at IS NOT NULL)))),
+    CONSTRAINT billing_stripe_prices_currency_format CHECK ((currency ~ '^[A-Z]{3}$'::text)),
+    CONSTRAINT billing_stripe_prices_id_shape CHECK ((stripe_price_id ~ '^price_[A-Za-z0-9]+$'::text))
+);
+
+ALTER TABLE ONLY public.billing_stripe_prices FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE billing_stripe_prices; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.billing_stripe_prices IS 'Historique des prix Stripe par plan et intervalle. Un prix Stripe est IMMUABLE : changer un tarif crée une ligne et archive la précédente, et les abonnements en cours restent accrochés à l''ancienne jusqu''à migration explicite. C''est ce qui protège les premiers clients d''une hausse subie.';
+
+
+--
+-- Name: COLUMN billing_stripe_prices.unit_amount_minor; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.billing_stripe_prices.unit_amount_minor IS 'Montant HT en centimes au moment de la création du prix Stripe. Volontairement figé : il dit ce que paient les abonnements accrochés à ce prix, pas ce que dit le catalogue aujourd''hui.';
+
+
+--
+-- Name: billing_stripe_products; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_stripe_products (
+    plan_key text NOT NULL,
+    stripe_product_id text NOT NULL,
+    livemode boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT billing_stripe_products_id_shape CHECK ((stripe_product_id ~ '^[A-Za-z0-9_]{1,255}$'::text))
+);
+
+ALTER TABLE ONLY public.billing_stripe_products FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE billing_stripe_products; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.billing_stripe_products IS 'Correspondance plan FadeUp -> produit Stripe. Une ligne par plan. La base fait autorité : c''est le script de synchronisation qui écrit Stripe à partir d''ici, jamais l''inverse.';
+
+
+--
 -- Name: booking_providers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -13145,9 +15488,16 @@ CREATE TABLE public.commercial_plans (
     is_available boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    annual_months_charged smallint DEFAULT 10 NOT NULL,
+    annual_price_minor integer GENERATED ALWAYS AS ((price_minor * annual_months_charged)) STORED,
+    min_establishments integer DEFAULT 1 NOT NULL,
+    feature_tier_plan_key text,
+    CONSTRAINT commercial_plans_annual_months_sane CHECK (((annual_months_charged >= 1) AND (annual_months_charged <= 12))),
     CONSTRAINT commercial_plans_currency_format CHECK ((price_currency ~ '^[A-Z]{3}$'::text)),
     CONSTRAINT commercial_plans_display_name_not_blank CHECK ((btrim(display_name) <> ''::text)),
+    CONSTRAINT commercial_plans_establishment_bounds_sane CHECK (((min_establishments >= 1) AND (min_establishments <= max_establishments))),
     CONSTRAINT commercial_plans_establishments_positive CHECK ((max_establishments >= 1)),
+    CONSTRAINT commercial_plans_feature_tier_not_self CHECK (((feature_tier_plan_key IS NULL) OR (feature_tier_plan_key <> plan_key))),
     CONSTRAINT commercial_plans_free_family_is_free CHECK (((commercial_family = 'free'::public.commercial_family) = (price_minor = 0))),
     CONSTRAINT commercial_plans_free_is_single_everything CHECK (((commercial_family <> 'free'::public.commercial_family) OR ((max_establishments = 1) AND (max_operational_professionals = 1)))),
     CONSTRAINT commercial_plans_independent_is_single_professional CHECK (((commercial_family <> 'independent'::public.commercial_family) OR (max_operational_professionals = 1))),
@@ -13202,6 +15552,34 @@ COMMENT ON COLUMN public.commercial_plans.max_operational_professionals IS 'Cap 
 --
 
 COMMENT ON COLUMN public.commercial_plans.is_available IS 'Whether FadeUp currently sells this plan. Withdrawing a plan must never delete it: organizations remain on it and their entitlements must keep resolving, so no role holds DELETE on this table.';
+
+
+--
+-- Name: COLUMN commercial_plans.annual_months_charged; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.commercial_plans.annual_months_charged IS 'Nombre de mois facturés sur un an. 10 pour tous les plans payants : dix mois payés, douze servis (MASTER_SPEC §4).';
+
+
+--
+-- Name: COLUMN commercial_plans.annual_price_minor; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.commercial_plans.annual_price_minor IS 'Prix annuel HT en centimes. GÉNÉRÉE à partir de price_minor et annual_months_charged : elle ne se saisit pas, donc elle ne peut pas diverger du mensuel.';
+
+
+--
+-- Name: COLUMN commercial_plans.min_establishments; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.commercial_plans.min_establishments IS 'Plancher d''établissements du palier. Avec max_establishments, définit les bornes 2-3 / 4-6 / 7-15 de la famille multi_salon. Paramétrable : élargir un palier est un UPDATE.';
+
+
+--
+-- Name: COLUMN commercial_plans.feature_tier_plan_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.commercial_plans.feature_tier_plan_key IS 'Plan dont celui-ci reprend le niveau fonctionnel. Les paliers multi_salon pointent vers salon_pro : le multi ouvre le niveau Shop Pro sur tous les établissements. Changer de niveau est un UPDATE suivi de sync_plan_feature_tier(), pas une réécriture.';
 
 
 --
@@ -13743,6 +16121,29 @@ COMMENT ON VIEW public.experiment_results IS 'Per-arm experiment outcomes. reach
 
 
 --
+-- Name: feed_ranking_weights; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.feed_ranking_weights (
+    signal text NOT NULL,
+    weight numeric NOT NULL,
+    description text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT feed_ranking_weights_signal_valid CHECK ((signal = ANY (ARRAY['relationship'::text, 'proximity'::text, 'freshness'::text, 'engagement'::text, 'bookability'::text]))),
+    CONSTRAINT feed_ranking_weights_weight_sane CHECK (((weight >= (0)::numeric) AND (weight <= (100)::numeric)))
+);
+
+ALTER TABLE ONLY public.feed_ranking_weights FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE feed_ranking_weights; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.feed_ranking_weights IS 'Poids des signaux de get_feed. La formule définitive du score FadeUp est une décision fondateur en attente (MASTER_SPEC §23.3) : ces lignes sont le point de réglage — la changer est un UPDATE, pas une migration. Aucun client n''y accède ; seule get_feed la lit.';
+
+
+--
 -- Name: location_hours; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -14112,6 +16513,65 @@ COMMENT ON TABLE public.notifications IS 'Product notifications for customers an
 
 
 --
+-- Name: organization_billing; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.organization_billing (
+    organization_id uuid NOT NULL,
+    stripe_customer_id text,
+    stripe_subscription_id text,
+    stripe_subscription_item_id text,
+    subscription_status text,
+    plan_key text,
+    billing_interval public.stripe_billing_interval,
+    stripe_price_id text,
+    current_period_start timestamp with time zone,
+    current_period_end timestamp with time zone,
+    cancel_at_period_end boolean DEFAULT false NOT NULL,
+    grace_until timestamp with time zone,
+    scheduled_plan_key text,
+    scheduled_interval public.stripe_billing_interval,
+    scheduled_effective_at timestamp with time zone,
+    scheduled_reason text,
+    scheduled_dispatched_at timestamp with time zone,
+    tax_id_type text,
+    tax_id_value text,
+    livemode boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT organization_billing_customer_shape CHECK (((stripe_customer_id IS NULL) OR (stripe_customer_id ~ '^cus_[A-Za-z0-9]+$'::text))),
+    CONSTRAINT organization_billing_period_ordered CHECK (((current_period_start IS NULL) OR (current_period_end IS NULL) OR (current_period_end > current_period_start))),
+    CONSTRAINT organization_billing_price_shape CHECK (((stripe_price_id IS NULL) OR (stripe_price_id ~ '^price_[A-Za-z0-9]+$'::text))),
+    CONSTRAINT organization_billing_scheduled_coherent CHECK ((((scheduled_plan_key IS NULL) AND (scheduled_interval IS NULL)) OR (scheduled_effective_at IS NOT NULL))),
+    CONSTRAINT organization_billing_status_known CHECK (((subscription_status IS NULL) OR (subscription_status = ANY (ARRAY['incomplete'::text, 'incomplete_expired'::text, 'trialing'::text, 'active'::text, 'past_due'::text, 'canceled'::text, 'unpaid'::text, 'paused'::text])))),
+    CONSTRAINT organization_billing_subscription_shape CHECK (((stripe_subscription_id IS NULL) OR (stripe_subscription_id ~ '^sub_[A-Za-z0-9]+$'::text)))
+);
+
+ALTER TABLE ONLY public.organization_billing FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE organization_billing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.organization_billing IS 'État Stripe d''une organisation : client, abonnement, période courante, échéance, grâce, changement programmé, TVA. Écrite par les webhooks et par les RPC de facturation, jamais par le client.';
+
+
+--
+-- Name: COLUMN organization_billing.grace_until; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.organization_billing.grace_until IS 'Fin des sept jours de grâce ouverts par un invoice.payment_failed. Pendant la grâce, les capacités sont conservées (effective_plan_key ne dégrade que sur status = canceled) et le professionnel est relancé à J+1, J+3 et J+6. Après, retour au Free — données conservées, profil toujours publié.';
+
+
+--
+-- Name: COLUMN organization_billing.scheduled_plan_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.organization_billing.scheduled_plan_key IS 'Plan qui prendra effet à scheduled_effective_at. Une descente de gamme ne coupe jamais une capacité déjà payée : elle attend la fin de la période. Une descente immédiate serait un litige.';
+
+
+--
 -- Name: organization_commercial_state; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -14231,6 +16691,37 @@ ALTER TABLE ONLY public.organization_follows FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.organization_follows IS 'Durable customer-to-barbershop social Follow graph. Separate from customer_favorites. Explicit unfollows are retained as tombstones.';
+
+
+--
+-- Name: organization_trials; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.organization_trials (
+    organization_id uuid NOT NULL,
+    plan_key text NOT NULL,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    ends_at timestamp with time zone NOT NULL,
+    status text DEFAULT 'active'::text NOT NULL,
+    started_from text DEFAULT 'onboarding'::text NOT NULL,
+    converted_at timestamp with time zone,
+    expired_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT organization_trials_lifecycle_coherent CHECK ((((status = 'active'::text) AND (converted_at IS NULL) AND (expired_at IS NULL)) OR ((status = 'converted'::text) AND (converted_at IS NOT NULL)) OR ((status = 'expired'::text) AND (expired_at IS NOT NULL)))),
+    CONSTRAINT organization_trials_source_known CHECK ((started_from = ANY (ARRAY['onboarding'::text, 'owner_request'::text]))),
+    CONSTRAINT organization_trials_status_known CHECK ((status = ANY (ARRAY['active'::text, 'converted'::text, 'expired'::text]))),
+    CONSTRAINT organization_trials_window_ordered CHECK ((ends_at > started_at))
+);
+
+ALTER TABLE ONLY public.organization_trials FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE organization_trials; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.organization_trials IS 'Essai de 14 jours, unique par organisation (clé primaire = organization_id, la ligne ne se supprime jamais). Un essai actif surclasse un plan effectif free dans private.effective_plan_key ; échu ou converti, il cesse de surclasser et tout revient au plan réel, sans suppression de données.';
 
 
 --
@@ -14438,6 +16929,77 @@ ALTER TABLE ONLY public.platform_owner_bootstrap_tokens FORCE ROW LEVEL SECURITY
 --
 
 COMMENT ON TABLE public.platform_owner_bootstrap_tokens IS 'Single-use hashed bootstrap tokens for claiming platform_owner. Zero client-facing policies — read/write only through claim_platform_owner_bootstrap()/reissue_platform_owner_bootstrap_token() or operator SQL.';
+
+
+--
+-- Name: post_likes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_likes (
+    post_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.post_likes FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE post_likes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.post_likes IS 'Likes publics (MASTER_SPEC §11). Une ligne par (post, compte) ; like_count sur posts est l''agrégat maintenu par trigger. Écriture et retrait limités à auth.uid() — par policy ET par les RPC like_post/unlike_post.';
+
+
+--
+-- Name: post_media; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_media (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    post_id uuid NOT NULL,
+    storage_path text NOT NULL,
+    media_type text DEFAULT 'image'::text NOT NULL,
+    width integer,
+    height integer,
+    duration_ms integer,
+    "position" smallint DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT post_media_dimensions_positive CHECK ((((width IS NULL) OR (width > 0)) AND ((height IS NULL) OR (height > 0)))),
+    CONSTRAINT post_media_position_nonnegative CHECK (("position" >= 0)),
+    CONSTRAINT post_media_storage_path_not_blank CHECK ((btrim(storage_path) <> ''::text)),
+    CONSTRAINT post_media_type_valid CHECK ((media_type = ANY (ARRAY['image'::text, 'video'::text]))),
+    CONSTRAINT post_media_video_duration CHECK ((((media_type = 'video'::text) AND (duration_ms IS NOT NULL) AND ((duration_ms >= 1) AND (duration_ms <= 60000))) OR ((media_type = 'image'::text) AND (duration_ms IS NULL))))
+);
+
+ALTER TABLE ONLY public.post_media FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE post_media; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.post_media IS 'Médias d''une publication, 1 à 10 par post (triggers ci-dessous — un CHECK ne peut pas compter les lignes d''une autre table). storage_path pointe dans le bucket privé post-media, toujours sous {user_id}/… ; servi par URL signées uniquement.';
+
+
+--
+-- Name: post_services; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_services (
+    post_id uuid NOT NULL,
+    service_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.post_services FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE post_services; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.post_services IS 'Lien optionnel post → service réservable. Sans lien : portfolio. Avec lien : « réserver cette coupe ». Le service doit appartenir à l''organisation de rattachement du post (check_post_services_consistency) — jamais à une autre.';
 
 
 --
@@ -15460,6 +18022,87 @@ COMMENT ON COLUMN public.queue_entries.booked_by_user_id IS 'The authenticated a
 
 
 --
+-- Name: review_photos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.review_photos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    review_id uuid NOT NULL,
+    storage_path text NOT NULL,
+    consent_publish boolean NOT NULL,
+    consent_social_reuse boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT review_photos_consent_required CHECK (consent_publish),
+    CONSTRAINT review_photos_storage_path_not_blank CHECK ((btrim(storage_path) <> ''::text))
+);
+
+ALTER TABLE ONLY public.review_photos FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE review_photos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.review_photos IS 'Photo contribuée par le client EN TANT QU''AVIS (MASTER_SPEC §11), une par avis. consent_publish : consentement explicite à la publication avec l''avis, exigé par contrainte. consent_social_reuse : accord DISTINCT — default false, jamais posé par submit_review — sans lequel une photo d''avis ne devient jamais matière à post.';
+
+
+--
+-- Name: review_reports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.review_reports (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    review_id uuid NOT NULL,
+    reporter_user_id uuid NOT NULL,
+    reason text NOT NULL,
+    detail text,
+    status text DEFAULT 'open'::text NOT NULL,
+    resolved_at timestamp with time zone,
+    resolved_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT review_reports_detail_length CHECK (((detail IS NULL) OR (char_length(detail) <= 1000))),
+    CONSTRAINT review_reports_reason_valid CHECK ((reason = ANY (ARRAY['fraud'::text, 'abusive_content'::text, 'personal_data'::text, 'hate_speech'::text, 'conflict_of_interest'::text, 'other'::text]))),
+    CONSTRAINT review_reports_resolution_stamped CHECK ((((status = 'open'::text) AND (resolved_at IS NULL)) OR ((status <> 'open'::text) AND (resolved_at IS NOT NULL)))),
+    CONSTRAINT review_reports_status_valid CHECK ((status = ANY (ARRAY['open'::text, 'reviewed'::text, 'dismissed'::text, 'actioned'::text])))
+);
+
+ALTER TABLE ONLY public.review_reports FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE review_reports; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.review_reports IS 'Signalement d''un avis pour modération. Les motifs sont ceux de la modération plus ''other'' pour le tout-venant — le tri se fait à la résolution. Un signalement par (avis, compte).';
+
+
+--
+-- Name: review_reputation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.review_reputation (
+    subject_kind text NOT NULL,
+    subject_id uuid NOT NULL,
+    rating_sum integer DEFAULT 0 NOT NULL,
+    rating_count integer DEFAULT 0 NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT review_reputation_kind_valid CHECK ((subject_kind = ANY (ARRAY['professional'::text, 'organization'::text]))),
+    CONSTRAINT review_reputation_nonnegative CHECK (((rating_sum >= 0) AND (rating_count >= 0))),
+    CONSTRAINT review_reputation_sum_bounded CHECK ((rating_sum <= (rating_count * 5)))
+);
+
+ALTER TABLE ONLY public.review_reputation FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE review_reputation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.review_reputation IS 'Réputation agrégée par sujet, maintenue par maintain_review_reputation depuis les seuls avis status=published. rating_count = 0 (ou absence de ligne) signifie « pas encore d''avis » et DOIT être exposé comme note NULL, jamais 0 : un profil neuf n''est pas un profil mal noté. L''exposition passe par get_public_reputation, qui rend null quand le compte est nul.';
+
+
+--
 -- Name: service_categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -15603,6 +18246,35 @@ COMMENT ON TABLE public.staff_profiles IS 'Operational/public-facing staff recor
 --
 
 COMMENT ON COLUMN public.staff_profiles.user_id IS 'The account behind this roster record. NULLABLE and ON DELETE SET NULL: erasing an account detaches the person and leaves the shop''s service history intact, rather than cascading it away. A NULL user_id is a tombstone — every RLS predicate compares it to auth.uid(), which NULL never matches.';
+
+
+--
+-- Name: stripe_webhook_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.stripe_webhook_events (
+    event_id text NOT NULL,
+    event_type text NOT NULL,
+    livemode boolean NOT NULL,
+    payload jsonb NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    error text,
+    attempts integer DEFAULT 0 NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    processed_at timestamp with time zone,
+    CONSTRAINT stripe_webhook_events_attempts_sane CHECK ((attempts >= 0)),
+    CONSTRAINT stripe_webhook_events_id_shape CHECK ((event_id ~ '^evt_[A-Za-z0-9]+$'::text)),
+    CONSTRAINT stripe_webhook_events_status_known CHECK ((status = ANY (ARRAY['queued'::text, 'processed'::text, 'skipped'::text, 'failed'::text, 'rejected'::text])))
+);
+
+ALTER TABLE ONLY public.stripe_webhook_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE stripe_webhook_events; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.stripe_webhook_events IS 'Journal des webhooks Stripe : charge utile brute et résultat de traitement. Clé primaire = identifiant d''événement Stripe, donc idempotence par construction. Écrit par la fonction Edge stripe-webhook APRÈS vérification de signature ; traité en asynchrone par run_billing_maintenance.';
 
 
 --
@@ -16050,6 +18722,30 @@ ALTER TABLE ONLY public.barbers
 
 
 --
+-- Name: billing_quote_requests billing_quote_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_quote_requests
+    ADD CONSTRAINT billing_quote_requests_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: billing_stripe_prices billing_stripe_prices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_stripe_prices
+    ADD CONSTRAINT billing_stripe_prices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: billing_stripe_products billing_stripe_products_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_stripe_products
+    ADD CONSTRAINT billing_stripe_products_pkey PRIMARY KEY (plan_key);
+
+
+--
 -- Name: booking_provider_observations booking_provider_observations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -16249,6 +18945,14 @@ ALTER TABLE ONLY public.email_templates
 
 
 --
+-- Name: feed_ranking_weights feed_ranking_weights_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.feed_ranking_weights
+    ADD CONSTRAINT feed_ranking_weights_pkey PRIMARY KEY (signal);
+
+
+--
 -- Name: invitations invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -16417,6 +19121,14 @@ ALTER TABLE ONLY public.notifications
 
 
 --
+-- Name: organization_billing organization_billing_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_billing
+    ADD CONSTRAINT organization_billing_pkey PRIMARY KEY (organization_id);
+
+
+--
 -- Name: organization_commercial_state organization_commercial_state_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -16438,6 +19150,14 @@ ALTER TABLE ONLY public.organization_dashboard_layouts
 
 ALTER TABLE ONLY public.organization_follows
     ADD CONSTRAINT organization_follows_pkey PRIMARY KEY (follower_user_id, organization_id);
+
+
+--
+-- Name: organization_trials organization_trials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_trials
+    ADD CONSTRAINT organization_trials_pkey PRIMARY KEY (organization_id);
 
 
 --
@@ -16654,6 +19374,46 @@ ALTER TABLE ONLY public.platform_owner_bootstrap_tokens
 
 ALTER TABLE ONLY public.platform_support_sessions
     ADD CONSTRAINT platform_support_sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post_likes post_likes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_likes
+    ADD CONSTRAINT post_likes_pkey PRIMARY KEY (post_id, user_id);
+
+
+--
+-- Name: post_media post_media_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_media
+    ADD CONSTRAINT post_media_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post_media post_media_storage_path_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_media
+    ADD CONSTRAINT post_media_storage_path_unique UNIQUE (storage_path);
+
+
+--
+-- Name: post_services post_services_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_services
+    ADD CONSTRAINT post_services_pkey PRIMARY KEY (post_id, service_id);
+
+
+--
+-- Name: posts posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
 
 
 --
@@ -17025,6 +19785,70 @@ ALTER TABLE ONLY public.queue_entries
 
 
 --
+-- Name: review_photos review_photos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_photos
+    ADD CONSTRAINT review_photos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: review_photos review_photos_review_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_photos
+    ADD CONSTRAINT review_photos_review_unique UNIQUE (review_id);
+
+
+--
+-- Name: review_photos review_photos_storage_path_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_photos
+    ADD CONSTRAINT review_photos_storage_path_unique UNIQUE (storage_path);
+
+
+--
+-- Name: review_reports review_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_reports
+    ADD CONSTRAINT review_reports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: review_reports review_reports_reporter_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_reports
+    ADD CONSTRAINT review_reports_reporter_unique UNIQUE (review_id, reporter_user_id);
+
+
+--
+-- Name: review_reputation review_reputation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_reputation
+    ADD CONSTRAINT review_reputation_pkey PRIMARY KEY (subject_kind, subject_id);
+
+
+--
+-- Name: reviews reviews_appointment_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_appointment_unique UNIQUE (appointment_id);
+
+
+--
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: service_categories service_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -17078,6 +19902,14 @@ ALTER TABLE ONLY public.staff_profiles
 
 ALTER TABLE ONLY public.staff_profiles
     ADD CONSTRAINT staff_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: stripe_webhook_events stripe_webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stripe_webhook_events
+    ADD CONSTRAINT stripe_webhook_events_pkey PRIMARY KEY (event_id);
 
 
 --
@@ -17411,6 +20243,48 @@ CREATE INDEX barbers_professional_id_idx ON public.barbers USING btree (professi
 --
 
 CREATE INDEX barbers_service_mode_override_idx ON public.barbers USING btree (service_mode_override) WHERE (service_mode_override IS NOT NULL);
+
+
+--
+-- Name: billing_quote_requests_one_open_per_org; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billing_quote_requests_one_open_per_org ON public.billing_quote_requests USING btree (organization_id) WHERE (status = 'open'::text);
+
+
+--
+-- Name: billing_quote_requests_org_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_quote_requests_org_idx ON public.billing_quote_requests USING btree (organization_id, created_at DESC);
+
+
+--
+-- Name: billing_stripe_prices_one_active_per_plan; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billing_stripe_prices_one_active_per_plan ON public.billing_stripe_prices USING btree (plan_key, billing_interval, livemode) WHERE is_active;
+
+
+--
+-- Name: billing_stripe_prices_plan_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_stripe_prices_plan_idx ON public.billing_stripe_prices USING btree (plan_key, billing_interval);
+
+
+--
+-- Name: billing_stripe_prices_stripe_id_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billing_stripe_prices_stripe_id_key ON public.billing_stripe_prices USING btree (stripe_price_id);
+
+
+--
+-- Name: billing_stripe_products_stripe_id_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX billing_stripe_products_stripe_id_key ON public.billing_stripe_products USING btree (stripe_product_id);
 
 
 --
@@ -17778,6 +20652,34 @@ CREATE INDEX notifications_user_unread_idx ON public.notifications USING btree (
 
 
 --
+-- Name: organization_billing_customer_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX organization_billing_customer_idx ON public.organization_billing USING btree (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL);
+
+
+--
+-- Name: organization_billing_grace_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX organization_billing_grace_idx ON public.organization_billing USING btree (grace_until) WHERE (grace_until IS NOT NULL);
+
+
+--
+-- Name: organization_billing_scheduled_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX organization_billing_scheduled_idx ON public.organization_billing USING btree (scheduled_effective_at) WHERE (scheduled_effective_at IS NOT NULL);
+
+
+--
+-- Name: organization_billing_subscription_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX organization_billing_subscription_key ON public.organization_billing USING btree (stripe_subscription_id) WHERE (stripe_subscription_id IS NOT NULL);
+
+
+--
 -- Name: organization_commercial_state_plan_key_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17803,6 +20705,13 @@ CREATE INDEX organization_follows_by_organization_idx ON public.organization_fol
 --
 
 CREATE INDEX organization_follows_by_user_idx ON public.organization_follows USING btree (follower_user_id, is_following, followed_at DESC);
+
+
+--
+-- Name: organization_trials_active_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX organization_trials_active_idx ON public.organization_trials USING btree (ends_at) WHERE (status = 'active'::text);
 
 
 --
@@ -17992,6 +20901,55 @@ CREATE UNIQUE INDEX platform_support_sessions_one_open_per_actor ON public.platf
 --
 
 CREATE INDEX platform_support_sessions_organization_id_idx ON public.platform_support_sessions USING btree (organization_id);
+
+
+--
+-- Name: post_likes_user_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX post_likes_user_idx ON public.post_likes USING btree (user_id);
+
+
+--
+-- Name: post_media_post_position_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX post_media_post_position_idx ON public.post_media USING btree (post_id, "position");
+
+
+--
+-- Name: post_services_service_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX post_services_service_idx ON public.post_services USING btree (service_id);
+
+
+--
+-- Name: posts_organization_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_organization_created_idx ON public.posts USING btree (organization_id, created_at DESC) WHERE (organization_id IS NOT NULL);
+
+
+--
+-- Name: posts_posted_at_org_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_posted_at_org_created_idx ON public.posts USING btree (posted_at_organization_id, created_at DESC) WHERE (posted_at_organization_id IS NOT NULL);
+
+
+--
+-- Name: posts_professional_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_professional_created_idx ON public.posts USING btree (professional_id, created_at DESC) WHERE (professional_id IS NOT NULL);
+
+
+--
+-- Name: posts_public_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_public_created_idx ON public.posts USING btree (created_at DESC) WHERE (visibility = 'public'::text);
 
 
 --
@@ -18541,6 +21499,34 @@ CREATE INDEX queue_entries_organization_id_idx ON public.queue_entries USING btr
 
 
 --
+-- Name: review_reports_open_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX review_reports_open_idx ON public.review_reports USING btree (created_at) WHERE (status = 'open'::text);
+
+
+--
+-- Name: reviews_customer_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_customer_idx ON public.reviews USING btree (customer_user_id);
+
+
+--
+-- Name: reviews_organization_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_organization_created_idx ON public.reviews USING btree (organization_id, created_at DESC);
+
+
+--
+-- Name: reviews_professional_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_professional_created_idx ON public.reviews USING btree (professional_id, created_at DESC);
+
+
+--
 -- Name: service_categories_organization_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -18657,6 +21643,20 @@ CREATE INDEX staff_profiles_public_active_idx ON public.staff_profiles USING btr
 --
 
 CREATE INDEX staff_profiles_user_id_idx ON public.staff_profiles USING btree (user_id) WHERE (user_id IS NOT NULL);
+
+
+--
+-- Name: stripe_webhook_events_queued_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX stripe_webhook_events_queued_idx ON public.stripe_webhook_events USING btree (received_at) WHERE (status = 'queued'::text);
+
+
+--
+-- Name: stripe_webhook_events_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX stripe_webhook_events_type_idx ON public.stripe_webhook_events USING btree (event_type, received_at DESC);
 
 
 --
@@ -18937,6 +21937,20 @@ CREATE TRIGGER barbers_enforce_professional_capacity BEFORE INSERT OR UPDATE OF 
 --
 
 CREATE TRIGGER barbers_set_updated_at BEFORE UPDATE ON public.barbers FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: billing_quote_requests billing_quote_requests_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_quote_requests_set_updated_at BEFORE UPDATE ON public.billing_quote_requests FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: billing_stripe_products billing_stripe_products_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_stripe_products_set_updated_at BEFORE UPDATE ON public.billing_stripe_products FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -19227,6 +22241,13 @@ CREATE TRIGGER on_organization_created AFTER INSERT ON public.organizations FOR 
 
 
 --
+-- Name: organization_billing organization_billing_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER organization_billing_set_updated_at BEFORE UPDATE ON public.organization_billing FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
 -- Name: organization_commercial_state organization_commercial_state_integrity; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -19252,6 +22273,20 @@ CREATE TRIGGER organization_dashboard_layouts_set_updated_at BEFORE UPDATE ON pu
 --
 
 CREATE TRIGGER organization_follows_analytics AFTER INSERT OR UPDATE ON public.organization_follows FOR EACH ROW EXECUTE FUNCTION public.analytics_organization_follow_event();
+
+
+--
+-- Name: organization_follows organization_follows_notify; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER organization_follows_notify AFTER INSERT OR UPDATE OF is_following ON public.organization_follows FOR EACH ROW EXECUTE FUNCTION public.notify_organization_follow();
+
+
+--
+-- Name: organization_trials organization_trials_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER organization_trials_set_updated_at BEFORE UPDATE ON public.organization_trials FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -19346,6 +22381,62 @@ CREATE TRIGGER platform_members_set_updated_at BEFORE UPDATE ON public.platform_
 
 
 --
+-- Name: post_likes post_likes_maintain_count; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER post_likes_maintain_count AFTER INSERT OR DELETE ON public.post_likes FOR EACH ROW EXECUTE FUNCTION public.maintain_post_like_count();
+
+
+--
+-- Name: post_likes post_likes_notify; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER post_likes_notify AFTER INSERT ON public.post_likes FOR EACH ROW EXECUTE FUNCTION public.notify_post_like();
+
+
+--
+-- Name: post_media post_media_keep_last; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE CONSTRAINT TRIGGER post_media_keep_last AFTER DELETE ON public.post_media DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.check_post_has_media();
+
+
+--
+-- Name: post_media post_media_limit; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER post_media_limit AFTER INSERT ON public.post_media FOR EACH ROW EXECUTE FUNCTION public.check_post_media_limit();
+
+
+--
+-- Name: post_services post_services_check_consistency; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER post_services_check_consistency BEFORE INSERT ON public.post_services FOR EACH ROW EXECUTE FUNCTION public.check_post_services_consistency();
+
+
+--
+-- Name: posts posts_check_consistency; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER posts_check_consistency BEFORE INSERT ON public.posts FOR EACH ROW EXECUTE FUNCTION public.check_posts_consistency();
+
+
+--
+-- Name: posts posts_guard_immutable_author; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER posts_guard_immutable_author BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION public.posts_guard_immutable_author();
+
+
+--
+-- Name: posts posts_require_media; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE CONSTRAINT TRIGGER posts_require_media AFTER INSERT ON public.posts DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.check_post_has_media();
+
+
+--
 -- Name: professional_applications professional_applications_guard_update; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -19392,6 +22483,13 @@ CREATE TRIGGER professional_claims_set_updated_at BEFORE UPDATE ON public.profes
 --
 
 CREATE TRIGGER professional_follows_analytics AFTER INSERT OR UPDATE ON public.professional_follows FOR EACH ROW EXECUTE FUNCTION public.analytics_professional_follow_event();
+
+
+--
+-- Name: professional_follows professional_follows_notify; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER professional_follows_notify AFTER INSERT OR UPDATE OF state ON public.professional_follows FOR EACH ROW EXECUTE FUNCTION public.notify_professional_follow();
 
 
 --
@@ -19717,6 +22815,41 @@ CREATE TRIGGER queue_entries_set_updated_at BEFORE UPDATE ON public.queue_entrie
 
 
 --
+-- Name: reviews reviews_check_consistency; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER reviews_check_consistency BEFORE INSERT ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.check_reviews_consistency();
+
+
+--
+-- Name: reviews reviews_guard_immutable; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER reviews_guard_immutable BEFORE UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.reviews_guard_immutable();
+
+
+--
+-- Name: reviews reviews_maintain_reputation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER reviews_maintain_reputation AFTER INSERT OR DELETE OR UPDATE OF status ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.maintain_review_reputation();
+
+
+--
+-- Name: reviews reviews_notify_received; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER reviews_notify_received AFTER INSERT ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.notify_review_received();
+
+
+--
+-- Name: reviews reviews_notify_reply; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER reviews_notify_reply AFTER UPDATE OF reply_body ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.notify_review_reply();
+
+
+--
 -- Name: service_categories service_categories_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -19763,6 +22896,27 @@ CREATE TRIGGER services_check_category_consistency BEFORE INSERT OR UPDATE ON pu
 --
 
 CREATE TRIGGER services_set_updated_at BEFORE UPDATE ON public.services FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: posts set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: review_reports set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.review_reports FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
+-- Name: reviews set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -20081,6 +23235,38 @@ ALTER TABLE ONLY public.barbers
 
 
 --
+-- Name: billing_quote_requests billing_quote_requests_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_quote_requests
+    ADD CONSTRAINT billing_quote_requests_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: billing_quote_requests billing_quote_requests_requested_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_quote_requests
+    ADD CONSTRAINT billing_quote_requests_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: billing_stripe_prices billing_stripe_prices_plan_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_stripe_prices
+    ADD CONSTRAINT billing_stripe_prices_plan_key_fkey FOREIGN KEY (plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: billing_stripe_products billing_stripe_products_plan_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_stripe_products
+    ADD CONSTRAINT billing_stripe_products_plan_key_fkey FOREIGN KEY (plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
 -- Name: booking_provider_observations booking_provider_observations_job_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20150,6 +23336,14 @@ ALTER TABLE ONLY public.commercial_plan_changes
 
 ALTER TABLE ONLY public.commercial_plan_changes
     ADD CONSTRAINT commercial_plan_changes_previous_plan_key_fkey FOREIGN KEY (previous_plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: commercial_plans commercial_plans_feature_tier_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.commercial_plans
+    ADD CONSTRAINT commercial_plans_feature_tier_fkey FOREIGN KEY (feature_tier_plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
@@ -20505,6 +23699,30 @@ ALTER TABLE ONLY public.notifications
 
 
 --
+-- Name: organization_billing organization_billing_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_billing
+    ADD CONSTRAINT organization_billing_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: organization_billing organization_billing_plan_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_billing
+    ADD CONSTRAINT organization_billing_plan_key_fkey FOREIGN KEY (plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE;
+
+
+--
+-- Name: organization_billing organization_billing_scheduled_plan_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_billing
+    ADD CONSTRAINT organization_billing_scheduled_plan_key_fkey FOREIGN KEY (scheduled_plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE;
+
+
+--
 -- Name: organization_commercial_state organization_commercial_state_assigned_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20558,6 +23776,22 @@ ALTER TABLE ONLY public.organization_follows
 
 ALTER TABLE ONLY public.organization_follows
     ADD CONSTRAINT organization_follows_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: organization_trials organization_trials_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_trials
+    ADD CONSTRAINT organization_trials_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: organization_trials organization_trials_plan_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organization_trials
+    ADD CONSTRAINT organization_trials_plan_key_fkey FOREIGN KEY (plan_key) REFERENCES public.commercial_plans(plan_key) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
@@ -20870,6 +24104,70 @@ ALTER TABLE ONLY public.platform_support_sessions
 
 ALTER TABLE ONLY public.platform_support_sessions
     ADD CONSTRAINT platform_support_sessions_target_user_id_fkey FOREIGN KEY (target_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: post_likes post_likes_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_likes
+    ADD CONSTRAINT post_likes_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_likes post_likes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_likes
+    ADD CONSTRAINT post_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_media post_media_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_media
+    ADD CONSTRAINT post_media_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_services post_services_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_services
+    ADD CONSTRAINT post_services_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: post_services post_services_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post_services
+    ADD CONSTRAINT post_services_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.services(id) ON DELETE CASCADE;
+
+
+--
+-- Name: posts posts_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: posts posts_posted_at_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_posted_at_organization_id_fkey FOREIGN KEY (posted_at_organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posts posts_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
 
 
 --
@@ -21414,6 +24712,70 @@ ALTER TABLE ONLY public.queue_entries
 
 ALTER TABLE ONLY public.queue_entries
     ADD CONSTRAINT queue_entries_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.services(id) ON DELETE SET NULL;
+
+
+--
+-- Name: review_photos review_photos_review_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_photos
+    ADD CONSTRAINT review_photos_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;
+
+
+--
+-- Name: review_reports review_reports_reporter_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_reports
+    ADD CONSTRAINT review_reports_reporter_user_id_fkey FOREIGN KEY (reporter_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: review_reports review_reports_review_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_reports
+    ADD CONSTRAINT review_reports_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_appointment_id_fkey FOREIGN KEY (appointment_id) REFERENCES public.appointments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_customer_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_customer_user_id_fkey FOREIGN KEY (customer_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: reviews reviews_replied_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_replied_by_user_id_fkey FOREIGN KEY (replied_by_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 
 --
@@ -21988,6 +25350,45 @@ CREATE POLICY barbers_update ON public.barbers FOR UPDATE TO authenticated USING
 
 
 --
+-- Name: billing_quote_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.billing_quote_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: billing_quote_requests billing_quote_requests_select_owner; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY billing_quote_requests_select_owner ON public.billing_quote_requests FOR SELECT TO authenticated USING ((( SELECT private.has_org_role(billing_quote_requests.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+
+
+--
+-- Name: billing_stripe_prices; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.billing_stripe_prices ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: billing_stripe_prices billing_stripe_prices_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY billing_stripe_prices_select ON public.billing_stripe_prices FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: billing_stripe_products; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.billing_stripe_products ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: billing_stripe_products billing_stripe_products_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY billing_stripe_products_select ON public.billing_stripe_products FOR SELECT TO authenticated USING (true);
+
+
+--
 -- Name: booking_provider_observations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -22398,6 +25799,12 @@ CREATE POLICY email_templates_select ON public.email_templates FOR SELECT TO aut
 
 
 --
+-- Name: feed_ranking_weights; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.feed_ranking_weights ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: invitations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -22748,6 +26155,19 @@ CREATE POLICY notifications_update_own ON public.notifications FOR UPDATE TO aut
 
 
 --
+-- Name: organization_billing; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.organization_billing ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: organization_billing organization_billing_select_owner; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY organization_billing_select_owner ON public.organization_billing FOR SELECT TO authenticated USING ((( SELECT private.has_org_role(organization_billing.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+
+
+--
 -- Name: organization_commercial_state; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -22805,6 +26225,19 @@ ALTER TABLE public.organization_follows ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY organization_follows_select_own ON public.organization_follows FOR SELECT TO authenticated USING ((follower_user_id = ( SELECT auth.uid() AS uid)));
+
+
+--
+-- Name: organization_trials; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.organization_trials ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: organization_trials organization_trials_select_owner; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY organization_trials_select_owner ON public.organization_trials FOR SELECT TO authenticated USING ((( SELECT private.has_org_role(organization_trials.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
 
 
 --
@@ -23236,6 +26669,121 @@ ALTER TABLE public.platform_support_sessions ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY platform_support_sessions_select ON public.platform_support_sessions FOR SELECT TO authenticated USING (((platform_actor_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+
+
+--
+-- Name: post_likes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.post_likes ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: post_likes post_likes_delete_self; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_likes_delete_self ON public.post_likes FOR DELETE TO authenticated USING ((user_id = ( SELECT auth.uid() AS uid)));
+
+
+--
+-- Name: post_likes post_likes_insert_self; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_likes_insert_self ON public.post_likes FOR INSERT TO authenticated WITH CHECK (((user_id = ( SELECT auth.uid() AS uid)) AND private.can_view_post(post_id)));
+
+
+--
+-- Name: post_likes post_likes_select_all; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_likes_select_all ON public.post_likes FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: post_media; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.post_media ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: post_media post_media_delete_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_media_delete_own ON public.post_media FOR DELETE TO authenticated USING (private.can_manage_post(post_id));
+
+
+--
+-- Name: post_media post_media_insert_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_media_insert_own ON public.post_media FOR INSERT TO authenticated WITH CHECK (private.can_manage_post(post_id));
+
+
+--
+-- Name: post_media post_media_select_visible; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_media_select_visible ON public.post_media FOR SELECT TO authenticated USING (private.can_view_post(post_id));
+
+
+--
+-- Name: post_services; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.post_services ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: post_services post_services_delete_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_services_delete_own ON public.post_services FOR DELETE TO authenticated USING (private.can_manage_post(post_id));
+
+
+--
+-- Name: post_services post_services_insert_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_services_insert_own ON public.post_services FOR INSERT TO authenticated WITH CHECK (private.can_manage_post(post_id));
+
+
+--
+-- Name: post_services post_services_select_visible; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY post_services_select_visible ON public.post_services FOR SELECT TO authenticated USING (private.can_view_post(post_id));
+
+
+--
+-- Name: posts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: posts posts_delete_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY posts_delete_own ON public.posts FOR DELETE TO authenticated USING (private.can_manage_post(id));
+
+
+--
+-- Name: posts posts_insert_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY posts_insert_own ON public.posts FOR INSERT TO authenticated WITH CHECK ((((author_kind = 'professional'::text) AND private.is_own_professional(professional_id)) OR ((author_kind = 'organization'::text) AND private.has_org_role(organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]))));
+
+
+--
+-- Name: posts posts_select_visible; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY posts_select_visible ON public.posts FOR SELECT TO authenticated USING (private.can_view_post(id));
+
+
+--
+-- Name: posts posts_update_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY posts_update_own ON public.posts FOR UPDATE TO authenticated USING (private.can_manage_post(id)) WITH CHECK (private.can_manage_post(id));
 
 
 --
@@ -24187,6 +27735,60 @@ CREATE POLICY queue_entries_update_self ON public.queue_entries FOR UPDATE TO au
 
 
 --
+-- Name: review_photos; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.review_photos ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: review_photos review_photos_select_visible; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY review_photos_select_visible ON public.review_photos FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.reviews r
+  WHERE ((r.id = review_photos.review_id) AND ((r.status = 'published'::text) OR (r.customer_user_id = ( SELECT auth.uid() AS uid)))))));
+
+
+--
+-- Name: review_reports; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.review_reports ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: review_reports review_reports_select_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY review_reports_select_own ON public.review_reports FOR SELECT TO authenticated USING ((reporter_user_id = ( SELECT auth.uid() AS uid)));
+
+
+--
+-- Name: review_reputation; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.review_reputation ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: review_reputation review_reputation_select_all; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY review_reputation_select_all ON public.review_reputation FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: reviews; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: reviews reviews_select_visible; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY reviews_select_visible ON public.reviews FOR SELECT TO authenticated USING (((status = 'published'::text) OR (customer_user_id = ( SELECT auth.uid() AS uid)) OR private.is_own_professional(professional_id) OR private.has_org_role(organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role])));
+
+
+--
 -- Name: service_categories; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -24341,6 +27943,19 @@ CREATE POLICY staff_profiles_select ON public.staff_profiles FOR SELECT TO authe
 --
 
 CREATE POLICY staff_profiles_update ON public.staff_profiles FOR UPDATE TO authenticated USING (( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role)) WITH CHECK (( SELECT private.has_org_role(staff_profiles.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role));
+
+
+--
+-- Name: stripe_webhook_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.stripe_webhook_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: stripe_webhook_events stripe_webhook_events_select_platform; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY stripe_webhook_events_select_platform ON public.stripe_webhook_events FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
 
 
 --
@@ -24557,5 +28172,5 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QvcsvexUeV91vcKVYeOLwFJUd4IebqlQU6P1GwGwkZxPZzB0nzs2gd1nXfpUXzk
+\unrestrict B5d0SeECzQCTIQXQOV0qQgcfb78Zp16YqH8d0wvbfJcPfhzgZTTbfhYcbJKxbcP
 
