@@ -33,7 +33,7 @@ import {
   readLocalQueueEntry,
   saveLocalQueueEntry,
   type LocalQueueEntry,
-} from '@/features/queue/lib/localEntry'
+} from '@/shared/lib/localQueueEntry'
 
 /**
  * /q/:slug — l'écran qu'un client ouvre depuis son canapé. PUBLIC : ni

@@ -109,6 +109,20 @@ export const postMediaKeys = {
   signed: (sortedPaths: readonly string[]) => [...postMediaKeys.all, 'signed', sortedPaths] as const,
 } as const
 
+/** F3 — la recherche marketplace (/search) et la découverte de l'accueil. */
+export const discoveryKeys = {
+  all: ['discovery'] as const,
+  searches: () => [...discoveryKeys.all, 'search'] as const,
+  /** UNE recherche = ses arguments RPC exacts (pagination par pages infinies). */
+  search: (args: Record<string, unknown>) => [...discoveryKeys.searches(), args] as const,
+  /** Élargissement progressif après zéro résultat (rayon supérieur). */
+  widened: (args: Record<string, unknown>) => [...discoveryKeys.all, 'widened', args] as const,
+  /** Repli « par service » quand la recherche par nom ne rend rien. */
+  serviceFallback: (args: Record<string, unknown>) => [...discoveryKeys.all, 'service-fallback', args] as const,
+  /** Devises par organisation pour les prix « à partir de » des rangées. */
+  currencies: (organizationIds: readonly string[]) => [...discoveryKeys.all, 'currencies', organizationIds] as const,
+} as const
+
 /** Clés des compositions /demo (P1c) — mêmes règles que le produit. */
 export const demoKeys = {
   all: ['demo'] as const,

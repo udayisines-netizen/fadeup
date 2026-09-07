@@ -14,6 +14,8 @@ export type FadeUpState =
   | 'bookable'
   | 'not-bookable'
   | 'available'
+  /** F3 — peut réellement servir dans les 60 min (file accessible), MASTER_SPEC §8. */
+  | 'available-now'
   | 'unavailable'
   | 'pending-request'
   | 'confirmed'
@@ -54,6 +56,9 @@ const SPECS: Record<FadeUpState, StateSpec> = {
   bookable: { labelKey: 'states.booking.bookable', tone: 'positive', icon: <IconCheck aria-hidden="true" /> },
   'not-bookable': { labelKey: 'states.booking.notBookable', tone: 'neutral', icon: <IconClose aria-hidden="true" /> },
   available: { labelKey: 'states.booking.available', tone: 'positive', icon: <IconCheck aria-hidden="true" /> },
+  // Le point « live », pas une couleur seule : cette disponibilité est un
+  // fait vivant (la file accepte), jamais un décor.
+  'available-now': { labelKey: 'states.booking.availableNow', tone: 'live', icon: <IconQueue aria-hidden="true" /> },
   unavailable: { labelKey: 'states.booking.unavailable', tone: 'neutral', icon: <IconClose aria-hidden="true" /> },
   'pending-request': { labelKey: 'states.booking.pendingRequest', tone: 'attention', icon: <IconPending aria-hidden="true" /> },
   confirmed: { labelKey: 'states.booking.confirmed', tone: 'positive', icon: <IconCheck aria-hidden="true" /> },

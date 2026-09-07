@@ -399,8 +399,23 @@ export const router = createBrowserRouter([
       {
         element: <ConsumerShell />,
         children: [
-          { index: true, element: <NotBuiltPage zone="home" /> },
-          { path: 'search', element: <NotBuiltPage zone="search" /> },
+          /* F3 — l'accueil et la recherche. Chunks paresseux : l'entrée
+             consumer reste sous son budget, la carte (maplibre) est un chunk
+             de plus, chargé seulement à l'onglet Carte. */
+          {
+            index: true,
+            lazy: async () => {
+              const { HomePage } = await import('@/features/home/routes/HomePage')
+              return { Component: HomePage }
+            },
+          },
+          {
+            path: 'search',
+            lazy: async () => {
+              const { SearchPage } = await import('@/features/discovery/routes/SearchPage')
+              return { Component: SearchPage }
+            },
+          },
           { path: 'feed', element: <NotBuiltPage zone="feed" /> },
           /* F2 — les deux profils publics, accessibles sans authentification.
              Chunks paresseux : jamais dans l'entrée consumer. */

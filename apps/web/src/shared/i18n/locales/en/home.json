@@ -1,0 +1,26 @@
+{
+  "search": {
+    "title": "Find your barber",
+    "label": "Search for a barber or a shop",
+    "placeholder": "Name, style, city…"
+  },
+  "queue": {
+    "title": "Your queue at {{organization}}",
+    "anonymousTitle": "Your active queue",
+    "positionLabel": "in line",
+    "cta": "Track my spot"
+  },
+  "next": {
+    "title": "Next appointment"
+  },
+  "rebook": {
+    "title": "Book again",
+    "cta": "Book again with {{barber}}"
+  },
+  "followed": {
+    "title": "Profiles you follow"
+  },
+  "discover": {
+    "title": "Discover"
+  }
+}

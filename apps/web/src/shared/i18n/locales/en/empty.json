@@ -4,16 +4,6 @@
     "description": "This surface will be built by lot {{prompt}}.",
     "action": "Go to home"
   },
-  "home": {
-    "title": "Home arrives with P2",
-    "description": "Search, your next booking and followed profiles will be built by lot P2.",
-    "action": "See sign-in"
-  },
-  "search": {
-    "title": "Search arrives with P2",
-    "description": "Discovering barbers and shops near you will be built by lot P2.",
-    "action": "Go to home"
-  },
   "feed": {
     "title": "The feed arrives with P4",
     "description": "Posts from profiles you follow and local discovery will be built by lot P4.",

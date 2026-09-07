@@ -3,6 +3,7 @@
     "bookable": "Réservable",
     "notBookable": "Réservation indisponible",
     "available": "Disponible",
+    "availableNow": "Disponible maintenant",
     "unavailable": "Indisponible",
     "pendingRequest": "En attente de confirmation",
     "confirmed": "Confirmé"

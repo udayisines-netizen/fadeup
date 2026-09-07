@@ -1,0 +1,76 @@
+{
+  "title": "Search",
+  "meta": {
+    "title": "Search — FadeUp"
+  },
+  "search": {
+    "label": "Search",
+    "placeholder": "Name, style (fade, taper…), service",
+    "cityLabel": "City or neighbourhood",
+    "cityPlaceholder": "City or neighbourhood"
+  },
+  "geo": {
+    "nearMe": "Near me",
+    "locating": "Locating…",
+    "denied": "Without location access, searching by city or neighbourhood works fully."
+  },
+  "view": {
+    "label": "Results display",
+    "list": "List",
+    "map": "Map"
+  },
+  "map": {
+    "label": "Results map",
+    "openProfile": "View profile"
+  },
+  "filters": {
+    "title": "Filters",
+    "button": "Filters",
+    "buttonCount": "Filters · {{count}}",
+    "openNow": "Open now",
+    "availableNow": "Available now",
+    "radius": "Radius",
+    "radiusKm": "{{km}} km",
+    "service": "Service type",
+    "servicePlaceholder": "Haircut, beard, fade…",
+    "priceMin": "Min price",
+    "priceMax": "Max price",
+    "sort": "Sort by",
+    "reset": "Reset filters",
+    "showResults_one": "Show {{count}} result",
+    "showResults_other": "Show {{count}} results"
+  },
+  "sort": {
+    "recommended": "Recommended",
+    "nearest": "Nearest",
+    "price": "Price, lowest first"
+  },
+  "results": {
+    "count_one": "{{count}} result",
+    "count_other": "{{count}} results",
+    "loadMore": "Show more results"
+  },
+  "row": {
+    "supplyIndependent": "Independent",
+    "supplyBarbershop": "Barbershop",
+    "serviceArea": "Mobile — serves the {{city}} area",
+    "queueCount_one": "{{count}} person in line",
+    "queueCount_other": "{{count}} people in line"
+  },
+  "empty": {
+    "title": "No results in this area",
+    "description": "No barber or shop matches this search.",
+    "descriptionRadius": "Nothing within {{km}} km. Farther results, if any, are shown below with their real distance.",
+    "descriptionCity": "No results in {{city}} for this search.",
+    "descriptionAvailability": "No one can serve within the hour right now in this area.",
+    "clearQuery": "Clear search",
+    "clearAvailability": "Remove “available now”",
+    "searchEverywhere": "Search beyond this city"
+  },
+  "fallback": {
+    "title": "Professionals offering “{{query}}” as a service"
+  },
+  "widen": {
+    "title": "Within {{km}} km"
+  }
+}
