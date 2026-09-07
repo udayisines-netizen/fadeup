@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XACLzIUG4kuvIyy94QcTw37WnQ5cpoePGQh7EHZtrpQdMKHT6S8mLEaxIrRFPvo
+\restrict bIqZvmzj24RSrg4pZeziD5PqMyldg5Cl0bsf0LbJBkpX4lG36fVMds6nufQWQro
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -7586,6 +7586,32 @@ COMMENT ON FUNCTION public.get_public_organization(p_slug text) IS 'Public shop 
 
 
 --
+-- Name: get_public_organization_follower_count(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) RETURNS integer
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select count(*)::integer
+  from (
+    select 1
+    from public.organization_follows f
+    where f.organization_id = p_organization_id
+      and f.is_following
+    limit 10000
+  ) capped;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_organization_follower_count(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) IS 'F2 — public follower count of an organization, capped at 10000 like private.professional_follower_count. Followers are public by product law (MASTER_SPEC §9); the professional side has carried this since B1, the organization side gets it here.';
+
+
+--
 -- Name: get_public_professional(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -7634,6 +7660,53 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_public_professional_by_handle(p_handle text) IS 'Anon-callable. Same contract and same shape as get_public_professional, addressed by the public handle. Serves claimed and unclaimed identities alike and returns claim_state with them.';
+
+
+--
+-- Name: get_public_professional_workplace(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_professional_workplace(p_professional_id uuid) RETURNS TABLE(organization_id uuid, organization_name text, organization_slug text, marketplace_supply_type text, barber_id uuid, location_id uuid, location_name text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    o.id,
+    o.name,
+    o.slug,
+    -- LE mapping, copié à l'identique de search_public_professionals (B1) :
+    -- énuméré valeur par valeur, un type ajouté plus tard rend NULL.
+    case o.business_type
+      when 'solo_professional' then 'independent'
+      when 'barbershop'        then 'barbershop'
+      when 'hair_salon'        then 'barbershop'
+      when 'mixed_salon'       then 'barbershop'
+      when 'multi_location'    then 'barbershop'
+      else null
+    end::text,
+    b.id,
+    sp.location_id,
+    l.name
+  from public.barbers b
+  join public.professionals p on p.id = b.professional_id
+  join public.organizations o on o.id = b.organization_id
+  join public.staff_profiles sp on sp.id = b.staff_profile_id
+  left join public.locations l on l.id = sp.location_id and l.is_active
+  where b.professional_id = p_professional_id
+    and p.claim_state = 'claimed'
+    and p.is_public
+    and b.is_bookable
+    and sp.is_active
+    and sp.is_public
+  order by b.created_at;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_professional_workplace(p_professional_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) IS 'F2 — resolves a public, claimed professional identity to its public workplace(s): the reverse of list_public_organization_barbers.professional_id. Unclaimed identities resolve to zero rows, mirroring get_public_barber''s NULL professional_id (the staff<->identity link is public only after claim).';
 
 
 --
@@ -9102,6 +9175,37 @@ $$;
 --
 
 COMMENT ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) IS 'Anon-callable: bookable, public staff_profiles-visible barbers eligible (via barber_services) for p_service_id, whose primary location is p_location_id, by organization slug.';
+
+
+--
+-- Name: list_public_location_hours(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) RETURNS TABLE(day_of_week smallint, is_closed boolean, open_time time without time zone, close_time time without time zone, second_open_time time without time zone, second_close_time time without time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    h.day_of_week,
+    h.is_closed,
+    h.open_time,
+    h.close_time,
+    h.second_open_time,
+    h.second_close_time
+  from public.location_hours h
+  join public.locations l on l.id = h.location_id and l.is_active
+  join public.organizations o on o.id = h.organization_id
+  where o.slug = p_organization_slug
+    and h.location_id = p_location_id
+  order by h.day_of_week;
+$$;
+
+
+--
+-- Name: FUNCTION list_public_location_hours(p_organization_slug text, p_location_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) IS 'F2 — public weekly opening hours of an active location. The search RPCs already derive is_open_now from these rows; this exposes the week itself for the shop profile (MASTER_SPEC §9: week plus open/closed now, in the location timezone).';
 
 
 --
@@ -30571,6 +30675,16 @@ GRANT ALL ON FUNCTION public.get_public_organization(p_slug text) TO service_rol
 
 
 --
+-- Name: FUNCTION get_public_organization_follower_count(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO service_role;
+
+
+--
 -- Name: FUNCTION get_public_professional(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
 --
 
@@ -30588,6 +30702,16 @@ REVOKE ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) F
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO anon;
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO authenticated;
 GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_professional_workplace(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO service_role;
 
 
 --
@@ -30858,6 +30982,16 @@ REVOKE ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_lo
 GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO anon;
 GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_location_hours(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO service_role;
 
 
 --
@@ -33544,5 +33678,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XACLzIUG4kuvIyy94QcTw37WnQ5cpoePGQh7EHZtrpQdMKHT6S8mLEaxIrRFPvo
+\unrestrict bIqZvmzj24RSrg4pZeziD5PqMyldg5Cl0bsf0LbJBkpX4lG36fVMds6nufQWQro
 
