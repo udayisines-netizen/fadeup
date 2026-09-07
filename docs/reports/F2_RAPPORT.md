@@ -362,7 +362,7 @@ cadre de couverture vide en tête de chaque profil (décision assumée §5.4,
    isolément : 22/22 ; ma campagne finale isolée fait foi au §7). Règle
    consignée des deux côtés : une seule campagne e2e à la fois sur
    l'organisation partagée.
-2. **Un post créé pointant vers des médias inexistants** : mon premier
+3. **Un post créé pointant vers des médias inexistants** : mon premier
    upload de médias de démonstration était en PNG — refusé 415 par le
    bucket (allowlist jpeg/webp/avif/mp4) — mais j'ai lancé `create_post`
    sans vérifier les uploads : un post public a existé quelques minutes
@@ -370,14 +370,14 @@ cadre de couverture vide en tête de chaque profil (décision assumée §5.4,
    construction). Corrigé en re-téléversant en JPEG et en repointant les
    deux lignes `post_media`. Leçon : vérifier chaque étape d'une chaîne
    avant de déclencher la suivante.
-2. **Balayage QA initial défectueux** : mes premières captures étaient
+4. **Balayage QA initial défectueux** : mes premières captures étaient
    BLANCHES (le serveur dev exécute encore son graphe de modules après
    `networkidle`) et mon premier script épuisait le renderer Chromium
    (contexte unique + captures pleine page en série sur 2 cœurs —
    `ERR_INSUFFICIENT_RESOURCES`). Si j'avais « validé » sur ces captures,
    la vérification navigateur aurait été du théâtre. Corrigé (attente du
    CONTENU, un contexte par page) et re-passé : 27 combinaisons propres.
-3. **Clé de test `.env.local` absente du worktree neuf** — recréée depuis
+5. **Clé de test `.env.local` absente du worktree neuf** — recréée depuis
    l'environnement de production (leçon F1 §10.4.6 toujours valable : celle
    de `/opt/fadeup` reste périmée, hors de mon périmètre d'écriture).
 
