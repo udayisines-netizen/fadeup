@@ -8,6 +8,17 @@ postgres-meta du conteneur `fadeup-supabase-meta` — la CLI Supabase moderne
 exige Docker-in-Docker pour `gen types --db-url` et échoue ici ; même
 générateur, même sortie).
 
+> **Mis à jour le 2026-09-07 après F1** (`f1/live-queue`). La Live Queue a
+> désormais ses deux faces d'écran (`/q/:slug` public, `/dashboard/queue`
+> pro, `/setup` installation). Une migration : GRANT EXECUTE sur
+> `private.queue_stage` à `authenticated` (défaut latent B1 — AUCUNE
+> transition de file ne passait l'API, voir BLOCKERS §10). Deux contrats
+> manquants constatés, non comblés côté front : sortie de file par le client
+> et exposition publique de `called_at`/grâce pour le compte à rebours
+> (BLOCKERS §11). Le poll de `get_public_service_state` passe à 30 s sur
+> l'écran de file (la bascule de mode doit se voir « sans rafraîchir », F1
+> §9) ; la file publique reste à 6 s, et le poll du client QUI SUIT SA PLACE
+> continue onglet caché (l'appel doit l'atteindre).
 > **Mis à jour le 2026-09-07 après B4** (`b4/social-schema`). Le schéma live
 > porte **128 tables** : les 113 de B2, **6 tables billing de B3** (lot
 > parallèle, `b3/monetization` — leurs migrations vivent sur cette branche-là)

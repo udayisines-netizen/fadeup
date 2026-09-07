@@ -8,7 +8,8 @@ import { defineConfig, devices } from '@playwright/test'
  * (Supabase via Kong :18100) — aucune donnée simulée.
  */
 export default defineConfig({
-  testDir: './e2e/p1b',
+  // P1b (régression shell/auth/i18n) + F1 (Live Queue).
+  testDir: './e2e',
   timeout: 45_000,
   retries: 1,
   // La machine a 2 cœurs et fait tourner la production : un seul worker.

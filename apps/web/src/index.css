@@ -754,3 +754,21 @@ body {
 [dir='rtl'] {
   --fu-dir: -1;
 }
+
+/*
+ * ============================================================================
+ * AFFICHE QR DE FILE (F1)
+ * ============================================================================
+ *
+ * L'affiche collée au mur et le QR sont des artefacts IMPRIMÉS : papier
+ * blanc, encre — invariants de thème. Les valeurs vivent ici (CSS, hors du
+ * lint TSX qui ferme la palette) et nulle part ailleurs.
+ */
+.fu-poster {
+  background: #ffffff;
+  color: var(--fu-accent-fg);
+}
+
+.fu-poster-muted {
+  color: rgba(8, 15, 13, 0.62);
+}

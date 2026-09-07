@@ -15,15 +15,28 @@ import { reportError } from '@/shared/observability/errorReporting'
  * coming as an event, so callers refetch there.
  */
 
+/**
+ * Row payload of a Postgres Changes event. Delivered ONLY so the Live Queue
+ * can write the cache directly (the one authorized direct-write site) —
+ * every other consumer keeps ignoring it and invalidating keys instead.
+ * `old` carries just the replica identity (the primary key) unless the table
+ * has REPLICA IDENTITY FULL; never treat it as the full previous row.
+ */
+export interface RealtimeChangePayload {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE'
+  new: Record<string, unknown> | null
+  old: Record<string, unknown> | null
+}
+
 export interface UseChannelOptions {
   /** Logical channel name, e.g. `notifications:<userId>`. Null disables. */
   name: string | null
   table: string
   /** PostgREST filter (`user_id=eq.<uuid>`). Narrows traffic, never authorization. */
   filter?: string
-  onInsert?: () => void
-  onUpdate?: () => void
-  onDelete?: () => void
+  onInsert?: (payload: RealtimeChangePayload) => void
+  onUpdate?: (payload: RealtimeChangePayload) => void
+  onDelete?: (payload: RealtimeChangePayload) => void
   /** Fired on every successful subscribe, including the first. */
   onReconnect?: () => void
 }
@@ -85,12 +98,17 @@ export function useChannel(options: UseChannelOptions): void {
           table,
           ...(filter ? { filter } : {}),
         } as never,
-        (payload: { eventType?: string }) => {
+        (payload: { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> }) => {
           if (cancelled || channel !== next) return
           const current = latest.current
-          if (payload.eventType === 'INSERT') current.onInsert?.()
-          else if (payload.eventType === 'UPDATE') current.onUpdate?.()
-          else if (payload.eventType === 'DELETE') current.onDelete?.()
+          const change: RealtimeChangePayload = {
+            eventType: payload.eventType as RealtimeChangePayload['eventType'],
+            new: payload.new ?? null,
+            old: payload.old ?? null,
+          }
+          if (payload.eventType === 'INSERT') current.onInsert?.(change)
+          else if (payload.eventType === 'UPDATE') current.onUpdate?.(change)
+          else if (payload.eventType === 'DELETE') current.onDelete?.(change)
         },
       )
 

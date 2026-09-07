@@ -1,0 +1,21 @@
+-- F1 — GRANT manquant sur private.queue_stage (défaut latent de B1).
+--
+-- `enforce_queue_transition` (trigger BEFORE UPDATE de queue_entries,
+-- SECURITY INVOKER, volontairement sans exemption de rôle) appelle
+-- private.queue_stage() pour interdire les transitions arrière. B1 a accordé
+-- EXECUTE à `authenticated` sur ses jumelles (has_org_role, is_own_barber)
+-- mais pas sur queue_stage : TOUTE transition d'entrée de file via l'API
+-- répondait 403 « permission denied for function queue_stage » — appeler,
+-- marquer absent, terminer étaient impossibles pour tous les rôles.
+-- Constaté le 2026-09-07 par le premier écran qui exerce ce chemin
+-- (F1 /dashboard/queue), preuve : PATCH /rest/v1/queue_entries → 42501.
+--
+-- Portée minimale : `authenticated` uniquement. `anon` ne met jamais à jour
+-- une entrée (aucun chemin public de sortie de file aujourd'hui) et n'a
+-- aucun privilège UPDATE sur la table.
+--
+-- Appliquer en tant que POSTGRES (propriétaire de la fonction) : le grantor
+-- doit être le propriétaire pour qu'un REVOKE ultérieur soit effectif
+-- (leçon B4 sur les grantors storage).
+
+grant execute on function private.queue_stage(public.queue_status) to authenticated;

@@ -366,3 +366,41 @@ générale : tout lot futur qui doit toucher ces 42 fonctions devra soit
 s'appliquer en `supabase_admin`, soit faire précéder la migration d'un
 `ALTER FUNCTION ... OWNER TO postgres` décidé et tracé. À trancher une fois,
 proprement, plutôt que lot par lot.
+
+---
+
+## 10. ~~`private.queue_stage` non accordée à `authenticated`~~ — **RÉSOLU par F1 (2026-09-07)**
+
+**Symptôme.** Toute transition d'une entrée de file via l'API répondait
+`403 — permission denied for function queue_stage` : appeler, marquer
+absent, marquer terminé étaient impossibles pour TOUS les rôles. Le trigger
+`enforce_queue_transition` (SECURITY INVOKER, sans exemption de rôle —
+voulu) appelle `private.queue_stage()`, et B1 avait accordé EXECUTE à
+`authenticated` sur ses jumelles (`has_org_role`, `is_own_barber`) mais pas
+sur elle. Latent depuis B1 : F1 est le premier écran à exercer ce chemin.
+
+**Correctif** : `db/migrations/20260907050000_f1_queue_stage_execute_grant.sql`
+(GRANT EXECUTE à `authenticated`, appliqué en `postgres` — le grantor doit
+être le propriétaire, leçon B4). Retour arrière testé sur restauration
+fidèle (`pre-f1-20260907-034902.dump`, up/down vérifiés ACL à l'appui).
+Sans échec de transition silencieux désormais : l'écran pro remonte un toast.
+
+## 11. La face client de la file — deux contrats manquants, constatés en F1 (2026-09-07)
+
+1. **Quitter la file** : aucun chemin. Les policies UPDATE de
+   `queue_entries` ne couvrent que les rôles org et le barber propriétaire ;
+   aucune RPC `leave_public_queue`/`cancel_my_queue_entry` n'existe. Un
+   client (anonyme OU connecté) ne peut pas sortir de la file — seul le
+   comptoir peut l'annuler. Correction proposée : RPC SECURITY DEFINER
+   `leave_public_queue(p_entry_id uuid)` — l'id d'entrée (uuid non
+   devinable, retourné au seul créateur) sert de capacité pour l'anonyme,
+   `booked_by_user_id`/`customer_id` pour le connecté ; transition
+   `→ cancelled` uniquement.
+2. **Compte à rebours de grâce côté client** : ni `called_at` ni
+   `queue_call_grace_minutes` ne sont exposés par une RPC publique
+   (`get_public_queue_status` n'a ni l'un ni l'autre ;
+   `get_location_queue_check_in` est réservée aux rôles org). L'écran client
+   rend l'appel impossible à manquer (panneau orchestré, notification) mais
+   SANS minute inventée — le compte à rebours attend que le contrat expose,
+   p. ex., un `called_deadline_at` calculé serveur sur la propre entrée du
+   client. Côté pro, le compte à rebours existe (seuils lus en base).

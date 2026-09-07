@@ -30,6 +30,24 @@ export const queueKeys = {
   all: ['queue'] as const,
   mine: () => [...queueKeys.all, 'mine'] as const,
   location: (locationId: string) => [...queueKeys.all, 'location', locationId] as const,
+  /** File publique /q/:slug — entrées anonymisées, poll 6 s. */
+  publicStatus: (slug: string, locationId: string) => [...queueKeys.all, 'public', slug, locationId] as const,
+  /** État de service public (mode effectif, file acceptante) — poll 120 s. */
+  publicServiceState: (slug: string, locationId: string) => [...queueKeys.all, 'public-state', slug, locationId] as const,
+  /** Lieux publics d'une organisation, pour résoudre /q/:slug. */
+  publicLocations: (slug: string) => [...queueKeys.all, 'public-locations', slug] as const,
+  /** File pro d'un lieu — LA clé que le canal realtime écrit directement. */
+  pro: (locationId: string) => [...queueKeys.all, 'pro', locationId] as const,
+  /** Jeton QR + seuils du lieu (owner/manager/réceptionniste). */
+  checkIn: (locationId: string) => [...queueKeys.all, 'check-in', locationId] as const,
+  /** Modes de service côté pro. */
+  proModes: (locationId: string) => [...queueKeys.all, 'pro-modes', locationId] as const,
+} as const
+
+export const setupKeys = {
+  all: ['setup'] as const,
+  readiness: (organizationId: string) => [...setupKeys.all, 'readiness', organizationId] as const,
+  context: () => [...setupKeys.all, 'context'] as const,
 } as const
 
 export const notificationKeys = {
