@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it } from 'vitest'
-import i18n from '@/i18n'
+import { getI18n } from 'react-i18next'
 import frBooking from '@/shared/i18n/locales/fr/booking.json'
 import enBooking from '@/shared/i18n/locales/en/booking.json'
 import frStates from '@/shared/i18n/locales/fr/states.json'
@@ -64,14 +64,14 @@ const CONTEXT = {
 }
 
 describe('garde de langue — jamais « Réservé » sur une demande', () => {
-  const initialLanguage = i18n.language
+  const initialLanguage = getI18n().language
 
   afterEach(async () => {
-    await i18n.changeLanguage(initialLanguage)
+    await getI18n().changeLanguage(initialLanguage)
   })
 
   it.each(['fr', 'en'])('l’écran « demande envoyée » rendu en %s ne contient aucun mot interdit', async (lng) => {
-    await i18n.changeLanguage(lng)
+    await getI18n().changeLanguage(lng)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const { container } = render(
       <MemoryRouter>

@@ -287,7 +287,10 @@ export function BookingFlowPage() {
         </div>
       </header>
 
-      {refusal && !bookingRefusalIsSlotRelated(refusal) && step !== 'summary' && (
+      {/* Un refus se dit LÀ OÙ le client atterrit : un conflit de créneau le
+          ramène à l'étape créneau et le message y reste lisible (le
+          récapitulatif qui le portait vient d'être démonté). */}
+      {refusal && step !== 'summary' && (
         <p role="alert" className="text-fu-sm text-[var(--fu-text-primary)]">
           {t(bookingRefusalMessageKey(refusal))}
         </p>
@@ -385,7 +388,10 @@ export function BookingFlowPage() {
                 <TimeSlotGrid
                   slots={mergedSlots}
                   value={chosenSlotStart}
-                  onChange={(slotStart) => patchParams({ t: slotStart })}
+                  onChange={(slotStart) => {
+                    setRefusal(null)
+                    patchParams({ t: slotStart })
+                  }}
                   timeZone={timezone}
                   part={part ?? firstPopulatedPart(mergedSlots, timezone)}
                   onPartChange={setPart}

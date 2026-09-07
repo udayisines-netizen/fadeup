@@ -63,22 +63,25 @@ test.describe('F2 — profil barber public', () => {
     await expect(follow).toHaveClass(/border/)
     // Le signal opérationnel réel dit « réservable ».
     await expect(page.locator('[data-testid="operational-signals"] [data-state="bookable"]')).toBeVisible()
-    // Et le tap mène à la destination du CTA (l'écran nomme son lot — le
-    // tunnel est un lot ultérieur), puis le retour ramène au profil.
+    // Et le tap mène au tunnel RÉEL (F4 — plus un écran NotBuilt) : l'étape
+    // service s'ouvre sur les services réels du salon.
     await book.click()
     await expect(page).toHaveURL(/\/book\/demo-maison-kais/)
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
+    await expect(page.getByTestId('service-step')).toBeVisible({ timeout: 15_000 })
   })
 
-  test('réservation indisponible : le profil reste ENTIER, le CTA dit l’état réel', async ({ page }) => {
-    // Atelier Fadel est en Free : ni réservation ni file — l'état fermé RÉEL.
+  test('organisation GRATUITE : le CTA est ACTIF — la porte de l’acquisition (F4)', async ({ page }) => {
+    // Atelier Fadel est en Free : depuis F4, le MODE ouvre la porte du tunnel
+    // (une organisation sans capacité reçoit une DEMANDE, le tunnel
+    // l'annonce) — la capacité ne décide que confirmed vs pending.
     await page.goto('/pro/demo.fadel')
     await waitForProfile(page)
     const book = page.getByTestId('profile-book-cta')
-    await expect(book).toBeDisabled({ timeout: 15_000 })
-    await expect(page.getByTestId('cta-note')).toBeVisible()
-    // Jamais la note « n'a pas pu être vérifié » : l'état est CONNU (fermé).
-    await expect(page.getByTestId('cta-note')).not.toHaveText(/pas pu être vérifié|could not be checked/i)
+    await expect(book).toBeEnabled({ timeout: 15_000 })
+    await book.click()
+    await expect(page).toHaveURL(/\/book\/demo-atelier-fadel/)
+    await page.goBack()
+    await waitForProfile(page)
     // Le profil reste entier : Suivre actif, portfolio et services rendus.
     await expect(page.getByTestId('profile-follow-cta')).toBeEnabled()
     await expect(page.getByTestId('portfolio-empty').or(page.getByTestId('post-grid'))).toBeVisible()
@@ -130,8 +133,10 @@ test.describe('F2 — profil barber public', () => {
     // L'explication est transparente et le chemin « c'est moi » existe.
     await expect(page.getByTestId('unclaimed-explainer')).toBeVisible()
     await expect(page.getByTestId('claim-prompt')).toBeVisible()
-    // Aucune capacité fabriquée : Book désactivé avec la note dédiée.
-    await expect(page.getByTestId('profile-book-cta')).toBeDisabled()
+    // Aucune capacité fabriquée : depuis F4, le geste RÉEL est la demande
+    // d'intérêt (B2) — le CTA le dit, la note explique la réservation.
+    await expect(page.getByTestId('profile-book-cta')).toBeEnabled()
+    await expect(page.getByTestId('profile-book-cta')).toHaveText(/demander un créneau|ask for a slot/i)
     await expect(page.getByTestId('cta-note')).toHaveText(/rejoint fadeup|joins fadeup/i)
     // Suivre reste possible (moteur d'acquisition).
     await expect(page.getByTestId('profile-follow-cta')).toBeEnabled()
@@ -205,12 +210,17 @@ test.describe('F2 — profil salon public', () => {
     await expect(page.getByTestId('team-book')).toHaveCount(1, { timeout: 15_000 })
     await page.getByTestId('team-book').click()
     await expect(page).toHaveURL(/\/book\/demo-maison-kais\?.*b=de300601/)
-    // Face NÉGATIVE : Barber Corner (Free) n'accepte pas -> aucun bouton
-    // « Réserver » par membre n'est fabriqué.
+    // Depuis F4, la porte du bouton membre est le MODE — une organisation
+    // GRATUITE dont le mode accepte reçoit une DEMANDE : le bouton du membre
+    // de Barber Corner (Free) existe et mène au même tunnel, qui annonce
+    // l'issue réelle. (L'ancienne face négative « Free -> aucun bouton »
+    // était la porte capacité de B1, remplacée par F4.)
     await page.goto('/shop/demo-barber-corner')
     await waitForProfile(page)
     await expect(page.getByTestId('team-list')).toBeVisible()
-    await expect(page.getByTestId('team-book')).toHaveCount(0)
+    await expect(page.getByTestId('team-book')).toHaveCount(1, { timeout: 15_000 })
+    await page.getByTestId('team-book').click()
+    await expect(page).toHaveURL(/\/book\/demo-barber-corner\?.*b=/)
   })
 
   test('mode file actif : les files F1b et le pont évident vers /q', async ({ page }) => {
