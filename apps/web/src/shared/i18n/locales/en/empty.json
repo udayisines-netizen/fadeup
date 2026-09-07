@@ -53,5 +53,10 @@
     "title": "Nothing to show yet",
     "description": "This content will appear as soon as it exists.",
     "action": "Back"
+  },
+  "booking": {
+    "title": "Online booking is coming soon",
+    "description": "This shop accepts bookings, but the FadeUp booking flow is still being built. Go back to the profile to follow this professional or join their queue.",
+    "action": "Back to profile"
   }
 }

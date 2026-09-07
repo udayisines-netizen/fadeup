@@ -16,13 +16,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   ref?: React.Ref<HTMLButtonElement>
 }
 
+/*
+ * F2 — les couleurs de texte portent l'indice `color:` : sans lui,
+ * tailwind-merge classe `text-[var(...)]` comme une TAILLE de police et le
+ * `text-fu-*` des tailles l'écrasait silencieusement — le CTA primaire
+ * perdait son encre et héritait la couleur ambiante (correct par accident en
+ * thème clair, blanc sur vert en thème sombre — l'interdit exact du §17).
+ */
 const VARIANTS: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:
-    'bg-[var(--fu-accent)] text-[var(--fu-accent-fg)] hover:bg-[var(--fu-accent-hover)] active:bg-[var(--fu-accent-hover)]',
+    'bg-[var(--fu-accent)] text-[color:var(--fu-accent-fg)] hover:bg-[var(--fu-accent-hover)] active:bg-[var(--fu-accent-hover)]',
   secondary:
-    'border border-[var(--fu-border-strong)] text-[var(--fu-text-primary)] bg-[var(--fu-surface)] hover:bg-[var(--fu-surface-subtle)]',
-  tertiary: 'text-[var(--fu-text-primary)] hover:bg-[var(--fu-surface-subtle)]',
-  destructive: 'bg-[var(--fu-danger)] text-[var(--fu-accent-fg)] hover:opacity-90',
+    'border border-[var(--fu-border-strong)] text-[color:var(--fu-text-primary)] bg-[var(--fu-surface)] hover:bg-[var(--fu-surface-subtle)]',
+  tertiary: 'text-[color:var(--fu-text-primary)] hover:bg-[var(--fu-surface-subtle)]',
+  destructive: 'bg-[var(--fu-danger)] text-[color:var(--fu-accent-fg)] hover:opacity-90',
 }
 
 /* 44 px touch floor on mobile; `sm` may tighten on pointer-accurate desktop. */

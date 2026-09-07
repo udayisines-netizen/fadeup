@@ -3,7 +3,7 @@ import { Avatar } from '@/shared/ui/Avatar'
 import { Row } from '@/shared/ui/Row'
 import { IconQueue } from '@/shared/ui/icons'
 import { formatEstimatedWait } from '@/shared/lib/waitTime'
-import type { PublicQueueFile } from '@/features/queue/api/publicQueue'
+import type { PublicQueueFile } from '@/shared/data/publicQueue'
 
 /**
  * Les files d'un établissement (F1b §2) : « Premier disponible » EN TÊTE —

@@ -53,5 +53,10 @@
     "title": "Rien à afficher pour l'instant",
     "description": "Ce contenu apparaîtra dès qu'il existera.",
     "action": "Retour"
+  },
+  "booking": {
+    "title": "La réservation en ligne arrive bientôt",
+    "description": "Ce salon accepte les réservations, mais le tunnel de réservation FadeUp est encore en construction. Revenez au profil pour suivre ce professionnel ou rejoindre sa file.",
+    "action": "Revenir au profil"
   }
 }

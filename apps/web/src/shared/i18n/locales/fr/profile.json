@@ -1,0 +1,87 @@
+{
+  "header": {
+    "worksAt": "Travaille chez {{salon}}",
+    "avatarLabel": "Photo de profil de {{name}}",
+    "coverLabel": "Photo de couverture de {{name}}"
+  },
+  "cta": {
+    "joinQueue": "Rejoindre la file",
+    "queueNote": "Sans rendez-vous : la file d'attente est ouverte.",
+    "closedNote": "La réservation en ligne est fermée pour le moment.",
+    "unknownNote": "L'état de réservation n'a pas pu être vérifié.",
+    "following": "Suivi",
+    "bookAria": "Réserver avec {{name}}",
+    "followAria": "Suivre {{name}}",
+    "unfollowAria": "Ne plus suivre {{name}}",
+    "temporaryUntilPrefix": "État temporaire, jusqu'à"
+  },
+  "unclaimed": {
+    "explainer": "Ce profil a été créé à partir de sources publiques. {{name}} ne le gère pas encore sur FadeUp.",
+    "bookingUnavailable": "La réservation ouvrira quand ce professionnel aura rejoint FadeUp.",
+    "claimPrompt": "Ce profil vous appartient ?",
+    "claimAction": "C'est moi",
+    "claimTitle": "Revendiquer ce profil",
+    "claimDescription": "La revendication est gratuite. Dites-nous comment vérifier que ce profil est le vôtre : notre équipe contrôle chaque demande.",
+    "claimEvidenceLabel": "Comment vérifier que c'est vous ?",
+    "claimEvidencePlaceholder": "Site, compte professionnel, e-mail du salon…",
+    "claimSubmit": "Envoyer la demande",
+    "claimSubmitted": "Demande envoyée. Notre équipe la vérifie et vous répond par e-mail.",
+    "claimSignInFirst": "Connectez-vous pour revendiquer ce profil.",
+    "claimError": "La demande n'a pas pu être envoyée. Réessayez."
+  },
+  "metrics": {
+    "label": "Chiffres du profil"
+  },
+  "portfolio": {
+    "title": "Réalisations",
+    "emptyTitle": "Pas encore de réalisations",
+    "emptyDescription": "Les photos de son travail apparaîtront ici.",
+    "postedAt": "Publié chez {{salon}}",
+    "loadMore": "Voir plus",
+    "mediaLabel": "Réalisation de {{name}}"
+  },
+  "services": {
+    "title": "Services",
+    "emptyTitle": "Pas encore de services",
+    "emptyDescription": "La liste des services et des tarifs apparaîtra ici."
+  },
+  "reviews": {
+    "title": "Avis",
+    "emptyDescription": "Les avis de clients vérifiés apparaîtront ici après leurs rendez-vous.",
+    "replyLabel": "Réponse du professionnel",
+    "anonymous": "Client FadeUp"
+  },
+  "location": {
+    "serviceArea": "Se déplace chez ses clients — {{city}} et alentours",
+    "serviceAreaShort": "Zone de service"
+  },
+  "shop": {
+    "teamTitle": "L'équipe",
+    "teamMemberAria": "Voir le profil de {{name}}",
+    "teamEmptyTitle": "Équipe non renseignée",
+    "teamEmptyDescription": "Les membres de l'équipe apparaîtront ici.",
+    "queueTitle": "File d'attente en direct",
+    "queueLink": "Voir la file et rejoindre",
+    "hoursTitle": "Horaires",
+    "hoursClosedDay": "Fermé",
+    "hoursUnknown": "Horaires non renseignés",
+    "reviewsTitle": "Avis",
+    "portfolioTitle": "Réalisations",
+    "servicesTitle": "Services",
+    "bookMember": "Réserver",
+    "notFoundTitle": "Salon introuvable",
+    "notFoundDescription": "Ce lien ne correspond à aucun salon FadeUp."
+  },
+  "notFound": {
+    "title": "Profil introuvable",
+    "description": "Ce lien ne correspond à aucun profil FadeUp public."
+  },
+  "share": {
+    "barberDescription": "Découvrez le travail de {{name}} et réservez sur FadeUp.",
+    "shopDescription": "Découvrez {{name}} : services, équipe et réservation sur FadeUp."
+  },
+  "signals": {
+    "inQueue_one": "{{count}} personne en file",
+    "inQueue_other": "{{count}} personnes en file"
+  }
+}
