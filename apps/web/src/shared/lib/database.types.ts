@@ -8633,6 +8633,12 @@ export type Database = {
           starting_price_cents: number
         }[]
       }
+      get_public_booking_capability: {
+        Args: { p_organization_slug: string }
+        Returns: {
+          accepts_immediate_booking: boolean
+        }[]
+      }
       get_public_currencies: {
         Args: { p_organization_ids: string[] }
         Returns: {
@@ -9630,6 +9636,7 @@ export type Database = {
           covers_search_point: boolean
           distance_km: number
           entity_type: string
+          is_managed: boolean
           is_open_now: boolean
           latitude: number
           location_id: string
