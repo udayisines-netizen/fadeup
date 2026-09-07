@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict B5d0SeECzQCTIQXQOV0qQgcfb78Zp16YqH8d0wvbfJcPfhzgZTTbfhYcbJKxbcP
+\restrict xVinM1Jx4bsAPzFdBenTfv8bUkyERIwm7xMppjr41CKC7i4AHIcxYwJhGWdOcfd
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -28172,5 +28172,5 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 -- PostgreSQL database dump complete
 --
 
-\unrestrict B5d0SeECzQCTIQXQOV0qQgcfb78Zp16YqH8d0wvbfJcPfhzgZTTbfhYcbJKxbcP
+\unrestrict xVinM1Jx4bsAPzFdBenTfv8bUkyERIwm7xMppjr41CKC7i4AHIcxYwJhGWdOcfd
 
