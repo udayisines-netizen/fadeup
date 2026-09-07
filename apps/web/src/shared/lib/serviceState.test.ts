@@ -4,6 +4,7 @@ import { deriveProfileCta, type PublicServiceStateRow } from '@/shared/lib/servi
 function row(overrides: Partial<PublicServiceStateRow> = {}): PublicServiceStateRow {
   return {
     booking_accepting_new_entries: false,
+    mode_allows_booking: false,
     queue_accepting_new_entries: false,
     effective_service_mode: 'hybrid',
     mode_expires_at: null,
@@ -25,9 +26,16 @@ describe('deriveProfileCta — le mappage F1/F2 des états de service', () => {
   })
 
   it('réservation ouverte => bookable, la file reste visible', () => {
-    const cta = deriveProfileCta(row({ booking_accepting_new_entries: true, queue_accepting_new_entries: true }))
+    const cta = deriveProfileCta(
+      row({ booking_accepting_new_entries: true, mode_allows_booking: true, queue_accepting_new_entries: true }),
+    )
     expect(cta.kind).toBe('bookable')
     expect(cta.queueOpen).toBe(true)
+  })
+
+  it('F4 : le MODE ouvre la porte même sans capacité commerciale — le tunnel dira « demande »', () => {
+    const cta = deriveProfileCta(row({ booking_accepting_new_entries: false, mode_allows_booking: true }))
+    expect(cta.kind).toBe('bookable')
   })
 
   it('file seule ouverte => queue-only : l’alternative réelle', () => {
@@ -41,13 +49,13 @@ describe('deriveProfileCta — le mappage F1/F2 des états de service', () => {
 
   it('mode temporaire futur => l’échéance est portée', () => {
     const future = new Date(Date.now() + 3_600_000).toISOString()
-    const cta = deriveProfileCta(row({ booking_accepting_new_entries: true, mode_expires_at: future }))
+    const cta = deriveProfileCta(row({ mode_allows_booking: true, mode_expires_at: future }))
     expect(cta.temporaryUntil).toBe(future)
   })
 
   it('échéance passée => ignorée (fenêtre morte vue par le poll)', () => {
     const past = new Date(Date.now() - 60_000).toISOString()
-    const cta = deriveProfileCta(row({ booking_accepting_new_entries: true, mode_expires_at: past }))
+    const cta = deriveProfileCta(row({ mode_allows_booking: true, mode_expires_at: past }))
     expect(cta.temporaryUntil).toBeNull()
   })
 })

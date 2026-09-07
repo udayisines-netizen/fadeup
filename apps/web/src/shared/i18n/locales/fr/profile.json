@@ -12,7 +12,9 @@
     "bookAria": "Réserver avec {{name}}",
     "followAria": "Suivre {{name}}",
     "unfollowAria": "Ne plus suivre {{name}}",
-    "temporaryUntilPrefix": "État temporaire, jusqu'à"
+    "temporaryUntilPrefix": "État temporaire, jusqu'à",
+    "requestSlot": "Demander un créneau",
+    "requestSlotAria": "Envoyer une demande d'intérêt à {{name}}"
   },
   "unclaimed": {
     "explainer": "Ce profil a été créé à partir de sources publiques. {{name}} ne le gère pas encore sur FadeUp.",

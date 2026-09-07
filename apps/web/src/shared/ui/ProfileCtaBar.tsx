@@ -25,6 +25,12 @@ export interface ProfileCtaBarProps {
    * erreur ni fabriquer une capacité.
    */
   noteOverride?: string | null
+  /**
+   * F4 — profil NON revendiqué : la place du CTA dominant est prise par
+   * « Demander un créneau » (demande d'intérêt B2, aucun créneau retenu).
+   * Ignoré tant que l'état charge, et dès que la réservation réelle existe.
+   */
+  interestTo?: string | null
 }
 
 /**
@@ -53,6 +59,7 @@ export function ProfileCtaBar({
   followBusy = false,
   onToggleFollow,
   noteOverride,
+  interestTo = null,
 }: ProfileCtaBarProps) {
   const { t } = useTranslation('v2')
   const navigate = useNavigate()
@@ -95,6 +102,18 @@ export function ProfileCtaBar({
               loading
             >
               {t('common.action.book')}
+            </Button>
+          ) : interestTo && cta.kind !== 'bookable' ? (
+            /* Non revendiqué : le geste RÉEL est la demande d'intérêt — pas
+               une capacité fabriquée, pas un cul-de-sac non plus. */
+            <Button
+              variant="primary"
+              size="lg"
+              data-testid="profile-book-cta"
+              aria-label={t('profile.cta.requestSlotAria', { name })}
+              onClick={() => void navigate(interestTo)}
+            >
+              {t('profile.cta.requestSlot')}
             </Button>
           ) : cta.kind === 'queue-only' && queueTo ? (
             /* L'alternative réelle : la file existe et accepte (pont F1). */

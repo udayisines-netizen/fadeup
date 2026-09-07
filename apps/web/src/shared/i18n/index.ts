@@ -10,6 +10,7 @@ import frEmpty from '@/shared/i18n/locales/fr/empty.json'
 import frDemo from '@/shared/i18n/locales/fr/demo.json'
 import frQueue from '@/shared/i18n/locales/fr/queue.json'
 import frProfile from '@/shared/i18n/locales/fr/profile.json'
+import frBooking from '@/shared/i18n/locales/fr/booking.json'
 import enCommon from '@/shared/i18n/locales/en/common.json'
 import enAuth from '@/shared/i18n/locales/en/auth.json'
 import enNav from '@/shared/i18n/locales/en/nav.json'
@@ -19,10 +20,11 @@ import enEmpty from '@/shared/i18n/locales/en/empty.json'
 import enDemo from '@/shared/i18n/locales/en/demo.json'
 import enQueue from '@/shared/i18n/locales/en/queue.json'
 import enProfile from '@/shared/i18n/locales/en/profile.json'
+import enBooking from '@/shared/i18n/locales/en/booking.json'
 
 const BUNDLES: Record<V2Locale, Record<V2Section, object>> = {
-  fr: { common: frCommon, auth: frAuth, nav: frNav, errors: frErrors, states: frStates, empty: frEmpty, demo: frDemo, queue: frQueue, profile: frProfile },
-  en: { common: enCommon, auth: enAuth, nav: enNav, errors: enErrors, states: enStates, empty: enEmpty, demo: enDemo, queue: enQueue, profile: enProfile },
+  fr: { common: frCommon, auth: frAuth, nav: frNav, errors: frErrors, states: frStates, empty: frEmpty, demo: frDemo, queue: frQueue, profile: frProfile, booking: frBooking },
+  en: { common: enCommon, auth: enAuth, nav: enNav, errors: enErrors, states: enStates, empty: enEmpty, demo: enDemo, queue: enQueue, profile: enProfile, booking: enBooking },
 }
 
 /**

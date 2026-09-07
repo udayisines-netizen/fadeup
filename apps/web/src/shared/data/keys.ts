@@ -24,6 +24,17 @@ export const bookingKeys = {
   lists: () => [...bookingKeys.all, 'list'] as const,
   list: (f: BookingFilters) => [...bookingKeys.lists(), f] as const,
   detail: (id: string) => [...bookingKeys.all, 'detail', id] as const,
+  /** F4 — créneaux réels d'un jour (`get_public_available_slots`). */
+  slots: (slug: string, locationId: string, barberId: string, serviceId: string, date: string) =>
+    [...bookingKeys.all, 'slots', slug, locationId, barberId, serviceId, date] as const,
+  /** F4 — barbers aptes à UN service (`list_public_barbers`). */
+  barbers: (slug: string, locationId: string, serviceId: string) =>
+    [...bookingKeys.all, 'barbers', slug, locationId, serviceId] as const,
+  /** F4 — alternatives après expiration (`get_public_booking_alternatives`). */
+  alternatives: (excludeOrganizationId: string, serviceQuery: string | null, coords: string | null) =>
+    [...bookingKeys.all, 'alternatives', excludeOrganizationId, serviceQuery, coords] as const,
+  /** F4 — mes demandes d'intérêt (`get_my_interest_requests`). */
+  interestRequests: () => [...bookingKeys.all, 'interest-requests'] as const,
 } as const
 
 export const queueKeys = {

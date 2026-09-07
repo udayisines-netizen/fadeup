@@ -384,6 +384,14 @@ export function ProfessionalProfilePage() {
             ? t('profile.unclaimed.bookingUnavailable')
             : undefined
         }
+        /* F4 — le cul-de-sac du non revendiqué est levé : le CTA devient une
+           demande d'intérêt réelle (B2), seulement une fois la résolution
+           TERMINÉE — jamais pendant un chargement. */
+        interestTo={
+          workplaces.isSuccess && !workplace && isUnclaimed && identity.handle
+            ? `/request/${encodeURIComponent(identity.handle)}`
+            : null
+        }
       />
 
       {isUnclaimed && professionalId && (

@@ -422,10 +422,25 @@ export const router = createBrowserRouter([
               return { Component: OrganizationProfilePage }
             },
           },
-          /* F2 — destination du CTA RÉSERVER : le tunnel de réservation est
-             un lot ultérieur ; l'écran nomme son lot, l'état du profil reste
-             réel (voir NotBuiltPage zone 'booking'). */
-          { path: 'book/:slug', element: <NotBuiltPage zone="booking" /> },
+          /* F4 — LE tunnel de réservation (Service → Barber → Créneau →
+             Récapitulatif). L'inscription légère OTP vit dans le flux ;
+             la route reste publique jusqu'au geste. */
+          {
+            path: 'book/:slug',
+            lazy: async () => {
+              const { BookingFlowPage } = await import('@/features/booking/routes/BookingFlowPage')
+              return { Component: BookingFlowPage }
+            },
+          },
+          /* F4 — demande d'intérêt vers un profil NON revendiqué (B2) :
+             aucun créneau retenu, aucune disponibilité affirmée. */
+          {
+            path: 'request/:handle',
+            lazy: async () => {
+              const { InterestRequestPage } = await import('@/features/booking/routes/InterestRequestPage')
+              return { Component: InterestRequestPage }
+            },
+          },
           /* F1 — la file publique : consulter sans auth ni géoloc ; le QR du
              salon encode ce lien avec ?l=<lieu>&t=<jeton>. */
           {
@@ -438,7 +453,15 @@ export const router = createBrowserRouter([
           {
             element: <RequireAuth />,
             children: [
-              { path: 'bookings', element: <NotBuiltPage zone="bookings" /> },
+              /* F4 — l'onglet Réservations : demandes avec échéance, file
+                 active, à venir, historique et rebooking. */
+              {
+                path: 'bookings',
+                lazy: async () => {
+                  const { MyBookingsPage } = await import('@/features/booking/routes/MyBookingsPage')
+                  return { Component: MyBookingsPage }
+                },
+              },
               { path: 'account/*', element: <NotBuiltPage zone="account" /> },
             ],
           },

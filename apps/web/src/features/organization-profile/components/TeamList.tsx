@@ -46,7 +46,9 @@ function TeamMemberRow({ slug, member, locationId }: { slug: string; member: Tea
   const handle = useMemberHandle(member.professional_id)
   const memberLocationId = member.location_id ?? locationId
   const state = useShopServiceState(slug, memberLocationId, member.barber_id, { poll: false })
-  const bookable = Boolean(state.data?.booking_accepting_new_entries)
+  // F4 : même porte que le CTA principal — le MODE ; une organisation sans
+  // capacité reçoit une demande, le tunnel annonce laquelle.
+  const bookable = Boolean(state.data?.mode_allows_booking)
 
   const bookButton = bookable ? (
     <Button

@@ -12,7 +12,9 @@
     "bookAria": "Book with {{name}}",
     "followAria": "Follow {{name}}",
     "unfollowAria": "Unfollow {{name}}",
-    "temporaryUntilPrefix": "Temporary state, until"
+    "temporaryUntilPrefix": "Temporary state, until",
+    "requestSlot": "Ask for a slot",
+    "requestSlotAria": "Send an interest request to {{name}}"
   },
   "unclaimed": {
     "explainer": "This profile was created from public sources. {{name}} does not manage it on FadeUp yet.",
