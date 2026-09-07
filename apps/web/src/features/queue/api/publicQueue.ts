@@ -36,16 +36,12 @@ export interface PublicQueueEntry {
   barber_display_name: string | null
 }
 
-/** Une file de l'établissement — `barber_id` null = « premier disponible ». */
-export interface PublicQueueFile {
-  barber_id: string | null
-  display_name: string | null
-  avatar_url: string | null
-  waiting_count: number
-  busy: boolean
-  /** Estimation F1b, ou null = rien d'affichable (jamais une minute inventée). */
-  estimated_wait_minutes: number | null
-}
+/**
+ * Le type des files vit dans shared/data depuis F2 (le profil salon consomme
+ * la même RPC). Ré-exporté ici pour les consommateurs F1b existants.
+ */
+export type { PublicQueueFile } from '@/shared/data/publicQueue'
+import type { PublicQueueFile } from '@/shared/data/publicQueue'
 
 /**
  * F1b — les files par barber d'un lieu, « premier disponible » en tête puis

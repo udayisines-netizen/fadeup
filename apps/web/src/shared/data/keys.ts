@@ -67,11 +67,46 @@ export const profileKeys = {
   all: ['profiles'] as const,
   publicProfessional: (id: string) => [...profileKeys.all, 'public-professional', id] as const,
   publicByHandle: (handle: string) => [...profileKeys.all, 'public-handle', handle] as const,
+  /** F2 — résolution inverse : identité revendiquée -> lieu de travail public. */
+  workplace: (professionalId: string) => [...profileKeys.all, 'workplace', professionalId] as const,
+  /** F2 — fiche staff publique d'un barber (slug + barber_id). */
+  barber: (slug: string, barberId: string) => [...profileKeys.all, 'barber', slug, barberId] as const,
+  barberServices: (slug: string, barberId: string) => [...profileKeys.all, 'barber-services', slug, barberId] as const,
+  serviceState: (slug: string, locationId: string, barberId: string | null) =>
+    [...profileKeys.all, 'service-state', slug, locationId, barberId] as const,
+  /** F2 — portfolio B4, paginé par curseur temporel. */
+  posts: (handle: string) => [...profileKeys.all, 'posts', handle] as const,
+  reviews: (professionalId: string) => [...profileKeys.all, 'reviews', professionalId] as const,
+  reputation: (professionalId: string) => [...profileKeys.all, 'reputation', professionalId] as const,
+  /** F2 — mes follows pro (état du bouton Suivre). */
+  myFollowedProfessionals: () => [...profileKeys.all, 'my-followed'] as const,
 } as const
 
 export const organizationKeys = {
   all: ['organizations'] as const,
   publicBySlug: (slug: string) => [...organizationKeys.all, 'public-slug', slug] as const,
+  /** F2 — profil salon : lieux, services, équipe, files, horaires, preuve sociale. */
+  locations: (slug: string) => [...organizationKeys.all, 'locations', slug] as const,
+  services: (slug: string, locationId: string) => [...organizationKeys.all, 'services', slug, locationId] as const,
+  team: (slug: string) => [...organizationKeys.all, 'team', slug] as const,
+  hours: (slug: string, locationId: string) => [...organizationKeys.all, 'hours', slug, locationId] as const,
+  queues: (slug: string, locationId: string) => [...organizationKeys.all, 'queues', slug, locationId] as const,
+  serviceState: (slug: string, locationId: string, barberId: string | null) =>
+    [...organizationKeys.all, 'service-state', slug, locationId, barberId] as const,
+  followerCount: (organizationId: string) => [...organizationKeys.all, 'follower-count', organizationId] as const,
+  reputation: (organizationId: string) => [...organizationKeys.all, 'reputation', organizationId] as const,
+  reviews: (organizationId: string) => [...organizationKeys.all, 'reviews', organizationId] as const,
+  posts: (slug: string) => [...organizationKeys.all, 'posts', slug] as const,
+  /** F2 — handle public d'un membre d'équipe revendiqué. */
+  memberHandle: (professionalId: string) => [...organizationKeys.all, 'member-handle', professionalId] as const,
+  /** F2 — mes follows organisation (état du bouton Suivre). */
+  myFollowed: () => [...organizationKeys.all, 'my-followed'] as const,
+} as const
+
+/** F2 — URL signées des médias de posts (bucket privé B4). */
+export const postMediaKeys = {
+  all: ['post-media'] as const,
+  signed: (sortedPaths: readonly string[]) => [...postMediaKeys.all, 'signed', sortedPaths] as const,
 } as const
 
 /** Clés des compositions /demo (P1c) — mêmes règles que le produit. */

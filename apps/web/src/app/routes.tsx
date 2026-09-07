@@ -402,8 +402,30 @@ export const router = createBrowserRouter([
           { index: true, element: <NotBuiltPage zone="home" /> },
           { path: 'search', element: <NotBuiltPage zone="search" /> },
           { path: 'feed', element: <NotBuiltPage zone="feed" /> },
-          { path: 'pro/:handle', element: <NotBuiltPage zone="proProfile" /> },
-          { path: 'shop/:slug', element: <NotBuiltPage zone="proProfile" /> },
+          /* F2 — les deux profils publics, accessibles sans authentification.
+             Chunks paresseux : jamais dans l'entrée consumer. */
+          {
+            path: 'pro/:handle',
+            lazy: async () => {
+              const { ProfessionalProfilePage } = await import(
+                '@/features/professional-profile/routes/ProfessionalProfilePage'
+              )
+              return { Component: ProfessionalProfilePage }
+            },
+          },
+          {
+            path: 'shop/:slug',
+            lazy: async () => {
+              const { OrganizationProfilePage } = await import(
+                '@/features/organization-profile/routes/OrganizationProfilePage'
+              )
+              return { Component: OrganizationProfilePage }
+            },
+          },
+          /* F2 — destination du CTA RÉSERVER : le tunnel de réservation est
+             un lot ultérieur ; l'écran nomme son lot, l'état du profil reste
+             réel (voir NotBuiltPage zone 'booking'). */
+          { path: 'book/:slug', element: <NotBuiltPage zone="booking" /> },
           /* F1 — la file publique : consulter sans auth ni géoloc ; le QR du
              salon encode ce lien avec ?l=<lieu>&t=<jeton>. */
           {

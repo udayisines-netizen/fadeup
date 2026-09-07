@@ -462,3 +462,26 @@ Sans échec de transition silencieux désormais : l'écran pro remonte un toast.
 3. **`pg_default_acl` des SÉQUENCES** : `anon`/`authenticated` reçoivent
    encore `rwU` par défaut sur les séquences neuves de `public`/`storage`
    (aucune n'existe aujourd'hui avec ces grants). Non traité — signalé.
+## 13. Open Graph par profil — invisible aux dérouleurs de liens sans JavaScript (constaté en F2, 2026-09-07)
+
+**Symptôme.** Les profils publics F2 posent titre, description et image Open
+Graph à l'exécution (`useDocumentMeta`) — vérifié dans le navigateur. Mais un
+dérouleur de lien qui n'exécute pas JavaScript (WhatsApp, iMessage, Slack,
+la plupart des bots) ne lit QUE les balises statiques d'`index.html`, qui
+restent génériques (et portent un domaine `fadeup.example` d'attente).
+
+**Cause exacte.** L'application est une SPA sans rendu serveur — et la
+migration Next.js/SSR est un NON-GOAL explicite (MASTER_SPEC §22). Aucun code
+applicatif ne peut changer ce qu'un client HTTP sans JS reçoit.
+
+**Impact.** « Un lien collé dans WhatsApp doit donner envie de cliquer »
+(F2 §5) n'est atteignable aujourd'hui que pour les rares agents qui exécutent
+JS. Le partage fonctionne, l'aperçu riche par profil, non.
+
+**Remédiation** (infra, hors périmètre F2) : un pré-rendu ciblé au bord —
+par exemple Nginx qui route les user-agents de dérouleurs vers un petit
+service qui interroge `get_public_professional_by_handle` /
+`get_public_organization` et rend un HTML minimal aux bonnes balises, ou une
+pré-génération statique des routes `/pro/*` et `/shop/*` connues. À décider
+avec le fondateur ; toucher à Nginx de production n'était pas dans le
+périmètre F2.

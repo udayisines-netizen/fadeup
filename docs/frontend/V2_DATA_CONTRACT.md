@@ -19,6 +19,20 @@ générateur, même sortie).
 > l'écran de file (la bascule de mode doit se voir « sans rafraîchir », F1
 > §9) ; la file publique reste à 6 s, et le poll du client QUI SUIT SA PLACE
 > continue onglet caché (l'appel doit l'atteindre).
+> **Mis à jour le 2026-09-07 après F2** (`f2/public-profiles`). Les deux
+> profils publics existent (`/pro/:handle`, `/shop/:slug`). Trois lectures
+> publiques ajoutées (migration `20260907200000`, additive, up/down prouvés
+> sur restauration fidèle) : `get_public_professional_workplace`
+> (résolution inverse identité revendiquée -> lieu de travail — le miroir de
+> `list_public_organization_barbers.professional_id` ; VIDE pour un non
+> revendiqué, décision B1 conservée), `list_public_location_hours` (la
+> semaine d'un lieu actif — `location_hours` était sous RLS membres
+> uniquement, `anon` recevait zéro ligne), et
+> `get_public_organization_follower_count` (jumelle plafonnée à 10 000 de
+> `private.professional_follower_count` — « Abonnés : public », §9).
+> La sonde `probe_public_rpcs.sh` couvre les trois (26 RPC, toutes 200).
+> Après le durcissement X3 (même jour), toute RPC neuve doit porter ses
+> GRANT EXECUTE explicites — celles de F2 les portaient déjà.
 > **Mis à jour le 2026-09-07 après B4** (`b4/social-schema`). Le schéma live
 > porte **128 tables** : les 113 de B2, **6 tables billing de B3** (lot
 > parallèle, `b3/monetization` — leurs migrations vivent sur cette branche-là)

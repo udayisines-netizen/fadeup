@@ -1,0 +1,82 @@
+{
+  "header": {
+    "worksAt": "Works at {{salon}}",
+    "coverLabel": "Cover photo of {{name}}"
+  },
+  "cta": {
+    "joinQueue": "Join the queue",
+    "queueNote": "No appointment needed: the walk-in queue is open.",
+    "closedNote": "Online booking is closed right now.",
+    "unknownNote": "The booking state could not be checked.",
+    "following": "Following",
+    "bookAria": "Book with {{name}}",
+    "followAria": "Follow {{name}}",
+    "unfollowAria": "Unfollow {{name}}",
+    "temporaryUntilPrefix": "Temporary state, until"
+  },
+  "unclaimed": {
+    "explainer": "This profile was created from public sources. {{name}} does not manage it on FadeUp yet.",
+    "bookingUnavailable": "Booking will open once this professional joins FadeUp.",
+    "claimPrompt": "Is this your profile?",
+    "claimAction": "This is me",
+    "claimTitle": "Claim this profile",
+    "claimDescription": "Claiming is free. Tell us how to verify this profile is yours — our team reviews every request.",
+    "claimEvidenceLabel": "How can we verify it's you?",
+    "claimEvidencePlaceholder": "Website, professional account, shop email…",
+    "claimSubmit": "Send request",
+    "claimSubmitted": "Request sent. Our team will review it and reply by email.",
+    "claimSignInFirst": "Sign in to claim this profile.",
+    "claimError": "The request could not be sent. Please try again."
+  },
+  "metrics": {
+    "label": "Profile numbers"
+  },
+  "portfolio": {
+    "title": "Work",
+    "emptyDescription": "Photos of their work will appear here.",
+    "loadMore": "Show more",
+    "mediaLabel": "Work by {{name}}"
+  },
+  "services": {
+    "title": "Services",
+    "emptyDescription": "Services and prices will appear here."
+  },
+  "reviews": {
+    "title": "Reviews",
+    "emptyDescription": "Reviews from verified clients will appear here after their appointments.",
+    "replyLabel": "Reply from the professional",
+    "anonymous": "FadeUp client"
+  },
+  "location": {
+    "serviceArea": "Comes to you — {{city}} and around"
+  },
+  "shop": {
+    "teamTitle": "The team",
+    "teamMemberAria": "View {{name}}'s profile",
+    "teamEmptyDescription": "Team members will appear here.",
+    "queueTitle": "Live queue",
+    "queueLink": "See the queue and join",
+    "hoursTitle": "Opening hours",
+    "hoursClosedDay": "Closed",
+    "hoursUnknown": "Hours not listed",
+    "reviewsTitle": "Reviews",
+    "portfolioTitle": "Work",
+    "servicesTitle": "Services",
+    "bookMember": "Book",
+    "notFoundTitle": "Shop not found",
+    "notFoundDescription": "This link does not match any FadeUp shop.",
+    "hoursUnknownDay": "Not listed"
+  },
+  "notFound": {
+    "title": "Profile not found",
+    "description": "This link does not match any public FadeUp profile."
+  },
+  "share": {
+    "barberDescription": "Discover {{name}}'s work and book on FadeUp.",
+    "shopDescription": "Discover {{name}}: services, team and booking on FadeUp."
+  },
+  "signals": {
+    "inQueue_one": "{{count}} person in the queue",
+    "inQueue_other": "{{count}} people in the queue"
+  }
+}

@@ -8650,6 +8650,10 @@ export type Database = {
           slug: string
         }[]
       }
+      get_public_organization_follower_count: {
+        Args: { p_organization_id: string }
+        Returns: number
+      }
       get_public_professional: {
         Args: { p_professional_id: string }
         Returns: {
@@ -8676,6 +8680,18 @@ export type Database = {
           headline: string
           id: string
           is_claimed: boolean
+        }[]
+      }
+      get_public_professional_workplace: {
+        Args: { p_professional_id: string }
+        Returns: {
+          barber_id: string
+          location_id: string
+          location_name: string
+          marketplace_supply_type: string
+          organization_id: string
+          organization_name: string
+          organization_slug: string
         }[]
       }
       get_public_queue_status: {
@@ -8876,6 +8892,17 @@ export type Database = {
           bio: string
           display_name: string
           title: string
+        }[]
+      }
+      list_public_location_hours: {
+        Args: { p_location_id: string; p_organization_slug: string }
+        Returns: {
+          close_time: string
+          day_of_week: number
+          is_closed: boolean
+          open_time: string
+          second_close_time: string
+          second_open_time: string
         }[]
       }
       list_public_locations: {

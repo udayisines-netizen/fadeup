@@ -115,6 +115,14 @@ probe get_organization_posts             "{\"p_slug\":\"${ORG_SLUG}\"}"
 probe get_public_reviews                 "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
 probe get_public_reputation              "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
 
+# --- F2 : les trois contrats des profils publics. La résolution inverse
+# handle -> lieu de travail (ne rend une ligne que pour une identité
+# revendiquée), les horaires publics d'un lieu actif, le compte d'abonnés
+# d'une organisation. Toutes STABLE, lecture seule, sondées en anon.
+probe get_public_professional_workplace  "{\"p_professional_id\":\"${PROFESSIONAL_ID}\"}"
+probe list_public_location_hours         "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\"}"
+probe get_public_organization_follower_count "{\"p_organization_id\":\"${ORG_ID}\"}"
+
 echo
 if [[ "$fail" -eq 0 ]]; then
   echo "ALL PUBLIC READ RPCs: 200"
