@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isExpired, isLateCancellation, remainingMs, remainingParts } from '@/features/booking/lib/deadline'
+import { isExpired, isLateCancellation, remainingMs, remainingParts } from '@/shared/lib/deadline'
 
 const NOW = new Date('2026-09-07T12:00:00Z')
 

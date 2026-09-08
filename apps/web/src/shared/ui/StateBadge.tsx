@@ -12,6 +12,10 @@ import {
 
 export type FadeUpState =
   | 'bookable'
+  /** P1PRO — le mode accepte la réservation mais l'organisation ne confirme
+   *  pas immédiatement (non revendiquée ou Free) : le client ENVERRA une
+   *  demande sous échéance. Jamais confondu avec `bookable`. */
+  | 'on-request'
   | 'not-bookable'
   | 'available'
   /** F3 — peut réellement servir dans les 60 min (file accessible), MASTER_SPEC §8. */
@@ -54,6 +58,7 @@ interface StateSpec {
  */
 const SPECS: Record<FadeUpState, StateSpec> = {
   bookable: { labelKey: 'states.booking.bookable', tone: 'positive', icon: <IconCheck aria-hidden="true" /> },
+  'on-request': { labelKey: 'states.booking.onRequest', tone: 'neutral', icon: <IconPending aria-hidden="true" /> },
   'not-bookable': { labelKey: 'states.booking.notBookable', tone: 'neutral', icon: <IconClose aria-hidden="true" /> },
   available: { labelKey: 'states.booking.available', tone: 'positive', icon: <IconCheck aria-hidden="true" /> },
   // Le point « live », pas une couleur seule : cette disponibilité est un

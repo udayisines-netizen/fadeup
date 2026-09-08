@@ -40,6 +40,13 @@ export interface ResultCardProps {
   /** Devises par organisation (get_public_currencies) — absent = prix « — ». */
   currencyByOrganization: Record<string, string> | undefined
   availability: ResultAvailability
+  /**
+   * P1PRO §7 — la capacité commerciale de l'organisation
+   * (`get_public_booking_capabilities`) : `true` = confirme immédiatement
+   * (« Réservable »), `false` = une demande sous échéance (« Sur demande »),
+   * `undefined`/`null` = inconnu (rien d'affirmé, comportement d'avant).
+   */
+  bookingCapability?: boolean | null
   onOpen: (row: ProfessionalSearchRow) => void
   className?: string
 }
@@ -57,11 +64,25 @@ function BannerFallback({ name }: { name: string }) {
   )
 }
 
-export function ResultCard({ row, currencyByOrganization, availability, onOpen, className }: ResultCardProps) {
+export function ResultCard({
+  row,
+  currencyByOrganization,
+  availability,
+  bookingCapability,
+  onOpen,
+  className,
+}: ResultCardProps) {
   const { t, i18n } = useTranslation('v2')
   const isServiceArea = row.location_kind === 'service_area'
   const price = startingPrice(row, currencyByOrganization)
   const banner = demoBanner(row.organization_slug)
+  // P1PRO §7 — le badge dit l'ISSUE réelle du geste quand la réservation
+  // accepte : « Sur demande » (pas de capacité commerciale) ou
+  // « Réservable » (confirmation immédiate). « Sur demande » dit déjà que le
+  // compte n'est pas géré : la mention de revendication devient redondante
+  // sur la CARTE (elle reste sur la feuille et le profil).
+  const onRequest = availability === 'bookable' && bookingCapability === false
+  const confirmedBookable = availability === 'bookable' && bookingCapability === true
   const supplyLabel =
     row.marketplace_supply_type === 'independent'
       ? t('discovery.row.supplyIndependent')
@@ -108,7 +129,7 @@ export function ResultCard({ row, currencyByOrganization, availability, onOpen, 
           size="lg"
           className="ring-4 ring-[var(--fu-surface)]"
         />
-        {!row.is_managed && <ClaimHint />}
+        {!row.is_managed && !onRequest && <ClaimHint />}
       </div>
 
       <div className="px-4 pb-3.5 pt-1.5">
@@ -147,10 +168,15 @@ export function ResultCard({ row, currencyByOrganization, availability, onOpen, 
               {t('states.metric.noData')}
             </span>
           )}
-          {/* UN badge : le fait le plus utile. Disponible maintenant prime
-              sur l'ouverture ; le reste vit dans la feuille. */}
+          {/* UN badge : le fait le plus utile. Disponible maintenant (vivant)
+              prime ; puis l'issue réelle du geste — « Sur demande » ou
+              « Réservable » ; sinon l'ouverture. Le reste vit dans la feuille. */}
           {availability === 'available-now' ? (
             <StateBadge state="available-now" size="sm" />
+          ) : onRequest ? (
+            <StateBadge state="on-request" size="sm" />
+          ) : confirmedBookable ? (
+            <StateBadge state="bookable" size="sm" />
           ) : (
             <Badge variant={row.is_open_now ? 'brand' : 'neutral'}>
               {row.is_open_now ? t('states.opening.open') : t('states.opening.closedShort')}

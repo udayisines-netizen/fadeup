@@ -6,6 +6,7 @@ import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
 import { useInView } from '@/shared/hooks/useInView'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { usePublicBookingCapability } from '@/shared/data/capability'
 import { demoBanner } from '@/shared/lib/demoMedia'
 import { recordRecentProfile } from '@/shared/lib/recentlyViewed'
 import { deviceTimezone } from '@/shared/lib/format'
@@ -89,6 +90,9 @@ export function ProfessionalProfilePage() {
   const location = (locations.data ?? []).find((row) => row.id === locationId) ?? null
 
   const serviceState = useProfileServiceState(slug, locationId, barberId)
+  /* P1PRO §7 — l'issue réelle du geste (« Réservable » vs « Sur demande »)
+     dépend de la capacité commerciale de l'ORGANISATION du barber. */
+  const capability = usePublicBookingCapability(slug)
   /* EN COURS tant que la chaîne handle -> rattachement -> lieu -> état n'a
      pas répondu : on n'affirme ni panne ni fermeture pendant un chargement. */
   const ctaResolving =
@@ -238,6 +242,7 @@ export function ProfessionalProfilePage() {
     following,
     followBusy: follow.isPending,
     onToggleFollow: toggleFollow,
+    onRequest: capability.data === false,
     /* La note « rejoindra FadeUp » n'est affirmée qu'une fois la
        résolution TERMINÉE, et seulement pour un non revendiqué — jamais
        pendant un chargement (revue F2, B1). */

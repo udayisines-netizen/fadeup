@@ -1,0 +1,96 @@
+{
+  "home": {
+    "todayLabel": "Aujourd'hui",
+    "revenueLabel": "Revenu du jour — calculé",
+    "revenueHint_one": "{{count}} prestation terminée, aux prix configurés",
+    "revenueHint_other": "{{count}} prestations terminées, aux prix configurés",
+    "remainingLabel": "Vos prestations restantes",
+    "remainingHint": "Encore à servir aujourd'hui",
+    "statAppointments": "Rendez-vous du jour",
+    "statCompleted": "Terminées",
+    "statPending": "Demandes en attente",
+    "requestsLabel": "Demandes",
+    "requestsCount_one": "{{count}} demande attend votre réponse",
+    "requestsCount_other": "{{count}} demandes attendent votre réponse",
+    "requestsNearest": "La plus urgente expire dans {{time}}",
+    "viewRequests": "Répondre aux demandes",
+    "nowLabel": "Maintenant",
+    "nowEmpty": "Personne au fauteuil en ce moment.",
+    "markDone": "Terminé",
+    "markDoneAria": "Marquer la prestation de {{name}} comme terminée",
+    "queueLabel": "File",
+    "queueEmpty": "La file est vide pour le moment.",
+    "viewQueue": "Voir la file",
+    "nextLabel": "Ensuite",
+    "nextEmpty": "Plus rien de prévu aujourd'hui.",
+    "timelineLabel": "La journée",
+    "statusCancelled": "Annulé",
+    "statusNoShow": "Absent",
+    "emptyDay": {
+      "title": "Rien de prévu aujourd'hui",
+      "description": "Aucun rendez-vous ni demande pour cette journée. Votre profil public travaille pour vous : partagez-le pour remplir l'agenda.",
+      "action": "Voir mon profil public"
+    }
+  },
+  "requests": {
+    "label": "Demandes",
+    "title": "Demandes de réservation",
+    "unknownService": "Service supprimé",
+    "withBarber": "avec {{name}}",
+    "expiresLabel": "Expire dans",
+    "accept": "Accepter",
+    "counter": "Proposer un autre horaire",
+    "decline": "Refuser",
+    "awaitingTitle": "En attente du client",
+    "awaitingHint": "Le client répond avant l'échéance",
+    "historyTitle": "Demandes traitées",
+    "historyEmpty": "Les demandes traitées apparaîtront ici — c'est la trace de ce que FadeUp vous apporte.",
+    "declineTitle": "Refuser cette demande ?",
+    "declineBody": "{{name}} attend une réponse. Le refus est définitif : sa demande sera close et il en sera averti.",
+    "declineNoteLabel": "Un mot pour le client (facultatif)",
+    "declineConfirm": "Refuser la demande",
+    "empty": {
+      "title": "Aucune demande en attente",
+      "description": "Quand un client demandera un créneau, elle apparaîtra ici en temps réel — avec son échéance.",
+      "action": "Voir mon profil public"
+    },
+    "errors": {
+      "expired": "Cette demande a expiré avant votre réponse — elle est sortie de la liste.",
+      "counterPending": "Une contre-proposition attend déjà la réponse du client.",
+      "generic": "L'action n'a pas pu aboutir. Actualisez et réessayez."
+    },
+    "upsell": {
+      "title": "Client confirmé — il vous a trouvé sur FadeUp",
+      "body": "L'essai de 14 jours ouvre l'agenda, la file d'attente et les statistiques. Sans carte bancaire, sans engagement.",
+      "cta": "Démarrer l'essai 14 jours",
+      "started": "Essai démarré — tout est ouvert.",
+      "unavailable": "L'essai n'est pas disponible sur ce compte."
+    },
+    "counterSheet": {
+      "title": "Proposer un autre horaire",
+      "context": "{{name}} a demandé le",
+      "dayLabel": "Quel jour ?",
+      "slotsLabel": "Créneaux réellement disponibles",
+      "noSlots": "Aucun créneau disponible ce jour-là. Essayez un autre jour.",
+      "noteLabel": "Un mot pour le client (facultatif)",
+      "notePlaceholder": "Pas 18h, mais 18h30 — même fauteuil.",
+      "holdNote": "Le créneau proposé est retenu jusqu'à la réponse du client ; l'horaire demandé est libéré. Le compte à rebours repart, jamais au-delà de l'heure proposée.",
+      "submit": "Envoyer la proposition",
+      "error": "La proposition n'a pas pu être envoyée. Réessayez.",
+      "errorExpired": "La demande a expiré avant l'envoi de la proposition."
+    },
+    "outcome": {
+      "accepted": "Acceptée",
+      "acceptedCounter": "Acceptée après contre-proposition",
+      "completed": "Réalisée",
+      "noShow": "Client absent",
+      "declined": "Refusée",
+      "expired": "Expirée sans réponse",
+      "counterDeclined": "Contre-proposition refusée",
+      "customerCancelled": "Retirée par le client",
+      "businessCancelled": "Annulée par le salon",
+      "rescheduled": "Déplacée",
+      "closed": "Close"
+    }
+  }
+}

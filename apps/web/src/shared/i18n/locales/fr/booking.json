@@ -109,7 +109,11 @@
     "no_longer_cancellable": "Cette réservation ne peut plus être annulée.",
     "not_authorized": "Cette réservation n'appartient pas à votre compte.",
     "no_longer_reschedulable": "Cette réservation ne peut plus être déplacée.",
-    "slot_conflict": "Ce créneau vient d'être pris. Choisissez-en un autre — rien n'a été envoyé."
+    "slot_conflict": "Ce créneau vient d'être pris. Choisissez-en un autre — rien n'a été envoyé.",
+    "request_expired": "Cette demande a expiré avant la réponse — elle est close.",
+    "counter_pending": "Une contre-proposition attend déjà la réponse du client.",
+    "not_a_pending_request": "Cette demande a déjà été traitée.",
+    "no_counter_pending": "Aucune proposition d'horaire n'attend de réponse ici."
   },
   "interestRefusal": {
     "no_contact_channel": "Un e-mail ou un téléphone est nécessaire pour vous prévenir de la réponse.",
@@ -182,5 +186,17 @@
     "loginTitle": "Connectez-vous pour voir vos réservations",
     "loginBody": "Vos rendez-vous, demandes et files d'attente vivent ici.",
     "loginAction": "Se connecter"
+  },
+  "counter": {
+    "sectionTitle": "Un autre horaire vous est proposé",
+    "intro": "{{name}} ne peut pas assurer l'horaire demandé et vous propose :",
+    "requestedLabel": "Demandé",
+    "proposedLabel": "Proposé",
+    "accept": "Accepter cet horaire",
+    "decline": "Refuser",
+    "declineTitle": "Refuser cet horaire ?",
+    "declineBody": "Votre demande chez {{name}} sera close — l'horaire d'origine n'est plus proposé. Vous pourrez chercher un autre créneau ou un autre professionnel.",
+    "declineConfirm": "Refuser la proposition",
+    "acceptError": "La réponse n'a pas pu être envoyée. La proposition a peut-être expiré — actualisez et réessayez."
   }
 }

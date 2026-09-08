@@ -18,6 +18,7 @@ import { Chip } from '@/shared/ui/Chip'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
 import { ResultCard } from '@/shared/ui/ResultCard'
+import { usePublicBookingCapabilities } from '@/shared/data/capability'
 import { Sheet } from '@/shared/ui/Sheet'
 import { SkeletonCard } from '@/shared/ui/Skeleton'
 import { Spinner } from '@/shared/ui/Spinner'
@@ -149,6 +150,10 @@ export function SearchPage() {
   const currencies = useResultCurrencies(
     useMemo(() => displayedRows.map((row) => row.organization_id), [displayedRows]),
   )
+  /* P1PRO §7 — la capacité en LOT : « Réservable » vs « Sur demande ». */
+  const capabilities = usePublicBookingCapabilities(
+    useMemo(() => displayedRows.map((row) => row.organization_slug), [displayedRows]),
+  )
 
   const availabilityByLocation = useMemo(() => {
     const map: Record<string, ResultAvailability> = {}
@@ -209,6 +214,7 @@ export function SearchPage() {
         row={row}
         currencyByOrganization={currencies.data}
         availability={availabilityByLocation[row.location_id] ?? 'loading'}
+        bookingCapability={capabilities.data?.[row.organization_slug] ?? null}
         onOpen={setOpenRow}
       />
     </div>
@@ -489,6 +495,7 @@ export function SearchPage() {
           row={openRow}
           currencyByOrganization={currencies.data}
           availability={availabilityByLocation[openRow.location_id] ?? 'loading'}
+          bookingCapability={capabilities.data?.[openRow.organization_slug] ?? null}
           onOpenChange={(next) => {
             if (!next) setOpenRow(null)
           }}

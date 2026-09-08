@@ -6,6 +6,7 @@ import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
 import { useInView } from '@/shared/hooks/useInView'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { usePublicBookingCapability } from '@/shared/data/capability'
 import { demoBanner } from '@/shared/lib/demoMedia'
 import { recordRecentProfile } from '@/shared/lib/recentlyViewed'
 import { deviceTimezone } from '@/shared/lib/format'
@@ -76,6 +77,9 @@ export function OrganizationProfilePage() {
   const team = useOrganizationTeam(slug)
   const hours = useLocationHours(slug, locationId)
   const serviceState = useShopServiceState(slug, locationId)
+  /* P1PRO §7 — « Réservable » vs « Sur demande » : la capacité commerciale
+     décide de l'issue du tunnel ; le CTA le dit AVANT. */
+  const capability = usePublicBookingCapability(slug)
   /* EN COURS tant que lieux/état n'ont pas répondu — jamais « panne » ni
      « fermé » pendant un chargement (revue F2). Lieu inexistant une fois
      résolu : rien n'est réservable, un fait. */
@@ -199,6 +203,7 @@ export function OrganizationProfilePage() {
     following,
     followBusy: follow.isPending,
     onToggleFollow: toggleFollow,
+    onRequest: capability.data === false,
   }
 
   return (

@@ -134,6 +134,30 @@ export const discoveryKeys = {
   currencies: (organizationIds: readonly string[]) => [...discoveryKeys.all, 'currencies', organizationIds] as const,
 } as const
 
+/** P1PRO — l'OS professionnel : accueil, demandes, historique. */
+export const proKeys = {
+  all: ['pro'] as const,
+  /** Demandes pending d'une organisation (`get_booking_requests`). */
+  requests: (organizationId: string) => [...proKeys.all, 'requests', organizationId] as const,
+  /** Demandes traitées avec leur issue (`get_booking_request_history`). */
+  requestHistory: (organizationId: string) => [...proKeys.all, 'request-history', organizationId] as const,
+  /** Agenda du jour de l'accueil (`get_calendar_appointments`, fenêtre locale). */
+  today: (organizationId: string, day: string) => [...proKeys.all, 'today', organizationId, day] as const,
+  /** Résumé de file de l'accueil (`queue_entries` org, RLS). */
+  queueSummary: (organizationId: string) => [...proKeys.all, 'queue-summary', organizationId] as const,
+} as const
+
+/**
+ * P1PRO — capacité de réservation PUBLIQUE (« Réservable » vs « Sur
+ * demande »). Une seule famille de clés pour le tunnel, la découverte et les
+ * profils : arriver sur le profil depuis la recherche part d'un cache chaud.
+ */
+export const capabilityKeys = {
+  all: ['booking-capability'] as const,
+  organization: (slug: string) => [...capabilityKeys.all, slug] as const,
+  batch: (sortedSlugs: readonly string[]) => [...capabilityKeys.all, 'batch', sortedSlugs] as const,
+} as const
+
 /** Clés des compositions /demo (P1c) — mêmes règles que le produit. */
 export const demoKeys = {
   all: ['demo'] as const,

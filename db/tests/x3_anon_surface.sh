@@ -70,6 +70,7 @@ get_professional_posts_by_id
 get_public_available_slots
 get_public_barber
 get_public_booking_alternatives
+get_public_booking_capabilities
 get_public_booking_capability
 get_public_currencies
 get_public_organization

@@ -24,11 +24,21 @@ function storedOrganizationId(): string | null {
   }
 }
 
+export type ProMembershipRole = 'owner' | 'manager' | 'receptionist' | 'barber'
+
 export interface ProOrganization {
   organizationId: string
   name: string
   slug: string
   businessType: string
+  /** Devise de l'organisation — les prix configurés s'affichent avec elle. */
+  currency: string
+  /**
+   * P1PRO — le rôle CONDITIONNE la présentation (un barber salarié ne voit
+   * pas le revenu du salon), il n'autorise rien : RLS et les RPC restent
+   * l'autorité (§8 du contrat de design pro).
+   */
+  role: ProMembershipRole
   locations: Array<{ id: string; name: string; kind: 'physical_address' | 'service_area'; timezone: string }>
 }
 
@@ -49,12 +59,19 @@ export function useProOrganization() {
   const { session } = useSession()
 
   const query = useQuery({
-    queryKey: [...organizationKeys.all, 'pro-context'],
+    // Le compte fait partie de la clé : deux sessions successives dans le
+    // même onglet ne partagent pas leur contexte.
+    queryKey: [...organizationKeys.all, 'pro-context', session?.user.id ?? ''],
     queryFn: async (): Promise<ProOrganization | null> => {
       const supabase = getSupabase()
+      // MES memberships seulement : la RLS rend visibles ceux de toute
+      // l'équipe (écran Équipe), et la première ligne serait parfois celle
+      // d'un AUTRE membre — un barber héritait du rôle de son owner (bogue
+      // attrapé par l'e2e P1PRO). L'autorisation reste en base.
       const { data: memberships, error } = await supabase
         .from('memberships')
-        .select('organization_id, organizations(id, name, slug, business_type)')
+        .select('organization_id, role, organizations(id, name, slug, business_type, currency)')
+        .eq('user_id', session?.user.id ?? '')
       if (error) throw error
       if (!memberships || memberships.length === 0) return null
 
@@ -75,6 +92,9 @@ export function useProOrganization() {
         // Jamais null en pratique (colonne contrainte) ; le repli le plus
         // conservateur masque les entrées d'équipe plutôt que de les montrer.
         businessType: membership.organizations.business_type ?? 'solo_professional',
+        currency: membership.organizations.currency ?? 'EUR',
+        // Repli conservateur : « barber » est le rôle qui voit le MOINS.
+        role: (membership.role ?? 'barber') as ProMembershipRole,
         locations: (locations ?? []).map((location) => ({
           id: location.id,
           name: location.name,
@@ -88,6 +108,16 @@ export function useProOrganization() {
   })
 
   return { organization: query.data ?? null, loading: query.isPending && Boolean(session), error: query.error }
+}
+
+/**
+ * P1PRO — le SEUL endroit du produit qui compare l'enum interne
+ * `business_type` (jamais affiché, jamais dans une feature — garde
+ * marketplace-supply.test) : une organisation solo ne rend aucune entrée
+ * d'équipe.
+ */
+export function isSoloOrganization(organization: ProOrganization | null): boolean {
+  return (organization?.businessType ?? 'solo_professional') === 'solo_professional'
 }
 
 export function useProEntitlements(organizationId: string | null) {
