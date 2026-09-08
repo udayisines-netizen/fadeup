@@ -6,7 +6,8 @@
     "availableNow": "Available now",
     "unavailable": "Unavailable",
     "pendingRequest": "Awaiting confirmation",
-    "confirmed": "Confirmed"
+    "confirmed": "Confirmed",
+    "onRequest": "On request"
   },
   "queue": {
     "open": "Queue open",

@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabase } from '@/shared/lib/supabase'
 import { organizationKeys, profileKeys } from '@/shared/data/keys'
 import type { PublicServiceStateRow } from '@/shared/lib/serviceState'
@@ -224,5 +224,41 @@ export function useProfessionalReputation(professionalId: string | null) {
     },
     enabled: Boolean(professionalId),
     staleTime: 60_000,
+  })
+}
+
+/**
+ * M1b — le follow réel (auth à l'action). L'état vient de la liste complète
+ * des pros suivis (`list_my_followed_professionals`) : une seule requête
+ * pour tous les écrans, invalidée par les mutations. `follow_professional`
+ * refuse une identité non revendiquée (42704) — l'écran masque le bouton
+ * sur un profil non revendiqué plutôt que d'offrir un geste qui échoue.
+ */
+export function useMyFollowedProfessionalIds(enabled: boolean) {
+  return useQuery({
+    queryKey: profileKeys.myFollowedProfessionals(),
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await getSupabase().rpc('list_my_followed_professionals')
+      if (error) throw error
+      return new Set((data ?? []).map((row) => row.id))
+    },
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
+export function useToggleFollowProfessional() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ professionalId, follow }: { professionalId: string; follow: boolean }) => {
+      const supabase = getSupabase()
+      const { error } = follow
+        ? await supabase.rpc('follow_professional', { p_professional_id: professionalId })
+        : await supabase.rpc('unfollow_professional', { p_professional_id: professionalId })
+      if (error) throw error
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: profileKeys.myFollowedProfessionals() })
+    },
   })
 }

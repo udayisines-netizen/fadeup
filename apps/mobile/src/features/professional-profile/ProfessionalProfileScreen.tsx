@@ -25,13 +25,17 @@ import {
   RatingLine,
   ReviewRow,
 } from '@/shared/ui/profileParts'
+import { useSession } from '@/shared/data/auth'
+import { AuthSheet } from '@/shared/ui/AuthSheet'
 import {
   useBarberServices,
   useProfessionalByHandle,
   useProfessionalPosts,
   useProfessionalReputation,
+  useMyFollowedProfessionalIds,
   useProfessionalReviews,
   useProfileServiceState,
+  useToggleFollowProfessional,
   usePublicBarber,
   usePublicLocations,
   useWorkplace,
@@ -121,8 +125,54 @@ export function ProfessionalProfileScreen() {
   const [showSticky, setShowSticky] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
 
-  const onBook = () => router.push(`/book/${encodeURIComponent(slug ?? '')}` as never)
+  /* Depuis un profil barber, le tunnel démarre barber PRÉSÉLECTIONNÉ
+     (MASTER_SPEC §6) — l'étape barber sera sautée. */
+  const onBook = () =>
+    router.push({
+      pathname: '/book/[slug]',
+      params: { slug: slug ?? '', ...(work?.barber_id ? { b: work.barber_id } : {}) },
+    })
   const onQueue = () => router.push(`/q/${encodeURIComponent(slug ?? '')}` as never)
+
+  /* M1b — le follow réel : auth à l'action, l'intention rejouée à la
+     session posée. Profil non revendiqué : bouton MASQUÉ (la base refuse
+     de suivre une identité non revendiquée — 42704). */
+  const { session } = useSession()
+  const followedIds = useMyFollowedProfessionalIds(Boolean(session))
+  const toggleFollow = useToggleFollowProfessional()
+  const [authOpen, setAuthOpen] = useState(false)
+  const pendingFollow = useRef(false)
+  const following = professionalId ? followedIds.data?.has(professionalId) === true : false
+  const follow =
+    isClaimed && professionalId
+      ? {
+          following,
+          busy: toggleFollow.isPending,
+          name: professional.data?.display_name ?? '',
+          onPress: () => {
+            if (!session) {
+              pendingFollow.current = true
+              setAuthOpen(true)
+              return
+            }
+            toggleFollow.mutate({ professionalId, follow: !following })
+          },
+        }
+      : undefined
+  const onAuthed = () => {
+    if (pendingFollow.current && professionalId) {
+      pendingFollow.current = false
+      toggleFollow.mutate({ professionalId, follow: true })
+    }
+  }
+
+  /* F4/M1b — non revendiqué SANS rattachement : le CTA devient la demande
+     d'intérêt réelle, seulement une fois la résolution TERMINÉE (jamais
+     pendant un chargement — le CTA ne ment pas). */
+  const onInterest =
+    workplace.isSuccess && !work && !isClaimed && handle
+      ? () => router.push({ pathname: '/book/[slug]', params: { slug: handle, pro: handle } })
+      : undefined
 
   if (professional.isPending) {
     return (
@@ -255,7 +305,7 @@ export function ProfessionalProfileScreen() {
               setCtaBottom(y + height)
             }}
           >
-            <ProfileCtaPair cta={cta} isManaged={isClaimed} onBook={onBook} onQueue={onQueue} />
+            <ProfileCtaPair cta={cta} isManaged={isClaimed} onBook={onBook} onQueue={onQueue} follow={follow} onInterest={onInterest} />
           </View>
 
           {/* Services — la Row de liste dense demeure la primitive ici. */}
@@ -353,9 +403,11 @@ export function ProfessionalProfileScreen() {
           entering={FadeIn.duration(120)}
           style={[styles.stickyBar, shadow.sticky, { paddingBottom: insets.bottom + spacing(2) }]}
         >
-          <ProfileCtaPair cta={cta} isManaged={isClaimed} onBook={onBook} onQueue={onQueue} />
+          <ProfileCtaPair cta={cta} isManaged={isClaimed} onBook={onBook} onQueue={onQueue} follow={follow} onInterest={onInterest} />
         </Animated.View>
       ) : null}
+
+      <AuthSheet open={authOpen} context="follow" onClose={() => setAuthOpen(false)} onAuthed={onAuthed} />
     </SafeAreaView>
   )
 }

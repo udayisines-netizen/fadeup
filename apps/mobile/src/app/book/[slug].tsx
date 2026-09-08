@@ -1,30 +1,24 @@
-import { useRouter } from 'expo-router'
-import { useTranslation } from 'react-i18next'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { StyleSheet } from 'react-native'
-import { EmptyState } from '@/shared/ui/EmptyState'
-import { color } from '@/shared/theme/tokens'
+import { useLocalSearchParams } from 'expo-router'
+
+import { BookingFlowScreen } from '@/features/booking/BookingFlowScreen'
+import { InterestRequestScreen } from '@/features/booking/InterestRequestScreen'
 
 /**
- * Le CTA Réserver mène ICI tant que le tunnel n'existe pas (M1b) —
- * placeholder HONNÊTE qui nomme son lot et ramène, jamais un bouton qui ne
- * fait rien (M1a §9).
+ * M1b — la porte de la réservation.
+ *
+ * Deux destinations derrière UNE route, parce que la cible décide :
+ *
+ *  - cible normale (organisation active) → LE tunnel (`BookingFlowScreen`),
+ *    dont l'état vit dans les paramètres `s`, `b`, `d`, `t`, `l` ;
+ *  - cible NON revendiquée → la demande d'intérêt (`?pro=<handle>`), qui ne
+ *    retient aucun créneau et n'affirme aucune disponibilité (F4 §6, B2).
+ *    Le web y entre par sa propre route `/request/:handle` ; en natif le
+ *    paramètre suffit et évite d'ouvrir une seconde route publique hors du
+ *    périmètre de ce lot.
  */
-export default function BookPlaceholder() {
-  const { t } = useTranslation('v2')
-  const router = useRouter()
-  return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <EmptyState
-        title={t('mobile.placeholder.booking.title')}
-        body={t('mobile.placeholder.booking.body')}
-        actionLabel={t('mobile.placeholder.back')}
-        onAction={() => router.back()}
-      />
-    </SafeAreaView>
-  )
+export default function BookRoute() {
+  const { pro } = useLocalSearchParams<{ pro?: string }>()
+  const handle = (Array.isArray(pro) ? pro[0] : pro) ?? ''
+  if (handle !== '') return <InterestRequestScreen handle={handle} />
+  return <BookingFlowScreen />
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: color.canvas, justifyContent: 'center' },
-})

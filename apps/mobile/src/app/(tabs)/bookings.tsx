@@ -1,14 +1,7 @@
-import { useTranslation } from 'react-i18next'
-import { PlaceholderScreen } from '@/shared/ui/PlaceholderScreen'
+import { MyBookingsScreen } from '@/features/booking/MyBookingsScreen'
 
-/** Placeholder honnête — les réservations sont construites par M1b. */
+/** L'onglet Réservations (M1b) — contre-propositions, demandes, file,
+ *  à venir, demandes d'intérêt, historique. */
 export default function BookingsTab() {
-  const { t } = useTranslation('v2')
-  return (
-    <PlaceholderScreen
-      icon="calendar-outline"
-      title={t('mobile.placeholder.bookings.title')}
-      body={t('mobile.placeholder.bookings.body')}
-    />
-  )
+  return <MyBookingsScreen />
 }

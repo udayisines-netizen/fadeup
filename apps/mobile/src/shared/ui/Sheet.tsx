@@ -5,7 +5,16 @@
  * le composant porte déjà `'use no memo'` pour que le compilateur le saute.
  */
 import { type ReactNode, useCallback, useEffect } from 'react'
-import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   runOnJS,
@@ -107,7 +116,12 @@ export function Sheet({ open, onClose, title, hero, children }: SheetProps) {
 
   return (
     <Modal transparent visible animationType="none" onRequestClose={requestClose} statusBarTranslucent>
-      <View style={styles.root}>
+      {/* M1b — le clavier iOS ne doit jamais recouvrir les champs d'une
+          feuille (e-mail/code de l'auth légère, prénom du join). */}
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <Animated.View style={[StyleSheet.absoluteFill, scrimStyle]}>
           <Pressable
             accessibilityRole="button"
@@ -152,7 +166,7 @@ export function Sheet({ open, onClose, title, hero, children }: SheetProps) {
           </ScrollView>
           </View>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }

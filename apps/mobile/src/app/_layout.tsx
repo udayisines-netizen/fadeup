@@ -2,7 +2,7 @@
 // tout import qui touche le client (guide Supabase React Native).
 import 'react-native-url-polyfill/auto'
 import { useEffect, useState } from 'react'
-import { View } from 'react-native'
+import { AppState, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -15,12 +15,16 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins'
 import { GeistMono_400Regular, GeistMono_500Medium } from '@expo-google-fonts/geist-mono'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider, focusManager } from '@tanstack/react-query'
 import { I18nextProvider } from 'react-i18next'
 import { initI18n } from '@/shared/i18n'
 import { createQueryClient } from '@/shared/data/queryClient'
+import { SessionContext, useProvideSession } from '@/shared/data/auth'
+import { wireOnlineManager } from '@/shared/hooks/useIsOnline'
 import { readOnboarding } from '@/features/onboarding/storage'
+import { syncOnboardingToCustomerProfile } from '@/features/onboarding/api/profileSync'
 import { OnboardingGateContext } from '@/features/onboarding/gate'
+import { OfflineBanner } from '@/shared/ui/OfflineBanner'
 import { color } from '@/shared/theme/tokens'
 
 /**
@@ -54,6 +58,25 @@ export default function RootLayout() {
     void readOnboarding().then((answers) => setOnboarded(answers !== null))
   }, [])
 
+  // M1b — réseau et retour d'app alimentent TanStack Query : les requêtes se
+  // suspendent hors connexion et repartent au retour au premier plan (la
+  // stratégie de rafraîchissement laissée ouverte par M1a §13.6).
+  useEffect(() => wireOnlineManager(), [])
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      focusManager.setFocused(state === 'active')
+    })
+    return () => sub.remove()
+  }, [])
+
+  // M1b — session partagée + synchro onboarding local → customer_profiles à
+  // l'arrivée d'une session (remplit les trous, n'écrase jamais la base).
+  const sessionState = useProvideSession()
+  const userId = sessionState.session?.user.id ?? null
+  useEffect(() => {
+    if (userId) void syncOnboardingToCustomerProfile()
+  }, [userId])
+
   const ready = fontsLoaded && onboarded !== null
 
   useEffect(() => {
@@ -69,6 +92,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
+          <SessionContext.Provider value={sessionState}>
           <OnboardingGateContext.Provider
             value={{ onboarded: onboarded === true, markOnboarded: () => setOnboarded(true) }}
           >
@@ -86,7 +110,9 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
               </Stack.Protected>
             </Stack>
+            <OfflineBanner />
           </OnboardingGateContext.Provider>
+          </SessionContext.Provider>
         </QueryClientProvider>
       </I18nextProvider>
     </GestureHandlerRootView>

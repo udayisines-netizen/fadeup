@@ -109,7 +109,11 @@
     "no_longer_cancellable": "This booking can no longer be cancelled.",
     "not_authorized": "This booking does not belong to your account.",
     "no_longer_reschedulable": "This booking can no longer be moved.",
-    "slot_conflict": "That slot was just taken. Pick another one — nothing was sent."
+    "slot_conflict": "That slot was just taken. Pick another one — nothing was sent.",
+    "request_expired": "This request expired before the answer — it is closed.",
+    "counter_pending": "A counter-proposal is already awaiting the customer's answer.",
+    "not_a_pending_request": "This request has already been handled.",
+    "no_counter_pending": "No proposed time is awaiting an answer here."
   },
   "interestRefusal": {
     "no_contact_channel": "An email or a phone number is needed to tell you about the reply.",
@@ -182,5 +186,17 @@
     "loginTitle": "Sign in to see your bookings",
     "loginBody": "Your appointments, requests and queues live here.",
     "loginAction": "Sign in"
+  },
+  "counter": {
+    "sectionTitle": "Another time was proposed",
+    "intro": "{{name}} can't make the time you asked and proposes:",
+    "requestedLabel": "Requested",
+    "proposedLabel": "Proposed",
+    "accept": "Accept this time",
+    "decline": "Decline",
+    "declineTitle": "Decline this time?",
+    "declineBody": "Your request at {{name}} will be closed — the original time is no longer offered. You can look for another slot or another professional.",
+    "declineConfirm": "Decline the proposal",
+    "acceptError": "Your answer could not be sent. The proposal may have expired — refresh and try again."
   }
 }
