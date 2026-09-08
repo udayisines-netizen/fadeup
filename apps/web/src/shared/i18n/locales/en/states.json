@@ -23,7 +23,8 @@
   "claim": {
     "unclaimed": "Not yet managed on FadeUp",
     "claimed": "Claimed profile",
-    "verified": "Verified profile"
+    "verified": "Verified profile",
+    "unclaimedShort": "Unclaimed"
   },
   "rating": {
     "none": "No reviews yet",
@@ -47,6 +48,7 @@
   },
   "opening": {
     "open": "Open",
-    "closed": "Currently closed"
+    "closed": "Currently closed",
+    "closedShort": "Closed"
   }
 }

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useNow } from '@/shared/hooks/useNow'
 import { useSession } from '@/shared/hooks/useSession'
+import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { Button } from '@/shared/ui/Button'
 import { Duration } from '@/shared/ui/Duration'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -119,6 +120,9 @@ export function BookingFlowPage() {
 
   const book = useBookAppointment()
   const [outcome, setOutcome] = useState<BookAppointmentResult | null>(null)
+  /* D1 §9 — la CONFIRMATION (un rendez-vous existe) est LE moment sombre de
+     célébration du produit. Une demande envoyée reste claire et sobre. */
+  useApplySurfaceTheme(outcome && !outcome.is_request ? 'moment' : 'consumer')
   const [refusal, setRefusal] = useState<BookingRefusalCode | null>(null)
   const [bookedBarberName, setBookedBarberName] = useState<string | null>(null)
 

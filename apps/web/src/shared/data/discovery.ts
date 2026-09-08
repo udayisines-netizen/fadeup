@@ -184,6 +184,32 @@ export function useResultServiceStates(
   })
 }
 
+/** Ligne de service publique (contrat B1/F2). */
+export type PublicServiceRow =
+  Database['public']['Functions']['list_public_services']['Returns'][number]
+
+/**
+ * D1 — les services de la feuille de résultat. MÊMES clés et MÊME RPC que le
+ * profil salon (organizationKeys.services / list_public_services) : ouvrir
+ * la feuille chauffe le cache que le profil complet consommera, et
+ * inversement — aucune requête parallèle inventée.
+ */
+export function useSheetServices(slug: string | null, locationId: string | null) {
+  return useQuery({
+    queryKey: organizationKeys.services(slug ?? '', locationId ?? ''),
+    queryFn: async (): Promise<PublicServiceRow[]> => {
+      const { data, error } = await getSupabase().rpc('list_public_services', {
+        p_organization_slug: slug ?? '',
+        p_location_id: locationId ?? '',
+      })
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: Boolean(slug && locationId),
+    staleTime: 60_000,
+  })
+}
+
 /**
  * Le prix « à partir de » d'une rangée : le minimum RÉEL des services actifs
  * du lieu (calculé serveur), dans la devise de l'organisation. Sans prix

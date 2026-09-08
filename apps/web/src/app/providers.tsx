@@ -25,11 +25,19 @@ import { V2ToastProvider } from '@/shared/ui/Toast'
  * l'init i18next.
  */
 
-// Le bouton flottant des devtools déborde du viewport mobile et polluerait
-// les études /demo (captures QA, mesure de débordement) — il reste partout
-// ailleurs en DEV.
+// D1 §10 — le bouton flottant des devtools recouvrait l'onglet Compte de la
+// nav basse à 390 px (le « rond qui déborde sur le libellé » du constat
+// fondateur). Il n'apparaît plus qu'en DEV **et** sur opt-in explicite :
+//   localStorage.setItem('fu.devtools', '1')  (puis recharger)
+function devtoolsWanted(): boolean {
+  try {
+    return localStorage.getItem('fu.devtools') === '1'
+  } catch {
+    return false
+  }
+}
 const ReactQueryDevtools =
-  import.meta.env.DEV && !window.location.pathname.startsWith('/demo')
+  import.meta.env.DEV && devtoolsWanted() && !window.location.pathname.startsWith('/demo')
     ? lazy(() =>
         import('@tanstack/react-query-devtools').then((mod) => ({ default: mod.ReactQueryDevtools })),
       )

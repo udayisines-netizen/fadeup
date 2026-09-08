@@ -9,6 +9,8 @@ export interface SocialProofProps {
   rating: number | null
   reviews: number | null
   likes: number | null
+  /** D1 modèle X : `row` pose les métriques SUR UNE LIGNE (repli en 2). */
+  layout?: 'column' | 'row'
   className?: string
 }
 
@@ -17,10 +19,17 @@ export interface SocialProofProps {
  * toujours distinctes — icône, notation et typographie diffèrent par
  * construction dans MetricValue, et rien ne les agrège jamais.
  */
-export function SocialProof({ followers, verifiedClients, rating, reviews, likes, className }: SocialProofProps) {
+export function SocialProof({ followers, verifiedClients, rating, reviews, likes, layout = 'column', className }: SocialProofProps) {
   const { t } = useTranslation('v2')
   return (
-    <section aria-label={t('profile.metrics.label')} className={cn('flex flex-col items-start gap-2.5', className)} data-testid="social-proof">
+    <section
+      aria-label={t('profile.metrics.label')}
+      className={cn(
+        layout === 'row' ? 'flex flex-wrap items-center gap-x-4 gap-y-1.5' : 'flex flex-col items-start gap-2.5',
+        className,
+      )}
+      data-testid="social-proof"
+    >
       <MetricValue kind="followers" value={followers} />
       <MetricValue kind="verified-clients" value={verifiedClients} />
       <MetricValue kind="rating" value={rating} />

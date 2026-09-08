@@ -1,19 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/shared/hooks/useSession'
 import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
+import { useInView } from '@/shared/hooks/useInView'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { demoBanner } from '@/shared/lib/demoMedia'
+import { recordRecentProfile } from '@/shared/lib/recentlyViewed'
 import { deviceTimezone } from '@/shared/lib/format'
 import { isOpenNow } from '@/shared/lib/openingHours'
+import { Avatar } from '@/shared/ui/Avatar'
 import { Button } from '@/shared/ui/Button'
 import { Duration } from '@/shared/ui/Duration'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { MediaFrame } from '@/shared/ui/MediaFrame'
 import { Money } from '@/shared/ui/Money'
 import { PostGrid } from '@/shared/ui/PostGrid'
-import { ProfileCtaBar } from '@/shared/ui/ProfileCtaBar'
+import { ProfileCtaBar, ProfileCtaButtons } from '@/shared/ui/ProfileCtaBar'
 import { QueueList } from '@/shared/ui/QueueList'
 import { Rating } from '@/shared/ui/Rating'
 import { ReviewList } from '@/shared/ui/ReviewList'
@@ -94,11 +98,29 @@ export function OrganizationProfilePage() {
   const reviews = useOrganizationReviews(organizationId)
   const posts = useOrganizationPosts(slug)
 
+  /* D1 (modèle X) — CTA inline dans l'en-tête ; barre collante en repli. */
+  const [inlineCtaRef, inlineCtaInView] = useInView()
+
   const myFollows = useMyFollowedOrganizations(Boolean(session))
   const following = Boolean(
     organizationId && (myFollows.data ?? []).some((row) => row.organization_id === organizationId),
   )
   const follow = useFollowOrganization(organizationId)
+
+  /* D1 §7 — mémoire LOCALE des profils consultés. Aucune écriture serveur. */
+  const orgName = organization.data?.name ?? null
+  const orgCity = location?.city ?? null
+  useEffect(() => {
+    if (!orgName) return
+    recordRecentProfile({
+      kind: 'shop',
+      key: slug,
+      name: orgName,
+      city: orgCity,
+      avatarUrl: null,
+      organizationSlug: slug,
+    })
+  }, [orgName, orgCity, slug])
 
   useDocumentMeta({
     title: organization.data ? `${organization.data.name} — FadeUp` : null,
@@ -167,14 +189,38 @@ export function OrganizationProfilePage() {
     follow.mutate(following ? 'unfollow' : 'follow')
   }
 
+  const banner = demoBanner(slug)
+  const ctaProps = {
+    cta,
+    name: org.name,
+    bookTo: bookLink,
+    queueTo: queueLink,
+    timezone: location?.timezone ?? null,
+    following,
+    followBusy: follow.isPending,
+    onToggleFollow: toggleFollow,
+  }
+
   return (
     <div className="mx-auto w-full max-w-xl pb-40 lg:grid lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
       <div>
-        {/* 1. Imagerie du lieu — aucun contrat de photo de lieu n'existe
-            encore : le cadre vide est honnête, jamais une fausse image. */}
-        <MediaFrame alt={t('profile.header.coverLabel', { name: org.name })} ratio="landscape" />
+        {/* 1. Bannière de l'établissement, pleine largeur (modèle X) —
+            image de démonstration marquée quand elle existe, sinon le cadre
+            honnête (aucune fausse image). */}
+        {banner ? (
+          <div className="h-40 overflow-hidden md:h-48 lg:rounded-[var(--radius-card)]">
+            <img src={banner} alt={t('profile.header.coverLabel', { name: org.name })} className="size-full object-cover" />
+          </div>
+        ) : (
+          <MediaFrame alt={t('profile.header.coverLabel', { name: org.name })} ratio="landscape" />
+        )}
 
-        <div className="mt-4 px-4">
+        {/* Portrait rond en surimpression, décalé à gauche. */}
+        <div className="-mt-10 flex items-end gap-4 px-4">
+          <Avatar name={org.name} size="xl" className="fu-vt-portrait ring-4 ring-[var(--fu-canvas)]" />
+        </div>
+
+        <div className="mt-3 px-4">
           {/* 2. Identité. */}
           <h1 className="text-fu-2xl font-semibold tracking-tight">{org.name}</h1>
 
@@ -222,6 +268,24 @@ export function OrganizationProfilePage() {
               ))}
             </div>
           )}
+
+          {/* Les MÉTRIQUES — une ligne, cinq faits distincts (Followers =
+              fait du graphe ; Verified Clients et Likes sans contrat public
+              côté salon : « — » ; jamais un zéro fabriqué). */}
+          <SocialProof
+            layout="row"
+            className="mt-4"
+            followers={followerCount.data ?? null}
+            verifiedClients={null}
+            rating={reputationRow?.rating_average ?? null}
+            reviews={reputationRow ? reputationRow.rating_count : null}
+            likes={null}
+          />
+
+          {/* LE CTA — avant tout contenu (modèle X, MASTER §9). */}
+          <div ref={inlineCtaRef} className="mt-4" data-testid="inline-cta">
+            <ProfileCtaButtons {...ctaProps} />
+          </div>
         </div>
 
         {/* 7. Services — rangées à filet fin, groupées par catégorie réelle. */}
@@ -300,18 +364,6 @@ export function OrganizationProfilePage() {
       </div>
 
       <aside className="px-4 lg:px-0 lg:pt-6">
-        {/* Preuve sociale — cinq métriques distinctes. Followers est un fait
-            (contrat F2) ; Verified Clients et Likes n'ont pas de contrat
-            public côté salon : « — », jamais un chiffre fabriqué. */}
-        <SocialProof
-          className="mt-8 lg:mt-0"
-          followers={followerCount.data ?? null}
-          verifiedClients={null}
-          rating={reputationRow?.rating_average ?? null}
-          reviews={reputationRow ? reputationRow.rating_count : null}
-          likes={null}
-        />
-
         {/* 10. Avis — jamais zéro étoile. */}
         <section className="mt-8" aria-label={t('profile.shop.reviewsTitle')}>
           <h2 className="text-fu-lg font-semibold">{t('profile.shop.reviewsTitle')}</h2>
@@ -333,17 +385,9 @@ export function OrganizationProfilePage() {
         </section>
       </aside>
 
-      {/* 5–6. RÉSERVER (vert plein, LE CTA dominant) + Suivre (secondaire). */}
-      <ProfileCtaBar
-        cta={cta}
-        name={org.name}
-        bookTo={bookLink}
-        queueTo={queueLink}
-        timezone={location?.timezone ?? null}
-        following={following}
-        followBusy={follow.isPending}
-        onToggleFollow={toggleFollow}
-      />
+      {/* La barre COLLANTE — repli de conversion, seulement quand la paire
+          inline du modèle X est sortie de l'écran. */}
+      <ProfileCtaBar {...ctaProps} hidden={inlineCtaInView} />
     </div>
   )
 }

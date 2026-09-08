@@ -86,5 +86,14 @@
   "unlocated": {
     "title": "À distance inconnue",
     "note": "Ces établissements existent mais n’ont pas de position exploitable : leur distance est inconnue — ils ne comptent pas comme « dans la zone »."
+  },
+  "card": {
+    "openAria": "Voir {{name}}"
+  },
+  "sheet": {
+    "fullProfile": "Voir le profil complet",
+    "services": "Services",
+    "servicesEmpty": "Les services ne sont pas encore renseignés.",
+    "close": "Fermer"
   }
 }

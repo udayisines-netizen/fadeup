@@ -92,3 +92,21 @@ Donc : rollback quand c'est possible, marquage + réutilisation +
 neutralisation quand ça ne l'est pas. Le tas de 72 ne DOIT plus grossir que
 de zéro (suites SQL) ou d'un multiple connu et documenté (e2e F1, 2 par
 campagne complète, jusqu'à sa réécriture).
+
+## 5. Imagerie de démonstration (D1, 2026-09-07)
+
+D1 a posé des IMAGES sur le jeu de démonstration `demo-*` (aucune
+organisation nouvelle, aucune donnée opérationnelle). Provenance : dérivés
+(recadrages) des deux générations Artlist déjà payées du 2026-08-31 —
+aucune ne représente un professionnel réel ni un salon existant.
+
+| Quoi | Où | Marquage | Retrait |
+|---|---|---|---|
+| 8 bannières d'établissement | `apps/web/public/demo-media/banners/<slug>.jpg` + registre `src/shared/lib/demoMedia.ts` (slugs `demo-*` uniquement) | chemin `/demo-media/`, slug `demo-*` | supprimer le dossier + le module |
+| 2 portraits (`demo.kais.bellamine`, `demo.moussa.diakite`) | `public/demo-media/avatars/` + `professionals.avatar_url`/`staff_profiles.avatar_url` | handle `demo.*`, chemin `/demo-media/` | `update … set avatar_url = null where handle like 'demo.%'` |
+| 5 posts portfolio (7 médias JPEG) | `posts`/`post_media` + bucket `post-media/d1-demo/` | UUID préfixe hex `d1de`, caption « — démo FadeUp », préfixe `d1-demo/` | `delete from posts where id::text like 'd1de%'` + objets `d1-demo/*` |
+
+Seed idempotent : `db/seeds/d1_demo_media.sql` (rôle `postgres`).
+Seuls DEUX visages distincts existent dans les sources : les autres
+identités `demo.*` gardent volontairement le monogramme — donner le même
+visage à deux personnes différentes serait un mensonge visuel.

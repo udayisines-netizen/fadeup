@@ -1,0 +1,62 @@
+/*
+ * D1 §9 — le thème des MOMENTS SOMBRES du parcours client.
+ *
+ * Trois écrans le portent : la confirmation de réservation (la célébration
+ * du produit), le suivi de file (l'écran qu'on garde ouvert en salon), et
+ * le Fade Passport à venir (ses tokens sont posés ici).
+ *
+ * Ce n'est PAS une inversion mécanique du thème clair, ni le thème Pro :
+ * le fond tire vers le vert profond de la marque, le vert vif reprend de
+ * la force (signaux, chiffres de position, célébration), le logo peut
+ * exister pleinement. Le texte des CTA sur vert reste l'ENCRE (8,30:1) —
+ * la loi ne change pas dans le noir. Poppins reste la voix du client.
+ */
+
+[data-theme='moment'] {
+  --font-fu-sans: 'Poppins', 'Geist', system-ui, sans-serif;
+
+  /* Fond : noir tiré au vert — la marque, pas un gris inversé. */
+  --fu-canvas: #071310;
+  --fu-surface: #0d1f18;
+  --fu-surface-subtle: #0a1a14;
+  --fu-surface-hover: #12271f;
+  --fu-surface-brand: rgba(40, 225, 142, 0.14);
+
+  --fu-text-primary: #eaf6f0; /* ≈16:1 sur le fond */
+  --fu-text-secondary: rgba(234, 246, 240, 0.66);
+  --fu-text-tertiary: rgba(234, 246, 240, 0.4);
+
+  --fu-border: rgba(234, 246, 240, 0.12);
+  --fu-border-strong: rgba(234, 246, 240, 0.22);
+
+  /* Le vert EXISTE ici : CTA plein, signaux, chiffres display. */
+  --fu-accent: #00c27a;
+  --fu-accent-hover: #28e18e;
+  --fu-accent-fg: #080f0d; /* encre sur vert, 8,30:1 — jamais blanc */
+  --fu-accent-soft: rgba(40, 225, 142, 0.16);
+  --fu-accent-text: #2fe59b;
+
+  --fu-success: #28e18e;
+  --fu-danger: #f2827c; /* lisible sur sombre (le rouge clair ne sert qu'au texte) */
+
+  --fu-focus: #28e18e;
+  --fu-scrim: rgba(0, 0, 0, 0.66);
+
+  --fu-shadow-sticky: 0 -1px 0 rgba(0, 0, 0, 0.5);
+  --fu-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.4);
+  --fu-shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 40px rgba(0, 0, 0, 0.5);
+  --fu-shadow-sheet: 0 -8px 40px rgba(0, 0, 0, 0.55);
+  --fu-brand-watermark: rgba(40, 225, 142, 0.1);
+
+  /* Fade Passport (M1a/P2) — les tokens posés par D1, non consommés ici :
+     la carte du Passport se compose sur ces valeurs, jamais sur un dégradé
+     d'interface (le seul dégradé du produit reste le logo/marketing). */
+  --fu-passport-canvas: #050e0b;
+  --fu-passport-card: #0d211a;
+  --fu-passport-sheen: rgba(40, 225, 142, 0.08);
+  --fu-passport-accent: #28e18e;
+
+  background-color: var(--fu-canvas);
+  color: var(--fu-text-primary);
+  font-family: var(--font-fu-sans);
+}

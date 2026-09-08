@@ -17,12 +17,13 @@ import { Button } from '@/shared/ui/Button'
 import { Chip } from '@/shared/ui/Chip'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/Input'
-import { SearchResultRow } from '@/shared/ui/SearchResultRow'
+import { ResultCard } from '@/shared/ui/ResultCard'
 import { Sheet } from '@/shared/ui/Sheet'
-import { SkeletonRow } from '@/shared/ui/Skeleton'
+import { SkeletonCard } from '@/shared/ui/Skeleton'
 import { Spinner } from '@/shared/ui/Spinner'
 import { Tabs } from '@/shared/ui/Tabs'
 import { IconFilter, IconLocation, IconSearch } from '@/shared/ui/icons'
+import { ResultSheet } from '@/shared/ui/ResultSheet'
 import { FiltersPanel } from '@/features/discovery/components/FiltersPanel'
 import { rankResults } from '@/shared/lib/searchRanking'
 import {
@@ -70,6 +71,9 @@ export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const state = useMemo(() => parseSearchState(searchParams), [searchParams])
   const [filtersOpen, setFiltersOpen] = useState(false)
+  /* D1 §5 — un tap sur une carte ouvre la FEUILLE ; la liste reste dessous
+     et sa position de défilement est préservée à la fermeture. */
+  const [openRow, setOpenRow] = useState<ProfessionalSearchRow | null>(null)
   const geolocation = useGeolocation()
 
   useDocumentMeta({ title: t('discovery.meta.title') })
@@ -192,14 +196,26 @@ export function SearchPage() {
     if (point) update({ latitude: point.latitude, longitude: point.longitude })
   }
 
-  const renderRow = (row: ProfessionalSearchRow) => (
-    <SearchResultRow
+  /* D1 §8 — apparition DÉCALÉE des résultats (stagger CSS : fu-rise-in +
+     délai par index ; neutralisé par prefers-reduced-motion via la règle
+     globale de theme.css). */
+  const renderRow = (row: ProfessionalSearchRow, index: number) => (
+    <div
       key={`${row.location_id}`}
-      row={row}
-      currencyByOrganization={currencies.data}
-      availability={availabilityByLocation[row.location_id] ?? 'loading'}
-    />
+      className="fu-rise-in"
+      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+    >
+      <ResultCard
+        row={row}
+        currencyByOrganization={currencies.data}
+        availability={availabilityByLocation[row.location_id] ?? 'loading'}
+        onOpen={setOpenRow}
+      />
+    </div>
   )
+  /* D1 §4 — grille de cartes : une colonne en mobile, une grille COMPOSÉE
+     dès 768 px (jamais une colonne étroite avec 400 px de vide). */
+  const cardGrid = 'grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3'
 
   const searchControls = (
     <div className="flex flex-col gap-3">
@@ -258,7 +274,9 @@ export function SearchPage() {
           {t('discovery.geo.denied')}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-2 lg:hidden">
+      {/* D1 — les filtres passent en barre haute (chips + tiroir), à TOUTES
+          les largeurs : le rail latéral de P1c est supprimé. */}
+      <div className="flex flex-wrap items-center gap-2">
         <Chip selected={state.openNow} onClick={() => update({ openNow: !state.openNow })}>
           {t('discovery.filters.openNow')}
         </Chip>
@@ -307,16 +325,16 @@ export function SearchPage() {
           {countLine}
         </p>
       )}
-      <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
+      <div className={cardGrid}>
         {showSkeletons ? (
           <>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
           </>
         ) : search.isError ? (
           <EmptyState
+            className="col-span-full"
             title={t('errors.boundary.title')}
             description={t(errorMessageKey(toAppError(search.error)))}
             action={
@@ -326,7 +344,7 @@ export function SearchPage() {
             }
           />
         ) : visibleRows.length === 0 ? (
-          <div data-testid="search-empty">
+          <div data-testid="search-empty" className="col-span-full">
             <EmptyState
               title={t('discovery.empty.title')}
               description={emptyDescription}
@@ -382,9 +400,7 @@ export function SearchPage() {
           <h2 className="mb-2 text-fu-base font-semibold">
             {t('discovery.fallback.title', { query: state.query })}
           </h2>
-          <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
-            {fallbackRows.map(renderRow)}
-          </div>
+          <div className={cardGrid}>{fallbackRows.map(renderRow)}</div>
         </section>
       )}
 
@@ -394,9 +410,7 @@ export function SearchPage() {
           <h2 className="mb-2 text-fu-base font-semibold">
             {t('discovery.widen.title', { km: widened.radiusKm })}
           </h2>
-          <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
-            {widened.rows.map(renderRow)}
-          </div>
+          <div className={cardGrid}>{widened.rows.map(renderRow)}</div>
         </section>
       )}
 
@@ -407,9 +421,7 @@ export function SearchPage() {
         <section className="mt-6" data-testid="unlocated-results">
           <h2 className="mb-2 text-fu-base font-semibold">{t('discovery.unlocated.title')}</h2>
           <p className="mb-2 text-fu-sm text-[var(--fu-text-secondary)]">{t('discovery.unlocated.note')}</p>
-          <div className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)]">
-            {unlocatedRows.map(renderRow)}
-          </div>
+          <div className={cardGrid}>{unlocatedRows.map(renderRow)}</div>
         </section>
       )}
     </div>
@@ -431,21 +443,14 @@ export function SearchPage() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-4 md:px-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 md:px-6">
       <h1 className="mb-3 text-fu-xl font-semibold">{t('discovery.title')}</h1>
 
-      {/* ≥1024 : composition desktop — rail (recherche + filtres) + liste. */}
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <div className="flex flex-col gap-5 lg:sticky lg:top-20">
-          {searchControls}
-          <div className="hidden lg:block">
-            <FiltersPanel
-              state={state}
-              onChange={(partial) => update(partial)}
-              onReset={() => update({ ...DEFAULT_SEARCH_STATE, view: state.view })}
-            />
-          </div>
-        </div>
+      {/* D1 §4 — composition unique : barre de recherche et chips en HAUT,
+          grille de cartes dessous. Le rail latéral (P1c) est révoqué ; les
+          filtres complets vivent dans le tiroir à toutes les largeurs. */}
+      <div className="flex flex-col gap-4">
+        {searchControls}
 
         <Tabs
           label={t('discovery.view.label')}
@@ -458,7 +463,7 @@ export function SearchPage() {
         />
       </div>
 
-      {/* < 1024 : les filtres en feuille (bas < 768, latérale au-dessus). */}
+      {/* Filtres complets — tiroir (bas < 768, latéral au-dessus). */}
       <Sheet
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
@@ -477,6 +482,18 @@ export function SearchPage() {
           </Button>
         </div>
       </Sheet>
+
+      {/* D1 §5 — la feuille de résultat ; la liste reste dessous. */}
+      {openRow && (
+        <ResultSheet
+          row={openRow}
+          currencyByOrganization={currencies.data}
+          availability={availabilityByLocation[openRow.location_id] ?? 'loading'}
+          onOpenChange={(next) => {
+            if (!next) setOpenRow(null)
+          }}
+        />
+      )}
     </div>
   )
 }
