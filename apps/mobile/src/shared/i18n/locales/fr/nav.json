@@ -1,0 +1,45 @@
+{
+  "tabs": {
+    "home": "Accueil",
+    "search": "Recherche",
+    "feed": "Feed",
+    "bookings": "Réservations",
+    "account": "Compte"
+  },
+  "consumer": {
+    "bookingsBadge": "Activité en cours sur vos réservations",
+    "accountMenu": "Menu du compte"
+  },
+  "pro": {
+    "today": "Aujourd'hui",
+    "agenda": "Agenda",
+    "requests": "Demandes",
+    "queue": "File",
+    "catalog": "Services",
+    "clients": "Clients",
+    "team": "Équipe",
+    "insights": "Analytics",
+    "billing": "Abonnement",
+    "settings": "Réglages",
+    "openNav": "Ouvrir la navigation",
+    "location": "Établissement"
+  },
+  "connection": {
+    "live": "Connecté",
+    "offline": "Hors ligne",
+    "reconnecting": "Reconnexion…"
+  },
+  "marketing": {
+    "forBusiness": "FadeUp pour les professionnels",
+    "openApp": "Ouvrir l'application"
+  },
+  "platform": {
+    "title": "Console FadeUp"
+  },
+  "demo": {
+    "title": "Compositions de démonstration"
+  },
+  "devui": {
+    "title": "Galerie de primitives"
+  }
+}

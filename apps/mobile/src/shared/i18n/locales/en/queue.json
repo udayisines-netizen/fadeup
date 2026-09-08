@@ -1,0 +1,334 @@
+{
+  "public": {
+    "summaryLabel": "Queue status",
+    "waitingCount_one": "person waiting",
+    "waitingCount_other": "people waiting",
+    "estimatedWait": "About {{minutes}} min wait",
+    "viewProfile": "View the shop profile",
+    "pickLocation": "Choose a location",
+    "closedHint": "The queue is closed right now. Come back during opening hours.",
+    "joinCta": "Join the queue",
+    "serviceArea": {
+      "title": "No queue here",
+      "description": "This professional travels to their clients: there is no waiting room. Book a slot instead.",
+      "action": "View profile and book"
+    },
+    "notFound": {
+      "title": "Shop not found",
+      "description": "This link does not match any FadeUp shop."
+    },
+    "error": {
+      "title": "Could not load the queue",
+      "description": "Check your connection and try again."
+    },
+    "queuesLabel": "The shop's queues",
+    "firstAvailable": "First available",
+    "firstAvailableHint": "The first free barber takes care of you",
+    "queueWait": "≈ {{minutes}} min",
+    "queueNoWait": "No wait",
+    "queueBusy": "In the chair",
+    "joinThisQueue": "Join this queue"
+  },
+  "join": {
+    "title": "Join the queue",
+    "presenceHint": "You need to be at the shop to join: the QR displayed there and your position confirm it.",
+    "scanHint": "Point at the QR code displayed in the shop.",
+    "nameLabel": "Your first name",
+    "nameHint": "Shown at the counter, with only your last-name initial.",
+    "nameRequired": "Enter your first name to join the queue.",
+    "emailLabel": "Email (optional)",
+    "emailHint": "To find your spot from any device — a one-time code, no password.",
+    "otpSent": "A 6-digit code was sent to {{email}}.",
+    "otpLabel": "Code from your email",
+    "confirmCode": "Confirm code",
+    "submit": "Join — your position will be checked",
+    "scanCta": "Scan the shop's QR",
+    "tokenExplainer": "The QR displayed in the shop proves you are there. Your position is only requested at that moment.",
+    "issue": {
+      "geo-denied": "Without your position we cannot confirm you are at the shop. Allow location access and try again.",
+      "geo-unavailable": "Your position could not be determined. Move near a window and try again.",
+      "scan-failed": "That QR code is not this shop's. Scan the one displayed on site.",
+      "otp-failed": "That code is invalid or has expired. Check the latest email you received.",
+      "email-send-failed": "The email could not be sent. Check the address, or continue without an account."
+    },
+    "queueLabel": "Chosen queue: {{name}}"
+  },
+  "refusal": {
+    "service_area_has_no_queue": "This professional travels to their clients: there is no live queue. Book a slot instead.",
+    "invalid_check_in_token": "This QR code is no longer valid. Scan the one displayed in the shop.",
+    "location_not_geolocated": "This shop has not published its position yet, so the queue cannot admit anyone. Let the counter know.",
+    "position_required": "Your position is required to join: you need to be at the shop. Allow location access and try again.",
+    "too_far": "You are too far from the shop to join its queue. Get closer and try again on site.",
+    "queue_closed": "The queue is not taking anyone right now. Ask at the counter or come back later.",
+    "queue_full": "The queue is full. Come back a little later, or book a slot.",
+    "already_in_queue": "You are already in a queue. Finish or leave it before joining another.",
+    "barber_queue_disabled": "This barber doesn't take a walk-in queue. Pick “First available” or another barber.",
+    "entry_not_found": "This spot no longer exists. If the queue is open, you can join again.",
+    "not_entry_owner": "This spot belongs to another account. Sign in with the account that joined the queue.",
+    "entry_already_closed": "This spot is already over: there is nothing left to leave.",
+    "entry_in_service": "You're in the chair — talk to your barber directly.",
+    "entry_not_waiting": "Your spot is no longer waiting: switching queues isn't possible anymore.",
+    "already_in_that_queue": "You're already in that queue."
+  },
+  "track": {
+    "yourPosition": "Your position",
+    "peopleAhead_one": "{{count}} person ahead of you",
+    "peopleAhead_other": "{{count}} people ahead of you",
+    "peopleAhead_zero": "You are next",
+    "enableNotifications": "Alert me when it's my turn",
+    "notificationTitle": "It's your turn!",
+    "notificationBody": "{{organization}} is waiting for you. You have a few minutes to show up.",
+    "called": {
+      "title": "It's your turn",
+      "description": "Head to the counter at {{organization}} — your spot is held for a few minutes."
+    },
+    "inService": {
+      "title": "In the chair — enjoy!"
+    },
+    "gone": {
+      "title": "You are no longer in the queue",
+      "description": "Your visit is done, or your spot expired after being called. If the queue is open, you can join again.",
+      "action": "Back to the queue"
+    },
+    "queueName": "Queue: {{name}}",
+    "queueFirstAvailable": "Queue: first available",
+    "estimatedWait": "About {{minutes}} min of waiting ahead of you",
+    "deadlineCountdown": "Your spot is held for another {{time}}",
+    "deadlinePassed": "The window has passed — come to the counter, the shop decides.",
+    "movedNotice": "You are now in {{name}}'s queue.",
+    "movedNoticeFirstAvailable": "You are now in the “first available” queue.",
+    "leaveCta": "Leave the queue",
+    "leaveConfirm": {
+      "title": "Leave the queue?",
+      "description": "Your spot will be lost. To come back, you'll join at the end of the line.",
+      "calledDescription": "You've been called: if you leave now, the shop will know and your spot will be lost.",
+      "confirm": "Yes, leave",
+      "cancel": "Stay in line"
+    },
+    "changeCta": "Change barber",
+    "changeSheet": {
+      "title": "Change barber",
+      "warning": "Switching queues loses your current spot: you'll start again at the end of the new queue.",
+      "confirm": "Switch to {{name}}",
+      "confirmFirstAvailable": "Switch to “first available”"
+    },
+    "ended": {
+      "completed": {
+        "title": "All done — thank you!",
+        "description": "Your visit is recorded. See you soon."
+      },
+      "left": {
+        "title": "You left the queue",
+        "description": "Your spot is released. If you change your mind, join at the end of the line."
+      },
+      "removedAuto": {
+        "title": "You're out of the queue",
+        "description": "The window after your call had passed, so your spot was released. You can join again while the queue is open."
+      },
+      "removedManual": {
+        "title": "Your spot was closed",
+        "description": "The shop closed your spot after the call. If the queue is open, you can join again."
+      },
+      "action": "Back to the queue"
+    }
+  },
+  "pro": {
+    "title": "Live queue",
+    "locationLabel": "Location",
+    "capacityPerBarber": "Capacity: {{count}} per barber",
+    "openSwitch": "Queue open",
+    "modeTitle": "Service mode",
+    "mode": {
+      "hybrid": "Bookings + queue",
+      "reservation_only": "Bookings only",
+      "queue_only": "Queue only",
+      "unavailable": "Unavailable"
+    },
+    "qrRow": {
+      "title": "Shop QR",
+      "subtitle": "Show large, print, regenerate"
+    },
+    "listTitle": "In line",
+    "empty": {
+      "title": "Nobody is waiting",
+      "openHint": "The queue is open: customers who scan the shop QR will appear here.",
+      "closedHint": "The queue is closed — nobody can join.",
+      "openAction": "Open the queue",
+      "qrAction": "Show the shop QR"
+    },
+    "callNext": "Call {{name}}",
+    "callNextEmpty": "Nobody to call",
+    "toast": {
+      "opened": "Queue open — customers can join.",
+      "closed": "Queue closed — customers already waiting stay in line."
+    },
+    "noLocation": {
+      "title": "No location",
+      "description": "Create your location in the setup first."
+    },
+    "serviceArea": {
+      "title": "No queue on a service area",
+      "description": "A professional who travels has no waiting room: the queue only exists at a physical address."
+    },
+    "graceElapsed": "Grace elapsed — your call",
+    "graceRemainingLabel": "{{minutes}} minutes and {{seconds}} seconds of grace remaining",
+    "inServiceSince": "In the chair for {{minutes}} min",
+    "waitingFor": "Waiting for {{minutes}} min",
+    "actions": {
+      "call": "Call",
+      "arrived": "Arrived",
+      "noShow": "No-show",
+      "complete": "Done"
+    },
+    "calledAtLabel": "Called at",
+    "modeOverrideLabel": "Override active: {{mode}} until",
+    "fileHeaderFirstAvailable": "First available",
+    "moveAction": "Move",
+    "moveSheet": {
+      "title": "Move {{name}}",
+      "description": "The customer keeps their seniority in the new queue, and their screen tells them about the change.",
+      "toFirstAvailable": "First available"
+    },
+    "movedToast": "Customer moved.",
+    "settingsTitle": "Queue settings",
+    "barberQueues": {
+      "title": "Queues per barber",
+      "hint": "A barber without a queue is not shown to customers and receives no one.",
+      "toggleLabel": "{{name}}'s queue"
+    },
+    "graceSweep": {
+      "label": "Automatic removal after the grace window",
+      "hint": "Off: you decide, call by call. On: a called customer who doesn't show within the window leaves the queue, and their phone tells them — without blame."
+    },
+    "durationsRow": {
+      "title": "Durations: declared vs observed",
+      "subtitle": "What FadeUp learned from your services"
+    },
+    "removedAutoBadge": "Removed automatically"
+  },
+  "qr": {
+    "title": "Your queue's QR",
+    "description": "Customers scan it to join the queue — from the screen or the poster on the wall.",
+    "backToQueue": "Back to the queue",
+    "print": "Print the poster (A5)",
+    "regenerate": "Regenerate the QR",
+    "regenerateHint": "Use this if you think the QR is circulating outside the shop: every printed copy becomes invalid immediately.",
+    "unavailable": {
+      "title": "QR not available",
+      "description": "Showing the QR is reserved for the owner, manager and front desk."
+    },
+    "confirm": {
+      "title": "Regenerate the QR?",
+      "description": "Every printed poster will stop working immediately. You will need to reprint.",
+      "action": "Yes, regenerate",
+      "done": "New QR issued — reprint the poster."
+    }
+  },
+  "poster": {
+    "instruction": "Scan to join the waiting line",
+    "qrLabel": "QR code for the waiting line at {{organization}}",
+    "footer": "fade-up.com"
+  },
+  "setup": {
+    "title": "Set up FadeUp",
+    "subtitle": "From account to an open queue, in under twenty minutes.",
+    "continue": "Save and continue",
+    "savedToast": "Step saved",
+    "goToQueue": "Go to the live queue",
+    "steps": {
+      "salon": {
+        "title": "The shop",
+        "description": "Its name and FadeUp web address. Everything stays editable."
+      },
+      "you": {
+        "title": "The first barber",
+        "description": "The name customers will see. The rest of the team can be invited later."
+      },
+      "address": {
+        "title": "Address and position",
+        "description": "The position is what verifies a customer is on site before entering the queue."
+      },
+      "services": {
+        "title": "Services",
+        "description": "A starter catalogue, editable anytime. Adjust the prices."
+      },
+      "hours": {
+        "title": "Opening hours",
+        "description": "The typical week's open days and times."
+      },
+      "activate": {
+        "title": "Free trial",
+        "description": "14 days, no card. This is what activates the live queue."
+      },
+      "open": {
+        "title": "Open the queue",
+        "description": "The morning gesture: the queue accepts customers."
+      },
+      "qr": {
+        "title": "The QR on the wall",
+        "description": "Print the A5 poster and stick it in plain sight. You're done."
+      }
+    },
+    "salon": {
+      "nameLabel": "Shop name",
+      "slugLabel": "FadeUp address",
+      "slugHint": "fade-up.com/q/… — lowercase, no spaces.",
+      "typeLabel": "Business type",
+      "typeShop": "Barbershop",
+      "typeSolo": "Independent"
+    },
+    "you": {
+      "nameLabel": "Display name",
+      "nameHint": "The one customers will see."
+    },
+    "address": {
+      "lineLabel": "Address",
+      "postalLabel": "Postal code",
+      "cityLabel": "City",
+      "captureCta": "Use my position",
+      "captured": "Position saved",
+      "geoIssue": "Position unavailable. Allow location access, while inside the shop.",
+      "whyPosition": "Do this from inside the shop: this position guards the queue's door — a customer too far away cannot join."
+    },
+    "services": {
+      "nameLabel": "Service",
+      "durationLabel": "Min",
+      "priceLabel": "Price €"
+    },
+    "hours": {
+      "daysLabel": "Open days",
+      "day0": "Sun",
+      "day1": "Mon",
+      "day2": "Tue",
+      "day3": "Wed",
+      "day4": "Thu",
+      "day5": "Fri",
+      "day6": "Sat",
+      "openLabel": "Opens",
+      "closeLabel": "Closes"
+    },
+    "activate": {
+      "cta": "Finish setup and start the trial",
+      "hint": "The trial opens the full product for 14 days, no card. If it lapses without a subscription: back to free, no data lost."
+    },
+    "open": {
+      "cta": "Open the queue now"
+    }
+  },
+  "durations": {
+    "title": "Durations: declared vs observed",
+    "description": "Service after service, FadeUp measures real duration per barber and per service. The estimate shown to customers shifts from declared to observed as measurements accumulate.",
+    "back": "Back to the queue",
+    "declared": "Declared",
+    "observed": "Observed",
+    "samples_one": "{{count}} measurement",
+    "samples_other": "{{count}} measurements",
+    "firstAvailable": "No assigned barber",
+    "cappedBadge": "Gap capped",
+    "cappedHint": "The gap between declared and observed exceeds ±50%: the display is bounded. Fix the declared duration, or check that “Done” is tapped at the right moment.",
+    "empty": {
+      "title": "No measurements yet",
+      "description": "As soon as a service is completed — walk-in or appointment — its real duration shows up here."
+    }
+  }
+}
