@@ -14,7 +14,9 @@
     "unfollowAria": "Unfollow {{name}}",
     "temporaryUntilPrefix": "Temporary state, until",
     "requestSlot": "Ask for a slot",
-    "requestSlotAria": "Send an interest request to {{name}}"
+    "requestSlotAria": "Send an interest request to {{name}}",
+    "onRequestNote": "This salon confirms every request itself — you'll send a request and it answers before a deadline.",
+    "requestBookingAria": "Ask {{name}} for a slot"
   },
   "unclaimed": {
     "explainer": "This profile was created from public sources. {{name}} does not manage it on FadeUp yet.",

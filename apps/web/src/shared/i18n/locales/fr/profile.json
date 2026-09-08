@@ -14,7 +14,9 @@
     "unfollowAria": "Ne plus suivre {{name}}",
     "temporaryUntilPrefix": "État temporaire, jusqu'à",
     "requestSlot": "Demander un créneau",
-    "requestSlotAria": "Envoyer une demande d'intérêt à {{name}}"
+    "requestSlotAria": "Envoyer une demande d'intérêt à {{name}}",
+    "onRequestNote": "Ce salon confirme chaque demande lui-même — vous enverrez une demande, il répond avant une échéance.",
+    "requestBookingAria": "Demander un créneau chez {{name}}"
   },
   "unclaimed": {
     "explainer": "Ce profil a été créé à partir de sources publiques. {{name}} ne le gère pas encore sur FadeUp.",

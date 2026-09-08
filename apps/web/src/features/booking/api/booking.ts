@@ -215,20 +215,7 @@ export function useBookingServiceState(slug: string | null, locationId: string |
  * doit savoir qu'il envoie une demande, pas l'apprendre après (F4 §3). La
  * vérité finale reste `is_request`, LUE de la réponse.
  */
-export function usePublicBookingCapability(slug: string | null) {
-  return useQuery({
-    queryKey: [...bookingKeys.all, 'capability', slug ?? ''] as const,
-    queryFn: async (): Promise<boolean | null> => {
-      const { data, error } = await getSupabase().rpc('get_public_booking_capability', {
-        p_organization_slug: slug ?? '',
-      })
-      if (error) throw error
-      return data?.[0]?.accepts_immediate_booking ?? null
-    },
-    enabled: Boolean(slug),
-    staleTime: 60_000,
-  })
-}
+export { usePublicBookingCapability } from '@/shared/data/capability'
 
 /* ------------------------------------------------------------------ */
 /* La réservation elle-même                                            */
@@ -317,6 +304,15 @@ export interface MyAppointment {
   resolution_note: string | null
   expires_at: string | null
   created_at: string
+  /**
+   * P1PRO — non nul sur une ligne `pending` = le salon PROPOSE un autre
+   * horaire : `starts_at` porte le créneau proposé,
+   * `counter_original_starts_at` l'horaire demandé. Le client répond via
+   * accept/decline — `pending-request` ne dit jamais « réservé ».
+   */
+  counter_proposed_at: string | null
+  counter_original_starts_at: string | null
+  counter_note: string | null
 }
 
 export function useMyAppointments(enabled = true) {
@@ -329,6 +325,43 @@ export function useMyAppointments(enabled = true) {
     },
     enabled,
     staleTime: 30_000,
+  })
+}
+
+/**
+ * P1PRO — répondre à une contre-proposition. Aucun optimisme : l'écran ne
+ * dit « confirmé » qu'une fois la base revenue. Les refus nommés
+ * (`fadeup_booking_refusal=…`) remontent en `BookingRefusedError`.
+ */
+export function useAcceptCounterProposal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { data, error } = await getSupabase().rpc('accept_booking_counter_proposal', {
+        p_appointment_id: appointmentId,
+      })
+      if (error) throwBookingError(error)
+      return data
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+    },
+  })
+}
+
+export function useDeclineCounterProposal() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { data, error } = await getSupabase().rpc('decline_booking_counter_proposal', {
+        p_appointment_id: appointmentId,
+      })
+      if (error) throwBookingError(error)
+      return data
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.all })
+    },
   })
 }
 

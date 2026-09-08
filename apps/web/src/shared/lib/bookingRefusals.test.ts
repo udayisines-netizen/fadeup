@@ -9,7 +9,7 @@ import {
   interestRefusalMessageKey,
   parseBookingRefusal,
   parseInterestRefusal,
-} from '@/features/booking/lib/refusals'
+} from '@/shared/lib/bookingRefusals'
 
 describe('refusals — le motif est lu sur le CODE, jamais sur le texte', () => {
   it('extrait le code du DETAIL PostgREST (fadeup_booking_refusal=…)', () => {

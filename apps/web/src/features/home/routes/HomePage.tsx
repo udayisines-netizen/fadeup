@@ -28,6 +28,7 @@ import { DateTime } from '@/shared/ui/DateTime'
 import { IconButton } from '@/shared/ui/IconButton'
 import { Input } from '@/shared/ui/Input'
 import { ResultCard } from '@/shared/ui/ResultCard'
+import { usePublicBookingCapabilities } from '@/shared/data/capability'
 import { ResultSheet } from '@/shared/ui/ResultSheet'
 import { Row } from '@/shared/ui/Row'
 import { SkeletonCard } from '@/shared/ui/Skeleton'
@@ -109,6 +110,10 @@ export function HomePage() {
   )
   const currencies = useResultCurrencies(
     useMemo(() => discoverRows.map((row) => row.organization_id), [discoverRows]),
+  )
+  /* P1PRO §7 — la capacité en LOT : « Réservable » vs « Sur demande ». */
+  const capabilities = usePublicBookingCapabilities(
+    useMemo(() => discoverRows.map((row) => row.organization_slug), [discoverRows]),
   )
   const discoverAvailability = useMemo(() => {
     const map: Record<string, ResultAvailability> = {}
@@ -376,6 +381,7 @@ export function HomePage() {
                     row={row}
                     currencyByOrganization={currencies.data}
                     availability={discoverAvailability[row.location_id] ?? 'loading'}
+                    bookingCapability={capabilities.data?.[row.organization_slug] ?? null}
                     onOpen={setOpenRow}
                   />
                 </div>
@@ -396,6 +402,7 @@ export function HomePage() {
           row={openRow}
           currencyByOrganization={currencies.data}
           availability={discoverAvailability[openRow.location_id] ?? 'loading'}
+          bookingCapability={capabilities.data?.[openRow.organization_slug] ?? null}
           onOpenChange={(nextOpen) => {
             if (!nextOpen) setOpenRow(null)
           }}

@@ -31,6 +31,13 @@ export interface ProfileCtaBarProps {
    * Ignoré tant que l'état charge, et dès que la réservation réelle existe.
    */
   interestTo?: string | null
+  /**
+   * P1PRO §7 — le mode accepte la réservation mais l'organisation ne
+   * confirme pas immédiatement (`get_public_booking_capability` = false) :
+   * le CTA dit « Demander un créneau », le client sait AVANT le tunnel
+   * qu'il enverra une demande sous échéance. La destination reste `bookTo`.
+   */
+  onRequest?: boolean
 }
 
 /**
@@ -65,6 +72,7 @@ export function ProfileCtaButtons({
   onToggleFollow,
   noteOverride,
   interestTo = null,
+  onRequest = false,
 }: ProfileCtaBarProps) {
   const { t } = useTranslation('v2')
   const navigate = useNavigate()
@@ -78,7 +86,9 @@ export function ProfileCtaButtons({
         ? t('profile.cta.queueNote')
         : cta.kind === 'closed'
           ? t('profile.cta.closedNote')
-          : null
+          : cta.kind === 'bookable' && onRequest
+            ? t('profile.cta.onRequestNote')
+            : null
   const note = noteOverride ?? derivedNote
 
   return (
@@ -135,11 +145,15 @@ export function ProfileCtaButtons({
               variant="primary"
               size="lg"
               data-testid="profile-book-cta"
-              aria-label={t('profile.cta.bookAria', { name })}
+              aria-label={
+                cta.kind === 'bookable' && onRequest
+                  ? t('profile.cta.requestBookingAria', { name })
+                  : t('profile.cta.bookAria', { name })
+              }
               disabled={cta.kind !== 'bookable'}
               onClick={() => void navigate(bookTo)}
             >
-              {t('common.action.book')}
+              {cta.kind === 'bookable' && onRequest ? t('profile.cta.requestSlot') : t('common.action.book')}
             </Button>
           )}
           <Button

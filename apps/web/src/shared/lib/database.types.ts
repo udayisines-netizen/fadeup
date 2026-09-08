@@ -384,6 +384,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -407,6 +410,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         Insert: {
           barber_id: string
@@ -416,6 +420,9 @@ export type Database = {
           buffer_before_minutes?: number
           chair_id?: string | null
           completed_at?: string | null
+          counter_note?: string | null
+          counter_original_starts_at?: string | null
+          counter_proposed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -439,6 +446,7 @@ export type Database = {
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
+          was_request?: boolean
         }
         Update: {
           barber_id?: string
@@ -448,6 +456,9 @@ export type Database = {
           buffer_before_minutes?: number
           chair_id?: string | null
           completed_at?: string | null
+          counter_note?: string | null
+          counter_original_starts_at?: string | null
+          counter_proposed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -471,6 +482,7 @@ export type Database = {
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
+          was_request?: boolean
         }
         Relationships: [
           {
@@ -7540,6 +7552,51 @@ export type Database = {
       }
     }
     Functions: {
+      accept_booking_counter_proposal: {
+        Args: { p_appointment_id: string }
+        Returns: {
+          barber_id: string
+          blocked_range: unknown
+          booked_by_user_id: string | null
+          buffer_after_minutes: number
+          buffer_before_minutes: number
+          chair_id: string | null
+          completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          decided_at: string | null
+          decided_by: string | null
+          ends_at: string
+          expires_at: string | null
+          id: string
+          location_id: string
+          notes: string | null
+          organization_id: string
+          rescheduled_to: string | null
+          resolution:
+            | Database["public"]["Enums"]["appointment_resolution"]
+            | null
+          resolution_note: string | null
+          service_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          was_request: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       accept_invitation: {
         Args: { p_token: string }
         Returns: {
@@ -7665,6 +7722,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -7688,6 +7748,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -7706,6 +7767,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -7729,6 +7793,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -7848,6 +7913,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -7871,6 +7939,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -7921,6 +7990,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -7944,6 +8016,57 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      counter_propose_booking_request: {
+        Args: {
+          p_appointment_id: string
+          p_barber_id?: string
+          p_note?: string
+          p_starts_at: string
+        }
+        Returns: {
+          barber_id: string
+          blocked_range: unknown
+          booked_by_user_id: string | null
+          buffer_after_minutes: number
+          buffer_before_minutes: number
+          chair_id: string | null
+          completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          decided_at: string | null
+          decided_by: string | null
+          ends_at: string
+          expires_at: string | null
+          id: string
+          location_id: string
+          notes: string | null
+          organization_id: string
+          rescheduled_to: string | null
+          resolution:
+            | Database["public"]["Enums"]["appointment_resolution"]
+            | null
+          resolution_note: string | null
+          service_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -8082,8 +8205,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      decline_booking_request: {
-        Args: { p_appointment_id: string; p_note?: string }
+      decline_booking_counter_proposal: {
+        Args: { p_appointment_id: string }
         Returns: {
           barber_id: string
           blocked_range: unknown
@@ -8092,6 +8215,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -8115,6 +8241,52 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "appointments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      decline_booking_request: {
+        Args: { p_appointment_id: string; p_note?: string }
+        Returns: {
+          barber_id: string
+          blocked_range: unknown
+          booked_by_user_id: string | null
+          buffer_after_minutes: number
+          buffer_before_minutes: number
+          chair_id: string | null
+          completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          decided_at: string | null
+          decided_by: string | null
+          ends_at: string
+          expires_at: string | null
+          id: string
+          location_id: string
+          notes: string | null
+          organization_id: string
+          rescheduled_to: string | null
+          resolution:
+            | Database["public"]["Enums"]["appointment_resolution"]
+            | null
+          resolution_note: string | null
+          service_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -8202,11 +8374,35 @@ export type Database = {
           tier: number
         }[]
       }
+      get_booking_request_history: {
+        Args: { p_limit?: number; p_organization_id: string }
+        Returns: {
+          barber_display_name: string
+          counter_original_starts_at: string
+          counter_proposed_at: string
+          created_at: string
+          currency: string
+          customer_name: string
+          decided_at: string
+          ends_at: string
+          id: string
+          location_id: string
+          location_name: string
+          price_cents: number
+          resolution: Database["public"]["Enums"]["appointment_resolution"]
+          service_name: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
       get_booking_requests: {
         Args: { p_organization_id: string }
         Returns: {
           barber_display_name: string
           barber_id: string
+          counter_note: string
+          counter_original_starts_at: string
+          counter_proposed_at: string
           created_at: string
           customer_email: string
           customer_name: string
@@ -8329,6 +8525,9 @@ export type Database = {
         Returns: {
           barber_display_name: string
           barber_id: string
+          counter_note: string
+          counter_original_starts_at: string
+          counter_proposed_at: string
           created_at: string
           currency: string
           ends_at: string
@@ -8631,6 +8830,13 @@ export type Database = {
           organization_name: string
           organization_slug: string
           starting_price_cents: number
+        }[]
+      }
+      get_public_booking_capabilities: {
+        Args: { p_organization_slugs: string[] }
+        Returns: {
+          accepts_immediate_booking: boolean
+          organization_slug: string
         }[]
       }
       get_public_booking_capability: {
@@ -8976,6 +9182,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -8999,6 +9208,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -9324,6 +9534,9 @@ export type Database = {
           buffer_before_minutes: number
           chair_id: string | null
           completed_at: string | null
+          counter_note: string | null
+          counter_original_starts_at: string | null
+          counter_proposed_at: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -9347,6 +9560,7 @@ export type Database = {
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
+          was_request: boolean
         }
         SetofOptions: {
           from: "*"
@@ -10214,6 +10428,7 @@ export type Database = {
         | "review_received"
         | "review_reply"
         | "queue_grace_removed"
+        | "booking_counter_proposed"
       outreach_campaign_status:
         | "draft"
         | "preparing"
@@ -10622,6 +10837,7 @@ export const Constants = {
         "review_received",
         "review_reply",
         "queue_grace_removed",
+        "booking_counter_proposed",
       ],
       outreach_campaign_status: [
         "draft",

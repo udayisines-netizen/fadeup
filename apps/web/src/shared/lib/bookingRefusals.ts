@@ -32,6 +32,11 @@ export const BOOKING_REFUSAL_CODES = [
   'not_authorized',
   'no_longer_reschedulable',
   'slot_conflict',
+  /* P1PRO — la contre-proposition. */
+  'request_expired',
+  'counter_pending',
+  'not_a_pending_request',
+  'no_counter_pending',
 ] as const
 
 export type BookingRefusalCode = (typeof BOOKING_REFUSAL_CODES)[number]

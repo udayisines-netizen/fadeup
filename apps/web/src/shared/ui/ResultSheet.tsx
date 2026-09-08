@@ -33,10 +33,12 @@ export interface ResultSheetProps {
   row: ProfessionalSearchRow | null
   currencyByOrganization: Record<string, string> | undefined
   availability: ResultAvailability
+  /** P1PRO §7 — « Réservable » (true) vs « Sur demande » (false) ; inconnu = rien d'affirmé. */
+  bookingCapability?: boolean | null
   onOpenChange: (open: boolean) => void
 }
 
-export function ResultSheet({ row, currencyByOrganization, availability, onOpenChange }: ResultSheetProps) {
+export function ResultSheet({ row, currencyByOrganization, availability, bookingCapability, onOpenChange }: ResultSheetProps) {
   const { t } = useTranslation('v2')
   const navigate = useNavigate()
 
@@ -95,6 +97,13 @@ export function ResultSheet({ row, currencyByOrganization, availability, onOpenC
             />
             <div className="mb-1 flex items-center gap-1.5">
               {availability === 'available-now' && <StateBadge state="available-now" size="sm" />}
+              {/* P1PRO §7 — l'issue réelle du geste, dite AVANT le tunnel. */}
+              {availability === 'bookable' && bookingCapability === false && (
+                <StateBadge state="on-request" size="sm" />
+              )}
+              {availability === 'bookable' && bookingCapability === true && (
+                <StateBadge state="bookable" size="sm" />
+              )}
               <Badge variant={row.is_open_now ? 'brand' : 'neutral'}>
                 {row.is_open_now ? t('states.opening.open') : t('states.opening.closedShort')}
               </Badge>
@@ -165,16 +174,27 @@ export function ResultSheet({ row, currencyByOrganization, availability, onOpenC
             fabriquée sur un non revendiqué. */}
         <div className="flex flex-col gap-2">
           {availability === 'bookable' ? (
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              data-testid="sheet-book-cta"
-              aria-label={t('profile.cta.bookAria', { name: row.organization_name })}
-              onClick={() => void navigate(bookTo)}
-            >
-              {t('common.action.book')}
-            </Button>
+            <>
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                data-testid="sheet-book-cta"
+                aria-label={
+                  bookingCapability === false
+                    ? t('profile.cta.requestBookingAria', { name: row.organization_name })
+                    : t('profile.cta.bookAria', { name: row.organization_name })
+                }
+                onClick={() => void navigate(bookTo)}
+              >
+                {bookingCapability === false ? t('profile.cta.requestSlot') : t('common.action.book')}
+              </Button>
+              {bookingCapability === false && (
+                <p className="text-center text-fu-sm text-[var(--fu-text-secondary)]" data-testid="sheet-cta-note">
+                  {t('profile.cta.onRequestNote')}
+                </p>
+              )}
+            </>
           ) : availability === 'available-now' ? (
             <Button
               variant="primary"

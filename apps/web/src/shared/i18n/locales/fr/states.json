@@ -6,7 +6,8 @@
     "availableNow": "Disponible maintenant",
     "unavailable": "Indisponible",
     "pendingRequest": "En attente de confirmation",
-    "confirmed": "Confirmé"
+    "confirmed": "Confirmé",
+    "onRequest": "Sur demande"
   },
   "queue": {
     "open": "File ouverte",

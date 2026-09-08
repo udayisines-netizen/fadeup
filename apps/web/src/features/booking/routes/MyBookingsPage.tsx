@@ -11,11 +11,14 @@ import { Row } from '@/shared/ui/Row'
 import { SkeletonRect } from '@/shared/ui/Skeleton'
 import { StateBadge } from '@/shared/ui/StateBadge'
 import {
+  useAcceptCounterProposal,
+  useDeclineCounterProposal,
   useMyAppointments,
   useMyInterestRequests,
   useMyQueueStatus,
   type MyAppointment,
 } from '@/features/booking/api/booking'
+import { Dialog } from '@/shared/ui/Dialog'
 import { isExpired, remainingParts } from '@/features/booking/lib/deadline'
 import { AlternativesSheet } from '@/features/booking/components/AlternativesSheet'
 import { BookingDetailSheet } from '@/features/booking/components/BookingDetailSheet'
@@ -43,20 +46,33 @@ export function MyBookingsPage() {
   const [alternativesFor, setAlternativesFor] = useState<MyAppointment | null>(null)
 
   const partitioned = useMemo(() => {
+    /* P1PRO — une demande contre-proposée attend MA réponse : elle sort du
+       lot des demandes en attente du salon et passe en tête. */
+    const counters: MyAppointment[] = []
     const requests: MyAppointment[] = []
     const upcoming: MyAppointment[] = []
     const history: MyAppointment[] = []
     for (const row of appointments.data ?? []) {
       const future = Date.parse(row.starts_at) > now.getTime()
-      if (row.status === 'pending' && row.resolution === null) requests.push(row)
-      else if (row.status === 'confirmed' && future) upcoming.push(row)
+      if (row.status === 'pending' && row.resolution === null) {
+        if (row.counter_proposed_at !== null && !(row.expires_at !== null && isExpired(row.expires_at, now))) {
+          counters.push(row)
+        } else {
+          requests.push(row)
+        }
+      } else if (row.status === 'confirmed' && future) upcoming.push(row)
       else history.push(row)
     }
+    counters.sort((a, b) => (a.expires_at ?? a.starts_at).localeCompare(b.expires_at ?? b.starts_at))
     requests.sort((a, b) => a.starts_at.localeCompare(b.starts_at))
     upcoming.sort((a, b) => a.starts_at.localeCompare(b.starts_at))
     history.sort((a, b) => b.starts_at.localeCompare(a.starts_at))
-    return { requests, upcoming, history }
+    return { counters, requests, upcoming, history }
   }, [appointments.data, now])
+
+  const acceptCounter = useAcceptCounterProposal()
+  const declineCounter = useDeclineCounterProposal()
+  const [decliningCounter, setDecliningCounter] = useState<MyAppointment | null>(null)
 
   if (!sessionLoading && !session) {
     return (
@@ -79,6 +95,7 @@ export function MyBookingsPage() {
   const interestRows = interests.data ?? []
   const nothing =
     !loading &&
+    partitioned.counters.length === 0 &&
     partitioned.requests.length === 0 &&
     partitioned.upcoming.length === 0 &&
     partitioned.history.length === 0 &&
@@ -145,6 +162,83 @@ export function MyBookingsPage() {
         />
       ) : (
         <>
+          {partitioned.counters.length > 0 && (
+            <section className="flex flex-col gap-2" data-testid="bookings-counters">
+              <h2 className="text-fu-lg font-semibold text-[var(--fu-text-primary)]">
+                {t('booking.counter.sectionTitle')}
+              </h2>
+              {partitioned.counters.map((row) => (
+                <article
+                  key={row.id}
+                  data-testid="counter-proposal-card"
+                  className="rounded-[var(--radius-card)] border border-[var(--fu-border-strong)] bg-[var(--fu-surface,#fff)] p-4 shadow-[var(--fu-shadow-card)]"
+                >
+                  <p className="text-fu-sm text-[var(--fu-text-secondary)]">
+                    {t('booking.counter.intro', { name: row.organization_name })}
+                  </p>
+                  <p className="mt-1.5 text-fu-base font-semibold text-[var(--fu-text-primary)]">
+                    {row.service_name}
+                    {row.barber_display_name ? ` · ${row.barber_display_name}` : ''}
+                  </p>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {row.counter_original_starts_at && (
+                      <p className="text-fu-sm text-[var(--fu-text-secondary)]">
+                        <span className="me-2">{t('booking.counter.requestedLabel')}</span>
+                        <s>
+                          <DateTime
+                            value={row.counter_original_starts_at}
+                            timezone={row.location_timezone}
+                            format="datetime"
+                          />
+                        </s>
+                      </p>
+                    )}
+                    <p className="text-fu-base font-medium text-[var(--fu-text-primary)]" data-testid="counter-proposed-slot">
+                      <span className="me-2 text-fu-sm font-normal text-[var(--fu-text-secondary)]">
+                        {t('booking.counter.proposedLabel')}
+                      </span>
+                      <DateTime value={row.starts_at} timezone={row.location_timezone} format="datetime" />
+                    </p>
+                  </div>
+                  {row.counter_note && (
+                    <p className="mt-2 rounded-[var(--radius-control)] bg-[var(--fu-surface-subtle,rgba(0,0,0,0.03))] px-3 py-2 text-fu-sm text-[var(--fu-text-secondary)]">
+                      {row.counter_note}
+                    </p>
+                  )}
+                  <p
+                    className="mt-2 font-fu-mono text-fu-sm tabular-nums text-[var(--fu-text-secondary)]"
+                    data-testid="counter-countdown"
+                  >
+                    {requestCountdown(row)}
+                  </p>
+                  <div className="mt-3 flex gap-2 [&>*:first-child]:flex-[2] [&>*:last-child]:flex-1">
+                    <Button
+                      variant="primary"
+                      data-testid="counter-accept"
+                      loading={acceptCounter.isPending && acceptCounter.variables === row.id}
+                      onClick={() => acceptCounter.mutate(row.id)}
+                    >
+                      {t('booking.counter.accept')}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      data-testid="counter-decline"
+                      disabled={acceptCounter.isPending}
+                      onClick={() => setDecliningCounter(row)}
+                    >
+                      {t('booking.counter.decline')}
+                    </Button>
+                  </div>
+                  {acceptCounter.isError && acceptCounter.variables === row.id && (
+                    <p className="mt-2 text-fu-sm text-[var(--fu-danger)]" role="alert">
+                      {t('booking.counter.acceptError')}
+                    </p>
+                  )}
+                </article>
+              ))}
+            </section>
+          )}
+
           {partitioned.requests.length > 0 && (
             <section className="flex flex-col gap-2" data-testid="bookings-requests">
               <h2 className="text-fu-lg font-semibold text-[var(--fu-text-primary)]">
@@ -318,6 +412,37 @@ export function MyBookingsPage() {
             setDetail(null)
           }}
         />
+      )}
+
+      {/* P1PRO — refuser une contre-proposition CLÔT la demande : dit avant
+          le geste, jamais découvert après. */}
+      {decliningCounter && (
+        <Dialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setDecliningCounter(null)
+          }}
+          title={t('booking.counter.declineTitle')}
+          description={t('booking.counter.declineBody', { name: decliningCounter.organization_name })}
+        >
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setDecliningCounter(null)}>
+              {t('common.action.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              data-testid="counter-decline-confirm"
+              loading={declineCounter.isPending}
+              onClick={() => {
+                declineCounter.mutate(decliningCounter.id, {
+                  onSettled: () => setDecliningCounter(null),
+                })
+              }}
+            >
+              {t('booking.counter.declineConfirm')}
+            </Button>
+          </div>
+        </Dialog>
       )}
 
       <AlternativesSheet
