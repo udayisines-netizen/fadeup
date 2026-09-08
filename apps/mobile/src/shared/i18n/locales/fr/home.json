@@ -1,0 +1,48 @@
+{
+  "search": {
+    "title": "Trouvez votre barber",
+    "label": "Rechercher un barber ou un salon",
+    "placeholder": "Nom, style, ville…"
+  },
+  "queue": {
+    "title": "Votre file chez {{organization}}",
+    "anonymousTitle": "Votre file en cours",
+    "positionLabel": "dans la file",
+    "cta": "Suivre ma place"
+  },
+  "next": {
+    "title": "Prochaine réservation"
+  },
+  "rebook": {
+    "title": "Réserver à nouveau",
+    "cta": "Reprendre avec {{barber}}"
+  },
+  "followed": {
+    "title": "Profils suivis"
+  },
+  "discover": {
+    "title": "À découvrir"
+  },
+  "current": {
+    "title": "En cours"
+  },
+  "pending": {
+    "title": "Demande en attente",
+    "deadline": "Réponse attendue avant"
+  },
+  "following": {
+    "title": "Vos barbers et salons"
+  },
+  "around": {
+    "title": "Autour de vous"
+  },
+  "recent": {
+    "title": "Vous avez consulté"
+  },
+  "invite": {
+    "title": "Créer un compte FadeUp",
+    "body": "Retrouvez vos réservations partout, et soyez prévenu quand c'est votre tour.",
+    "cta": "Créer mon compte",
+    "dismiss": "Fermer l'invitation"
+  }
+}

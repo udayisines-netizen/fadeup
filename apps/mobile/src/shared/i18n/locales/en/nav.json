@@ -1,0 +1,45 @@
+{
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "feed": "Feed",
+    "bookings": "Bookings",
+    "account": "Account"
+  },
+  "consumer": {
+    "bookingsBadge": "Activity on your bookings",
+    "accountMenu": "Account menu"
+  },
+  "pro": {
+    "today": "Today",
+    "agenda": "Agenda",
+    "requests": "Requests",
+    "queue": "Queue",
+    "catalog": "Services",
+    "clients": "Clients",
+    "team": "Team",
+    "insights": "Analytics",
+    "billing": "Subscription",
+    "settings": "Settings",
+    "openNav": "Open navigation",
+    "location": "Location"
+  },
+  "connection": {
+    "live": "Connected",
+    "offline": "Offline",
+    "reconnecting": "Reconnecting…"
+  },
+  "marketing": {
+    "forBusiness": "FadeUp for professionals",
+    "openApp": "Open the app"
+  },
+  "platform": {
+    "title": "FadeUp console"
+  },
+  "demo": {
+    "title": "Demo compositions"
+  },
+  "devui": {
+    "title": "Primitive gallery"
+  }
+}

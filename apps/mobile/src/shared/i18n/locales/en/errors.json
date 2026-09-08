@@ -1,0 +1,21 @@
+{
+  "data": {
+    "network": "Can't connect. Check your network and try again.",
+    "auth": "Sign in again to continue.",
+    "forbidden": "You don't have access to this content.",
+    "conflict": "This action conflicts with an existing record.",
+    "validation": "Some information isn't valid. Check what you entered.",
+    "notFound": "This content doesn't exist, or no longer does.",
+    "unknown": "Something unexpected went wrong. Try again."
+  },
+  "boundary": {
+    "title": "Something went wrong",
+    "description": "This page hit an error. Reload it to continue.",
+    "reload": "Reload the page"
+  },
+  "route": {
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The requested address doesn't exist.",
+    "notFoundAction": "Go to home"
+  }
+}

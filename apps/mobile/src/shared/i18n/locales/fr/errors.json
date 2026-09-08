@@ -1,0 +1,21 @@
+{
+  "data": {
+    "network": "Connexion impossible. Vérifiez votre réseau puis réessayez.",
+    "auth": "Reconnectez-vous pour continuer.",
+    "forbidden": "Vous n'avez pas accès à ce contenu.",
+    "conflict": "Cette action entre en conflit avec un enregistrement existant.",
+    "validation": "Certaines informations ne sont pas valides. Vérifiez votre saisie.",
+    "notFound": "Ce contenu n'existe pas ou n'existe plus.",
+    "unknown": "Une erreur inattendue s'est produite. Réessayez."
+  },
+  "boundary": {
+    "title": "Quelque chose s'est mal passé",
+    "description": "Cette page a rencontré une erreur. Rechargez-la pour continuer.",
+    "reload": "Recharger la page"
+  },
+  "route": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "L'adresse demandée n'existe pas.",
+    "notFoundAction": "Aller à l'accueil"
+  }
+}

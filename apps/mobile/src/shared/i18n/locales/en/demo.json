@@ -1,0 +1,76 @@
+{
+  "index": {
+    "lede": "Three real studies, fed by the production database's public RPCs. No mockups, no hard-coded data.",
+    "open": "Open the study",
+    "discoveryTitle": "Customer discovery",
+    "discoveryLede": "The hairline row against six real results at 390 px.",
+    "profileTitle": "Barber identity",
+    "profileLede": "The MASTER_SPEC §9 profile hierarchy, honest empty states included.",
+    "proTitle": "FadeUp Pro — TODAY",
+    "proLede": "The dark, dense operational home: TODAY / NOW / NEXT / QUEUE."
+  },
+  "controls": {
+    "fullState": "Full state",
+    "emptyState": "Empty state",
+    "emptyHint": "The empty state comes from a real zero-result search — nothing is simulated."
+  },
+  "discovery": {
+    "title": "Discovery",
+    "searchLabel": "Search a barber, a shop, a city",
+    "searchPlaceholder": "Fade, shop, city…",
+    "openNow": "Open now",
+    "resultCount_one": "{{count}} result",
+    "resultCount_other": "{{count}} results",
+    "supplyIndependent": "Independent",
+    "supplyBarbershop": "Barbershop",
+    "mobileZone": "Service area",
+    "noResults": {
+      "title": "No results for this search",
+      "description": "Widen the area or change the terms — nothing is invented to fill the list.",
+      "action": "Clear the search"
+    },
+    "rpcNote": "search_public_professionals(p_entity_type => 'shop') — the marketplace restriction is forced."
+  },
+  "profile": {
+    "pickTitle": "Pick a real profile",
+    "pickDescription": "The profiles below come from the public search — select one for the study.",
+    "worksAt": "Works at {{salon}}",
+    "services": "Services",
+    "socialProof": "Social proof",
+    "portfolio": "Work",
+    "portfolioEmpty": "No work published yet.",
+    "reviews": "Reviews",
+    "bookingClosed": "This professional doesn't accept online booking at the moment.",
+    "queueOnlyNote": "On site only: the queue is the only way in.",
+    "handleProbe": "Handle lookup (get_public_professional_by_handle)",
+    "handleProbeEmpty": "No claimed profile carries this handle — the RPC only serves claimed, public identities."
+  },
+  "pro": {
+    "today": "Today",
+    "now": "NOW",
+    "next": "NEXT",
+    "queue": "QUEUE",
+    "nowEmpty": "No one in the chair",
+    "nextEmpty": "No upcoming appointment today",
+    "agendaEmpty": {
+      "title": "Empty agenda today",
+      "description": "No real appointment exists in the database for this organization — and none is fabricated to fill the screen.",
+      "action": "See the full agenda (P3)"
+    },
+    "queueEmpty": {
+      "title": "Empty queue",
+      "description": "No real queue entry. Queues fill on site, never in a demo.",
+      "action": "Queue settings (P3)"
+    },
+    "needsPro": {
+      "title": "Professional session required",
+      "description": "The agenda and queue are private organization data: sign in with a professional account to see real data. Without a session, this study shows the structure and its honest empty states.",
+      "action": "Sign in"
+    },
+    "legend": "Operational state vocabulary (legend — not data)",
+    "revenueNote": "Revenue computed from configured prices — never typed in.",
+    "walkIn": "Walk-in",
+    "appointments_one": "{{count}} appointment",
+    "appointments_other": "{{count}} appointments"
+  }
+}

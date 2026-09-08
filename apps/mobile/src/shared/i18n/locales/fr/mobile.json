@@ -1,0 +1,78 @@
+{
+  "onboarding": {
+    "progress": "Étape {{step}} sur {{total}}",
+    "skip": "Passer",
+    "skipAll": "Explorer sans répondre",
+    "next": "Continuer",
+    "start": "C'est parti",
+    "welcome": {
+      "title": "Bienvenue sur FadeUp",
+      "subtitle": "Trois questions pour personnaliser ce que vous verrez. Vous pouvez toutes les passer."
+    },
+    "name": {
+      "title": "Comment vous appelle-t-on ?",
+      "placeholder": "Votre prénom",
+      "why": "Utile au moment de réserver — jamais affiché publiquement."
+    },
+    "gender": {
+      "title": "Vous êtes… ?",
+      "why": "Optionnel. Sert uniquement à mettre en avant barbershops ou salons mixtes. Cette réponse reste sur votre appareil.",
+      "man": "Un homme",
+      "woman": "Une femme",
+      "noPreference": "Peu importe"
+    },
+    "frequency": {
+      "title": "À quelle fréquence vous coupez-vous les cheveux ?",
+      "why": "Pour, plus tard, vous rappeler de réserver au bon moment.",
+      "weekly": "Chaque semaine",
+      "every_2_weeks": "Toutes les 2 semaines",
+      "every_3_weeks": "Toutes les 3 semaines",
+      "monthly": "Chaque mois",
+      "less_often": "Moins souvent",
+      "depends": "Ça dépend"
+    }
+  },
+  "placeholder": {
+    "feed": {
+      "title": "Le feed arrive",
+      "body": "Les publications des barbers que vous suivez et la découverte locale arrivent dans la prochaine version (M1b)."
+    },
+    "bookings": {
+      "title": "Vos réservations arrivent",
+      "body": "Le suivi de vos réservations et de votre place en file arrive dans la prochaine version (M1b)."
+    },
+    "account": {
+      "title": "Votre compte arrive",
+      "body": "La connexion, votre Fade Passport et vos préférences arrivent dans la prochaine version (M1b)."
+    },
+    "booking": {
+      "title": "La réservation arrive",
+      "body": "Le tunnel de réservation arrive dans la prochaine version de l'application (M1b). Le profil reste entier : suivez ce professionnel ou consultez ses réalisations en attendant."
+    },
+    "queue": {
+      "title": "La file arrive",
+      "body": "Rejoindre et suivre une file d'attente arrive dans la prochaine version de l'application (M1b)."
+    },
+    "back": "Retour"
+  },
+  "search": {
+    "expandTitle": "Un peu plus loin",
+    "expandRadius": "À moins de {{km}} km",
+    "unknownDistance": "À distance inconnue",
+    "cityHint": "Recherchez par ville ou utilisez « Autour de moi »."
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "body": "Cette adresse ne correspond à aucun écran.",
+    "home": "Revenir à l'accueil"
+  },
+  "language": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "connect": {
+    "title": "La connexion arrive",
+    "body": "Créer un compte et suivre vos barbers arrive dans la prochaine version (M1b). Tout reste consultable librement en attendant."
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "title": "Recherche",
+  "meta": {
+    "title": "Recherche — FadeUp"
+  },
+  "search": {
+    "label": "Rechercher",
+    "placeholder": "Nom, style, service…",
+    "cityLabel": "Ville ou quartier",
+    "cityPlaceholder": "Ville ou quartier"
+  },
+  "geo": {
+    "nearMe": "Autour de moi",
+    "locating": "Localisation…",
+    "denied": "Sans géolocalisation, la recherche par ville ou quartier fonctionne entièrement."
+  },
+  "view": {
+    "label": "Affichage des résultats",
+    "list": "Liste",
+    "map": "Carte"
+  },
+  "map": {
+    "label": "Carte des résultats",
+    "openProfile": "Voir le profil",
+    "empty": "Aucun résultat à afficher sur la carte.",
+    "unlocated_one": "{{count}} résultat sans position connue ne figure pas sur la carte.",
+    "unlocated_other": "{{count}} résultats sans position connue ne figurent pas sur la carte."
+  },
+  "filters": {
+    "title": "Filtres",
+    "button": "Filtres",
+    "buttonCount": "Filtres · {{count}}",
+    "openNow": "Ouvert maintenant",
+    "availableNow": "Disponible maintenant",
+    "radius": "Rayon",
+    "radiusKm": "{{km}} km",
+    "service": "Type de service",
+    "servicePlaceholder": "Coupe, barbe, dégradé…",
+    "priceMin": "Prix min",
+    "priceMax": "Prix max",
+    "sort": "Trier par",
+    "reset": "Réinitialiser les filtres",
+    "showResults_one": "Afficher {{count}} résultat",
+    "showResults_other": "Afficher {{count}} résultats",
+    "showResultsPlain": "Afficher les résultats"
+  },
+  "sort": {
+    "recommended": "Recommandé",
+    "nearest": "Le plus proche",
+    "price": "Prix croissant"
+  },
+  "results": {
+    "count_one": "{{count}} résultat",
+    "count_other": "{{count}} résultats",
+    "loadMore": "Afficher plus de résultats",
+    "countAvailable_one": "{{count}} peut servir dans l’heure",
+    "countAvailable_other": "{{count}} peuvent servir dans l’heure",
+    "countAvailablePartial_one": "{{count}} peut servir dans l’heure, parmi les {{loaded}} premiers résultats",
+    "countAvailablePartial_other": "{{count}} peuvent servir dans l’heure, parmi les {{loaded}} premiers résultats"
+  },
+  "row": {
+    "supplyIndependent": "Indépendant",
+    "supplyBarbershop": "Barbershop",
+    "serviceArea": "Se déplace — zone autour de {{city}}",
+    "queueCount_one": "{{count}} personne en file",
+    "queueCount_other": "{{count}} personnes en file",
+    "noPrice": "Prix non renseigné"
+  },
+  "empty": {
+    "title": "Aucun résultat dans cette zone",
+    "description": "Aucun barber ou salon ne correspond à cette recherche.",
+    "descriptionRadius": "Aucun résultat à moins de {{km}} km. Les résultats plus éloignés, s'il y en a, sont affichés ci-dessous avec leur distance réelle.",
+    "descriptionCity": "Aucun résultat à {{city}} pour cette recherche.",
+    "descriptionAvailability": "Personne ne peut servir dans l'heure pour le moment dans cette zone.",
+    "clearQuery": "Effacer la recherche",
+    "clearAvailability": "Retirer « disponible maintenant »",
+    "searchEverywhere": "Chercher au-delà de cette ville",
+    "descriptionAvailabilityPartial": "Personne ne peut servir dans l’heure parmi les {{loaded}} premiers résultats. Chargez la suite, ou retirez le filtre."
+  },
+  "fallback": {
+    "title": "Professionnels proposant « {{query}} » comme service"
+  },
+  "widen": {
+    "title": "À moins de {{km}} km"
+  },
+  "unlocated": {
+    "title": "À distance inconnue",
+    "note": "Ces établissements existent mais n’ont pas de position exploitable : leur distance est inconnue — ils ne comptent pas comme « dans la zone »."
+  },
+  "card": {
+    "openAria": "Voir {{name}}"
+  },
+  "sheet": {
+    "fullProfile": "Voir le profil complet",
+    "services": "Services",
+    "servicesEmpty": "Les services ne sont pas encore renseignés.",
+    "close": "Fermer"
+  }
+}

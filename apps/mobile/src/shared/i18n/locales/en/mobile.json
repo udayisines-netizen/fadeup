@@ -1,0 +1,78 @@
+{
+  "onboarding": {
+    "progress": "Step {{step}} of {{total}}",
+    "skip": "Skip",
+    "skipAll": "Explore without answering",
+    "next": "Continue",
+    "start": "Let's go",
+    "welcome": {
+      "title": "Welcome to FadeUp",
+      "subtitle": "Three questions to personalise what you'll see. You can skip them all."
+    },
+    "name": {
+      "title": "What should we call you?",
+      "placeholder": "Your first name",
+      "why": "Useful when you book — never shown publicly."
+    },
+    "gender": {
+      "title": "You are… ?",
+      "why": "Optional. Only used to surface barbershops or mixed salons. This answer stays on your device.",
+      "man": "A man",
+      "woman": "A woman",
+      "noPreference": "No preference"
+    },
+    "frequency": {
+      "title": "How often do you get a haircut?",
+      "why": "So we can, later on, remind you to book at the right time.",
+      "weekly": "Every week",
+      "every_2_weeks": "Every 2 weeks",
+      "every_3_weeks": "Every 3 weeks",
+      "monthly": "Every month",
+      "less_often": "Less often",
+      "depends": "It depends"
+    }
+  },
+  "placeholder": {
+    "feed": {
+      "title": "The feed is coming",
+      "body": "Posts from the barbers you follow and local discovery arrive in the next release (M1b)."
+    },
+    "bookings": {
+      "title": "Your bookings are coming",
+      "body": "Tracking your bookings and your queue spot arrives in the next release (M1b)."
+    },
+    "account": {
+      "title": "Your account is coming",
+      "body": "Sign-in, your Fade Passport and your preferences arrive in the next release (M1b)."
+    },
+    "booking": {
+      "title": "Booking is coming",
+      "body": "The booking flow arrives in the next release of the app (M1b). The profile stays whole: follow this professional or browse their work in the meantime."
+    },
+    "queue": {
+      "title": "The queue is coming",
+      "body": "Joining and tracking a live queue arrives in the next release of the app (M1b)."
+    },
+    "back": "Back"
+  },
+  "search": {
+    "expandTitle": "A little further out",
+    "expandRadius": "Within {{km}} km",
+    "unknownDistance": "Unknown distance",
+    "cityHint": "Search by city, or use “Near me”."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This address doesn't match any screen.",
+    "home": "Back to home"
+  },
+  "language": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "connect": {
+    "title": "Sign-in is coming",
+    "body": "Creating an account and following your barbers arrives in the next release (M1b). Everything stays freely browsable in the meantime."
+  }
+}
