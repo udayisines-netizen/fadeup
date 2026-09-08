@@ -96,6 +96,7 @@ list_public_services
 normalize_phone_number
 search_public_organizations
 search_public_professionals
+submit_marketplace_withdrawal_request
 suggested_currency_for_country
 suggested_timezone_for_country
 track_analytics_event
@@ -262,6 +263,7 @@ else
   # publiques : private.can_view_post autorise la lecture quand
   # visibility = 'public' — un portfolio est fait pour être lu par tous,
   # connecté ou non. Le balayage anonyme les lit d'ailleurs sans se plaindre.
+  # post_likes suit la même règle : le compteur de likes est public (B4).
   ALLOW_AUTHED_ROWS="billing_stripe_prices
 billing_stripe_products
 commercial_capabilities
@@ -273,7 +275,8 @@ profiles
 customer_profiles
 customer_passports
 posts
-post_media"
+post_media
+post_likes"
   sweep_reads  "$USER_JWT" "authed-sans-droit lecture tables" "$ALLOW_AUTHED_ROWS"
   sweep_writes "$USER_JWT" "authed-sans-droit écriture tables"
 
