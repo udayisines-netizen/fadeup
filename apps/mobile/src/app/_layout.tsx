@@ -97,7 +97,6 @@ export default function RootLayout() {
             value={{ onboarded: onboarded === true, markOnboarded: () => setOnboarded(true) }}
           >
             <StatusBar style="dark" />
-            <OfflineBanner />
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -111,6 +110,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
               </Stack.Protected>
             </Stack>
+            <OfflineBanner />
           </OnboardingGateContext.Provider>
           </SessionContext.Provider>
         </QueryClientProvider>

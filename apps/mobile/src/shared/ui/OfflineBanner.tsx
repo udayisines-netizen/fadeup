@@ -48,6 +48,15 @@ export function OfflineBlock({ body }: { body?: string }) {
 
 const styles = StyleSheet.create({
   banner: {
+    /* Survol absolu : un frère du navigateur (Stack) casse la mise en page
+       de react-native-screens (constaté en QA M1b) — le bandeau se pose
+       PAR-DESSUS, discret, sans toucher l'arbre du navigateur. */
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    elevation: 4,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing(2),
