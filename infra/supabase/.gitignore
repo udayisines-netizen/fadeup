@@ -14,6 +14,9 @@ volumes/functions/stripe-webhook/**
 !volumes/functions/stripe-billing/
 volumes/functions/stripe-billing/**
 !volumes/functions/stripe-billing/index.ts
+!volumes/functions/resend-webhook/
+volumes/functions/resend-webhook/**
+!volumes/functions/resend-webhook/index.ts
 .env
 test.http
 docker-compose.override.yml
