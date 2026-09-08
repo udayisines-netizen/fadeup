@@ -64,7 +64,7 @@ test.describe('F3 — /search', () => {
     await page.goto('/search?q=maison')
     await expect(page).not.toHaveURL(/\/auth\//)
     await waitForResults(page)
-    await expect(page.getByTestId('result-link').first()).toBeVisible()
+    await expect(page.getByTestId('result-card').first()).toBeVisible()
     // LOI PRODUIT §2 : la restriction marketplace part EXPLICITEMENT.
     expect(entityTypeSeen).toBe('shop')
   })
@@ -102,14 +102,18 @@ test.describe('F3 — /search', () => {
     // la ligne établissement a le droit d'exister.
     await page.goto('/search?q=kais')
     await waitForResults(page)
-    const links = page.getByTestId('result-link')
-    const count = await links.count()
+    // D1 : chaque résultat est une CARTE d'établissement (data-org = slug
+    // d'organisation) ; le chemin complet passe par la feuille et mène à
+    // /shop/… — jamais un profil de salarié.
+    const cards = page.getByTestId('result-card')
+    const count = await cards.count()
     expect(count).toBeGreaterThan(0)
     for (let i = 0; i < count; i += 1) {
-      // Chaque résultat est un ÉTABLISSEMENT : son chemin est /shop/…,
-      // jamais un profil de salarié.
-      await expect(links.nth(i)).toHaveAttribute('href', /^\/shop\//)
+      expect(await cards.nth(i).getAttribute('data-org')).toMatch(/^[a-z0-9-]+$/)
     }
+    await page.getByTestId('result-open').first().click()
+    await page.getByTestId('sheet-full-profile').click()
+    await expect(page).toHaveURL(/\/shop\//)
   })
 
   test('zéro résultat : l’élargissement étiqueté, jamais un résultat hors sujet glissé dans la liste', async ({ page }) => {
@@ -119,7 +123,7 @@ test.describe('F3 — /search', () => {
     // distance réelle affichée sur la rangée.
     const widened = page.getByTestId('widened-results')
     await expect(widened).toBeVisible({ timeout: 20_000 })
-    await expect(widened.getByTestId('result-link').first()).toBeVisible()
+    await expect(widened.getByTestId('result-card').first()).toBeVisible()
     await expect(widened.getByTestId('result-distance').first()).toBeVisible()
   })
 
@@ -132,7 +136,7 @@ test.describe('F3 — /search', () => {
     await expect(page.getByTestId('result-count')).toHaveText(/^0/)
     const fallback = page.getByTestId('service-fallback')
     await expect(fallback).toBeVisible({ timeout: 20_000 })
-    await expect(fallback.getByTestId('result-link').first()).toBeVisible()
+    await expect(fallback.getByTestId('result-card').first()).toBeVisible()
   })
 
   test('une ligne sans coordonnées ne compte pas comme « dans la zone » : le zéro se dit, la ligne s’affiche à part', async ({ page }) => {
@@ -213,13 +217,17 @@ test.describe('F3 — /search', () => {
     await page.getByTestId('city-input').press('Enter')
     await expect(page).toHaveURL(/city=Paris/)
     await waitForResults(page)
-    await expect(page.getByTestId('result-link').first()).toBeVisible()
+    await expect(page.getByTestId('result-card').first()).toBeVisible()
   })
 
   test('un résultat mène au bon profil', async ({ page }) => {
+    // D1 : un tap ouvre la FEUILLE (la liste reste dessous, le défilement
+    // est préservé) ; le profil complet est un geste de plus.
     await page.goto('/search?q=maison')
     await waitForResults(page)
-    await page.getByTestId('result-link').filter({ hasText: 'Maison Kaïs' }).click()
+    await page.getByTestId('result-open').first().click()
+    await expect(page.getByTestId('result-sheet')).toBeVisible()
+    await page.getByTestId('sheet-full-profile').click()
     await expect(page).toHaveURL(/\/shop\/demo-maison-kais/)
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Maison Kaïs', { timeout: 20_000 })
   })
