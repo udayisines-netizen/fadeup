@@ -201,7 +201,8 @@ Poppins conservée (c'est un moment CLIENT).
   `001ef8f` imagerie de démonstration · `d18bf83` Poppins + tokens +
   thème moment · `10e9740` primitives (carte, feuille, CTA modèle X) ·
   `f8ce8d6` surfaces (recherche, accueil, profils, moments sombres) ·
-  `4c7f001` e2e · `e78a61c` docs (contrat + rapport).
+  `4c7f001` e2e · `66c3aa6` docs (contrat + rapport) + un correctif de
+  hash sur cette ligne même.
 - **Poussée. Aucune fusion.** Aucun `git add .`/`-A`, aucun
   `reset --hard`, aucun `clean`, aucun `docker prune`.
 
