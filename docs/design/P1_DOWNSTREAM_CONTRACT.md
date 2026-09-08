@@ -1,5 +1,13 @@
 # P1 — CONTRAT AVAL (P2 · P3 · P4 · P5)
 
+> **RÉVOQUÉ EN PARTIE PAR D1 (2026-09-08).** Le contrat en vigueur est
+> **`D1_DESIGN_CONTRACT.md`**, qui remplace ce document et NOMME ce qui est
+> révoqué (« Row plutôt que Card », « pas d'ombre », « un seul moment
+> orchestré », « pas de Framer Motion », « Poppins jamais l'interface »,
+> desktop rail+liste, rayons card 12/media 4, sombre = Pro seulement).
+> Ce fichier n'est conservé que comme trace historique : ne pas s'y
+> conformer, ne pas le citer comme autorité.
+
 **Ce document est le contrat.** Trois agents en worktrees séparés, sur P2
 Consumer, P3 Pro et P4 Social, doivent produire des écrans appartenant
 visiblement au même produit — sans se parler. Si une décision visuelle
