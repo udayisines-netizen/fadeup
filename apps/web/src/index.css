@@ -11,6 +11,7 @@
 @import './styles/tokens-consumer.css';
 @import './styles/tokens-pro.css';
 @import './styles/tokens-editorial.css';
+@import './styles/tokens-moment.css';
 
 /*
  * Instrument Serif — the marketing display face. `font-display: swap` so a

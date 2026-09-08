@@ -1,13 +1,51 @@
 /*
- * Geist Sans / Geist Mono — the V2 interface faces (P1A_TYPOGRAPHY_VERDICT).
- * Self-hosted in public/fonts (no Google Fonts CDN: third-party latency and
- * needless GDPR exposure for a product launching in France). Latin subset —
- * FR and EN are the only product-ready languages; Arabic keeps its own
- * conditional face (legacy i18n acquis, untouched here).
+ * V2 interface faces — self-hosted in public/fonts (no Google Fonts CDN:
+ * third-party latency and needless GDPR exposure for a product launching in
+ * France). Latin subset — FR and EN are the only product-ready languages;
+ * Arabic keeps its own conditional face (legacy i18n acquis, untouched here).
  *
- * The 400 and 600 sans weights are additionally <link rel="preload">ed from
- * index.html — they carry body text and headings on first paint.
+ * D1 split (revokes the P1a « Geist everywhere » verdict):
+ *   · POPPINS carries the CONSUMER surface — logo, brand and interface
+ *     unified. Constraint held: nothing readable under 14px, Medium over
+ *     Regular on small labels (the P1a density measurement stays true, it
+ *     just never applied to a consumer app of titles, cards and prices).
+ *   · GEIST stays the PRO face — density wins over unity on an agenda.
+ *   · Geist Mono stays the numeric face everywhere (tabular-nums).
+ *
+ * The consumer-critical weights are <link rel="preload">ed from index.html.
  */
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-700-normal.woff2') format('woff2');
+}
 
 @font-face {
   font-family: 'Geist';

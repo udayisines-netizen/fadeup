@@ -10,7 +10,7 @@ import { createContext, useCallback, useEffect, useMemo, useState, type ReactNod
  * never fight over one attribute. Radix portals mount into <body>, so a
  * body-level attribute still themes every overlay.
  */
-export type SurfaceTheme = 'consumer' | 'pro' | 'editorial'
+export type SurfaceTheme = 'consumer' | 'pro' | 'editorial' | 'moment'
 
 interface SurfaceThemeContextValue {
   surface: SurfaceTheme | null

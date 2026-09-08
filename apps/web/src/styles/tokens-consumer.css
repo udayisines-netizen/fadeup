@@ -1,16 +1,25 @@
 /*
- * Consumer theme — direction A, éditorial minimal (P1A_VISUAL_DIRECTION).
- * Hierarchy comes from hairline borders and typography, NOT from shadow.
- * Exactly one shadow exists: the sticky action bar.
+ * Consumer theme — D1 revision of direction A. Light ground stays, but the
+ * lot revokes « pas d'ombre » and « Row plutôt que Card » : surfaces that
+ * carry action or imagery get REAL elevation (soft shadows, generous
+ * radius), and the brand green is allowed to exist on screen (CTA, active
+ * states, live signals) — without ever painting surfaces.
+ *
+ * Typeface: POPPINS — logo, brand and interface unified (D1 §2). Nothing
+ * readable under 14px, Medium over Regular on small labels.
  *
  * Applied on <body data-theme="consumer"> (the legacy light/dark attribute
  * stays on <html> for the retained /platform surface — the two never fight).
  */
 
 [data-theme='consumer'] {
-  --fu-canvas: #ffffff;
+  --font-fu-sans: 'Poppins', 'Geist', system-ui, sans-serif;
+
+  /* D1 — the page ground carries a faint green-tinted paper value so white
+     card surfaces actually detach from it (elevation needs a ground). */
+  --fu-canvas: #f6f8f7;
   --fu-surface: #ffffff;
-  --fu-surface-subtle: #fafbfa;
+  --fu-surface-subtle: #f2f5f3;
   --fu-surface-brand: #e6fff3;
 
   --fu-text-primary: #080f0d; /* 19,36:1 */
@@ -24,11 +33,15 @@
   --fu-accent-hover: #00875a;
   --fu-accent-fg: #080f0d; /* 8,30:1 — JAMAIS #FFFFFF (2,33:1) */
   --fu-accent-soft: #e6fff3;
-  /* Green as TEXT on white needs the deep green (4,55:1) — raw #00C27A
-     fails at 2,33:1 (P1A_TOKENS). */
-  --fu-accent-text: #00875a;
+  /* Green as TEXT needs a deep green — raw #00C27A fails at 2,33:1
+     (P1A_TOKENS). D1: the page ground is now #F6F8F7, where #00875A dropped
+     to 4,27:1 (axe) — deepened to #007A52: 5,04:1 on the canvas, 5,38:1 on
+     white, 5,11:1 on the soft brand surface. */
+  --fu-accent-text: #007a52;
+  /* D1 — decorative monogram ink for banner fallbacks (never for text). */
+  --fu-brand-watermark: rgba(0, 135, 90, 0.18);
 
-  --fu-success: #00875a; /* 4,55:1 — success stays in the green family */
+  --fu-success: #007a52; /* ≥5:1 sur tous les fonds clairs — la famille verte */
   --fu-danger: #b23f3c; /* error text on light, ≥4,5:1 (P1A_TOKENS note) */
 
   --fu-focus: #00875a;
@@ -36,6 +49,14 @@
 
   --fu-shadow-sticky:
     0 -1px 0 rgba(8, 15, 13, 0.08), 0 -8px 24px rgba(8, 15, 13, 0.06);
+
+  /* D1 — real elevation scale (revokes P1c « une seule ombre ») :
+     card = resting result card · card-hover = pointer feedback ·
+     sheet = the rising sheet over the list. Ink-tinted, never grey. */
+  --fu-shadow-card: 0 1px 2px rgba(8, 15, 13, 0.04), 0 6px 20px rgba(8, 15, 13, 0.07);
+  --fu-shadow-card-hover: 0 2px 4px rgba(8, 15, 13, 0.05), 0 12px 32px rgba(8, 15, 13, 0.1);
+  --fu-shadow-sheet: 0 -8px 40px rgba(8, 15, 13, 0.18);
+
 
   background-color: var(--fu-canvas);
   color: var(--fu-text-primary);

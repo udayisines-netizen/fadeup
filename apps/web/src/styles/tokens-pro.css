@@ -5,6 +5,9 @@
  */
 
 [data-theme='pro'] {
+  /* D1 — Geist stays the Pro face: density wins over brand unity here. */
+  --font-fu-sans: 'Geist', system-ui, sans-serif;
+
   --fu-canvas: #080f0d;
   --fu-surface: #0f1a16;
   --fu-surface-subtle: #0b1311;

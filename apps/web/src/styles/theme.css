@@ -19,6 +19,12 @@
  */
 
 @theme {
+  /* D1 — the interface face is now THEMED: each tokens-*.css REDEFINES
+     --font-fu-sans on its [data-theme] scope (consumer → Poppins, pro and
+     editorial → Geist). The value here is only the pre-theme default; the
+     override must be a literal on the themed element, never a nested var()
+     (a var() inside a custom property freezes at :root computed-value time
+     and descendants inherit the frozen result). */
   --font-fu-sans: 'Geist', system-ui, sans-serif;
   --font-fu-mono: 'Geist Mono', ui-monospace, monospace;
 
@@ -42,10 +48,13 @@
   --text-fu-4xl--line-height: 64px;
 
   /* Radius is HIERARCHISED — everything at 24px is the mark of a generated
-     interface. New names, no collision with legacy --radius-sm/md/lg/xl. */
+     interface. New names, no collision with legacy --radius-sm/md/lg/xl.
+     D1 revision: cards carry real imagery and elevation now — the card
+     radius grows generous (16) and media inside a card follows its curve
+     (10) instead of the P1b hairline-era 4px. Controls stay tighter. */
   --radius-control: 8px; /* buttons, fields, chips */
-  --radius-card: 12px; /* rows, cards */
-  --radius-media: 4px; /* photos, videos */
+  --radius-card: 16px; /* result cards, panels */
+  --radius-media: 10px; /* photos, videos */
   --radius-modal: 16px;
   --radius-sheet: 20px; /* top corners only */
   --radius-avatar: 9999px;
