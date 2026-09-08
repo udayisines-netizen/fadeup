@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/shared/hooks/useSession'
 import { useDocumentMeta } from '@/shared/hooks/useDocumentMeta'
+import { useInView } from '@/shared/hooks/useInView'
 import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { deriveProfileCta } from '@/shared/lib/serviceState'
+import { demoBanner } from '@/shared/lib/demoMedia'
+import { recordRecentProfile } from '@/shared/lib/recentlyViewed'
 import { deviceTimezone } from '@/shared/lib/format'
 import { Avatar } from '@/shared/ui/Avatar'
 import { Button } from '@/shared/ui/Button'
@@ -14,7 +17,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { MediaFrame } from '@/shared/ui/MediaFrame'
 import { Money } from '@/shared/ui/Money'
 import { PostGrid } from '@/shared/ui/PostGrid'
-import { ProfileCtaBar } from '@/shared/ui/ProfileCtaBar'
+import { ProfileCtaBar, ProfileCtaButtons } from '@/shared/ui/ProfileCtaBar'
 import { ReviewList } from '@/shared/ui/ReviewList'
 import { Row } from '@/shared/ui/Row'
 import { SkeletonCircle, SkeletonText } from '@/shared/ui/Skeleton'
@@ -118,9 +121,26 @@ export function ProfessionalProfilePage() {
   const follow = useFollowProfessional(professionalId, professional.data?.handle ?? null)
 
   const [claimOpen, setClaimOpen] = useState(false)
+  /* D1 (modèle X) — la paire de CTA vit INLINE sous l'en-tête ; la barre
+     collante ne se montre qu'une fois la paire sortie de l'écran. */
+  const [inlineCtaRef, inlineCtaInView] = useInView()
 
   const identity = professional.data
   const isUnclaimed = identity?.claim_state === 'unclaimed'
+
+  /* D1 §7 — mémoire LOCALE des profils consultés (l'accueil du visiteur
+     sans compte). Aucune écriture serveur. */
+  useEffect(() => {
+    if (!identity?.handle) return
+    recordRecentProfile({
+      kind: 'pro',
+      key: identity.handle,
+      name: identity.display_name,
+      city: null,
+      avatarUrl: identity.avatar_url ?? null,
+      organizationSlug: slug,
+    })
+  }, [identity?.handle, identity?.display_name, identity?.avatar_url, slug, identity])
 
   useDocumentMeta({
     title: identity ? `${identity.display_name} — FadeUp` : null,
@@ -201,18 +221,57 @@ export function ProfessionalProfilePage() {
 
   const queueLink = slug && locationId ? `/q/${encodeURIComponent(slug)}?l=${locationId}` : null
   const bookLink = slug ? `/book/${encodeURIComponent(slug)}?l=${locationId ?? ''}&b=${barberId ?? ''}` : '/book/unavailable'
+  const banner = demoBanner(slug)
+
+  /* La MÊME paire de CTA, inline (modèle X) et en barre collante — jamais
+     les deux visibles en même temps. */
+  const ctaProps = {
+    cta: workplaces.isPending
+      ? ({ kind: 'loading', queueOpen: false, temporaryUntil: null } as const)
+      : workplace
+        ? cta
+        : ({ kind: 'closed', queueOpen: false, temporaryUntil: null } as const),
+    name: identity.display_name,
+    bookTo: bookLink,
+    queueTo: queueLink,
+    timezone: location?.timezone ?? null,
+    following,
+    followBusy: follow.isPending,
+    onToggleFollow: toggleFollow,
+    /* La note « rejoindra FadeUp » n'est affirmée qu'une fois la
+       résolution TERMINÉE, et seulement pour un non revendiqué — jamais
+       pendant un chargement (revue F2, B1). */
+    noteOverride:
+      workplaces.isSuccess && !workplace && isUnclaimed
+        ? t('profile.unclaimed.bookingUnavailable')
+        : undefined,
+    /* F4 — le cul-de-sac du non revendiqué est levé : le CTA devient une
+       demande d'intérêt réelle (B2), seulement une fois la résolution
+       TERMINÉE — jamais pendant un chargement. */
+    interestTo:
+      workplaces.isSuccess && !workplace && isUnclaimed && identity.handle
+        ? `/request/${encodeURIComponent(identity.handle)}`
+        : null,
+  }
 
   return (
     <div className="mx-auto w-full max-w-xl pb-40 lg:grid lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
       <div>
-        {/* 1. Média + avatar — un profil sans photo est la norme du scrapé. */}
-        <MediaFrame alt={t('profile.header.coverLabel', { name: identity.display_name })} ratio="landscape" />
-        <div className="-mt-8 flex items-end gap-4 px-4">
+        {/* 1. Bannière pleine largeur (modèle X) — image de démonstration
+            marquée quand elle existe, sinon le cadre honnête. */}
+        {banner ? (
+          <div className="h-40 overflow-hidden md:h-48 lg:rounded-[var(--radius-card)]">
+            <img src={banner} alt={t('profile.header.coverLabel', { name: identity.display_name })} className="size-full object-cover" />
+          </div>
+        ) : (
+          <MediaFrame alt={t('profile.header.coverLabel', { name: identity.display_name })} ratio="landscape" />
+        )}
+        <div className="-mt-10 flex items-end gap-4 px-4">
           <Avatar
             name={identity.display_name}
             src={identity.avatar_url}
             size="xl"
-            className="ring-4 ring-[var(--fu-canvas)]"
+            className="fu-vt-portrait ring-4 ring-[var(--fu-canvas)]"
           />
         </div>
 
@@ -278,9 +337,50 @@ export function ProfessionalProfilePage() {
           )}
 
           {identity.bio && <p className="mt-4 text-fu-base leading-relaxed">{identity.bio}</p>}
+
+          {/* Les MÉTRIQUES — une ligne, cinq faits distincts, jamais un zéro
+              fabriqué (Followers = fait du graphe ; Verified Clients et
+              Likes sans contrat public : « — » ; Rating/Reviews = réputation
+              B4, null sans avis). */}
+          <SocialProof
+            layout="row"
+            className="mt-4"
+            followers={identity.follower_count ?? null}
+            verifiedClients={null}
+            rating={reputationRow?.rating_average ?? null}
+            reviews={reputationRow ? reputationRow.rating_count : null}
+            likes={null}
+          />
+
+          {/* LE CTA — avant tout contenu (modèle X, MASTER §9). */}
+          <div ref={inlineCtaRef} className="mt-4" data-testid="inline-cta">
+            <ProfileCtaButtons {...ctaProps} />
+          </div>
         </div>
 
-        {/* 10. Portfolio — pagination par curseur, première tranche de 30. */}
+        {/* Services d'abord (D1 §6), durée et prix en mono. */}
+        {workplace && (
+          <section className="mt-8 px-4" aria-label={t('profile.services.title')}>
+            <h2 className="text-fu-lg font-semibold">{t('profile.services.title')}</h2>
+            {(services.data ?? []).length > 0 ? (
+              <div className="mt-3 overflow-hidden rounded-[var(--radius-card)] bg-[var(--fu-surface)] shadow-[var(--fu-shadow-card)] [&>*:last-child]:border-b-0">
+                {(services.data ?? []).map((service) => (
+                  <Row
+                    key={service.id}
+                    clampTitle
+                    title={<span className="text-fu-base font-medium">{service.name}</span>}
+                    subtitle={<Duration minutes={service.duration_minutes} />}
+                    trailing={<Money cents={service.price_cents} currency={currency} />}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-fu-sm text-[var(--fu-text-secondary)]">{t('profile.services.emptyDescription')}</p>
+            )}
+          </section>
+        )}
+
+        {/* Puis les réalisations en grille. */}
         <section className="mt-8 px-4" aria-label={t('profile.portfolio.title')}>
           <h2 className="text-fu-lg font-semibold">{t('profile.portfolio.title')}</h2>
           {allPosts.length > 0 ? (
@@ -307,45 +407,10 @@ export function ProfessionalProfilePage() {
             </div>
           )}
         </section>
-
-        {/* 11. Services — rangées à filet fin, durée et prix en mono. */}
-        {workplace && (
-          <section className="mt-8 px-4" aria-label={t('profile.services.title')}>
-            <h2 className="text-fu-lg font-semibold">{t('profile.services.title')}</h2>
-            {(services.data ?? []).length > 0 ? (
-              <div className="mt-3 rounded-[var(--radius-card)] border border-[var(--fu-border)] [&>*:last-child]:border-b-0">
-                {(services.data ?? []).map((service) => (
-                  <Row
-                    key={service.id}
-                    clampTitle
-                    title={<span className="text-fu-base font-medium">{service.name}</span>}
-                    subtitle={<Duration minutes={service.duration_minutes} />}
-                    trailing={<Money cents={service.price_cents} currency={currency} />}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="mt-2 text-fu-sm text-[var(--fu-text-secondary)]">{t('profile.services.emptyDescription')}</p>
-            )}
-          </section>
-        )}
       </div>
 
       <aside className="px-4 lg:px-0 lg:pt-6">
-        {/* 12. Preuve sociale — cinq métriques distinctes, jamais un zéro fabriqué.
-            Followers est un fait du graphe ; Verified Clients et Likes n'ont pas
-            de contrat public : « — ». Rating/Reviews viennent de la réputation
-            B4 (null sans avis, jamais 0). */}
-        <SocialProof
-          className="mt-8 lg:mt-0"
-          followers={identity.follower_count ?? null}
-          verifiedClients={null}
-          rating={reputationRow?.rating_average ?? null}
-          reviews={reputationRow ? reputationRow.rating_count : null}
-          likes={null}
-        />
-
-        {/* 13. Avis — jamais zéro étoile. */}
+        {/* Avis — jamais zéro étoile. */}
         <section className="mt-8" aria-label={t('profile.reviews.title')}>
           <h2 className="text-fu-lg font-semibold">{t('profile.reviews.title')}</h2>
           {reviewRows.length > 0 ? (
@@ -359,40 +424,9 @@ export function ProfessionalProfilePage() {
         </section>
       </aside>
 
-      {/* 7–8. RÉSERVER (vert plein, LE CTA dominant) + Suivre (secondaire).
-          État réel ; non revendiqué = pas de capacité fabriquée. */}
-      <ProfileCtaBar
-        cta={
-          workplaces.isPending
-            ? { kind: 'loading', queueOpen: false, temporaryUntil: null }
-            : workplace
-              ? cta
-              : { kind: 'closed', queueOpen: false, temporaryUntil: null }
-        }
-        name={identity.display_name}
-        bookTo={bookLink}
-        queueTo={queueLink}
-        timezone={location?.timezone ?? null}
-        following={following}
-        followBusy={follow.isPending}
-        onToggleFollow={toggleFollow}
-        /* La note « rejoindra FadeUp » n'est affirmée qu'une fois la
-           résolution TERMINÉE, et seulement pour un non revendiqué — jamais
-           pendant un chargement (revue F2, B1). */
-        noteOverride={
-          workplaces.isSuccess && !workplace && isUnclaimed
-            ? t('profile.unclaimed.bookingUnavailable')
-            : undefined
-        }
-        /* F4 — le cul-de-sac du non revendiqué est levé : le CTA devient une
-           demande d'intérêt réelle (B2), seulement une fois la résolution
-           TERMINÉE — jamais pendant un chargement. */
-        interestTo={
-          workplaces.isSuccess && !workplace && isUnclaimed && identity.handle
-            ? `/request/${encodeURIComponent(identity.handle)}`
-            : null
-        }
-      />
+      {/* La barre COLLANTE — repli de conversion, seulement quand la paire
+          inline du modèle X est sortie de l'écran. */}
+      <ProfileCtaBar {...ctaProps} hidden={inlineCtaInView} />
 
       {isUnclaimed && professionalId && (
         <ClaimSheet open={claimOpen} onOpenChange={setClaimOpen} professionalId={professionalId} />

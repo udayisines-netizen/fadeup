@@ -211,8 +211,12 @@ export function QueueTracking({
         </p>
       )}
       <p className="text-fu-sm font-medium text-[var(--fu-text-secondary)]">{t('queue.track.yourPosition')}</p>
-      <p className="font-fu-mono text-fu-4xl font-semibold tabular-nums leading-none" data-testid="queue-track-position">
-        {entry.queue_position ?? '—'}
+      <p className="font-fu-mono text-fu-4xl font-semibold tabular-nums leading-none text-[color:var(--fu-accent-text)]" data-testid="queue-track-position">
+        {/* D1 §8 — quand la position CHANGE, ça se voit : la clé remonte le
+            chiffre neuf (fu-number-in) ; reduced-motion le neutralise. */}
+        <span key={entry.queue_position ?? 'none'} className="fu-number-in">
+          {entry.queue_position ?? '—'}
+        </span>
       </p>
       <p className="text-fu-sm text-[var(--fu-text-secondary)]" data-testid="queue-track-file">
         {queueLabel}

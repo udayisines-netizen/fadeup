@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/shared/hooks/useSession'
+import { useApplySurfaceTheme } from '@/shared/theme/useTheme'
 import { Button } from '@/shared/ui/Button'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Row } from '@/shared/ui/Row'
@@ -181,6 +182,11 @@ export function PublicQueuePage() {
       : 'unknown'
   const isTracking = Boolean((trackedEntryId && !tracking.isError) || trackedGone)
   const canJoin = queueState === 'open' && !isTracking && !isServiceArea && Boolean(locationId)
+
+  /* D1 §9 — le SUIVI de sa place est un moment SOMBRE : un écran qu'on
+     garde ouvert, souvent en salon, où le vert reprend de la force. La
+     consultation de la file, elle, reste claire. */
+  useApplySurfaceTheme(isTracking && !trackedGone ? 'moment' : 'consumer')
 
   const openJoin = useCallback((target: PublicQueueFile | null) => {
     setJoinTarget(target)

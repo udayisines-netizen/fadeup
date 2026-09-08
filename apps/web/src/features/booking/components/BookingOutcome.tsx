@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { LazyMotion, MotionConfig, domAnimation, m } from 'motion/react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useNow } from '@/shared/hooks/useNow'
-import { celebrateSuccess } from '@/shared/motion'
+import { usePrefersReducedMotion } from '@/shared/hooks/usePrefersReducedMotion'
 import { Button } from '@/shared/ui/Button'
 import { DateTime } from '@/shared/ui/DateTime'
 import { Money } from '@/shared/ui/Money'
@@ -67,46 +68,63 @@ function OutcomeRecap({ result, context }: { result: BookAppointmentResult; cont
   )
 }
 
+/**
+ * D1 §9 — LE moment fort du produit, composé en SOMBRE (thème `moment`,
+ * posé par BookingFlowPage) : le logo existe pleinement, la coche s'affirme
+ * en RESSORT (Framer Motion), la suite monte en décalé. Sous
+ * prefers-reduced-motion : fondus purs, sans échelle ni translation.
+ */
 function Confirmed({ result, context }: { result: BookAppointmentResult; context: BookingOutcomeContext }) {
   const { t } = useTranslation('v2')
   const navigate = useNavigate()
-  const markRef = useRef<HTMLDivElement>(null)
+  const reduced = usePrefersReducedMotion()
 
-  // LE moment orchestré de cet écran — et le seul (P1_MOTION_SYSTEM).
-  useEffect(() => {
-    if (markRef.current) celebrateSuccess(markRef.current)
-  }, [])
+  const follow = (delay: number) =>
+    reduced
+      ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.09 } }
+      : {
+          initial: { opacity: 0, y: 14 },
+          animate: { opacity: 1, y: 0 },
+          transition: { delay, type: 'spring' as const, stiffness: 260, damping: 26 },
+        }
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-28 pt-8 md:pb-10" data-testid="booking-confirmed">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div
-          ref={markRef}
-          className="flex size-14 items-center justify-center rounded-full bg-[var(--fu-accent)]"
-        >
-          <IconCheck aria-hidden="true" className="size-7 text-[var(--fu-accent-fg)]" />
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">
+        <div className="mx-auto flex min-h-[calc(100dvh-8rem)] w-full max-w-xl flex-col justify-center gap-6 px-4 pb-28 pt-8 md:pb-10" data-testid="booking-confirmed">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <img src="/brand/fadeup-mark-primary.png" alt="" className="size-10 opacity-90" />
+            <m.div
+              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.45 }}
+              animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+              transition={reduced ? { duration: 0.09 } : { type: 'spring', stiffness: 320, damping: 16, mass: 1 }}
+              className="flex size-20 items-center justify-center rounded-full bg-[var(--fu-accent)] shadow-[0_0_60px_rgba(0,194,122,0.35)]"
+            >
+              <IconCheck aria-hidden="true" className="size-10 text-[var(--fu-accent-fg)]" />
+            </m.div>
+            <m.div {...follow(0.18)} className="flex flex-col gap-1">
+              <h1 className="text-fu-2xl font-semibold text-[var(--fu-text-primary)]">{t('booking.confirmed.title')}</h1>
+              <p className="text-fu-base text-[var(--fu-text-secondary)]">{t('booking.confirmed.subtitle')}</p>
+            </m.div>
+          </div>
+          <m.div {...follow(0.3)} className="flex flex-col gap-6">
+            <OutcomeRecap result={result} context={context} />
+            <div className="flex flex-col gap-2">
+              <Button variant="primary" size="lg" fullWidth onClick={() => void navigate('/bookings')}>
+                {t('booking.confirmed.viewBookings')}
+              </Button>
+              <Button
+                variant="tertiary"
+                fullWidth
+                onClick={() => void navigate(`/shop/${encodeURIComponent(context.organizationSlug)}`)}
+              >
+                {t('booking.confirmed.backToProfile')}
+              </Button>
+            </div>
+          </m.div>
         </div>
-        <div className="fu-success-follow flex flex-col gap-1">
-          <h1 className="text-fu-2xl font-semibold text-[var(--fu-text-primary)]">{t('booking.confirmed.title')}</h1>
-          <p className="text-fu-base text-[var(--fu-text-secondary)]">{t('booking.confirmed.subtitle')}</p>
-        </div>
-      </div>
-      <div className="fu-success-follow flex flex-col gap-6">
-        <OutcomeRecap result={result} context={context} />
-        <div className="flex flex-col gap-2">
-          <Button variant="primary" size="lg" fullWidth onClick={() => void navigate('/bookings')}>
-            {t('booking.confirmed.viewBookings')}
-          </Button>
-          <Button
-            variant="tertiary"
-            fullWidth
-            onClick={() => void navigate(`/shop/${encodeURIComponent(context.organizationSlug)}`)}
-          >
-            {t('booking.confirmed.backToProfile')}
-          </Button>
-        </div>
-      </div>
-    </div>
+      </MotionConfig>
+    </LazyMotion>
   )
 }
 
