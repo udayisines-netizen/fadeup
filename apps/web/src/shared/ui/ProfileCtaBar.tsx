@@ -48,8 +48,13 @@ export interface ProfileCtaBarProps {
  *
  * Sous 768 px la nav basse consumer occupe le bord : la barre se pose
  * AU-DESSUS (bottom-14), leçon F1 §10.2.
+ *
+ * D1 (modèle X) : la MÊME paire de boutons vit aussi inline dans l'en-tête
+ * du profil (`ProfileCtaButtons`) ; la barre collante accepte `hidden` et ne
+ * se montre qu'une fois la paire inline sortie de l'écran — jamais deux
+ * verts pleins visibles en même temps (P1 §9).
  */
-export function ProfileCtaBar({
+export function ProfileCtaButtons({
   cta,
   name,
   bookTo,
@@ -77,8 +82,7 @@ export function ProfileCtaBar({
   const note = noteOverride ?? derivedNote
 
   return (
-    <StickyActionBar className="bottom-14 pb-3 md:bottom-0 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-      <div className="mx-auto max-w-md">
+    <div>
         {(note || cta.temporaryUntil) && (
           <p className="mb-2 text-center text-fu-xs text-[var(--fu-text-secondary)]" data-testid="cta-note">
             {note}
@@ -150,6 +154,22 @@ export function ProfileCtaBar({
             {following ? t('profile.cta.following') : t('common.action.follow')}
           </Button>
         </div>
+    </div>
+  )
+}
+
+/**
+ * La barre COLLANTE — le repli de conversion quand la paire inline du
+ * modèle X est sortie de l'écran. `hidden` la retire du rendu (pas
+ * seulement de la vue) pour qu'aucun lecteur d'écran ne rencontre deux
+ * paires de CTA identiques.
+ */
+export function ProfileCtaBar({ hidden = false, ...props }: ProfileCtaBarProps & { hidden?: boolean }) {
+  if (hidden) return null
+  return (
+    <StickyActionBar className="fu-rise-in bottom-14 pb-3 md:bottom-0 md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto max-w-md">
+        <ProfileCtaButtons {...props} />
       </div>
     </StickyActionBar>
   )

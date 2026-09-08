@@ -86,5 +86,14 @@
   "unlocated": {
     "title": "Distance unknown",
     "note": "These establishments are real but have no usable position: their distance is unknown — they don’t count as “in this area”."
+  },
+  "card": {
+    "openAria": "View {{name}}"
+  },
+  "sheet": {
+    "fullProfile": "See full profile",
+    "services": "Services",
+    "servicesEmpty": "Services are not listed yet.",
+    "close": "Close"
   }
 }

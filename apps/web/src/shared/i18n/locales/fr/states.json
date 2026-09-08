@@ -23,7 +23,8 @@
   "claim": {
     "unclaimed": "Pas encore géré sur FadeUp",
     "claimed": "Profil revendiqué",
-    "verified": "Profil vérifié"
+    "verified": "Profil vérifié",
+    "unclaimedShort": "Non revendiqué"
   },
   "rating": {
     "none": "Pas encore d'avis",
@@ -47,6 +48,7 @@
   },
   "opening": {
     "open": "Ouvert",
-    "closed": "Fermé actuellement"
+    "closed": "Fermé actuellement",
+    "closedShort": "Fermé"
   }
 }

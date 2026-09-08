@@ -202,6 +202,33 @@
     animation-delay: 160ms;
   }
 
+  /* ── D1 : transition PARTAGÉE du portrait (View Transitions) — le
+        portrait de la feuille grandit vers celui du profil. Le nom n'existe
+        que hors reduced-motion : sous reduce, navigation instantanée. ── */
+  .fu-vt-portrait {
+    view-transition-name: fu-portrait;
+  }
+
+  /* ── D1 : mouvement de position en file — quand le chiffre change,
+        ÇA SE VOIT (l'élément remonte et s'affirme, jamais la liste). ── */
+  @keyframes fu-number-in {
+    0% {
+      opacity: 0;
+      transform: translateY(0.35em) scale(1.15);
+    }
+    60% {
+      transform: translateY(0) scale(1.04);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .fu-number-in {
+    display: inline-block;
+    animation: fu-number-in 420ms var(--fu-ease) both;
+  }
+
   /* ── Passport — révélation du moment de marque sombre ── */
   @keyframes fu-passport-in {
     from {

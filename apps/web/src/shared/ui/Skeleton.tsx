@@ -28,6 +28,29 @@ export function SkeletonRect({ className }: SkeletonPieceProps) {
   return <div aria-hidden="true" className={pieceClasses(cn('h-24 rounded-[var(--radius-media)]', className))} />
 }
 
+/** D1 — la géométrie exacte d'une ResultCard : bannière, portrait, lignes. */
+export function SkeletonCard({ className }: SkeletonPieceProps) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('overflow-hidden rounded-[var(--radius-card)] bg-[var(--fu-surface)] shadow-[var(--fu-shadow-card)]', className)}
+    >
+      <div className="h-24 animate-pulse bg-[var(--fu-border)]" />
+      <div className="relative -mt-7 px-4">
+        <SkeletonCircle className="size-14 ring-4 ring-[var(--fu-surface)]" />
+      </div>
+      <div className="flex flex-col gap-2 px-4 pb-4 pt-2">
+        <SkeletonText className="w-3/5" />
+        <SkeletonText className="h-3 w-4/5" />
+        <div className="flex justify-between">
+          <SkeletonText className="w-16" />
+          <SkeletonText className="w-14" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** La géométrie exacte d'une `Row` : avatar, deux lignes, zone de fin. */
 export function SkeletonRow({ className }: SkeletonPieceProps) {
   return (

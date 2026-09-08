@@ -22,5 +22,27 @@
   },
   "discover": {
     "title": "Discover"
+  },
+  "current": {
+    "title": "Happening now"
+  },
+  "pending": {
+    "title": "Pending request",
+    "deadline": "Answer expected before"
+  },
+  "following": {
+    "title": "Your barbers and shops"
+  },
+  "around": {
+    "title": "Around you"
+  },
+  "recent": {
+    "title": "You recently viewed"
+  },
+  "invite": {
+    "title": "Create a FadeUp account",
+    "body": "Find your bookings anywhere, and get notified when it's your turn.",
+    "cta": "Create my account",
+    "dismiss": "Dismiss invitation"
   }
 }
