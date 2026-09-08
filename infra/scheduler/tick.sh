@@ -95,6 +95,21 @@ while true; do
     echo "$(date -u +%FT%TZ) fadeup-scheduler: tick failed: ${output}" >&2
   fi
 
+  # X2: Resend delivery feedback, a SEPARATE call for the same blast-radius
+  # rule — a failure here must not stop slots being released. Processes the
+  # webhook events the resend-webhook Edge Function stored: delivered/opened
+  # timestamps on email_outbox, hard bounce or complaint -> address suppressed
+  # and prospect do_not_contact. Idempotent (each event is consumed once);
+  # with an empty journal it does nothing.
+  if feedback=$(psql -v ON_ERROR_STOP=1 -At \
+        -c "select events_processed || '|' || addresses_suppressed from public.run_email_feedback_maintenance();" 2>&1); then
+    if [ "$feedback" != "0|0" ]; then
+      echo "$(date -u +%FT%TZ) fadeup-scheduler: email_feedback events|suppressed = ${feedback}"
+    fi
+  else
+    echo "$(date -u +%FT%TZ) fadeup-scheduler: email feedback failed: ${feedback}" >&2
+  fi
+
   # F1b: the queue grace sweep is a SEPARATE psql call on purpose — the six
   # jobs above share one statement, so one failing domain fails them all
   # together; the queue sweep must not join that blast radius (B2's rule:

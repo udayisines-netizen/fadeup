@@ -491,6 +491,11 @@ services:
       # de variable VITE_* : rien de tout ça n'atteint le navigateur.
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      # X2 — signature Svix des webhooks Resend (resend-webhook). Valeur dans
+      # .env quand le fondateur aura créé le point de terminaison côté Resend
+      # (docs/frontend/EMAIL_DELIVERABILITY.md). Vide = la fonction rejette
+      # tout (fail closed) : le déploiement inerte est sans risque.
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
     command:
       [
         "start",
