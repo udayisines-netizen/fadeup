@@ -163,11 +163,22 @@ test.describe('F3 — /search', () => {
   test('un résultat non revendiqué porte son badge neutre ; un établissement géré n’en porte pas', async ({ page }) => {
     await page.goto('/search')
     await waitForResults(page)
-    // demo-barber-corner : ni membre ni identité revendiquée — badge neutre
-    // présent (contrat is_managed v2, F3).
+    // demo-barber-corner : ni membre ni identité revendiquée. P1PRO §7 : sur
+    // la CARTE, « Sur demande » (capacité absente) REND la mention de
+    // revendication redondante et la remplace — elle reste sur la feuille et
+    // le profil. Le badge neutre ne se rend sur la carte que tant que la
+    // capacité n'a pas répondu, ou quand la réservation n'accepte pas.
+    // Modification de spec due à un changement de PRODUIT voulu (prompt
+    // P1PRO §7), même régime que les réécritures F3 de D1.
     const unmanagedRow = page.locator('[data-org="demo-barber-corner"]')
     await expect(unmanagedRow).toHaveCount(1)
-    await expect(unmanagedRow.locator('[data-state="unclaimed"]')).toBeVisible()
+    await expect(
+      unmanagedRow.locator('[data-state="unclaimed"], [data-state="on-request"]').first(),
+    ).toBeVisible()
+    // Jamais les DEUX à la fois : un seul badge sur la carte.
+    const both = await unmanagedRow.locator('[data-state="unclaimed"]').count()
+    const onRequest = await unmanagedRow.locator('[data-state="on-request"]').count()
+    expect(both + onRequest).toBeLessThanOrEqual(1)
     // side-agency (membre) et demo-maison-kais (identité revendiquée
     // rattachée — la cohérence avec /pro/demo.kais.bellamine « Revendiqué »,
     // revue F3 B1) : AUCUN badge de revendication.
