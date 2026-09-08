@@ -47,11 +47,30 @@ export const color = {
   focus: '#00875A',
   scrim: 'rgba(8, 15, 13, 0.48)',
 
-  /* Tokens du thème `moment` (sombre composé #071310) — POSÉS pour M1b
-     (confirmation, suivi de file, Passport). Aucun écran M1a ne les rend. */
+  /* Thème `moment` (sombre composé #071310) — D1 §9, complété par M1b depuis
+     apps/web/src/styles/tokens-moment.css (le web fait foi pour les valeurs).
+     Deux écrans le rendent : le suivi de file et la confirmation de
+     réservation. PAS une inversion mécanique : le vert vif reprend de la
+     force, l'encre sur vert reste la loi (jamais de blanc sur vert). */
   moment: {
     canvas: '#071310',
     surface: '#0D1F18',
+    surfaceSubtle: '#0A1A14',
+    textPrimary: '#EAF6F0' /* ≈16:1 sur le fond */,
+    textSecondary: 'rgba(234, 246, 240, 0.66)',
+    textTertiary: 'rgba(234, 246, 240, 0.4)',
+    border: 'rgba(234, 246, 240, 0.12)',
+    borderStrong: 'rgba(234, 246, 240, 0.22)',
+    accent: '#00C27A',
+    accentPressed: '#28E18E',
+    accentFg: '#080F0D' /* encre sur vert, 8,30:1 — jamais blanc */,
+    accentSoft: 'rgba(40, 225, 142, 0.16)',
+    accentText: '#2FE59B',
+    success: '#28E18E',
+    danger: '#F2827C' /* lisible sur sombre — texte uniquement */,
+    focus: '#28E18E',
+    scrim: 'rgba(0, 0, 0, 0.66)',
+    brandWatermark: 'rgba(40, 225, 142, 0.1)',
   },
 } as const
 

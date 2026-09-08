@@ -1,0 +1,96 @@
+{
+  "home": {
+    "todayLabel": "Today",
+    "revenueLabel": "Today's revenue — calculated",
+    "revenueHint_one": "{{count}} completed service, at configured prices",
+    "revenueHint_other": "{{count}} completed services, at configured prices",
+    "remainingLabel": "Your remaining services",
+    "remainingHint": "Still to serve today",
+    "statAppointments": "Appointments today",
+    "statCompleted": "Completed",
+    "statPending": "Pending requests",
+    "requestsLabel": "Requests",
+    "requestsCount_one": "{{count}} request awaits your answer",
+    "requestsCount_other": "{{count}} requests await your answer",
+    "requestsNearest": "The most urgent expires in {{time}}",
+    "viewRequests": "Answer requests",
+    "nowLabel": "Now",
+    "nowEmpty": "Nobody in the chair right now.",
+    "markDone": "Done",
+    "markDoneAria": "Mark {{name}}'s service as done",
+    "queueLabel": "Queue",
+    "queueEmpty": "The queue is empty for now.",
+    "viewQueue": "View the queue",
+    "nextLabel": "Next",
+    "nextEmpty": "Nothing else planned today.",
+    "timelineLabel": "The day",
+    "statusCancelled": "Cancelled",
+    "statusNoShow": "No-show",
+    "emptyDay": {
+      "title": "Nothing planned today",
+      "description": "No appointment or request for this day. Your public profile works for you: share it to fill the agenda.",
+      "action": "View my public profile"
+    }
+  },
+  "requests": {
+    "label": "Requests",
+    "title": "Booking requests",
+    "unknownService": "Deleted service",
+    "withBarber": "with {{name}}",
+    "expiresLabel": "Expires in",
+    "accept": "Accept",
+    "counter": "Propose another time",
+    "decline": "Decline",
+    "awaitingTitle": "Waiting for the customer",
+    "awaitingHint": "The customer answers before the deadline",
+    "historyTitle": "Handled requests",
+    "historyEmpty": "Handled requests will appear here — the record of what FadeUp brings you.",
+    "declineTitle": "Decline this request?",
+    "declineBody": "{{name}} is waiting for an answer. Declining is final: the request will be closed and they will be notified.",
+    "declineNoteLabel": "A word for the customer (optional)",
+    "declineConfirm": "Decline the request",
+    "empty": {
+      "title": "No pending request",
+      "description": "When a customer requests a slot, it will appear here in real time — with its deadline.",
+      "action": "View my public profile"
+    },
+    "errors": {
+      "expired": "This request expired before your answer — it left the list.",
+      "counterPending": "A counter-proposal is already awaiting the customer's answer.",
+      "generic": "The action could not complete. Refresh and try again."
+    },
+    "upsell": {
+      "title": "Customer confirmed — they found you on FadeUp",
+      "body": "The 14-day trial opens the agenda, the live queue and the statistics. No credit card, no commitment.",
+      "cta": "Start the 14-day trial",
+      "started": "Trial started — everything is open.",
+      "unavailable": "The trial is not available on this account."
+    },
+    "counterSheet": {
+      "title": "Propose another time",
+      "context": "{{name}} asked for",
+      "dayLabel": "Which day?",
+      "slotsLabel": "Actually available slots",
+      "noSlots": "No slot available that day. Try another day.",
+      "noteLabel": "A word for the customer (optional)",
+      "notePlaceholder": "Not 6pm, but 6:30pm — same chair.",
+      "holdNote": "The proposed slot is held until the customer answers; the requested time is released. The countdown restarts, never beyond the proposed hour.",
+      "submit": "Send the proposal",
+      "error": "The proposal could not be sent. Try again.",
+      "errorExpired": "The request expired before the proposal was sent."
+    },
+    "outcome": {
+      "accepted": "Accepted",
+      "acceptedCounter": "Accepted after counter-proposal",
+      "completed": "Completed",
+      "noShow": "Customer no-show",
+      "declined": "Declined",
+      "expired": "Expired unanswered",
+      "counterDeclined": "Counter-proposal declined",
+      "customerCancelled": "Withdrawn by the customer",
+      "businessCancelled": "Cancelled by the salon",
+      "rescheduled": "Moved",
+      "closed": "Closed"
+    }
+  }
+}

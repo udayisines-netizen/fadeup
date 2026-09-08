@@ -51,6 +51,35 @@ const MANIFEST = {
     mode: 'adapted',
     webSha256: '57eeba3b947dd5f1d883db158e8c0b3ed77728a9881bd11272420235b5e4d832',
   },
+  // M1b — file, réservation, auth légère : les couches pures et data du web
+  // (F1/F1b/F4/P1PRO) sont propres de tout global web et portent des imports
+  // `@/` identiques des deux côtés — copies verbatim, tests compris.
+  'src/shared/lib/bookingRefusals.ts': { web: 'src/shared/lib/bookingRefusals.ts', mode: 'verbatim' },
+  'src/shared/lib/bookingRefusals.test.ts': { web: 'src/shared/lib/bookingRefusals.test.ts', mode: 'verbatim' },
+  'src/shared/lib/deadline.ts': { web: 'src/shared/lib/deadline.ts', mode: 'verbatim' },
+  'src/shared/lib/deadline.test.ts': { web: 'src/shared/lib/deadline.test.ts', mode: 'verbatim' },
+  'src/shared/lib/queueLink.ts': { web: 'src/shared/lib/queueLink.ts', mode: 'verbatim' },
+  'src/shared/lib/queueLink.test.ts': { web: 'src/shared/lib/queueLink.test.ts', mode: 'verbatim' },
+  'src/shared/hooks/useNow.ts': { web: 'src/shared/hooks/useNow.ts', mode: 'verbatim' },
+  'src/shared/data/publicQueue.ts': { web: 'src/shared/data/publicQueue.ts', mode: 'verbatim' },
+  'src/shared/data/capability.ts': { web: 'src/shared/data/capability.ts', mode: 'verbatim' },
+  'src/features/queue/lib/refusals.ts': { web: 'src/features/queue/lib/refusals.ts', mode: 'verbatim' },
+  'src/features/queue/lib/refusals.test.ts': { web: 'src/features/queue/lib/refusals.test.ts', mode: 'verbatim' },
+  'src/features/queue/api/publicQueue.ts': { web: 'src/features/queue/api/publicQueue.ts', mode: 'verbatim' },
+  'src/features/queue/api/lightAuth.ts': { web: 'src/features/queue/api/lightAuth.ts', mode: 'verbatim' },
+  'src/features/booking/lib/refusals.ts': { web: 'src/features/booking/lib/refusals.ts', mode: 'verbatim' },
+  'src/features/booking/lib/deadline.ts': { web: 'src/features/booking/lib/deadline.ts', mode: 'verbatim' },
+  'src/features/booking/lib/slots.ts': { web: 'src/features/booking/lib/slots.ts', mode: 'verbatim' },
+  'src/features/booking/lib/slots.test.ts': { web: 'src/features/booking/lib/slots.test.ts', mode: 'verbatim' },
+  'src/features/booking/api/booking.ts': { web: 'src/features/booking/api/booking.ts', mode: 'verbatim' },
+  'src/features/booking/api/lightAuth.ts': { web: 'src/features/booking/api/lightAuth.ts', mode: 'verbatim' },
+  // localQueueEntry.ts : localStorage synchrone → AsyncStorage asynchrone
+  // (même contrat, même clé, même validation) — adaptation déclarée en tête.
+  'src/shared/lib/localQueueEntry.ts': {
+    web: 'src/shared/lib/localQueueEntry.ts',
+    mode: 'adapted',
+    webSha256: '29cb69b005ae00c098e3418c5240a451c3390e26c1a124603d11239123ead425',
+  },
 }
 
 const I18N_DIRS = ['src/shared/i18n/locales/fr', 'src/shared/i18n/locales/en']

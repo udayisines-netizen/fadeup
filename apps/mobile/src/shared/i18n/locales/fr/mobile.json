@@ -33,25 +33,9 @@
     }
   },
   "placeholder": {
-    "feed": {
-      "title": "Le feed arrive",
-      "body": "Les publications des barbers que vous suivez et la découverte locale arrivent dans la prochaine version (M1b)."
-    },
-    "bookings": {
-      "title": "Vos réservations arrivent",
-      "body": "Le suivi de vos réservations et de votre place en file arrive dans la prochaine version (M1b)."
-    },
     "account": {
       "title": "Votre compte arrive",
       "body": "La connexion, votre Fade Passport et vos préférences arrivent dans la prochaine version (M1b)."
-    },
-    "booking": {
-      "title": "La réservation arrive",
-      "body": "Le tunnel de réservation arrive dans la prochaine version de l'application (M1b). Le profil reste entier : suivez ce professionnel ou consultez ses réalisations en attendant."
-    },
-    "queue": {
-      "title": "La file arrive",
-      "body": "Rejoindre et suivre une file d'attente arrive dans la prochaine version de l'application (M1b)."
     },
     "back": "Retour"
   },
@@ -71,8 +55,95 @@
     "fr": "Français",
     "en": "English"
   },
-  "connect": {
-    "title": "La connexion arrive",
-    "body": "Créer un compte et suivre vos barbers arrive dans la prochaine version (M1b). Tout reste consultable librement en attendant."
+  "auth": {
+    "title": "Connexion rapide",
+    "body": "Un e-mail suffit — un code à six chiffres, et vous reprenez exactement où vous en étiez.",
+    "contextFollow": "Connectez-vous pour suivre ce profil.",
+    "contextLike": "Connectez-vous pour aimer ce post.",
+    "contextBookings": "Connectez-vous pour retrouver vos réservations.",
+    "contextAccount": "Connectez-vous pour gérer votre compte.",
+    "emailLabel": "Adresse e-mail",
+    "sendCode": "Recevoir un code",
+    "google": "Continuer avec Google",
+    "googleFailed": "La connexion Google n'a pas abouti. Réessayez, ou utilisez le code e-mail.",
+    "or": "ou",
+    "cancel": "Plus tard"
+  },
+  "offline": {
+    "banner": "Hors connexion — rien ne peut se mettre à jour.",
+    "blockedTitle": "Hors connexion",
+    "blockedBody": "Cet écran a besoin du réseau pour afficher des données à jour. Rien d'ancien ne vous sera montré.",
+    "queueBlockedBody": "Votre position change en permanence : plutôt que d'afficher un chiffre périmé, l'écran attend le retour du réseau.",
+    "retry": "Réessayer"
+  },
+  "feed": {
+    "title": "Feed",
+    "sourceFollowedPro": "Vous suivez",
+    "sourceFollowedOrg": "Salon suivi",
+    "sourceDiscovery": "À découvrir",
+    "bookCta": "Réserver cette coupe",
+    "likeAria": "Aimer ce post",
+    "unlikeAria": "Ne plus aimer ce post",
+    "likes_one": "{{count}} j'aime",
+    "likes_other": "{{count}} j'aime",
+    "emptyTitle": "Rien à montrer pour l'instant",
+    "emptyBody": "Suivez des barbers et des salons pour remplir votre feed — ou explorez la recherche.",
+    "emptyAction": "Explorer la recherche",
+    "endOfFeed": "Vous êtes à jour.",
+    "postedAt": "chez {{name}}",
+    "mediaOf": "Média {{index}} sur {{count}}",
+    "videoBadge": "Vidéo",
+    "openPost": "Ouvrir le post de {{name}}"
+  },
+  "account": {
+    "title": "Compte",
+    "signedOutTitle": "Votre compte",
+    "signedOutBody": "Connectez-vous pour retrouver vos réservations, favoris et abonnements.",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "profileSection": "Profil",
+    "nameLabel": "Prénom",
+    "namePlaceholder": "Votre prénom",
+    "nameSave": "Enregistrer",
+    "nameSaved": "Enregistré",
+    "emailRow": "Connecté avec {{email}}",
+    "favoritesSection": "Salons favoris",
+    "favoritesEmpty": "Aucun salon en favori pour l'instant.",
+    "removeFavorite": "Retirer",
+    "followsSection": "Abonnements",
+    "followsPros": "Professionnels suivis",
+    "followsOrgs_one": "{{count}} salon suivi",
+    "followsOrgs_other": "{{count}} salons suivis",
+    "followsEmpty": "Vous ne suivez personne pour l'instant.",
+    "unfollow": "Ne plus suivre",
+    "unfollowBody": "Vous ne verrez plus son activité. Le désabonnement dure : une réservation ne vous réabonnera pas automatiquement — seul un nouveau « Suivre » depuis son profil le rétablira.",
+    "notifSection": "Notifications",
+    "notifBody": "Les notifications push arrivent avec la prochaine version. Vos préférences sont gardées sur cet appareil et s'appliqueront dès qu'elles existeront.",
+    "notifQueue": "Mon tour dans la file",
+    "notifBooking": "Réponses à mes demandes",
+    "notifSocial": "Activité des profils suivis",
+    "passportRow": "Fade Passport",
+    "passportSoon": "Bientôt",
+    "passportBody": "Votre passeport FadeUp — il arrive dans une prochaine version, sa place est réservée ici.",
+    "deleteRow": "Supprimer mon compte",
+    "deleteTitle": "Supprimer votre compte",
+    "deleteBody": "La suppression en libre-service depuis l'application n'est pas encore disponible — elle exige un chantier côté serveur, déjà identifié. Aucune donnée n'est exploitée en attendant ; vous pouvez vous déconnecter de cet appareil dès maintenant.",
+    "deleteAck": "Compris"
+  },
+  "queuex": {
+    "scanTitle": "Scanner le QR du salon",
+    "cameraPermissionBody": "La caméra ne sert qu'à lire le QR affiché dans le salon.",
+    "cameraDenied": "L'accès à la caméra est refusé. Autorisez-le dans les réglages pour scanner le QR du salon.",
+    "openSettings": "Ouvrir les réglages",
+    "consultFromAnywhere": "L'attente se consulte librement — rejoindre se fait au salon, QR en main.",
+    "keptAwake": "L'écran reste allumé pendant votre attente."
+  },
+  "bookingx": {
+    "expiredCallFirst": "Appelez d'abord le salon",
+    "expiredCallFirstBody": "Un appel règle souvent la question en une minute. Ce salon n'a pas publié son numéro dans FadeUp — vous le trouverez sur place ou en ligne.",
+    "resumeNotice": "Votre créneau est conservé — connectez-vous pour terminer.",
+    "noPreferenceHours": "Plus d'heure à proposer pour ce jour — choisissez-en un autre.",
+    "loadFailedTitle": "Ces informations n'ont pas pu être chargées",
+    "loadFailedBody": "Rien de périmé ne vous est montré. Réessayez dans un instant."
   }
 }

@@ -34,9 +34,16 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FadeUp utilise votre position uniquement pour la recherche « Autour de moi »."
+          "locationWhenInUsePermission": "FadeUp utilise votre position uniquement pour la recherche « Autour de moi » et pour vérifier votre présence au salon quand vous rejoignez une file."
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FadeUp utilise la caméra uniquement pour scanner le QR affiché dans le salon."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -18,6 +18,8 @@ import { Money } from '@/shared/ui/Money'
 import { MonoText } from '@/shared/ui/MonoText'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { SocialProof } from '@/shared/ui/SocialProof'
+import { AuthSheet } from '@/shared/ui/AuthSheet'
+import { useSession } from '@/shared/data/auth'
 import {
   PostGrid,
   ProfileCtaPair,
@@ -29,7 +31,9 @@ import { BackButton } from '@/shared/ui/BackButton'
 import {
   useLocationHours,
   useMemberHandle,
+  useMyFollowedOrganizationIds,
   useOrganizationFollowerCount,
+  useToggleFollowOrganization,
   useOrganizationLocations,
   useOrganizationPosts,
   useOrganizationReputation,
@@ -109,6 +113,35 @@ export function OrganizationProfileScreen() {
 
   const onBook = () => router.push(`/book/${encodeURIComponent(slug ?? '')}` as never)
   const onQueue = () => router.push(`/q/${encodeURIComponent(slug ?? '')}` as never)
+
+  /* M1b — le follow réel du salon : auth à l'action, intention rejouée. */
+  const { session } = useSession()
+  const followedOrgIds = useMyFollowedOrganizationIds(Boolean(session))
+  const toggleFollow = useToggleFollowOrganization()
+  const [authOpen, setAuthOpen] = useState(false)
+  const pendingFollow = useRef(false)
+  const following = organizationId ? followedOrgIds.data?.has(organizationId) === true : false
+  const follow = organizationId
+    ? {
+        following,
+        busy: toggleFollow.isPending,
+        name: organization.data?.name ?? '',
+        onPress: () => {
+          if (!session) {
+            pendingFollow.current = true
+            setAuthOpen(true)
+            return
+          }
+          toggleFollow.mutate({ organizationId, follow: !following })
+        },
+      }
+    : undefined
+  const onAuthed = () => {
+    if (pendingFollow.current && organizationId) {
+      pendingFollow.current = false
+      toggleFollow.mutate({ organizationId, follow: true })
+    }
+  }
 
   if (organization.isPending) {
     return (
@@ -212,7 +245,7 @@ export function OrganizationProfileScreen() {
               setCtaBottom(y + height)
             }}
           >
-            <ProfileCtaPair cta={cta} isManaged onBook={onBook} onQueue={onQueue} />
+            <ProfileCtaPair cta={cta} isManaged onBook={onBook} onQueue={onQueue} follow={follow} />
           </View>
 
           {/* Services — groupés par catégorie réelle, prix en mono. */}
@@ -365,9 +398,11 @@ export function OrganizationProfileScreen() {
           entering={FadeIn.duration(120)}
           style={[styles.stickyBar, shadow.sticky, { paddingBottom: insets.bottom + spacing(2) }]}
         >
-          <ProfileCtaPair cta={cta} isManaged onBook={onBook} onQueue={onQueue} />
+          <ProfileCtaPair cta={cta} isManaged onBook={onBook} onQueue={onQueue} follow={follow} />
         </Animated.View>
       ) : null}
+
+      <AuthSheet open={authOpen} context="follow" onClose={() => setAuthOpen(false)} onAuthed={onAuthed} />
     </SafeAreaView>
   )
 }

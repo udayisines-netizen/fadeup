@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabase } from '@/shared/lib/supabase'
 import { organizationKeys } from '@/shared/data/keys'
 import type { PublicLocationHoursRow } from '@/shared/lib/openingHours'
@@ -231,5 +231,43 @@ export function useOrganizationPosts(slug: string | null) {
     },
     enabled: Boolean(slug),
     staleTime: 60_000,
+  })
+}
+
+/**
+ * M1b — le follow réel d'un salon (auth à l'action). Le contrat
+ * `list_my_followed_organizations` ne renvoie QUE `organization_id` (manque
+ * déclaré au rapport M1b) — suffisant pour l'état du bouton, rien de plus.
+ * `follow_organization`/`unfollow_organization` répondent 42501
+ * « organization unavailable » sur une org invisible.
+ */
+export function useMyFollowedOrganizationIds(enabled: boolean) {
+  return useQuery({
+    queryKey: organizationKeys.myFollowed(),
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await getSupabase().rpc('list_my_followed_organizations')
+      if (error) throw error
+      return new Set((data ?? []).map((row) => row.organization_id))
+    },
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
+export function useToggleFollowOrganization() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ organizationId, follow }: { organizationId: string; follow: boolean }) => {
+      const supabase = getSupabase()
+      const { error } = follow
+        ? await supabase.rpc('follow_organization', { p_organization_id: organizationId })
+        : await supabase.rpc('unfollow_organization', { p_organization_id: organizationId })
+      if (error) throw error
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: organizationKeys.myFollowed() })
+      // Le compteur public d'abonnés change aussi.
+      void queryClient.invalidateQueries({ queryKey: ['organization'] })
+    },
   })
 }

@@ -33,25 +33,9 @@
     }
   },
   "placeholder": {
-    "feed": {
-      "title": "The feed is coming",
-      "body": "Posts from the barbers you follow and local discovery arrive in the next release (M1b)."
-    },
-    "bookings": {
-      "title": "Your bookings are coming",
-      "body": "Tracking your bookings and your queue spot arrives in the next release (M1b)."
-    },
     "account": {
       "title": "Your account is coming",
       "body": "Sign-in, your Fade Passport and your preferences arrive in the next release (M1b)."
-    },
-    "booking": {
-      "title": "Booking is coming",
-      "body": "The booking flow arrives in the next release of the app (M1b). The profile stays whole: follow this professional or browse their work in the meantime."
-    },
-    "queue": {
-      "title": "The queue is coming",
-      "body": "Joining and tracking a live queue arrives in the next release of the app (M1b)."
     },
     "back": "Back"
   },
@@ -71,8 +55,95 @@
     "fr": "Français",
     "en": "English"
   },
-  "connect": {
-    "title": "Sign-in is coming",
-    "body": "Creating an account and following your barbers arrives in the next release (M1b). Everything stays freely browsable in the meantime."
+  "auth": {
+    "title": "Quick sign-in",
+    "body": "An email is enough — a six-digit code, and you pick up exactly where you left off.",
+    "contextFollow": "Sign in to follow this profile.",
+    "contextLike": "Sign in to like this post.",
+    "contextBookings": "Sign in to see your bookings.",
+    "contextAccount": "Sign in to manage your account.",
+    "emailLabel": "Email address",
+    "sendCode": "Get a code",
+    "google": "Continue with Google",
+    "googleFailed": "Google sign-in didn't complete. Try again, or use the email code.",
+    "or": "or",
+    "cancel": "Later"
+  },
+  "offline": {
+    "banner": "Offline — nothing can update right now.",
+    "blockedTitle": "You're offline",
+    "blockedBody": "This screen needs the network to show up-to-date data. Nothing stale will be shown.",
+    "queueBlockedBody": "Your position changes constantly: rather than show a stale number, this screen waits for the network.",
+    "retry": "Try again"
+  },
+  "feed": {
+    "title": "Feed",
+    "sourceFollowedPro": "Following",
+    "sourceFollowedOrg": "Followed shop",
+    "sourceDiscovery": "Discover",
+    "bookCta": "Book this cut",
+    "likeAria": "Like this post",
+    "unlikeAria": "Unlike this post",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "emptyTitle": "Nothing to show yet",
+    "emptyBody": "Follow barbers and shops to fill your feed — or explore search.",
+    "emptyAction": "Explore search",
+    "endOfFeed": "You're all caught up.",
+    "postedAt": "at {{name}}",
+    "mediaOf": "Media {{index}} of {{count}}",
+    "videoBadge": "Video",
+    "openPost": "Open post by {{name}}"
+  },
+  "account": {
+    "title": "Account",
+    "signedOutTitle": "Your account",
+    "signedOutBody": "Sign in to see your bookings, favorites and follows.",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "profileSection": "Profile",
+    "nameLabel": "First name",
+    "namePlaceholder": "Your first name",
+    "nameSave": "Save",
+    "nameSaved": "Saved",
+    "emailRow": "Signed in as {{email}}",
+    "favoritesSection": "Favorite shops",
+    "favoritesEmpty": "No favorite shops yet.",
+    "removeFavorite": "Remove",
+    "followsSection": "Following",
+    "followsPros": "Professionals you follow",
+    "followsOrgs_one": "{{count}} shop followed",
+    "followsOrgs_other": "{{count}} shops followed",
+    "followsEmpty": "You're not following anyone yet.",
+    "unfollow": "Unfollow",
+    "unfollowBody": "You'll stop seeing their activity. Unfollowing lasts: a booking won't follow them again automatically — only tapping Follow on their profile will.",
+    "notifSection": "Notifications",
+    "notifBody": "Push notifications arrive in an upcoming version. Your preferences are kept on this device and will apply as soon as they exist.",
+    "notifQueue": "My turn in the queue",
+    "notifBooking": "Replies to my requests",
+    "notifSocial": "Activity from profiles I follow",
+    "passportRow": "Fade Passport",
+    "passportSoon": "Soon",
+    "passportBody": "Your FadeUp passport — it arrives in an upcoming version; its place is reserved here.",
+    "deleteRow": "Delete my account",
+    "deleteTitle": "Delete your account",
+    "deleteBody": "Self-service deletion from the app isn't available yet — it requires server-side work that has been identified. No data is exploited in the meantime; you can sign out of this device right away.",
+    "deleteAck": "Got it"
+  },
+  "queuex": {
+    "scanTitle": "Scan the shop's QR",
+    "cameraPermissionBody": "The camera is only used to read the QR displayed in the shop.",
+    "cameraDenied": "Camera access is denied. Allow it in Settings to scan the shop's QR.",
+    "openSettings": "Open Settings",
+    "consultFromAnywhere": "The wait can be checked from anywhere — joining happens at the shop, QR in hand.",
+    "keptAwake": "The screen stays on while you wait."
+  },
+  "bookingx": {
+    "expiredCallFirst": "Call the shop first",
+    "expiredCallFirstBody": "A call often settles it in a minute. This shop hasn't published its number in FadeUp — you'll find it on site or online.",
+    "resumeNotice": "Your slot is kept — sign in to finish.",
+    "noPreferenceHours": "No time left to suggest on this day — pick another one.",
+    "loadFailedTitle": "This could not be loaded",
+    "loadFailedBody": "Nothing stale is shown to you. Try again in a moment."
   }
 }

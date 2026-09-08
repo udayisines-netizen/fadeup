@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Image, StyleSheet, View, type ImageSourcePropType } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { FuText } from '@/shared/ui/Text'
@@ -6,7 +6,6 @@ import { MonoText } from '@/shared/ui/MonoText'
 import { Avatar } from '@/shared/ui/Avatar'
 import { BannerImage } from '@/shared/ui/BannerImage'
 import { Button } from '@/shared/ui/Button'
-import { Sheet } from '@/shared/ui/Sheet'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { useSignedPostMedia } from '@/shared/data/postMedia'
 import type { PostMedia } from '@/shared/data/postMedia'
@@ -49,23 +48,42 @@ const heroStyles = StyleSheet.create({
  * LA paire de CTA du modèle X : Réserver (dominant, encre sur vert, l'état
  * RÉEL) + Suivre (secondaire, jamais vert plein). Le CTA dit l'état
  * (`deriveProfileCta`) — indisponible : désactivé + note, le profil reste
- * entier. En M1a, Suivre ouvre la feuille « la connexion arrive » (M1b) —
- * jamais un bouton qui ne fait rien.
+ * entier.
+ *
+ * M1b : le follow est RÉEL. Ce composant reste de PRÉSENTATION — l'écran
+ * appelant porte la mutation et la feuille d'auth (auth à l'action, le
+ * parcours reprend sur place). `follow` absent = bouton masqué (profil non
+ * revendiqué : `follow_professional` refuse les identités non revendiquées,
+ * un bouton qui échouerait toujours serait un mensonge).
  */
+export interface ProfileFollowProps {
+  following: boolean
+  busy?: boolean
+  name: string
+  onPress: () => void
+}
+
 export function ProfileCtaPair({
   cta,
   isManaged,
   onBook,
   onQueue,
+  follow,
+  onInterest,
 }: {
   cta: ProfileCtaState
   /** false = profil non revendiqué : la note dit pourquoi, sans alerte. */
   isManaged: boolean
   onBook: () => void
   onQueue: () => void
+  follow?: ProfileFollowProps
+  /**
+   * F4/M1b — le cul-de-sac du non revendiqué est levé : posé UNIQUEMENT une
+   * fois la résolution terminée, le geste RÉEL devient la demande d'intérêt.
+   */
+  onInterest?: () => void
 }) {
   const { t, i18n } = useTranslation('v2')
-  const [connectOpen, setConnectOpen] = useState(false)
 
   const note = useMemo(() => {
     if (cta.kind === 'unknown') return t('profile.cta.unknownNote')
@@ -81,6 +99,8 @@ export function ProfileCtaPair({
         <View style={ctaStyles.dominant}>
           {cta.kind === 'bookable' ? (
             <Button label={t('common.action.book')} size="lg" fullWidth onPress={onBook} />
+          ) : onInterest && cta.kind !== 'loading' ? (
+            <Button label={t('profile.cta.requestSlot')} size="lg" fullWidth onPress={onInterest} />
           ) : cta.kind === 'queue-only' ? (
             <Button label={t('profile.cta.joinQueue')} size="lg" fullWidth onPress={onQueue} />
           ) : (
@@ -93,12 +113,19 @@ export function ProfileCtaPair({
             />
           )}
         </View>
-        <Button
-          label={t('common.action.follow')}
-          variant="secondary"
-          size="lg"
-          onPress={() => setConnectOpen(true)}
-        />
+        {follow ? (
+          <Button
+            label={follow.following ? t('profile.cta.following') : t('common.action.follow')}
+            variant="secondary"
+            size="lg"
+            loading={follow.busy}
+            accessibilityLabel={t(follow.following ? 'profile.cta.unfollowAria' : 'profile.cta.followAria', {
+              name: follow.name,
+            })}
+            accessibilityState={{ selected: follow.following }}
+            onPress={follow.onPress}
+          />
+        ) : null}
       </View>
       {note ? (
         <FuText variant="sm" tone="secondary">
@@ -111,21 +138,6 @@ export function ProfileCtaPair({
           {formatDateTime(cta.temporaryUntil, deviceTimezone(), 'time', i18n.language)}
         </FuText>
       ) : null}
-
-      <Sheet open={connectOpen} onClose={() => setConnectOpen(false)} title={t('mobile.connect.title')}>
-        <View style={ctaStyles.connect}>
-          <FuText variant="title">{t('mobile.connect.title')}</FuText>
-          <FuText variant="sm" tone="secondary">
-            {t('mobile.connect.body')}
-          </FuText>
-          <Button
-            label={t('common.action.close')}
-            variant="secondary"
-            fullWidth
-            onPress={() => setConnectOpen(false)}
-          />
-        </View>
-      </Sheet>
     </View>
   )
 }
@@ -134,7 +146,6 @@ const ctaStyles = StyleSheet.create({
   block: { gap: spacing(2) },
   row: { flexDirection: 'row', gap: spacing(2.5), alignItems: 'center' },
   dominant: { flex: 1 },
-  connect: { gap: spacing(3), paddingBottom: spacing(2) },
 })
 
 /**
