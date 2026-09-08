@@ -274,7 +274,13 @@ profiles
 customer_profiles
 customer_passports
 posts
-post_media"
+post_media
+post_likes"
+  # post_likes ajouté par X2 (2026-09-08) : même politique can_view_post que
+  # posts/post_media — les likes d'un post public sont PUBLICS (loi produit
+  # MASTER §2). L'omission était invisible tant qu'AUCUN like n'existait sur
+  # un post visible ; le premier like réel (créé par la campagne M1b du
+  # 2026-09-08, delivered@resend.dev sur un post d1de) l'a révélée.
   sweep_reads  "$USER_JWT" "authed-sans-droit lecture tables" "$ALLOW_AUTHED_ROWS"
   sweep_writes "$USER_JWT" "authed-sans-droit écriture tables"
 

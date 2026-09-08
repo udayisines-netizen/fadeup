@@ -23,9 +23,13 @@
       "body": "Des sources publiquement accessibles : fiches d'établissement (par exemple Google Business), annuaires professionnels, votre site web et vos profils publics sur les réseaux sociaux. Chaque donnée garde sa provenance dans nos systèmes.",
       "exact": "Vous pouvez obtenir la source exacte des données de votre fiche en nous écrivant à l'adresse ci-dessus."
     },
+    "recipients": {
+      "title": "Qui y a accès",
+      "body": "La fiche est publique par nature : elle est visible des visiteurs de FadeUp. En interne, seuls nos prestataires techniques traitent les données pour notre compte — hébergement et envoi d'e-mails. Lorsqu'un prestataire implique un transfert hors de l'Union européenne, ce transfert est encadré par les garanties prévues par le RGPD (clauses contractuelles types). Nous ne vendons pas vos données."
+    },
     "retention": {
       "title": "Combien de temps",
-      "body": "Les données sont conservées tant que la fiche est publiée. Si vous demandez le retrait, la fiche est dépubliée au plus tard 72 heures après validation de la demande, et votre établissement n'est plus recontacté ni republié."
+      "body": "Les données sont conservées tant que la fiche est publiée. Si vous demandez le retrait, la fiche est dépubliée au plus tard 72 heures après validation de la demande, et votre établissement n'est plus recontacté ni republié. Après un retrait, nous ne conservons que le strict nécessaire pour tenir cette promesse : votre inscription sur notre liste d'opposition, qui empêche toute republication et tout nouveau contact."
     },
     "rights": {
       "title": "Vos droits",
@@ -58,8 +62,8 @@
     "alreadyPendingBody": "Une demande de retrait est déjà enregistrée pour cette fiche. Elle sera traitée au plus tard le {{deadline}}.",
     "refusal": {
       "professional_is_claimed": "Cette fiche est gérée par son propriétaire depuis son compte FadeUp : elle ne peut pas être retirée par ce formulaire.",
-      "invalid_email": "Cette adresse e-mail n'est pas valide.",
-      "rate_limited": "Trop de demandes sont en cours pour le moment. Écrivez-nous directement : bonjour@contact.fade-up.com."
+      "profile_not_published": "Cette fiche n'est pas (ou plus) publiée sur FadeUp — il n'y a rien à retirer. Pour ne plus recevoir d'e-mails, utilisez le lien de désabonnement qu'ils contiennent, ou écrivez-nous.",
+      "invalid_email": "Cette adresse e-mail n'est pas valide."
     },
     "error": "La demande n'a pas pu être enregistrée. Réessayez, ou écrivez-nous : bonjour@contact.fade-up.com."
   },

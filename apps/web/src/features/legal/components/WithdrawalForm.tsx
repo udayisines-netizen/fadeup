@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/ui/Button'
@@ -42,6 +42,19 @@ export function WithdrawalForm({ initialRef, token }: { initialRef: string | nul
 
   const prefilled = useProfessionalRef(refLocked ? initialRef : null)
   const submit = useSubmitWithdrawal()
+
+  // Lien vers une fiche introuvable (retirée entre-temps) ou résolution en
+  // échec : on retombe sur le champ libre, EN DISANT pourquoi (revue X2 —
+  // la première version laissait un champ vide sans explication).
+  const prefilledNotFound = refLocked && prefilled.isSuccess && !prefilled.data
+  const prefilledFailed = refLocked && prefilled.isError
+
+  // Le focus suit le résultat : le formulaire disparaît, le lecteur d'écran
+  // doit atterrir sur la confirmation.
+  const successRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (result) successRef.current?.focus()
+  }, [result])
 
   const formatDeadline = (iso: string) =>
     new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(iso))
@@ -100,7 +113,9 @@ export function WithdrawalForm({ initialRef, token }: { initialRef: string | nul
       <div
         role="status"
         data-testid="withdrawal-success"
-        className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface-subtle)] p-4"
+        ref={successRef}
+        tabIndex={-1}
+        className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface-subtle)] p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)]"
       >
         <p className="text-fu-base font-semibold text-[var(--fu-text-primary)]">
           {result.already_pending ? t('legal.withdrawal.alreadyPendingTitle') : t('legal.withdrawal.successTitle')}
@@ -129,7 +144,7 @@ export function WithdrawalForm({ initialRef, token }: { initialRef: string | nul
         void onSubmit()
       }}
     >
-      {refLocked && prefilled.data ? (
+      {refLocked && !prefilledNotFound && !prefilledFailed && prefilled.data ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <p className="text-fu-base font-medium text-[var(--fu-text-primary)]" data-testid="withdrawal-concerning">
             {t('legal.withdrawal.concerning', { name: prefilled.data.display_name })}
@@ -153,8 +168,15 @@ export function WithdrawalForm({ initialRef, token }: { initialRef: string | nul
           label={t('legal.withdrawal.refLabel')}
           hint={t('legal.withdrawal.refHint')}
           value={refInput}
-          onChange={(event) => setRefInput(event.target.value)}
-          error={refError ?? undefined}
+          onChange={(event) => {
+            setRefInput(event.target.value)
+            if (refLocked) setRefLocked(false)
+          }}
+          error={
+            refError
+            ?? (prefilledNotFound ? t('legal.withdrawal.refNotFound') : undefined)
+            ?? (prefilledFailed ? t('legal.withdrawal.refLookupFailed') : undefined)
+          }
           required
         />
       )}

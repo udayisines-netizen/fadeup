@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uQ8GkyVxlBahS9P06YOQkQO8SsbMTJ1BepFzgc2H1Bgp8UdE0Y1qfGiJiMO5pvB
+\restrict EFKCmCGkfYVE3lXDwr1kLyEjgewCXOqw5aZiZScrjGqrHYbJhRptw029WBvSUgU
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -11341,7 +11341,6 @@ declare
   v_professional_id uuid;
   v_existing uuid;
   v_name text;
-  v_blocked boolean;
 begin
   v_actor := (select auth.uid());
   if v_actor is null or not (select private.is_platform_admin()) then
@@ -11360,33 +11359,28 @@ begin
 
   if v_existing is not null then
     -- Idempotente et auto-réparatrice (B1) — mais plus jamais au mépris d'un
-    -- retrait : un prospect do_not_contact ou supprimé s'est opposé, et la
-    -- republication d'un clic annulerait l'engagement tenu par
-    -- complete_marketplace_withdrawal.
-    select (pr.do_not_contact
-            or exists (select 1 from public.prospect_suppressions s
-                       where s.scope = 'prospect' and s.prospect_id = pr.id))
-    into v_blocked
-    from public.prospects pr where pr.id = p_prospect_id;
-
-    if v_blocked then
+    -- retrait ou d'une suppression. LE MÊME garde que la branche neuve
+    -- (publication_block_reason), en ignorant seulement already_published,
+    -- vrai par construction ici : deux définitions de l'éligibilité avaient
+    -- déjà divergé une fois (revue X2, suppressed_email ignoré).
+    v_reason := public.publication_block_reason(p_prospect_id);
+    if v_reason is not null and v_reason <> 'already_published' then
       perform 1 from public.professionals p
       where p.id = v_existing and not p.is_public;
       if found then
-        raise exception 'prospect is not eligible for publication: do_not_contact'
+        raise exception 'prospect is not eligible for publication: %', v_reason
           using errcode = '42501';
       end if;
-      -- Déjà public ET do_not_contact : état hérité — on ne dépublie pas en
-      -- douce depuis un chemin de publication, on rend l'identité telle
-      -- qu'elle est. Le retrait a son propre circuit.
+      -- Déjà public ET bloqué : état hérité — on ne dépublie pas en douce
+      -- depuis un chemin de publication, on rend l'identité telle qu'elle
+      -- est. Le retrait a son propre circuit. Et on n'informe PAS : les
+      -- gardes de contact de l'enqueue refuseront de toute façon.
     end if;
 
     update public.professionals
     set is_public = true
     where id = v_existing and not is_public;
 
-    -- L'information article 14 part à la PUBLICATION — cette branche publie
-    -- aussi. Idempotente : dedupe_key, un professionnel informé une fois.
     perform private.enqueue_publication_information(v_existing);
 
     return v_existing;
@@ -15460,11 +15454,14 @@ CREATE FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id u
     AS $_$
 declare
   v_claim_state public.professional_claim_state;
+  v_is_public boolean;
   v_channel text := 'public_form';
   v_email text;
+  v_note text;
   v_row public.marketplace_withdrawal_requests;
+  v_attempt integer;
 begin
-  select p.claim_state into v_claim_state
+  select p.claim_state, p.is_public into v_claim_state, v_is_public
   from public.professionals p where p.id = p_professional_id;
 
   if not found then
@@ -15472,11 +15469,19 @@ begin
   end if;
 
   if v_claim_state = 'claimed' then
-    -- Même refus, même code que le chemin opérateur B2 : un profil revendiqué
-    -- se retire depuis son propre compte, pas par un formulaire anonyme.
     raise exception 'this profile is claimed; its owner controls its visibility'
       using errcode = '42501',
             detail = 'fadeup_withdrawal_refusal=professional_is_claimed';
+  end if;
+
+  -- Revue X2 : une fiche non publiée n'a rien à retirer — accepter la
+  -- demande ouvrirait une échéance de 72 h factice dans l'écran opérateur
+  -- (et permettrait d'en ouvrir une par identité jamais publiée). Le refus
+  -- est nommé ; la page explique et renvoie au désabonnement/contact.
+  if not v_is_public then
+    raise exception 'this profile is not published on the marketplace'
+      using errcode = '42501',
+            detail = 'fadeup_withdrawal_refusal=profile_not_published';
   end if;
 
   v_email := nullif(btrim(coalesce(p_requester_email, '')), '');
@@ -15487,23 +15492,13 @@ begin
             detail = 'fadeup_withdrawal_refusal=invalid_email';
   end if;
 
-  -- Garde de volume, pas de silence : au-delà de 200 demandes publiques en
-  -- 24 h (un ordre de grandeur au-dessus de tout usage réel — il y a ~23
-  -- prospects publiables), quelqu'un scripte le formulaire. On refuse avec un
-  -- motif nommé, la page affiche le canal e-mail de repli. Les demandes déjà
-  -- enregistrées ne sont pas touchées ; rien ne se dépublie de toute façon
-  -- sans un opérateur.
-  if (select count(*) from public.marketplace_withdrawal_requests w
-      where w.requested_via in ('public_form', 'email_link')
-        and w.created_at > now() - interval '24 hours') >= 200 then
-    raise exception 'too many public withdrawal requests; please contact us by email'
-      using errcode = '54000',
-            detail = 'fadeup_withdrawal_refusal=rate_limited';
-  end if;
+  -- La garde de volume « 200/24 h » de la première version est RETIRÉE, et
+  -- c'est une décision, pas un oubli : l'index unique « une demande en cours
+  -- par professionnel » plafonne déjà le total au nombre d'identités
+  -- publiées non revendiquées — la garde était inatteignable, et globale
+  -- elle aurait permis à un attaquant de fermer le canal d'opposition RGPD
+  -- aux personnes légitimes.
 
-  -- Le jeton de l'e-mail d'information prouve le contrôle de la boîte du
-  -- prospect : la demande est marquée comme vérifiée par ce canal. Un jeton
-  -- faux ou étranger ne bloque pas — la demande reste possible, non vérifiée.
   if nullif(btrim(coalesce(p_token, '')), '') is not null then
     perform 1
     from public.prospects pr
@@ -15515,40 +15510,49 @@ begin
     end if;
   end if;
 
-  insert into public.marketplace_withdrawal_requests
-    (professional_id, requested_via, requester_note, requester_email)
-  values
-    (p_professional_id, v_channel,
-     nullif(left(btrim(coalesce(p_requester_note, '')), 2000), ''),
-     v_email)
-  on conflict (professional_id) where status = 'pending' do nothing
-  returning * into v_row;
+  v_note := nullif(left(btrim(coalesce(p_requester_note, '')), 2000), '');
 
-  if v_row.id is null then
-    -- Une demande est déjà en cours : la re-soumettre ne crée ni une deuxième
-    -- échéance ni une deuxième exécution (index unique partiel B2). On rend
-    -- l'échéance existante — le demandeur voit que c'est pris en compte.
+  -- Deux tentatives : la première perd si une demande en cours existe (index
+  -- unique partiel) ; la seconde ne court que si cette demande vient d'être
+  -- décidée dans l'intervalle — et porte son propre on conflict (revue X2 :
+  -- la première version pouvait lever un 23505 nu dans cette fenêtre).
+  for v_attempt in 1..2 loop
+    insert into public.marketplace_withdrawal_requests
+      (professional_id, requested_via, requester_note, requester_email)
+    values (p_professional_id, v_channel, v_note, v_email)
+    on conflict (professional_id) where status = 'pending' do nothing
+    returning * into v_row;
+
+    if v_row.id is not null then
+      return query select v_row.id, v_row.deadline_at, false;
+      return;
+    end if;
+
     select * into v_row
     from public.marketplace_withdrawal_requests w
     where w.professional_id = p_professional_id and w.status = 'pending';
 
-    if v_row.id is null then
-      -- Course résiduelle (l'autre demande vient d'être décidée) : réessayer
-      -- une fois suffit, la fenêtre est de l'ordre de la milliseconde.
-      insert into public.marketplace_withdrawal_requests
-        (professional_id, requested_via, requester_note, requester_email)
-      values
-        (p_professional_id, v_channel,
-         nullif(left(btrim(coalesce(p_requester_note, '')), 2000), ''),
-         v_email)
-      returning * into v_row;
-    else
-      return query select v_row.id, v_row.deadline_at, true;
+    if v_row.id is not null then
+      if v_row.requested_via in ('public_form', 'email_link') then
+        -- La re-soumission du même formulaire : dite telle quelle.
+        return query select v_row.id, v_row.deadline_at, true;
+        return;
+      end if;
+      -- Une demande EXISTE mais elle est entrée par un autre canal
+      -- (opérateur, e-mail, légal). Le demandeur public n'a pas à apprendre
+      -- que quelqu'un a déjà demandé le retrait de ce commerce : il reçoit
+      -- l'engagement GÉNÉRIQUE (« au plus tard 72 h après validation »),
+      -- jamais l'échéance réelle — qui est plus proche, l'engagement est
+      -- donc tenu a fortiori. Sa note/adresse ne sont pas perdues pour
+      -- l'opérateur : la demande existante est déjà dans sa file.
+      return query select v_row.id, now() + interval '72 hours', false;
       return;
     end if;
-  end if;
+    -- Aucune pending : la demande concurrente vient d'être décidée — la
+    -- boucle retente une insertion.
+  end loop;
 
-  return query select v_row.id, v_row.deadline_at, false;
+  raise exception 'could not record the withdrawal request' using errcode = '40001';
 end;
 $_$;
 
@@ -15557,7 +15561,7 @@ $_$;
 -- Name: FUNCTION submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) IS 'Anon-callable — le formulaire public de la page d''information RGPD. ENREGISTRE une demande de retrait dans le circuit B2 (marketplace_withdrawal_requests), ne dépublie RIEN : l''opérateur vérifie l''identité puis complete_marketplace_withdrawal exécute, sous l''engagement des 72 h. Canal ''email_link'' quand le jeton de l''e-mail d''information prouve le contrôle de la boîte, ''public_form'' sinon. Refus nommés : professional_is_claimed, invalid_email, rate_limited.';
+COMMENT ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) IS 'Anon-callable — le formulaire public de la page d''information RGPD. ENREGISTRE une demande de retrait dans le circuit B2 pour une fiche PUBLIÉE non revendiquée ; l''opérateur vérifie l''identité puis complete_marketplace_withdrawal exécute, sous l''engagement des 72 h. Canal email_link quand le jeton de l''e-mail prouve le contrôle de la boîte. Refus nommés : professional_is_claimed, profile_not_published, invalid_email. Ne révèle jamais l''existence d''une demande entrée par un autre canal.';
 
 
 --
@@ -34565,5 +34569,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uQ8GkyVxlBahS9P06YOQkQO8SsbMTJ1BepFzgc2H1Bgp8UdE0Y1qfGiJiMO5pvB
+\unrestrict EFKCmCGkfYVE3lXDwr1kLyEjgewCXOqw5aZiZScrjGqrHYbJhRptw029WBvSUgU
 

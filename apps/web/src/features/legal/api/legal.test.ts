@@ -41,7 +41,9 @@ describe('parseWithdrawalRefusal', () => {
     expect(parseWithdrawalRefusal({ details: 'fadeup_withdrawal_refusal=professional_is_claimed' })).toBe(
       'professional_is_claimed',
     )
-    expect(parseWithdrawalRefusal({ details: 'fadeup_withdrawal_refusal=rate_limited' })).toBe('rate_limited')
+    expect(parseWithdrawalRefusal({ details: 'fadeup_withdrawal_refusal=profile_not_published' })).toBe(
+      'profile_not_published',
+    )
   })
 
   it('rend null pour un code inconnu ou une erreur quelconque', () => {

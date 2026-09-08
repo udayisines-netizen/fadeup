@@ -12,6 +12,21 @@ set lock_timeout = '5s';
 
 begin;
 
+-- GARDE (revue X2) : les traces d'information article 14 et les demandes de
+-- retrait publiques sont LA PREUVE de conformité — exactement ce qu'on
+-- produit si un professionnel conteste. Ce down les détruirait ; il refuse
+-- donc de s'exécuter si elles existent. Sur un bac d'essai (ou en pleine
+-- connaissance de cause) : set fadeup.x2_force_down = 'on';
+do $$
+begin
+  if coalesce(current_setting('fadeup.x2_force_down', true), '') <> 'on'
+     and (exists (select 1 from public.professional_information_notices)
+          or exists (select 1 from public.marketplace_withdrawal_requests
+                     where requested_via in ('public_form', 'email_link'))) then
+    raise exception 'X2 down refuse: information notices or public withdrawal requests exist — dropping them would destroy compliance evidence. To force: set fadeup.x2_force_down = ''on'';';
+  end if;
+end $$;
+
 -- 1. Fonctions X2.
 drop function if exists public.submit_marketplace_withdrawal_request(uuid, text, text, text);
 drop function if exists public.run_email_feedback_maintenance();

@@ -23,9 +23,13 @@
       "body": "Publicly accessible sources: business listings (for example Google Business), professional directories, your website and your public social media profiles. Every data point keeps its provenance in our systems.",
       "exact": "You can obtain the exact source of the data on your listing by writing to the address above."
     },
+    "recipients": {
+      "title": "Who has access",
+      "body": "The listing is public by nature: it is visible to FadeUp visitors. Internally, only our technical providers process the data on our behalf — hosting and email delivery. When a provider involves a transfer outside the European Union, that transfer is covered by the safeguards provided by the GDPR (standard contractual clauses). We do not sell your data."
+    },
     "retention": {
       "title": "For how long",
-      "body": "The data is kept for as long as the listing is published. If you request removal, the listing is unpublished no later than 72 hours after the request is validated, and your business is neither contacted again nor republished."
+      "body": "The data is kept for as long as the listing is published. If you request removal, the listing is unpublished no later than 72 hours after the request is validated, and your business is neither contacted again nor republished. After a removal, we keep only what is strictly needed to honour that promise: your entry on our objection list, which prevents any republication and any further contact."
     },
     "rights": {
       "title": "Your rights",
@@ -58,8 +62,8 @@
     "alreadyPendingBody": "A removal request is already recorded for this listing. It will be handled no later than {{deadline}}.",
     "refusal": {
       "professional_is_claimed": "This listing is managed by its owner from their FadeUp account: it cannot be removed through this form.",
-      "invalid_email": "This email address is not valid.",
-      "rate_limited": "Too many requests are in progress right now. Write to us directly: bonjour@contact.fade-up.com."
+      "profile_not_published": "This listing is not (or no longer) published on FadeUp — there is nothing to remove. To stop receiving emails, use the unsubscribe link they contain, or write to us.",
+      "invalid_email": "This email address is not valid."
     },
     "error": "The request could not be recorded. Try again, or write to us: bonjour@contact.fade-up.com."
   },

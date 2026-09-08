@@ -76,6 +76,11 @@ export function ProfessionalsDataPage() {
           <p className={body}>{t('legal.data.sources.exact')}</p>
         </section>
 
+        <section aria-labelledby="x2-recipients">
+          <h2 id="x2-recipients" className={sectionTitle}>{t('legal.data.recipients.title')}</h2>
+          <p className={body}>{t('legal.data.recipients.body')}</p>
+        </section>
+
         <section aria-labelledby="x2-retention">
           <h2 id="x2-retention" className={sectionTitle}>{t('legal.data.retention.title')}</h2>
           <p className={body}>{t('legal.data.retention.body')}</p>

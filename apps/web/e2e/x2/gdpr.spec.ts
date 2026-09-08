@@ -52,9 +52,11 @@ test.describe('X2 — page d\'information RGPD', () => {
     await page.goto('/professionals-data')
     await expect(page.getByTestId('professionals-data-page')).toBeVisible()
     await expect(page).not.toHaveURL(/\/auth\//)
-    // Les huit sections : responsable, finalités, données, sources, durée,
-    // droits, e-mails, retrait — et le formulaire.
-    await expect(page.locator('section')).toHaveCount(8)
+    // Les neuf sections : responsable, finalités, données, sources,
+    // destinataires, durée, droits, e-mails, retrait — et le formulaire.
+    // Locator SCOPÉ à la page (revue X2 : un <section> de layout casserait
+    // un compte global).
+    await expect(page.getByTestId('professionals-data-page').locator('section')).toHaveCount(9)
     await expect(page.getByTestId('withdrawal-form')).toBeVisible()
   })
 

@@ -191,6 +191,8 @@ begin
   perform pg_temp.record('déclenchement', 'le payload porte retrait, désabonnement et page d''information',
     (v_outbox.payload ? 'withdrawal_url') and (v_outbox.payload ? 'unsubscribe_url')
     and (v_outbox.payload ->> 'info_url') like 'https://fade-up.com/professionals-data%');
+  perform pg_temp.record('déclenchement', 'le lien de désabonnement pointe la fonction One-Click (RFC 8058)',
+    (v_outbox.payload ->> 'unsubscribe_url') like 'https://fade-up.com/functions/v1/unsubscribe/%');
 
   -- Le payload réel rend sans placeholder orphelin.
   begin
@@ -236,6 +238,90 @@ begin
 exception when others then
   perform set_config('request.jwt.claims', '', true);
   perform pg_temp.record('déclenchement', 'parcours de publication', false, sqlerrm);
+end $$;
+
+-- ===========================================================================
+-- CHANTIER 2c — les gardes de contact du durcissement (revue X2)
+--
+-- Le scénario A de la revue : un profil DÉJÀ PUBLIC dont le prospect s'est
+-- désabonné, sans trace d'information préalable — un re-clic Publier mettait
+-- en file un e-mail vers l'adresse qui a dit non. Plus maintenant.
+-- ===========================================================================
+
+do $$
+declare
+  v_admin uuid;
+  v_type text;
+  v_src uuid;
+  v_p3 uuid;
+  v_prof3 uuid;
+  v_count integer;
+  v_notice record;
+begin
+  select user_id into v_admin from public.platform_members limit 1;
+  select id into v_src from public.prospect_sources where key = 'qa_x2_source_a';
+  select enumlabel into v_type
+  from pg_enum e join pg_type t on t.oid = e.enumtypid
+  where t.typname = 'prospect_type' order by e.enumsortorder limit 1;
+
+  insert into public.prospects (type, canonical_name, country, email)
+  values (v_type::public.prospect_type, 'QA X2 Salon Trois', 'FR', 'qa-x2-prospect-trois@fadeup.test')
+  returning id into v_p3;
+  insert into public.prospect_source_records (source_id, prospect_id)
+  values (v_src, v_p3), ((select id from public.prospect_sources where key = 'qa_x2_source_b'), v_p3);
+  insert into public.prospect_locations (prospect_id, country, city) values (v_p3, 'FR', 'Nice');
+  insert into x2_ctx (key, uuid_val) values ('p3', v_p3);
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+
+  v_prof3 := public.publish_external_professional(v_p3, 'QA X2 scenario A');
+  insert into x2_ctx (key, uuid_val) values ('prof3', v_prof3);
+
+  -- Reconstruire l'état du scénario A : public, désabonné, AUCUNE trace.
+  delete from public.professional_information_notices where professional_id = v_prof3;
+  delete from public.email_outbox where dedupe_key = 'publication_notice:' || v_prof3::text;
+  update public.prospects set do_not_contact = true where id = v_p3;
+
+  perform public.publish_external_professional(v_p3, 'QA X2 re-clic');
+
+  select count(*) into v_count from public.email_outbox
+  where dedupe_key = 'publication_notice:' || v_prof3::text;
+  select * into v_notice from public.professional_information_notices
+  where professional_id = v_prof3;
+  perform pg_temp.record('gardes-contact', 're-clic sur profil public désabonné : ZÉRO e-mail, trace public_page_only',
+    v_count = 0 and v_notice.channel = 'public_page_only',
+    'outbox=' || v_count || ' canal=' || coalesce(v_notice.channel, 'aucun'));
+
+  -- Adresse supprimée (hard bounce passé) : la branche idempotente refuse la
+  -- RE-publication avec le motif du garde authoritatif — les deux branches
+  -- partagent désormais UNE définition de l'éligibilité.
+  update public.prospects set do_not_contact = false where id = v_p3;
+  insert into public.prospect_suppressions (scope, value, reason)
+  values ('email', 'qa-x2-prospect-trois@fadeup.test', 'hard_bounce')
+  on conflict (scope, value) where value is not null do nothing;
+  update public.professionals set is_public = false where id = v_prof3;
+
+  begin
+    perform public.publish_external_professional(v_p3, 'QA X2 suppressed_email');
+    perform pg_temp.record('gardes-contact', 'adresse supprimée : la re-publication est refusée (définition unifiée)',
+      false, 'la republication est passée');
+  exception when others then
+    perform pg_temp.record('gardes-contact', 'adresse supprimée : la re-publication est refusée (définition unifiée)',
+      sqlstate = '42501' and sqlerrm like '%suppressed_email%', sqlerrm);
+  end;
+
+  -- Remettre prof3 public pour les tests de retrait plus bas.
+  delete from public.prospect_suppressions
+  where scope = 'email' and value = 'qa-x2-prospect-trois@fadeup.test' and reason = 'hard_bounce';
+  perform public.publish_external_professional(v_p3, 'QA X2 re-publication propre');
+  perform pg_temp.record('gardes-contact', 'suppression levée : la re-publication redevient possible',
+    (select is_public from public.professionals where id = v_prof3));
+
+  perform set_config('request.jwt.claims', '', true);
+exception when others then
+  perform set_config('request.jwt.claims', '', true);
+  perform pg_temp.record('gardes-contact', 'parcours scénario A', false, sqlerrm);
 end $$;
 
 -- ===========================================================================
@@ -317,6 +403,45 @@ begin
   end;
 exception when others then
   perform pg_temp.record('retrait', 'parcours de retrait public', false, sqlerrm);
+end $$;
+
+-- Durcissements revue X2 : le canal opérateur reste invisible au public.
+do $$
+declare
+  v_admin uuid;
+  v_prof3 uuid;
+  v_r record;
+  v_op record;
+  v_count integer;
+begin
+  select user_id into v_admin from public.platform_members limit 1;
+  select uuid_val into v_prof3 from x2_ctx where key = 'prof3';
+  if v_prof3 is null then
+    perform pg_temp.record('retrait', 'préalable : prof3 publié', false, 'scénario A en échec en amont');
+    return;
+  end if;
+
+  -- L'opérateur enregistre une demande (canal 'phone').
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  select * into v_op from public.request_marketplace_withdrawal(v_prof3, 'phone', 'appel du salon');
+  perform set_config('request.jwt.claims', '', true);
+
+  -- Le formulaire public sur la même fiche : il ne doit RIEN apprendre —
+  -- ni already_pending, ni l'échéance réelle (plus proche), juste
+  -- l'engagement générique de 72 h. Et aucune seconde ligne.
+  select * into v_r from public.submit_marketplace_withdrawal_request(v_prof3);
+  select count(*) into v_count from public.marketplace_withdrawal_requests
+  where professional_id = v_prof3 and status = 'pending';
+  perform pg_temp.record('retrait', 'demande opérateur existante : rien révélé au formulaire public',
+    (not v_r.already_pending)
+    and v_r.deadline_at between now() + interval '71 hours 55 minutes' and now() + interval '72 hours 5 minutes'
+    and v_r.deadline_at >= v_op.deadline_at
+    and v_count = 1,
+    'already_pending=' || v_r.already_pending || ' pending=' || v_count);
+exception when others then
+  perform set_config('request.jwt.claims', '', true);
+  perform pg_temp.record('retrait', 'dissimulation du canal opérateur', false, sqlerrm);
 end $$;
 
 -- ===========================================================================
@@ -417,6 +542,26 @@ begin
   select * into v_r from public.run_email_feedback_maintenance();
   perform pg_temp.record('webhook', 'type non traité → skipped',
     (select status from public.resend_webhook_events where event_id = 'qa-x2-evt-unknown') = 'skipped');
+
+  -- 7. created_at malformé : l'horodatage est défensif, l'événement passe
+  -- quand même (revue X2 — un cast qui lève aurait perdu un rebond dur).
+  insert into public.resend_webhook_events (event_id, event_type, payload)
+  values ('qa-x2-evt-badts', 'email.delivered', jsonb_build_object(
+    'type', 'email.delivered', 'created_at', 'pas-une-date',
+    'data', jsonb_build_object('email_id', 'qa-x2-msg-0001')));
+  select * into v_r from public.run_email_feedback_maintenance();
+  perform pg_temp.record('webhook', 'created_at malformé : traité, jamais failed',
+    (select status from public.resend_webhook_events where event_id = 'qa-x2-evt-badts') = 'processed');
+
+  -- 8. Un événement failed REVIENT (attempts < 5) — la première version le
+  -- perdait pour toujours.
+  insert into public.resend_webhook_events (event_id, event_type, payload, status, attempts)
+  values ('qa-x2-evt-retry', 'email.delivered', jsonb_build_object(
+    'type', 'email.delivered',
+    'data', jsonb_build_object('email_id', 'qa-x2-msg-0001')), 'failed', 2);
+  select * into v_r from public.run_email_feedback_maintenance();
+  perform pg_temp.record('webhook', 'un failed est repris et aboutit',
+    (select status from public.resend_webhook_events where event_id = 'qa-x2-evt-retry') = 'processed');
 exception when others then
   perform pg_temp.record('webhook', 'parcours webhook', false, sqlerrm);
 end $$;
@@ -460,6 +605,17 @@ begin
 
   perform pg_temp.record('non-republication', 'le profil reste dépublié',
     not (select is_public from public.professionals where id = v_prof1));
+
+  -- Revue X2 : une fiche non publiée n'a rien à retirer — le formulaire
+  -- public la refuse (sinon : échéance 72 h factice dans l'écran opérateur).
+  begin
+    perform public.submit_marketplace_withdrawal_request(v_prof1);
+    perform pg_temp.record('retrait', 'fiche non publiée : refus nommé profile_not_published',
+      false, 'la demande est passée');
+  exception when others then
+    perform pg_temp.record('retrait', 'fiche non publiée : refus nommé profile_not_published',
+      sqlstate = '42501' and sqlerrm like '%not published%');
+  end;
 
   perform set_config('request.jwt.claims', '', true);
 exception when others then

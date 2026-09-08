@@ -72,8 +72,8 @@ export function useProfessionalRef(ref: string | null) {
 
 export const WITHDRAWAL_REFUSAL_CODES = [
   'professional_is_claimed',
+  'profile_not_published',
   'invalid_email',
-  'rate_limited',
 ] as const
 
 export type WithdrawalRefusalCode = (typeof WITHDRAWAL_REFUSAL_CODES)[number]
