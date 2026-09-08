@@ -1,5 +1,32 @@
 # V2 Data Contract
 
+> **Mis à jour le 2026-09-08 après P1PRO** (`p1pro/direction`). La
+> CONTRE-PROPOSITION d'horaire existe (migrations `20260908030000` +
+> `20260908031000`, up/down prouvés sur restauration fidèle, ACL comparées) :
+> - Colonnes `appointments` : `counter_proposed_at` (non nul sur une ligne
+>   `pending` = le salon propose `starts_at`, le CLIENT répond),
+>   `counter_original_starts_at` (l'horaire demandé), `counter_note`,
+>   `was_request` (la ligne est née demande — stampé par
+>   `set_appointment_request_expiry`, backfill approximatif déclaré).
+> - RPC pro : `counter_propose_booking_request(id, starts_at, barber?, note?)`
+>   — DÉPLACE la ligne pending sur le créneau proposé (retenu par
+>   l'exclusion), échéance `least(proposé, now()+TTL)` ;
+>   `get_booking_request_history(org, limit?)` — les demandes traitées avec
+>   leur issue. `get_booking_requests` et `get_my_appointments` portent les
+>   trois colonnes counter en fin de retour. `confirm_booking_request`
+>   refuse (`counter_pending`) tant qu'une contre-proposition attend.
+> - RPC client : `accept_booking_counter_proposal(id)` (pending → confirmed,
+>   aucun conflit possible : le créneau était retenu) et
+>   `decline_booking_counter_proposal(id)` (cancelled /
+>   cancelled_by_customer — le salon avait déjà dit non à l'horaire
+>   d'origine, la demande se clôt).
+> - Public : `get_public_booking_capabilities(slugs[])` (max 50) — la
+>   capacité en lot pour que la découverte distingue « Réservable » de
+>   « Sur demande » sans N+1.
+> - Enum `notification_type` + `booking_counter_proposed` ; gabarits e-mail
+>   `booking_counter_proposed` fr/en.
+> `database.types.ts` régénéré.
+
 Établi par P1a le 2026-09-04, contre `db-audit/SCHEMA.sql` (dump du 2026-09-03,
 108 tables, 186 fonctions, 58 enums, 307 policies RLS) et la base de production
 live (`fadeup-supabase-db`, lectures seules). Types générés :
@@ -94,6 +121,7 @@ Légende : SD = SECURITY DEFINER ; auth = session requise ; écrans = consommate
 | `get_public_service_state` **B1** | slug, location, barber? | mode effectif, `booking_accepting_new_entries`, `queue_accepting_new_entries`. **Répondait 405 à tout appelant avant B1** ; ne contient plus aucune écriture | ✓ | non | P2 Profils, Réservation, File |
 | `get_public_queue_status` | slug, location | entrées file (prénom, position) | ✓ | non | P2 File publique |
 | `get_public_currencies` | org_ids[] | devise par org | ✓ | non | P2 cartes de résultat |
+| `get_public_booking_capabilities` **P1PRO** | slugs[] (≤ 50) | `accepts_immediate_booking` par slug — « Réservable » vs « Sur demande » en lot | ✓ | non | P2 Recherche, Accueil |
 | `get_shared_passport` | token | champs Passport partagés | ✓ | non | P2 Passport partagé |
 | `get_invitation_by_token` | token | invitation équipe | ✓ | non | P3 Acceptation invitation |
 
@@ -112,7 +140,8 @@ Légende : SD = SECURITY DEFINER ; auth = session requise ; écrans = consommate
 
 | RPC | Retour | SD | Écran(s) |
 |---|---|---|---|
-| `get_booking_requests` | demandes `pending` (+ contact client, `expires_at`) | ✓ | P3 Demandes |
+| `get_booking_requests` | demandes `pending` (+ contact client, `expires_at`, colonnes counter **P1PRO**) | ✓ | P3 Demandes |
+| `get_booking_request_history` **P1PRO** | demandes traitées + issue (statut, résolution, trace counter) | ✓ | P3 Demandes (historique) |
 | `get_calendar_appointments` | agenda fenêtré, filtrable location/barber, prix service | ✓ | P3 Agenda, TODAY |
 | `get_available_slots` | slots côté staff | ✓ | P3 Réservation manuelle |
 | `get_service_mode_state` | modes par location/barber | ✓ | P3 TODAY/QUEUE, réglages |
@@ -137,6 +166,8 @@ lectures `prospect_*`/`outreach_*`/`ml_*` restent hors périmètre frontend (non
 | `get_public_booking_alternatives` **B2** | alternatives proches après expiration ; `accepts_immediate_booking` dit si l'organisation peut confirmer ou seulement recevoir une demande | ✓ | non | P2 « demande expirée » |
 | `unsubscribe_prospect_outreach` **B2** | désabonnement en un clic depuis un e-mail de prospection ; définitif | ✓ | non | lien e-mail, hors app |
 | `get_my_interest_requests` **B2** | les demandes d'intérêt du client connecté | ✓ | oui | P2 Réservations |
+| `accept_booking_counter_proposal` **P1PRO** | accepte le créneau contre-proposé → `confirmed` (créneau déjà retenu) | ✓ | oui | P2 Réservations |
+| `decline_booking_counter_proposal` **P1PRO** | refuse → `cancelled` / `cancelled_by_customer`, salon notifié | ✓ | oui | P2 Réservations |
 | `redeem_appointment_claim` | rattache un rendez-vous anonyme au compte | ✓ | oui | P2 post-inscription |
 | `cancel_my_appointment` | annulation client | ✓ | oui | P2 Réservations |
 | `reschedule_appointment` | report ; un report client repasse la ligne en `pending` (matrice de transition) | ✓ | oui | P2 Réservations |
@@ -152,7 +183,10 @@ lectures `prospect_*`/`outreach_*`/`ml_*` restent hors périmètre frontend (non
 
 ### Écriture — pro
 
-`confirm_booking_request`, `decline_booking_request`, `cancel_appointment_as_business`,
+`confirm_booking_request` (refuse `counter_pending` — **P1PRO**),
+`counter_propose_booking_request` (**P1PRO** : déplace la demande sur le
+créneau proposé, retenu ; échéance redémarrée),
+`decline_booking_request`, `cancel_appointment_as_business`,
 `complete_appointment`, `mark_appointment_no_show`, `set_appointment_blocked_range`,
 `set_location_service_mode`, `set_barber_service_mode_override`,
 `set_service_mode_temporary_override`, `clear_service_mode_temporary_override`,
