@@ -525,7 +525,24 @@ export const router = createBrowserRouter([
                   return { Component: mod.default }
                 },
                 children: [
-                  { index: true, element: <NotBuiltPage zone="dashboard" /> },
+                  /* P1PRO — l'accueil opérationnel TODAY / NOW / NEXT / QUEUE. */
+                  {
+                    index: true,
+                    lazy: async () => {
+                      const { ProHomePage } = await import('@/features/pro-home/routes/ProHomePage')
+                      return { Component: ProHomePage }
+                    },
+                  },
+                  /* P1PRO — les demandes. PAS de garde de capacité : un salon
+                     Free reçoit des demandes PRÉCISÉMENT parce qu'il n'a pas
+                     la capacité booking (B2), et il doit pouvoir accepter. */
+                  {
+                    path: 'requests',
+                    lazy: async () => {
+                      const { ProRequestsPage } = await import('@/features/pro-requests/routes/ProRequestsPage')
+                      return { Component: ProRequestsPage }
+                    },
+                  },
                   /* F1 — file pro, conditionnée à la capacité RÉELLE
                      `liveQueue` (live_capabilities) : absente = non rendue. */
                   {

@@ -30,6 +30,8 @@ interface ProNavItem {
   end?: boolean
   /** Masqué pour un `solo_professional`. */
   requiresTeam?: boolean
+  /** P1PRO — réservé aux rôles gestionnaires (owner/manager/réceptionniste). */
+  requiresManage?: boolean
   /** Clé RÉELLE de `commercial_capabilities` — jamais inventée. */
   capability?: string
 }
@@ -37,7 +39,11 @@ interface ProNavItem {
 const PRO_NAV: ProNavItem[] = [
   { to: '/dashboard', labelKey: 'nav.pro.today', icon: IconHome, end: true },
   { to: '/dashboard/agenda', labelKey: 'nav.pro.agenda', icon: IconCalendar, capability: 'booking' },
-  { to: '/dashboard/requests', labelKey: 'nav.pro.requests', icon: IconPending, capability: 'booking' },
+  /* P1PRO — PAS de capacité : un salon Free reçoit des demandes précisément
+     parce qu'il n'a pas la capacité booking (B2), et doit pouvoir accepter.
+     Le rôle conditionne (barber : la RPC ne lui répond pas, l'entrée est
+     masquée par requiresManage). */
+  { to: '/dashboard/requests', labelKey: 'nav.pro.requests', icon: IconPending, requiresManage: true },
   { to: '/dashboard/queue', labelKey: 'nav.pro.queue', icon: IconQueue, capability: 'liveQueue' },
   { to: '/dashboard/catalog', labelKey: 'nav.pro.catalog', icon: IconServices, capability: 'services' },
   { to: '/dashboard/clients', labelKey: 'nav.pro.clients', icon: IconClients, capability: 'customers' },
@@ -80,13 +86,16 @@ function ProNav({ onNavigate }: { onNavigate?: () => void }) {
 
   const capabilities = entitlements?.liveCapabilities ?? []
   const businessType = organization?.businessType ?? 'solo_professional'
+  const canManage =
+    organization?.role === 'owner' || organization?.role === 'manager' || organization?.role === 'receptionist'
 
-  // Conditionnement DOUBLE : équipe ET capacité (`live_capabilities`).
-  // Une capacité absente n'est PAS rendue — ni grisée, ni cadenassée,
+  // Conditionnement TRIPLE : équipe, rôle ET capacité (`live_capabilities`).
+  // Ce qui est absent n'est PAS rendu — ni grisé, ni cadenassé,
   // aucune vente incitative dans le menu.
   const items = PRO_NAV.filter(
     (item) =>
       (!item.requiresTeam || businessType !== 'solo_professional') &&
+      (!item.requiresManage || canManage) &&
       (!item.capability || capabilities.includes(item.capability)),
   )
 
