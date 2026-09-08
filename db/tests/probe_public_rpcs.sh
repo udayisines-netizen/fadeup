@@ -104,6 +104,11 @@ probe get_public_queue_status            "{\"p_organization_slug\":\"${ORG_SLUG}
 # indistinguable d'une panne ; elles sont couvertes par la suite e2e.
 probe list_public_queues                 "{\"p_organization_slug\":\"${ORG_SLUG}\",\"p_location_id\":\"${LOCATION_ID}\"}"
 probe get_public_currencies              "{\"p_organization_ids\":[\"${ORG_ID}\"]}"
+# X2 : submit_marketplace_withdrawal_request (écriture anon — demande de
+# retrait RGPD) ne se sonde pas : chaque exécution créerait une vraie demande
+# dans le circuit opérateur B2. Couverte par verify_x2.sql, la suite e2e X2,
+# et le contrat de surface x3_anon_surface.sh (même doctrine que
+# unsubscribe_prospect_outreach et les RPC à capacité F1b ci-dessous).
 probe search_public_organizations        '{"p_city":"Paris"}'
 probe search_public_professionals        '{}'
 

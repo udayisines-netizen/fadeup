@@ -96,6 +96,7 @@ list_public_services
 normalize_phone_number
 search_public_organizations
 search_public_professionals
+submit_marketplace_withdrawal_request
 suggested_currency_for_country
 suggested_timezone_for_country
 track_analytics_event

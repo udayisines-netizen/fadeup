@@ -1626,8 +1626,12 @@ export type Database = {
       email_outbox: {
         Row: {
           attempts: number
+          bounce_classification: string | null
+          bounced_at: string | null
+          complained_at: string | null
           created_at: string
           dedupe_key: string | null
+          delivered_at: string | null
           dispatched_at: string | null
           id: string
           last_error: string | null
@@ -1635,6 +1639,7 @@ export type Database = {
           locked_at: string | null
           net_request_id: number | null
           next_attempt_at: string
+          opened_at: string | null
           payload: Json
           provider_message_id: string | null
           sent_at: string | null
@@ -1646,8 +1651,12 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          bounce_classification?: string | null
+          bounced_at?: string | null
+          complained_at?: string | null
           created_at?: string
           dedupe_key?: string | null
+          delivered_at?: string | null
           dispatched_at?: string | null
           id?: string
           last_error?: string | null
@@ -1655,6 +1664,7 @@ export type Database = {
           locked_at?: string | null
           net_request_id?: number | null
           next_attempt_at?: string
+          opened_at?: string | null
           payload?: Json
           provider_message_id?: string | null
           sent_at?: string | null
@@ -1666,8 +1676,12 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          bounce_classification?: string | null
+          bounced_at?: string | null
+          complained_at?: string | null
           created_at?: string
           dedupe_key?: string | null
+          delivered_at?: string | null
           dispatched_at?: string | null
           id?: string
           last_error?: string | null
@@ -1675,6 +1689,7 @@ export type Database = {
           locked_at?: string | null
           net_request_id?: number | null
           next_attempt_at?: string
+          opened_at?: string | null
           payload?: Json
           provider_message_id?: string | null
           sent_at?: string | null
@@ -2037,6 +2052,7 @@ export type Database = {
           professional_id: string
           requested_at: string
           requested_via: string
+          requester_email: string | null
           requester_note: string | null
           status: Database["public"]["Enums"]["marketplace_withdrawal_status"]
           updated_at: string
@@ -2051,6 +2067,7 @@ export type Database = {
           professional_id: string
           requested_at?: string
           requested_via: string
+          requester_email?: string | null
           requester_note?: string | null
           status?: Database["public"]["Enums"]["marketplace_withdrawal_status"]
           updated_at?: string
@@ -2065,6 +2082,7 @@ export type Database = {
           professional_id?: string
           requested_at?: string
           requested_via?: string
+          requester_email?: string | null
           requester_note?: string | null
           status?: Database["public"]["Enums"]["marketplace_withdrawal_status"]
           updated_at?: string
@@ -4170,6 +4188,65 @@ export type Database = {
           },
         ]
       }
+      professional_information_notices: {
+        Row: {
+          channel: string
+          created_at: string
+          email: string | null
+          id: string
+          outbox_id: string | null
+          professional_id: string
+          prospect_id: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          outbox_id?: string | null
+          professional_id: string
+          prospect_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          outbox_id?: string | null
+          professional_id?: string
+          prospect_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_information_notices_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "email_outbox"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_information_notices_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_information_notices_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_publication_queue"
+            referencedColumns: ["prospect_id"]
+          },
+          {
+            foreignKeyName: "professional_information_notices_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_interest_request_contacts: {
         Row: {
           booked_by_user_id: string | null
@@ -6233,6 +6310,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      resend_webhook_events: {
+        Row: {
+          attempts: number
+          error: string | null
+          event_id: string
+          event_type: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          error?: string | null
+          event_id: string
+          event_type: string
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       review_photos: {
         Row: {
@@ -9741,6 +9851,13 @@ export type Database = {
           reconciled: number
         }[]
       }
+      run_email_feedback_maintenance: {
+        Args: never
+        Returns: {
+          addresses_suppressed: number
+          events_processed: number
+        }[]
+      }
       run_establishment_tier_maintenance: {
         Args: never
         Returns: {
@@ -10176,6 +10293,19 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      submit_marketplace_withdrawal_request: {
+        Args: {
+          p_professional_id: string
+          p_requester_email?: string
+          p_requester_note?: string
+          p_token?: string
+        }
+        Returns: {
+          already_pending: boolean
+          deadline_at: string
+          request_id: string
+        }[]
       }
       submit_professional_application: {
         Args: {

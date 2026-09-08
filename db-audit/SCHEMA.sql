@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
+\restrict uQ8GkyVxlBahS9P06YOQkQO8SsbMTJ1BepFzgc2H1Bgp8UdE0Y1qfGiJiMO5pvB
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -458,7 +458,8 @@ CREATE TYPE public.notification_type AS ENUM (
     'post_liked',
     'review_received',
     'review_reply',
-    'queue_grace_removed'
+    'queue_grace_removed',
+    'booking_counter_proposed'
 );
 
 
@@ -1060,6 +1061,11 @@ CREATE TABLE public.email_outbox (
     provider_message_id text,
     dedupe_key text,
     dispatched_at timestamp with time zone,
+    delivered_at timestamp with time zone,
+    opened_at timestamp with time zone,
+    bounced_at timestamp with time zone,
+    complained_at timestamp with time zone,
+    bounce_classification text,
     CONSTRAINT email_outbox_attempts_sane CHECK ((attempts >= 0)),
     CONSTRAINT email_outbox_to_email_not_blank CHECK ((btrim(to_email) <> ''::text))
 );
@@ -1093,6 +1099,20 @@ COMMENT ON COLUMN public.email_outbox.net_request_id IS 'L''identifiant de requ�
 --
 
 COMMENT ON COLUMN public.email_outbox.dedupe_key IS 'Clé d''idempotence. Deux lignes de même clé ne peuvent pas coexister, donc un scheduler redémarré au milieu d''un lot ne produit jamais un doublon d''envoi. NULL autorisé : les écritures antérieures à B2 n''en portent pas, et un index unique partiel ne contraint que les lignes qui en ont une.';
+
+
+--
+-- Name: COLUMN email_outbox.delivered_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.delivered_at IS 'Posé par le webhook Resend (email.delivered). NULL ne veut pas dire « non délivré » : avant l''activation du webhook, aucun retour n''existe (BLOCKERS §7).';
+
+
+--
+-- Name: COLUMN email_outbox.bounce_classification; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.bounce_classification IS 'Le type de rebond tel que Resend le nomme (permanent/transient…), en minuscules. Un rebond permanent supprime l''adresse de toute prospection future.';
 
 
 --
@@ -1168,6 +1188,10 @@ CREATE TABLE public.appointments (
     rescheduled_to uuid,
     completed_at timestamp with time zone,
     booked_by_user_id uuid,
+    counter_proposed_at timestamp with time zone,
+    counter_original_starts_at timestamp with time zone,
+    counter_note text,
+    was_request boolean DEFAULT false NOT NULL,
     CONSTRAINT appointments_buffers_nonnegative CHECK (((buffer_before_minutes >= 0) AND (buffer_after_minutes >= 0))),
     CONSTRAINT appointments_customer_name_not_blank CHECK ((btrim(customer_name) <> ''::text)),
     CONSTRAINT appointments_resolution_note_length CHECK (((resolution_note IS NULL) OR (char_length(resolution_note) <= 500))),
@@ -1228,6 +1252,34 @@ COMMENT ON COLUMN public.appointments.booked_by_user_id IS 'The authenticated ac
 
 
 --
+-- Name: COLUMN appointments.counter_proposed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_proposed_at IS 'P1PRO — posé quand le salon propose un autre horaire pour une demande pending. Sur une ligne pending, le consentement est côté client : confirm_booking_request refuse. Conservé après issue comme trace (l''historique distingue « contre-proposée puis acceptée/refusée »).';
+
+
+--
+-- Name: COLUMN appointments.counter_original_starts_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_original_starts_at IS 'P1PRO — l''horaire DEMANDÉ par le client avant la première contre-proposition (starts_at porte l''horaire proposé). Jamais réécrit par une re-proposition.';
+
+
+--
+-- Name: COLUMN appointments.counter_note; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_note IS 'P1PRO — mot facultatif du salon accompagnant la contre-proposition.';
+
+
+--
+-- Name: COLUMN appointments.was_request; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.was_request IS 'P1PRO — la ligne est née demande (pending). Stampé par set_appointment_request_expiry, jamais remis à false. Backfill 2026-09-08 approximatif sur les lignes déjà décidées (voir P1PRO_RAPPORT §7).';
+
+
+--
 -- Name: queue_entries; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1283,6 +1335,88 @@ COMMENT ON COLUMN public.queue_entries.booked_by_user_id IS 'The authenticated a
 --
 
 COMMENT ON COLUMN public.queue_entries.auto_marked_no_show_at IS 'Horodatage du balayage de grâce quand c''est LUI qui a passé cette entrée en no_show. NULL pour un « absent » décidé par le salon : la trace F1b qui distingue une sortie automatique d''une sortie manuelle.';
+
+
+--
+-- Name: accept_booking_counter_proposal(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_is_customer boolean;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  -- X3 : coalesce anti-NULL — sans lui, customer_id NULL rend la condition
+  -- NULL et « if not » ne lève pas.
+  v_is_customer := coalesce(v_appointment.customer_id in (
+    select c.id from public.customers c where c.user_id = (select auth.uid())
+  ), false);
+
+  if not v_is_customer then
+    raise exception 'not authorized to answer this proposal'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  -- Idempotent : si le salon a re-proposé PUIS que deux réponses se
+  -- croisent, la ligne réglée est rendue telle quelle.
+  if v_appointment.status = 'confirmed' then
+    return v_appointment;
+  end if;
+
+  if v_appointment.status <> 'pending' or v_appointment.counter_proposed_at is null then
+    raise exception 'no counter-proposal is awaiting an answer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=no_counter_pending';
+  end if;
+
+  if v_appointment.expires_at is not null and v_appointment.expires_at <= now() then
+    raise exception 'this proposal has expired'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=request_expired';
+  end if;
+
+  -- Le salon a proposé ce créneau, le client y consent : confirmé. Le
+  -- créneau était déjà retenu par la ligne pending — aucune course possible
+  -- sur le chevauchement.
+  update public.appointments
+    set status = 'confirmed',
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_confirmed', 'customer',
+    'Your appointment is confirmed',
+    null, 'booking_confirmed', ':counter-accept'
+  );
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_confirmed', 'business',
+    'Proposed time accepted',
+    v_appointment.customer_name, null, ':counter-accept'
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION accept_booking_counter_proposal(p_appointment_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) IS 'P1PRO — le client accepte le créneau contre-proposé : pending → confirmed (créneau déjà retenu par la ligne). Notifie les deux parties.';
 
 
 --
@@ -4409,6 +4543,15 @@ begin
     raise exception 'this request has already been answered' using errcode = '22023';
   end if;
 
+  -- P1PRO : une contre-proposition attend le client — le consentement a
+  -- changé de camp. Le salon peut toujours refuser, pas « accepter » à la
+  -- place du client.
+  if v_appointment.counter_proposed_at is not null then
+    raise exception 'a counter-proposal is awaiting the customer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=counter_pending';
+  end if;
+
   -- The accept-versus-expire race. The row is locked, so the sweep is either
   -- already done (status is no longer pending, caught above) or is waiting
   -- behind this lock and will find the row confirmed. This check closes the
@@ -4440,6 +4583,140 @@ $$;
 --
 
 COMMENT ON FUNCTION public.confirm_booking_request(p_appointment_id uuid) IS 'Accepts a pending booking request. Owner/manager/receptionist of that organization only. Row-locked and state-guarded, so concurrent accepts settle on one outcome and a second accept is a harmless no-op. Refuses an expired request even if the sweep has not reached it yet.';
+
+
+--
+-- Name: counter_propose_booking_request(uuid, timestamp with time zone, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid DEFAULT NULL::uuid, p_note text DEFAULT NULL::text) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_barber_id uuid;
+  v_duration integer;
+  v_ends_at timestamptz;
+  v_timezone text;
+  v_ttl integer;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  if not (select private.can_manage_appointments(v_appointment.organization_id)) then
+    raise exception 'not authorized to manage this booking'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  if v_appointment.status <> 'pending' then
+    raise exception 'only a pending request can receive a counter-proposal'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=not_a_pending_request';
+  end if;
+
+  if v_appointment.expires_at is not null and v_appointment.expires_at <= now() then
+    raise exception 'this request has expired'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=request_expired';
+  end if;
+
+  if p_starts_at is null then
+    raise exception 'the proposed time is required'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=missing_time';
+  end if;
+
+  if p_starts_at <= now() then
+    raise exception 'the proposed time must be in the future'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=past_time';
+  end if;
+
+  v_barber_id := coalesce(p_barber_id, v_appointment.barber_id);
+
+  -- Même règle que reschedule_appointment : un autre professionnel doit
+  -- appartenir au salon et rester apte au service. Jamais cru sur parole.
+  if v_barber_id is distinct from v_appointment.barber_id then
+    if not exists (
+      select 1
+      from public.barbers b
+      join public.staff_profiles sp on sp.id = b.staff_profile_id
+      join public.barber_services bs on bs.barber_id = b.id and bs.service_id = v_appointment.service_id
+      where b.id = v_barber_id
+        and b.organization_id = v_appointment.organization_id
+        and b.is_bookable and sp.is_active and sp.is_public
+    ) then
+      raise exception 'that professional is not available for this service'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=barber_unavailable';
+    end if;
+  end if;
+
+  -- Durée depuis le SNAPSHOT de la demande, pas depuis le service du jour.
+  v_duration := (extract(epoch from (v_appointment.ends_at - v_appointment.starts_at)) / 60)::integer;
+  v_ends_at := p_starts_at + make_interval(mins => v_duration);
+
+  select l.timezone into v_timezone
+    from public.locations l where l.id = v_appointment.location_id;
+
+  -- Le créneau proposé doit être réellement proposable : dans les heures
+  -- d'ouverture ; le chevauchement est tranché par la contrainte d'exclusion
+  -- au moment de l'UPDATE (l'autorité, comme pour reschedule).
+  if not private.slot_is_within_hours(v_barber_id, v_appointment.location_id, p_starts_at, v_ends_at, v_timezone) then
+    raise exception 'proposed time is outside available hours'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=outside_hours';
+  end if;
+
+  select o.booking_request_ttl_minutes into v_ttl
+    from public.organizations o where o.id = v_appointment.organization_id;
+
+  -- Voie sanctionnée de déplacement (garde de colonnes LOT 11) — exactement
+  -- comme reschedule_appointment.
+  perform set_config('fadeup.appointment_reschedule', 'on', true);
+
+  -- Une seule instruction : la contrainte d'exclusion est l'autorité sur la
+  -- liberté du créneau proposé. La ligne pending déplacée RETIENT ce
+  -- créneau ; l'horaire d'origine est libéré. L'échéance redémarre :
+  -- least(horaire proposé, now() + TTL) — le trigger la re-plafonne.
+  update public.appointments
+    set starts_at = p_starts_at,
+        ends_at = v_ends_at,
+        barber_id = v_barber_id,
+        counter_proposed_at = now(),
+        counter_original_starts_at = coalesce(v_appointment.counter_original_starts_at, v_appointment.starts_at),
+        counter_note = nullif(btrim(coalesce(p_note, '')), ''),
+        expires_at = least(p_starts_at, now() + make_interval(mins => coalesce(v_ttl, 1440))),
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  -- Suffixe daté : une re-proposition est une NOUVELLE information — la clé
+  -- de dédoublonnage ne doit pas avaler la seconde notification.
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_counter_proposed', 'customer',
+    'A new time was proposed for your request',
+    v_appointment.counter_note, 'booking_counter_proposed',
+    ':' || to_char(now(), 'YYYYMMDDHH24MISS')
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text) IS 'P1PRO — le salon propose un autre horaire pour une demande pending. Déplace la ligne sur le créneau proposé (retenu par l''exclusion), pose counter_proposed_at (le client répond), redémarre l''échéance : least(proposé, now()+TTL).';
 
 
 --
@@ -5108,6 +5385,74 @@ $$;
 --
 
 COMMENT ON FUNCTION public.customer_profiles_issue_passport() IS 'AFTER INSERT on customer_profiles. Becoming a FadeUp customer IS having a Fade Passport (Constitution §2.2) — there is no "Get Passport" action to take, and no state in which a registered customer is missing one.';
+
+
+--
+-- Name: decline_booking_counter_proposal(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_is_customer boolean;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  v_is_customer := coalesce(v_appointment.customer_id in (
+    select c.id from public.customers c where c.user_id = (select auth.uid())
+  ), false);
+
+  if not v_is_customer then
+    raise exception 'not authorized to answer this proposal'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  if v_appointment.status = 'cancelled' and v_appointment.resolution = 'cancelled_by_customer' then
+    return v_appointment;
+  end if;
+
+  if v_appointment.status <> 'pending' or v_appointment.counter_proposed_at is null then
+    raise exception 'no counter-proposal is awaiting an answer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=no_counter_pending';
+  end if;
+
+  -- Le salon avait déjà dit non à l'horaire d'origine : refuser la
+  -- proposition clôt la demande. cancelled libère le créneau (prédicat
+  -- d'exclusion intact) ; la résolution dit QUI a tranché.
+  update public.appointments
+    set status = 'cancelled',
+        resolution = 'cancelled_by_customer',
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_cancelled', 'business',
+    'Proposed time declined',
+    v_appointment.customer_name, null, ':counter-decline'
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION decline_booking_counter_proposal(p_appointment_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) IS 'P1PRO — le client refuse le créneau contre-proposé : la demande se clôt (cancelled / cancelled_by_customer), le salon est notifié.';
 
 
 --
@@ -6247,10 +6592,53 @@ COMMENT ON FUNCTION public.get_billing_catalog() IS 'Le catalogue tarifaire comp
 
 
 --
+-- Name: get_booking_request_history(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_display_name text, service_name text, price_cents integer, currency text, customer_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, resolution public.appointment_resolution, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, decided_at timestamp with time zone, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  -- L'issue se dérive côté front, sans invention :
+  --   confirmed/completed              → acceptée (contre-proposée si counter_proposed_at)
+  --   cancelled + declined             → refusée par le salon
+  --   cancelled + expired              → expirée sans réponse
+  --   cancelled + cancelled_by_customer→ retirée par le client
+  --                                      (contre-proposition refusée si counter_proposed_at)
+  select
+    a.id, a.location_id, l.name, sp.display_name, s.name,
+    s.price_cents, coalesce(o.currency, 'EUR'),
+    a.customer_name, a.starts_at, a.ends_at,
+    a.status, a.resolution,
+    a.counter_proposed_at, a.counter_original_starts_at,
+    a.decided_at, a.created_at
+  from public.appointments a
+  join public.locations l on l.id = a.location_id
+  join public.organizations o on o.id = a.organization_id
+  left join public.barbers b on b.id = a.barber_id
+  left join public.staff_profiles sp on sp.id = b.staff_profile_id
+  left join public.services s on s.id = a.service_id
+  where a.organization_id = p_organization_id
+    and a.was_request
+    and a.status <> 'pending'
+    and (select private.can_manage_appointments(p_organization_id))
+  order by coalesce(a.decided_at, a.created_at) desc
+  limit least(greatest(coalesce(p_limit, 100), 1), 200);
+$$;
+
+
+--
+-- Name: FUNCTION get_booking_request_history(p_organization_id uuid, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer) IS 'P1PRO — les demandes traitées d''une organisation avec leur issue (statut + résolution + trace de contre-proposition). C''est la preuve de ce que FadeUp apporte au salon.';
+
+
+--
 -- Name: get_booking_requests(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, duration_minutes integer, price_cents integer, customer_name text, customer_phone text, customer_email text, notes text, starts_at timestamp with time zone, ends_at timestamp with time zone, expires_at timestamp with time zone, created_at timestamp with time zone)
+CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, duration_minutes integer, price_cents integer, customer_name text, customer_phone text, customer_email text, notes text, starts_at timestamp with time zone, ends_at timestamp with time zone, expires_at timestamp with time zone, created_at timestamp with time zone, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, counter_note text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6260,7 +6648,8 @@ CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABL
     (extract(epoch from (a.ends_at - a.starts_at)) / 60)::integer,
     s.price_cents,
     a.customer_name, a.customer_phone, a.customer_email, a.notes,
-    a.starts_at, a.ends_at, a.expires_at, a.created_at
+    a.starts_at, a.ends_at, a.expires_at, a.created_at,
+    a.counter_proposed_at, a.counter_original_starts_at, a.counter_note
   from public.appointments a
   join public.locations l on l.id = a.location_id
   left join public.barbers b on b.id = a.barber_id
@@ -6280,7 +6669,7 @@ $$;
 -- Name: FUNCTION get_booking_requests(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.get_booking_requests(p_organization_id uuid) IS 'Pending booking requests awaiting a decision, for staff who may decide them. Returns nothing — rather than raising — for a caller without the role, so it is safe to call from a shared layout. Hides requests already past their deadline, since accepting one would fail.';
+COMMENT ON FUNCTION public.get_booking_requests(p_organization_id uuid) IS 'Demandes pending d''une organisation, la plus urgente en tête. P1PRO ajoute les colonnes de contre-proposition : counter_proposed_at non nul = en attente du CLIENT (le front sépare les deux groupes).';
 
 
 --
@@ -6575,7 +6964,7 @@ COMMENT ON FUNCTION public.get_my_access() IS 'The authoritative post-authentica
 -- Name: get_my_appointments(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization_id uuid, organization_name text, organization_slug text, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, price_cents integer, currency text, location_timezone text, resolution public.appointment_resolution, resolution_note text, expires_at timestamp with time zone, created_at timestamp with time zone)
+CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization_id uuid, organization_name text, organization_slug text, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, price_cents integer, currency text, location_timezone text, resolution public.appointment_resolution, resolution_note text, expires_at timestamp with time zone, created_at timestamp with time zone, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, counter_note text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6587,7 +6976,8 @@ CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization
     -- The shop's timezone travels with the appointment: a customer abroad must
     -- still read the time the salon means, not the one their phone assumes.
     l.timezone,
-    a.resolution, a.resolution_note, a.expires_at, a.created_at
+    a.resolution, a.resolution_note, a.expires_at, a.created_at,
+    a.counter_proposed_at, a.counter_original_starts_at, a.counter_note
   from public.appointments a
   join public.organizations o on o.id = a.organization_id
   join public.locations l on l.id = a.location_id
@@ -6605,7 +6995,7 @@ $$;
 -- Name: FUNCTION get_my_appointments(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.get_my_appointments() IS 'A signed-in customer''s own appointments across every shop they use. Now carries each shop''s currency AND its location timezone, because a customer''s list genuinely spans businesses in different countries and both were previously assumed from the device.';
+COMMENT ON FUNCTION public.get_my_appointments() IS 'Rendez-vous et demandes du client connecté. P1PRO ajoute la contre-proposition : counter_proposed_at non nul sur une ligne pending = le salon propose starts_at (l''horaire demandé est counter_original_starts_at) — répondre via accept/decline_booking_counter_proposal.';
 
 
 --
@@ -7578,6 +7968,37 @@ COMMENT ON FUNCTION public.get_public_booking_alternatives(p_latitude double pre
 Ne promet AUCUNE disponibilité et n''en vérifie aucune : elle retourne `accepts_immediate_booking`, qui dit si l''organisation détient la capacité `booking` et peut donc confirmer, ou si elle recevra une nouvelle demande. Une interface qui affiche « réservez ici » sur une ligne à false envoie le client vers une seconde attente juste après la première.
 
 Un professionnel en zone de service apparaît si sa zone couvre le point cherché, avec covers_search_point = true et sans adresse inventée.';
+
+
+--
+-- Name: get_public_booking_capabilities(text[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) RETURNS TABLE(organization_slug text, accepts_immediate_booking boolean)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if cardinality(coalesce(p_organization_slugs, '{}')) > 50 then
+    raise exception 'too many organizations requested at once (max 50)'
+      using errcode = '22023';
+  end if;
+
+  -- Même prédicat que le singulier F4 (le slug seul) : la recherche et le
+  -- tunnel doivent voir le même monde.
+  return query
+  select o.slug, private.org_has_capability(o.id, 'booking')
+  from public.organizations o
+  where o.slug = any(coalesce(p_organization_slugs, '{}'));
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_booking_capabilities(p_organization_slugs text[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) IS 'P1PRO — get_public_booking_capability en lot (max 50 slugs), pour que la découverte distingue « Réservable » (confirmation immédiate) de « Sur demande » (pending sous échéance) sans N+1.';
 
 
 --
@@ -10920,6 +11341,7 @@ declare
   v_professional_id uuid;
   v_existing uuid;
   v_name text;
+  v_blocked boolean;
 begin
   v_actor := (select auth.uid());
   if v_actor is null or not (select private.is_platform_admin()) then
@@ -10927,11 +11349,6 @@ begin
       using errcode = '42501';
   end if;
 
-  -- Lock the PROSPECT, not the linkage row, because the linkage row is what we
-  -- are about to create and therefore cannot be locked. Two administrators
-  -- double-clicking Publish on the same candidate serialise here; the loser
-  -- re-reads a gate that now says already_published and returns the winner's
-  -- identity instead of a 23505 they would have to interpret.
   perform 1 from public.prospects where id = p_prospect_id for update;
   if not found then
     raise exception 'prospect not found' using errcode = '42704';
@@ -10942,19 +11359,39 @@ begin
   where pp.prospect_id = p_prospect_id;
 
   if v_existing is not null then
-    -- Idempotent, and self-healing for identities minted while the R1B CHECK
-    -- still forbade publication: those rows exist, are linked, and are
-    -- invisible. Pressing Publish again finishes the job.
+    -- Idempotente et auto-réparatrice (B1) — mais plus jamais au mépris d'un
+    -- retrait : un prospect do_not_contact ou supprimé s'est opposé, et la
+    -- republication d'un clic annulerait l'engagement tenu par
+    -- complete_marketplace_withdrawal.
+    select (pr.do_not_contact
+            or exists (select 1 from public.prospect_suppressions s
+                       where s.scope = 'prospect' and s.prospect_id = pr.id))
+    into v_blocked
+    from public.prospects pr where pr.id = p_prospect_id;
+
+    if v_blocked then
+      perform 1 from public.professionals p
+      where p.id = v_existing and not p.is_public;
+      if found then
+        raise exception 'prospect is not eligible for publication: do_not_contact'
+          using errcode = '42501';
+      end if;
+      -- Déjà public ET do_not_contact : état hérité — on ne dépublie pas en
+      -- douce depuis un chemin de publication, on rend l'identité telle
+      -- qu'elle est. Le retrait a son propre circuit.
+    end if;
+
     update public.professionals
     set is_public = true
     where id = v_existing and not is_public;
 
+    -- L'information article 14 part à la PUBLICATION — cette branche publie
+    -- aussi. Idempotente : dedupe_key, un professionnel informé une fois.
+    perform private.enqueue_publication_information(v_existing);
+
     return v_existing;
   end if;
 
-  -- Checked here so the operator gets the reason by name. The trigger would
-  -- refuse the insert regardless; this is ergonomics on top of the guarantee,
-  -- never in place of it.
   v_reason := public.publication_block_reason(p_prospect_id);
   if v_reason is not null then
     raise exception 'prospect is not eligible for publication: %', v_reason
@@ -10965,17 +11402,10 @@ begin
 
   v_professional_id := public.create_external_professional(p_prospect_id);
 
-  -- Publication is the point of this function. It happens AFTER the linkage
-  -- row exists, because professionals_guard_publication reads the linkage to
-  -- find the anchor — the same ordering the guard's INSERT branch describes.
   update public.professionals
   set is_public = true
   where id = v_professional_id;
 
-  -- Constitution §4.4's discipline, applied to acquisition: a decision that
-  -- creates a durable public-facing identity records who took it and when.
-  -- The prospect's name is captured AS PUBLISHED, so a later rename of the
-  -- prospect does not rewrite the history of what was approved.
   insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
   values (
     v_actor,
@@ -10990,10 +11420,11 @@ begin
     )
   );
 
-  -- Fold the verdict forward immediately so the review queue stops offering a
-  -- candidate that has just been published, without waiting for the next
-  -- Worker sweep.
   perform public.refresh_prospect_publication_eligibility(p_prospect_id);
+
+  -- Publier, puis informer — dans la même transaction : si la mise en file
+  -- échoue, la publication échoue avec elle. On ne publie pas sans informer.
+  perform private.enqueue_publication_information(v_professional_id);
 
   return v_professional_id;
 end;
@@ -13127,6 +13558,25 @@ COMMENT ON FUNCTION public.run_email_delivery() IS 'Le tick d''envoi, appelé pa
 
 
 --
+-- Name: run_email_feedback_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_email_feedback_maintenance() RETURNS TABLE(events_processed integer, addresses_suppressed integer)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select * from private.apply_resend_webhook_feedback(100);
+$$;
+
+
+--
+-- Name: FUNCTION run_email_feedback_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_email_feedback_maintenance() IS 'Passe scheduler X2 : applique le retour de délivrabilité Resend. Sans événement en attente, ne fait rien. Grantée au seul fadeup_scheduler, comme les autres run_*.';
+
+
+--
 -- Name: run_establishment_tier_maintenance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -13955,6 +14405,10 @@ declare
   v_ttl integer;
 begin
   if new.status = 'pending' then
+    -- P1PRO : la ligne est (ou redevient) une demande — marqueur durable
+    -- pour l'historique. Jamais remis à false.
+    new.was_request := true;
+
     -- Only derive on the way IN to pending. A row already carrying a deadline
     -- keeps it, so a reschedule or a staff edit never silently extends the
     -- window a customer is already watching count down.
@@ -14994,6 +15448,116 @@ $$;
 --
 
 COMMENT ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) IS 'Platform owner/admin only. Opens (and audits) an explicit support-view session for one organization, closing any session the caller left open.';
+
+
+--
+-- Name: submit_marketplace_withdrawal_request(uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text DEFAULT NULL::text, p_requester_note text DEFAULT NULL::text, p_token text DEFAULT NULL::text) RETURNS TABLE(request_id uuid, deadline_at timestamp with time zone, already_pending boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+declare
+  v_claim_state public.professional_claim_state;
+  v_channel text := 'public_form';
+  v_email text;
+  v_row public.marketplace_withdrawal_requests;
+begin
+  select p.claim_state into v_claim_state
+  from public.professionals p where p.id = p_professional_id;
+
+  if not found then
+    raise exception 'professional not found' using errcode = '42704';
+  end if;
+
+  if v_claim_state = 'claimed' then
+    -- Même refus, même code que le chemin opérateur B2 : un profil revendiqué
+    -- se retire depuis son propre compte, pas par un formulaire anonyme.
+    raise exception 'this profile is claimed; its owner controls its visibility'
+      using errcode = '42501',
+            detail = 'fadeup_withdrawal_refusal=professional_is_claimed';
+  end if;
+
+  v_email := nullif(btrim(coalesce(p_requester_email, '')), '');
+  if v_email is not null
+     and v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'requester email is not a valid address'
+      using errcode = '22023',
+            detail = 'fadeup_withdrawal_refusal=invalid_email';
+  end if;
+
+  -- Garde de volume, pas de silence : au-delà de 200 demandes publiques en
+  -- 24 h (un ordre de grandeur au-dessus de tout usage réel — il y a ~23
+  -- prospects publiables), quelqu'un scripte le formulaire. On refuse avec un
+  -- motif nommé, la page affiche le canal e-mail de repli. Les demandes déjà
+  -- enregistrées ne sont pas touchées ; rien ne se dépublie de toute façon
+  -- sans un opérateur.
+  if (select count(*) from public.marketplace_withdrawal_requests w
+      where w.requested_via in ('public_form', 'email_link')
+        and w.created_at > now() - interval '24 hours') >= 200 then
+    raise exception 'too many public withdrawal requests; please contact us by email'
+      using errcode = '54000',
+            detail = 'fadeup_withdrawal_refusal=rate_limited';
+  end if;
+
+  -- Le jeton de l'e-mail d'information prouve le contrôle de la boîte du
+  -- prospect : la demande est marquée comme vérifiée par ce canal. Un jeton
+  -- faux ou étranger ne bloque pas — la demande reste possible, non vérifiée.
+  if nullif(btrim(coalesce(p_token, '')), '') is not null then
+    perform 1
+    from public.prospects pr
+    join public.prospect_professionals pp on pp.prospect_id = pr.id
+    where pp.professional_id = p_professional_id
+      and pr.outreach_unsubscribe_token = btrim(p_token);
+    if found then
+      v_channel := 'email_link';
+    end if;
+  end if;
+
+  insert into public.marketplace_withdrawal_requests
+    (professional_id, requested_via, requester_note, requester_email)
+  values
+    (p_professional_id, v_channel,
+     nullif(left(btrim(coalesce(p_requester_note, '')), 2000), ''),
+     v_email)
+  on conflict (professional_id) where status = 'pending' do nothing
+  returning * into v_row;
+
+  if v_row.id is null then
+    -- Une demande est déjà en cours : la re-soumettre ne crée ni une deuxième
+    -- échéance ni une deuxième exécution (index unique partiel B2). On rend
+    -- l'échéance existante — le demandeur voit que c'est pris en compte.
+    select * into v_row
+    from public.marketplace_withdrawal_requests w
+    where w.professional_id = p_professional_id and w.status = 'pending';
+
+    if v_row.id is null then
+      -- Course résiduelle (l'autre demande vient d'être décidée) : réessayer
+      -- une fois suffit, la fenêtre est de l'ordre de la milliseconde.
+      insert into public.marketplace_withdrawal_requests
+        (professional_id, requested_via, requester_note, requester_email)
+      values
+        (p_professional_id, v_channel,
+         nullif(left(btrim(coalesce(p_requester_note, '')), 2000), ''),
+         v_email)
+      returning * into v_row;
+    else
+      return query select v_row.id, v_row.deadline_at, true;
+      return;
+    end if;
+  end if;
+
+  return query select v_row.id, v_row.deadline_at, false;
+end;
+$_$;
+
+
+--
+-- Name: FUNCTION submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) IS 'Anon-callable — le formulaire public de la page d''information RGPD. ENREGISTRE une demande de retrait dans le circuit B2 (marketplace_withdrawal_requests), ne dépublie RIEN : l''opérateur vérifie l''identité puis complete_marketplace_withdrawal exécute, sous l''engagement des 72 h. Canal ''email_link'' quand le jeton de l''e-mail d''information prouve le contrôle de la boîte, ''public_form'' sinon. Refus nommés : professional_is_claimed, invalid_email, rate_limited.';
 
 
 --
@@ -17344,9 +17908,11 @@ CREATE TABLE public.marketplace_withdrawal_requests (
     decision_note text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    requester_email text,
     CONSTRAINT marketplace_withdrawal_requests_deadline_after_request CHECK ((deadline_at > requested_at)),
     CONSTRAINT marketplace_withdrawal_requests_decision_matches_status CHECK (((status = 'pending'::public.marketplace_withdrawal_status) = (decided_at IS NULL))),
-    CONSTRAINT marketplace_withdrawal_requests_via_valid CHECK ((requested_via = ANY (ARRAY['email'::text, 'phone'::text, 'platform_operator'::text, 'legal'::text, 'other'::text])))
+    CONSTRAINT marketplace_withdrawal_requests_requester_email_shape CHECK (((requester_email IS NULL) OR (requester_email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text))),
+    CONSTRAINT marketplace_withdrawal_requests_via_valid CHECK ((requested_via = ANY (ARRAY['email'::text, 'phone'::text, 'platform_operator'::text, 'legal'::text, 'other'::text, 'public_form'::text, 'email_link'::text])))
 );
 
 
@@ -17355,6 +17921,13 @@ CREATE TABLE public.marketplace_withdrawal_requests (
 --
 
 COMMENT ON TABLE public.marketplace_withdrawal_requests IS 'Une demande de retrait de la marketplace, datée, avec son échéance de 72 h (MASTER_SPEC §5). Une seule demande en cours par profil à la fois — index unique partiel ci-dessous. Le retrait lui-même reste withdraw_external_professional ; cette table est ce qui le DÉCLENCHE et ce qui rend le délai visible.';
+
+
+--
+-- Name: COLUMN marketplace_withdrawal_requests.requester_email; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.marketplace_withdrawal_requests.requester_email IS 'Adresse laissée par le demandeur du formulaire public, pour la vérification et la réponse de l''opérateur. Optionnelle : le RGPD n''exige pas une adresse pour s''opposer.';
 
 
 --
@@ -18086,6 +18659,32 @@ COMMENT ON COLUMN public.professional_follows.followed_at IS 'When following beg
 --
 
 COMMENT ON COLUMN public.professional_follows.unfollowed_at IS 'The customer''s explicit decision to stop, and the timestamp of it. Preserved across repeat unfollows: the first refusal is the truthful one.';
+
+
+--
+-- Name: professional_information_notices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.professional_information_notices (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    professional_id uuid NOT NULL,
+    prospect_id uuid,
+    channel text NOT NULL,
+    email text,
+    outbox_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT professional_information_notices_channel_valid CHECK ((channel = ANY (ARRAY['email'::text, 'public_page_only'::text]))),
+    CONSTRAINT professional_information_notices_email_shape CHECK (((channel = 'email'::text) = (email IS NOT NULL)))
+);
+
+ALTER TABLE ONLY public.professional_information_notices FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE professional_information_notices; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.professional_information_notices IS 'La trace de l''information article 14 : une ligne par (professionnel, canal). Le RÉSULTAT de l''envoi se lit en joignant email_outbox (status, sent_at, delivered_at, bounced_at) — jamais dupliqué ici.';
 
 
 --
@@ -19035,6 +19634,34 @@ ALTER TABLE ONLY public.queue_entry_moves FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.queue_entry_moves IS 'Trace d''audit des déplacements entre files (F1b §2) : qui (moved_by, NULL = client anonyme), quand, d''où (from_barber_id, NULL = premier disponible), vers où. kind = staff_move (le salon déplace, l''entrée garde son ancienneté) ou customer_change (le client change, son entrée est annulée et réinsérée en fin de nouvelle file — new_entry_id). Jamais écrite par un client : RPC seulement.';
+
+
+--
+-- Name: resend_webhook_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resend_webhook_events (
+    event_id text NOT NULL,
+    event_type text NOT NULL,
+    payload jsonb NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    error text,
+    attempts integer DEFAULT 0 NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    processed_at timestamp with time zone,
+    CONSTRAINT resend_webhook_events_id_shape CHECK (((btrim(event_id) <> ''::text) AND (char_length(event_id) <= 200))),
+    CONSTRAINT resend_webhook_events_status_valid CHECK ((status = ANY (ARRAY['queued'::text, 'processed'::text, 'skipped'::text, 'failed'::text]))),
+    CONSTRAINT resend_webhook_events_type_not_blank CHECK ((btrim(event_type) <> ''::text))
+);
+
+ALTER TABLE ONLY public.resend_webhook_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE resend_webhook_events; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.resend_webhook_events IS 'Journal brut des événements Resend (délivré, rebond, plainte, ouverture), clé primaire = identifiant Svix (idempotence). La fonction Edge resend-webhook n''écrit qu''ici et seulement après vérification de signature ; private.apply_resend_webhook_feedback traite, le scheduler cadence.';
 
 
 --
@@ -20502,6 +21129,14 @@ ALTER TABLE ONLY public.professional_follows
 
 
 --
+-- Name: professional_information_notices professional_information_notices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: professional_interest_request_contacts professional_interest_request_contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20843,6 +21478,14 @@ ALTER TABLE ONLY public.queue_entries
 
 ALTER TABLE ONLY public.queue_entry_moves
     ADD CONSTRAINT queue_entry_moves_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: resend_webhook_events resend_webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resend_webhook_events
+    ADD CONSTRAINT resend_webhook_events_pkey PRIMARY KEY (event_id);
 
 
 --
@@ -21582,6 +22225,13 @@ CREATE INDEX email_outbox_pending_idx ON public.email_outbox USING btree (next_a
 
 
 --
+-- Name: email_outbox_provider_message_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX email_outbox_provider_message_id_idx ON public.email_outbox USING btree (provider_message_id) WHERE (provider_message_id IS NOT NULL);
+
+
+--
 -- Name: email_outbox_reconcilable_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -22093,6 +22743,13 @@ CREATE INDEX professional_follows_professional_idx ON public.professional_follow
 
 
 --
+-- Name: professional_information_notices_one_per_channel; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX professional_information_notices_one_per_channel ON public.professional_information_notices USING btree (professional_id, channel);
+
+
+--
 -- Name: professional_interest_requests_pending_expiry_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -22587,6 +23244,20 @@ CREATE INDEX queue_entry_moves_entry_idx ON public.queue_entry_moves USING btree
 --
 
 CREATE INDEX queue_entry_moves_location_idx ON public.queue_entry_moves USING btree (location_id, created_at DESC);
+
+
+--
+-- Name: resend_webhook_events_queued_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX resend_webhook_events_queued_idx ON public.resend_webhook_events USING btree (received_at) WHERE (status = 'queued'::text);
+
+
+--
+-- Name: resend_webhook_events_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX resend_webhook_events_type_idx ON public.resend_webhook_events USING btree (event_type, received_at DESC);
 
 
 --
@@ -25361,6 +26032,30 @@ ALTER TABLE ONLY public.professional_follows
 
 
 --
+-- Name: professional_information_notices professional_information_notices_outbox_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_outbox_id_fkey FOREIGN KEY (outbox_id) REFERENCES public.email_outbox(id) ON DELETE SET NULL;
+
+
+--
+-- Name: professional_information_notices professional_information_notices_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: professional_information_notices professional_information_notices_prospect_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_prospect_id_fkey FOREIGN KEY (prospect_id) REFERENCES public.prospects(id) ON DELETE SET NULL;
+
+
+--
 -- Name: professional_interest_request_contacts professional_interest_request_contacts_booked_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -28046,6 +28741,19 @@ CREATE POLICY professional_follows_select ON public.professional_follows FOR SEL
 
 
 --
+-- Name: professional_information_notices; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.professional_information_notices ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: professional_information_notices professional_information_notices_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY professional_information_notices_select ON public.professional_information_notices FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
 -- Name: professional_interest_request_contacts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -28954,6 +29662,19 @@ CREATE POLICY queue_entry_moves_select ON public.queue_entry_moves FOR SELECT TO
 
 
 --
+-- Name: resend_webhook_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.resend_webhook_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: resend_webhook_events resend_webhook_events_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY resend_webhook_events_select ON public.resend_webhook_events FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
 -- Name: review_photos; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -29401,8 +30122,4448 @@ CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_w
 
 
 --
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
+--
+
+GRANT USAGE ON SCHEMA public TO postgres;
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT USAGE ON SCHEMA public TO prospect_worker;
+GRANT USAGE ON SCHEMA public TO fadeup_scheduler;
+
+
+--
+-- Name: TABLE email_outbox; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.email_outbox TO authenticated;
+GRANT ALL ON TABLE public.email_outbox TO service_role;
+
+
+--
+-- Name: TABLE prospect_jobs; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_jobs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_jobs TO authenticated;
+GRANT ALL ON TABLE public.prospect_jobs TO service_role;
+GRANT SELECT,INSERT ON TABLE public.prospect_jobs TO prospect_worker;
+
+
+--
+-- Name: TABLE appointments; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE public.appointments TO anon;
+GRANT SELECT,DELETE ON TABLE public.appointments TO authenticated;
+GRANT ALL ON TABLE public.appointments TO service_role;
+
+
+--
+-- Name: COLUMN appointments.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.organization_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(organization_id),UPDATE(organization_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.location_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(location_id),UPDATE(location_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.barber_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(barber_id),UPDATE(barber_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.chair_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(chair_id),UPDATE(chair_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.service_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(service_id),UPDATE(service_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.customer_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_name),UPDATE(customer_name) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.customer_phone; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_phone),UPDATE(customer_phone) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.customer_email; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_email),UPDATE(customer_email) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.starts_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(starts_at),UPDATE(starts_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.ends_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(ends_at),UPDATE(ends_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.buffer_before_minutes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(buffer_before_minutes),UPDATE(buffer_before_minutes) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.buffer_after_minutes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(buffer_after_minutes),UPDATE(buffer_after_minutes) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(status),UPDATE(status) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.notes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(notes),UPDATE(notes) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.created_by; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_by),UPDATE(created_by) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_at),UPDATE(created_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.customer_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_id),UPDATE(customer_id) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.expires_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(expires_at),UPDATE(expires_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.resolution; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(resolution),UPDATE(resolution) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.resolution_note; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(resolution_note),UPDATE(resolution_note) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.decided_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(decided_at),UPDATE(decided_at) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.decided_by; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(decided_by),UPDATE(decided_by) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: COLUMN appointments.rescheduled_to; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(rescheduled_to),UPDATE(rescheduled_to) ON TABLE public.appointments TO authenticated;
+
+
+--
+-- Name: TABLE queue_entries; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE public.queue_entries TO authenticated;
+GRANT ALL ON TABLE public.queue_entries TO service_role;
+
+
+--
+-- Name: COLUMN queue_entries.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.organization_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(organization_id),UPDATE(organization_id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.location_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(location_id),UPDATE(location_id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.barber_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(barber_id),UPDATE(barber_id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.service_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(service_id),UPDATE(service_id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.customer_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_name),UPDATE(customer_name) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.customer_phone; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_phone),UPDATE(customer_phone) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(status),UPDATE(status) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.notes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(notes),UPDATE(notes) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.called_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(called_at),UPDATE(called_at) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.service_started_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(service_started_at),UPDATE(service_started_at) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.completed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(completed_at),UPDATE(completed_at) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.created_by; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_by),UPDATE(created_by) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_at),UPDATE(created_at) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: COLUMN queue_entries.customer_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(customer_id),UPDATE(customer_id) ON TABLE public.queue_entries TO authenticated;
+
+
+--
+-- Name: FUNCTION accept_booking_counter_proposal(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) TO authenticated;
+
+
+--
+-- Name: TABLE memberships; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.memberships TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.memberships TO authenticated;
+GRANT ALL ON TABLE public.memberships TO service_role;
+
+
+--
+-- Name: FUNCTION accept_invitation(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.accept_invitation(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.accept_invitation(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.accept_invitation(p_token text) TO service_role;
+
+
+--
+-- Name: TABLE platform_members; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.platform_members TO anon;
+GRANT SELECT ON TABLE public.platform_members TO authenticated;
+GRANT ALL ON TABLE public.platform_members TO service_role;
+
+
+--
+-- Name: FUNCTION accept_platform_invitation(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.accept_platform_invitation(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.accept_platform_invitation(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.accept_platform_invitation(p_token text) TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_appointment_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_appointment_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_appointment_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_claim_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_claim_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_claim_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_external_profile_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_external_profile_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_external_profile_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_favorite_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_favorite_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_favorite_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_organization_follow_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_organization_follow_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_organization_follow_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_passport_issued_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_passport_issued_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_passport_issued_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_plan_change_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_plan_change_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_plan_change_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_professional_follow_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_professional_follow_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_professional_follow_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_prospect_discovered_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_prospect_discovered_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_prospect_discovered_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_prospect_enriched_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_prospect_enriched_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_prospect_enriched_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_queue_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_queue_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_queue_event() TO service_role;
+
+
+--
+-- Name: FUNCTION analytics_relationship_created_event(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.analytics_relationship_created_event() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.analytics_relationship_created_event() TO service_role;
+
+
+--
+-- Name: FUNCTION apply_appointment_no_show_rule(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.apply_appointment_no_show_rule(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.apply_appointment_no_show_rule(p_organization_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.apply_appointment_no_show_rule(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.apply_appointment_no_show_rule(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION apply_starter_services(p_organization_id uuid, p_location_id uuid, p_services jsonb, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.apply_starter_services(p_organization_id uuid, p_location_id uuid, p_services jsonb, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.apply_starter_services(p_organization_id uuid, p_location_id uuid, p_services jsonb, p_barber_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.apply_starter_services(p_organization_id uuid, p_location_id uuid, p_services jsonb, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.apply_starter_services(p_organization_id uuid, p_location_id uuid, p_services jsonb, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION apply_weekly_hours(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_days jsonb); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.apply_weekly_hours(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_days jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.apply_weekly_hours(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_days jsonb) TO postgres;
+GRANT ALL ON FUNCTION public.apply_weekly_hours(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_days jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.apply_weekly_hours(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_days jsonb) TO service_role;
+
+
+--
+-- Name: FUNCTION appointments_auto_follow(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.appointments_auto_follow() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.appointments_auto_follow() TO service_role;
+
+
+--
+-- Name: FUNCTION appointments_record_relationship(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.appointments_record_relationship() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.appointments_record_relationship() TO service_role;
+
+
+--
+-- Name: TABLE outreach_templates; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_templates TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_templates TO authenticated;
+GRANT ALL ON TABLE public.outreach_templates TO service_role;
+GRANT SELECT ON TABLE public.outreach_templates TO prospect_worker;
+
+
+--
+-- Name: FUNCTION approve_outreach_template(p_template_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.approve_outreach_template(p_template_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.approve_outreach_template(p_template_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.approve_outreach_template(p_template_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.approve_outreach_template(p_template_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION assign_barber_professional(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.assign_barber_professional() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.assign_barber_professional() TO service_role;
+
+
+--
+-- Name: FUNCTION assign_commercial_plan(p_organization_id uuid, p_plan_key text, p_status public.commercial_status, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.assign_commercial_plan(p_organization_id uuid, p_plan_key text, p_status public.commercial_status, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.assign_commercial_plan(p_organization_id uuid, p_plan_key text, p_status public.commercial_status, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.assign_commercial_plan(p_organization_id uuid, p_plan_key text, p_status public.commercial_status, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) TO anon;
+GRANT ALL ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) TO authenticated;
+GRANT ALL ON FUNCTION public.book_public_appointment(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text) TO service_role;
+
+
+--
+-- Name: FUNCTION cancel_appointment_as_business(p_appointment_id uuid, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.cancel_appointment_as_business(p_appointment_id uuid, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cancel_appointment_as_business(p_appointment_id uuid, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.cancel_appointment_as_business(p_appointment_id uuid, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION cancel_my_appointment(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.cancel_my_appointment(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cancel_my_appointment(p_appointment_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cancel_my_appointment(p_appointment_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION cancel_prospect_job(p_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.cancel_prospect_job(p_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cancel_prospect_job(p_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.cancel_prospect_job(p_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION change_queue_entry_barber(p_entry_id uuid, p_to_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.change_queue_entry_barber(p_entry_id uuid, p_to_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.change_queue_entry_barber(p_entry_id uuid, p_to_barber_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.change_queue_entry_barber(p_entry_id uuid, p_to_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.change_queue_entry_barber(p_entry_id uuid, p_to_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION check_appointment_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_appointment_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_appointment_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_appointment_time_blocks(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_appointment_time_blocks() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO postgres;
+GRANT ALL ON FUNCTION public.check_appointment_time_blocks() TO service_role;
+
+
+--
+-- Name: FUNCTION check_barber_exception_barber_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_barber_exception_barber_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_barber_exception_barber_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_barber_service_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_barber_service_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_barber_service_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_barber_staff_profile_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_barber_staff_profile_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_barber_staff_profile_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_barber_working_hours_barber_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_barber_working_hours_barber_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_chair_location_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_chair_location_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_chair_location_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_customer_membership_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_customer_membership_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_customer_membership_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_invitation_location_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_invitation_location_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_invitation_location_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_location_hours_location_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_location_hours_location_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_location_hours_location_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_location_service_settings_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_location_service_settings_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_location_service_settings_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_post_has_media(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_post_has_media() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_post_has_media() TO service_role;
+
+
+--
+-- Name: FUNCTION check_post_media_limit(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_post_media_limit() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_post_media_limit() TO service_role;
+
+
+--
+-- Name: FUNCTION check_post_services_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_post_services_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_post_services_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_posts_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_posts_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_posts_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_queue_entry_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_queue_entry_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_queue_entry_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_reviews_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_reviews_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_reviews_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_service_category_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_service_category_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_service_category_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_service_location_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_service_location_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_service_location_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_service_mode_override_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_service_mode_override_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_service_mode_override_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_staff_profile_location_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_staff_profile_location_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_staff_profile_location_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_time_block_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_time_block_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_time_block_consistency() TO postgres;
+GRANT ALL ON FUNCTION public.check_time_block_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION check_waitlist_entry_consistency(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.check_waitlist_entry_consistency() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.check_waitlist_entry_consistency() TO service_role;
+
+
+--
+-- Name: FUNCTION claim_platform_owner_bootstrap(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.claim_platform_owner_bootstrap(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.claim_platform_owner_bootstrap(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.claim_platform_owner_bootstrap(p_token text) TO service_role;
+
+
+--
+-- Name: TABLE outreach_recipients; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_recipients TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_recipients TO authenticated;
+GRANT ALL ON TABLE public.outreach_recipients TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_recipients TO prospect_worker;
+
+
+--
+-- Name: FUNCTION classify_outreach_reply(p_recipient_id uuid, p_positive boolean, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.classify_outreach_reply(p_recipient_id uuid, p_positive boolean, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.classify_outreach_reply(p_recipient_id uuid, p_positive boolean, p_note text) TO postgres;
+GRANT ALL ON FUNCTION public.classify_outreach_reply(p_recipient_id uuid, p_positive boolean, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.classify_outreach_reply(p_recipient_id uuid, p_positive boolean, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION clear_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.clear_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.clear_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.clear_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION complete_appointment(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.complete_appointment(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.complete_appointment(p_appointment_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.complete_appointment(p_appointment_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.complete_appointment(p_appointment_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.complete_marketplace_withdrawal(p_request_id uuid, p_decision_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION complete_onboarding(p_organization_id uuid, p_publish boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.complete_onboarding(p_organization_id uuid, p_publish boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.complete_onboarding(p_organization_id uuid, p_publish boolean) TO postgres;
+GRANT ALL ON FUNCTION public.complete_onboarding(p_organization_id uuid, p_publish boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.complete_onboarding(p_organization_id uuid, p_publish boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION complete_organization_onboarding(p_org_name text, p_org_slug text, p_location_name text, p_timezone text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.complete_organization_onboarding(p_org_name text, p_org_slug text, p_location_name text, p_timezone text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.complete_organization_onboarding(p_org_name text, p_org_slug text, p_location_name text, p_timezone text) TO authenticated;
+GRANT ALL ON FUNCTION public.complete_organization_onboarding(p_org_name text, p_org_slug text, p_location_name text, p_timezone text) TO service_role;
+
+
+--
+-- Name: FUNCTION confirm_booking_request(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.confirm_booking_request(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.confirm_booking_request(p_appointment_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.confirm_booking_request(p_appointment_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text) TO service_role;
+GRANT ALL ON FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text) TO authenticated;
+
+
+--
+-- Name: FUNCTION create_external_professional(p_prospect_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_external_professional(p_prospect_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_external_professional(p_prospect_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.create_external_professional(p_prospect_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.create_external_professional(p_prospect_id uuid) TO prospect_worker;
+
+
+--
+-- Name: TABLE organizations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,DELETE,UPDATE ON TABLE public.organizations TO anon;
+GRANT SELECT,DELETE,UPDATE ON TABLE public.organizations TO authenticated;
+GRANT ALL ON TABLE public.organizations TO service_role;
+
+
+--
+-- Name: FUNCTION create_organization(p_name text, p_slug text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_organization(p_name text, p_slug text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_organization(p_name text, p_slug text) TO authenticated;
+GRANT ALL ON FUNCTION public.create_organization(p_name text, p_slug text) TO service_role;
+
+
+--
+-- Name: FUNCTION create_passport_share(p_label text, p_ttl_hours integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_passport_share(p_label text, p_ttl_hours integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_passport_share(p_label text, p_ttl_hours integer) TO authenticated;
+GRANT ALL ON FUNCTION public.create_passport_share(p_label text, p_ttl_hours integer) TO service_role;
+
+
+--
+-- Name: FUNCTION create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval) TO authenticated;
+GRANT ALL ON FUNCTION public.create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval) TO service_role;
+
+
+--
+-- Name: TABLE posts; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.posts TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.posts TO authenticated;
+
+
+--
+-- Name: FUNCTION create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]) TO authenticated;
+GRANT ALL ON FUNCTION public.create_post(p_author_kind text, p_media jsonb, p_caption text, p_visibility text, p_organization_id uuid, p_posted_at_organization_id uuid, p_service_ids uuid[]) TO service_role;
+
+
+--
+-- Name: FUNCTION create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text) TO anon;
+GRANT ALL ON FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text) TO authenticated;
+GRANT ALL ON FUNCTION public.create_professional_interest_request(p_professional_id uuid, p_customer_name text, p_service_label text, p_preferred_starts_at timestamp with time zone, p_customer_email text, p_customer_phone text, p_notes text, p_locale text) TO service_role;
+
+
+--
+-- Name: FUNCTION create_prospect_discovery_job(p_job_type text, p_payload jsonb, p_source_keys text[], p_priority integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_prospect_discovery_job(p_job_type text, p_payload jsonb, p_source_keys text[], p_priority integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_prospect_discovery_job(p_job_type text, p_payload jsonb, p_source_keys text[], p_priority integer) TO authenticated;
+GRANT ALL ON FUNCTION public.create_prospect_discovery_job(p_job_type text, p_payload jsonb, p_source_keys text[], p_priority integer) TO service_role;
+
+
+--
+-- Name: FUNCTION customer_profiles_issue_passport(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.customer_profiles_issue_passport() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.customer_profiles_issue_passport() TO service_role;
+
+
+--
+-- Name: FUNCTION decline_booking_counter_proposal(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION decline_booking_request(p_appointment_id uuid, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.decline_booking_request(p_appointment_id uuid, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.decline_booking_request(p_appointment_id uuid, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.decline_booking_request(p_appointment_id uuid, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION delete_post(p_post_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.delete_post(p_post_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.delete_post(p_post_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.delete_post(p_post_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE platform_support_sessions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.platform_support_sessions TO anon;
+GRANT SELECT ON TABLE public.platform_support_sessions TO authenticated;
+GRANT ALL ON TABLE public.platform_support_sessions TO service_role;
+
+
+--
+-- Name: FUNCTION end_platform_support_session(p_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.end_platform_support_session(p_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.end_platform_support_session(p_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.end_platform_support_session(p_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_appointment_transition(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_appointment_transition() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_appointment_transition() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_barber_capacity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_barber_capacity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_barber_capacity() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_booking_service_mode(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_booking_service_mode() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_booking_service_mode() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_commercial_state_integrity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_commercial_state_integrity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_commercial_state_integrity() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_establishment_capacity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_establishment_capacity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_establishment_capacity() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_professional_claim_transition(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_professional_claim_transition() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_professional_claim_transition() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_prospect_publication_gate(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_prospect_publication_gate() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_prospect_publication_gate() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_queue_service_mode(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_queue_service_mode() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_queue_service_mode() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_queue_transition(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_queue_transition() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_queue_transition() TO service_role;
+
+
+--
+-- Name: FUNCTION enforce_staff_reactivation_capacity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.enforce_staff_reactivation_capacity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enforce_staff_reactivation_capacity() TO service_role;
+
+
+--
+-- Name: FUNCTION ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text) TO postgres;
+GRANT ALL ON FUNCTION public.ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text) TO authenticated;
+GRANT ALL ON FUNCTION public.ensure_owner_professional(p_organization_id uuid, p_location_id uuid, p_display_name text, p_title text, p_bio text) TO service_role;
+
+
+--
+-- Name: FUNCTION expire_interest_requests(p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.expire_interest_requests(p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.expire_interest_requests(p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION expire_pending_appointments(p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.expire_pending_appointments(p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.expire_pending_appointments(p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION favorite_shop(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.favorite_shop(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.favorite_shop(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.favorite_shop(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION follow_organization(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.follow_organization(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.follow_organization(p_organization_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.follow_organization(p_organization_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION follow_professional(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.follow_professional(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.follow_professional(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.follow_professional(p_professional_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_available_slots(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_available_slots(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_available_slots(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_available_slots(p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_billing_catalog(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_billing_catalog() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_billing_catalog() TO anon;
+GRANT ALL ON FUNCTION public.get_billing_catalog() TO authenticated;
+GRANT ALL ON FUNCTION public.get_billing_catalog() TO service_role;
+
+
+--
+-- Name: FUNCTION get_booking_request_history(p_organization_id uuid, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer) TO service_role;
+GRANT ALL ON FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_booking_requests(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_booking_requests(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_booking_requests(p_organization_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.get_booking_requests(p_organization_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision) TO anon;
+GRANT ALL ON FUNCTION public.get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision) TO authenticated;
+GRANT ALL ON FUNCTION public.get_feed(p_cursor timestamp with time zone, p_limit integer, p_latitude double precision, p_longitude double precision) TO service_role;
+
+
+--
+-- Name: FUNCTION get_invitation_by_token(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_invitation_by_token(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_invitation_by_token(p_token text) TO anon;
+GRANT ALL ON FUNCTION public.get_invitation_by_token(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.get_invitation_by_token(p_token text) TO service_role;
+
+
+--
+-- Name: FUNCTION get_location_queue_check_in(p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_location_queue_check_in(p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_location_queue_check_in(p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_location_queue_check_in(p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_my_access(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_access() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_access() TO postgres;
+GRANT ALL ON FUNCTION public.get_my_access() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_access() TO service_role;
+
+
+--
+-- Name: FUNCTION get_my_appointments(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_appointments() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_appointments() TO service_role;
+GRANT ALL ON FUNCTION public.get_my_appointments() TO authenticated;
+
+
+--
+-- Name: FUNCTION get_my_favorites(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_favorites() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_favorites() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_favorites() TO service_role;
+
+
+--
+-- Name: FUNCTION get_my_interest_requests(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_interest_requests() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_interest_requests() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_interest_requests() TO service_role;
+
+
+--
+-- Name: FUNCTION get_my_professional_application(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_professional_application() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_professional_application() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_professional_application() TO service_role;
+
+
+--
+-- Name: FUNCTION get_my_queue_status(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_queue_status() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_queue_status() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_queue_status() TO service_role;
+
+
+--
+-- Name: FUNCTION get_organization_analytics_summary(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_organization_analytics_summary(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_organization_analytics_summary(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO service_role;
+GRANT ALL ON FUNCTION public.get_organization_analytics_summary(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_organization_entitlements(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_organization_entitlements(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_organization_entitlements(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_organization_entitlements(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_organization_posts(p_slug text, p_cursor timestamp with time zone, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_organization_readiness(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_organization_readiness(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_organization_readiness(p_organization_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.get_organization_readiness(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_organization_readiness(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_organization_retention_cohort(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_organization_retention_cohort(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_organization_retention_cohort(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO service_role;
+GRANT ALL ON FUNCTION public.get_organization_retention_cohort(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_platform_analytics_funnel(p_from timestamp with time zone, p_to timestamp with time zone); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_platform_analytics_funnel(p_from timestamp with time zone, p_to timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_platform_analytics_funnel(p_from timestamp with time zone, p_to timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public.get_platform_analytics_funnel(p_from timestamp with time zone, p_to timestamp with time zone) TO service_role;
+
+
+--
+-- Name: FUNCTION get_professional_analytics_summary(p_professional_id uuid, p_from timestamp with time zone, p_to timestamp with time zone); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_professional_analytics_summary(p_professional_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_professional_analytics_summary(p_professional_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO service_role;
+GRANT ALL ON FUNCTION public.get_professional_analytics_summary(p_professional_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_professional_posts(p_handle text, p_cursor timestamp with time zone, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_available_slots(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_available_slots(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_available_slots(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) TO anon;
+GRANT ALL ON FUNCTION public.get_public_available_slots(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_available_slots(p_organization_slug text, p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_date date, p_slot_step_minutes integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_barber(p_organization_slug text, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_barber(p_organization_slug text, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_barber(p_organization_slug text, p_barber_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_barber(p_organization_slug text, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_barber(p_organization_slug text, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION public.get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_booking_alternatives(p_latitude double precision, p_longitude double precision, p_service_query text, p_exclude_organization_id uuid, p_radius_km double precision, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_booking_capabilities(p_organization_slugs text[]); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) TO service_role;
+GRANT ALL ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) TO anon;
+GRANT ALL ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_public_booking_capability(p_organization_slug text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_booking_capability(p_organization_slug text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_booking_capability(p_organization_slug text) TO service_role;
+GRANT ALL ON FUNCTION public.get_public_booking_capability(p_organization_slug text) TO anon;
+GRANT ALL ON FUNCTION public.get_public_booking_capability(p_organization_slug text) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_public_currencies(p_organization_ids uuid[]); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_currencies(p_organization_ids uuid[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_currencies(p_organization_ids uuid[]) TO anon;
+GRANT ALL ON FUNCTION public.get_public_currencies(p_organization_ids uuid[]) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_currencies(p_organization_ids uuid[]) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_organization(p_slug text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_organization(p_slug text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_organization(p_slug text) TO anon;
+GRANT ALL ON FUNCTION public.get_public_organization(p_slug text) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_organization(p_slug text) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_organization_follower_count(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_organization_follower_count(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_professional(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_professional(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_professional(p_professional_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_professional(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_professional(p_professional_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_professional_by_handle(p_handle text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO anon;
+GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_professional_by_handle(p_handle text) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_professional_workplace(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_professional_workplace(p_professional_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_queue_status(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_queue_status(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_queue_status(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_queue_status(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_queue_status(p_organization_slug text, p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_reputation(p_professional_id uuid, p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_reputation(p_professional_id uuid, p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_reputation(p_professional_id uuid, p_organization_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_reputation(p_professional_id uuid, p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_reputation(p_professional_id uuid, p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION public.get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_reviews(p_professional_id uuid, p_organization_id uuid, p_cursor timestamp with time zone, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_public_service_state(p_organization_slug text, p_location_id uuid, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_public_service_state(p_organization_slug text, p_location_id uuid, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_public_service_state(p_organization_slug text, p_location_id uuid, p_barber_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_public_service_state(p_organization_slug text, p_location_id uuid, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_public_service_state(p_organization_slug text, p_location_id uuid, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_queue_entry_tracking(p_entry_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_queue_entry_tracking(p_entry_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_queue_entry_tracking(p_entry_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.get_queue_entry_tracking(p_entry_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_queue_entry_tracking(p_entry_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_service_duration_insights(p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_service_duration_insights(p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_service_duration_insights(p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_service_duration_insights(p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_service_mode_state(p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_service_mode_state(p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_service_mode_state(p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.get_service_mode_state(p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_shared_passport(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_shared_passport(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_shared_passport(p_token text) TO anon;
+GRANT ALL ON FUNCTION public.get_shared_passport(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.get_shared_passport(p_token text) TO service_role;
+
+
+--
+-- Name: FUNCTION guard_customer_professional_relationship(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_customer_professional_relationship() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_customer_professional_relationship() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_customers_identity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_customers_identity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_customers_identity() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_marketplace_publication(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_marketplace_publication() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO postgres;
+GRANT ALL ON FUNCTION public.guard_marketplace_publication() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_passport_identity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_passport_identity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_passport_identity() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_professional_application_update(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_professional_application_update() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_professional_application_update() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_professional_identity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_professional_identity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_professional_identity() TO service_role;
+
+
+--
+-- Name: FUNCTION guard_professional_publication(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.guard_professional_publication() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.guard_professional_publication() TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_location_service_settings(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.handle_new_location_service_settings() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.handle_new_location_service_settings() TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_membership(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.handle_new_membership() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.handle_new_membership() TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_organization(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.handle_new_organization() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.handle_new_organization() TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_organization_commercial_state(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.handle_new_organization_commercial_state() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.handle_new_organization_commercial_state() TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_user(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.handle_new_user() TO service_role;
+
+
+--
+-- Name: FUNCTION join_public_queue(p_organization_slug text, p_location_id uuid, p_customer_name text, p_customer_phone text, p_barber_id uuid, p_service_id uuid, p_check_in_token text, p_latitude double precision, p_longitude double precision); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.join_public_queue(p_organization_slug text, p_location_id uuid, p_customer_name text, p_customer_phone text, p_barber_id uuid, p_service_id uuid, p_check_in_token text, p_latitude double precision, p_longitude double precision) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.join_public_queue(p_organization_slug text, p_location_id uuid, p_customer_name text, p_customer_phone text, p_barber_id uuid, p_service_id uuid, p_check_in_token text, p_latitude double precision, p_longitude double precision) TO anon;
+GRANT ALL ON FUNCTION public.join_public_queue(p_organization_slug text, p_location_id uuid, p_customer_name text, p_customer_phone text, p_barber_id uuid, p_service_id uuid, p_check_in_token text, p_latitude double precision, p_longitude double precision) TO authenticated;
+GRANT ALL ON FUNCTION public.join_public_queue(p_organization_slug text, p_location_id uuid, p_customer_name text, p_customer_phone text, p_barber_id uuid, p_service_id uuid, p_check_in_token text, p_latitude double precision, p_longitude double precision) TO service_role;
+
+
+--
+-- Name: FUNCTION leave_public_queue(p_entry_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.leave_public_queue(p_entry_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.leave_public_queue(p_entry_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.leave_public_queue(p_entry_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.leave_public_queue(p_entry_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION like_post(p_post_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.like_post(p_post_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.like_post(p_post_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.like_post(p_post_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION link_customer_from_contact_info(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.link_customer_from_contact_info() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.link_customer_from_contact_info() TO service_role;
+
+
+--
+-- Name: FUNCTION list_marketplace_withdrawal_requests(p_include_completed boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION list_my_followed_organizations(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_my_followed_organizations() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_my_followed_organizations() TO service_role;
+GRANT ALL ON FUNCTION public.list_my_followed_organizations() TO authenticated;
+
+
+--
+-- Name: FUNCTION list_my_followed_professionals(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_my_followed_professionals() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_my_followed_professionals() TO authenticated;
+GRANT ALL ON FUNCTION public.list_my_followed_professionals() TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_barber_services(p_organization_slug text, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_barber_services(p_organization_slug text, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_barber_services(p_organization_slug text, p_barber_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_barber_services(p_organization_slug text, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_barber_services(p_organization_slug text, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_barbers(p_organization_slug text, p_location_id uuid, p_service_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_location_hours(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_location_hours(p_organization_slug text, p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_locations(p_organization_slug text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_locations(p_organization_slug text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_locations(p_organization_slug text) TO anon;
+GRANT ALL ON FUNCTION public.list_public_locations(p_organization_slug text) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_locations(p_organization_slug text) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_organization_barbers(p_organization_slug text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_organization_barbers(p_organization_slug text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_organization_barbers(p_organization_slug text) TO anon;
+GRANT ALL ON FUNCTION public.list_public_organization_barbers(p_organization_slug text) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_organization_barbers(p_organization_slug text) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_queues(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_queues(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_queues(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_queues(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_queues(p_organization_slug text, p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION list_public_services(p_organization_slug text, p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.list_public_services(p_organization_slug text, p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.list_public_services(p_organization_slug text, p_location_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.list_public_services(p_organization_slug text, p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.list_public_services(p_organization_slug text, p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION maintain_post_like_count(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.maintain_post_like_count() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.maintain_post_like_count() TO service_role;
+
+
+--
+-- Name: FUNCTION maintain_review_reputation(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.maintain_review_reputation() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.maintain_review_reputation() TO service_role;
+
+
+--
+-- Name: FUNCTION mark_all_notifications_read(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.mark_all_notifications_read() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.mark_all_notifications_read() TO authenticated;
+GRANT ALL ON FUNCTION public.mark_all_notifications_read() TO service_role;
+
+
+--
+-- Name: FUNCTION mark_all_platform_notifications_read(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.mark_all_platform_notifications_read() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.mark_all_platform_notifications_read() TO authenticated;
+GRANT ALL ON FUNCTION public.mark_all_platform_notifications_read() TO service_role;
+
+
+--
+-- Name: FUNCTION mark_appointment_no_show(p_appointment_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.mark_appointment_no_show(p_appointment_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.mark_appointment_no_show(p_appointment_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.mark_appointment_no_show(p_appointment_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.mark_appointment_no_show(p_appointment_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION mark_notification_read(p_notification_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.mark_notification_read(p_notification_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.mark_notification_read(p_notification_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.mark_notification_read(p_notification_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION mark_platform_notification_read(p_notification_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.mark_platform_notification_read(p_notification_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.mark_platform_notification_read(p_notification_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.mark_platform_notification_read(p_notification_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE reviews; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.reviews TO service_role;
+GRANT SELECT ON TABLE public.reviews TO authenticated;
+
+
+--
+-- Name: FUNCTION moderate_review(p_review_id uuid, p_status text, p_reason text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.moderate_review(p_review_id uuid, p_status text, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.moderate_review(p_review_id uuid, p_status text, p_reason text) TO authenticated;
+GRANT ALL ON FUNCTION public.moderate_review(p_review_id uuid, p_status text, p_reason text) TO service_role;
+
+
+--
+-- Name: FUNCTION move_queue_entry(p_entry_id uuid, p_to_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.move_queue_entry(p_entry_id uuid, p_to_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.move_queue_entry(p_entry_id uuid, p_to_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.move_queue_entry(p_entry_id uuid, p_to_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION my_organization_has_capability(p_organization_id uuid, p_capability text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.my_organization_has_capability(p_organization_id uuid, p_capability text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.my_organization_has_capability(p_organization_id uuid, p_capability text) TO authenticated;
+GRANT ALL ON FUNCTION public.my_organization_has_capability(p_organization_id uuid, p_capability text) TO service_role;
+
+
+--
+-- Name: FUNCTION normalize_invitation_email(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.normalize_invitation_email() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.normalize_invitation_email() TO service_role;
+
+
+--
+-- Name: FUNCTION normalize_phone_number(p_raw text, p_country text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO anon;
+GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO authenticated;
+GRANT ALL ON FUNCTION public.normalize_phone_number(p_raw text, p_country text) TO service_role;
+
+
+--
+-- Name: FUNCTION notify_new_appointment(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_new_appointment() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_new_appointment() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_new_invitation(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_new_invitation() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_new_invitation() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_organization_follow(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_organization_follow() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_organization_follow() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_post_like(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_post_like() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_post_like() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_professional_follow(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_professional_follow() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_professional_follow() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_review_received(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_review_received() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_review_received() TO service_role;
+
+
+--
+-- Name: FUNCTION notify_review_reply(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.notify_review_reply() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.notify_review_reply() TO service_role;
+
+
+--
+-- Name: FUNCTION offboard_barber(p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.offboard_barber(p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.offboard_barber(p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.offboard_barber(p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind) TO postgres;
+GRANT ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind) TO authenticated;
+GRANT ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind) TO service_role;
+GRANT ALL ON FUNCTION public.outreach_block_reason(p_prospect_id uuid, p_channel public.outreach_channel_kind) TO prospect_worker;
+
+
+--
+-- Name: TABLE booking_provider_observations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.booking_provider_observations TO postgres;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.booking_provider_observations TO authenticated;
+GRANT ALL ON TABLE public.booking_provider_observations TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.booking_provider_observations TO prospect_worker;
+
+
+--
+-- Name: FUNCTION override_prospect_booking_provider(p_prospect_id uuid, p_provider_key text, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.override_prospect_booking_provider(p_prospect_id uuid, p_provider_key text, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.override_prospect_booking_provider(p_prospect_id uuid, p_provider_key text, p_note text) TO postgres;
+GRANT ALL ON FUNCTION public.override_prospect_booking_provider(p_prospect_id uuid, p_provider_key text, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.override_prospect_booking_provider(p_prospect_id uuid, p_provider_key text, p_note text) TO service_role;
+
+
+--
+-- Name: TABLE prospect_locales; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_locales TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locales TO authenticated;
+GRANT ALL ON TABLE public.prospect_locales TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locales TO prospect_worker;
+
+
+--
+-- Name: FUNCTION override_prospect_locale(p_prospect_id uuid, p_locale text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.override_prospect_locale(p_prospect_id uuid, p_locale text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.override_prospect_locale(p_prospect_id uuid, p_locale text) TO postgres;
+GRANT ALL ON FUNCTION public.override_prospect_locale(p_prospect_id uuid, p_locale text) TO authenticated;
+GRANT ALL ON FUNCTION public.override_prospect_locale(p_prospect_id uuid, p_locale text) TO service_role;
+
+
+--
+-- Name: FUNCTION posts_guard_immutable_author(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.posts_guard_immutable_author() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.posts_guard_immutable_author() TO service_role;
+
+
+--
+-- Name: FUNCTION prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval) TO authenticated;
+GRANT ALL ON FUNCTION public.prepare_billing_checkout(p_organization_id uuid, p_plan_key text, p_interval public.stripe_billing_interval) TO service_role;
+
+
+--
+-- Name: FUNCTION prepare_billing_portal(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE ml_model_versions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_model_versions TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_model_versions TO authenticated;
+GRANT ALL ON TABLE public.ml_model_versions TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_model_versions TO prospect_worker;
+
+
+--
+-- Name: FUNCTION promote_ml_model(p_model_version_id uuid, p_evaluation_notes text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.promote_ml_model(p_model_version_id uuid, p_evaluation_notes text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.promote_ml_model(p_model_version_id uuid, p_evaluation_notes text) TO postgres;
+GRANT ALL ON FUNCTION public.promote_ml_model(p_model_version_id uuid, p_evaluation_notes text) TO authenticated;
+GRANT ALL ON FUNCTION public.promote_ml_model(p_model_version_id uuid, p_evaluation_notes text) TO service_role;
+
+
+--
+-- Name: FUNCTION prospect_effective_locale(p_prospect_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.prospect_effective_locale(p_prospect_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.prospect_effective_locale(p_prospect_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.prospect_effective_locale(p_prospect_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.prospect_effective_locale(p_prospect_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.prospect_effective_locale(p_prospect_id uuid) TO prospect_worker;
+
+
+--
+-- Name: FUNCTION publication_block_reason(p_prospect_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.publication_block_reason(p_prospect_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.publication_block_reason(p_prospect_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.publication_block_reason(p_prospect_id uuid) TO prospect_worker;
+GRANT ALL ON FUNCTION public.publication_block_reason(p_prospect_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION publish_external_professional(p_prospect_id uuid, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.publish_external_professional(p_prospect_id uuid, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.publish_external_professional(p_prospect_id uuid, p_note text) TO service_role;
+GRANT ALL ON FUNCTION public.publish_external_professional(p_prospect_id uuid, p_note text) TO authenticated;
+
+
+--
+-- Name: FUNCTION queue_entries_auto_follow(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.queue_entries_auto_follow() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.queue_entries_auto_follow() TO service_role;
+
+
+--
+-- Name: FUNCTION queue_entries_record_relationship(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.queue_entries_record_relationship() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.queue_entries_record_relationship() TO service_role;
+
+
+--
+-- Name: FUNCTION reconcile_customer_professional_relationships(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reconcile_customer_professional_relationships(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reconcile_customer_professional_relationships(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.reconcile_customer_professional_relationships(p_professional_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION record_appointment_duration_sample(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_appointment_duration_sample() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_appointment_duration_sample() TO service_role;
+
+
+--
+-- Name: FUNCTION record_billing_customer(p_organization_id uuid, p_stripe_customer_id text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_billing_customer(p_organization_id uuid, p_stripe_customer_id text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_billing_customer(p_organization_id uuid, p_stripe_customer_id text) TO authenticated;
+GRANT ALL ON FUNCTION public.record_billing_customer(p_organization_id uuid, p_stripe_customer_id text) TO service_role;
+
+
+--
+-- Name: FUNCTION record_queue_duration_sample(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_queue_duration_sample() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_queue_duration_sample() TO service_role;
+
+
+--
+-- Name: FUNCTION recover_stale_prospect_job_leases(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.recover_stale_prospect_job_leases() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.recover_stale_prospect_job_leases() TO authenticated;
+GRANT ALL ON FUNCTION public.recover_stale_prospect_job_leases() TO service_role;
+GRANT ALL ON FUNCTION public.recover_stale_prospect_job_leases() TO prospect_worker;
+
+
+--
+-- Name: FUNCTION redeem_appointment_claim(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.redeem_appointment_claim(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.redeem_appointment_claim(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.redeem_appointment_claim(p_token text) TO service_role;
+
+
+--
+-- Name: TABLE prospect_publication_eligibility; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_publication_eligibility TO service_role;
+GRANT SELECT ON TABLE public.prospect_publication_eligibility TO prospect_worker;
+GRANT SELECT ON TABLE public.prospect_publication_eligibility TO authenticated;
+
+
+--
+-- Name: FUNCTION refresh_prospect_publication_eligibility(p_prospect_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.refresh_prospect_publication_eligibility(p_prospect_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.refresh_prospect_publication_eligibility(p_prospect_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.refresh_prospect_publication_eligibility(p_prospect_id uuid) TO prospect_worker;
+GRANT ALL ON FUNCTION public.refresh_prospect_publication_eligibility(p_prospect_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION regenerate_location_queue_check_in_token(p_location_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.regenerate_location_queue_check_in_token(p_location_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.regenerate_location_queue_check_in_token(p_location_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.regenerate_location_queue_check_in_token(p_location_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION reissue_platform_owner_bootstrap_token(p_expires_in interval); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reissue_platform_owner_bootstrap_token(p_expires_in interval) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reissue_platform_owner_bootstrap_token(p_expires_in interval) TO authenticated;
+GRANT ALL ON FUNCTION public.reissue_platform_owner_bootstrap_token(p_expires_in interval) TO service_role;
+
+
+--
+-- Name: FUNCTION reject_analytics_event_mutation(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reject_analytics_event_mutation() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reject_analytics_event_mutation() TO service_role;
+
+
+--
+-- Name: FUNCTION reject_commercial_history_mutation(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reject_commercial_history_mutation() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reject_commercial_history_mutation() TO service_role;
+
+
+--
+-- Name: FUNCTION reject_service_mode_history_mutation(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reject_service_mode_history_mutation() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reject_service_mode_history_mutation() TO service_role;
+
+
+--
+-- Name: FUNCTION remove_favorite(p_favorite_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.remove_favorite(p_favorite_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.remove_favorite(p_favorite_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.remove_favorite(p_favorite_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION reply_to_review(p_review_id uuid, p_body text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reply_to_review(p_review_id uuid, p_body text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reply_to_review(p_review_id uuid, p_body text) TO authenticated;
+GRANT ALL ON FUNCTION public.reply_to_review(p_review_id uuid, p_body text) TO service_role;
+
+
+--
+-- Name: FUNCTION report_review(p_review_id uuid, p_reason text, p_detail text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.report_review(p_review_id uuid, p_reason text, p_detail text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.report_review(p_review_id uuid, p_reason text, p_detail text) TO authenticated;
+GRANT ALL ON FUNCTION public.report_review(p_review_id uuid, p_reason text, p_detail text) TO service_role;
+
+
+--
+-- Name: FUNCTION request_billing_cancellation(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.request_billing_cancellation(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.request_billing_cancellation(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.request_billing_cancellation(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.request_billing_quote(p_organization_id uuid, p_establishments integer, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.request_marketplace_withdrawal(p_professional_id uuid, p_requested_via text, p_requester_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval) TO authenticated;
+GRANT ALL ON FUNCTION public.request_plan_change(p_organization_id uuid, p_new_plan_key text, p_new_interval public.stripe_billing_interval) TO service_role;
+
+
+--
+-- Name: FUNCTION reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION resolve_review_report(p_report_id uuid, p_status text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.resolve_review_report(p_report_id uuid, p_status text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.resolve_review_report(p_report_id uuid, p_status text) TO authenticated;
+GRANT ALL ON FUNCTION public.resolve_review_report(p_report_id uuid, p_status text) TO service_role;
+
+
+--
+-- Name: FUNCTION restrict_appointment_self_update(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.restrict_appointment_self_update() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.restrict_appointment_self_update() TO service_role;
+
+
+--
+-- Name: FUNCTION restrict_queue_entry_self_update(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.restrict_queue_entry_self_update() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.restrict_queue_entry_self_update() TO service_role;
+
+
+--
+-- Name: FUNCTION retire_ml_model(p_model_version_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.retire_ml_model(p_model_version_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.retire_ml_model(p_model_version_id uuid) TO postgres;
+GRANT ALL ON FUNCTION public.retire_ml_model(p_model_version_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.retire_ml_model(p_model_version_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE professional_applications; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT,DELETE,UPDATE ON TABLE public.professional_applications TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.professional_applications TO authenticated;
+GRANT ALL ON TABLE public.professional_applications TO service_role;
+
+
+--
+-- Name: COLUMN professional_applications.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(id) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.user_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(user_id) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.first_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(first_name) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.last_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(last_name) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.email; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(email) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.phone; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(phone) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.business_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(business_name) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.professional_type; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(professional_type) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.city; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(city) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.address_line1; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(address_line1) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.postal_code; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(postal_code) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.country; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(country) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.staff_count; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(staff_count) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.website; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(website) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.instagram; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(instagram) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.business_identifier; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(business_identifier) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(status) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.submitted_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(submitted_at) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.reviewed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(reviewed_at) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.reviewed_by; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(reviewed_by) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.rejection_reason; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(rejection_reason) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.organization_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(organization_id) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(created_at) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: COLUMN professional_applications.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(updated_at) ON TABLE public.professional_applications TO authenticated;
+
+
+--
+-- Name: FUNCTION review_professional_application(p_application_id uuid, p_decision text, p_rejection_reason text, p_internal_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.review_professional_application(p_application_id uuid, p_decision text, p_rejection_reason text, p_internal_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.review_professional_application(p_application_id uuid, p_decision text, p_rejection_reason text, p_internal_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.review_professional_application(p_application_id uuid, p_decision text, p_rejection_reason text, p_internal_note text) TO service_role;
+
+
+--
+-- Name: TABLE professional_claims; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professional_claims TO service_role;
+
+
+--
+-- Name: COLUMN professional_claims.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(id) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.professional_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(professional_id) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.claimant_user_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(claimant_user_id) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.state; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(state) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.evidence; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(evidence) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.submitted_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(submitted_at) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.decided_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(decided_at) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.decision_note; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(decision_note) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(created_at) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: COLUMN professional_claims.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(updated_at) ON TABLE public.professional_claims TO authenticated;
+
+
+--
+-- Name: FUNCTION review_professional_claim(p_claim_id uuid, p_decision text, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.review_professional_claim(p_claim_id uuid, p_decision text, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.review_professional_claim(p_claim_id uuid, p_decision text, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.review_professional_claim(p_claim_id uuid, p_decision text, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION reviews_guard_immutable(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.reviews_guard_immutable() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.reviews_guard_immutable() TO service_role;
+
+
+--
+-- Name: TABLE invitations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE ON TABLE public.invitations TO anon;
+GRANT SELECT,INSERT,DELETE ON TABLE public.invitations TO authenticated;
+GRANT ALL ON TABLE public.invitations TO service_role;
+
+
+--
+-- Name: FUNCTION revoke_invitation(p_invitation_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.revoke_invitation(p_invitation_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.revoke_invitation(p_invitation_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.revoke_invitation(p_invitation_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION revoke_passport_share(p_share_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.revoke_passport_share(p_share_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.revoke_passport_share(p_share_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.revoke_passport_share(p_share_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE platform_invitations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.platform_invitations TO service_role;
+GRANT SELECT ON TABLE public.platform_invitations TO authenticated;
+
+
+--
+-- Name: FUNCTION revoke_platform_invitation(p_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.revoke_platform_invitation(p_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.revoke_platform_invitation(p_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.revoke_platform_invitation(p_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION run_acquisition_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_acquisition_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_acquisition_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_acquisition_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_billing_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_billing_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_billing_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_billing_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_booking_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_booking_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_booking_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_booking_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_email_delivery(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_email_delivery() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_email_delivery() TO service_role;
+GRANT ALL ON FUNCTION public.run_email_delivery() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_email_feedback_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_email_feedback_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_email_feedback_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_email_feedback_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_establishment_tier_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_establishment_tier_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_establishment_tier_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_establishment_tier_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_queue_grace_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_queue_grace_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_queue_grace_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_queue_grace_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION run_trial_maintenance(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.run_trial_maintenance() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.run_trial_maintenance() TO service_role;
+GRANT ALL ON FUNCTION public.run_trial_maintenance() TO fadeup_scheduler;
+
+
+--
+-- Name: FUNCTION save_business_profile(p_organization_id uuid, p_business_type public.business_type, p_currency text, p_country_code text, p_name text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.save_business_profile(p_organization_id uuid, p_business_type public.business_type, p_currency text, p_country_code text, p_name text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.save_business_profile(p_organization_id uuid, p_business_type public.business_type, p_currency text, p_country_code text, p_name text) TO postgres;
+GRANT ALL ON FUNCTION public.save_business_profile(p_organization_id uuid, p_business_type public.business_type, p_currency text, p_country_code text, p_name text) TO authenticated;
+GRANT ALL ON FUNCTION public.save_business_profile(p_organization_id uuid, p_business_type public.business_type, p_currency text, p_country_code text, p_name text) TO service_role;
+
+
+--
+-- Name: FUNCTION search_public_organizations(p_country text, p_city text, p_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_limit integer, p_offset integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.search_public_organizations(p_country text, p_city text, p_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_limit integer, p_offset integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.search_public_organizations(p_country text, p_city text, p_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_limit integer, p_offset integer) TO anon;
+GRANT ALL ON FUNCTION public.search_public_organizations(p_country text, p_city text, p_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_limit integer, p_offset integer) TO authenticated;
+GRANT ALL ON FUNCTION public.search_public_organizations(p_country text, p_city text, p_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_limit integer, p_offset integer) TO service_role;
+
+
+--
+-- Name: FUNCTION search_public_professionals(p_country text, p_city text, p_query text, p_service_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_min_price_cents integer, p_max_price_cents integer, p_open_now_only boolean, p_entity_type text, p_limit integer, p_offset integer, p_sort text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.search_public_professionals(p_country text, p_city text, p_query text, p_service_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_min_price_cents integer, p_max_price_cents integer, p_open_now_only boolean, p_entity_type text, p_limit integer, p_offset integer, p_sort text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.search_public_professionals(p_country text, p_city text, p_query text, p_service_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_min_price_cents integer, p_max_price_cents integer, p_open_now_only boolean, p_entity_type text, p_limit integer, p_offset integer, p_sort text) TO service_role;
+GRANT ALL ON FUNCTION public.search_public_professionals(p_country text, p_city text, p_query text, p_service_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_min_price_cents integer, p_max_price_cents integer, p_open_now_only boolean, p_entity_type text, p_limit integer, p_offset integer, p_sort text) TO anon;
+GRANT ALL ON FUNCTION public.search_public_professionals(p_country text, p_city text, p_query text, p_service_query text, p_latitude double precision, p_longitude double precision, p_radius_km double precision, p_min_price_cents integer, p_max_price_cents integer, p_open_now_only boolean, p_entity_type text, p_limit integer, p_offset integer, p_sort text) TO authenticated;
+
+
+--
+-- Name: FUNCTION set_appointment_blocked_range(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_appointment_blocked_range() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_appointment_blocked_range() TO service_role;
+
+
+--
+-- Name: FUNCTION set_appointment_request_expiry(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_appointment_request_expiry() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_appointment_request_expiry() TO service_role;
+
+
+--
+-- Name: TABLE barbers; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE public.barbers TO anon;
+GRANT SELECT,DELETE ON TABLE public.barbers TO authenticated;
+GRANT ALL ON TABLE public.barbers TO service_role;
+
+
+--
+-- Name: COLUMN barbers.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(id) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: COLUMN barbers.organization_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(organization_id),UPDATE(organization_id) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: COLUMN barbers.staff_profile_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(staff_profile_id),UPDATE(staff_profile_id) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: COLUMN barbers.is_bookable; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(is_bookable),UPDATE(is_bookable) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: COLUMN barbers.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_at),UPDATE(created_at) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: COLUMN barbers.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE public.barbers TO authenticated;
+
+
+--
+-- Name: FUNCTION set_barber_queue_enabled(p_barber_id uuid, p_enabled boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_barber_queue_enabled(p_barber_id uuid, p_enabled boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_barber_queue_enabled(p_barber_id uuid, p_enabled boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_barber_queue_enabled(p_barber_id uuid, p_enabled boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION set_barber_service_mode_override(p_barber_id uuid, p_mode public.service_mode); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_barber_service_mode_override(p_barber_id uuid, p_mode public.service_mode) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_barber_service_mode_override(p_barber_id uuid, p_mode public.service_mode) TO authenticated;
+GRANT ALL ON FUNCTION public.set_barber_service_mode_override(p_barber_id uuid, p_mode public.service_mode) TO service_role;
+
+
+--
+-- Name: FUNCTION set_interest_request_expiry(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_interest_request_expiry() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_interest_request_expiry() TO service_role;
+
+
+--
+-- Name: TABLE location_service_settings; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.location_service_settings TO service_role;
+GRANT SELECT ON TABLE public.location_service_settings TO authenticated;
+
+
+--
+-- Name: FUNCTION set_location_queue_grace_sweep(p_location_id uuid, p_enabled boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_location_queue_grace_sweep(p_location_id uuid, p_enabled boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_location_queue_grace_sweep(p_location_id uuid, p_enabled boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_location_queue_grace_sweep(p_location_id uuid, p_enabled boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION set_location_queue_open(p_location_id uuid, p_queue_open boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_location_queue_open(p_location_id uuid, p_queue_open boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_location_queue_open(p_location_id uuid, p_queue_open boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_location_queue_open(p_location_id uuid, p_queue_open boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION set_location_service_mode(p_location_id uuid, p_mode public.service_mode); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_location_service_mode(p_location_id uuid, p_mode public.service_mode) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_location_service_mode(p_location_id uuid, p_mode public.service_mode) TO authenticated;
+GRANT ALL ON FUNCTION public.set_location_service_mode(p_location_id uuid, p_mode public.service_mode) TO service_role;
+
+
+--
+-- Name: FUNCTION set_organization_marketplace_visible(p_organization_id uuid, p_visible boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_organization_marketplace_visible(p_organization_id uuid, p_visible boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_organization_marketplace_visible(p_organization_id uuid, p_visible boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_organization_marketplace_visible(p_organization_id uuid, p_visible boolean) TO service_role;
+
+
+--
+-- Name: TABLE outreach_campaigns; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_campaigns TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_campaigns TO authenticated;
+GRANT ALL ON TABLE public.outreach_campaigns TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_campaigns TO prospect_worker;
+
+
+--
+-- Name: FUNCTION set_outreach_campaign_status(p_campaign_id uuid, p_status public.outreach_campaign_status); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_outreach_campaign_status(p_campaign_id uuid, p_status public.outreach_campaign_status) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_outreach_campaign_status(p_campaign_id uuid, p_status public.outreach_campaign_status) TO postgres;
+GRANT ALL ON FUNCTION public.set_outreach_campaign_status(p_campaign_id uuid, p_status public.outreach_campaign_status) TO authenticated;
+GRANT ALL ON FUNCTION public.set_outreach_campaign_status(p_campaign_id uuid, p_status public.outreach_campaign_status) TO service_role;
+
+
+--
+-- Name: FUNCTION set_outreach_template_paused(p_template_id uuid, p_paused boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_outreach_template_paused(p_template_id uuid, p_paused boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_outreach_template_paused(p_template_id uuid, p_paused boolean) TO postgres;
+GRANT ALL ON FUNCTION public.set_outreach_template_paused(p_template_id uuid, p_paused boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_outreach_template_paused(p_template_id uuid, p_paused boolean) TO service_role;
+
+
+--
+-- Name: TABLE prospect_sources; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_sources TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_sources TO authenticated;
+GRANT ALL ON TABLE public.prospect_sources TO service_role;
+GRANT SELECT ON TABLE public.prospect_sources TO prospect_worker;
+
+
+--
+-- Name: FUNCTION set_prospect_source_enabled(p_key text, p_enabled boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_prospect_source_enabled(p_key text, p_enabled boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_prospect_source_enabled(p_key text, p_enabled boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.set_prospect_source_enabled(p_key text, p_enabled boolean) TO service_role;
+
+
+--
+-- Name: TABLE api_source_health; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_health TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_health TO authenticated;
+GRANT ALL ON TABLE public.api_source_health TO service_role;
+GRANT SELECT,UPDATE ON TABLE public.api_source_health TO prospect_worker;
+
+
+--
+-- Name: FUNCTION set_prospect_source_paused(p_key text, p_paused boolean, p_reason text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_prospect_source_paused(p_key text, p_paused boolean, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_prospect_source_paused(p_key text, p_paused boolean, p_reason text) TO authenticated;
+GRANT ALL ON FUNCTION public.set_prospect_source_paused(p_key text, p_paused boolean, p_reason text) TO service_role;
+
+
+--
+-- Name: TABLE service_mode_overrides; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.service_mode_overrides TO service_role;
+GRANT SELECT ON TABLE public.service_mode_overrides TO authenticated;
+
+
+--
+-- Name: FUNCTION set_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_mode public.service_mode, p_expires_at timestamp with time zone, p_barber_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_mode public.service_mode, p_expires_at timestamp with time zone, p_barber_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_mode public.service_mode, p_expires_at timestamp with time zone, p_barber_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.set_service_mode_temporary_override(p_scope public.service_mode_scope, p_location_id uuid, p_mode public.service_mode, p_expires_at timestamp with time zone, p_barber_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION set_updated_at(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_updated_at() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_updated_at() TO service_role;
+
+
+--
+-- Name: FUNCTION stamp_passport_identity(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.stamp_passport_identity() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.stamp_passport_identity() TO service_role;
+
+
+--
+-- Name: FUNCTION start_organization_trial(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.start_organization_trial(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.start_organization_trial(p_organization_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.start_organization_trial(p_organization_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) TO authenticated;
+GRANT ALL ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) TO service_role;
+
+
+--
+-- Name: FUNCTION submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) TO service_role;
+GRANT ALL ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) TO anon;
+GRANT ALL ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) TO authenticated;
+
+
+--
+-- Name: FUNCTION submit_professional_application(p_first_name text, p_last_name text, p_phone text, p_business_name text, p_professional_type public.professional_type, p_city text, p_address_line1 text, p_postal_code text, p_country text, p_staff_count integer, p_website text, p_instagram text, p_business_identifier text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.submit_professional_application(p_first_name text, p_last_name text, p_phone text, p_business_name text, p_professional_type public.professional_type, p_city text, p_address_line1 text, p_postal_code text, p_country text, p_staff_count integer, p_website text, p_instagram text, p_business_identifier text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.submit_professional_application(p_first_name text, p_last_name text, p_phone text, p_business_name text, p_professional_type public.professional_type, p_city text, p_address_line1 text, p_postal_code text, p_country text, p_staff_count integer, p_website text, p_instagram text, p_business_identifier text) TO authenticated;
+GRANT ALL ON FUNCTION public.submit_professional_application(p_first_name text, p_last_name text, p_phone text, p_business_name text, p_professional_type public.professional_type, p_city text, p_address_line1 text, p_postal_code text, p_country text, p_staff_count integer, p_website text, p_instagram text, p_business_identifier text) TO service_role;
+
+
+--
+-- Name: FUNCTION submit_professional_claim(p_professional_id uuid, p_evidence text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.submit_professional_claim(p_professional_id uuid, p_evidence text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.submit_professional_claim(p_professional_id uuid, p_evidence text) TO authenticated;
+GRANT ALL ON FUNCTION public.submit_professional_claim(p_professional_id uuid, p_evidence text) TO service_role;
+
+
+--
+-- Name: FUNCTION submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.submit_review(p_appointment_id uuid, p_rating integer, p_comment text, p_photo_storage_path text, p_photo_consent_publish boolean) TO service_role;
+
+
+--
+-- Name: FUNCTION suggested_currency_for_country(p_country_code text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO postgres;
+GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO anon;
+GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO authenticated;
+GRANT ALL ON FUNCTION public.suggested_currency_for_country(p_country_code text) TO service_role;
+
+
+--
+-- Name: FUNCTION suggested_timezone_for_country(p_country_code text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO postgres;
+GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO anon;
+GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO authenticated;
+GRANT ALL ON FUNCTION public.suggested_timezone_for_country(p_country_code text) TO service_role;
+
+
+--
+-- Name: FUNCTION suppress_prospect_outreach(p_prospect_id uuid, p_reason text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.suppress_prospect_outreach(p_prospect_id uuid, p_reason text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.suppress_prospect_outreach(p_prospect_id uuid, p_reason text) TO postgres;
+GRANT ALL ON FUNCTION public.suppress_prospect_outreach(p_prospect_id uuid, p_reason text) TO authenticated;
+GRANT ALL ON FUNCTION public.suppress_prospect_outreach(p_prospect_id uuid, p_reason text) TO service_role;
+
+
+--
+-- Name: FUNCTION sweep_prospect_publication_eligibility(p_limit integer); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.sweep_prospect_publication_eligibility(p_limit integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.sweep_prospect_publication_eligibility(p_limit integer) TO service_role;
+GRANT ALL ON FUNCTION public.sweep_prospect_publication_eligibility(p_limit integer) TO prospect_worker;
+GRANT ALL ON FUNCTION public.sweep_prospect_publication_eligibility(p_limit integer) TO authenticated;
+
+
+--
+-- Name: FUNCTION sync_plan_feature_tier(p_plan_key text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.sync_plan_feature_tier(p_plan_key text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.sync_plan_feature_tier(p_plan_key text) TO service_role;
+
+
+--
+-- Name: FUNCTION track_analytics_event(p_event_name text, p_event_origin text, p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_professional_id uuid, p_properties jsonb, p_session_id text, p_locale text, p_correlation_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.track_analytics_event(p_event_name text, p_event_origin text, p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_professional_id uuid, p_properties jsonb, p_session_id text, p_locale text, p_correlation_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.track_analytics_event(p_event_name text, p_event_origin text, p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_professional_id uuid, p_properties jsonb, p_session_id text, p_locale text, p_correlation_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.track_analytics_event(p_event_name text, p_event_origin text, p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_professional_id uuid, p_properties jsonb, p_session_id text, p_locale text, p_correlation_id uuid) TO anon;
+GRANT ALL ON FUNCTION public.track_analytics_event(p_event_name text, p_event_origin text, p_organization_id uuid, p_location_id uuid, p_barber_id uuid, p_professional_id uuid, p_properties jsonb, p_session_id text, p_locale text, p_correlation_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION unfollow_organization(p_organization_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.unfollow_organization(p_organization_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.unfollow_organization(p_organization_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.unfollow_organization(p_organization_id uuid) TO authenticated;
+
+
+--
+-- Name: FUNCTION unfollow_professional(p_professional_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.unfollow_professional(p_professional_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.unfollow_professional(p_professional_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.unfollow_professional(p_professional_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION unlike_post(p_post_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.unlike_post(p_post_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.unlike_post(p_post_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.unlike_post(p_post_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION unsubscribe_prospect_outreach(p_token text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.unsubscribe_prospect_outreach(p_token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.unsubscribe_prospect_outreach(p_token text) TO anon;
+GRANT ALL ON FUNCTION public.unsubscribe_prospect_outreach(p_token text) TO authenticated;
+GRANT ALL ON FUNCTION public.unsubscribe_prospect_outreach(p_token text) TO service_role;
+
+
+--
+-- Name: FUNCTION withdraw_external_professional(p_professional_id uuid, p_note text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.withdraw_external_professional(p_professional_id uuid, p_note text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.withdraw_external_professional(p_professional_id uuid, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.withdraw_external_professional(p_professional_id uuid, p_note text) TO service_role;
+
+
+--
+-- Name: FUNCTION withdraw_professional_claim(p_claim_id uuid); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.withdraw_professional_claim(p_claim_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.withdraw_professional_claim(p_claim_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.withdraw_professional_claim(p_claim_id uuid) TO service_role;
+
+
+--
+-- Name: TABLE analytics_event_definitions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.analytics_event_definitions TO service_role;
+
+
+--
+-- Name: TABLE analytics_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.analytics_events TO service_role;
+
+
+--
+-- Name: TABLE analytics_ingestion_rejections; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.analytics_ingestion_rejections TO service_role;
+
+
+--
+-- Name: TABLE api_source_limits; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_limits TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.api_source_limits TO authenticated;
+GRANT ALL ON TABLE public.api_source_limits TO service_role;
+GRANT SELECT,UPDATE ON TABLE public.api_source_limits TO prospect_worker;
+
+
+--
+-- Name: TABLE api_usage; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT ON TABLE public.api_usage TO anon;
+GRANT SELECT,INSERT ON TABLE public.api_usage TO authenticated;
+GRANT ALL ON TABLE public.api_usage TO service_role;
+GRANT SELECT,INSERT ON TABLE public.api_usage TO prospect_worker;
+
+
+--
+-- Name: TABLE appointment_claim_tokens; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.appointment_claim_tokens TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.appointment_claim_tokens TO authenticated;
+GRANT ALL ON TABLE public.appointment_claim_tokens TO service_role;
+
+
+--
+-- Name: TABLE audit_logs; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.audit_logs TO anon;
+GRANT SELECT ON TABLE public.audit_logs TO authenticated;
+GRANT ALL ON TABLE public.audit_logs TO service_role;
+
+
+--
+-- Name: TABLE barber_availability_exceptions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_availability_exceptions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_availability_exceptions TO authenticated;
+GRANT ALL ON TABLE public.barber_availability_exceptions TO service_role;
+
+
+--
+-- Name: TABLE barber_services; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_services TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_services TO authenticated;
+GRANT ALL ON TABLE public.barber_services TO service_role;
+
+
+--
+-- Name: TABLE barber_working_hours; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_working_hours TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.barber_working_hours TO authenticated;
+GRANT ALL ON TABLE public.barber_working_hours TO service_role;
+
+
+--
+-- Name: TABLE billing_quote_requests; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.billing_quote_requests TO service_role;
+GRANT SELECT ON TABLE public.billing_quote_requests TO authenticated;
+
+
+--
+-- Name: TABLE billing_stripe_prices; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.billing_stripe_prices TO service_role;
+GRANT SELECT ON TABLE public.billing_stripe_prices TO authenticated;
+
+
+--
+-- Name: TABLE billing_stripe_products; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.billing_stripe_products TO service_role;
+GRANT SELECT ON TABLE public.billing_stripe_products TO authenticated;
+
+
+--
+-- Name: TABLE booking_providers; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.booking_providers TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.booking_providers TO authenticated;
+GRANT ALL ON TABLE public.booking_providers TO service_role;
+GRANT SELECT ON TABLE public.booking_providers TO prospect_worker;
+
+
+--
+-- Name: TABLE chairs; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.chairs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.chairs TO authenticated;
+GRANT ALL ON TABLE public.chairs TO service_role;
+
+
+--
+-- Name: TABLE commercial_capabilities; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.commercial_capabilities TO service_role;
+GRANT SELECT ON TABLE public.commercial_capabilities TO authenticated;
+
+
+--
+-- Name: TABLE commercial_plan_changes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.commercial_plan_changes TO service_role;
+GRANT SELECT ON TABLE public.commercial_plan_changes TO authenticated;
+
+
+--
+-- Name: TABLE commercial_plans; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.commercial_plans TO service_role;
+GRANT SELECT ON TABLE public.commercial_plans TO authenticated;
+
+
+--
+-- Name: TABLE prospects; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO authenticated;
+GRANT ALL ON TABLE public.prospects TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospects TO prospect_worker;
+
+
+--
+-- Name: TABLE competitor_analytics; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.competitor_analytics TO postgres;
+GRANT ALL ON TABLE public.competitor_analytics TO service_role;
+GRANT SELECT ON TABLE public.competitor_analytics TO authenticated;
+GRANT SELECT ON TABLE public.competitor_analytics TO prospect_worker;
+
+
+--
+-- Name: TABLE customer_favorites; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.customer_favorites TO anon;
+GRANT SELECT ON TABLE public.customer_favorites TO authenticated;
+GRANT ALL ON TABLE public.customer_favorites TO service_role;
+
+
+--
+-- Name: TABLE customer_memberships; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_memberships TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_memberships TO authenticated;
+GRANT ALL ON TABLE public.customer_memberships TO service_role;
+
+
+--
+-- Name: TABLE customer_passport_photos; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_photos TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_photos TO authenticated;
+GRANT ALL ON TABLE public.customer_passport_photos TO service_role;
+
+
+--
+-- Name: TABLE customer_passport_shares; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_shares TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_passport_shares TO authenticated;
+GRANT ALL ON TABLE public.customer_passport_shares TO service_role;
+
+
+--
+-- Name: TABLE customer_passports; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.customer_passports TO anon;
+GRANT SELECT ON TABLE public.customer_passports TO authenticated;
+GRANT ALL ON TABLE public.customer_passports TO service_role;
+
+
+--
+-- Name: COLUMN customer_passports.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(id) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.user_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(user_id),UPDATE(user_id) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.usual_haircut; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(usual_haircut),UPDATE(usual_haircut) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.fade_type; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(fade_type),UPDATE(fade_type) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.side_length; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(side_length),UPDATE(side_length) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.top_length; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(top_length),UPDATE(top_length) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.beard_preferences; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(beard_preferences),UPDATE(beard_preferences) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.preferences_notes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(preferences_notes),UPDATE(preferences_notes) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(created_at),UPDATE(created_at) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: COLUMN customer_passports.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE public.customer_passports TO authenticated;
+
+
+--
+-- Name: TABLE customer_professional_relationships; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.customer_professional_relationships TO service_role;
+GRANT SELECT ON TABLE public.customer_professional_relationships TO authenticated;
+
+
+--
+-- Name: TABLE customer_profiles; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customer_profiles TO authenticated;
+GRANT ALL ON TABLE public.customer_profiles TO service_role;
+
+
+--
+-- Name: TABLE customers; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customers TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.customers TO authenticated;
+GRANT ALL ON TABLE public.customers TO service_role;
+
+
+--
+-- Name: TABLE email_streams; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.email_streams TO service_role;
+GRANT SELECT ON TABLE public.email_streams TO authenticated;
+
+
+--
+-- Name: TABLE email_templates; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.email_templates TO service_role;
+GRANT SELECT ON TABLE public.email_templates TO authenticated;
+
+
+--
+-- Name: TABLE outreach_assignments; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_assignments TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_assignments TO authenticated;
+GRANT ALL ON TABLE public.outreach_assignments TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_assignments TO prospect_worker;
+
+
+--
+-- Name: TABLE outreach_experiment_arms; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_experiment_arms TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_experiment_arms TO authenticated;
+GRANT ALL ON TABLE public.outreach_experiment_arms TO service_role;
+GRANT SELECT ON TABLE public.outreach_experiment_arms TO prospect_worker;
+
+
+--
+-- Name: TABLE outreach_experiments; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_experiments TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_experiments TO authenticated;
+GRANT ALL ON TABLE public.outreach_experiments TO service_role;
+GRANT SELECT ON TABLE public.outreach_experiments TO prospect_worker;
+
+
+--
+-- Name: TABLE experiment_results; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.experiment_results TO postgres;
+GRANT ALL ON TABLE public.experiment_results TO service_role;
+GRANT SELECT ON TABLE public.experiment_results TO authenticated;
+
+
+--
+-- Name: TABLE feed_ranking_weights; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.feed_ranking_weights TO service_role;
+
+
+--
+-- Name: TABLE location_hours; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.location_hours TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.location_hours TO authenticated;
+GRANT ALL ON TABLE public.location_hours TO service_role;
+
+
+--
+-- Name: TABLE locations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.locations TO authenticated;
+GRANT ALL ON TABLE public.locations TO service_role;
+
+
+--
+-- Name: TABLE marketplace_withdrawal_requests; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.marketplace_withdrawal_requests TO service_role;
+GRANT SELECT ON TABLE public.marketplace_withdrawal_requests TO authenticated;
+
+
+--
+-- Name: TABLE membership_plans; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.membership_plans TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.membership_plans TO authenticated;
+GRANT ALL ON TABLE public.membership_plans TO service_role;
+
+
+--
+-- Name: TABLE ml_datasets; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_datasets TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_datasets TO authenticated;
+GRANT ALL ON TABLE public.ml_datasets TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_datasets TO prospect_worker;
+
+
+--
+-- Name: TABLE ml_feature_schemas; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_feature_schemas TO postgres;
+GRANT SELECT ON TABLE public.ml_feature_schemas TO authenticated;
+GRANT ALL ON TABLE public.ml_feature_schemas TO service_role;
+GRANT SELECT ON TABLE public.ml_feature_schemas TO prospect_worker;
+
+
+--
+-- Name: TABLE ml_metrics; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_metrics TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_metrics TO authenticated;
+GRANT ALL ON TABLE public.ml_metrics TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_metrics TO prospect_worker;
+
+
+--
+-- Name: TABLE ml_predictions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_predictions TO postgres;
+GRANT SELECT,INSERT ON TABLE public.ml_predictions TO authenticated;
+GRANT ALL ON TABLE public.ml_predictions TO service_role;
+GRANT SELECT,INSERT ON TABLE public.ml_predictions TO prospect_worker;
+
+
+--
+-- Name: TABLE ml_training_runs; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.ml_training_runs TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_training_runs TO authenticated;
+GRANT ALL ON TABLE public.ml_training_runs TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.ml_training_runs TO prospect_worker;
+
+
+--
+-- Name: TABLE notifications; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,UPDATE ON TABLE public.notifications TO anon;
+GRANT SELECT,UPDATE ON TABLE public.notifications TO authenticated;
+GRANT ALL ON TABLE public.notifications TO service_role;
+
+
+--
+-- Name: TABLE organization_billing; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.organization_billing TO service_role;
+GRANT SELECT ON TABLE public.organization_billing TO authenticated;
+
+
+--
+-- Name: TABLE organization_commercial_state; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.organization_commercial_state TO service_role;
+GRANT SELECT ON TABLE public.organization_commercial_state TO authenticated;
+
+
+--
+-- Name: TABLE organization_dashboard_layouts; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.organization_dashboard_layouts TO service_role;
+GRANT SELECT,INSERT,DELETE ON TABLE public.organization_dashboard_layouts TO authenticated;
+
+
+--
+-- Name: COLUMN organization_dashboard_layouts.module_order; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(module_order) ON TABLE public.organization_dashboard_layouts TO authenticated;
+
+
+--
+-- Name: COLUMN organization_dashboard_layouts.updated_by; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(updated_by) ON TABLE public.organization_dashboard_layouts TO authenticated;
+
+
+--
+-- Name: TABLE organization_follows; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.organization_follows TO service_role;
+GRANT SELECT ON TABLE public.organization_follows TO authenticated;
+
+
+--
+-- Name: TABLE organization_trials; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.organization_trials TO service_role;
+GRANT SELECT ON TABLE public.organization_trials TO authenticated;
+
+
+--
+-- Name: TABLE outreach_channel_policies; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_channel_policies TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.outreach_channel_policies TO authenticated;
+GRANT ALL ON TABLE public.outreach_channel_policies TO service_role;
+GRANT SELECT ON TABLE public.outreach_channel_policies TO prospect_worker;
+
+
+--
+-- Name: TABLE outreach_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_events TO postgres;
+GRANT SELECT,INSERT ON TABLE public.outreach_events TO authenticated;
+GRANT ALL ON TABLE public.outreach_events TO service_role;
+GRANT SELECT,INSERT ON TABLE public.outreach_events TO prospect_worker;
+
+
+--
+-- Name: TABLE outreach_funnel_stats; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_funnel_stats TO postgres;
+GRANT ALL ON TABLE public.outreach_funnel_stats TO service_role;
+GRANT SELECT ON TABLE public.outreach_funnel_stats TO authenticated;
+GRANT SELECT ON TABLE public.outreach_funnel_stats TO prospect_worker;
+
+
+--
+-- Name: TABLE outreach_sales_angles; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.outreach_sales_angles TO postgres;
+GRANT SELECT ON TABLE public.outreach_sales_angles TO authenticated;
+GRANT ALL ON TABLE public.outreach_sales_angles TO service_role;
+GRANT SELECT ON TABLE public.outreach_sales_angles TO prospect_worker;
+
+
+--
+-- Name: TABLE plan_capabilities; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.plan_capabilities TO service_role;
+GRANT SELECT ON TABLE public.plan_capabilities TO authenticated;
+
+
+--
+-- Name: TABLE platform_audit_log; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.platform_audit_log TO anon;
+GRANT SELECT ON TABLE public.platform_audit_log TO authenticated;
+GRANT ALL ON TABLE public.platform_audit_log TO service_role;
+
+
+--
+-- Name: TABLE platform_notifications; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.platform_notifications TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.platform_notifications TO authenticated;
+GRANT ALL ON TABLE public.platform_notifications TO service_role;
+
+
+--
+-- Name: TABLE platform_owner_bootstrap_tokens; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.platform_owner_bootstrap_tokens TO service_role;
+
+
+--
+-- Name: TABLE post_likes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.post_likes TO service_role;
+GRANT SELECT,INSERT,DELETE ON TABLE public.post_likes TO authenticated;
+
+
+--
+-- Name: TABLE post_media; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.post_media TO service_role;
+GRANT SELECT,INSERT,DELETE ON TABLE public.post_media TO authenticated;
+
+
+--
+-- Name: TABLE post_services; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.post_services TO service_role;
+GRANT SELECT,INSERT,DELETE ON TABLE public.post_services TO authenticated;
+
+
+--
+-- Name: TABLE professional_follows; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professional_follows TO service_role;
+
+
+--
+-- Name: COLUMN professional_follows.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(id) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.professional_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(professional_id) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.state; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(state) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.source; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(source) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.followed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(followed_at) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.unfollowed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(unfollowed_at) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(created_at) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: COLUMN professional_follows.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(updated_at) ON TABLE public.professional_follows TO authenticated;
+
+
+--
+-- Name: TABLE professional_information_notices; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professional_information_notices TO service_role;
+GRANT SELECT ON TABLE public.professional_information_notices TO authenticated;
+
+
+--
+-- Name: TABLE professional_interest_request_contacts; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professional_interest_request_contacts TO service_role;
+GRANT SELECT ON TABLE public.professional_interest_request_contacts TO authenticated;
+
+
+--
+-- Name: TABLE professional_interest_requests; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professional_interest_requests TO service_role;
+GRANT SELECT ON TABLE public.professional_interest_requests TO authenticated;
+
+
+--
+-- Name: TABLE professionals; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.professionals TO service_role;
+
+
+--
+-- Name: COLUMN professionals.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(id) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.claim_state; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(claim_state) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.display_name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(display_name),UPDATE(display_name) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.handle; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(handle),UPDATE(handle) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.headline; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(headline),UPDATE(headline) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.bio; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(bio),UPDATE(bio) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.avatar_url; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(avatar_url),UPDATE(avatar_url) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.is_public; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(is_public),UPDATE(is_public) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.claimed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(claimed_at) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(created_at) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: COLUMN professionals.updated_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(updated_at) ON TABLE public.professionals TO authenticated;
+
+
+--
+-- Name: TABLE profiles; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.profiles TO authenticated;
+GRANT ALL ON TABLE public.profiles TO service_role;
+
+
+--
+-- Name: TABLE prospect_contacts; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO authenticated;
+GRANT ALL ON TABLE public.prospect_contacts TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_contacts TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_data_quality; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_data_quality TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_data_quality TO authenticated;
+GRANT ALL ON TABLE public.prospect_data_quality TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_data_quality TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_duplicates; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_duplicates TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_duplicates TO authenticated;
+GRANT ALL ON TABLE public.prospect_duplicates TO service_role;
+
+
+--
+-- Name: TABLE prospect_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT ON TABLE public.prospect_events TO anon;
+GRANT SELECT,INSERT ON TABLE public.prospect_events TO authenticated;
+GRANT ALL ON TABLE public.prospect_events TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_events TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_features; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_features TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_features TO authenticated;
+GRANT ALL ON TABLE public.prospect_features TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_features TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_fit_scores; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_fit_scores TO postgres;
+GRANT SELECT,INSERT ON TABLE public.prospect_fit_scores TO authenticated;
+GRANT ALL ON TABLE public.prospect_fit_scores TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_fit_scores TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_identity_matches; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_identity_matches TO postgres;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_identity_matches TO authenticated;
+GRANT ALL ON TABLE public.prospect_identity_matches TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_identity_matches TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_job_sources; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_job_sources TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_job_sources TO authenticated;
+GRANT ALL ON TABLE public.prospect_job_sources TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.prospect_job_sources TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_locations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO authenticated;
+GRANT ALL ON TABLE public.prospect_locations TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_locations TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_notes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_notes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_notes TO authenticated;
+GRANT ALL ON TABLE public.prospect_notes TO service_role;
+
+
+--
+-- Name: TABLE prospect_outreach; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach TO authenticated;
+GRANT ALL ON TABLE public.prospect_outreach TO service_role;
+
+
+--
+-- Name: TABLE prospect_outreach_eligibility; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_outreach_eligibility TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach_eligibility TO authenticated;
+GRANT ALL ON TABLE public.prospect_outreach_eligibility TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_outreach_eligibility TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_professionals; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_professionals TO service_role;
+GRANT SELECT ON TABLE public.prospect_professionals TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_publication_queue; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_publication_queue TO service_role;
+GRANT SELECT ON TABLE public.prospect_publication_queue TO authenticated;
+
+
+--
+-- Name: TABLE prospect_score_distribution; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_score_distribution TO postgres;
+GRANT ALL ON TABLE public.prospect_score_distribution TO service_role;
+GRANT SELECT ON TABLE public.prospect_score_distribution TO authenticated;
+
+
+--
+-- Name: TABLE prospect_score_rulesets; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_score_rulesets TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_score_rulesets TO authenticated;
+GRANT ALL ON TABLE public.prospect_score_rulesets TO service_role;
+GRANT SELECT ON TABLE public.prospect_score_rulesets TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_scores; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO authenticated;
+GRANT ALL ON TABLE public.prospect_scores TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_scores TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_search_partitions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_search_partitions TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_search_partitions TO authenticated;
+GRANT ALL ON TABLE public.prospect_search_partitions TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_search_partitions TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_searches; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_searches TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_searches TO authenticated;
+GRANT ALL ON TABLE public.prospect_searches TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_searches TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_segment_definitions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_segment_definitions TO postgres;
+GRANT SELECT ON TABLE public.prospect_segment_definitions TO authenticated;
+GRANT ALL ON TABLE public.prospect_segment_definitions TO service_role;
+GRANT SELECT ON TABLE public.prospect_segment_definitions TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_segments; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.prospect_segments TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_segments TO authenticated;
+GRANT ALL ON TABLE public.prospect_segments TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_segments TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_social_profiles; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO authenticated;
+GRANT ALL ON TABLE public.prospect_social_profiles TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_social_profiles TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_source_records; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO authenticated;
+GRANT ALL ON TABLE public.prospect_source_records TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_source_records TO prospect_worker;
+
+
+--
+-- Name: TABLE prospect_suppressions; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_suppressions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_suppressions TO authenticated;
+GRANT ALL ON TABLE public.prospect_suppressions TO service_role;
+
+
+--
+-- Name: TABLE prospect_tags; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_tags TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.prospect_tags TO authenticated;
+GRANT ALL ON TABLE public.prospect_tags TO service_role;
+
+
+--
+-- Name: TABLE queue_entry_moves; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.queue_entry_moves TO service_role;
+GRANT SELECT ON TABLE public.queue_entry_moves TO authenticated;
+
+
+--
+-- Name: TABLE resend_webhook_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.resend_webhook_events TO service_role;
+GRANT SELECT ON TABLE public.resend_webhook_events TO authenticated;
+
+
+--
+-- Name: TABLE review_photos; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.review_photos TO service_role;
+GRANT SELECT ON TABLE public.review_photos TO authenticated;
+
+
+--
+-- Name: TABLE review_reports; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.review_reports TO service_role;
+GRANT SELECT ON TABLE public.review_reports TO authenticated;
+
+
+--
+-- Name: TABLE review_reputation; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.review_reputation TO service_role;
+GRANT SELECT ON TABLE public.review_reputation TO authenticated;
+
+
+--
+-- Name: TABLE service_categories; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_categories TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_categories TO authenticated;
+GRANT ALL ON TABLE public.service_categories TO service_role;
+
+
+--
+-- Name: TABLE service_duration_samples; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.service_duration_samples TO service_role;
+GRANT SELECT ON TABLE public.service_duration_samples TO authenticated;
+
+
+--
+-- Name: TABLE service_locations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_locations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.service_locations TO authenticated;
+GRANT ALL ON TABLE public.service_locations TO service_role;
+
+
+--
+-- Name: TABLE service_mode_changes; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.service_mode_changes TO service_role;
+GRANT SELECT ON TABLE public.service_mode_changes TO authenticated;
+
+
+--
+-- Name: TABLE services; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.services TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.services TO authenticated;
+GRANT ALL ON TABLE public.services TO service_role;
+
+
+--
+-- Name: TABLE staff_profiles; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.staff_profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.staff_profiles TO authenticated;
+GRANT ALL ON TABLE public.staff_profiles TO service_role;
+
+
+--
+-- Name: TABLE stripe_webhook_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.stripe_webhook_events TO service_role;
+GRANT SELECT ON TABLE public.stripe_webhook_events TO authenticated;
+
+
+--
+-- Name: TABLE template_performance; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.template_performance TO postgres;
+GRANT ALL ON TABLE public.template_performance TO service_role;
+GRANT SELECT ON TABLE public.template_performance TO authenticated;
+GRANT SELECT ON TABLE public.template_performance TO prospect_worker;
+
+
+--
+-- Name: TABLE time_blocks; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.time_blocks TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.time_blocks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.time_blocks TO authenticated;
+GRANT ALL ON TABLE public.time_blocks TO service_role;
+
+
+--
+-- Name: TABLE waitlist_entries; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.waitlist_entries TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.waitlist_entries TO authenticated;
+GRANT ALL ON TABLE public.waitlist_entries TO service_role;
+
+
+--
+-- Name: TABLE whatsapp_accounts; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.whatsapp_accounts TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_accounts TO authenticated;
+GRANT ALL ON TABLE public.whatsapp_accounts TO service_role;
+GRANT SELECT ON TABLE public.whatsapp_accounts TO prospect_worker;
+
+
+--
+-- Name: TABLE whatsapp_conversations; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.whatsapp_conversations TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_conversations TO authenticated;
+GRANT ALL ON TABLE public.whatsapp_conversations TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_conversations TO prospect_worker;
+
+
+--
+-- Name: TABLE whatsapp_messages; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.whatsapp_messages TO postgres;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.whatsapp_messages TO authenticated;
+GRANT ALL ON TABLE public.whatsapp_messages TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_messages TO prospect_worker;
+
+
+--
+-- Name: TABLE whatsapp_template_mappings; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.whatsapp_template_mappings TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.whatsapp_template_mappings TO authenticated;
+GRANT ALL ON TABLE public.whatsapp_template_mappings TO service_role;
+GRANT SELECT ON TABLE public.whatsapp_template_mappings TO prospect_worker;
+
+
+--
+-- Name: TABLE whatsapp_webhook_events; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON TABLE public.whatsapp_webhook_events TO postgres;
+GRANT SELECT,INSERT ON TABLE public.whatsapp_webhook_events TO authenticated;
+GRANT ALL ON TABLE public.whatsapp_webhook_events TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.whatsapp_webhook_events TO prospect_worker;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
+\unrestrict uQ8GkyVxlBahS9P06YOQkQO8SsbMTJ1BepFzgc2H1Bgp8UdE0Y1qfGiJiMO5pvB
 
