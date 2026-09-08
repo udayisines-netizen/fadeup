@@ -282,6 +282,15 @@ lancer `db/tests/verify_*.sql` — sauf `verify_b1.sql` — contre la production
 
 ## 6. Séparation des flux d'envoi — **UN SEUL DOMAINE VÉRIFIÉ** (constaté en B2, 2026-09-04)
 
+> **Mise à jour X2 (2026-09-08).** Toujours un seul domaine vérifié — la
+> re-sonde X2 n'a pas pu conclure (429 : quota quotidien Resend épuisé par
+> les campagnes de test du jour, voir §14.3). La préparation est COMPLÈTE :
+> les actions DNS exactes du fondateur et la bascule en une ligne sont
+> documentées dans `docs/frontend/EMAIL_DELIVERABILITY.md` §2. Le risque
+> reste entier tant que ce n'est pas fait, et X2 recommande de NE PAS donner
+> l'ordre de publier les prospects avant cette vérification : le premier
+> envoi en masse concentrerait ses rebonds sur le domaine des liens magiques.
+
 **Ce que la spec demande.** B2 §3 : deux domaines d'envoi distincts,
 transactionnel et prospection, pour qu'une réputation abîmée par du démarchage
 à froid ne fasse pas tomber les liens magiques.
@@ -319,6 +328,18 @@ coûte un `UPDATE`.
 ---
 
 ## 7. Clé API Resend restreinte à l'envoi — **la délivrance n'est pas observable** (constaté en B2, 2026-09-04)
+
+> **Mise à jour X2 (2026-09-08) — l'option 1 (webhook) est CONSTRUITE,
+> déployée INERTE.** Fonction Edge `resend-webhook` (signature Svix vérifiée
+> à temps constant AVANT toute écriture, 401 fail-closed sans secret —
+> vérifié en production), journal idempotent `resend_webhook_events` (PK =
+> id Svix), traitement SQL cadencé par le scheduler
+> (`run_email_feedback_maintenance`) : delivered/opened → horodatages
+> d'`email_outbox` ; **rebond permanent ou plainte → adresse supprimée +
+> `do_not_contact`**. verify_x2.sql couvre le tout (51 assertions). Reste
+> UNE action fondateur : créer le point de terminaison chez Resend et poser
+> le secret — procédure exacte dans `docs/frontend/EMAIL_DELIVERABILITY.md`
+> §3. Tant que ce n'est pas fait, la délivrance reste inobservable.
 
 **Symptôme.** `GET /domains` et `GET /emails/{id}` répondent :
 
@@ -485,3 +506,56 @@ service qui interroge `get_public_professional_by_handle` /
 pré-génération statique des routes `/pro/*` et `/shop/*` connues. À décider
 avec le fondateur ; toucher à Nginx de production n'était pas dans le
 périmètre F2.
+
+## 14. Restes X2, constatés en X2 (2026-09-08)
+
+1. ~~**Le désabonnement en un clic (RFC 8058) ne fonctionne que pour un
+   humain.**~~ — **RÉSOLU par X2 même (2026-09-08), après revue.** B2 posait
+   `List-Unsubscribe-Post` avec pour cible `/unsubscribe/:token`, une route
+   qui n'existait pas (404 SPA) et qui, une fois créée, ne pouvait pas
+   recevoir le POST machine. X2 livre la fonction Edge `unsubscribe`
+   (`/functions/v1/unsubscribe/<token>` : GET → 303 vers la page humaine à
+   confirmation ; POST One-Click → RPC `unsubscribe_prospect_outreach`) et
+   les payloads d'e-mails (prospection B2 + information X2) pointent
+   désormais cette URL. Prouvé en production : GET 303, POST 200, PUT 405,
+   sans jeton 400. Les e-mails DÉJÀ partis portent l'ancienne URL de page —
+   elle reste servie (chemin humain), seul leur One-Click machine restera
+   muet.
+2. **`apps/mobile` doit être synchronisée À LA FUSION de X2.** La garde
+   anti-dérive M1a (`apps/mobile/scripts/check-shared-drift.mjs`) exige des
+   copies verbatim de `database.types.ts` (régénéré par X2 : +130 lignes
+   additives) et des catalogues `shared/i18n/locales/{fr,en}` (X2 ajoute
+   `legal.json`). X2 n'a PAS touché `apps/mobile` (M1b y travaille en
+   parallèle) : au premier `check:drift` après fusion, copier ces fichiers
+   côté mobile.
+3. **Le quota quotidien Resend s'épuise en campagnes de test** (constaté le
+   2026-09-08 : 429 sur toute tentative d'envoi, 238 messages `@fadeup.test`
+   acceptés le même jour + 196 en file au moment du constat). Un TLD `.test`
+   ne délivre jamais : chaque envoi de test consomme du quota pour rien, et
+   **un lien magique réel demandé ce jour-là échoue**. Ce n'est plus une
+   prédiction : la campagne e2e complète du 2026-09-08 07:17 l'a MESURÉ —
+   `gomail: could not send email 1: 550 You have reached your daily email
+   sending quota` dans les logs GoTrue, test F4 « inscription légère OTP »
+   en échec sur les deux projets (le seul e2e qui exige un VRAI envoi).
+   Décision fondateur : palier Resend payant avant toute campagne réelle, et
+   discipline de test (bac sans envoi, ou adresses `@resend.dev` qui ne
+   comptent pas comme du trafic réel) — voir
+   `docs/frontend/EMAIL_DELIVERABILITY.md` §4.
+4. **`apps/web/public/sitemap.xml` est périmé** : il liste `/features`,
+   `/pricing`, `/pro/login`… qui n'existent plus, et n'a pas les routes
+   publiques réelles. X2 y a seulement ajouté `/professionals-data`
+   (l'indexabilité de cette page est une exigence article 14(5)(b)) ; la
+   réécriture du fichier est un chantier SEO à part.
+5. **`bonjour@contact.fade-up.com` ne peut pas RECEVOIR de courrier** —
+   trouvé par la revue indépendante X2, et c'est LE verrou restant avant
+   l'ordre de publier. `contact.fade-up.com` n'a ni MX ni A (mesuré :
+   `dig MX contact.fade-up.com` vide ; l'apex `fade-up.com` a bien des MX
+   ionos). Le domaine sait envoyer (DKIM Resend), pas recevoir. Or cette
+   adresse est le contact du responsable de traitement sur la page article
+   14, le canal « source exacte sur demande » (art. 14(2)(f)), le repli des
+   messages d'erreur du formulaire, et le `reply_to` des DEUX flux
+   (`email_streams`). Un professionnel qui exerce son droit d'accès écrit à
+   une boîte qui rebondit. Remédiation (fondateur, DNS/boîte) :
+   `docs/frontend/EMAIL_DELIVERABILITY.md` §6 — créer la réception (MX sur
+   `contact.` ou bascule des textes vers une adresse de l'apex qui reçoit),
+   puis PROUVER par un envoi entrant réel.
