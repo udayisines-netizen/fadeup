@@ -1,0 +1,76 @@
+{
+  "data": {
+    "metaTitle": "Fiches professionnelles et vos données — FadeUp",
+    "metaDescription": "Pourquoi une fiche professionnelle vous concernant existe sur FadeUp, d'où viennent les données, vos droits, et comment demander le retrait de la fiche.",
+    "title": "Votre fiche professionnelle sur FadeUp",
+    "intro": "FadeUp référence des professionnels de la coiffure, y compris des professionnels qui n'ont pas encore de compte. Si une fiche vous concernant apparaît sur FadeUp sans que vous l'ayez créée, cette page explique pourquoi elle existe, ce qu'elle contient, et comment la retirer.",
+    "controller": {
+      "title": "Qui est responsable",
+      "body": "Le responsable du traitement est FadeUp. Pour toute question sur vos données, écrivez-nous :",
+      "contact": "bonjour@contact.fade-up.com"
+    },
+    "purpose": {
+      "title": "Pourquoi cette fiche existe",
+      "body": "La fiche permet aux clients de trouver les professionnels de la coiffure autour d'eux, y compris ceux qui ne sont pas encore présents sur FadeUp. Ce traitement repose sur l'intérêt légitime (article 6(1)(f) du RGPD) : référencer une activité professionnelle à partir d'informations que vous avez vous-même rendues publiques.",
+      "unmanaged": "Chaque fiche non gérée par son propriétaire est clairement marquée « Pas encore géré sur FadeUp ». Rien n'y est inventé : pas de disponibilité, pas d'avis, pas de chiffres qui ne viennent pas de données réelles."
+    },
+    "categories": {
+      "title": "Ce que la fiche contient",
+      "body": "Uniquement des données professionnelles : nom professionnel ou nom de l'établissement, catégorie d'activité, adresse ou zone d'activité, site web et liens publics. Photos, horaires et tarifs n'apparaissent que si leur provenance et leurs droits le permettent."
+    },
+    "sources": {
+      "title": "D'où viennent les données",
+      "body": "Des sources publiquement accessibles : fiches d'établissement (par exemple Google Business), annuaires professionnels, votre site web et vos profils publics sur les réseaux sociaux. Chaque donnée garde sa provenance dans nos systèmes.",
+      "exact": "Vous pouvez obtenir la source exacte des données de votre fiche en nous écrivant à l'adresse ci-dessus."
+    },
+    "retention": {
+      "title": "Combien de temps",
+      "body": "Les données sont conservées tant que la fiche est publiée. Si vous demandez le retrait, la fiche est dépubliée au plus tard 72 heures après validation de la demande, et votre établissement n'est plus recontacté ni republié."
+    },
+    "rights": {
+      "title": "Vos droits",
+      "body": "Vous disposez des droits d'accès, de rectification, d'effacement, de limitation et d'opposition sur les données qui vous concernent. Pour les exercer, utilisez le formulaire de retrait ci-dessous ou écrivez-nous. Vous pouvez aussi adresser une réclamation à la CNIL (cnil.fr).",
+      "claimNote": "Si vous souhaitez gérer la fiche vous-même — corriger les informations, ajouter les vôtres — vous pouvez la revendiquer directement depuis la fiche."
+    },
+    "emails": {
+      "title": "Les e-mails que vous pouvez recevoir",
+      "body": "Quand une fiche vous concernant est publiée, nous vous en informons par e-mail si une adresse publique existe. Si un client manifeste son intérêt pour vos services, nous transmettons sa demande par e-mail, avec au plus deux rappels. Chaque message contient un lien de désabonnement : un clic, et plus aucun message de ce type ne vous sera envoyé."
+    }
+  },
+  "withdrawal": {
+    "title": "Retirer votre fiche",
+    "body": "Indiquez la fiche concernée, et nous la retirons. Un membre de l'équipe vérifie que la demande concerne bien votre établissement — c'est ce qui empêche un tiers de faire disparaître la fiche de quelqu'un d'autre — puis le retrait est effectif au plus tard 72 heures après cette validation.",
+    "refLabel": "Votre fiche",
+    "refHint": "Collez l'adresse de la fiche (fade-up.com/pro/…) ou son identifiant @handle.",
+    "refNotFound": "Aucune fiche ne correspond. Vérifiez l'adresse ou l'identifiant.",
+    "refLookupFailed": "La fiche n'a pas pu être vérifiée. Réessayez.",
+    "refRequired": "Indiquez la fiche à retirer.",
+    "concerning": "Fiche concernée : {{name}}",
+    "changeRef": "Changer de fiche",
+    "claimed": "Cette fiche est gérée par son propriétaire depuis son compte FadeUp. Si c'est la vôtre, connectez-vous pour contrôler sa visibilité.",
+    "emailLabel": "Votre e-mail (facultatif)",
+    "emailHint": "Pour vous confirmer le retrait et vous répondre si nous avons une question.",
+    "noteLabel": "Précisions (facultatif)",
+    "submit": "Demander le retrait",
+    "successTitle": "Demande enregistrée",
+    "successBody": "Le retrait sera effectif au plus tard le {{deadline}}, après vérification par notre équipe.",
+    "alreadyPendingTitle": "Demande déjà en cours",
+    "alreadyPendingBody": "Une demande de retrait est déjà enregistrée pour cette fiche. Elle sera traitée au plus tard le {{deadline}}.",
+    "refusal": {
+      "professional_is_claimed": "Cette fiche est gérée par son propriétaire depuis son compte FadeUp : elle ne peut pas être retirée par ce formulaire.",
+      "invalid_email": "Cette adresse e-mail n'est pas valide.",
+      "rate_limited": "Trop de demandes sont en cours pour le moment. Écrivez-nous directement : bonjour@contact.fade-up.com."
+    },
+    "error": "La demande n'a pas pu être enregistrée. Réessayez, ou écrivez-nous : bonjour@contact.fade-up.com."
+  },
+  "unsubscribe": {
+    "metaTitle": "Se désabonner — FadeUp",
+    "title": "Ne plus recevoir ces e-mails",
+    "body": "Confirmez pour ne plus recevoir d'e-mails de FadeUp concernant votre fiche professionnelle : information de publication et demandes de clients.",
+    "confirm": "Me désabonner",
+    "doneTitle": "C'est fait",
+    "doneBody": "Vous ne recevrez plus ces e-mails. Si vous souhaitez aussi retirer votre fiche, la page ci-dessous explique comment.",
+    "dataPageLink": "Votre fiche et vos droits",
+    "error": "Le désabonnement n'a pas pu être enregistré. Réessayez."
+  }
+}

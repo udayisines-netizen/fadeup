@@ -11,7 +11,7 @@
  */
 export const V2_NAMESPACE = 'v2' as const
 
-export const V2_SECTIONS = ['common', 'auth', 'nav', 'errors', 'states', 'empty', 'demo', 'queue', 'profile', 'discovery', 'home', 'booking', 'pro'] as const
+export const V2_SECTIONS = ['common', 'auth', 'nav', 'errors', 'states', 'empty', 'demo', 'queue', 'profile', 'discovery', 'home', 'booking', 'pro', 'legal'] as const
 export type V2Section = (typeof V2_SECTIONS)[number]
 
 /** The launch selector exposes exactly these, even though the DB constraint allows ten. */

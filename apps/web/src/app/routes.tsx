@@ -465,6 +465,24 @@ export const router = createBrowserRouter([
               return { Component: PublicQueuePage }
             },
           },
+          /* X2 — RGPD : la page d'information des professionnels référencés
+             (article 14) et la destination du lien de désabonnement que les
+             e-mails B2/X2 portent. Publiques, sans authentification,
+             indexables. Chunks paresseux. */
+          {
+            path: 'professionals-data',
+            lazy: async () => {
+              const { ProfessionalsDataPage } = await import('@/features/legal/routes/ProfessionalsDataPage')
+              return { Component: ProfessionalsDataPage }
+            },
+          },
+          {
+            path: 'unsubscribe/:token',
+            lazy: async () => {
+              const { UnsubscribePage } = await import('@/features/legal/routes/UnsubscribePage')
+              return { Component: UnsubscribePage }
+            },
+          },
           {
             element: <RequireAuth />,
             children: [

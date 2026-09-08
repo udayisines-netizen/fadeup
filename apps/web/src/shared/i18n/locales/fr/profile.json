@@ -20,6 +20,7 @@
   },
   "unclaimed": {
     "explainer": "Ce profil a été créé à partir de sources publiques. {{name}} ne le gère pas encore sur FadeUp.",
+    "dataLink": "Pourquoi cette fiche existe, et vos droits",
     "bookingUnavailable": "La réservation ouvrira quand ce professionnel aura rejoint FadeUp.",
     "claimPrompt": "Ce profil vous appartient ?",
     "claimAction": "C'est moi",

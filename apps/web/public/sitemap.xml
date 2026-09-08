@@ -12,6 +12,15 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- X2 — page d'information RGPD des professionnels référencés (art. 14) :
+       indexable à dessein, c'est une « mesure appropriée » 14(5)(b). Le reste
+       de ce fichier est PÉRIMÉ (routes /features, /pricing, /pro/login…
+       n'existent plus) — consigné dans X2_RAPPORT, hors périmètre X2. -->
+  <url>
+    <loc>https://www.fadeup.example/professionals-data</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
   <url>
     <loc>https://www.fadeup.example/features</loc>
     <changefreq>monthly</changefreq>

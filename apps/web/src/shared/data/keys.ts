@@ -174,3 +174,10 @@ export const demoKeys = {
   proQueue: (organizationId: string) => [...demoKeys.all, 'pro-queue', organizationId] as const,
   proModes: (locationId: string) => [...demoKeys.all, 'pro-modes', locationId] as const,
 } as const
+
+/** X2 — page d'information RGPD des professionnels référencés. */
+export const legalKeys = {
+  all: ['legal'] as const,
+  /** Résolution handle-ou-uuid → identité publique, pour le formulaire de retrait. */
+  professionalRef: (ref: string) => [...legalKeys.all, 'professional-ref', ref] as const,
+} as const

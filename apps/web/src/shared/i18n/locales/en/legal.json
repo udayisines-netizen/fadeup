@@ -1,0 +1,76 @@
+{
+  "data": {
+    "metaTitle": "Professional listings and your data — FadeUp",
+    "metaDescription": "Why a professional listing about you exists on FadeUp, where the data comes from, your rights, and how to request the removal of the listing.",
+    "title": "Your professional listing on FadeUp",
+    "intro": "FadeUp lists hair professionals, including professionals who do not have an account yet. If a listing about you appears on FadeUp without you having created it, this page explains why it exists, what it contains, and how to remove it.",
+    "controller": {
+      "title": "Who is responsible",
+      "body": "The data controller is FadeUp. For any question about your data, write to us:",
+      "contact": "bonjour@contact.fade-up.com"
+    },
+    "purpose": {
+      "title": "Why this listing exists",
+      "body": "The listing helps customers find hair professionals around them, including those who are not on FadeUp yet. This processing relies on legitimate interest (Article 6(1)(f) of the GDPR): listing a professional activity from information you have made public yourself.",
+      "unmanaged": "Every listing not managed by its owner is clearly marked \"Not yet managed on FadeUp\". Nothing on it is invented: no availability, no reviews, no numbers that do not come from real data."
+    },
+    "categories": {
+      "title": "What the listing contains",
+      "body": "Professional data only: professional or business name, business category, address or service area, website and public links. Photos, opening hours and rates only appear when their provenance and rights allow it."
+    },
+    "sources": {
+      "title": "Where the data comes from",
+      "body": "Publicly accessible sources: business listings (for example Google Business), professional directories, your website and your public social media profiles. Every data point keeps its provenance in our systems.",
+      "exact": "You can obtain the exact source of the data on your listing by writing to the address above."
+    },
+    "retention": {
+      "title": "For how long",
+      "body": "The data is kept for as long as the listing is published. If you request removal, the listing is unpublished no later than 72 hours after the request is validated, and your business is neither contacted again nor republished."
+    },
+    "rights": {
+      "title": "Your rights",
+      "body": "You have the rights of access, rectification, erasure, restriction and objection over the data concerning you. To exercise them, use the removal form below or write to us. You can also lodge a complaint with your supervisory authority (in France, the CNIL — cnil.fr).",
+      "claimNote": "If you would rather manage the listing yourself — correct the information, add your own — you can claim it directly from the listing."
+    },
+    "emails": {
+      "title": "The emails you may receive",
+      "body": "When a listing about you is published, we inform you by email if a public address exists. If a customer expresses interest in your services, we forward their request by email, with at most two reminders. Every message contains an unsubscribe link: one click, and no more messages of this kind will be sent to you."
+    }
+  },
+  "withdrawal": {
+    "title": "Remove your listing",
+    "body": "Tell us which listing is concerned, and we will remove it. A team member verifies that the request really concerns your business — this is what prevents a third party from taking down someone else's listing — then the removal takes effect no later than 72 hours after that validation.",
+    "refLabel": "Your listing",
+    "refHint": "Paste the listing address (fade-up.com/pro/…) or its @handle.",
+    "refNotFound": "No listing matches. Check the address or the handle.",
+    "refLookupFailed": "The listing could not be verified. Try again.",
+    "refRequired": "Tell us which listing to remove.",
+    "concerning": "Listing concerned: {{name}}",
+    "changeRef": "Change listing",
+    "claimed": "This listing is managed by its owner from their FadeUp account. If it is yours, sign in to control its visibility.",
+    "emailLabel": "Your email (optional)",
+    "emailHint": "So we can confirm the removal and reach you if we have a question.",
+    "noteLabel": "Details (optional)",
+    "submit": "Request removal",
+    "successTitle": "Request recorded",
+    "successBody": "The removal will take effect no later than {{deadline}}, after verification by our team.",
+    "alreadyPendingTitle": "Request already in progress",
+    "alreadyPendingBody": "A removal request is already recorded for this listing. It will be handled no later than {{deadline}}.",
+    "refusal": {
+      "professional_is_claimed": "This listing is managed by its owner from their FadeUp account: it cannot be removed through this form.",
+      "invalid_email": "This email address is not valid.",
+      "rate_limited": "Too many requests are in progress right now. Write to us directly: bonjour@contact.fade-up.com."
+    },
+    "error": "The request could not be recorded. Try again, or write to us: bonjour@contact.fade-up.com."
+  },
+  "unsubscribe": {
+    "metaTitle": "Unsubscribe — FadeUp",
+    "title": "Stop receiving these emails",
+    "body": "Confirm to stop receiving FadeUp emails about your professional listing: publication notices and customer requests.",
+    "confirm": "Unsubscribe me",
+    "doneTitle": "Done",
+    "doneBody": "You will no longer receive these emails. If you also want your listing removed, the page below explains how.",
+    "dataPageLink": "Your listing and your rights",
+    "error": "The unsubscription could not be recorded. Try again."
+  }
+}

@@ -318,7 +318,17 @@ export function ProfessionalProfilePage() {
           {/* Non revendiqué : transparent, neutre, digne de confiance. */}
           {isUnclaimed && (
             <p className="mt-3 text-fu-sm leading-relaxed text-[var(--fu-text-secondary)]" data-testid="unclaimed-explainer">
-              {t('profile.unclaimed.explainer', { name: identity.display_name })}
+              {t('profile.unclaimed.explainer', { name: identity.display_name })}{' '}
+              {/* X2 — le chemin article 14 : pourquoi la fiche existe, la
+                  source des données, le retrait. Présent UNIQUEMENT sur un
+                  profil non revendiqué. */}
+              <Link
+                to={`/professionals-data?pro=${encodeURIComponent(identity.handle ?? identity.id)}`}
+                data-testid="unclaimed-data-link"
+                className="font-medium text-[var(--fu-accent-text)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fu-focus)]"
+              >
+                {t('profile.unclaimed.dataLink')}
+              </Link>
             </p>
           )}
           {isUnclaimed && (
