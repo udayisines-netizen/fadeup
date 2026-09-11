@@ -1,0 +1,166 @@
+{
+  "base": "3a0f5e4",
+  "notes": [
+    "networkidle timeout http://127.0.0.1:4177/platform/acquisition/map",
+    "networkidle timeout http://127.0.0.1:4178/platform/acquisition/map"
+  ],
+  "results": [
+    {
+      "screen": "home-390",
+      "pct": 0,
+      "size": "390x844",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "search-390",
+      "pct": 0,
+      "size": "390x844",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "pro-demo-390",
+      "pct": 0,
+      "size": "390x844",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "queue-demo-390",
+      "pct": 0,
+      "size": "390x844",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "home-1440",
+      "pct": 0.014506172839506172,
+      "size": "1440x900",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "search-1440",
+      "pct": 0.014506172839506172,
+      "size": "1440x900",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "pro-demo-1440",
+      "pct": 0.014506172839506172,
+      "size": "1440x900",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "queue-demo-1440",
+      "pct": 0.014506172839506172,
+      "size": "1440x900",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "platform-login-1440",
+      "pct": 0,
+      "size": "1440x900",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "perfForbiddenChunks": [
+        "platform-login-page-Dc5MlP4N.js",
+        "platform-Bx_FmsL_.js"
+      ]
+    },
+    {
+      "screen": "platform-overview (staff connecté)",
+      "pct": 0,
+      "size": "1440x900"
+    },
+    {
+      "screen": "platform-organizations (staff connecté)",
+      "pct": 0,
+      "size": "1440x900"
+    },
+    {
+      "screen": "platform-audit (staff connecté)",
+      "pct": 0,
+      "size": "1440x900"
+    },
+    {
+      "screen": "platform-acquisition-map (staff connecté)",
+      "pct": 0.03611111111111111,
+      "size": "1440x900"
+    },
+    {
+      "screen": "platform staff session (perf)",
+      "perfConsoleErrors": [],
+      "perfFailed": [],
+      "maplibreLoaded": true,
+      "platformChunksLoaded": 27
+    },
+    {
+      "screen": "platform staff session (base)",
+      "baseConsoleErrors": [],
+      "baseFailed": []
+    },
+    {
+      "screen": "garde-base",
+      "anonRoot": "/platform/login?redirect=%2Fplatform",
+      "anonDeep": "/platform/login?redirect=%2Fplatform%2Forganizations",
+      "nostaffUrl": "/platform",
+      "nostaffRefused": true,
+      "nostaffNavCount": 0
+    },
+    {
+      "screen": "garde-perf",
+      "anonRoot": "/platform/login?redirect=%2Fplatform",
+      "anonDeep": "/platform/login?redirect=%2Fplatform%2Forganizations",
+      "nostaffUrl": "/platform",
+      "nostaffRefused": true,
+      "nostaffNavCount": 0
+    },
+    {
+      "screen": "garde-anon-deep (redirection login)",
+      "pct": 0,
+      "size": "1440x900"
+    },
+    {
+      "screen": "garde-nostaff (refus)",
+      "pct": 0,
+      "size": "1440x900"
+    },
+    {
+      "screen": "jsQR",
+      "requestsAtLoad": 0,
+      "requestsAtSheet": 0,
+      "requestsAtScan": 0,
+      "chunk": [],
+      "consoleErrors": []
+    }
+  ]
+}

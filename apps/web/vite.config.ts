@@ -23,31 +23,37 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // P1b — split points for the real surfaces: pro/platform/marketing
-          // never ride in the consumer entry chunk. Legacy /platform pages
-          // and layouts fold into the same 'platform' chunk (packaging only —
-          // their code is untouched).
-          if (id.includes('/app/shells/ProShell') || id.includes('/features/pro/') || id.includes('/features/pro-'))
-            return 'pro'
-          if (
-            id.includes('/features/platform-') ||
-            id.includes('/pages/platform-') ||
-            id.includes('/routes/platform-') ||
-            id.includes('/app/shells/PlatformShell')
-          )
-            return 'platform'
-          if (id.includes('/features/marketing') || id.includes('/app/shells/MarketingShell')) return 'marketing'
+          // PERF — les règles de groupe P1b ('pro', 'platform', 'marketing')
+          // sont SUPPRIMÉES : rolldown aspirait dans chaque groupe la
+          // fermeture de dépendances de ses modules — y compris des modules
+          // partagés dont l'entrée a besoin (supabase client, RealtimeProvider,
+          // i18n, Toast…). L'entrée importait alors ces chunks EN STATIQUE et
+          // le premier chargement consumer transférait ~674 Ko gzip (platform
+          // 218 + maplibre 246 + marketing 62 + pro 37 — mesuré, D1 §11).
+          // Le découpage NATUREL par import dynamique (toutes ces surfaces
+          // sont des routes `lazy`) suffit ; la garantie « jamais dans
+          // l'entrée consumer » est désormais tenue par
+          // scripts/check-entry-graph.mjs, qui FAIT ÉCHOUER le build.
+          //
           // F3 — maplibre est partagé entre la carte consumer (onglet Carte
-          // de /search, paresseux) et la carte legacy /platform : sans cette
-          // règle il se fondait dans le chunk 'platform' (466 Ko gzip) que
-          // l'onglet Carte aurait téléchargé en entier. Les DEUX modules JS
-          // sont nommés explicitement : un filtre large sur le paquet attrape
-          // aussi son CSS (id suffixé d'une requête, donc pas de endsWith
-          // possible) et rolldown abandonne alors le groupe EN SILENCE —
-          // mesuré pendant F3.
+          // de /search, paresseux) et la carte legacy /platform. Les DEUX
+          // modules JS sont nommés explicitement : un filtre large sur le
+          // paquet attrape aussi son CSS (id suffixé d'une requête, donc pas
+          // de endsWith possible) et rolldown abandonne alors le groupe EN
+          // SILENCE — mesuré pendant F3.
           if (id.includes('maplibre-gl.mjs') || id.includes('maplibre-gl-shared.mjs')) return 'maplibre'
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
-          if (id.includes('node_modules/react')) return 'vendor-react'
+          // PERF — règle resserrée : `node_modules/react` attrapait TOUT
+          // react-* (react-hook-form, react-remove-scroll, react-day-picker…)
+          // et les collait — avec leur fermeture — dans un chunk que l'entrée
+          // importe en statique. Seul le cœur react partagé par tout reste
+          // nommé ; le reste suit le découpage naturel de ses importeurs.
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/')
+          )
+            return 'vendor-react'
         },
       },
     },

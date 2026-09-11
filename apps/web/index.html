@@ -58,13 +58,13 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- D1: Poppins 400/500/600 carry the consumer surface on first paint
-         (~8 KB per latin subset); Geist 400/600 stay preloaded for the Pro
-         and editorial surfaces. -->
+         (~8 KB per latin subset). PERF: Geist (Pro/editorial) is NOT
+         preloaded anymore — 68 KB paid by every consumer first load for
+         surfaces that require sign-in; @font-face (font-display: swap)
+         fetches it the moment a Pro surface first renders. -->
     <link rel="preload" href="/fonts/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/poppins-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/poppins-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/geist-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/geist-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FadeUp — the operating system for modern barbershops</title>
     <meta

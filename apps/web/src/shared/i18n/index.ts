@@ -1,55 +1,76 @@
-import i18n from '@/i18n'
-import { V2_NAMESPACE, V2_LOCALES, type V2Locale, type V2Section } from '@/shared/i18n/namespaces'
+import i18n, { initI18n } from '@/i18n'
+import { resolveInitialLocale } from '@/lib/locale'
+import { V2_NAMESPACE, V2_LOCALES, type V2Locale } from '@/shared/i18n/namespaces'
 
-import frCommon from '@/shared/i18n/locales/fr/common.json'
-import frAuth from '@/shared/i18n/locales/fr/auth.json'
-import frNav from '@/shared/i18n/locales/fr/nav.json'
-import frErrors from '@/shared/i18n/locales/fr/errors.json'
-import frStates from '@/shared/i18n/locales/fr/states.json'
-import frEmpty from '@/shared/i18n/locales/fr/empty.json'
-import frDemo from '@/shared/i18n/locales/fr/demo.json'
-import frQueue from '@/shared/i18n/locales/fr/queue.json'
-import frProfile from '@/shared/i18n/locales/fr/profile.json'
-import frDiscovery from '@/shared/i18n/locales/fr/discovery.json'
-import frHome from '@/shared/i18n/locales/fr/home.json'
-import frPro from '@/shared/i18n/locales/fr/pro.json'
-import frBooking from '@/shared/i18n/locales/fr/booking.json'
-import enCommon from '@/shared/i18n/locales/en/common.json'
-import enAuth from '@/shared/i18n/locales/en/auth.json'
-import enNav from '@/shared/i18n/locales/en/nav.json'
-import enErrors from '@/shared/i18n/locales/en/errors.json'
-import enStates from '@/shared/i18n/locales/en/states.json'
-import enEmpty from '@/shared/i18n/locales/en/empty.json'
-import enDemo from '@/shared/i18n/locales/en/demo.json'
-import enQueue from '@/shared/i18n/locales/en/queue.json'
-import enProfile from '@/shared/i18n/locales/en/profile.json'
-import enDiscovery from '@/shared/i18n/locales/en/discovery.json'
-import enHome from '@/shared/i18n/locales/en/home.json'
-import enBooking from '@/shared/i18n/locales/en/booking.json'
-import enPro from '@/shared/i18n/locales/en/pro.json'
+/**
+ * PERF — chargement par locale (remplace l'import statique des DEUX langues) :
+ * fr et en réunis pesaient ~38 Ko de JSON dans l'entrée consumer, payés par
+ * tout le monde à chaque premier chargement. Chaque locale est désormais un
+ * chunk dynamique (voir `locales/<lng>/index.ts`).
+ *
+ * Garanties conservées :
+ *   · la locale ACTIVE est enregistrée AVANT le premier rendu (main.tsx
+ *     attend `registerV2Bundles()` comme il attendait déjà `initI18n()`) —
+ *     aucune clé brute au premier écran ;
+ *   · l'AUTRE locale est chargée en tâche de fond immédiatement après, donc
+ *     le repli en (parité fr/en vérifiée) et la bascule de langue restent
+ *     disponibles quelques instants après le premier écran ;
+ *   · la bascule elle-même attend `ensureV2Locale` (LanguageSwitcher), ce qui
+ *     ferme la fenêtre de course si l'utilisateur bascule avant la fin du
+ *     chargement de fond.
+ */
 
-const BUNDLES: Record<V2Locale, Record<V2Section, object>> = {
-  fr: { common: frCommon, auth: frAuth, nav: frNav, errors: frErrors, states: frStates, empty: frEmpty, demo: frDemo, queue: frQueue, profile: frProfile, discovery: frDiscovery, home: frHome, booking: frBooking, pro: frPro },
-  en: { common: enCommon, auth: enAuth, nav: enNav, errors: enErrors, states: enStates, empty: enEmpty, demo: enDemo, queue: enQueue, profile: enProfile, discovery: enDiscovery, home: enHome, booking: enBooking, pro: enPro },
+const loaders: Record<V2Locale, () => Promise<{ default: Record<string, object> }>> = {
+  fr: () => import('@/shared/i18n/locales/fr'),
+  en: () => import('@/shared/i18n/locales/en'),
+}
+
+const pending = new Map<V2Locale, Promise<void>>()
+
+/**
+ * Charge et enregistre une locale v2 (idempotent via `pending`, une seule
+ * requête par locale). PAS de raccourci `hasResourceBundle` avant l'attente
+ * d'`initI18n` : i18next n'attache les fonctions de store à l'instance QUE
+ * pendant `init()` — les appeler avant est un TypeError (mesuré).
+ */
+export function ensureV2Locale(locale: V2Locale): Promise<void> {
+  let p = pending.get(locale)
+  if (!p) {
+    // Le téléchargement du bundle part tout de suite (parallèle d'initI18n
+    // depuis main.tsx) ; l'ENREGISTREMENT, lui, attend l'init — le store
+    // i18next n'existe pas avant.
+    p = Promise.all([loaders[locale](), initI18n()]).then(([{ default: sections }]) => {
+      if (!i18n.hasResourceBundle(locale, V2_NAMESPACE)) {
+        // Each section sits under its own zone, so a full key always reads
+        // `<zone>.<élément>.<variante>` — e.g. `v2:auth.login.submit`.
+        i18n.addResourceBundle(locale, V2_NAMESPACE, { ...sections }, true, false)
+      }
+    })
+    pending.set(locale, p)
+  }
+  return p
+}
+
+/** La locale v2 portée par une langue i18next quelconque (v2 ne parle que fr/en). */
+export function toV2Locale(language: string): V2Locale {
+  return language === 'fr' || language.startsWith('fr-') ? 'fr' : 'en'
 }
 
 /**
- * Registers the V2 bundle on the shared i18next instance (see namespaces.ts
- * for why V2 is one airtight namespace). FR and EN are both registered
- * eagerly — they are the only product-ready locales and together weigh a few
- * kilobytes; eager registration means a language switch is instant and the
- * EN fallback is always present.
+ * Enregistre le bundle v2 de la locale ACTIVE sur l'instance i18next
+ * partagée (voir namespaces.ts pour le namespace unique étanche), puis lance
+ * le chargement de fond de l'autre locale. À attendre avant le premier rendu.
  *
- * Idempotent, and safe to call before or after `initI18n()` resolves as long
- * as i18next has been created (it is, at module scope).
+ * Idempotent, et sûr avant ou après la résolution d'`initI18n()` tant que
+ * l'instance i18next existe (c'est le cas, à la portée module).
  */
-export function registerV2Bundles(): void {
+export async function registerV2Bundles(): Promise<void> {
+  // `resolveInitialLocale` (synchrone, localStorage/navigateur) permet de
+  // lancer ce chargement EN PARALLÈLE d'`initI18n()` depuis main.tsx —
+  // l'instance n'a pas encore de langue à ce moment-là.
+  const active = toV2Locale(i18n.language ?? resolveInitialLocale())
+  await ensureV2Locale(active)
   for (const locale of V2_LOCALES) {
-    const sections = BUNDLES[locale]
-    if (!i18n.hasResourceBundle(locale, V2_NAMESPACE)) {
-      // Each section sits under its own zone, so a full key always reads
-      // `<zone>.<élément>.<variante>` — e.g. `v2:auth.login.submit`.
-      i18n.addResourceBundle(locale, V2_NAMESPACE, { ...sections }, true, false)
-    }
+    if (locale !== active) void ensureV2Locale(locale)
   }
 }

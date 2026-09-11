@@ -1,14 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { normalizeLocale } from '@/lib/locale'
 import { getAnalyticsSessionId } from './session'
-import {
-  createAnalyticsClient,
-  NOOP_ANALYTICS_CLIENT,
-  type AnalyticsClient,
-} from './client'
+import type { AnalyticsClient } from './client'
 import type {
   AnalyticsClientEventName,
   AnalyticsContext as AnalyticsEventContext,
@@ -23,13 +19,53 @@ import type {
  * framework-free so `apps/mobile` can import them unchanged (§19) — and this
  * file is deliberately the thing mobile will NOT import, because §19 also says
  * web React components are not shared.
+ *
+ * PERF — the implementation (`client.ts` → `events.ts` → zod, ~14 Ko gzip) is
+ * imported DYNAMICALLY: analytics is never render-critical, and its zod
+ * schemas were the last reason zod sat in the consumer entry graph. Events
+ * tracked before the implementation module arrives are buffered in order and
+ * flushed as soon as it does (typically well under 100 ms); the public
+ * surface (`AnalyticsProvider`, `useAnalytics`, `useTrackView`) and the
+ * framework-free modules are unchanged.
  */
 
-const AnalyticsClientContext = createContext<AnalyticsClient>(NOOP_ANALYTICS_CLIENT)
+type TrackInput = { properties?: Record<string, unknown>; context?: AnalyticsEventContext }
+type ClientModule = typeof import('./client')
+
+let implPromise: Promise<ClientModule> | null = null
+function loadImpl(): Promise<ClientModule> {
+  implPromise ??= import('./client')
+  return implPromise
+}
+
+const NOOP_CLIENT: AnalyticsClient = { track: () => {} }
+
+const AnalyticsClientContext = createContext<AnalyticsClient>(NOOP_CLIENT)
 
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { i18n } = useTranslation()
+
+  const [impl, setImpl] = useState<ClientModule | null>(null)
+  // Events tracked before the impl module arrives, in order. Nulled after the
+  // one flush — StrictMode's doubled effect then finds nothing to re-send.
+  const buffered = useRef<Array<{ name: AnalyticsClientEventName; input?: TrackInput }> | null>([])
+
+  useEffect(() => {
+    let cancelled = false
+    void loadImpl().then(
+      (module) => {
+        if (!cancelled) setImpl(module)
+      },
+      () => {
+        // A failed chunk load must never break the product — analytics stays
+        // a no-op for this session, same guarantee as a failing transport.
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // The origin follows the SESSION, not the route: a signed-in customer
   // browsing a public shop page is still a customer_web visit, and reporting
@@ -39,29 +75,45 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
   // so the two agree by construction.
   const origin = user ? 'customer_web' : 'public_web'
 
-  const client = useMemo(
-    () =>
-      createAnalyticsClient({
-        origin,
-        transport: async (args) => {
-          const supabase = getSupabaseClient()
-          const { error } = await supabase.rpc('track_analytics_event', args)
-          if (error) throw error
+  const client = useMemo<AnalyticsClient>(() => {
+    if (!impl) {
+      return {
+        track: (name, input) => {
+          buffered.current?.push({ name, input: input as TrackInput | undefined })
         },
-        getSessionId: getAnalyticsSessionId,
-        getLocale: () => normalizeLocale(i18n.language),
-        onError: (reason, error) => {
-          // Analytics failures are DIAGNOSTICS, never user-facing. No toast, no
-          // error boundary, no retry: the server already records the rejection
-          // in analytics_ingestion_rejections, which is where a broken
-          // instrumentation change is meant to be noticed (§22).
-          if (import.meta.env.DEV) {
-            console.warn('[analytics]', reason, error)
-          }
-        },
-      }),
-    [origin, i18n.language],
-  )
+      }
+    }
+    return impl.createAnalyticsClient({
+      origin,
+      transport: async (args) => {
+        const supabase = getSupabaseClient()
+        const { error } = await supabase.rpc('track_analytics_event', args)
+        if (error) throw error
+      },
+      getSessionId: getAnalyticsSessionId,
+      getLocale: () => normalizeLocale(i18n.language),
+      onError: (reason, error) => {
+        // Analytics failures are DIAGNOSTICS, never user-facing. No toast, no
+        // error boundary, no retry: the server already records the rejection
+        // in analytics_ingestion_rejections, which is where a broken
+        // instrumentation change is meant to be noticed (§22).
+        if (import.meta.env.DEV) {
+          console.warn('[analytics]', reason, error)
+        }
+      },
+    })
+  }, [impl, origin, i18n.language])
+
+  useEffect(() => {
+    if (!impl) return
+    const pending = buffered.current
+    buffered.current = null
+    if (pending) {
+      for (const event of pending) {
+        client.track(event.name, event.input as never)
+      }
+    }
+  }, [impl, client])
 
   return (
     <AnalyticsClientContext.Provider value={client}>
