@@ -476,8 +476,41 @@ fausse à une question de droit.
 | SQL déterministe | `db/tests/verify_os2.sql` (transaction annulée) | **24 groupes d'assertions verts** |
 | Surface anonyme | `db/tests/x3_anon_surface.sh --strict` | voir ci-dessous |
 | RPC publiques | `db/tests/probe_public_rpcs.sh --strict` | **ALL PUBLIC READ RPCs: 200** |
-| Campagne e2e | `E2E_PORT=4640 npx playwright test` | **257 verts, 4 rouges** — 2 tests × 2 largeurs, aucun imputable à OS-2 (§11) |
-| e2e du lot | `npx playwright test e2e/os2` | **22 verts, 8 ignorés** (les contrats serveur ne tournent qu'une fois) |
+| Campagne e2e | `E2E_PORT=4640 npx playwright test` | **257 verts, 4 rouges** — 2 tests × 2 largeurs, aucun imputable à OS-2 (§11). Mesurée sur `dc7da38`, voir l'encadré ci-dessous |
+| e2e du lot | `npx playwright test e2e/os2` | **22 verts, 8 ignorés** (les contrats serveur ne tournent qu'une fois), sur l'arbre FINAL |
+
+### Sur quel arbre la campagne a été mesurée — et l'écart avec celui qui est livré
+
+La question m'a été posée par la session PLAT-2, qui venait de constater que
+sa propre campagne mesurait un arbre antérieur à celui qu'elle livrait. Elle
+vaut pour moi aussi, donc voici le compte exact plutôt qu'un chiffre nu.
+
+**La campagne complète (257/4) a tourné sur `dc7da38`.** L'arbre livré est
+`4847034`. Entre les deux, un seul écart de RUNTIME :
+
+```
+$ git diff --name-only dc7da38..HEAD | grep -vE "^docs/|captures.mjs"
+apps/web/src/shared/i18n/locales/{fr,en}/pro.json   ← 2 chaînes
+db/tests/verify_os2.sql                             ← suite SQL, hors Playwright
+```
+
+Les deux chaînes sont `pro.clients.row.lastVisit` et `lastVisitToday`,
+raccourcies après lecture d'une capture à 390 px (« Dernière visite il y
+a N j » se faisait couper). Elles ne sont consommées que par
+`features/pro-clients`, et **la suite de ce périmètre a été rejouée VERTE
+sur l'arbre final** (`e2e/os2`, 22 exécutions, 21 h 27), après le
+changement. `verify_os2.sql` a lui aussi été rejoué après sa dernière
+modification (sortie `Z0-Z1`).
+
+Le reste de l'écart est de la documentation et le script de captures.
+`npm run typecheck`, `npm run lint`, les 822 tests unitaires et
+`npm run build` ont tous tourné sur l'arbre final.
+
+**Ce que ça ne prouve pas** : que les 24 suites antérieures rendent
+exactement 257 sur `4847034`. Je le déduis d'un raisonnement (deux chaînes,
+un seul consommateur, suite du consommateur verte) et non d'une mesure. Le
+raisonnement est solide mais ce n'est pas la même chose, et la distinction
+appartient au lecteur — pas à moi.
 
 ### Les tests d'OS-2
 
@@ -772,6 +805,25 @@ eu lieu.
 7. **Deux captures octet pour octet identiques** dans la première série,
    qui prétendaient montrer « avec prix » et « sans prix ». Détail au début
    de ce rapport.
+
+**Le motif commun aux points 4 et 7, et il dépasse ce lot.** La session
+PLAT-2 a trouvé le même genre de défaut chez elle le même jour : un
+contrôle dimensionnel qui mesurait le carré blanc de fond au lieu du
+symbole. Avec mes deux cas et la fixture P1PRO du §11, cela fait trois
+formes d'une seule faute :
+
+| Cas | Ce que l'assertion prétendait départager | Pourquoi elle ne le pouvait pas |
+|---|---|---|
+| PLAT-2, taille du QR | symbole ≥ 8 cm | elle mesurait la boîte, zone de silence comprise |
+| OS-2, seuils de file | « lus en base » vs « écrits en dur » | elle attendait `20` et `5`, c'est-à-dire les défauts SQL |
+| P1PRO, NEXT | « le rendez-vous apparaît » vs « il n'est pas aujourd'hui » | `now + 3 h` franchit minuit après 21 h UTC |
+
+Chaque fois, **l'assertion est verte dans les deux mondes qu'elle est
+censée distinguer**. Le remède est le même : choisir une valeur que SEULE
+la bonne hypothèse peut produire — un seuil inhabituel, une mesure du
+symbole, un horaire borné à la journée — puis **vérifier le test en le
+cassant** avant de lui faire confiance. C'est ce que j'ai fait pour la
+garde de clés i18n (§7), et ce que je n'avais pas fait pour les seuils.
 
 Plus trois pièges de harnais, sans conséquence produit mais qui ont coûté
 des campagnes : `psql -At -c "insert … returning id"` imprime l'identifiant
