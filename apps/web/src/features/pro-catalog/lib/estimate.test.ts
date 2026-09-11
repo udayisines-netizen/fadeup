@@ -13,10 +13,16 @@ describe('estimateNotice', () => {
     ).toEqual({ key: 'pro.catalog.estimate.declaredOnly', params: {}, capped: false })
   })
 
-  it("moins de 5 mesures : l'observé ne pèse encore rien", () => {
+  it("moins de 5 mesures : l'observé ne pèse encore rien — mais on ne prétend pas qu'il n'y en a aucune", () => {
     expect(
       estimateNotice({ sampleCount: 4, declaredWeightPercent: 100, declaredMinutes: 30, observedMinutes: 33 }),
-    ).toEqual({ key: 'pro.catalog.estimate.declaredOnly', params: {}, capped: false })
+    ).toEqual({ key: 'pro.catalog.estimate.tooFewSamples', params: { count: 4 }, capped: false })
+  })
+
+  it('une seule mesure : le compteur a commencé, et le professionnel le sait', () => {
+    expect(
+      estimateNotice({ sampleCount: 1, declaredWeightPercent: 100, declaredMinutes: 30, observedMinutes: 28 }),
+    ).toEqual({ key: 'pro.catalog.estimate.tooFewSamples', params: { count: 1 }, capped: false })
   })
 
   it('5 mesures : le mélange commence, et il est chiffré', () => {
@@ -37,10 +43,10 @@ describe('estimateNotice', () => {
     ).toEqual({ key: 'pro.catalog.estimate.observedOnly', params: { count: 20 }, capped: false })
   })
 
-  it('observé absent malgré un compteur non nul : rien de mesuré à annoncer', () => {
+  it('observé absent malgré un compteur non nul : aucune moyenne inventée, mais le compte est dit', () => {
     expect(
       estimateNotice({ sampleCount: 9, declaredWeightPercent: 69, declaredMinutes: 30, observedMinutes: null }),
-    ).toEqual({ key: 'pro.catalog.estimate.declaredOnly', params: {}, capped: false })
+    ).toEqual({ key: 'pro.catalog.estimate.tooFewSamples', params: { count: 9 }, capped: false })
   })
 
   it("écart supérieur à 50 % avec assez de mesures : l'estimation est bornée", () => {
@@ -81,6 +87,6 @@ describe('estimateNotice', () => {
   it('poids de 100 % malgré des mesures : la durée annoncée gouverne encore', () => {
     expect(
       estimateNotice({ sampleCount: 8, declaredWeightPercent: 100, declaredMinutes: 30, observedMinutes: 31 }),
-    ).toEqual({ key: 'pro.catalog.estimate.declaredOnly', params: {}, capped: false })
+    ).toEqual({ key: 'pro.catalog.estimate.tooFewSamples', params: { count: 8 }, capped: false })
   })
 })

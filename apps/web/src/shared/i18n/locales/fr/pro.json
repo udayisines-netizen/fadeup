@@ -252,6 +252,8 @@
     "subtitle": "Ce que votre salon propose, et qui le réalise.",
     "add": "Créer un service",
     "showArchived": "Afficher les archives",
+    "activeCount_one": "{{count}} service actif",
+    "activeCount_other": "{{count}} services actifs",
     "categoryNone": "Sans catégorie",
     "status": {
       "active": "Actif",
@@ -299,6 +301,8 @@
     "estimate": {
       "title": "Ce que la durée annoncée change",
       "declaredOnly": "Aucune prestation n'a encore été mesurée : le client voit exactement la durée que vous annoncez ici.",
+      "tooFewSamples_one": "FadeUp a mesuré {{count}} prestation — pas encore assez pour peser. Le client voit exactement la durée que vous annoncez ici.",
+      "tooFewSamples_other": "FadeUp a mesuré {{count}} prestations — pas encore assez pour peser. Le client voit exactement la durée que vous annoncez ici.",
       "blended": "FadeUp a mesuré {{count}} prestation : ce que le client voit vient à {{percent}} % de votre durée annoncée, le reste de la moyenne observée.",
       "blended_other": "FadeUp a mesuré {{count}} prestations : ce que le client voit vient à {{percent}} % de votre durée annoncée, le reste de la moyenne observée.",
       "observedOnly": "FadeUp a mesuré {{count}} prestations : le client voit désormais la moyenne observée, pas la durée annoncée.",
@@ -362,6 +366,8 @@
     "lapsedCallout_one": "{{count}} régulier n'est pas revenu à temps.",
     "lapsedCallout_other": "{{count}} réguliers ne sont pas revenus à temps.",
     "lapsedCalloutAction": "Les voir",
+    "deletedCustomer": "Client effacé",
+    "deletedCustomerHint": "Ce client a exercé son droit à l'effacement. Son historique reste pour votre comptabilité, son identité non.",
     "row": {
       "visits_one": "{{count}} prestation",
       "visits_other": "{{count}} prestations",
@@ -381,7 +387,8 @@
     "empty": {
       "title": "Aucun client pour l'instant",
       "description": "Chaque prestation terminée crée une fiche client. Ouvrez votre file ou posez un rendez-vous.",
-      "action": "Voir la file"
+      "action": "Voir la file",
+      "actionAgenda": "Ouvrir l'agenda"
     },
     "emptySearch": {
       "title": "Aucun résultat",
@@ -391,6 +398,7 @@
     "emptySegment": {
       "title": "Personne dans ce segment",
       "description": "C'est une bonne nouvelle : aucun de vos réguliers n'a dépassé son rythme habituel.",
+      "descriptionGeneric": "Aucun client de votre salon n'entre dans ce segment pour l'instant.",
       "action": "Voir tous les clients"
     },
     "detail": {
@@ -436,7 +444,8 @@
       "empty": "Aucune note pour l'instant.",
       "author": "{{name}}",
       "authorUnknown": "Auteur retiré de l'équipe",
-      "tooLong": "Une note tient en 2000 caractères."
+      "tooLong": "Une note tient en 2000 caractères.",
+      "required": "Une note ne peut pas être vide."
     },
     "toast": {
       "noteAdded": "Note enregistrée",
@@ -445,6 +454,7 @@
     },
     "errors": {
       "notFound": "Cette fiche n'existe pas, ou elle n'appartient pas à votre salon.",
+      "notFoundHelp": "Revenez à la liste : vous y voyez toutes les fiches de votre salon.",
       "noteForbidden": "Vous ne pouvez pas modifier une note écrite par quelqu'un d'autre."
     }
   },
@@ -452,8 +462,14 @@
     "title": "Équipe",
     "subtitle": "Qui travaille ici, et avec quels droits.",
     "invite": "Inviter par e-mail",
+    "loading": "Chargement de l'équipe…",
     "membersTitle": "Membres",
     "invitationsTitle": "Invitations en attente",
+    "forbidden": {
+      "title": "Cet écran est réservé à la gestion",
+      "description": "Seuls le propriétaire et les managers du salon voient l'équipe et ses invitations.",
+      "action": "Retour au tableau de bord"
+    },
     "role": {
       "owner": "Propriétaire",
       "manager": "Manager",
@@ -462,6 +478,7 @@
     },
     "row": {
       "you": "Vous",
+      "actions": "Actions pour {{name}}",
       "noSeat": "Pas de fauteuil",
       "notBookable": "Non réservable",
       "noQueue": "Pas de file",
@@ -539,6 +556,8 @@
       "hasFutureAppointments": "Ce barber a encore des rendez-vous à venir : choisissez qui les reprend.",
       "reassignConflict": "Le remplaçant est déjà pris sur au moins un de ces créneaux. Déplacez-les depuis l'agenda, puis réessayez.",
       "targetInvalid": "Le remplaçant doit être un barber actif et réservable de ce salon.",
+      "targetIsSelf": "Le remplaçant ne peut pas être la personne retirée.",
+      "locationForeign": "Cet établissement n'appartient pas à ce salon.",
       "capacity": "Votre plan ne couvre pas un fauteuil de plus."
     }
   }

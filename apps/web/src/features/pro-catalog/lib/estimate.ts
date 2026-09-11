@@ -29,13 +29,14 @@ export interface EstimateInput {
 
 export type EstimateKey =
   | 'pro.catalog.estimate.declaredOnly'
+  | 'pro.catalog.estimate.tooFewSamples'
   | 'pro.catalog.estimate.blended'
   | 'pro.catalog.estimate.observedOnly'
 
 export interface EstimateNotice {
   /** La clé i18n à rendre. */
   key: EstimateKey
-  /** Ses interpolations (vide pour `declaredOnly`). */
+  /** Ses interpolations (vide pour `declaredOnly`, qui ne compte rien). */
   params: { count?: number; percent?: number }
   /**
    * Vrai quand l'écart annoncé/observé dépasse 50 % du déclaré avec assez de
@@ -57,8 +58,13 @@ export function estimateNotice(input: EstimateInput): EstimateNotice {
     Math.abs((observedMinutes as number) - declaredMinutes) > ESTIMATE_CAP_RATIO * declaredMinutes
 
   if (!measured) {
-    // Moins de 5 mesures, ou rien de mesuré : le client voit exactement la
-    // durée annoncée. La saisie a donc un effet direct.
+    // Le client voit exactement la durée annoncée — mais on ne dit pas
+    // « aucune prestation mesurée » quand il y en a une à quatre : ce serait
+    // faux, et le professionnel a le droit de savoir que le compteur a
+    // commencé.
+    if (sampleCount > 0) {
+      return { key: 'pro.catalog.estimate.tooFewSamples', params: { count: sampleCount }, capped }
+    }
     return { key: 'pro.catalog.estimate.declaredOnly', params: {}, capped }
   }
 
@@ -74,6 +80,7 @@ export function estimateNotice(input: EstimateInput): EstimateNotice {
     }
   }
 
-  // Poids de 100 % malgré les mesures : la durée annoncée gouverne encore.
-  return { key: 'pro.catalog.estimate.declaredOnly', params: {}, capped }
+  // Poids de 100 % malgré les mesures : la durée annoncée gouverne encore,
+  // et le compteur a bien commencé.
+  return { key: 'pro.catalog.estimate.tooFewSamples', params: { count: sampleCount }, capped }
 }

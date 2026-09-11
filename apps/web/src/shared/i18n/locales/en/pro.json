@@ -252,6 +252,8 @@
     "subtitle": "What your shop offers, and who performs it.",
     "add": "Create a service",
     "showArchived": "Show archived",
+    "activeCount_one": "{{count}} active service",
+    "activeCount_other": "{{count}} active services",
     "categoryNone": "Uncategorised",
     "status": {
       "active": "Active",
@@ -299,6 +301,8 @@
     "estimate": {
       "title": "What the announced duration changes",
       "declaredOnly": "No service has been measured yet: the customer sees exactly the duration you announce here.",
+      "tooFewSamples_one": "FadeUp has measured {{count}} service — not enough to count yet. The customer sees exactly the duration you announce here.",
+      "tooFewSamples_other": "FadeUp has measured {{count}} services — not enough to count yet. The customer sees exactly the duration you announce here.",
       "blended": "FadeUp has measured {{count}} service: what the customer sees comes {{percent}}% from your announced duration, the rest from the observed average.",
       "blended_other": "FadeUp has measured {{count}} services: what the customer sees comes {{percent}}% from your announced duration, the rest from the observed average.",
       "observedOnly": "FadeUp has measured {{count}} services: the customer now sees the observed average, not the announced duration.",
@@ -362,6 +366,8 @@
     "lapsedCallout_one": "{{count}} regular has not come back on time.",
     "lapsedCallout_other": "{{count}} regulars have not come back on time.",
     "lapsedCalloutAction": "See them",
+    "deletedCustomer": "Deleted client",
+    "deletedCustomerHint": "This client exercised their right to erasure. Their history stays for your bookkeeping, their identity does not.",
     "row": {
       "visits_one": "{{count}} service",
       "visits_other": "{{count}} services",
@@ -381,7 +387,8 @@
     "empty": {
       "title": "No client yet",
       "description": "Every completed service creates a client record. Open your queue or book an appointment.",
-      "action": "See the queue"
+      "action": "See the queue",
+      "actionAgenda": "Open the agenda"
     },
     "emptySearch": {
       "title": "No result",
@@ -391,6 +398,7 @@
     "emptySegment": {
       "title": "Nobody in this segment",
       "description": "That is good news: none of your regulars has gone past their usual rhythm.",
+      "descriptionGeneric": "No client of your shop falls into this segment yet.",
       "action": "See every client"
     },
     "detail": {
@@ -436,7 +444,8 @@
       "empty": "No note yet.",
       "author": "{{name}}",
       "authorUnknown": "Author left the team",
-      "tooLong": "A note fits in 2000 characters."
+      "tooLong": "A note fits in 2000 characters.",
+      "required": "A note cannot be empty."
     },
     "toast": {
       "noteAdded": "Note saved",
@@ -445,6 +454,7 @@
     },
     "errors": {
       "notFound": "This record does not exist, or does not belong to your shop.",
+      "notFoundHelp": "Go back to the list: it shows every record of your shop.",
       "noteForbidden": "You cannot edit a note written by someone else."
     }
   },
@@ -452,8 +462,14 @@
     "title": "Team",
     "subtitle": "Who works here, and with which rights.",
     "invite": "Invite by email",
+    "loading": "Loading the team…",
     "membersTitle": "Members",
     "invitationsTitle": "Pending invitations",
+    "forbidden": {
+      "title": "This screen is for management",
+      "description": "Only the shop's owner and managers see the team and its invitations.",
+      "action": "Back to the dashboard"
+    },
     "role": {
       "owner": "Owner",
       "manager": "Manager",
@@ -462,6 +478,7 @@
     },
     "row": {
       "you": "You",
+      "actions": "Actions for {{name}}",
       "noSeat": "No chair",
       "notBookable": "Not bookable",
       "noQueue": "No queue",
@@ -539,6 +556,8 @@
       "hasFutureAppointments": "This barber still has upcoming appointments: choose who takes them over.",
       "reassignConflict": "The replacement is already booked over at least one of these slots. Move them from the agenda, then try again.",
       "targetInvalid": "The replacement must be an active, bookable barber of this shop.",
+      "targetIsSelf": "The replacement cannot be the person being removed.",
+      "locationForeign": "This location does not belong to this shop.",
       "capacity": "Your plan does not cover one more chair."
     }
   }
