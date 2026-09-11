@@ -1,7 +1,7 @@
 # PLAT-1 — Console interne : rôles, permissions, zones, audit
 
 **Branche** `plat1/roles`, créée depuis `rebuild/social-first-v2` (`3a0f5e4`).
-**Base** : quatre migrations appliquées en production le 2026-09-11.
+**Base** : cinq migrations appliquées en production le 2026-09-11.
 **Fusion** : aucune. Rien n'a été fusionné, rien n'a été poussé sur une autre branche.
 
 ---
@@ -33,7 +33,7 @@ d'intervalle, avec le même navigateur et le même compte.
 |---|---|
 | Routes comparées | **33** |
 | Empreintes **identiques champ à champ** | **30** |
-| Routes modifiées, toutes voulues par le lot | 3 |
+| Routes dont l'empreinte diffère | 3 — deux voulues par le lot, une causée par un lot voisin (détail ci-dessous) |
 | Erreurs console, avant et après | **0 et 0** |
 | Réponses HTTP ≥ 400, avant et après | **0 et 0** |
 | Routes débordant horizontalement à 390 px | **3 avant, les mêmes 3 après** — `team`, `acquisition/jobs`, `acquisition/sources` : un défaut hérité de tableaux larges, ni corrigé ni aggravé par ce lot (aucune route neuve ne déborde) |
@@ -140,10 +140,13 @@ garantit déjà un booléen strict.
 
 **118 policies RLS** ont été réécrites pour poser cette question au lieu des
 deux anciennes expressions : 37 sur les tables possédées par `postgres`, 81 sur
-celles possédées par `supabase_admin`. Aujourd'hui **120 policies** de `public`
-appellent `private.platform_can()` (les deux de plus sont `platform_zones` et
-`platform_member_zones`), et **zéro** policy CRM ne référence encore
-`has_platform_role`.
+celles possédées par `supabase_admin`. Après les durcissements de revue, **130 policies** de `public` appellent
+`private.platform_can()` : les 123 du CRM, `organizations_select`,
+`platform_member_zones_select`, `platform_audit_log_select`, et les quatre du
+détail locataire (`locations`, `memberships`, `barbers`, `staff_profiles`). **Zéro** policy CRM ne référence encore `has_platform_role`.
+(Le rapport disait d'abord « les deux de plus sont `platform_zones` et
+`platform_member_zones` » : c'était faux, `platform_zones_select` emploie un
+`EXISTS` direct. Corrigé après revue.)
 
 ### Pourquoi une garde d'interface ne suffit pas
 
@@ -264,6 +267,36 @@ l'écran.
 ---
 
 ## 5. La vue en tant que
+
+### Ce qu'elle fait, et ce qu'elle NE fait PAS — à lire avant de cocher la case
+
+La revue indépendante a posé la question juste, et la réponse doit être écrite
+noir sur blanc : **ce lot livre le cadre de la vue en tant que, pas
+l'élévation.**
+
+`start_platform_support_session` ne donne **aucun droit de lecture
+supplémentaire** — son propre commentaire le dit. Ce qui existe après PLAT-1
+est : une session datée, bornée, tracée, un bandeau permanent, et une garde de
+paiement. Ce qui n'existe pas est un modérateur qui VOIT ce que voit le
+propriétaire : il n'a ni les établissements, ni l'équipe, ni les barbers (§16),
+et sa fiche d'organisation le lui dit désormais honnêtement au lieu de prétendre
+qu'ils n'existent pas.
+
+Le §4 du cahier des charges dit « prend la vue d'un propriétaire de salon **et
+agit en son nom** ». **La seconde moitié n'est pas livrée.** Je ne coche donc
+pas cette case et je la remonte : décider ce que « voir comme le propriétaire »
+ouvre exactement — et le prouver sur des écrans — est le travail de PLAT-2, qui
+ne doit surtout pas se construire en croyant la fonctionnalité acquise.
+
+**Un corollaire à connaître.** La garde de paiement porte sur l'**acteur**, pas
+sur la cible : rien n'empêche de sortir de la vue, changer le plan, ré-entrer.
+L'acte reste tracé au journal, et la garde fait ce qu'elle promet — aucun geste
+de paiement **pendant** la vue empruntée — mais elle ne garantit pas à elle
+seule que personne ne touche un abonnement au nom d'un autre. Pour les cinq RPC
+Stripe, c'est `assert_billing_owner` qui l'interdit ; pour
+`assign_commercial_plan`, rien : un admin peut l'appeler sur n'importe quelle
+organisation, en vue empruntée ou non. **C'était déjà vrai avant PLAT-1**, et ce
+lot ne le change pas.
 
 ### Ce qui existait, et ce qui manquait
 
@@ -440,9 +473,10 @@ Sauvegarde avant toute écriture : `/opt/fadeup/backups/pre-plat1-20260911-03003
 | Migration | Rôle | Contenu | Retour arrière |
 |---|---|---|---|
 | `20260911100000_plat1_role_enum.sql` | `postgres` | les 3 valeurs d'énumération manquantes | testé — voir la réserve ci-dessous |
-| `20260911100100_plat1_permission_model.sql` | `postgres` | catalogue, grille, `platform_can`, zones, origines, audit scellé, échéance de vue empruntée, 11 RPC neuves, 18 RPC redéfinies, 37 policies | **testé, ACL identiques** |
+| `20260911100100_plat1_permission_model.sql` | `postgres` | catalogue, grille, `platform_can`, zones, origines, audit scellé, échéance de vue empruntée, 11 RPC neuves (plus 6 aides `private` et un déclencheur), 18 RPC redéfinies, 37 policies | **testé, ACL identiques** |
 | `20260911100200_plat1_crm_policies_admin.sql` | `supabase_admin` | 81 policies CRM | **testé, ACL identiques** |
 | `20260911100300_plat1_publication_chain.sql` | `postgres` | les 3 gardes internes de la chaîne de publication | **testé** (down puis up rejoués sur le bac d'essai) |
+| `20260911100400_plat1_review_hardening.sql` | `postgres` | les 6 durcissements de la revue indépendante (§16) | **testé** (down puis up rejoués sur le bac d'essai) |
 
 **Ce que les quatre migrations ont changé en production**, mesuré objet par
 objet contre l'état d'avant :
@@ -461,13 +495,13 @@ retirent s'appliquent en `postgres`. Un `revoke` par le mauvais rôle aurait ét
 un no-op silencieux ; la vérification après coup montre `anon` réellement
 absent des deux ACL.
 
-**Propriétaires vérifiés avant écriture** : les 22 fonctions redéfinies
-appartiennent toutes à `postgres` ; les 64 tables CRM se répartissent en 31
+**Propriétaires vérifiés avant écriture** : les **21 fonctions redéfinies**
+(18 dans la migration 2, 3 dans la migration 4) appartiennent toutes à `postgres` ; les 64 tables CRM se répartissent en 31
 `postgres` et 33 `supabase_admin`, d'où la séparation en deux fichiers — une
 policy ne se refait que par le propriétaire de sa table, et la règle 3 de
 `DB_OWNERSHIP.md` interdit la moitié de migration.
 
-**`create or replace` et jamais `drop` + `create`** sur les 18 fonctions
+**`create or replace` et jamais `drop` + `create`** sur les 21 fonctions
 existantes : une signature inchangée conserve l'ACL. Un DROP obligerait à
 re-matérialiser les grants, et c'est ainsi qu'on perd un droit sans s'en
 apercevoir (le piège de P1PRO).
@@ -522,7 +556,7 @@ uniquement depuis des SECURITY DEFINER (`assert_not_in_support_view`,
 
 ## 8. La suite de permissions
 
-`db/tests/verify_plat1.sql` — **71 assertions**, une seule transaction terminée
+`db/tests/verify_plat1.sql` — **80 assertions**, une seule transaction terminée
 par `ROLLBACK` (règle 1 de `QA_DATA.md`). Elle crée sept comptes, six rôles,
 deux zones et deux prospects, puis n'écrit rien : vérifié après passage en
 production, **0 ligne résiduelle**.
@@ -549,6 +583,7 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | **K** | le commercial n'annule pas un rendez-vous, le support passe la garde, une annulation sans motif est refusée |
 | **L** | **la chaîne de publication va jusqu'au bout** : le commercial franchit les trois gardes, le stagiaire est arrêté, le rafraîchissement d'éligibilité suit la même question |
 | **M** | **plusieurs stagiaires partagent une zone**, et le second y voit bien les prospects |
+| **N** | les durcissements de revue : **TRUNCATE refusé même en `reset role`**, l'admin ne révoque pas une invitation, le modérateur ne lit ni le trombinoscope ni le détail d'une organisation, l'admin les lit, et **la restriction par zone survit à la réécriture de performance** |
 
 ---
 
@@ -560,7 +595,7 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte |
 | `npm run test` (Vitest) | **694 / 694, 81 fichiers** — dont 7 neufs sur le bandeau et la navigation par rôle |
 | `NODE_OPTIONS=--max-old-space-size=3072 npm run build` | **succès**, chunk `platform` 813 Ko / **221 Ko gzip**, chargé paresseusement |
-| `db/tests/verify_plat1.sql` (production) | **71 assertions vertes, 0 résidu** |
+| `db/tests/verify_plat1.sql` (production) | **80 assertions vertes, 0 résidu** |
 | `db/tests/probe_public_rpcs.sh --strict` | **vert** — toutes les lectures publiques en 200 |
 | `db/tests/x3_anon_surface.sh --strict` | **vert** — 137 tables balayées en anonyme et en authentifié-sans-droit, contrat de surface intact à 44 RPC |
 | Relevé des 33 routes, avant / après | **30 identiques**, 3 écarts voulus ou externes (§1) |
@@ -771,9 +806,59 @@ neufs y sont posés **sans toucher au routeur**, ce qui satisfait à la fois
 | **`npm run e2e`** | voir §9bis — la campagne a dû attendre qu'un lot parallèle libère le runner |
 | **axe sans violation sérieuse ou critique** | voir §9bis |
 | **L'écran de saisie terrain** | §6 du lot : « PLAT-1 pose le socle, pas les écrans métier. PLAT-2 construira les surfaces par rôle. » La RPC `capture_field_prospect` est en production et testée (D6 à D9) ; l'origine est **visible** sur la liste et la fiche ; il manque le formulaire. |
+| **Vue en tant que : « agit en son nom »** | Le cadre est livré (trace, échéance, garde de paiement, bandeau) ; **l'élévation de lecture ne l'est pas**. Voir §5, requalifié après revue. |
 | **Support et modérateur : « lecture complète pour traiter un appel »** | Seule `organizations_select` a été élargie (§11.5). La lecture des rendez-vous, des clients et des barbers reste sur `is_platform_admin()`. Élargir une quarantaine de policies locataires sans écran pour les exercer aurait été un élargissement non prouvé. **PLAT-2, avec ses écrans.** |
 | **`database.types.ts` régénéré intégralement** | Le générateur `postgres-meta` local produit désormais une forme différente (il n'émet plus `isOneToOne`) : une régénération complète mêlerait 884 lignes sans rapport au diff de ce lot. Seule l'énumération `platform_role` a été mise à jour, à la main. Rien n'en dépend : le client `/platform` (`src/lib/supabase.ts`) n'est **pas** typé sur `Database`. **À faire en une fois, avec un générateur épinglé.** |
 | **Les comptes QA `qa-plat1-*`** | Sept comptes `@fadeup.test` créés pour la campagne navigateur (l'authentification réelle exige de vraies lignes `auth.users`). Ils portent les six rôles et servent la suite e2e. **Ils sont encore en base** — voir §14. |
+
+---
+
+## 13bis. La revue indépendante, et ce qu'elle a trouvé
+
+Une revue indépendante a été lancée sur le lot avec pour consigne de chercher
+des défauts. Elle a restauré la sauvegarde d'avant en schéma seul, extrait les
+379 corps de fonctions, et diffé un à un contre la production — la seule façon
+de vérifier « repris verbatim » au lieu de me croire. Verdict sur ce point :
+**21 corps ont changé, aucun autre, et les diffs ne contiennent que les gardes,
+les gardes de paiement ajoutées et les deux écritures d'audit voulues.**
+
+Elle a trouvé **un bloquant et sept points sérieux**. Tous sont corrigés, sauf
+un qui est une requalification.
+
+| | Trouvaille | Suite donnée |
+|---|---|---|
+| **B1** | la production était en avance sur le commit — la 4ᵉ migration n'était pas versionnée | committée (`c86b06c`) |
+| **S2** | **faux états vides** : un modérateur lisait « No locations yet » sur un salon qui en a | policies de détail locataire passées par la grille, écran qui dit « non visible avec votre rôle » |
+| **S3** | la lecture du CRM était devenue une **sous-requête corrélée** — 52 exécutions sur 52 lignes, 26 ms ; inutilisable à 20 000 prospects | terme non corrélé ajouté ; mesuré : `SubPlan never executed`, 1,3 ms |
+| **S4** | `RequirePlatformRole` n'avait pas de branche d'erreur pour les droits : une panne dégradait la console **en silence** | branche ajoutée |
+| **S5** | le journal filtrait **côté client sur 200 lignes** et répondait « aucune activité » à une question dont la réponse était « plus loin » | filtres poussés dans la requête, « aucun résultat » distingué de « journal vide » |
+| **S6** | **le journal était tronçable** : un déclencheur `for each row` ne voit pas TRUNCATE, et `service_role` gardait ce droit | déclencheur `for each statement` + révocation ; assertion N1 |
+| **S7** | « seul le fondateur gère les rôles » fuyait par `revoke_platform_invitation` | garde passée à `internal_roles.manage` ; assertion N2 |
+| **S8** | **la vue en tant que ne donne la vue de personne** | requalifiée en §5, case non cochée |
+
+Et neuf points mineurs, dont sept corrigés : l'acteur du journal et l'auteur
+d'une fiche terrain lisibles en e-mail plutôt qu'en UUID, l'état « pas pour
+vous » de l'écran d'équipe, les concessions `anon` résiduelles, la double
+source de vérité sur `audit.read` et le trombinoscope, la région live du
+bandeau, et trois chiffres faux dans ce rapport.
+
+**Deux mineurs NE sont pas corrigés, et je le déclare :**
+
+- **Les chaînes anglaises en dur que j'ai ajoutées** à la fiche prospect et à
+  la liste (« Field », « Seen in the field », « Worker V2 », « Field
+  capture »). Cette page est dans la zone exemptée de la localisation et elle
+  est **déjà** entièrement en anglais en dur. Traduire cinq chaînes dans une
+  page qui en compte deux cents la rendrait incohérente avec elle-même. Le lot
+  a traduit dix langues pour ce qu'il livre (`team`, `audit`, le bandeau, la
+  fiche d'organisation) et laisse la zone d'acquisition telle qu'elle est.
+  **Sa localisation entière est un chantier PLAT-2.**
+- **`cancel_appointment_as_platform` inscrit `cancelled_by_business`.**
+  L'énumération `appointment_resolution` n'a pas de valeur pour « annulé par la
+  plateforme », et lui en ajouter une toucherait le contrat de réservation que
+  consomment OS-1, l'application mobile et les écrans pro. La vérité est dans
+  `decided_by` (l'interne) et dans le journal ; l'étiquette de la ligne, elle,
+  attribue au salon un geste qu'il n'a pas fait. **À trancher en PLAT-2**, avec
+  le contrat de réservation ouvert.
 
 ---
 
@@ -805,9 +890,12 @@ ne les ai pas touchées.
 1. **Les écrans par rôle.** Le socle est posé ; les surfaces ne le sont pas. Un
    support qui se connecte aujourd'hui voit deux entrées de menu et rien pour
    traiter un appel.
-2. **La lecture locataire du support et du modérateur.** Quelles policies
-   exactement, et prouvées sur quels écrans. C'est la case non cochée la plus
-   importante.
+2. **Ce que « voir comme le propriétaire » ouvre exactement.** C'est la case
+   non cochée la plus importante, et la revue a eu raison de le dire :
+   aujourd'hui la vue empruntée est un marqueur journalisé, pas une élévation.
+   Quelles policies, pour quels rôles, prouvées sur quels écrans — et
+   l'affichage honnête posé par ce lot (« non visible avec votre rôle »)
+   montre exactement où il manque quelque chose.
 3. **Le formulaire de saisie terrain**, et sa version mobile : un stagiaire
    saisit debout dans la rue, pas devant un écran de 1440 px.
 4. **La granularité de la zone.** Une ville suffit pour Saint-Denis, pas pour
