@@ -45,7 +45,31 @@
     "sendInvitation": "发送邀请",
     "invitationCreated": "邀请已创建",
     "invitationRevoked": "邀请已撤销",
-    "couldntRevokeInvitation": "无法撤销邀请"
+    "couldntRevokeInvitation": "无法撤销邀请",
+    "founderManagesRoles": "只有创始人分配内部角色和区域。",
+    "zones": "区域",
+    "zonesHint": "外勤实习生只能看到其区域内的潜在客户。",
+    "noZonesYet": "暂无区域",
+    "zoneModel": "一个区域由国家和城市构成。",
+    "zoneCreated": "已添加区域",
+    "couldntCreateZone": "无法添加区域",
+    "country": "国家",
+    "city": "城市",
+    "postalHint": "邮政编码（提示）",
+    "addZone": "添加区域",
+    "manage": "管理",
+    "done": "完成",
+    "changeRole": "更改角色",
+    "roleUpdated": "角色已更新",
+    "couldntUpdateRole": "无法更改角色",
+    "zonesUpdated": "区域已更新",
+    "couldntUpdateZones": "无法更改区域",
+    "revokeAccess": "撤销访问权限",
+    "accessRevoked": "访问权限已撤销",
+    "couldntRevokeAccess": "无法撤销访问权限",
+    "anyoneWithTheLink": "任何拥有链接的人",
+    "shareThisLink": "请分享此链接：",
+    "couldntCreateInvitation": "无法创建邀请"
   },
   "organizations": {
     "couldntLoadOrganizations": "无法加载商家",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "暂无平台活动",
     "platformlevelSecurityEventsMostRecent": "平台级安全事件，最新的排在前面。",
     "action": "操作",
-    "actor": "操作者"
+    "actor": "操作者",
+    "filterByAction": "操作",
+    "allActions": "所有操作",
+    "search": "搜索",
+    "reservedToFounderAndAdmins": "审计日志仅由创始人和管理员查看。"
   },
   "organizationDetail": {
     "loadingOrganization": "正在加载商家",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "暂无团队成员",
     "organizations": "← 商家",
     "viewBarberWorkspace": "查看专业人员工作台",
-    "couldntEnterSupportView": "无法进入支持视图"
+    "couldntEnterSupportView": "无法进入支持视图",
+    "enterSupportView": "进入支持视图",
+    "currentlyInSupportView": "支持视图进行中",
+    "enteredSupportView": "已为 {{name}} 开启支持视图"
   },
   "login": {
     "platformSignIn": "平台登录",
@@ -95,5 +126,51 @@
     "exitSupportView": "退出支持视图",
     "exitedSupportView": "已退出支持视图",
     "couldntExitSupportView": "无法退出支持视图"
+  },
+  "roles": {
+    "platform_owner": "创始人",
+    "platform_admin": "管理员",
+    "platform_support": "客服",
+    "platform_sales": "销售",
+    "platform_moderator": "内容审核",
+    "platform_intern": "外勤实习生"
+  },
+  "supportView": {
+    "badge": "支持视图",
+    "viewing": "你正在代表 {{target}} 操作",
+    "barberWorkspace": "{{name}} 的工作区",
+    "thisOrganization": "该机构",
+    "remaining": "剩余 {{count}} 分钟",
+    "expired": "会话已过期",
+    "noPayment": "此处无法进行任何支付操作"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "已认领创始人访问权",
+    "platform_owner_bootstrap_token_reissued": "重新签发创始人令牌",
+    "platform_invitation_created": "已创建邀请",
+    "platform_invitation_accepted": "已接受邀请",
+    "platform_invitation_revoked": "已撤销邀请",
+    "platform_support_session_started": "已开启支持视图",
+    "platform_support_session_ended": "已关闭支持视图",
+    "platform_member_granted": "已授予内部访问权",
+    "platform_member_role_changed": "内部角色已更改",
+    "platform_member_revoked": "已撤销内部访问权",
+    "platform_member_zones_set": "已分配区域",
+    "platform_zone_created": "已创建区域",
+    "field_prospect_captured": "实地录入潜在客户",
+    "external_professional_published": "已发布到市场",
+    "external_professional_withdrawn": "已从市场撤下",
+    "marketplace_withdrawal_requested": "已申请撤下",
+    "marketplace_withdrawal_completed": "撤下已完成",
+    "professional_application_approved": "入驻已通过",
+    "professional_application_rejected": "入驻已拒绝",
+    "professional_claim_approved": "认领已通过",
+    "professional_claim_rejected": "认领已拒绝",
+    "review_moderated": "评价已处理",
+    "review_report_resolved": "举报已处理",
+    "post_moderated": "帖子已处理",
+    "appointment_cancelled_by_platform": "客服取消了预约",
+    "barber_deleted_by_platform": "理发师已删除",
+    "professional_application_submitted": "已提交入驻申请"
   }
 }

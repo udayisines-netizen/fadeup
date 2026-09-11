@@ -1,0 +1,40 @@
+{
+  "orgHref": "/platform/organizations/b15023ae-8dc0-4ef6-bc3a-93c82489d5c1",
+  "banner": {
+    "text": "SUPPORT VIEW Acting on QA F1 mtwfqdro 30 min left No payment action is possible here Exit Support View",
+    "buttons": [
+      "Exit Support View"
+    ],
+    "position": "sticky",
+    "background": "rgb(180, 121, 10)"
+  },
+  "bannerStillThere": true,
+  "rpcRefusal_support": {
+    "status": 403,
+    "body": "{\"code\":\"42501\",\"details\":\"fadeup_support_view_refusal=not_authorized\",\"hint\":null,\"message\":\"vue en tant que non autorisée\"}"
+  },
+  "rpcRefusal_commercial": {
+    "status": 403,
+    "body": "{\"code\":\"42501\",\"details\":\"fadeup_support_view_refusal=not_authorized\",\"hint\":null,\"message\":\"vue en tant que non autorisée\"}"
+  },
+  "rpcRefusal_stagiaire": {
+    "status": 403,
+    "body": "{\"code\":\"42501\",\"details\":\"fadeup_support_view_refusal=not_authorized\",\"hint\":null,\"message\":\"vue en tant que non autorisée\"}"
+  },
+  "paymentBeforeSupportView": {
+    "status": 200,
+    "body": "\"23e9124b-7586-4a4b-9293-ad5dc8cc87e4\""
+  },
+  "paymentDuringSupportView": {
+    "status": 403,
+    "body": "{\"code\":\"42501\",\"details\":\"fadeup_support_view_refusal=payment_forbidden\",\"hint\":null,\"message\":\"geste de paiement refusé en vue empruntée : prepare_billing_portal\"}"
+  },
+  "planDuringSupportView": {
+    "status": 403,
+    "body": "{\"code\":\"42501\",\"details\":\"fadeup_support_view_refusal=payment_forbidden\",\"hint\":null,\"message\":\"geste de paiement refusé en vue empruntée : assign_commercial_plan\"}"
+  },
+  "founderPermissions": {
+    "status": 200,
+    "body": "[\"appointment.cancel\", \"audit.read\", \"barber.delete\", \"billing.manage\", \"commercial.plan_assign\", \"crm.field_capture\", \"crm.read\", \"crm.write\", \"internal_roles.manage\", \"marketplace.publish\", \"marketplace.withdraw\", \"moderation.content\", \"onboarding.review\", \"support_view.enter\", \"tenant.read\"]"
+  }
+}

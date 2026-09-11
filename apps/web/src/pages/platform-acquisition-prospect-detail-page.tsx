@@ -127,12 +127,36 @@ export function PlatformAcquisitionProspectDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold text-ink-950">{prospect.canonicalName}</h1>
             <ProspectTypeBadge type={prospect.type} />
+            {/*
+              PLAT-1 — l'origine se voit AVANT d'appeler. Un salon vu de ses
+              yeux par un stagiaire ne vaut pas une fiche scrapée, et c'est le
+              premier chose que le commercial doit savoir.
+            */}
+            {prospect.origin === 'field' ? (
+              <Badge variant="success">Seen in the field</Badge>
+            ) : (
+              <Badge variant="neutral">Worker V2</Badge>
+            )}
             {prospect.doNotContact ? <Badge variant="danger">Do not contact</Badge> : null}
           </div>
           <p className="mt-1 text-sm text-ink-500">
             {prospect.country} · Discovered {formatDateTime(prospect.firstDiscoveredAt)}
             {prospect.lastEnrichedAt ? ` · Last enriched ${formatDateTime(prospect.lastEnrichedAt)}` : ' · Not enriched yet'}
           </p>
+          {prospect.origin === 'field' ? (
+            <div className="mt-3 max-w-2xl rounded-lg border border-success-600 bg-success-100 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-success-700">
+                Field capture
+                {prospect.fieldCapturedAt ? ` · ${formatDateTime(prospect.fieldCapturedAt)}` : ''}
+              </p>
+              {prospect.fieldObservation ? (
+                <p className="mt-1 text-sm text-ink-950">{prospect.fieldObservation}</p>
+              ) : null}
+              <p className="mt-1 font-mono text-xs text-ink-500">
+                by {prospect.fieldCapturedBy ?? 'unknown (account removed)'}
+              </p>
+            </div>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           {canManage && !prospect.doNotContact ? (

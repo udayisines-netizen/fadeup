@@ -6,6 +6,7 @@ import { useOrgMembers } from '@/lib/queries/memberships'
 import { useOrgStaffProfiles, type StaffProfile } from '@/lib/queries/staff-profiles'
 import { useOrgBarbers } from '@/lib/queries/barbers'
 import { useSupportView } from '@/routes/platform-support-view-context'
+import { usePlatformPermissions } from '@/routes/require-platform-role'
 import { Container } from '@/components/ui/container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,8 @@ export function PlatformOrganizationDetailPage() {
   const { organizationId } = useParams<{ organizationId: string }>()
   const { toast } = useToast()
   const { activeSession, enterSupportView, isEntering } = useSupportView()
+  const { can } = usePlatformPermissions()
+  const canEnterSupportView = can('support_view.enter')
 
   const organizationQuery = useOrganization(organizationId)
   const locationsQuery = useOrgLocations(organizationId)
@@ -83,7 +86,7 @@ export function PlatformOrganizationDetailPage() {
   async function handleEnterSupportView() {
     try {
       await enterSupportView({ organizationId: organizationId!, targetType: 'organization' })
-      toast({ title: `Entered support view for ${organization.name}` })
+      toast({ title: t('platform:organizationDetail.enteredSupportView', { name: organization.name }) })
     } catch (error) {
       toast({ title: t('platform:organizationDetail.couldntEnterSupportView'), description: getErrorMessage(error), variant: 'error' })
     }
@@ -101,9 +104,20 @@ export function PlatformOrganizationDetailPage() {
             /{organization.slug} · Created {new Date(organization.createdAt).toLocaleDateString()}
           </p>
         </div>
-        <Button variant="secondary" isLoading={isEntering} disabled={isViewingThisOrg} onClick={() => void handleEnterSupportView()}>
-          {isViewingThisOrg ? 'Currently in support view' : 'Enter support view'}
-        </Button>
+        {/*
+          PLAT-1 : l'entrée en vue empruntée n'est rendue qu'aux rôles qui la
+          portent (fondateur, admin, modérateur). Une capacité absente ne rend
+          RIEN — ni bouton grisé, ni cadenas. L'autorisation, elle, est dans
+          start_platform_support_session, qui refuse un support ou un
+          commercial même appelée directement.
+        */}
+        {canEnterSupportView ? (
+          <Button variant="secondary" isLoading={isEntering} disabled={isViewingThisOrg} onClick={() => void handleEnterSupportView()}>
+            {isViewingThisOrg
+              ? t('platform:organizationDetail.currentlyInSupportView')
+              : t('platform:organizationDetail.enterSupportView')}
+          </Button>
+        ) : null}
       </div>
 
       <section className="mt-8">

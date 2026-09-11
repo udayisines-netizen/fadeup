@@ -45,7 +45,31 @@
     "sendInvitation": "Send invitation",
     "invitationCreated": "Invitation created",
     "invitationRevoked": "Invitation revoked",
-    "couldntRevokeInvitation": "Couldn't revoke invitation"
+    "couldntRevokeInvitation": "Couldn't revoke invitation",
+    "founderManagesRoles": "Only the founder assigns internal roles and zones.",
+    "zones": "Zones",
+    "zonesHint": "A field intern sees only the prospects of their zones.",
+    "noZonesYet": "No zone yet",
+    "zoneModel": "A zone is a country and a city.",
+    "zoneCreated": "Zone added",
+    "couldntCreateZone": "Couldn't add the zone",
+    "country": "Country",
+    "city": "City",
+    "postalHint": "Postal code (hint)",
+    "addZone": "Add zone",
+    "manage": "Manage",
+    "done": "Done",
+    "changeRole": "Change role",
+    "roleUpdated": "Role updated",
+    "couldntUpdateRole": "Couldn't update the role",
+    "zonesUpdated": "Zones updated",
+    "couldntUpdateZones": "Couldn't update the zones",
+    "revokeAccess": "Revoke access",
+    "accessRevoked": "Access revoked",
+    "couldntRevokeAccess": "Couldn't revoke the access",
+    "anyoneWithTheLink": "Anyone with the link",
+    "shareThisLink": "Share this link with them:",
+    "couldntCreateInvitation": "Couldn't create the invitation"
   },
   "organizations": {
     "couldntLoadOrganizations": "Couldn't load organizations",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "No platform activity yet",
     "platformlevelSecurityEventsMostRecent": "Platform-level security events, most recent first.",
     "action": "Action",
-    "actor": "Actor"
+    "actor": "Actor",
+    "filterByAction": "Action",
+    "allActions": "All actions",
+    "search": "Search",
+    "reservedToFounderAndAdmins": "The audit log is read by the founder and admins only."
   },
   "organizationDetail": {
     "loadingOrganization": "Loading organization",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "No team members yet",
     "organizations": "← Organizations",
     "viewBarberWorkspace": "View Barber Workspace",
-    "couldntEnterSupportView": "Couldn't enter support view"
+    "couldntEnterSupportView": "Couldn't enter support view",
+    "enterSupportView": "Enter support view",
+    "currentlyInSupportView": "Currently in support view",
+    "enteredSupportView": "Support view opened for {{name}}"
   },
   "login": {
     "platformSignIn": "Platform sign in",
@@ -95,5 +126,51 @@
     "exitSupportView": "Exit Support View",
     "exitedSupportView": "Exited support view",
     "couldntExitSupportView": "Couldn't exit support view"
+  },
+  "roles": {
+    "platform_owner": "Founder",
+    "platform_admin": "Admin",
+    "platform_support": "Support",
+    "platform_sales": "Sales",
+    "platform_moderator": "Moderator",
+    "platform_intern": "Field intern"
+  },
+  "supportView": {
+    "badge": "Support view",
+    "viewing": "Acting on {{target}}",
+    "barberWorkspace": "{{name}}'s workspace",
+    "thisOrganization": "this organization",
+    "remaining": "{{count}} min left",
+    "expired": "Session expired",
+    "noPayment": "No payment action is possible here"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Founder access claimed",
+    "platform_owner_bootstrap_token_reissued": "Founder token reissued",
+    "platform_invitation_created": "Invitation created",
+    "platform_invitation_accepted": "Invitation accepted",
+    "platform_invitation_revoked": "Invitation revoked",
+    "platform_support_session_started": "Support view opened",
+    "platform_support_session_ended": "Support view closed",
+    "platform_member_granted": "Internal access granted",
+    "platform_member_role_changed": "Internal role changed",
+    "platform_member_revoked": "Internal access revoked",
+    "platform_member_zones_set": "Zones assigned",
+    "platform_zone_created": "Zone created",
+    "field_prospect_captured": "Field prospect captured",
+    "external_professional_published": "Published to the marketplace",
+    "external_professional_withdrawn": "Withdrawn from the marketplace",
+    "marketplace_withdrawal_requested": "Withdrawal requested",
+    "marketplace_withdrawal_completed": "Withdrawal completed",
+    "professional_application_approved": "Onboarding approved",
+    "professional_application_rejected": "Onboarding rejected",
+    "professional_claim_approved": "Claim approved",
+    "professional_claim_rejected": "Claim rejected",
+    "review_moderated": "Review moderated",
+    "review_report_resolved": "Report resolved",
+    "post_moderated": "Post moderated",
+    "appointment_cancelled_by_platform": "Appointment cancelled by support",
+    "barber_deleted_by_platform": "Barber deleted",
+    "professional_application_submitted": "Onboarding submitted"
   }
 }

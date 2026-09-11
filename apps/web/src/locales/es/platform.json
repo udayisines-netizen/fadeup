@@ -45,7 +45,31 @@
     "sendInvitation": "Enviar invitación",
     "invitationCreated": "Invitación creada",
     "invitationRevoked": "Invitación revocada",
-    "couldntRevokeInvitation": "No se pudo revocar la invitación"
+    "couldntRevokeInvitation": "No se pudo revocar la invitación",
+    "founderManagesRoles": "Solo el fundador asigna roles internos y zonas.",
+    "zones": "Zonas",
+    "zonesHint": "Un becario de campo solo ve los prospectos de sus zonas.",
+    "noZonesYet": "Aún no hay zonas",
+    "zoneModel": "Una zona es un país y una ciudad.",
+    "zoneCreated": "Zona añadida",
+    "couldntCreateZone": "No se pudo añadir la zona",
+    "country": "País",
+    "city": "Ciudad",
+    "postalHint": "Código postal (indicación)",
+    "addZone": "Añadir zona",
+    "manage": "Gestionar",
+    "done": "Listo",
+    "changeRole": "Cambiar rol",
+    "roleUpdated": "Rol actualizado",
+    "couldntUpdateRole": "No se pudo cambiar el rol",
+    "zonesUpdated": "Zonas actualizadas",
+    "couldntUpdateZones": "No se pudieron cambiar las zonas",
+    "revokeAccess": "Revocar acceso",
+    "accessRevoked": "Acceso revocado",
+    "couldntRevokeAccess": "No se pudo revocar el acceso",
+    "anyoneWithTheLink": "Cualquiera con el enlace",
+    "shareThisLink": "Comparte este enlace con esa persona:",
+    "couldntCreateInvitation": "No se pudo crear la invitación"
   },
   "organizations": {
     "couldntLoadOrganizations": "No se pudieron cargar los negocios",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "Aún no hay actividad",
     "platformlevelSecurityEventsMostRecent": "Eventos de seguridad de la plataforma, del más reciente al más antiguo.",
     "action": "Acción",
-    "actor": "Autor"
+    "actor": "Autor",
+    "filterByAction": "Acción",
+    "allActions": "Todas las acciones",
+    "search": "Buscar",
+    "reservedToFounderAndAdmins": "El registro de auditoría solo lo leen el fundador y los administradores."
   },
   "organizationDetail": {
     "loadingOrganization": "Cargando el negocio",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "Aún no hay miembros",
     "organizations": "← Negocios",
     "viewBarberWorkspace": "Ver el espacio del profesional",
-    "couldntEnterSupportView": "No se pudo entrar en la vista de soporte"
+    "couldntEnterSupportView": "No se pudo entrar en la vista de soporte",
+    "enterSupportView": "Entrar en vista de soporte",
+    "currentlyInSupportView": "Vista de soporte en curso",
+    "enteredSupportView": "Vista de soporte abierta para {{name}}"
   },
   "login": {
     "platformSignIn": "Acceso a la plataforma",
@@ -95,5 +126,51 @@
     "exitSupportView": "Salir de la vista de soporte",
     "exitedSupportView": "Has salido de la vista de soporte",
     "couldntExitSupportView": "No se pudo salir de la vista de soporte"
+  },
+  "roles": {
+    "platform_owner": "Fundador",
+    "platform_admin": "Administrador",
+    "platform_support": "Soporte",
+    "platform_sales": "Comercial",
+    "platform_moderator": "Moderador",
+    "platform_intern": "Becario de campo"
+  },
+  "supportView": {
+    "badge": "Vista de soporte",
+    "viewing": "Actuando sobre {{target}}",
+    "barberWorkspace": "el espacio de {{name}}",
+    "thisOrganization": "esta organización",
+    "remaining": "{{count}} min restantes",
+    "expired": "Sesión expirada",
+    "noPayment": "Ninguna acción de pago es posible aquí"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Acceso de fundador reclamado",
+    "platform_owner_bootstrap_token_reissued": "Token de fundador reemitido",
+    "platform_invitation_created": "Invitación creada",
+    "platform_invitation_accepted": "Invitación aceptada",
+    "platform_invitation_revoked": "Invitación revocada",
+    "platform_support_session_started": "Vista de soporte abierta",
+    "platform_support_session_ended": "Vista de soporte cerrada",
+    "platform_member_granted": "Acceso interno concedido",
+    "platform_member_role_changed": "Rol interno cambiado",
+    "platform_member_revoked": "Acceso interno revocado",
+    "platform_member_zones_set": "Zonas asignadas",
+    "platform_zone_created": "Zona creada",
+    "field_prospect_captured": "Prospecto captado en campo",
+    "external_professional_published": "Publicado en el marketplace",
+    "external_professional_withdrawn": "Retirado del marketplace",
+    "marketplace_withdrawal_requested": "Retirada solicitada",
+    "marketplace_withdrawal_completed": "Retirada completada",
+    "professional_application_approved": "Alta aprobada",
+    "professional_application_rejected": "Alta rechazada",
+    "professional_claim_approved": "Reclamación aprobada",
+    "professional_claim_rejected": "Reclamación rechazada",
+    "review_moderated": "Reseña moderada",
+    "review_report_resolved": "Denuncia resuelta",
+    "post_moderated": "Publicación moderada",
+    "appointment_cancelled_by_platform": "Cita cancelada por soporte",
+    "barber_deleted_by_platform": "Barbero eliminado",
+    "professional_application_submitted": "Alta enviada"
   }
 }

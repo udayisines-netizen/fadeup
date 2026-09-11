@@ -1,0 +1,180 @@
+[
+  {
+    "role": "fondateur",
+    "email": "qa-plat1-founder@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/applications",
+      "/platform/organizations",
+      "/platform/acquisition",
+      "/platform/outreach",
+      "/platform/data-science",
+      "/platform/team",
+      "/platform/audit"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 14,
+        "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Platform team Only the foun"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 36,
+        "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Audit log Platform-level se"
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  },
+  {
+    "role": "admin",
+    "email": "qa-plat1-admin@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/applications",
+      "/platform/organizations",
+      "/platform/acquisition",
+      "/platform/outreach",
+      "/platform/data-science",
+      "/platform/team",
+      "/platform/audit"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 14,
+        "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Platform team Who has FadeU"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 36,
+        "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Audit log Platform-level se"
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  },
+  {
+    "role": "support",
+    "email": "qa-plat1-support@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/organizations"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 1,
+        "text": "FadeUp Platform Overview Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Members User Role"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 0,
+        "text": "FadeUp Platform Overview Organizations Theme: System (light) Sign out Audit log The audit log is read by the founder and admins only."
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  },
+  {
+    "role": "moderateur",
+    "email": "qa-plat1-moderator@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/applications",
+      "/platform/organizations"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 1,
+        "text": "FadeUp Platform Overview Applications Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Memb"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 0,
+        "text": "FadeUp Platform Overview Applications Organizations Theme: System (light) Sign out Audit log The audit log is read by the founder and admins only."
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  },
+  {
+    "role": "commercial",
+    "email": "qa-plat1-sales@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/applications",
+      "/platform/acquisition",
+      "/platform/outreach",
+      "/platform/data-science"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 1,
+        "text": "FadeUp Platform Overview Applications Acquisition Outreach Data science Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pendin"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 0,
+        "text": "FadeUp Platform Overview Applications Acquisition Outreach Data science Theme: System (light) Sign out Audit log The audit log is read by the founder and admin"
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  },
+  {
+    "role": "stagiaire",
+    "email": "qa-plat1-intern@fadeup.test",
+    "nav": [
+      "/platform",
+      "/platform",
+      "/platform/acquisition"
+    ],
+    "disabledOrLocked": 0,
+    "screens": {
+      "team": {
+        "status": 200,
+        "rows": 1,
+        "text": "FadeUp Platform Overview Acquisition Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Members User Role Z"
+      },
+      "audit": {
+        "status": 200,
+        "rows": 0,
+        "text": "FadeUp Platform Overview Acquisition Theme: System (light) Sign out Audit log The audit log is read by the founder and admins only."
+      }
+    },
+    "supportView": {
+      "hasToken": true,
+      "url": null
+    },
+    "consoleErrors": []
+  }
+]

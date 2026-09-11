@@ -45,7 +45,31 @@
     "sendInvitation": "Отправить приглашение",
     "invitationCreated": "Приглашение создано",
     "invitationRevoked": "Приглашение отозвано",
-    "couldntRevokeInvitation": "Не удалось отозвать приглашение"
+    "couldntRevokeInvitation": "Не удалось отозвать приглашение",
+    "founderManagesRoles": "Только основатель назначает внутренние роли и зоны.",
+    "zones": "Зоны",
+    "zonesHint": "Стажёр видит только потенциальных клиентов своих зон.",
+    "noZonesYet": "Зон пока нет",
+    "zoneModel": "Зона — это страна и город.",
+    "zoneCreated": "Зона добавлена",
+    "couldntCreateZone": "Не удалось добавить зону",
+    "country": "Страна",
+    "city": "Город",
+    "postalHint": "Почтовый индекс (подсказка)",
+    "addZone": "Добавить зону",
+    "manage": "Управлять",
+    "done": "Готово",
+    "changeRole": "Изменить роль",
+    "roleUpdated": "Роль обновлена",
+    "couldntUpdateRole": "Не удалось изменить роль",
+    "zonesUpdated": "Зоны обновлены",
+    "couldntUpdateZones": "Не удалось изменить зоны",
+    "revokeAccess": "Отозвать доступ",
+    "accessRevoked": "Доступ отозван",
+    "couldntRevokeAccess": "Не удалось отозвать доступ",
+    "anyoneWithTheLink": "Любой, у кого есть ссылка",
+    "shareThisLink": "Поделитесь этой ссылкой:",
+    "couldntCreateInvitation": "Не удалось создать приглашение"
   },
   "organizations": {
     "couldntLoadOrganizations": "Не удалось загрузить организации",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "Активности пока нет",
     "platformlevelSecurityEventsMostRecent": "События безопасности платформы, начиная с самых свежих.",
     "action": "Действие",
-    "actor": "Инициатор"
+    "actor": "Инициатор",
+    "filterByAction": "Действие",
+    "allActions": "Все действия",
+    "search": "Поиск",
+    "reservedToFounderAndAdmins": "Журнал аудита читают только основатель и администраторы."
   },
   "organizationDetail": {
     "loadingOrganization": "Загружаем организацию",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "Участников пока нет",
     "organizations": "← Организации",
     "viewBarberWorkspace": "Открыть рабочее место специалиста",
-    "couldntEnterSupportView": "Не удалось открыть режим поддержки"
+    "couldntEnterSupportView": "Не удалось открыть режим поддержки",
+    "enterSupportView": "Войти в режим поддержки",
+    "currentlyInSupportView": "Режим поддержки активен",
+    "enteredSupportView": "Режим поддержки открыт для {{name}}"
   },
   "login": {
     "platformSignIn": "Вход на платформу",
@@ -95,5 +126,51 @@
     "exitSupportView": "Выйти из режима поддержки",
     "exitedSupportView": "Вы вышли из режима поддержки",
     "couldntExitSupportView": "Не удалось выйти из режима поддержки"
+  },
+  "roles": {
+    "platform_owner": "Основатель",
+    "platform_admin": "Администратор",
+    "platform_support": "Поддержка",
+    "platform_sales": "Продажи",
+    "platform_moderator": "Модератор",
+    "platform_intern": "Стажёр на местах"
+  },
+  "supportView": {
+    "badge": "Режим поддержки",
+    "viewing": "Вы действуете от имени {{target}}",
+    "barberWorkspace": "рабочее пространство {{name}}",
+    "thisOrganization": "эта организация",
+    "remaining": "осталось {{count}} мин",
+    "expired": "Сессия истекла",
+    "noPayment": "Платёжные действия здесь невозможны"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Доступ основателя получен",
+    "platform_owner_bootstrap_token_reissued": "Токен основателя перевыпущен",
+    "platform_invitation_created": "Приглашение создано",
+    "platform_invitation_accepted": "Приглашение принято",
+    "platform_invitation_revoked": "Приглашение отозвано",
+    "platform_support_session_started": "Режим поддержки открыт",
+    "platform_support_session_ended": "Режим поддержки закрыт",
+    "platform_member_granted": "Внутренний доступ выдан",
+    "platform_member_role_changed": "Внутренняя роль изменена",
+    "platform_member_revoked": "Внутренний доступ отозван",
+    "platform_member_zones_set": "Зоны назначены",
+    "platform_zone_created": "Зона создана",
+    "field_prospect_captured": "Клиент записан на месте",
+    "external_professional_published": "Опубликовано на витрине",
+    "external_professional_withdrawn": "Убрано с витрины",
+    "marketplace_withdrawal_requested": "Запрошено удаление",
+    "marketplace_withdrawal_completed": "Удаление выполнено",
+    "professional_application_approved": "Заявка одобрена",
+    "professional_application_rejected": "Заявка отклонена",
+    "professional_claim_approved": "Заявка на профиль одобрена",
+    "professional_claim_rejected": "Заявка на профиль отклонена",
+    "review_moderated": "Отзыв модерирован",
+    "review_report_resolved": "Жалоба обработана",
+    "post_moderated": "Публикация модерирована",
+    "appointment_cancelled_by_platform": "Запись отменена поддержкой",
+    "barber_deleted_by_platform": "Барбер удалён",
+    "professional_application_submitted": "Заявка подана"
   }
 }

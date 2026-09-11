@@ -7,6 +7,14 @@ import { defineConfig, devices } from '@playwright/test'
  * tests axe) n'existe que là, et l'application parle à la vraie base locale
  * (Supabase via Kong :18100) — aucune donnée simulée.
  */
+/*
+ * Le port du serveur de développement est paramétrable : trois worktrees
+ * tournent en parallèle sur cette machine et `reuseExistingServer` ferait
+ * autrement passer les tests d'un lot contre le code d'un autre. PLAT-1
+ * utilise 4630 (OS-1 tient 4610, PERF 4620).
+ */
+const E2E_PORT = Number(process.env.E2E_PORT ?? 4610)
+
 export default defineConfig({
   // P1b (régression shell/auth/i18n) + F1 (Live Queue).
   testDir: './e2e',
@@ -16,7 +24,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4610',
+    baseURL: `http://127.0.0.1:${E2E_PORT}`,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -37,8 +45,8 @@ export default defineConfig({
       : []),
   ],
   webServer: {
-    command: 'npm run dev -- --port 4610 --strictPort --host 127.0.0.1',
-    url: 'http://127.0.0.1:4610',
+    command: `npm run dev -- --port ${E2E_PORT} --strictPort --host 127.0.0.1`,
+    url: `http://127.0.0.1:${E2E_PORT}`,
     reuseExistingServer: true,
     timeout: 120_000,
   },

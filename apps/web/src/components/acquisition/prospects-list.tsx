@@ -113,6 +113,10 @@ export function ProspectsListView({ presetType }: { presetType?: ProspectType })
                     >
                       {prospect.canonicalName}
                     </Link>
+                    {/* PLAT-1 : l'origine se lit en balayant la liste, pas seulement sur la fiche. */}
+                    {prospect.origin === 'field' ? (
+                      <span className="ml-2 text-xs font-medium text-success-700">Field</span>
+                    ) : null}
                     {prospect.doNotContact ? <span className="ml-2 text-xs text-danger-700">Do not contact</span> : null}
                   </TableCell>
                   {!presetType ? (

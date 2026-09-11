@@ -45,7 +45,31 @@
     "sendInvitation": "招待を送る",
     "invitationCreated": "招待を作成しました",
     "invitationRevoked": "招待を取り消しました",
-    "couldntRevokeInvitation": "招待を取り消せませんでした"
+    "couldntRevokeInvitation": "招待を取り消せませんでした",
+    "founderManagesRoles": "内部ロールとゾーンを割り当てるのは創業者のみです。",
+    "zones": "ゾーン",
+    "zonesHint": "フィールド研修生は自分のゾーンの見込み客だけを見ます。",
+    "noZonesYet": "ゾーンはまだありません",
+    "zoneModel": "ゾーンは国と都市の組み合わせです。",
+    "zoneCreated": "ゾーンを追加しました",
+    "couldntCreateZone": "ゾーンを追加できませんでした",
+    "country": "国",
+    "city": "市区",
+    "postalHint": "郵便番号（参考）",
+    "addZone": "ゾーンを追加",
+    "manage": "管理",
+    "done": "完了",
+    "changeRole": "ロールを変更",
+    "roleUpdated": "ロールを更新しました",
+    "couldntUpdateRole": "ロールを変更できませんでした",
+    "zonesUpdated": "ゾーンを更新しました",
+    "couldntUpdateZones": "ゾーンを変更できませんでした",
+    "revokeAccess": "アクセスを取り消す",
+    "accessRevoked": "アクセスを取り消しました",
+    "couldntRevokeAccess": "アクセスを取り消せませんでした",
+    "anyoneWithTheLink": "リンクを知っている人",
+    "shareThisLink": "このリンクを共有してください：",
+    "couldntCreateInvitation": "招待を作成できませんでした"
   },
   "organizations": {
     "couldntLoadOrganizations": "事業者を読み込めませんでした",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "プラットフォームの操作履歴はまだありません",
     "platformlevelSecurityEventsMostRecent": "プラットフォーム全体のセキュリティイベント（新しい順）。",
     "action": "操作内容",
-    "actor": "実行者"
+    "actor": "実行者",
+    "filterByAction": "操作",
+    "allActions": "すべての操作",
+    "search": "検索",
+    "reservedToFounderAndAdmins": "監査ログを閲覧できるのは創業者と管理者のみです。"
   },
   "organizationDetail": {
     "loadingOrganization": "事業者を読み込んでいます",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "メンバーはまだいません",
     "organizations": "← 事業者",
     "viewBarberWorkspace": "スタッフのワークスペースを見る",
-    "couldntEnterSupportView": "サポートビューに入れませんでした"
+    "couldntEnterSupportView": "サポートビューに入れませんでした",
+    "enterSupportView": "サポートビューに入る",
+    "currentlyInSupportView": "サポートビュー中",
+    "enteredSupportView": "{{name}} のサポートビューを開始"
   },
   "login": {
     "platformSignIn": "プラットフォームにログイン",
@@ -95,5 +126,51 @@
     "exitSupportView": "サポートビューを終了",
     "exitedSupportView": "サポートビューを終了しました",
     "couldntExitSupportView": "サポートビューを終了できませんでした"
+  },
+  "roles": {
+    "platform_owner": "創業者",
+    "platform_admin": "管理者",
+    "platform_support": "サポート",
+    "platform_sales": "営業",
+    "platform_moderator": "モデレーター",
+    "platform_intern": "フィールド研修生"
+  },
+  "supportView": {
+    "badge": "サポートビュー",
+    "viewing": "{{target}} として操作中",
+    "barberWorkspace": "{{name}} のワークスペース",
+    "thisOrganization": "この組織",
+    "remaining": "残り {{count}} 分",
+    "expired": "セッション期限切れ",
+    "noPayment": "ここでは支払い操作はできません"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "創業者アクセスの取得",
+    "platform_owner_bootstrap_token_reissued": "創業者トークンを再発行",
+    "platform_invitation_created": "招待を作成",
+    "platform_invitation_accepted": "招待を承諾",
+    "platform_invitation_revoked": "招待を取り消し",
+    "platform_support_session_started": "サポートビュー開始",
+    "platform_support_session_ended": "サポートビュー終了",
+    "platform_member_granted": "内部アクセスを付与",
+    "platform_member_role_changed": "内部ロールを変更",
+    "platform_member_revoked": "内部アクセスを取り消し",
+    "platform_member_zones_set": "ゾーンを割り当て",
+    "platform_zone_created": "ゾーンを作成",
+    "field_prospect_captured": "現地で見込み客を登録",
+    "external_professional_published": "マーケットプレイスに公開",
+    "external_professional_withdrawn": "マーケットプレイスから撤回",
+    "marketplace_withdrawal_requested": "撤回を申請",
+    "marketplace_withdrawal_completed": "撤回を完了",
+    "professional_application_approved": "オンボーディング承認",
+    "professional_application_rejected": "オンボーディング却下",
+    "professional_claim_approved": "認証を承認",
+    "professional_claim_rejected": "認証を却下",
+    "review_moderated": "レビューを処理",
+    "review_report_resolved": "通報を処理",
+    "post_moderated": "投稿を処理",
+    "appointment_cancelled_by_platform": "サポートが予約をキャンセル",
+    "barber_deleted_by_platform": "理容師を削除",
+    "professional_application_submitted": "オンボーディング申請"
   }
 }

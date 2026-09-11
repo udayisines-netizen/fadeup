@@ -45,7 +45,31 @@
     "sendInvitation": "إرسال الدعوة",
     "invitationCreated": "تم إنشاء الدعوة",
     "invitationRevoked": "تم إلغاء الدعوة",
-    "couldntRevokeInvitation": "تعذّر إلغاء الدعوة"
+    "couldntRevokeInvitation": "تعذّر إلغاء الدعوة",
+    "founderManagesRoles": "المؤسس وحده يمنح الأدوار الداخلية والمناطق.",
+    "zones": "المناطق",
+    "zonesHint": "المتدرب الميداني يرى عملاء مناطقه فقط.",
+    "noZonesYet": "لا توجد مناطق بعد",
+    "zoneModel": "المنطقة هي بلد ومدينة.",
+    "zoneCreated": "تمت إضافة المنطقة",
+    "couldntCreateZone": "تعذّرت إضافة المنطقة",
+    "country": "البلد",
+    "city": "المدينة",
+    "postalHint": "الرمز البريدي (إشارة)",
+    "addZone": "إضافة منطقة",
+    "manage": "إدارة",
+    "done": "تم",
+    "changeRole": "تغيير الدور",
+    "roleUpdated": "تم تحديث الدور",
+    "couldntUpdateRole": "تعذّر تغيير الدور",
+    "zonesUpdated": "تم تحديث المناطق",
+    "couldntUpdateZones": "تعذّر تغيير المناطق",
+    "revokeAccess": "إلغاء الوصول",
+    "accessRevoked": "تم إلغاء الوصول",
+    "couldntRevokeAccess": "تعذّر إلغاء الوصول",
+    "anyoneWithTheLink": "أي شخص لديه الرابط",
+    "shareThisLink": "شارك هذا الرابط:",
+    "couldntCreateInvitation": "تعذّر إنشاء الدعوة"
   },
   "organizations": {
     "couldntLoadOrganizations": "تعذّر تحميل المنشآت",
@@ -59,7 +83,11 @@
     "noPlatformActivityYet": "لا يوجد نشاط بعد",
     "platformlevelSecurityEventsMostRecent": "أحداث الأمان على مستوى المنصة، الأحدث أولًا.",
     "action": "الإجراء",
-    "actor": "المنفّذ"
+    "actor": "المنفّذ",
+    "filterByAction": "الإجراء",
+    "allActions": "كل الإجراءات",
+    "search": "بحث",
+    "reservedToFounderAndAdmins": "سجل التدقيق يقرأه المؤسس والمديرون فقط."
   },
   "organizationDetail": {
     "loadingOrganization": "جارٍ تحميل المنشأة",
@@ -71,7 +99,10 @@
     "noTeamMembersYet": "لا يوجد أعضاء بعد",
     "organizations": "← المنشآت",
     "viewBarberWorkspace": "عرض مساحة عمل المختص",
-    "couldntEnterSupportView": "تعذّر الدخول إلى وضع الدعم"
+    "couldntEnterSupportView": "تعذّر الدخول إلى وضع الدعم",
+    "enterSupportView": "الدخول إلى وضع الدعم",
+    "currentlyInSupportView": "وضع الدعم جارٍ",
+    "enteredSupportView": "فُتح وضع الدعم لـ {{name}}"
   },
   "login": {
     "platformSignIn": "تسجيل الدخول إلى المنصة",
@@ -95,5 +126,51 @@
     "exitSupportView": "الخروج من وضع الدعم",
     "exitedSupportView": "تم الخروج من وضع الدعم",
     "couldntExitSupportView": "تعذّر الخروج من وضع الدعم"
+  },
+  "roles": {
+    "platform_owner": "المؤسس",
+    "platform_admin": "مدير",
+    "platform_support": "الدعم",
+    "platform_sales": "المبيعات",
+    "platform_moderator": "مشرف",
+    "platform_intern": "متدرب ميداني"
+  },
+  "supportView": {
+    "badge": "وضع الدعم",
+    "viewing": "أنت تتصرف نيابة عن {{target}}",
+    "barberWorkspace": "مساحة {{name}}",
+    "thisOrganization": "هذه المؤسسة",
+    "remaining": "بقي {{count}} دقيقة",
+    "expired": "انتهت الجلسة",
+    "noPayment": "لا يمكن تنفيذ أي إجراء دفع هنا"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "تمت المطالبة بوصول المؤسس",
+    "platform_owner_bootstrap_token_reissued": "إعادة إصدار رمز المؤسس",
+    "platform_invitation_created": "تم إنشاء الدعوة",
+    "platform_invitation_accepted": "تم قبول الدعوة",
+    "platform_invitation_revoked": "تم إلغاء الدعوة",
+    "platform_support_session_started": "فتح وضع الدعم",
+    "platform_support_session_ended": "إغلاق وضع الدعم",
+    "platform_member_granted": "مُنح وصول داخلي",
+    "platform_member_role_changed": "تغيير الدور الداخلي",
+    "platform_member_revoked": "إلغاء الوصول الداخلي",
+    "platform_member_zones_set": "تعيين المناطق",
+    "platform_zone_created": "تم إنشاء منطقة",
+    "field_prospect_captured": "تسجيل عميل ميداني",
+    "external_professional_published": "نُشر في السوق",
+    "external_professional_withdrawn": "سُحب من السوق",
+    "marketplace_withdrawal_requested": "طُلب السحب",
+    "marketplace_withdrawal_completed": "اكتمل السحب",
+    "professional_application_approved": "تمت الموافقة على الانضمام",
+    "professional_application_rejected": "رُفض الانضمام",
+    "professional_claim_approved": "تمت الموافقة على المطالبة",
+    "professional_claim_rejected": "رُفضت المطالبة",
+    "review_moderated": "تمت مراجعة التقييم",
+    "review_report_resolved": "تمت معالجة البلاغ",
+    "post_moderated": "تمت مراجعة المنشور",
+    "appointment_cancelled_by_platform": "ألغى الدعم الموعد",
+    "barber_deleted_by_platform": "تم حذف الحلاق",
+    "professional_application_submitted": "تم إرسال طلب الانضمام"
   }
 }
