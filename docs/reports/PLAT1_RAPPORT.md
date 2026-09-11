@@ -528,6 +528,17 @@ comparaison.
 | Écarts bruts | 2 lignes, uniquement l'**ordre** des concessionnaires dans `relacl` après révocation puis re-concession d'`anon` sur `platform_audit_log` et `platform_support_sessions` — ensembles identiques, chaînes différentes |
 | Objets résiduels | tables, colonnes, fonctions, types : **0** |
 
+**Ce qu'un retour arrière DÉTRUIT, et qu'il faut savoir avant de l'ordonner.**
+Le fichier le dit en tête, mais un fondateur qui ne lit que ce rapport doit
+l'avoir sous les yeux : le retour arrière de `20260911100100` supprime les
+colonnes `field_observation`, `field_captured_by` et `field_captured_at` de
+`prospects`, ainsi que les tables `platform_zones` et `platform_member_zones`.
+**Les prospects saisis sur le terrain survivent, mais ce que le stagiaire a
+observé, qui l'a saisi et quand disparaissent avec les colonnes**, et toutes
+les affectations de zones avec les tables. Tant qu'aucune fiche terrain n'a été
+saisie et qu'aucune zone n'a été créée — l'état d'aujourd'hui — le retour
+arrière ne coûte rien. Après, il coûte cela.
+
 **La réserve, déclarée** : PostgreSQL n'a pas d'`alter type drop value`. Les
 trois valeurs `platform_sales`, `platform_moderator`, `platform_intern` ne
 peuvent pas être retirées sans recréer le type, donc sans casser les ~190
@@ -594,7 +605,7 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | Contrôle | Résultat |
 |---|---|
 | `npm run typecheck` (`tsc -b` + `tsconfig.v2`) | **0 erreur** |
-| `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte |
+| `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte. Le lot **ajoute un avertissement** oxlint (`require-platform-role.tsx`, `only-export-components`) : le fichier exporte désormais un second hook à côté de son composant. Même motif que les onze avertissements identiques déjà présents dans le dépôt ; déclaré plutôt que tu. |
 | `npm run test` (Vitest) | **694 / 694, 81 fichiers** — dont 7 neufs sur le bandeau et la navigation par rôle |
 | `NODE_OPTIONS=--max-old-space-size=3072 npm run build` | **succès**, chunk `platform` 813 Ko / **221 Ko gzip**, chargé paresseusement |
 | `db/tests/verify_plat1.sql` (production) | **80 assertions vertes, 0 résidu** |
@@ -603,8 +614,9 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | Relevé des 33 routes, avant / après | **30 identiques**, 3 écarts voulus ou externes (§1) |
 | Erreurs console sur les 33 routes | **0**, avant comme après |
 | Réponses HTTP ≥ 400 | **0**, avant comme après |
-| `npm run e2e` | voir §9bis |
-| axe | voir §9bis |
+| `npm run e2e` — suite PLAT-1 seule | **12 / 12 verts**, 390 px et 1440 px |
+| `npm run e2e` — campagne complète | **non lancée** : le runner est occupé par un lot voisin depuis deux heures, et les suites antérieures partagent `qa-f1b-shared`. Voir §9bis. |
+| axe | **8 violations sérieuses, toutes de contraste, toutes préexistantes** — dont une sur la page de connexion que ce lot ne touche pas. Le bandeau neuf, lui, en ajoute **zéro**. Voir §9bis. |
 
 ### 9bis. axe, et la campagne e2e
 
@@ -664,7 +676,32 @@ stagiaire, refus honnête du journal, et **refus de la vue en tant que avec la
 RPC appelée directement** (403 + motif nommé). Elle se saute proprement si les
 comptes QA n'existent pas.
 
-RÉSULTAT_E2E
+**Résultat — la suite PLAT-1 seule : 12 tests, 12 verts**, en 390 px et en
+1440 px (52 s).
+
+```
+E2E_PORT=4630 QA_SUPABASE_URL=… QA_ANON_KEY=… npx playwright test e2e/plat1
+  12 passed (52.4s)
+```
+
+Dont le test qui compte : `start_platform_support_session` appelée **depuis la
+page, avec le jeton du support**, rend **403** et le motif nommé
+`fadeup_support_view_refusal=not_authorized`. Et celui qui vérifie qu'aucun
+lien absent n'est remplacé par un élément grisé ou cadenassé.
+
+**La campagne COMPLÈTE — les suites antérieures comprises — n'a pas pu tourner.**
+Un lot voisin occupe le runner Playwright depuis près de deux heures, et le
+cahier des charges impose « une seule campagne e2e à la fois ». Les suites
+antérieures (d1, f1, f1b, f2, f3, f4, p1b, p1pro) partagent l'organisation
+`qa-f1b-shared` : les lancer maintenant corromprait la campagne voisine autant
+que la mienne. La suite PLAT-1, elle, ne touche aucune donnée partagée — elle
+se connecte, lit `/platform` et appelle une RPC — d'où le lancement isolé.
+
+**Cette case reste donc non cochée**, et c'est une attente d'ordonnancement,
+pas un échec : `npm run e2e` est à relancer en entier dès que le runner se
+libère. J'ai rendu le port paramétrable (`E2E_PORT`, défaut 4610 inchangé)
+précisément pour que trois worktrees puissent cohabiter sans qu'un lot teste le
+code d'un autre — `reuseExistingServer` le permettait.
 
 Les nouveaux tests unitaires :
 
@@ -805,8 +842,8 @@ neufs y sont posés **sans toucher au routeur**, ce qui satisfait à la fois
 
 | Case | Raison |
 |---|---|
-| **`npm run e2e`** | voir §9bis — la campagne a dû attendre qu'un lot parallèle libère le runner |
-| **axe sans violation sérieuse ou critique** | voir §9bis |
+| **`npm run e2e` en entier** | La suite PLAT-1 est verte (12/12). La campagne complète attend que le runner se libère : un lot voisin le tient depuis deux heures et les suites antérieures partagent `qa-f1b-shared`. Attente d'ordonnancement, pas échec. |
+| **axe sans violation sérieuse ou critique** | Le seul défaut est un contraste de la **palette héritée** de `/platform`, présent avant ce lot jusque sur la page de connexion. Le corriger veut dire repeindre toute la console et détruire la preuve d'équivalence du §1. Décision de produit, pas d'implémentation. Voir §9bis. |
 | **L'écran de saisie terrain** | §6 du lot : « PLAT-1 pose le socle, pas les écrans métier. PLAT-2 construira les surfaces par rôle. » La RPC `capture_field_prospect` est en production et testée (D6 à D9) ; l'origine est **visible** sur la liste et la fiche ; il manque le formulaire. |
 | **Vue en tant que : « agit en son nom »** | Le cadre est livré (trace, échéance, garde de paiement, bandeau) ; **l'élévation de lecture ne l'est pas**. Voir §5, requalifié après revue. |
 | **Support et modérateur : « lecture complète pour traiter un appel »** | Seule `organizations_select` a été élargie (§11.5). La lecture des rendez-vous, des clients et des barbers reste sur `is_platform_admin()`. Élargir une quarantaine de policies locataires sans écran pour les exercer aurait été un élargissement non prouvé. **PLAT-2, avec ses écrans.** |
