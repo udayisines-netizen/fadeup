@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase'
-import type { PlatformRole } from '@/lib/types'
+import type { PlatformPermission, PlatformRole } from '@/lib/types'
 
 interface PlatformMemberRow {
   role: PlatformRole
@@ -224,7 +224,10 @@ export function useCreatePlatformInvitation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: { role: 'platform_admin' | 'platform_support'; invitedEmail: string | null }) => {
+    // PLAT-1 : les cinq rôles invitables. platform_owner reste hors invitation
+    // (contrainte platform_invitations_role_not_owner), et seul le fondateur
+    // appelle cette RPC — la garde est dans create_platform_invitation.
+    mutationFn: async (input: { role: Exclude<PlatformRole, 'platform_owner'>; invitedEmail: string | null }) => {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase.rpc('create_platform_invitation', {
         p_role: input.role,
@@ -277,17 +280,45 @@ interface PlatformAuditRow {
   created_at: string
 }
 
-/** Platform-level audit trail — platform_owner/platform_admin only (platform_audit_log_select policy). Most recent first. */
-export function usePlatformAuditLog() {
+export interface PlatformAuditFilters {
+  /** Une famille d'action exacte, ou rien pour toutes. */
+  action?: string
+  /** Cherche dans l'action, le type et l'identifiant de cible. */
+  search?: string
+  limit?: number
+}
+
+/**
+ * Le journal interne (`platform_audit_log_select` : porteurs de `audit.read`).
+ *
+ * LES FILTRES SONT SERVEUR, et c'est le point. Un filtrage côté client sur les
+ * 200 dernières lignes répondait « aucune activité » à une question dont la
+ * réponse était « il y en a, plus loin » — sur un journal qu'on présente comme
+ * opposable, c'est un mensonge. Trouvé par la revue indépendante.
+ */
+export function usePlatformAuditLog(filters: PlatformAuditFilters = {}) {
+  const action = filters.action?.trim() ?? ''
+  const search = filters.search?.trim() ?? ''
+  const limit = filters.limit ?? 200
+
   return useQuery({
-    queryKey: ['platform', 'audit-log'],
+    queryKey: ['platform', 'audit-log', action, search, limit],
     queryFn: async (): Promise<PlatformAuditEntry[]> => {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
+      let query = supabase
         .from('platform_audit_log')
         .select('id, actor_user_id, action, target_type, target_id, metadata, created_at')
         .order('created_at', { ascending: false })
-        .limit(200)
+        .limit(limit)
+
+      if (action) query = query.eq('action', action)
+      if (search) {
+        // PostgREST `or` : l'action, le type de cible ou son identifiant.
+        const escaped = search.replace(/[,()]/g, ' ')
+        query = query.or(`action.ilike.*${escaped}*,target_type.ilike.*${escaped}*,target_id::text.ilike.*${escaped}*`)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       return ((data ?? []) as PlatformAuditRow[]).map((row) => ({
@@ -315,6 +346,8 @@ export interface PlatformSupportSession {
   reason: string | null
   startedAt: string
   endedAt: string | null
+  /** PLAT-1 : une vue empruntée dure trente minutes. Passé ce délai elle n'emprunte plus rien. */
+  expiresAt: string
 }
 
 interface PlatformSupportSessionRow {
@@ -325,6 +358,7 @@ interface PlatformSupportSessionRow {
   reason: string | null
   started_at: string
   ended_at: string | null
+  expires_at: string
 }
 
 function mapSupportSession(row: PlatformSupportSessionRow): PlatformSupportSession {
@@ -336,10 +370,11 @@ function mapSupportSession(row: PlatformSupportSessionRow): PlatformSupportSessi
     reason: row.reason,
     startedAt: row.started_at,
     endedAt: row.ended_at,
+    expiresAt: row.expires_at,
   }
 }
 
-const SUPPORT_SESSION_COLUMNS = 'id, organization_id, target_type, target_user_id, reason, started_at, ended_at'
+const SUPPORT_SESSION_COLUMNS = 'id, organization_id, target_type, target_user_id, reason, started_at, ended_at, expires_at'
 
 /** The calling platform staffer's own currently-open support-view session, if any (platform_support_sessions_one_open_per_actor guarantees at most one). */
 export function useMyActiveSupportSession(userId: string | undefined) {
@@ -352,12 +387,19 @@ export function useMyActiveSupportSession(userId: string | undefined) {
         .select(SUPPORT_SESSION_COLUMNS)
         .eq('platform_actor_id', userId)
         .is('ended_at', null)
+        // Une session ÉCHUE n'emprunte plus rien : le serveur le sait
+        // (private.platform_active_support_session), et le bandeau doit
+        // disparaître au même instant plutôt que de mentir.
+        .gt('expires_at', new Date().toISOString())
         .maybeSingle()
 
       if (error) throw error
       return data ? mapSupportSession(data as PlatformSupportSessionRow) : null
     },
     enabled: Boolean(userId),
+    // Rafraîchi à la minute : c'est ce qui fait tomber le bandeau à l'échéance
+    // sans attendre une navigation.
+    refetchInterval: 60_000,
   })
 }
 
@@ -395,4 +437,234 @@ export function useEndSupportSession() {
       void queryClient.invalidateQueries({ queryKey: ['platform', 'support-session'] })
     },
   })
+}
+
+// --- PLAT-1 : droits internes, équipe, zones ------------------------------------
+
+/**
+ * Les droits internes de l'appelant (`get_my_platform_permissions`).
+ *
+ * SERT À CONDITIONNER LE RENDU, PAS À AUTORISER. Ce qu'un rôle ne peut pas
+ * faire n'est pas rendu — jamais grisé, jamais cadenassé. Chaque RPC repose
+ * la question côté serveur, et refuse même appelée directement.
+ */
+export function useMyPlatformPermissions(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['platform', 'permissions', userId],
+    queryFn: async (): Promise<PlatformPermission[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('get_my_platform_permissions')
+      if (error) throw error
+      return (data ?? []) as PlatformPermission[]
+    },
+    enabled: Boolean(userId),
+    staleTime: 60_000,
+  })
+}
+
+export interface PlatformZoneSummary {
+  id: string
+  label: string
+  country: string
+  city: string
+}
+
+export interface PlatformTeamMember {
+  userId: string
+  email: string | null
+  fullName: string | null
+  role: PlatformRole
+  note: string | null
+  createdAt: string
+  zones: PlatformZoneSummary[]
+}
+
+interface PlatformTeamRow {
+  user_id: string
+  email: string | null
+  full_name: string | null
+  role: PlatformRole
+  note: string | null
+  created_at: string
+  zones: PlatformZoneSummary[] | null
+}
+
+/**
+ * Le trombinoscope interne avec e-mails et zones (`list_platform_team`).
+ * La RPC rend zéro ligne à qui n'est ni fondateur ni admin — voir l'équipe
+ * n'est pas la gérer.
+ */
+export function usePlatformTeam() {
+  return useQuery({
+    queryKey: ['platform', 'team'],
+    queryFn: async (): Promise<PlatformTeamMember[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.rpc('list_platform_team')
+      if (error) throw error
+      return ((data ?? []) as PlatformTeamRow[]).map((row) => ({
+        userId: row.user_id,
+        email: row.email,
+        fullName: row.full_name,
+        role: row.role,
+        note: row.note,
+        createdAt: row.created_at,
+        zones: row.zones ?? [],
+      }))
+    },
+  })
+}
+
+export interface PlatformZone {
+  id: string
+  country: string
+  city: string
+  label: string
+  postalCodeHint: string | null
+  isActive: boolean
+}
+
+interface PlatformZoneRow {
+  id: string
+  country: string
+  city: string
+  label: string
+  postal_code_hint: string | null
+  is_active: boolean
+}
+
+/** Les zones commerciales. Lisibles par tout interne — un stagiaire doit pouvoir nommer la sienne. */
+export function usePlatformZones() {
+  return useQuery({
+    queryKey: ['platform', 'zones'],
+    queryFn: async (): Promise<PlatformZone[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('platform_zones')
+        .select('id, country, city, label, postal_code_hint, is_active')
+        .order('label', { ascending: true })
+
+      if (error) throw error
+      return ((data ?? []) as PlatformZoneRow[]).map((row) => ({
+        id: row.id,
+        country: row.country,
+        city: row.city,
+        label: row.label,
+        postalCodeHint: row.postal_code_hint,
+        isActive: row.is_active,
+      }))
+    },
+  })
+}
+
+function useTeamMutation<TInput>(fn: (input: TInput) => Promise<void>) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'team'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'members'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'audit-log'] })
+    },
+  })
+}
+
+/** Donne ou change le rôle interne d'un compte. Fondateur seul, côté serveur. */
+export function useSetPlatformMemberRole() {
+  return useTeamMutation<{ userId: string; role: PlatformRole; note?: string | null }>(async (input) => {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.rpc('set_platform_member_role', {
+      p_user_id: input.userId,
+      p_role: input.role,
+      p_note: input.note ?? null,
+    })
+    if (error) throw error
+  })
+}
+
+/** Retire l'accès interne d'un compte. Fondateur seul, côté serveur. */
+export function useRevokePlatformMember() {
+  return useTeamMutation<{ userId: string; reason?: string | null }>(async (input) => {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.rpc('revoke_platform_member', {
+      p_user_id: input.userId,
+      p_reason: input.reason ?? null,
+    })
+    if (error) throw error
+  })
+}
+
+/** Remplace les zones d'un interne. Fondateur seul, côté serveur. */
+export function useSetPlatformMemberZones() {
+  return useTeamMutation<{ userId: string; zoneIds: string[] }>(async (input) => {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.rpc('set_platform_member_zones', {
+      p_user_id: input.userId,
+      p_zone_ids: input.zoneIds,
+    })
+    if (error) throw error
+  })
+}
+
+/** Crée une zone (pays + ville). Fondateur seul, côté serveur. */
+export function useCreatePlatformZone() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { country: string; city: string; label?: string | null; postalCodeHint?: string | null }) => {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.rpc('create_platform_zone', {
+        p_country: input.country,
+        p_city: input.city,
+        p_label: input.label ?? null,
+        p_postal_code_hint: input.postalCodeHint ?? null,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'zones'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'audit-log'] })
+    },
+  })
+}
+
+/**
+ * Les familles d'action DISTINCTES présentes dans le journal, pour peupler le
+ * filtre. Lues sur une fenêtre large plutôt que sur la page affichée : un
+ * filtre qui ne propose que ce qui est déjà à l'écran ne sert à rien.
+ */
+export function usePlatformAuditActions() {
+  return useQuery({
+    queryKey: ['platform', 'audit-actions'],
+    queryFn: async (): Promise<string[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('platform_audit_log')
+        .select('action')
+        .order('created_at', { ascending: false })
+        .limit(2000)
+
+      if (error) throw error
+      return [...new Set(((data ?? []) as { action: string }[]).map((row) => row.action))].sort()
+    },
+    staleTime: 60_000,
+  })
+}
+
+/**
+ * Un annuaire `user_id → e-mail` pour rendre lisibles l'acteur du journal et
+ * l'auteur d'une fiche terrain. Un `c1a71000-…` n'est pas un auteur pour le
+ * commercial qui décroche son téléphone. S'appuie sur `list_platform_team()`,
+ * qui rend zéro ligne à qui n'a pas `internal_team.read` — l'annuaire est donc
+ * vide pour eux, et l'appelant retombe sur l'identifiant.
+ */
+export function usePlatformUserDirectory() {
+  const teamQuery = usePlatformTeam()
+  const byId = new Map<string, string>()
+  for (const member of teamQuery.data ?? []) {
+    byId.set(member.userId, member.email ?? member.fullName ?? member.userId)
+  }
+  return {
+    isPending: teamQuery.isPending,
+    label: (userId: string | null | undefined): string | null =>
+      userId ? (byId.get(userId) ?? null) : null,
+  }
 }

@@ -1,0 +1,306 @@
+[
+  {
+    "screen": "login@1440",
+    "supportViewBanner": false,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".touch-manipulation",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "login@390",
+    "supportViewBanner": false,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".touch-manipulation",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "team@1440",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 11,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".py-8 > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(4)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(4) > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".mt-4 > .bg-accent-600.hover\\:bg-accent-700.active\\:bg-accent-800",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".sm\\:self-start",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "team@390",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 11,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".py-8 > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Platform team members\"] > table > thead > tr > th:nth-child(4)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(4) > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".mt-4 > .bg-accent-600.hover\\:bg-accent-700.active\\:bg-accent-800",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Pending platform invitations\"] > table > thead > tr > th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".sm\\:self-start",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "audit@1440",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 5,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(4)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "audit@390",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 5,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(4)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "organizations@1440",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 4,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "organizations@390",
+    "supportViewBanner": true,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 4,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(3)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  }
+]

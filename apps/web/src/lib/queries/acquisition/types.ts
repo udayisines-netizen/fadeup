@@ -12,6 +12,14 @@ export const PROSPECT_TYPES: readonly ProspectType[] = ['barbershop', 'independe
 
 export type ProspectEntityKind = 'independent' | 'group_parent' | 'group_location'
 
+/**
+ * PLAT-1 — les deux origines d'un prospect. « worker » : découvert par Worker
+ * V2, fiche scrapée. « field » : vu par un interne sur le terrain, avec son
+ * auteur, sa date et son observation. Un salon vu de ses yeux ne vaut pas une
+ * fiche scrapée, et le commercial doit le savoir avant d'appeler.
+ */
+export type ProspectOrigin = 'worker' | 'field'
+
 export type ProspectPipelineStage =
   | 'discovered'
   | 'enriched'

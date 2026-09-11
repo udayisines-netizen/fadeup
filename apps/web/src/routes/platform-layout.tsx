@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
-import { RequirePlatformRole } from '@/routes/require-platform-role'
+import { RequirePlatformRole, usePlatformPermissions } from '@/routes/require-platform-role'
 import { PlatformSupportViewProvider } from '@/routes/platform-support-view-context'
 import { PlatformSupportViewBanner } from '@/components/platform-support-view-banner'
 import { Navbar } from '@/components/ui/navbar'
@@ -32,6 +32,22 @@ export function PlatformLayout() {
 function PlatformShell() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { can } = usePlatformPermissions()
+
+  /*
+   * PLAT-1 — ce qu'un rôle ne peut pas faire N'EST PAS RENDU : jamais grisé,
+   * jamais cadenassé. Un stagiaire ne voit ni les campagnes ni le journal ;
+   * un support ne voit pas l'acquisition. La navigation se recompose sans
+   * eux, elle ne se dégrade pas.
+   *
+   * Ceci CONDITIONNE, cela n'autorise pas : chaque table et chaque RPC
+   * derrière ces liens repose la question côté serveur.
+   */
+  const canSeeCrm = can('crm.read') || can('crm.zone_read')
+  // Le trombinoscope est servi par list_platform_team, gardée par
+  // is_platform_admin() — c'est-à-dire exactement les porteurs de audit.read
+  // (fondateur et admin). Le fondateur y accède aussi pour GÉRER.
+  const canSeeTeam = can('internal_roles.manage') || can('audit.read')
 
   async function handleSignOut() {
     const supabase = getSupabaseClient()
@@ -52,13 +68,19 @@ function PlatformShell() {
             <AppNavLink to="/platform" end>
               {t('platform:nav.overview')}
             </AppNavLink>
-            <AppNavLink to="/platform/applications">{t('platform:nav.applications')}</AppNavLink>
-            <AppNavLink to="/platform/organizations">{t('common:entity.organizations')}</AppNavLink>
-            <AppNavLink to="/platform/acquisition">{t('platform:nav.acquisition')}</AppNavLink>
-            <AppNavLink to="/platform/outreach">{t('platform:nav.outreach')}</AppNavLink>
-            <AppNavLink to="/platform/data-science">{t('platform:nav.dataScience')}</AppNavLink>
-            <AppNavLink to="/platform/team">{t('common:entity.team')}</AppNavLink>
-            <AppNavLink to="/platform/audit">{t('platform:nav.auditLog')}</AppNavLink>
+            {can('onboarding.review') ? (
+              <AppNavLink to="/platform/applications">{t('platform:nav.applications')}</AppNavLink>
+            ) : null}
+            {can('tenant.read') ? (
+              <AppNavLink to="/platform/organizations">{t('common:entity.organizations')}</AppNavLink>
+            ) : null}
+            {canSeeCrm ? <AppNavLink to="/platform/acquisition">{t('platform:nav.acquisition')}</AppNavLink> : null}
+            {can('crm.read') ? <AppNavLink to="/platform/outreach">{t('platform:nav.outreach')}</AppNavLink> : null}
+            {can('crm.read') ? (
+              <AppNavLink to="/platform/data-science">{t('platform:nav.dataScience')}</AppNavLink>
+            ) : null}
+            {canSeeTeam ? <AppNavLink to="/platform/team">{t('common:entity.team')}</AppNavLink> : null}
+            {can('audit.read') ? <AppNavLink to="/platform/audit">{t('platform:nav.auditLog')}</AppNavLink> : null}
           </>
         }
         actions={

@@ -8,10 +8,12 @@ import { defineConfig, devices } from '@playwright/test'
  * (Supabase via Kong :18100) — aucune donnée simulée.
  */
 /**
- * PERF — port paramétrable : 4610 en local historique, mais un worktree
- * parallèle (OS-1) peut déjà tenir ce port avec SON serveur dev, et
- * `reuseExistingServer` ferait alors tester le mauvais code sans un mot.
- * `E2E_PORT=<port> npm run e2e` isole chaque campagne sur son port.
+ * Port du serveur de développement paramétrable : plusieurs worktrees
+ * tournent en parallèle sur cette machine, et `reuseExistingServer` ferait
+ * autrement passer les tests d'un lot contre le code d'un autre.
+ * `E2E_PORT=<port> npm run e2e` isole chaque campagne.
+ * Ports en usage : OS-1 4610, PERF 4620, PLAT-1 4630.
+ */
  */
 const E2E_PORT = Number(process.env.E2E_PORT ?? 4610)
 

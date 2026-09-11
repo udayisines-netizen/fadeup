@@ -3,6 +3,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import {
   normalizeScoreFactors,
   type ProspectEntityKind,
+  type ProspectOrigin,
   type ProspectOutreachChannel,
   type ProspectOutreachDirection,
   type ProspectPipelineStage,
@@ -34,6 +35,11 @@ export interface Prospect {
   lastEnrichedAt: string | null
   createdAt: string
   updatedAt: string
+  /** PLAT-1 : Worker ou terrain. */
+  origin: ProspectOrigin
+  fieldCapturedBy: string | null
+  fieldCapturedAt: string | null
+  fieldObservation: string | null
 }
 
 interface ProspectRow {
@@ -56,6 +62,11 @@ interface ProspectRow {
   last_enriched_at: string | null
   created_at: string
   updated_at: string
+  /* PLAT-1 : les deux origines du CRM. */
+  origin: ProspectOrigin
+  field_captured_by: string | null
+  field_captured_at: string | null
+  field_observation: string | null
 }
 
 function mapProspect(row: ProspectRow): Prospect {
@@ -79,11 +90,15 @@ function mapProspect(row: ProspectRow): Prospect {
     lastEnrichedAt: row.last_enriched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    origin: row.origin,
+    fieldCapturedBy: row.field_captured_by,
+    fieldCapturedAt: row.field_captured_at,
+    fieldObservation: row.field_observation,
   }
 }
 
 const PROSPECT_COLUMNS =
-  'id, type, entity_kind, parent_group_id, status, canonical_name, country, website_url, website_domain, phone_e164, email, current_score, current_score_bucket, do_not_contact, converted_organization_id, first_discovered_at, last_enriched_at, created_at, updated_at'
+  'id, type, entity_kind, parent_group_id, status, canonical_name, country, website_url, website_domain, phone_e164, email, current_score, current_score_bucket, do_not_contact, converted_organization_id, first_discovered_at, last_enriched_at, created_at, updated_at, origin, field_captured_by, field_captured_at, field_observation'
 
 export interface ProspectFilters {
   search?: string

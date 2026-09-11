@@ -45,7 +45,32 @@
     "sendInvitation": "Einladung senden",
     "invitationCreated": "Einladung erstellt",
     "invitationRevoked": "Einladung zurückgezogen",
-    "couldntRevokeInvitation": "Einladung konnte nicht zurückgezogen werden"
+    "couldntRevokeInvitation": "Einladung konnte nicht zurückgezogen werden",
+    "founderManagesRoles": "Nur der Gründer vergibt interne Rollen und Zonen.",
+    "zones": "Zonen",
+    "zonesHint": "Ein Außendienst-Praktikant sieht nur Interessenten seiner Zonen.",
+    "noZonesYet": "Noch keine Zone",
+    "zoneModel": "Eine Zone ist ein Land und eine Stadt.",
+    "zoneCreated": "Zone hinzugefügt",
+    "couldntCreateZone": "Zone konnte nicht hinzugefügt werden",
+    "country": "Land",
+    "city": "Stadt",
+    "postalHint": "Postleitzahl (Hinweis)",
+    "addZone": "Zone hinzufügen",
+    "manage": "Verwalten",
+    "done": "Fertig",
+    "changeRole": "Rolle ändern",
+    "roleUpdated": "Rolle aktualisiert",
+    "couldntUpdateRole": "Rolle konnte nicht geändert werden",
+    "zonesUpdated": "Zonen aktualisiert",
+    "couldntUpdateZones": "Zonen konnten nicht geändert werden",
+    "revokeAccess": "Zugang entziehen",
+    "accessRevoked": "Zugang entzogen",
+    "couldntRevokeAccess": "Zugang konnte nicht entzogen werden",
+    "anyoneWithTheLink": "Jeder mit dem Link",
+    "shareThisLink": "Teilen Sie diesen Link:",
+    "couldntCreateInvitation": "Einladung konnte nicht erstellt werden",
+    "notVisibleForYourRole": "Das interne Verzeichnis lesen nur Gründer und Admins."
   },
   "organizations": {
     "couldntLoadOrganizations": "Betriebe konnten nicht geladen werden",
@@ -59,7 +84,13 @@
     "noPlatformActivityYet": "Noch keine Aktivität",
     "platformlevelSecurityEventsMostRecent": "Sicherheitsereignisse der Plattform, neueste zuerst.",
     "action": "Aktion",
-    "actor": "Ausgeführt von"
+    "actor": "Ausgeführt von",
+    "filterByAction": "Aktion",
+    "allActions": "Alle Aktionen",
+    "search": "Suchen",
+    "reservedToFounderAndAdmins": "Das Audit-Protokoll lesen nur Gründer und Admins.",
+    "noResultForThisFilter": "Kein Eintrag entspricht diesem Filter.",
+    "showingLatest": "Die {{count}} neuesten Einträge."
   },
   "organizationDetail": {
     "loadingOrganization": "Betrieb wird geladen",
@@ -71,7 +102,11 @@
     "noTeamMembersYet": "Noch keine Mitglieder",
     "organizations": "← Betriebe",
     "viewBarberWorkspace": "Arbeitsbereich der Fachkraft ansehen",
-    "couldntEnterSupportView": "Support-Ansicht konnte nicht geöffnet werden"
+    "couldntEnterSupportView": "Support-Ansicht konnte nicht geöffnet werden",
+    "enterSupportView": "Support-Ansicht öffnen",
+    "currentlyInSupportView": "Support-Ansicht aktiv",
+    "enteredSupportView": "Support-Ansicht für {{name}} geöffnet",
+    "detailNotVisibleForYourRole": "Standorte, Team und Barbiere sind mit Ihrer Rolle nicht sichtbar."
   },
   "login": {
     "platformSignIn": "Plattform-Anmeldung",
@@ -95,5 +130,51 @@
     "exitSupportView": "Support-Ansicht verlassen",
     "exitedSupportView": "Support-Ansicht verlassen",
     "couldntExitSupportView": "Support-Ansicht konnte nicht verlassen werden"
+  },
+  "roles": {
+    "platform_owner": "Gründer",
+    "platform_admin": "Admin",
+    "platform_support": "Support",
+    "platform_sales": "Vertrieb",
+    "platform_moderator": "Moderator",
+    "platform_intern": "Praktikant im Außendienst"
+  },
+  "supportView": {
+    "badge": "Support-Ansicht",
+    "viewing": "Sie handeln für {{target}}",
+    "barberWorkspace": "dem Arbeitsbereich von {{name}}",
+    "thisOrganization": "diese Organisation",
+    "remaining": "noch {{count}} Min.",
+    "expired": "Sitzung abgelaufen",
+    "noPayment": "Keine Zahlungsaktion möglich"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Gründerzugang beansprucht",
+    "platform_owner_bootstrap_token_reissued": "Gründer-Token neu ausgestellt",
+    "platform_invitation_created": "Einladung erstellt",
+    "platform_invitation_accepted": "Einladung angenommen",
+    "platform_invitation_revoked": "Einladung widerrufen",
+    "platform_support_session_started": "Support-Ansicht geöffnet",
+    "platform_support_session_ended": "Support-Ansicht geschlossen",
+    "platform_member_granted": "Interner Zugang gewährt",
+    "platform_member_role_changed": "Interne Rolle geändert",
+    "platform_member_revoked": "Interner Zugang entzogen",
+    "platform_member_zones_set": "Zonen zugewiesen",
+    "platform_zone_created": "Zone erstellt",
+    "field_prospect_captured": "Interessent im Feld erfasst",
+    "external_professional_published": "Im Marktplatz veröffentlicht",
+    "external_professional_withdrawn": "Vom Marktplatz entfernt",
+    "marketplace_withdrawal_requested": "Entfernung beantragt",
+    "marketplace_withdrawal_completed": "Entfernung abgeschlossen",
+    "professional_application_approved": "Onboarding genehmigt",
+    "professional_application_rejected": "Onboarding abgelehnt",
+    "professional_claim_approved": "Anspruch genehmigt",
+    "professional_claim_rejected": "Anspruch abgelehnt",
+    "review_moderated": "Bewertung moderiert",
+    "review_report_resolved": "Meldung bearbeitet",
+    "post_moderated": "Beitrag moderiert",
+    "appointment_cancelled_by_platform": "Termin durch Support storniert",
+    "barber_deleted_by_platform": "Barbier gelöscht",
+    "professional_application_submitted": "Onboarding eingereicht"
   }
 }

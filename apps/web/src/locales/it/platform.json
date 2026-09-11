@@ -45,7 +45,32 @@
     "sendInvitation": "Invia invito",
     "invitationCreated": "Invito creato",
     "invitationRevoked": "Invito revocato",
-    "couldntRevokeInvitation": "Impossibile revocare l'invito"
+    "couldntRevokeInvitation": "Impossibile revocare l'invito",
+    "founderManagesRoles": "Solo il fondatore assegna ruoli interni e zone.",
+    "zones": "Zone",
+    "zonesHint": "Uno stagista vede solo i prospect delle sue zone.",
+    "noZonesYet": "Nessuna zona",
+    "zoneModel": "Una zona è un paese e una città.",
+    "zoneCreated": "Zona aggiunta",
+    "couldntCreateZone": "Impossibile aggiungere la zona",
+    "country": "Paese",
+    "city": "Città",
+    "postalHint": "CAP (indicazione)",
+    "addZone": "Aggiungi zona",
+    "manage": "Gestisci",
+    "done": "Fatto",
+    "changeRole": "Cambia ruolo",
+    "roleUpdated": "Ruolo aggiornato",
+    "couldntUpdateRole": "Impossibile cambiare il ruolo",
+    "zonesUpdated": "Zone aggiornate",
+    "couldntUpdateZones": "Impossibile cambiare le zone",
+    "revokeAccess": "Revoca l'accesso",
+    "accessRevoked": "Accesso revocato",
+    "couldntRevokeAccess": "Impossibile revocare l'accesso",
+    "anyoneWithTheLink": "Chiunque abbia il link",
+    "shareThisLink": "Condividi questo link:",
+    "couldntCreateInvitation": "Impossibile creare l'invito",
+    "notVisibleForYourRole": "L'elenco interno è letto solo da fondatore e amministratori."
   },
   "organizations": {
     "couldntLoadOrganizations": "Impossibile caricare le attività",
@@ -59,7 +84,13 @@
     "noPlatformActivityYet": "Ancora nessuna attività",
     "platformlevelSecurityEventsMostRecent": "Eventi di sicurezza della piattaforma, dal più recente.",
     "action": "Azione",
-    "actor": "Autore"
+    "actor": "Autore",
+    "filterByAction": "Azione",
+    "allActions": "Tutte le azioni",
+    "search": "Cerca",
+    "reservedToFounderAndAdmins": "Il registro di audit è letto solo da fondatore e amministratori.",
+    "noResultForThisFilter": "Nessuna voce corrisponde a questo filtro.",
+    "showingLatest": "Le {{count}} voci più recenti."
   },
   "organizationDetail": {
     "loadingOrganization": "Caricamento dell'attività",
@@ -71,7 +102,11 @@
     "noTeamMembersYet": "Ancora nessun membro",
     "organizations": "← Attività",
     "viewBarberWorkspace": "Vedi lo spazio del professionista",
-    "couldntEnterSupportView": "Impossibile aprire la vista assistenza"
+    "couldntEnterSupportView": "Impossibile aprire la vista assistenza",
+    "enterSupportView": "Entra in vista di supporto",
+    "currentlyInSupportView": "Vista di supporto in corso",
+    "enteredSupportView": "Vista di supporto aperta su {{name}}",
+    "detailNotVisibleForYourRole": "Sedi, squadra e barbieri non sono visibili con il tuo ruolo."
   },
   "login": {
     "platformSignIn": "Accesso alla piattaforma",
@@ -95,5 +130,51 @@
     "exitSupportView": "Esci dalla vista assistenza",
     "exitedSupportView": "Uscito dalla vista assistenza",
     "couldntExitSupportView": "Impossibile uscire dalla vista assistenza"
+  },
+  "roles": {
+    "platform_owner": "Fondatore",
+    "platform_admin": "Amministratore",
+    "platform_support": "Supporto",
+    "platform_sales": "Commerciale",
+    "platform_moderator": "Moderatore",
+    "platform_intern": "Stagista sul campo"
+  },
+  "supportView": {
+    "badge": "Vista di supporto",
+    "viewing": "Stai agendo su {{target}}",
+    "barberWorkspace": "lo spazio di {{name}}",
+    "thisOrganization": "questa organizzazione",
+    "remaining": "{{count}} min rimasti",
+    "expired": "Sessione scaduta",
+    "noPayment": "Nessuna azione di pagamento è possibile"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Accesso fondatore rivendicato",
+    "platform_owner_bootstrap_token_reissued": "Token fondatore riemesso",
+    "platform_invitation_created": "Invito creato",
+    "platform_invitation_accepted": "Invito accettato",
+    "platform_invitation_revoked": "Invito revocato",
+    "platform_support_session_started": "Vista di supporto aperta",
+    "platform_support_session_ended": "Vista di supporto chiusa",
+    "platform_member_granted": "Accesso interno concesso",
+    "platform_member_role_changed": "Ruolo interno cambiato",
+    "platform_member_revoked": "Accesso interno revocato",
+    "platform_member_zones_set": "Zone assegnate",
+    "platform_zone_created": "Zona creata",
+    "field_prospect_captured": "Prospect rilevato sul campo",
+    "external_professional_published": "Pubblicato sul marketplace",
+    "external_professional_withdrawn": "Rimosso dal marketplace",
+    "marketplace_withdrawal_requested": "Rimozione richiesta",
+    "marketplace_withdrawal_completed": "Rimozione completata",
+    "professional_application_approved": "Onboarding approvato",
+    "professional_application_rejected": "Onboarding rifiutato",
+    "professional_claim_approved": "Rivendicazione approvata",
+    "professional_claim_rejected": "Rivendicazione rifiutata",
+    "review_moderated": "Recensione moderata",
+    "review_report_resolved": "Segnalazione risolta",
+    "post_moderated": "Post moderato",
+    "appointment_cancelled_by_platform": "Appuntamento annullato dal supporto",
+    "barber_deleted_by_platform": "Barbiere eliminato",
+    "professional_application_submitted": "Onboarding inviato"
   }
 }

@@ -45,7 +45,32 @@
     "sendInvitation": "Enviar convite",
     "invitationCreated": "Convite criado",
     "invitationRevoked": "Convite revogado",
-    "couldntRevokeInvitation": "Não foi possível revogar o convite"
+    "couldntRevokeInvitation": "Não foi possível revogar o convite",
+    "founderManagesRoles": "Apenas o fundador atribui papéis internos e zonas.",
+    "zones": "Zonas",
+    "zonesHint": "Um estagiário vê apenas os prospetos das suas zonas.",
+    "noZonesYet": "Ainda sem zonas",
+    "zoneModel": "Uma zona é um país e uma cidade.",
+    "zoneCreated": "Zona adicionada",
+    "couldntCreateZone": "Não foi possível adicionar a zona",
+    "country": "País",
+    "city": "Cidade",
+    "postalHint": "Código postal (indicação)",
+    "addZone": "Adicionar zona",
+    "manage": "Gerir",
+    "done": "Concluído",
+    "changeRole": "Alterar papel",
+    "roleUpdated": "Papel atualizado",
+    "couldntUpdateRole": "Não foi possível alterar o papel",
+    "zonesUpdated": "Zonas atualizadas",
+    "couldntUpdateZones": "Não foi possível alterar as zonas",
+    "revokeAccess": "Revogar acesso",
+    "accessRevoked": "Acesso revogado",
+    "couldntRevokeAccess": "Não foi possível revogar o acesso",
+    "anyoneWithTheLink": "Qualquer pessoa com o link",
+    "shareThisLink": "Partilhe este link:",
+    "couldntCreateInvitation": "Não foi possível criar o convite",
+    "notVisibleForYourRole": "O diretório interno é lido apenas pelo fundador e administradores."
   },
   "organizations": {
     "couldntLoadOrganizations": "Não foi possível carregar os negócios",
@@ -59,7 +84,13 @@
     "noPlatformActivityYet": "Ainda sem atividade",
     "platformlevelSecurityEventsMostRecent": "Eventos de segurança da plataforma, do mais recente para o mais antigo.",
     "action": "Ação",
-    "actor": "Autor"
+    "actor": "Autor",
+    "filterByAction": "Ação",
+    "allActions": "Todas as ações",
+    "search": "Pesquisar",
+    "reservedToFounderAndAdmins": "O registo de auditoria é lido apenas pelo fundador e administradores.",
+    "noResultForThisFilter": "Nenhuma entrada corresponde a este filtro.",
+    "showingLatest": "As {{count}} entradas mais recentes."
   },
   "organizationDetail": {
     "loadingOrganization": "A carregar o negócio",
@@ -71,7 +102,11 @@
     "noTeamMembersYet": "Ainda sem membros",
     "organizations": "← Negócios",
     "viewBarberWorkspace": "Ver o espaço do profissional",
-    "couldntEnterSupportView": "Não foi possível entrar na vista de suporte"
+    "couldntEnterSupportView": "Não foi possível entrar na vista de suporte",
+    "enterSupportView": "Entrar na vista de suporte",
+    "currentlyInSupportView": "Vista de suporte em curso",
+    "enteredSupportView": "Vista de suporte aberta para {{name}}",
+    "detailNotVisibleForYourRole": "As instalações, a equipa e os barbeiros não são visíveis com o seu papel."
   },
   "login": {
     "platformSignIn": "Início de sessão na plataforma",
@@ -95,5 +130,51 @@
     "exitSupportView": "Sair da vista de suporte",
     "exitedSupportView": "Saiu da vista de suporte",
     "couldntExitSupportView": "Não foi possível sair da vista de suporte"
+  },
+  "roles": {
+    "platform_owner": "Fundador",
+    "platform_admin": "Administrador",
+    "platform_support": "Suporte",
+    "platform_sales": "Comercial",
+    "platform_moderator": "Moderador",
+    "platform_intern": "Estagiário de campo"
+  },
+  "supportView": {
+    "badge": "Vista de suporte",
+    "viewing": "Você age sobre {{target}}",
+    "barberWorkspace": "o espaço de {{name}}",
+    "thisOrganization": "esta organização",
+    "remaining": "{{count}} min restantes",
+    "expired": "Sessão expirada",
+    "noPayment": "Nenhuma ação de pagamento é possível"
+  },
+  "auditActions": {
+    "platform_owner_bootstrap_claimed": "Acesso de fundador reivindicado",
+    "platform_owner_bootstrap_token_reissued": "Token de fundador reemitido",
+    "platform_invitation_created": "Convite criado",
+    "platform_invitation_accepted": "Convite aceite",
+    "platform_invitation_revoked": "Convite revogado",
+    "platform_support_session_started": "Vista de suporte aberta",
+    "platform_support_session_ended": "Vista de suporte fechada",
+    "platform_member_granted": "Acesso interno concedido",
+    "platform_member_role_changed": "Papel interno alterado",
+    "platform_member_revoked": "Acesso interno revogado",
+    "platform_member_zones_set": "Zonas atribuídas",
+    "platform_zone_created": "Zona criada",
+    "field_prospect_captured": "Prospeto captado no terreno",
+    "external_professional_published": "Publicado no marketplace",
+    "external_professional_withdrawn": "Retirado do marketplace",
+    "marketplace_withdrawal_requested": "Remoção solicitada",
+    "marketplace_withdrawal_completed": "Remoção concluída",
+    "professional_application_approved": "Adesão aprovada",
+    "professional_application_rejected": "Adesão recusada",
+    "professional_claim_approved": "Reivindicação aprovada",
+    "professional_claim_rejected": "Reivindicação recusada",
+    "review_moderated": "Avaliação moderada",
+    "review_report_resolved": "Denúncia resolvida",
+    "post_moderated": "Publicação moderada",
+    "appointment_cancelled_by_platform": "Marcação cancelada pelo suporte",
+    "barber_deleted_by_platform": "Barbeiro eliminado",
+    "professional_application_submitted": "Adesão submetida"
   }
 }

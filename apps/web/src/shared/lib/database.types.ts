@@ -10541,7 +10541,13 @@ export type Database = {
         | "approved"
         | "paused"
         | "retired"
-      platform_role: "platform_owner" | "platform_admin" | "platform_support"
+      platform_role:
+        | "platform_owner"
+        | "platform_admin"
+        | "platform_support"
+        | "platform_sales"
+        | "platform_moderator"
+        | "platform_intern"
       professional_application_status:
         | "pending_review"
         | "approved"
@@ -10955,7 +10961,14 @@ export const Constants = {
         "paused",
         "retired",
       ],
-      platform_role: ["platform_owner", "platform_admin", "platform_support"],
+      platform_role: [
+        "platform_owner",
+        "platform_admin",
+        "platform_support",
+        "platform_sales",
+        "platform_moderator",
+        "platform_intern",
+      ],
       professional_application_status: [
         "pending_review",
         "approved",

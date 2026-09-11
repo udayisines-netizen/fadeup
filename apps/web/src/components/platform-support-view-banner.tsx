@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useSupportView } from '@/routes/platform-support-view-context'
 import { useOrganization } from '@/lib/queries/platform'
 import { useOrgStaffProfiles } from '@/lib/queries/staff-profiles'
@@ -8,10 +9,21 @@ import { getErrorMessage } from '@/lib/get-error-message'
 import { useTranslation } from 'react-i18next'
 
 /**
- * Persistent banner shown for the whole time a support-view session is
- * open — CLAUDE.md section 11: "Platform Support View — Viewing [Barber
- * Name]'s workspace" + "Exit Support View". Renders nothing when there is
- * no active session.
+ * Le bandeau de vue empruntée.
+ *
+ * PLAT-1 §7 : « Le bandeau de vue empruntée doit être impossible à ignorer.
+ * C'est le seul endroit où j'accepte un traitement visuel agressif. » D'où le
+ * fond plein, la barre collée en haut de la fenêtre au-dessus de tout le
+ * reste, et le décompte qui rappelle que la session expire.
+ *
+ * IL N'A PAS DE BOUTON DE FERMETURE, et ce n'est pas un oubli : un modérateur
+ * qui oublie où il est fait des dégâts. La seule sortie est de SORTIR de la
+ * vue — ce qui ferme la session et l'écrit au journal.
+ *
+ * Ne rend rien quand aucune session n'est active. « Active » veut dire non
+ * close ET non échue : la requête filtre sur expires_at et se rafraîchit à la
+ * minute, si bien que le bandeau tombe au moment où la session cesse
+ * réellement d'emprunter quoi que ce soit côté serveur.
  */
 export function PlatformSupportViewBanner() {
   const { t } = useTranslation()
@@ -21,14 +33,15 @@ export function PlatformSupportViewBanner() {
   const staffProfilesQuery = useOrgStaffProfiles(
     activeSession?.targetType === 'barber' ? activeSession.organizationId : undefined,
   )
+  const remaining = useRemainingMinutes(activeSession?.expiresAt)
 
   if (!activeSession) return null
 
   const targetStaffProfile = staffProfilesQuery.data?.find((profile) => profile.userId === activeSession.targetUserId)
   const workspaceLabel =
     activeSession.targetType === 'barber' && targetStaffProfile
-      ? `${targetStaffProfile.displayName}'s workspace`
-      : (organizationQuery.data?.name ?? 'this organization')
+      ? t('platform:supportView.barberWorkspace', { name: targetStaffProfile.displayName })
+      : (organizationQuery.data?.name ?? t('platform:supportView.thisOrganization'))
 
   async function handleExit() {
     try {
@@ -40,15 +53,67 @@ export function PlatformSupportViewBanner() {
   }
 
   return (
-    <div className="border-b border-warning-600 bg-warning-100">
-      <Container size="lg" className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm">
-        <span className="font-medium text-warning-700">
-          Platform Support View — Viewing {workspaceLabel}
-        </span>
-        <Button variant="secondary" size="sm" isLoading={isExiting} onClick={() => void handleExit()}>
-          {t('platform:nav.exitSupportView')}
-        </Button>
+    <div
+      data-plat1-support-banner="true"
+      role="status"
+      /*
+       * Encre sur ambre, dans les DEUX thèmes — pas de blanc sur ambre.
+       * `--color-warning-600` vaut #b4790a en clair et #e0a02f en sombre :
+       * du blanc y donne 3,7:1 et échoue AA, une encre fixe donne 5,1:1 et
+       * 8,1:1. La couleur de texte est volontairement figée plutôt que prise
+       * dans l'échelle `ink`, qui s'inverse avec le thème et rendrait le
+       * bandeau illisible en sombre. Même raisonnement que « blanc sur vert
+       * interdit » du contrat pro.
+       */
+      className="sticky top-0 z-50 border-y-2 border-warning-700 bg-warning-600 text-[#150e02] shadow-lg"
+    >
+      <Container size="lg" className="flex flex-wrap items-center justify-between gap-3 py-3">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-xs font-semibold uppercase tracking-[0.18em]">
+            {t('platform:supportView.badge')}
+          </span>
+          <span className="truncate text-sm font-semibold">
+            {t('platform:supportView.viewing', { target: workspaceLabel })}
+          </span>
+          {/*
+            Le décompte change chaque minute : sans aria-live ici, un lecteur
+            d'écran ne relit pas tout le bandeau à chaque tick. Le bandeau
+            entier reste role="status" pour être annoncé UNE fois à son
+            apparition. Trouvé par la revue indépendante.
+          */}
+          <span className="text-sm tabular-nums" aria-live="off">
+            {remaining === null
+              ? null
+              : remaining <= 0
+                ? t('platform:supportView.expired')
+                : t('platform:supportView.remaining', { count: remaining })}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-xs sm:inline">{t('platform:supportView.noPayment')}</span>
+          <Button variant="secondary" size="sm" isLoading={isExiting} onClick={() => void handleExit()}>
+            {t('platform:nav.exitSupportView')}
+          </Button>
+        </div>
       </Container>
     </div>
   )
+}
+
+/** Minutes restantes avant l'échéance, arrondies au supérieur. Retick chaque minute. */
+function useRemainingMinutes(expiresAt: string | undefined): number | null {
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!expiresAt) return
+    const id = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(id)
+  }, [expiresAt])
+
+  if (!expiresAt) return null
+  const parsed = Date.parse(expiresAt)
+  if (Number.isNaN(parsed)) return null
+  // Arrondi au plus proche : `ceil` afficherait « 31 min » sur une session de
+  // trente, au moindre décalage d'horloge entre le serveur et le navigateur.
+  return Math.max(0, Math.round((parsed - now) / 60_000))
 }
