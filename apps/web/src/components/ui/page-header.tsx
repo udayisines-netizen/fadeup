@@ -63,7 +63,9 @@ export function SectionHeader({
     <div className={cn('flex items-center justify-between gap-3', className)}>
       <div className="flex min-w-0 items-center gap-2">
         <Tag className="truncate text-xs font-semibold uppercase tracking-wider text-ink-500">{title}</Tag>
-        {meta ? <span className="shrink-0 text-xs text-ink-300">{meta}</span> : null}
+        {/* PLAT-2 — `ink-300` donnait 2,26:1, mesuré par axe. Voir le même
+            correctif sur `Metric.context`. */}
+        {meta ? <span className="shrink-0 text-xs text-ink-500">{meta}</span> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>

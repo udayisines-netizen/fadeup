@@ -80,7 +80,11 @@ export function SegmentedControl<T extends string>({
               'relative flex cursor-pointer items-center justify-center gap-1.5 rounded-md font-medium transition-colors',
               'focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700',
               size === 'sm' ? 'min-h-9 px-2 text-xs' : 'min-h-11 px-3 text-sm',
-              selected ? 'text-ink-950' : 'text-ink-500 hover:text-ink-700',
+              // PLAT-2 — l'option NON sélectionnée était `ink-500` sur le
+              // fond `paper-100` du contrôle : 4,14:1, mesuré par axe.
+              // `ink-700` la porte à 7,5:1 et reste nettement plus discrète
+              // que l'encre pleine de l'option sélectionnée.
+              selected ? 'text-ink-950' : 'text-ink-700 hover:text-ink-950',
             )}
           >
             <input

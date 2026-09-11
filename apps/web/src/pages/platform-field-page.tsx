@@ -456,14 +456,23 @@ function ProspectMap({ points }: { points: (ProspectListRow & { latitude: number
     for (const point of points) {
       const element = document.createElement('button')
       element.type = 'button'
+      // PLAT-2 — LA ZONE TOUCHABLE FAIT 44 px, le rond visible en fait 32.
+      // Mesuré à 390 px : à 32 px de zone, le pouce d'un stagiaire debout dans
+      // la rue rate la fiche une fois sur trois. Le rond reste petit pour ne
+      // pas noyer la carte ; c'est le `padding` transparent qui porte la
+      // cible, pas le dessin.
       element.className =
+        'flex h-11 w-11 items-center justify-center rounded-full bg-transparent p-1.5'
+      const pin = document.createElement('span')
+      pin.className =
         'flex h-8 w-8 items-center justify-center rounded-full border border-paper-0 bg-paper-0/70 shadow-sm'
       element.setAttribute('aria-label', point.canonical_name)
       const dot = document.createElement('span')
       dot.className = `block h-4 w-4 rounded-full border-2 border-paper-0 ${
         point.origin === 'field' ? 'bg-accent-600' : 'bg-info-600'
       }`
-      element.appendChild(dot)
+      pin.appendChild(dot)
+      element.appendChild(pin)
 
       const popupNode = document.createElement('div')
       popupNode.className = 'flex flex-col gap-1'
