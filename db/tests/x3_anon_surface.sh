@@ -56,6 +56,15 @@ ok()   { printf 'ok     %s\n' "$*"; }
 # 1. CONTRAT DE SURFACE — RPC exécutables par anon (consacré par X3,
 #    2026-09-07). Chaque entrée est là parce qu'un écran public l'appelle ou
 #    parce qu'elle est volontairement publique. En ajouter une = décision.
+#
+#    PLAT-2 (2026-09-11) en ajoute UNE, et une seule : `resolve_poster_code`.
+#    Motif : un client qui scanne une affiche dans un salon n'a pas de compte.
+#    Ce qu'elle rend à un anonyme est exactement ce qui est déjà public — le
+#    slug du salon et son établissement, la même information que le QR de file
+#    imprimé par le salon lui-même (F1). Elle ne rend ni le lot, ni l'auteur
+#    de l'attribution, ni le prospect destinataire, ni la moindre liste
+#    d'établissements à qui ne peut pas attribuer, et un code mal formé ne
+#    touche même pas la table. Le contrat passe de 44 à 45.
 # ============================================================================
 ALLOWED_ANON_RPCS="apply_appointment_no_show_rule
 book_public_appointment
@@ -94,6 +103,7 @@ list_public_organization_barbers
 list_public_queues
 list_public_services
 normalize_phone_number
+resolve_poster_code
 search_public_organizations
 search_public_professionals
 submit_marketplace_withdrawal_request
