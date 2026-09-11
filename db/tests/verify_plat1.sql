@@ -485,6 +485,97 @@ begin
   raise notice 'ok — K3 une annulation sans motif est refusée';
 end $$;
 
+-- ============================================================================
+-- L. LA CHAÎNE DE PUBLICATION, JUSQU'AU BOUT
+-- ============================================================================
+--
+-- Une garde d'entrée qui dit oui et une garde interne qui dit non est pire
+-- qu'une garde absente : le commercial croit publier et ne publie pas.
+-- `publish_external_professional` appelle `create_external_professional` et
+-- `refresh_prospect_publication_eligibility`, toutes deux SECURITY DEFINER —
+-- où `auth.uid()` reste celui de l'APPELANT, donc où leur propre garde se
+-- réévalue. Ce bloc vérifie que les trois disent la même chose.
+
+reset role;
+insert into public.prospects (id, type, canonical_name, country, website_domain)
+values ('9a1b0000-0000-0000-0000-00000000000a', 'barbershop', 'QA PLAT1 Chaine', 'FR', 'qa-plat1-chaine.fr');
+set local role authenticated;
+
+do $$
+declare v_sqlstate text; v_msg text;
+begin
+  -- Le commercial doit PASSER la garde d'autorisation. Il peut encore buter
+  -- sur l'éligibilité (une condition de donnée), jamais sur un 42501 dont le
+  -- message parle d'autorisation.
+  perform pg_temp.be('9a100000-0000-0000-0000-000000000005');
+  begin
+    perform public.create_external_professional('9a1b0000-0000-0000-0000-00000000000a');
+    v_sqlstate := null;
+  exception when others then v_sqlstate := sqlstate; v_msg := sqlerrm;
+  end;
+  if v_msg is not null and v_msg like '%can create external profiles%' then
+    raise exception 'ÉCHEC — L1 le commercial est refusé par la garde interne de publication : %', v_msg;
+  end if;
+  raise notice 'ok — L1 le commercial passe la chaîne de publication (%)', coalesce(v_msg, 'créé');
+
+  -- Le stagiaire, lui, doit être refusé par cette même garde.
+  perform pg_temp.be('9a100000-0000-0000-0000-000000000006');
+  begin
+    perform public.create_external_professional('9a1b0000-0000-0000-0000-00000000000a');
+    v_msg := null;
+  exception when others then v_msg := sqlerrm;
+  end;
+  if v_msg is null or v_msg not like '%can create external profiles%' then
+    raise exception 'ÉCHEC — L2 le stagiaire n''est pas arrêté par la garde de publication : %', coalesce(v_msg, 'créé');
+  end if;
+  raise notice 'ok — L2 le stagiaire est arrêté par la garde de publication';
+
+  -- Et le rafraîchissement d'éligibilité suit la même question.
+  perform pg_temp.be('9a100000-0000-0000-0000-000000000005');
+  begin
+    perform public.refresh_prospect_publication_eligibility('9a1b0000-0000-0000-0000-00000000000a');
+    v_msg := null;
+  exception when others then v_msg := sqlerrm;
+  end;
+  if v_msg is not null then
+    raise exception 'ÉCHEC — L3 le commercial ne peut pas rafraîchir l''éligibilité : %', v_msg;
+  end if;
+  raise notice 'ok — L3 le commercial rafraîchit l''éligibilité de publication';
+end $$;
+
+-- ============================================================================
+-- M. PLUSIEURS STAGIAIRES PAR ZONE
+-- ============================================================================
+
+do $$
+declare v_n bigint;
+begin
+  reset role;
+  insert into auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, aud, role)
+  values ('9a100000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'qa-plat1-v-intern2@fadeup.test', crypt('x', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated');
+  insert into public.platform_members (user_id, role) values ('9a100000-0000-0000-0000-000000000008', 'platform_intern');
+  set local role authenticated;
+
+  perform pg_temp.be('9a100000-0000-0000-0000-000000000001');
+  perform public.set_platform_member_zones('9a100000-0000-0000-0000-000000000008', array['9a1e0000-0000-0000-0000-000000000001'::uuid]);
+
+  reset role;
+  select count(*) into v_n from public.platform_member_zones where zone_id = '9a1e0000-0000-0000-0000-000000000001';
+  set local role authenticated;
+  if v_n < 2 then
+    raise exception 'ÉCHEC — M1 une zone ne porte que % stagiaire(s)', v_n;
+  end if;
+  raise notice 'ok — M1 plusieurs stagiaires partagent une zone (%)', v_n;
+
+  -- Et le second voit bien le prospect de cette zone.
+  perform pg_temp.be('9a100000-0000-0000-0000-000000000008');
+  select count(*) into v_n from public.prospects where id = '9a1b0000-0000-0000-0000-000000000001';
+  if v_n <> 1 then
+    raise exception 'ÉCHEC — M2 le second stagiaire ne voit pas le prospect de la zone partagée';
+  end if;
+  raise notice 'ok — M2 le second stagiaire voit le prospect de la zone partagée';
+end $$;
+
 reset role;
 
 do $$ begin raise notice '========== PLAT-1 : suite de permissions VERTE =========='; end $$;

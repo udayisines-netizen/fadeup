@@ -1,7 +1,7 @@
 # PLAT-1 — Console interne : rôles, permissions, zones, audit
 
 **Branche** `plat1/roles`, créée depuis `rebuild/social-first-v2` (`3a0f5e4`).
-**Base** : trois migrations appliquées en production le 2026-09-11.
+**Base** : quatre migrations appliquées en production le 2026-09-11.
 **Fusion** : aucune. Rien n'a été fusionné, rien n'a été poussé sur une autre branche.
 
 ---
@@ -36,7 +36,7 @@ d'intervalle, avec le même navigateur et le même compte.
 | Routes modifiées, toutes voulues par le lot | 3 |
 | Erreurs console, avant et après | **0 et 0** |
 | Réponses HTTP ≥ 400, avant et après | **0 et 0** |
-| Débordement horizontal à 390 px | aucun, avant comme après |
+| Routes débordant horizontalement à 390 px | **3 avant, les mêmes 3 après** — `team`, `acquisition/jobs`, `acquisition/sources` : un défaut hérité de tableaux larges, ni corrigé ni aggravé par ce lot (aucune route neuve ne déborde) |
 
 Les trois écarts :
 
@@ -51,6 +51,13 @@ Les trois écarts :
    parallèle et neutralisait ses données de test (règle 4 de `QA_DATA.md`).
    Vérifié en base : `organizations.updated_at = 2026-09-11 03:42:14+00`. Aucune
    ligne de code de cette page n'est touchée par PLAT-1.
+
+Le débordement de `/platform/team` mérite d'être nommé plutôt que caché : il
+existait **avant** ce lot (mesuré sur le dépôt intouché), et la colonne
+« Gérer » que j'ajoute ne le crée pas — elle s'ajoute à un tableau qui
+dépassait déjà. **Je ne l'ai pas corrigé** : refaire la mise en page mobile des
+tableaux hérités est une refonte de la surface, que le lot interdit. **À
+consigner pour PLAT-2**, avec les deux autres écrans d'acquisition.
 
 **Aucune route n'est supprimée, renommée ni déplacée** : la liste des 33 chemins
 est identique des deux côtés. **Aucune dépendance n'est ajoutée** :
@@ -435,6 +442,24 @@ Sauvegarde avant toute écriture : `/opt/fadeup/backups/pre-plat1-20260911-03003
 | `20260911100000_plat1_role_enum.sql` | `postgres` | les 3 valeurs d'énumération manquantes | testé — voir la réserve ci-dessous |
 | `20260911100100_plat1_permission_model.sql` | `postgres` | catalogue, grille, `platform_can`, zones, origines, audit scellé, échéance de vue empruntée, 11 RPC neuves, 18 RPC redéfinies, 37 policies | **testé, ACL identiques** |
 | `20260911100200_plat1_crm_policies_admin.sql` | `supabase_admin` | 81 policies CRM | **testé, ACL identiques** |
+| `20260911100300_plat1_publication_chain.sql` | `postgres` | les 3 gardes internes de la chaîne de publication | **testé** (down puis up rejoués sur le bac d'essai) |
+
+**Ce que les quatre migrations ont changé en production**, mesuré objet par
+objet contre l'état d'avant :
+
+| | |
+|---|---|
+| Objets avant / après | 986 / 1016 |
+| **Objets supprimés** | **0** |
+| Objets ajoutés | 30 (4 tables, leurs policies, les fonctions neuves) |
+| Policies modifiées | **127** — les 118 du CRM, les 5 sélections sensibles aux zones, `organizations_select`, les 2 de la cloche, et `platform_support_sessions_select` |
+| ACL de table modifiées | **2**, strictement plus strictes : le `SELECT` résiduel d'`anon` révoqué sur `platform_audit_log` et `platform_support_sessions` |
+
+**Concédant vérifié avant révocation**, comme l'exige le lot : les deux
+concessions retirées portaient `anon=r/postgres`, et les migrations qui les
+retirent s'appliquent en `postgres`. Un `revoke` par le mauvais rôle aurait été
+un no-op silencieux ; la vérification après coup montre `anon` réellement
+absent des deux ACL.
 
 **Propriétaires vérifiés avant écriture** : les 22 fonctions redéfinies
 appartiennent toutes à `postgres` ; les 64 tables CRM se répartissent en 31
@@ -497,7 +522,7 @@ uniquement depuis des SECURITY DEFINER (`assert_not_in_support_view`,
 
 ## 8. La suite de permissions
 
-`db/tests/verify_plat1.sql` — **66 assertions**, une seule transaction terminée
+`db/tests/verify_plat1.sql` — **71 assertions**, une seule transaction terminée
 par `ROLLBACK` (règle 1 de `QA_DATA.md`). Elle crée sept comptes, six rôles,
 deux zones et deux prospects, puis n'écrit rien : vérifié après passage en
 production, **0 ligne résiduelle**.
@@ -522,6 +547,8 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | **I** | le journal : lu par le fondateur, pas par le support ni le modérateur ni le commercial ; **ni modifiable ni supprimable même en `reset role`** ; les sept familles d'action ont leur écrivain |
 | **J** | **le propriétaire voit les vues empruntées subies**, un tiers ne voit rien |
 | **K** | le commercial n'annule pas un rendez-vous, le support passe la garde, une annulation sans motif est refusée |
+| **L** | **la chaîne de publication va jusqu'au bout** : le commercial franchit les trois gardes, le stagiaire est arrêté, le rafraîchissement d'éligibilité suit la même question |
+| **M** | **plusieurs stagiaires partagent une zone**, et le second y voit bien les prospects |
 
 ---
 
@@ -533,7 +560,7 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte |
 | `npm run test` (Vitest) | **694 / 694, 81 fichiers** — dont 7 neufs sur le bandeau et la navigation par rôle |
 | `NODE_OPTIONS=--max-old-space-size=3072 npm run build` | **succès**, chunk `platform` 813 Ko / **221 Ko gzip**, chargé paresseusement |
-| `db/tests/verify_plat1.sql` (production) | **66 assertions vertes, 0 résidu** |
+| `db/tests/verify_plat1.sql` (production) | **71 assertions vertes, 0 résidu** |
 | `db/tests/probe_public_rpcs.sh --strict` | **vert** — toutes les lectures publiques en 200 |
 | `db/tests/x3_anon_surface.sh --strict` | **vert** — 137 tables balayées en anonyme et en authentifié-sans-droit, contrat de surface intact à 44 RPC |
 | Relevé des 33 routes, avant / après | **30 identiques**, 3 écarts voulus ou externes (§1) |
@@ -541,6 +568,66 @@ Elle échoue bruyamment à la première assertion fausse. Ce qu'elle couvre :
 | Réponses HTTP ≥ 400 | **0**, avant comme après |
 | `npm run e2e` | voir §9bis |
 | axe | voir §9bis |
+
+### 9bis. axe, et la campagne e2e
+
+**axe — la mesure, puis la déclaration honnête.**
+
+Le lot demande « axe sans violation sérieuse ou critique ». **La case n'est pas
+cochée**, et voici exactement pourquoi.
+
+Le même balayage a tourné contre le dépôt **intouché** et contre PLAT-1, sur
+quatre écrans × deux largeurs :
+
+| Écran | Nœuds en échec, avant | après |
+|---|---|---|
+| `/platform/login` (intouché) | 1 | 1 |
+| `/platform/organizations` (intouché) | 4 | 4 |
+| `/platform/audit` | 5 | 5 |
+| `/platform/team` | 8 | **11** |
+
+**Une seule règle échoue partout : `color-contrast`**, et elle échoue **déjà
+sur la page de connexion, que ce lot ne touche pas**. Deux causes, toutes deux
+dans la palette héritée de `/platform` :
+
+- `--color-ink-500` (#66766e) sur `--color-paper-50` (#f5f8f6) donne **4,48:1**
+  — il manque 0,02 pour AA ;
+- blanc sur `--color-accent-600` (#0d9b5f) donne **3,57:1** — le bouton
+  primaire de toute la console.
+
+PLAT-1 **n'introduit pas de classe de défaut nouvelle** : il ajoute trois
+occurrences de deux défauts qui existaient déjà huit fois sur le même écran, en
+réutilisant les primitives de la page (un en-tête de colonne, un sous-titre de
+section, un bouton primaire). Corriger la cause, c'est modifier deux jetons de
+la palette héritée — ce qui repeindrait **tous** les écrans de la console et
+détruirait, par construction, la preuve d'équivalence du §1. Le lot dit « c'est
+une surface existante, ne la refais pas ». **Je ne l'ai donc pas fait, et je le
+déclare plutôt que de le taire.** C'est une décision de produit, pas
+d'implémentation.
+
+**Ce que j'ai corrigé, en revanche, c'est ce qui était à moi.** Le bandeau de
+vue empruntée est le seul traitement visuel neuf du lot. Sa première version
+était blanche sur ambre : **3,7:1, échec AA**. Il porte désormais une encre
+fixe sur ambre — **5,1:1 en thème clair, 8,1:1 en sombre** — parce que
+`--color-warning-600` s'inverse avec le thème et qu'une couleur prise dans
+l'échelle `ink` aurait rendu le bandeau illisible en sombre. Même raisonnement
+que le « blanc sur vert interdit » du contrat pro.
+
+Preuve que le bandeau ne coûte rien : le balayage relancé **avec la vue
+empruntée ouverte** (le bandeau est présent sur les quatre écrans, le relevé le
+note) donne **exactement les mêmes nombres de nœuds** — 11, 5, 4. Le bandeau
+ajoute **zéro** violation.
+
+Relevés : `docs/reports/plat1/axe-avant.json`, `axe-apres.json`,
+`axe-bandeau.json`.
+
+**Campagne e2e.** `apps/web/e2e/plat1/platform-permissions.spec.ts` a été
+écrite : garde et redirection, navigation du fondateur, du support et du
+stagiaire, refus honnête du journal, et **refus de la vue en tant que avec la
+RPC appelée directement** (403 + motif nommé). Elle se saute proprement si les
+comptes QA n'existent pas.
+
+RÉSULTAT_E2E
 
 Les nouveaux tests unitaires :
 
@@ -639,6 +726,41 @@ neufs y sont posés **sans toucher au routeur**, ce qui satisfait à la fois
    « ZZ dead ».
 6. **Le bandeau affichait « 31 min left » sur une session de trente.** `Math.ceil`
    sur un décalage d'horloge d'une seconde. Passé en `Math.round`.
+7. **Le défaut le plus grave du lot, trouvé en me relisant et corrigé.**
+   `publish_external_professional` avait reçu la garde `marketplace.publish`,
+   qui ouvre la publication au commercial — mais elle appelle
+   `create_external_professional` et
+   `refresh_prospect_publication_eligibility`, deux fonctions SECURITY DEFINER
+   qui portaient encore `is_platform_admin()` et
+   `has_platform_role([owner, admin])`. Dans un SECURITY DEFINER, `auth.uid()`
+   reste celui de l'appelant : ces gardes internes se réévaluaient pour le
+   commercial et le refusaient. Mesuré avant correction, en transaction
+   annulée :
+
+   ```
+   refus 42501 — only FadeUp platform staff or the acquisition worker
+                 can create external profiles
+   ```
+
+   Autrement dit, le critère « publier sur la marketplace est une action de
+   commercial ou d'admin » était **faux en pratique**, alors que la garde
+   d'entrée disait oui. Une garde d'entrée qui ment est pire qu'une garde
+   absente. Corrigé par `20260911100300_plat1_publication_chain.sql`, et
+   verrouillé par les assertions L1 à L3 : le commercial franchit les trois
+   gardes, le stagiaire reste arrêté.
+
+   **La leçon, qui vaut pour PLAT-2** : changer la garde d'une RPC ne suffit
+   pas ; il faut suivre ce qu'elle APPELLE. Une requête sur le graphe d'appels
+   (`pg_proc.prosrc`) a montré que `publish_external_professional` était la
+   seule des treize RPC re-gardées dans ce cas — mais c'est une vérification à
+   refaire à chaque fois.
+8. **Un sélecteur de test qui refermait ce qu'il venait d'ouvrir.** Le script de
+   preuve visait `getByRole('button', { name: /support/i })` sur la fiche
+   d'organisation ; le bandeau, placé plus haut dans le DOM, porte lui aussi un
+   bouton dont le nom contient « support ». Le premier passage ouvrait la
+   session, le second cliquait sur « Exit Support View ». Diagnostiqué par le
+   journal d'audit, qui montrait une session fermée 46 secondes après son
+   ouverture — le journal a servi avant même d'avoir un écran.
 
 ---
 
@@ -692,15 +814,42 @@ ne les ai pas touchées.
    Paris. Arrondissement ? Code postal ? Le modèle actuel se sous-divise sans
    migration destructive (une zone de plus, un `city_key` plus fin), mais il
    faut trancher avant d'assigner de vrais stagiaires.
-5. **La file des retraits RGPD.** `list_marketplace_withdrawal_requests` existe
+5. **Trois écrans hérités débordent à 390 px** : `/platform/team`,
+   `/platform/acquisition/jobs`, `/platform/acquisition/sources`. Mesuré avant
+   et après, identique : ce lot ne les crée pas et ne les corrige pas. Défaut
+   consigné séparément, comme l'exige la discipline de périmètre.
+6. **Un oracle d'existence de prospect subsiste.** `publication_block_reason`,
+   `outreach_block_reason` et `prospect_effective_locale` sont exécutables par
+   **tout compte authentifié** sans garde plateforme, et prennent un
+   `prospect_id` en paramètre. R1A avait fermé un oracle de la même famille
+   (`20260825100900_internal_least_privilege.sql`) ; ceux-là sont restés.
+   **Antérieur à PLAT-1**, hors périmètre, consigné ici parce que je l'ai vu en
+   traçant le graphe d'appels.
+7. **La file des retraits RGPD.** `list_marketplace_withdrawal_requests` existe
    depuis B2, avec `is_overdue` et `hours_remaining`, et le commentaire de la
    fonction dit lui-même que « c'est la colonne sur laquelle un écran
    `/platform` doit alerter ». Cet écran n'existe toujours pas. Les 72 heures ne
    sont pour l'instant tenues par personne.
-6. **L'identité de l'interne, côté professionnel** (§11.3), à ratifier.
-7. **Le conflit avec `x2/gdpr`.** Cette branche redéfinit
-   `publish_external_professional`, que PLAT-1 redéfinit aussi (une ligne : la
-   garde passe de `is_platform_admin()` à `platform_can('marketplace.publish')`).
-   Les deux branches ne sont fusionnées ni l'une ni l'autre. **La fusion devra
-   reprendre le corps X2 et y appliquer la garde PLAT-1**, pas choisir.
-8. **La régénération de `database.types.ts`** avec un générateur épinglé.
+8. **L'identité de l'interne, côté professionnel** (§11.3), à ratifier.
+9. **Le conflit avec `x2/gdpr`, et son piège.** Les deux branches redéfinissent
+   `publish_external_professional`. PLAT-1 n'y change qu'une ligne — la garde
+   passe de `is_platform_admin()` à `platform_can('marketplace.publish')` — mais
+   le corps qu'il reprend est celui de la **production**, qui contient déjà le
+   travail X2 : il appelle `private.enqueue_publication_information`, la
+   fonction qui envoie l'information article 14. Or **cette fonction n'existe
+   pas dans l'historique de migrations de cette branche**, parce que `x2/gdpr`
+   n'est pas fusionnée alors que ses migrations sont, elles, appliquées en
+   production.
+
+   Conséquence : appliquée à la production, ma migration est juste — elle
+   préserve X2. **Rejouée à blanc sur une base neuve depuis les seules
+   migrations de `plat1/roles`, elle installerait une fonction qui lèverait à
+   l'exécution** (plpgsql ne résout pas ses appels à la création, donc rien
+   n'échoue à l'installation). Le piège est écrit en toutes lettres dans la
+   migration, au-dessus du corps concerné.
+
+   Reprendre le corps B1 de cette branche aurait été pire : cela aurait effacé
+   l'information RGPD en production. **La fusion devra prendre les deux
+   branches ensemble**, reprendre le corps X2 et y appliquer la garde PLAT-1 —
+   pas choisir l'un des deux. C'est le point le plus délicat à ne pas rater.
+10. **La régénération de `database.types.ts`** avec un générateur épinglé.

@@ -1335,6 +1335,23 @@ begin;
 
 -- ---- publish_external_professional → marketplace.publish
 -- Publier un prospect sur la marketplace est un geste de COMMERCIAL ou d'admin, jamais de stagiaire : c'est lui qui déclenche l'information RGPD et engage la responsabilité légale.
+--
+-- ATTENTION, PIÈGE INTER-BRANCHES. Le corps ci-dessous est celui de la
+-- PRODUCTION au 2026-09-11, et il appelle `private.enqueue_publication_information`
+-- — l'information article 14 de X2. Cette fonction EXISTE en production (les
+-- migrations X2 y ont été appliquées) mais n'existe PAS dans l'historique de
+-- migrations de cette branche : `x2/gdpr` n'est pas fusionnée.
+--
+-- Conséquence, à connaître avant de rejouer :
+--   - appliquée à la production, cette migration est juste (elle préserve X2) ;
+--   - rejouée à blanc sur une base neuve depuis les seules migrations de cette
+--     branche, elle installe une fonction qui lèvera À L'EXÉCUTION (plpgsql ne
+--     résout pas ses appels à la création).
+--
+-- Reprendre le corps B1 de cette branche aurait été pire : cela aurait effacé
+-- l'information RGPD en production. La seule sortie est de fusionner `x2/gdpr`
+-- et `plat1/roles` ensemble, en reprenant le corps X2 et en y appliquant la
+-- garde PLAT-1 — pas en choisissant l'un des deux.
 create or replace function public.publish_external_professional(p_prospect_id uuid, p_note text DEFAULT NULL::text)
  RETURNS uuid
  LANGUAGE plpgsql
