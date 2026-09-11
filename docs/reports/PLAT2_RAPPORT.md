@@ -643,7 +643,8 @@ nommés. Elle reste verte contre la production.
 | `db/tests/x3_anon_surface.sh --strict` | **vert** — 143 tables balayées en anonyme et en authentifié-sans-droit, contrat de surface à **45** RPC, aucune dérive |
 | Relevé des 33 routes, avant / après | **31 identiques**, 2 écarts externes (§1.2) |
 | `npm run e2e` — suite PLAT-2 | **36 / 36**, 390 px et 1440 px, rejouée sur l'état final |
-| `npm run e2e` — campagne complète | **283 verts**, 4 rouges (3 expliqués et rejoués, 1 cause externe), 1 instable — §8.4 |
+| `npm run e2e` — campagne complète, **sur l'arbre livré** | **259 verts**, 4 rouges (2 quota Resend, 2 fixture dépendante de l'heure — prouvées, §8.5), 38 emportés par deux groupes en série |
+| … et la cascade levée : tout sauf ces deux groupes | **249 / 249**, 0 rouge |
 | axe, 7 écrans × 2 largeurs | voir §8.3 |
 
 ### 8.1 Les tests unitaires neufs
@@ -986,6 +987,39 @@ clé : un fichier qui ne survit pas à un `git clean` n'est pas une preuve.
     son destinataire.** Trois phrases, trois fausses (§16, B3). Elles
     seraient parties sur du papier.
 
+### 11bis. L'assertion creuse — trois cas, trois lots, une seule faute
+
+Ce n'est pas une leçon que je tire de mon seul lot : **trois sessions l'ont
+trouvée le même après-midi, chacune de son côté, et chacune sur son propre
+code.**
+
+| Lot | L'assertion | Pourquoi elle ne prouvait rien |
+|---|---|---|
+| **PLAT-2** | « le QR fait au moins 8 cm » | elle mesurait le **carré blanc de fond**, pas le symbole — verte à 9 cm pendant que le symbole faisait 7,05 |
+| **OS-2** | « les seuils viennent de la BASE, pas d'une constante » | elle attendait `20` et `5` — **exactement les défauts SQL**. Verte que la valeur vienne de la base ou d'une constante |
+| **P1PRO** (trouvé par OS-2) | « le rendez-vous apparaît dans NEXT » | la fixture réserve à `now + 3 h` et teste « aujourd'hui » : après 21 h UTC, elle rougit alors que **l'écran a raison** |
+
+**La faute est la même à chaque fois : l'assertion ne peut pas distinguer
+l'hypothèse qu'elle valide de celle qu'elle devrait exclure.** Elle est verte
+dans les deux mondes. Ce n'est pas un test faible, c'est une case cochée à
+vide — et elle est plus dangereuse qu'un test absent, parce qu'elle occupe la
+place.
+
+Le remède est le même aussi, et il tient en deux gestes :
+
+1. **choisir une valeur que seule la bonne hypothèse peut produire** — un
+   seuil inhabituel plutôt qu'un défaut, l'emprise des modules plutôt que la
+   boîte, un horaire borné à la journée plutôt qu'un décalage relatif ;
+2. **vérifier le test en le CASSANT** avant de lui faire confiance. Les tests
+   neufs de ce lot l'ont tous été ; celui du QR, qui ne l'avait pas été, est
+   précisément celui qui a laissé passer le défaut.
+
+Je ne l'écris pas dans un document de méthode : personne ne m'a mandaté pour
+en ouvrir un, et la discipline de périmètre l'interdit. Mais **le même
+paragraphe figure dans le rapport d'OS-2**, avec les mêmes trois cas et
+l'attribution croisée. Deux rapports qui disent la même chose sont un dossier
+remontable ; un document qu'aucun lot n'avait mandat d'écrire n'en est pas un.
+
 ---
 
 ## 12. Cases non cochées, avec la raison exacte
@@ -1097,12 +1131,84 @@ production : 0 ticket, 0 affiche hors fixtures, 0 compte `qa-plat2-*`.
 **283 verts, 4 rouges, 1 instable, 3 sautés** (31 min), toutes suites
 antérieures comprises. Et les quatre rouges sont **vérifiés, pas excusés**.
 
+**MESURÉE SUR `8131591`, PAS SUR L'ARBRE LIVRÉ** — je le dis avant de donner
+le chiffre, parce que la distinction appartient au lecteur. Entre les deux,
+quatre commits, dont celui des trouvailles de la revue, qui touche **cinq
+primitives partagées de `/platform`**. Seule ma propre suite (36/36) avait été
+rejouée sur l'état final. La campagne a donc été **relancée en entier sur
+`4a386fe`** dès que le runner s'est libéré ; son résultat est en §8.5, et
+c'est celui qui fait foi.
+
 | Rouge | Cause établie | Preuve |
 |---|---|---|
 | `f1/live-queue` — temps réel sur deux navigateurs | **croisement de campagnes.** Un lot voisin a relancé la sienne pendant la mienne, sur `qa-f1b-shared` — le motif exact de `QA_DATA.md` règle 2b, mesuré le 2026-09-07 | **rejouées en ISOLÉ immédiatement après : 44/44 vertes.** C'est la preuve, pas l'explication |
 | `f1b/barber-queues` — compte à rebours | idem | idem |
 | `f4/booking-funnel` — inscription légère OTP, aux DEUX largeurs | **cause externe** : `fadeup-supabase-auth` répond `550 You have reached your daily email sending quota`. Tout test qui traverse un envoi réel échoue aujourd'hui | verrou déjà consigné par X2 et M1b ; signalé par le lot voisin avant ma campagne |
 | `os1/agenda` (instable, passé au 2ᵉ essai) | `create_appointment_as_business` → `location_unavailable` pendant la fenêtre de croisement | passé au réessai |
+
+### 8.5 La campagne REJOUÉE sur l'arbre livré — `4a386fe`
+
+Le runner libéré, la campagne a été relancée **en entier sur le commit
+expédié**, dans une base que le lot voisin venait de neutraliser.
+
+**259 verts, 4 rouges, 3 sautés, 38 non exécutés** (23 min).
+
+**Les 38 « non exécutés » ne sont PAS des tests ignorés** : les deux suites qui
+rougissent sont en `test.describe.configure({ mode: 'serial' })`
+(`f4/booking-funnel.spec.ts:32`, `p1pro/pro-direction.spec.ts:37`), et un échec
+y interrompt tout le reste du groupe. C'est aussi ce qui explique l'écart avec
+les 283 de la première campagne : **une cascade, pas une régression** — le
+groupe p1pro est plus gros que celui de f1.
+
+**Les quatre rouges, et aucun n'est de ce lot :**
+
+| Rouge | Cause, MESURÉE |
+|---|---|
+| `f4/booking-funnel` — inscription légère OTP, aux deux largeurs | **quota Resend épuisé**, verrou externe déjà consigné par X2 et M1b |
+| `p1pro/pro-direction` — la demande en temps réel, aux deux largeurs | **une fixture dépendante de l'heure**, et je l'ai prouvée plutôt que supposée (ci-dessous) |
+
+**La fixture P1PRO, mesurée en base.** Elle réserve à `now + 2 h` par le tunnel
+réel. À 21:54 UTC, cela tombe **vendredi 23:54** sur un lieu QA en UTC dont les
+horaires ferment à **23:59**. La plus COURTE prestation du salon dure 15
+minutes : le rendez-vous finirait **samedi 00:09**, après la fermeture.
+`book_public_appointment` refuse, correctement, avec
+`fadeup_booking_refusal=outside_hours` :
+
+```
+ service        durée  début demandé   fin calculée   fermeture
+ Barbe          15 min  Fri 23:54       Sat 00:09      23:59
+ Coupe          30 min  Fri 23:54       Sat 00:24      23:59
+ Coupe + barbe  45 min  Fri 23:54       Sat 00:39      23:59
+```
+
+**Le serveur a raison, la fixture a tort** : elle suppose que « dans deux
+heures » tient toujours dans la journée ouvrée. Le lot voisin a trouvé la même
+famille sur la même suite à quelques minutes d'écart, par un autre symptôme
+(NEXT légitimement vide après 21 h UTC). C'est le troisième cas de
+l'**assertion creuse** du §11bis, et le correctif engage ce que « NEXT » doit
+dire près de minuit — **une question de produit, pas un `+ 2 h` à changer en
+`+ 1 h`.** Suite d'un autre lot : consigné, pas corrigé.
+
+**La suite PLAT-2, elle, est verte : 36/36**, aux deux largeurs.
+
+**Et la cascade a été levée, pas déduite.** Toutes les suites SAUF les deux
+groupes en série ont été relancées sur le même arbre :
+
+```
+npx playwright test e2e/d1 e2e/f1 e2e/f1b e2e/f2 e2e/f3 e2e/os1 e2e/p1b e2e/plat1 e2e/plat2
+  249 passed, 3 skipped, 0 failed  (19,8 min)
+```
+
+**249 sur 249.** Autrement dit : sur l'arbre livré, **tout ce qui n'est pas
+bloqué par le quota Resend ou par la fenêtre horaire passe**, aux deux
+largeurs, et les 38 non exécutés de la campagne complète étaient bien la
+cascade de deux groupes en série — pas des tests silencieusement cassés.
+
+Les deux seules suites que je ne peux pas rendre vertes ce soir sont celles
+dont l'obstacle n'est pas dans le code : un quota d'envoi épuisé, et une
+horloge à 21 h 54 UTC.
+
+---
 
 **Ce que ça a coûté, et que je ne cache pas** : les campagnes — les miennes
 comprises — ont créé **21 organisations `qa-f1-*`** dans la production. C'est
