@@ -134,11 +134,17 @@ for (const [label, viewport] of [
   await page.waitForTimeout(500)
   await shot(page, `catalog-${label}`, { fullPage: full })
 
-  // 2. La feuille d'un service : l'effet de la durée sur l'estimation.
+  // 2. La feuille d'un service : l'effet de la durée sur l'estimation, ET
+  //    le champ prix. À 390 px le prix est sous la ligne de flottaison :
+  //    sans ce défilement, la capture « avec prix » et la capture « sans
+  //    prix » seraient octet pour octet identiques et ne prouveraient rien.
   await page.getByTestId('pro-catalog-list').getByText(services[0].name, { exact: false }).first().click()
   await page.getByTestId('pro-catalog-estimate').waitFor({ timeout: 20_000 })
   await page.waitForTimeout(400)
   await shot(page, `catalog-sheet-${label}`)
+  await page.getByTestId('pro-catalog-field-price').scrollIntoViewIfNeeded()
+  await page.waitForTimeout(300)
+  await shot(page, `catalog-sheet-price-${label}`)
   await page.keyboard.press('Escape')
 
   // 3. Les archives.
@@ -167,10 +173,26 @@ for (const [label, viewport] of [
   await page.waitForTimeout(400)
   await shot(page, `team-${label}`, { fullPage: full })
 
-  // 7. Le dialogue de retrait : l'avertissement d'identité.
-  const removable = page.getByTestId('pro-team-member').filter({ has: page.getByTestId('pro-team-remove') }).first()
-  if (await removable.count()) {
-    await removable.getByTestId('pro-team-remove').click()
+  // 7. Le dialogue de retrait : l'avertissement d'identité. Les actions
+  //    d'une rangée vivent derrière un popover (régime dense) : il faut
+  //    l'ouvrir pour que « Retirer » existe dans le DOM.
+  {
+    const rows = page.getByTestId('pro-team-member')
+    const count = await rows.count()
+    let opened = false
+    for (let i = 0; i < count && !opened; i += 1) {
+      const trigger = rows.nth(i).getByRole('button').first()
+      if (!(await trigger.isVisible())) continue
+      await trigger.click()
+      await page.waitForTimeout(250)
+      if (await page.getByTestId('pro-team-remove').isVisible().catch(() => false)) {
+        opened = true
+        break
+      }
+      await page.keyboard.press('Escape')
+    }
+    if (!opened) throw new Error('team-remove : aucun membre retirable — capture impossible, on ne la fabrique pas')
+    await page.getByTestId('pro-team-remove').click()
     await page.getByTestId('pro-team-remove-dialog').waitFor({ timeout: 15_000 })
     await page.waitForTimeout(400)
     await shot(page, `team-remove-${label}`)
@@ -197,7 +219,9 @@ for (const [label, viewport] of [
   await b.page.goto(`${BASE}/dashboard/catalog`)
   await b.page.getByTestId('pro-catalog-list').waitFor({ timeout: 60_000 })
   await b.page.getByTestId('pro-catalog-list').getByText(services[0].name, { exact: false }).first().click()
-  await b.page.waitForTimeout(600)
+  await b.page.getByTestId('pro-catalog-price-reserved').waitFor({ timeout: 20_000 })
+  await b.page.getByTestId('pro-catalog-price-reserved').scrollIntoViewIfNeeded()
+  await b.page.waitForTimeout(400)
   await shot(b.page, `catalog-barber-no-price-${label}`)
   await b.context.close()
 }

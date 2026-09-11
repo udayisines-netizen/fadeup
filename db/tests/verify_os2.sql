@@ -41,7 +41,9 @@
 --   R3  clients : un régulier en retard est identifié, un client à une seule
 --       visite n'a NI cycle NI retard
 --   R4  clients : historique du client, fiche, nombre de notes
---   Z1  motif nul : chaque RPC neuve refuse un appelant anonyme
+--   Z0  motif nul : la GARDE INTERNE lève quand auth.uid() est NULL
+--       (claims vides, droit d'exécuter intact — sinon on testerait le GRANT)
+--   Z1  et le rôle anon n'a même pas le droit d'exécuter
 
 \set ON_ERROR_STOP on
 
@@ -463,6 +465,27 @@ begin
   end;
 
   -- ==================================================================
+  -- C3bis. Un service créé est réellement OFFERT quelque part
+  -- ==================================================================
+  -- Sans ligne service_locations, aucun chemin de réservation ne voit le
+  -- service : il serait « actif » à l'écran et réservable nulle part.
+  select count(*) into v_count
+  from public.service_locations sl where sl.service_id = v_service_new;
+  if v_count <> (select count(*) from public.locations l where l.organization_id = v_org) then
+    raise exception 'C3f: un service créé sans p_location_ids doit être offert dans TOUS les établissements (reçu %)', v_count;
+  end if;
+  begin
+    perform public.create_service(v_org, 'Lieu etranger', 20, 1000, null, null,
+      array[(select l.id from public.locations l where l.organization_id = v_org2 limit 1)]);
+    raise exception 'C3g: un établissement d''une autre organisation doit être refusé';
+  exception when invalid_parameter_value then
+    get stacked diagnostics v_detail = pg_exception_detail;
+    if v_detail <> 'fadeup_service_refusal=location_foreign' then
+      raise exception 'C3h: motif attendu location_foreign, reçu %', v_detail;
+    end if;
+  end;
+
+  -- ==================================================================
   -- C4. Historique : on archive, on ne supprime pas
   -- ==================================================================
   v_day := ((now() at time zone v_tz)::date + 2);
@@ -665,9 +688,15 @@ begin
     raise exception 'FIXTURE: le barber devrait porter une identité professionnelle';
   end if;
 
-  -- Une personne en attente dans SA file.
+  -- Une personne EN ATTENTE dans sa file (elle suivra), et une personne AU
+  -- FAUTEUIL (elle doit RESTER : sa prestation en cours ne s'attribue pas
+  -- au remplaçant).
   insert into public.queue_entries (organization_id, location_id, barber_id, customer_name, status)
   values (v_org, v_loc, v_barber, 'OS2 File Un', 'waiting');
+  insert into public.queue_entries
+    (organization_id, location_id, barber_id, customer_name, status, created_at, called_at, service_started_at)
+  values (v_org, v_loc, v_barber, 'OS2 Au Fauteuil', 'in_service',
+          now() - interval '20 minutes', now() - interval '10 minutes', now() - interval '9 minutes');
 
   begin
     perform public.remove_team_member(v_membership);
@@ -699,6 +728,13 @@ begin
   select count(*) into v_count from public.queue_entry_moves qm where qm.to_barber_id = v_barber_b;
   if v_count < 1 then
     raise exception 'T4e: le déplacement de file doit être journalisé';
+  end if;
+  -- La personne AU FAUTEUIL n'a PAS bougé (règle F1b, et sa mesure de durée
+  -- doit rester attribuée à qui a fait le travail).
+  select count(*) into v_count from public.queue_entries q
+   where q.barber_id = v_barber and q.customer_name = 'OS2 Au Fauteuil' and q.status = 'in_service';
+  if v_count <> 1 then
+    raise exception 'T4e2: une prestation EN COURS ne doit pas changer de barber au départ de celui qui la fait';
   end if;
   -- LA loi produit : l'identité publique survit.
   select count(*) into v_count from public.professionals p where p.id = v_professional;
@@ -817,7 +853,47 @@ begin
   -- ==================================================================
   -- Z1. Le motif nul : anonyme refusé partout
   -- ==================================================================
+  -- Deux étages, et il faut les DEUX. Sous `set local role anon`, le refus
+  -- vient du GRANT (la fonction n'est pas exécutable) et n'exerce PAS la
+  -- garde nulle. On teste donc d'abord le CORPS de la fonction, appelée
+  -- avec des claims vides — auth.uid() est NULL, l'appelant a le droit
+  -- d'exécuter, et c'est bien la garde interne qui doit lever.
   perform set_config('request.jwt.claims', '', true);
+  begin
+    perform public.list_customer_notes(v_customer);
+    raise exception 'Z0a: la garde nulle de list_customer_notes doit lever quand auth.uid() est NULL';
+  exception when insufficient_privilege then
+    get stacked diagnostics v_detail = pg_exception_detail;
+    if v_detail <> 'fadeup_customer_notes_refusal=anonymous' then
+      raise exception 'Z0b: motif attendu anonymous, reçu %', v_detail;
+    end if;
+  end;
+  begin
+    perform public.get_my_customer_notes();
+    raise exception 'Z0c: la garde nulle de get_my_customer_notes doit lever';
+  exception when insufficient_privilege then
+    get stacked diagnostics v_detail = pg_exception_detail;
+    if v_detail <> 'fadeup_customer_notes_refusal=anonymous' then
+      raise exception 'Z0d: motif attendu anonymous, reçu %', v_detail;
+    end if;
+  end;
+  begin
+    perform public.add_customer_note(v_customer, 'anonyme');
+    raise exception 'Z0e: la garde nulle de add_customer_note doit lever';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.invite_team_member(v_org, 'z@fadeup.test', 'barber');
+    raise exception 'Z0f: la garde nulle de invite_team_member doit lever';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.remove_team_member(gen_random_uuid());
+    raise exception 'Z0g: la garde nulle de remove_team_member doit lever';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- Second étage : le rôle anon n'a même pas le droit d'EXÉCUTER.
   execute 'set local role anon';
   begin
     perform public.list_customer_notes(v_customer);
@@ -857,7 +933,7 @@ begin
   execute 'reset role';
 
   perform set_config('request.jwt.claims', '', true);
-  raise notice 'OS2 : TOUT PASSE (N1-N5, C1-C6, Q1, T1-T5, R1-R4, Z1)';
+  raise notice 'OS2 : TOUT PASSE (N1-N5, C1-C6, Q1, T1-T5, R1-R4, Z0-Z1)';
 end;
 $verify$;
 
