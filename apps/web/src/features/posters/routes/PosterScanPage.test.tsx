@@ -28,7 +28,7 @@ function flatten(value: unknown, prefix = ''): string[] {
 
 const source = readFileSync(PAGE, 'utf8')
 /** Les clés littérales `t('poster.x.y')` ; les clés calculées sont traitées à part. */
-const literalKeys = [...source.matchAll(/t\('poster\.([a-zA-Z0-9_.]+)'/g)].map((m) => m[1])
+const literalKeys = [...source.matchAll(/t\('poster\.([a-zA-Z0-9_.]+)'/g)].flatMap((m) => (m[1] ? [m[1]] : []))
 /** Les cinq motifs de refus construits par interpolation. */
 const REFUSAL_KEYS = [
   'already_assigned',

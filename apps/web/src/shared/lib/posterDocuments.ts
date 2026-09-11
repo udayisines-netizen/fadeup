@@ -40,21 +40,43 @@ const MUTED: PdfRgb = { r: 0.4, g: 0.463, b: 0.431 }
 const WHITE: PdfRgb = { r: 1, g: 1, b: 1 }
 
 /**
- * LE QR FAIT NEUF CENTIMÈTRES DE CÔTÉ — le lot en exige huit au minimum. La
- * marge d'un centimètre n'est pas décorative : un QR imprimé puis plastifié,
- * scanné de biais dans un salon mal éclairé, perd de la marge de correction,
- * et c'est la taille du module qui la rend.
+ * LE SYMBOLE FAIT NEUF CENTIMÈTRES DE CÔTÉ — le lot en exige huit au minimum.
+ *
+ * CE QUE « HUIT CENTIMÈTRES » VEUT DIRE, ET LE DÉFAUT QUE ÇA A CORRIGÉ. La
+ * première version posait une boîte de 9 cm et y peignait le symbole PLUS sa
+ * zone de silence : quatre modules de chaque côté sur trente-sept, soit 21,6 %
+ * de la boîte perdus. Le symbole réellement imprimé faisait **7,05 cm**, donc
+ * SOUS le plancher, pendant que le test — qui mesurait le carré blanc de fond
+ * — le déclarait à 9. Une mesure qui prend la boîte pour le symbole ne mesure
+ * pas l'exigence, elle la contourne.
+ *
+ * Désormais `QR_SYMBOL` est le côté du SYMBOLE, et la zone de silence
+ * s'ajoute autour. La marge d'un centimètre au-dessus du plancher n'est pas
+ * décorative : un QR imprimé puis plastifié, scanné de biais dans un salon mal
+ * éclairé, perd de la marge de correction, et c'est la taille du module qui la
+ * rend.
  */
-const QR_SIZE = 9 * CM
+const QR_SYMBOL = 9 * CM
 
 /** La zone de silence exigée par la norme : quatre modules de chaque côté. */
 const QR_QUIET_MODULES = 4
 
-function drawQr(page: PdfPage, value: string, x: number, y: number, size: number): void {
+/**
+ * Dessine un QR dont le SYMBOLE mesure `symbol` de côté, plus sa zone de
+ * silence autour. Rend l'emprise totale, pour que l'appelant sache la place
+ * qu'il a réellement prise.
+ */
+function drawQr(page: PdfPage, value: string, centerX: number, topY: number, symbol: number): number {
   const qr = createQr(value, { errorCorrectionLevel: 'M' })
   const modules = qr.modules
-  const total = modules.size + QR_QUIET_MODULES * 2
-  const cell = size / total
+  const cell = symbol / modules.size
+  const quiet = QR_QUIET_MODULES * cell
+  const size = symbol + quiet * 2
+  // L'emprise dépend du NOMBRE DE MODULES, qui dépend de la longueur de
+  // l'URL : l'appelant ne peut pas la connaître d'avance. Il donne donc un
+  // centre et un haut, et reçoit l'emprise pour poser ce qui suit.
+  const x = centerX - size / 2
+  const y = topY - size
 
   page.fillColor(WHITE).rect(x, y, size, size)
   page.fillColor(INK)
@@ -69,8 +91,8 @@ function drawQr(page: PdfPage, value: string, x: number, y: number, size: number
       if (filled && runStart === null) runStart = col
       if (!filled && runStart !== null) {
         page.rect(
-          x + (QR_QUIET_MODULES + runStart) * cell,
-          y + size - (QR_QUIET_MODULES + row + 1) * cell,
+          x + quiet + runStart * cell,
+          y + size - quiet - (row + 1) * cell,
           (col - runStart) * cell,
           cell,
         )
@@ -78,6 +100,7 @@ function drawQr(page: PdfPage, value: string, x: number, y: number, size: number
       }
     }
   }
+  return size
 }
 
 function drawMark(page: PdfPage, x: number, y: number, size: number, color: PdfRgb): void {
@@ -152,27 +175,31 @@ function posterPage(input: PosterDocumentInput): PdfPage {
     cursor -= headlineSize * 1.2
   }
 
-  // LE QR, centré, neuf centimètres.
-  const qrY = cursor - 0.8 * CM - QR_SIZE
-  drawQr(page, posterUrl(input.origin, input.code), (A4.width - QR_SIZE) / 2, qrY, QR_SIZE)
+  // LE QR, centré. `QR_SYMBOL` est le côté du SYMBOLE ; la zone de silence
+  // s'ajoute autour, et l'emprise rendue sert à poser la suite.
+  const qrTop = cursor - 0.6 * CM
+  const qrY = qrTop - drawQr(page, posterUrl(input.origin, input.code), A4.width / 2, qrTop, QR_SYMBOL)
 
   // LE CODE EN CLAIR, en tout petit sous le QR. C'est le filet quand
   // l'impression est abîmée : il se dicte au téléphone.
   page.fillColor(MUTED)
-  centered(page, copy.codeLabel, qrY - 0.7 * CM, 9, 'Helvetica')
+  centered(page, copy.codeLabel, qrY - 0.35 * CM, 9, 'Helvetica')
   page.fillColor(INK)
   const codeSize = 13
-  page.text(
-    (A4.width - textWidth(input.code, codeSize, 'Helvetica-Bold') - 2 * codeSize * 0.12) / 2,
-    qrY - 1.3 * CM,
-    input.code,
-    { font: 'Helvetica-Bold', size: codeSize, charSpacing: codeSize * 0.12 },
-  )
+  // L'espacement ajoute (n-1) intervalles à la largeur : compenser 2 laissait
+  // le code décalé de 1,9 mm sous un QR parfaitement centré.
+  const codeSpacing = codeSize * 0.12
+  const codeWidth = textWidth(input.code, codeSize, 'Helvetica-Bold') + (input.code.length - 1) * codeSpacing
+  page.text((A4.width - codeWidth) / 2, qrY - 0.7 * CM, input.code, {
+    font: 'Helvetica-Bold',
+    size: codeSize,
+    charSpacing: codeSpacing,
+  })
 
   // La phrase d'action, en bas.
   page.fillColor(INK)
   const actionSize = 15
-  let actionCursor = qrY - 2.6 * CM
+  let actionCursor = qrY - 1.9 * CM
   for (const line of wrapText(copy.action, A4.width - 5 * CM, actionSize, 'Helvetica').slice(0, 3)) {
     centered(page, line, actionCursor, actionSize, 'Helvetica')
     actionCursor -= actionSize * 1.35
@@ -257,7 +284,10 @@ function letterPage(input: LetterDocumentInput): PdfPage {
   // rien : l'appelant passe alors `proofLines` vide, et le bloc entier saute.
   if (copy.proofLines.length > 0) {
     cursor -= 10
-    const boxHeight = 22 + copy.proofLines.length * 15
+    // +8 pt sous la dernière ligne de base : la descendante d'Helvetica à
+    // 11 pt vaut 2,33 pt, et 1 pt de fond laissait les jambages (p, j, q, y)
+    // franchir le filet.
+    const boxHeight = 30 + copy.proofLines.length * 15
     page.strokeColor(MUTED).rect(margin, cursor - boxHeight + 12, contentWidth, boxHeight, 'stroke')
     page.fillColor(INK)
     page.text(margin + 12, cursor - 6, copy.proofHeading, { font: 'Helvetica-Bold', size: 11 })
@@ -283,7 +313,7 @@ function letterPage(input: LetterDocumentInput): PdfPage {
 
   // Un QR de rappel, petit : la lettre n'est pas l'affiche, elle donne le
   // chemin le plus court à un patron qui a son téléphone en main.
-  drawQr(page, posterUrl(input.origin, input.code), A4.width - margin - 3 * CM, cursor - 3.4 * CM, 3 * CM)
+  drawQr(page, posterUrl(input.origin, input.code), A4.width - margin - 1.7 * CM, cursor + 0.4 * CM, 2.6 * CM)
 
   page.fillColor(INK)
   for (const line of wrapText(copy.signature, contentWidth - 4 * CM, 11)) {

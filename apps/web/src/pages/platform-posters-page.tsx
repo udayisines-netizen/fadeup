@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { usePlatformIntl } from '@/lib/platform-intl'
 import type { TFunction } from 'i18next'
 import { usePlatformPermissions } from '@/routes/require-platform-role'
 import {
@@ -679,6 +680,7 @@ function BatchLog({
 
 function BatchRow({ batch, open, onToggle }: { batch: PosterBatchRow; open: boolean; onToggle: () => void }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   return (
     <TableRow className={open ? 'bg-paper-50' : undefined}>
       <TableCell>
@@ -692,7 +694,7 @@ function BatchRow({ batch, open, onToggle }: { batch: PosterBatchRow; open: bool
       <TableCell className="tabular-nums text-ink-500">{batch.letters_prepared}</TableCell>
       <TableCell className="max-w-[14rem] truncate text-xs text-ink-500">
         <span className="block truncate">{batch.created_by_email ?? '—'}</span>
-        <span className="block whitespace-nowrap">{new Date(batch.created_at).toLocaleDateString()}</span>
+        <span className="block whitespace-nowrap">{intl.date(batch.created_at)}</span>
       </TableCell>
       <TableCell className="text-right">
         <Button variant="secondary" size="sm" onClick={onToggle}>
@@ -838,6 +840,7 @@ function PosterTableRow({
   onMail: () => void
 }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
 
   return (
     <TableRow>
@@ -863,7 +866,7 @@ function PosterTableRow({
         {poster.state === 'assigned' && poster.assigned_at ? (
           <span className="mt-1 block text-xs text-ink-500">
             {poster.assigned_by_email ? t('platform:posters.assignedBy', { email: poster.assigned_by_email }) : null}{' '}
-            {t('platform:posters.onDate', { date: new Date(poster.assigned_at).toLocaleDateString() })}
+            {t('platform:posters.onDate', { date: intl.date(poster.assigned_at) })}
           </span>
         ) : null}
         {poster.state === 'revoked' && poster.revoke_reason ? (
@@ -888,7 +891,7 @@ function PosterTableRow({
             <span className="block">{t('platform:posters.letterSentTo', { name: poster.letter_prospect_name })}</span>
             {poster.letter_generated_at ? (
               <span className="block whitespace-nowrap">
-                {t('platform:posters.onDate', { date: new Date(poster.letter_generated_at).toLocaleDateString() })}
+                {t('platform:posters.onDate', { date: intl.date(poster.letter_generated_at) })}
               </span>
             ) : null}
           </>

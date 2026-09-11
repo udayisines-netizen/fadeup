@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
+import { usePlatformIntl } from '@/lib/platform-intl'
 import type { TFunction } from 'i18next'
 import { usePlatformPermissions } from '@/routes/require-platform-role'
 import {
@@ -168,16 +170,24 @@ function stageLabel(t: TFunction, stage: string): string {
   return key ? t(`platform:salesDesk.${key}`) : stage
 }
 
+/*
+ * Ces deux aides sont appelées depuis une quinzaine d'endroits, dont des
+ * fonctions hors composant : elles ne peuvent pas être des hooks. Elles lisent
+ * donc la langue sur l'INSTANCE i18next — celle de l'APPLICATION, pas celle du
+ * navigateur. Les composants qui les appellent sont abonnés par
+ * `useTranslation()`, donc un changement de langue les re-rend et les
+ * reformate.
+ */
 function formatDate(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date.toLocaleDateString()
+  return Number.isNaN(date.getTime()) ? null : date.toLocaleDateString(i18n.language)
 }
 
 function formatDateTime(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date.toLocaleString()
+  return Number.isNaN(date.getTime()) ? null : date.toLocaleString(i18n.language)
 }
 
 function SalesDesk() {
@@ -317,6 +327,7 @@ function SalesDesk() {
  */
 function PipelineSection() {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const pipelineQuery = useSalesPipeline()
 
   if (pipelineQuery.isPending) {
@@ -362,20 +373,20 @@ function PipelineSection() {
       ) : (
         <>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <MetricTile value={totalProspects.toLocaleString()} label={t('platform:salesDesk.prospectsTotal')} />
+            <MetricTile value={intl.number(totalProspects)} label={t('platform:salesDesk.prospectsTotal')} />
             <MetricTile
-              value={sum((row) => row.prospect_count, 'field').toLocaleString()}
+              value={intl.number(sum((row) => row.prospect_count, 'field'))}
               label={t('platform:salesDesk.originField')}
               context={t('platform:salesDesk.originFieldHint')}
               tone="accent"
             />
             <MetricTile
-              value={sum((row) => row.prospect_count, 'worker').toLocaleString()}
+              value={intl.number(sum((row) => row.prospect_count, 'worker'))}
               label={t('platform:salesDesk.originWorker')}
               context={t('platform:salesDesk.originWorkerHint')}
             />
             <MetricTile
-              value={sum((row) => row.published_count).toLocaleString()}
+              value={intl.number(sum((row) => row.published_count))}
               label={t('platform:salesDesk.publishedTotal')}
             />
           </div>
@@ -406,7 +417,7 @@ function PipelineSection() {
                       <TableCell>
                         <OriginCell row={worker} tone="neutral" />
                       </TableCell>
-                      <TableCell className="tabular-nums text-ink-500">{total.toLocaleString()}</TableCell>
+                      <TableCell className="tabular-nums text-ink-500">{intl.number(total)}</TableCell>
                     </TableRow>
                   )
                 })}
@@ -421,6 +432,7 @@ function PipelineSection() {
 
 function OriginCell({ row, tone }: { row: PipelineRow | undefined; tone: 'accent' | 'neutral' }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   if (!row || row.prospect_count === 0) {
     return <span className="text-ink-300">—</span>
   }
@@ -433,7 +445,7 @@ function OriginCell({ row, tone }: { row: PipelineRow | undefined; tone: 'accent
             : 'block text-base font-semibold tabular-nums text-ink-950'
         }
       >
-        {row.prospect_count.toLocaleString()}
+        {intl.number(row.prospect_count)}
       </span>
       <span className="block whitespace-nowrap text-xs text-ink-500">
         {t('platform:salesDesk.perOrigin', { published: row.published_count, contacted: row.contacted_count })}
@@ -523,6 +535,7 @@ function ProspectRow({
 /** Les chiffres réels, puis l'état des relances. C'est l'ordre de l'appel. */
 function ProspectInsight({ prospect }: { prospect: ProspectListRow }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { can } = usePlatformPermissions()
   const statsQuery = useProspectStats(prospect.id)
   const stats = statsQuery.data
@@ -636,20 +649,20 @@ function ProspectInsight({ prospect }: { prospect: ProspectListRow }) {
                 ) : null}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <MetricTile
-                    value={stats.interest_requests_pending.toLocaleString()}
+                    value={intl.number(stats.interest_requests_pending)}
                     label={t('platform:salesDesk.pendingRequests')}
                     tone={stats.interest_requests_pending > 0 ? 'warning' : 'quiet'}
                   />
                   <MetricTile
-                    value={stats.interest_requests.toLocaleString()}
+                    value={intl.number(stats.interest_requests)}
                     label={t('platform:salesDesk.interestRequests')}
                   />
                   <MetricTile
-                    value={stats.booking_started.toLocaleString()}
+                    value={intl.number(stats.booking_started)}
                     label={t('platform:salesDesk.bookingStarted')}
                   />
                   <MetricTile
-                    value={stats.profile_views_all_time.toLocaleString()}
+                    value={intl.number(stats.profile_views_all_time)}
                     label={t('platform:salesDesk.viewsAllTime')}
                     context={
                       stats.last_profile_view_at
@@ -660,14 +673,14 @@ function ProspectInsight({ prospect }: { prospect: ProspectListRow }) {
                     }
                   />
                   <MetricTile
-                    value={stats.profile_views.toLocaleString()}
+                    value={intl.number(stats.profile_views)}
                     label={t('platform:salesDesk.views90')}
                   />
                   <MetricTile
-                    value={stats.search_result_views.toLocaleString()}
+                    value={intl.number(stats.search_result_views)}
                     label={t('platform:salesDesk.searchViews')}
                   />
-                  <MetricTile value={stats.followers.toLocaleString()} label={t('platform:salesDesk.followers')} />
+                  <MetricTile value={intl.number(stats.followers)} label={t('platform:salesDesk.followers')} />
                 </div>
               </>
             )}
@@ -926,6 +939,7 @@ function PublishAction({ prospect }: { prospect: ProspectListRow }) {
  */
 function OnboardingSection() {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const queueQuery = useApplicationQueue('pending_review')
   const pending = queueQuery.data ?? []
   const shown = pending.slice(0, 5)
@@ -936,7 +950,7 @@ function OnboardingSection() {
         title={t('platform:salesDesk.onboarding')}
         meta={
           queueQuery.isSuccess
-            ? t('platform:salesDesk.onboardingWaiting') + ' · ' + pending.length.toLocaleString()
+            ? t('platform:salesDesk.onboardingWaiting') + ' · ' + intl.number(pending.length)
             : undefined
         }
       />
@@ -996,12 +1010,15 @@ function ApplicationCard({ application }: { application: ApplicationQueueRow }) 
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to={`/platform/applications/${application.id}`}
-            className="text-sm font-medium text-accent-600 underline underline-offset-2"
-          >
-            {t('platform:salesDesk.reviewInDetail')}
-          </Link>
+          {/*
+            PAS DE LIEN VERS `/platform/applications/:id`. Cette page lit
+            `professional_applications` EN DIRECT, sous une policy qui exige
+            `is_platform_admin()` : un commercial ou un modérateur y arrivait
+            sur un écran vide. L'écran de modération du même lot documente ce
+            piège et refuse déjà le lien ; celui-ci le posait quand même.
+            La ligne porte ce qu'il faut pour décider, et rien ne renvoie vers
+            un cul-de-sac.
+          */}
           <Button variant="secondary" size="sm" onClick={() => setRejecting(true)}>
             {t('platform:salesDesk.reject')}
           </Button>

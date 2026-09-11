@@ -43,18 +43,47 @@ describe('le PDF des affiches', () => {
     })
   })
 
-  it('imprime le QR à au moins huit centimètres de côté', () => {
+  it('imprime LE SYMBOLE — pas son fond — à au moins huit centimètres', () => {
     const pdf = buildPosterPdf(['ABCDEFGHJK'], 'https://fade-up.com', COPY)
     const text = asText(pdf)
-    // Le fond blanc du QR est le premier grand carré dessiné après le fond de
-    // page : on relit sa taille dans le flux.
-    const squares = [...text.matchAll(/([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) re f/g)]
-      .map((m) => ({ w: Number(m[3]), h: Number(m[4]) }))
-      .filter((s) => Math.abs(s.w - s.h) < 0.01 && s.w > 100)
-    const qrSquare = squares[0]
-    expect(qrSquare).toBeDefined()
-    expect(qrSquare?.w).toBeGreaterThanOrEqual(8 * CM)
-    expect(qrSquare?.w).toBeLessThanOrEqual(A4.width - 2 * CM)
+    const rects = [...text.matchAll(/([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+) re f/g)].map((m) => ({
+      x: Number(m[1]),
+      y: Number(m[2]),
+      w: Number(m[3]),
+      h: Number(m[4]),
+    }))
+
+    /*
+     * LE DÉFAUT QUE CE TEST A LAISSÉ PASSER, ET QU'IL NE LAISSERA PLUS.
+     * Sa première version mesurait le CARRÉ BLANC de fond du QR — 9 cm — et
+     * déclarait l'exigence tenue. Le symbole lui-même n'en faisait que 7,05 :
+     * la zone de silence, 21,6 % de la boîte, était comptée dedans. Un test
+     * qui mesure la boîte ne mesure pas le symbole ; il contourne l'exigence
+     * par construction. On mesure donc l'EMPRISE DES MODULES NOIRS.
+     */
+    const background = rects.find((r) => Math.abs(r.w - r.h) < 0.01 && r.w > 60)
+    expect(background).toBeDefined()
+    if (!background) return
+    const modules = rects.filter(
+      (r) =>
+        r !== background &&
+        r.x >= background.x - 1 &&
+        r.x + r.w <= background.x + background.w + 1 &&
+        r.y >= background.y - 1 &&
+        r.h < background.w / 5,
+    )
+    expect(modules.length).toBeGreaterThan(50)
+    const left = Math.min(...modules.map((r) => r.x))
+    const right = Math.max(...modules.map((r) => r.x + r.w))
+    const bottom = Math.min(...modules.map((r) => r.y))
+    const top = Math.max(...modules.map((r) => r.y + r.h))
+    const symbol = Math.max(right - left, top - bottom)
+
+    expect(symbol, 'le symbole doit faire au moins 8 cm').toBeGreaterThanOrEqual(8 * CM)
+    // Et il tient sur la page, zone de silence comprise.
+    expect(background.w).toBeLessThanOrEqual(A4.width - 2 * CM)
+    // La zone de silence de la norme est présente : le fond dépasse le symbole.
+    expect(background.w).toBeGreaterThan(symbol)
   })
 
   it('porte le code EN CLAIR sur la page, pour le cas où l’impression est abîmée', () => {

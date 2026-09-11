@@ -233,14 +233,19 @@ describe('PlatformSupportPage — /platform/support', () => {
       data: undefined,
       isPending: false,
       isError: true,
-      error: { message: 'permission denied', details: 'fadeup_support_refusal=not_support' },
+      error: { message: 'permission denied', details: 'fadeup_support_refusal=not_authorized' },
     } as never)
 
     renderPage()
 
     expect(screen.getByText('platform:supportDesk.queueError')).toBeInTheDocument()
-    // Le motif nommé du refus serveur est rendu, pas avalé.
-    expect(screen.getByText(/not_support/)).toBeInTheDocument()
+    /*
+     * Le motif nommé du refus est rendu TRADUIT — pas le code brut, et pas le
+     * message anglais de Postgres. La première version de ce test exigeait le
+     * code brut : elle gardait le défaut au lieu de le prévenir.
+     */
+    expect(screen.getByText('platform:supportDesk.refusal_not_authorized')).toBeInTheDocument()
+    expect(screen.queryByText(/permission denied/)).toBeNull()
     expect(screen.queryByText('platform:supportDesk.queueEmpty')).not.toBeInTheDocument()
   })
 

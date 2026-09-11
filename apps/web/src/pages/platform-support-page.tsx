@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import { usePlatformIntl } from '@/lib/platform-intl'
 import { usePlatformPermissions } from '@/routes/require-platform-role'
 import { useAllOrganizations } from '@/lib/queries/platform'
 import {
@@ -144,7 +145,7 @@ function SupportDesk() {
           ) : ticketsQuery.isError ? (
             <ErrorState
               title={t('platform:supportDesk.queueError')}
-              description={failureDescription(ticketsQuery.error)}
+              description={failureDescription(ticketsQuery.error, t)}
             />
           ) : (
             <TicketTable tickets={ticketsQuery.data ?? []} mineOnly={mineOnly} />
@@ -200,7 +201,7 @@ function WithdrawalDeadlines({ tickets }: { tickets: SupportTicketRow[] }) {
         ) : withdrawalsQuery.isError ? (
           <ErrorState
             title={t('platform:supportDesk.withdrawalsError')}
-            description={failureDescription(withdrawalsQuery.error)}
+            description={failureDescription(withdrawalsQuery.error, t)}
           />
         ) : (
           <Table label={t('platform:supportDesk.deadlines')}>
@@ -238,6 +239,7 @@ function WithdrawalDeadlines({ tickets }: { tickets: SupportTicketRow[] }) {
 
 function WithdrawalRow({ row, ticket }: { row: WithdrawalRequestRow; ticket: SupportTicketRow | null }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { can } = usePlatformPermissions()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -262,7 +264,7 @@ function WithdrawalRow({ row, ticket }: { row: WithdrawalRequestRow; ticket: Sup
         <TableCell>
           <DeadlineBadge hoursRemaining={row.hours_remaining} isOverdue={row.is_overdue} />
           <span className="mt-1 block whitespace-nowrap text-xs text-ink-500">
-            {new Date(row.deadline_at).toLocaleString()}
+            {intl.dateTime(row.deadline_at)}
           </span>
         </TableCell>
         <TableCell className="text-end">
@@ -301,7 +303,7 @@ function WithdrawalRow({ row, ticket }: { row: WithdrawalRequestRow; ticket: Sup
                         onError: (error) =>
                           toast({
                             title: t('platform:supportDesk.ticketFailed'),
-                            description: failureDescription(error),
+                            description: failureDescription(error, t),
                             variant: 'error',
                           }),
                       },
@@ -328,7 +330,7 @@ function WithdrawalRow({ row, ticket }: { row: WithdrawalRequestRow; ticket: Sup
           } catch (error) {
             toast({
               title: t('platform:supportDesk.completeFailed'),
-              description: failureDescription(error),
+              description: failureDescription(error, t),
               variant: 'error',
             })
           }
@@ -539,7 +541,7 @@ function NewCallForm({ onDone }: { onDone: () => void }) {
         } catch (error) {
           toast({
             title: t('platform:supportDesk.ticketFailed'),
-            description: failureDescription(error),
+            description: failureDescription(error, t),
             variant: 'error',
           })
         }
@@ -600,7 +602,7 @@ function ShopDossierOpener() {
           ) : organizationsQuery.isError ? (
             <ErrorState
               title={t('common:errors.somethingWentWrong')}
-              description={failureDescription(organizationsQuery.error)}
+              description={failureDescription(organizationsQuery.error, t)}
             />
           ) : (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">

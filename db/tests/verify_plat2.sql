@@ -183,6 +183,13 @@ values ('9a20b200-0000-0000-0000-000000000001', '9a20f000-0000-0000-0000-0000000
 -- Un e-mail transactionnel déjà parti, pour l'action « renvoyer ».
 insert into public.email_outbox (id, to_email, template, locale, payload, stream, status, sent_at)
 values ('9a20b300-0000-0000-0000-000000000001', 'qa-plat2-v-client@fadeup.test', 'booking_confirmed', 'fr', '{}', 'transactional', 'sent', now() - interval '1 hour');
+-- Et un second vers une adresse INSCRITE SUR LA LISTE D'OPPOSITION, sans que
+-- CETTE ligne-là ait rebondi : c'est le cas que la version d'avant la revue
+-- laissait passer.
+insert into public.email_outbox (id, to_email, template, locale, payload, stream, status, sent_at)
+values ('9a20b300-0000-0000-0000-000000000002', 'qa-plat2-v-bounce@fadeup.test', 'booking_confirmed', 'fr', '{}', 'transactional', 'sent', now() - interval '2 hours');
+insert into public.prospect_suppressions (scope, value, reason)
+values ('email', 'qa-plat2-v-bounce@fadeup.test', 'hard_bounce');
 
 -- Un client avec une note privée : le commercial ne doit jamais la lire.
 insert into public.customers (id, organization_id, name, phone, notes, user_id)
@@ -437,6 +444,12 @@ select pg_temp.expect('D10 une sortie de file sans motif est refusée',
   $$select public.remove_queue_entry_as_platform('9a20ad00-0000-0000-0000-000000000001', '  ')$$, 'refus');
 select pg_temp.expect('D11 il renvoie un e-mail transactionnel',
   $$select public.resend_platform_email('9a20b300-0000-0000-0000-000000000001', 'le client ne l''a pas reçu')$$, 'ok');
+
+-- LA LISTE D'OPPOSITION DE X2 est posée sur l'ADRESSE, pas sur la ligne :
+-- un rebond dur vaut pour tout ce qui part vers cette adresse. La fonction ne
+-- regardait que `bounced_at` de la ligne demandée. Trouvé par la revue.
+select pg_temp.expect('D11b un renvoi vers une adresse SUR LA LISTE D''OPPOSITION est refusé',
+  $$select public.resend_platform_email('9a20b300-0000-0000-0000-000000000002', 'essai')$$, 'refus');
 
 select pg_temp.be('9a200000-0000-0000-0000-000000000005');
 select pg_temp.expect('D12 le commercial ne sort personne d''une file',
@@ -708,9 +721,13 @@ select pg_temp.expect_text('G37 elle porte le nom du salon',
 select pg_temp.expect_text('G38 et UN ÉLÉMENT DE PREUVE tiré de l''analytics réelle',
   $$select ((public.prepare_poster_letter((select code from qa_plat2_codes where rn = 3), '9a20b100-0000-0000-0000-000000000001') -> 'proof') ->> 'profile_views_all_time')$$, '2');
 
--- Un prospect SANS mesure ne reçoit PAS de preuve inventée.
-select pg_temp.expect_text('G39 un prospect sans mesure part SANS élément de preuve',
-  $$select jsonb_typeof(public.prepare_poster_letter((select code from qa_plat2_codes where rn = 4), '9a20b100-0000-0000-0000-000000000002') -> 'proof')$$, 'null');
+-- Un prospect PUBLIÉ mais sans aucune mesure ne reçoit PAS de preuve inventée.
+select pg_temp.expect_text('G39 un prospect publié sans mesure part SANS élément de preuve',
+  $$select jsonb_typeof(public.prepare_poster_letter((select code from qa_plat2_codes where rn = 4), '9a20b100-0000-0000-0000-000000000004') -> 'proof')$$, 'null');
+-- ET UNE LETTRE NE PART PAS VERS UN SALON QUI N'EST PAS EN LIGNE : son corps
+-- générique affirme au patron que sa fiche existe déjà. Trouvé par la revue.
+select pg_temp.expect('G39b une lettre ne part PAS vers un salon dont la fiche n''est pas publiée',
+  $$select public.prepare_poster_letter((select code from qa_plat2_codes where rn = 6), '9a20b100-0000-0000-0000-000000000002')$$, 'refus');
 
 -- ---- le crochet de revendication -----------------------------------------
 -- La fiche du prospect de la zone est PUBLIQUE et NON REVENDIQUÉE : l'affiche
@@ -725,6 +742,74 @@ select pg_temp.expect_text('G40 SCAN de ce code : chemin vers la revendication',
   'zz.qa.plat2.affiche');
 select pg_temp.expect_text('G41 un code sans destinataire postal n''invente aucun crochet',
   $$select jsonb_typeof(public.resolve_poster_code((select code from qa_plat2_codes where rn = 6)) -> 'claim')$$, 'null');
+
+-- ---- les durcissements de la revue indépendante --------------------------
+--
+-- UNE AFFICHE PARTIE PAR LA POSTE ne se fait pas préempter pendant les jours
+-- où l'enveloppe voyage. Le code rn=3 porte une lettre (G35).
+-- Le code rn=5 est parti vers le prospect « Affiche » (G40a), qui n'a
+-- converti vers AUCUNE organisation : personne d'autre que l'interne ne doit
+-- pouvoir se le donner.
+select pg_temp.be('9a200000-0000-0000-0000-000000000006');
+select pg_temp.expect('G42 UN STAGIAIRE NE PRÉEMPTE PAS une affiche déjà postée',
+  $$select public.assign_poster((select code from qa_plat2_codes where rn = 5), '9a20c000-0000-0000-0000-00000000000c')$$, 'refus');
+select pg_temp.be('9a200000-0000-0000-0000-000000000011');
+select pg_temp.expect('G43 un patron non plus, même sur SON établissement',
+  $$select public.assign_poster((select code from qa_plat2_codes where rn = 5), '9a20c000-0000-0000-0000-00000000000a')$$, 'refus');
+
+-- MAIS LE DESTINATAIRE, LUI, LA REÇOIT. Le code rn=3 est parti vers le
+-- prospect de la zone, qui a converti en salon A quand sa revendication a été
+-- approuvée (section E) : l'affiche va donc bien au salon à qui elle était
+-- adressée, et le stagiaire qui la tient peut la poser pour lui.
+select pg_temp.be('9a200000-0000-0000-0000-000000000006');
+select pg_temp.expect('G43b LE SALON DESTINATAIRE, lui, reçoit son affiche',
+  $$select public.assign_poster((select code from qa_plat2_codes where rn = 3), '9a20c000-0000-0000-0000-00000000000c')$$, 'ok');
+
+select pg_temp.be('9a200000-0000-0000-0000-000000000001');
+select pg_temp.expect('G44 UN INTERNE, qui a décidé l''envoi, peut le défaire',
+  $$select public.assign_poster((select code from qa_plat2_codes where rn = 5), '9a20c000-0000-0000-0000-00000000000a')$$, 'ok');
+
+-- L'ÉNUMÉRATION PAR LA TABLE, fermée. Un porteur de `poster.assign` attribue
+-- en SCANNANT ; il n'a aucun besoin de lire la table, et la lui laisser
+-- ouverte lui donnait la liste des codes libres avec leur destinataire.
+select pg_temp.be('9a200000-0000-0000-0000-000000000006');
+select pg_temp.expect_count('G45 LE STAGIAIRE N''ÉNUMÈRE AUCUNE AFFICHE par la table',
+  $$select count(*) from public.posters$$, 0);
+select pg_temp.be('9a200000-0000-0000-0000-000000000005');
+select pg_temp.expect_count('G46 le commercial non plus',
+  $$select count(*) from public.posters$$, 0);
+select pg_temp.be('9a200000-0000-0000-0000-000000000011');
+select pg_temp.expect_count('G47 le patron ne voit QUE les affiches de SON salon',
+  $$select count(*) from public.posters where organization_id <> '9a20a000-0000-0000-0000-00000000000a'$$, 0);
+
+-- UNE RÉVOCATION N'ÉCRASE PAS LA PRÉCÉDENTE.
+select pg_temp.be('9a200000-0000-0000-0000-000000000001');
+-- DEUX INSTRUCTIONS, et c'est nécessaire : `pg_temp.expect` attrape
+-- l'exception dans une sous-transaction, qui défait TOUTE l'instruction —
+-- les deux révocations d'un même `select` seraient annulées ensemble et le
+-- test ne prouverait rien.
+select pg_temp.expect('G48a une première révocation passe',
+  $$select public.revoke_poster((select code from qa_plat2_codes where rn = 2), 'premier motif')$$, 'ok');
+select pg_temp.expect('G48 révoquer une affiche DÉJÀ révoquée est refusé',
+  $$select public.revoke_poster((select code from qa_plat2_codes where rn = 2), 'second motif qui écraserait')$$, 'refus');
+select pg_temp.expect_count('G49 et le premier motif est intact',
+  $$select count(*) from public.posters p join qa_plat2_codes q on q.code = p.code
+     where q.rn = 2 and p.revoke_reason = 'premier motif'$$, 1);
+
+-- LA RÉATTRIBUTION APRÈS RÉVOCATION EST DISTINGUÉE AU JOURNAL. Elle était
+-- écrite `false` en toute circonstance : le drapeau se lisait APRÈS le
+-- `returning into`, où l'état vaut déjà « attribué ».
+select pg_temp.expect('G50 une affiche révoquée se réattribue',
+  $$select public.assign_poster((select code from qa_plat2_codes where rn = 2), '9a20c000-0000-0000-0000-00000000000a')$$, 'ok');
+-- DEUX réattributions après révocation dans cette suite : G26 (la première
+-- révocation, réattribuée par le fondateur) et G50. Les deux doivent porter
+-- le drapeau ; avant la revue, AUCUNE ne le portait.
+select pg_temp.expect_count('G51 et le journal dit que ce SONT des réattributions',
+  $$select count(*) from public.platform_audit_log
+     where action = 'poster_assigned' and (metadata ->> 'reassigned_after_revocation')::boolean$$, 2);
+select pg_temp.expect_count('G52 tandis qu''une première attribution ne le dit pas',
+  $$select count(*) from public.platform_audit_log
+     where action = 'poster_assigned' and not (metadata ->> 'reassigned_after_revocation')::boolean$$, 4);
 
 -- ============================================================================
 -- H. CHAQUE ACTION EST RÉELLEMENT TRACÉE

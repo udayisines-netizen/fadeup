@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import { usePlatformIntl } from '@/lib/platform-intl'
 import { usePlatformPermissions } from '@/routes/require-platform-role'
+import { useAuth } from '@/lib/auth-context'
 import { usePlatformTeam } from '@/lib/queries/platform'
 import {
   useAddSupportTicketMessage,
@@ -130,10 +132,45 @@ export function refusalOf(error: unknown): string | undefined {
   return /fadeup_[a-z_]*refusal=([a-z_]+)/.exec(haystack)?.[1]
 }
 
-/** La description d'un toast d'échec : le message serveur, et son motif quand il en porte un. */
-export function failureDescription(error: unknown): string | undefined {
-  const parts = [getErrorMessage(error), refusalOf(error)].filter(Boolean)
-  return parts.length > 0 ? parts.join(' · ') : undefined
+/**
+ * Les motifs de refus que les RPC de support et d'affiche savent nommer, et
+ * que cet écran sait DIRE. La version précédente concaténait le code brut au
+ * message serveur : le support lisait « cet e-mail a rebondi, il ne se
+ * renvoie pas · email_bounced ». Les deux autres écrans du lot traduisaient
+ * déjà ; celui-ci ne le faisait pas.
+ */
+const REFUSAL_KEYS = [
+  'not_authorized',
+  'subject_required',
+  'origin_not_wired',
+  'withdrawal_required',
+  'resolution_required',
+  'assignee_not_support',
+  'kind_reserved',
+  'body_required',
+  'dossier_not_authorized',
+  'target_required',
+  'reason_required',
+  'queue_entry_not_waiting',
+  'queue_remove_required',
+  'email_resend_required',
+  'email_bounced',
+  'email_suppressed',
+  'email_not_transactional',
+  'appointment_cancel_required',
+] as const
+
+/**
+ * La description d'un toast d'échec. Le motif NOMMÉ, traduit, quand la RPC en
+ * porte un ; le message serveur seulement quand elle n'en porte pas — mieux
+ * vaut une phrase anglaise de Postgres qu'un silence.
+ */
+export function failureDescription(error: unknown, translate?: (key: string) => string): string | undefined {
+  const refusal = refusalOf(error)
+  if (refusal && translate && (REFUSAL_KEYS as readonly string[]).includes(refusal)) {
+    return translate(`platform:supportDesk.refusal_${refusal}`)
+  }
+  return getErrorMessage(error)
 }
 
 /**
@@ -305,6 +342,7 @@ export function PlatformSupportTicketPage() {
 
 function SupportTicket() {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { ticketId } = useParams<{ ticketId: string }>()
   const vocabulary = useSupportVocabulary()
   const ticketQuery = useSupportTicket(ticketId)
@@ -335,7 +373,7 @@ function SupportTicket() {
         <ErrorState
           className="mt-4"
           title={t('platform:supportDesk.loadTicketFailed')}
-          description={failureDescription(ticketQuery.error)}
+          description={failureDescription(ticketQuery.error, t)}
         />
       </Container>
     )
@@ -376,10 +414,10 @@ function SupportTicket() {
             value={ticket.assigned_to_email ?? t('platform:supportDesk.unassigned')}
           />
           <KeyValue label={t('platform:supportDesk.openedBy')} value={ticket.opened_by_email ?? '—'} />
-          <KeyValue label={t('common:field.created')} value={new Date(ticket.created_at).toLocaleString()} />
+          <KeyValue label={t('common:field.created')} value={intl.dateTime(ticket.created_at)} />
           <KeyValue
             label={t('platform:supportDesk.colDeadline')}
-            value={ticket.due_at ? new Date(ticket.due_at).toLocaleString() : '—'}
+            value={ticket.due_at ? intl.dateTime(ticket.due_at) : '—'}
           />
           {ticket.organization_name ? (
             <KeyValue label={t('platform:supportDesk.dossierOrganization')} value={ticket.organization_name} />
@@ -434,7 +472,7 @@ function SupportTicket() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="neutral">{vocabulary.messageKind(message.kind)}</Badge>
                       <span className="text-xs text-ink-500">
-                        {message.author_email ?? '—'} · {new Date(message.created_at).toLocaleString()}
+                        {message.author_email ?? '—'} · {intl.dateTime(message.created_at)}
                       </span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-sm text-ink-950">{message.body}</p>
@@ -483,6 +521,8 @@ function TicketActions({
   const { toast } = useToast()
   const vocabulary = useSupportVocabulary()
   const teamQuery = usePlatformTeam()
+  const { user } = useAuth()
+  const myUserId = user?.id ?? null
   const assign = useAssignSupportTicket()
   const setStatus = useSetSupportTicketStatus()
   const [resolving, setResolving] = useState(false)
@@ -494,6 +534,21 @@ function TicketActions({
    */
   const handlers = (teamQuery.data ?? []).filter((member) => TICKET_HANDLING_ROLES.includes(member.role))
 
+  function assignTo(assignee: string | null) {
+    assign.mutate(
+      { ticketId, assignee },
+      {
+        onSuccess: () => toast({ title: t('platform:supportDesk.assigned') }),
+        onError: (error) =>
+          toast({
+            title: t('platform:supportDesk.assignFailed'),
+            description: failureDescription(error, t),
+            variant: 'error',
+          }),
+      },
+    )
+  }
+
   function changeStatus(next: SupportTicketStatus) {
     setStatus.mutate(
       { ticketId, status: next },
@@ -502,7 +557,7 @@ function TicketActions({
         onError: (error) =>
           toast({
             title: t('platform:supportDesk.statusFailed'),
-            description: failureDescription(error),
+            description: failureDescription(error, t),
             variant: 'error',
           }),
       },
@@ -520,25 +575,43 @@ function TicketActions({
             ) : teamQuery.isPending ? (
               <Skeleton className="h-11 w-full" />
             ) : handlers.length === 0 ? (
-              <p className="text-sm text-ink-500">{t('platform:supportDesk.teamNotVisible')}</p>
+              /*
+               * LE DÉFAUT QUE CECI RÉPARE. `list_platform_team()` est gardée
+               * par `internal_team.read` — fondateur et admin. Un SUPPORT,
+               * c'est-à-dire la persona même de cet écran, recevait donc zéro
+               * ligne et ne pouvait assigner AUCUN ticket, pas même à
+               * lui-même, alors que le serveur l'autorise (assign_support_ticket
+               * n'exige que `support.tickets`). Le filtre « mes tickets » de la
+               * file en devenait inutilisable.
+               *
+               * Il ne s'agit PAS d'élargir `internal_team.read` pour ça : voir
+               * le trombinoscope est une autre question que prendre un ticket.
+               * On offre donc le geste que le serveur autorise déjà, et le seul
+               * qui ait un sens sans annuaire : se l'attribuer.
+               */
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-ink-500">{t('platform:supportDesk.teamNotVisible')}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={assign.isPending || assignedTo === myUserId}
+                    onClick={() => assignTo(myUserId ?? null)}
+                  >
+                    {t('platform:supportDesk.assignToMe')}
+                  </Button>
+                  {assignedTo ? (
+                    <Button variant="ghost" size="sm" disabled={assign.isPending} onClick={() => assignTo(null)}>
+                      {t('platform:supportDesk.unassignMe')}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
             ) : (
               <SelectField
                 label={t('platform:supportDesk.assignTo')}
                 value={assignedTo ?? ''}
-                onChange={(event) =>
-                  assign.mutate(
-                    { ticketId, assignee: event.target.value || null },
-                    {
-                      onSuccess: () => toast({ title: t('platform:supportDesk.assigned') }),
-                      onError: (error) =>
-                        toast({
-                          title: t('platform:supportDesk.assignFailed'),
-                          description: failureDescription(error),
-                          variant: 'error',
-                        }),
-                    },
-                  )
-                }
+                onChange={(event) => assignTo(event.target.value || null)}
                 options={[
                   { value: '', label: t('platform:supportDesk.unassigned') },
                   ...handlers.map((member) => ({
@@ -595,7 +668,7 @@ function TicketActions({
           } catch (error) {
             toast({
               title: t('platform:supportDesk.statusFailed'),
-              description: failureDescription(error),
+              description: failureDescription(error, t),
               variant: 'error',
             })
           }
@@ -635,7 +708,7 @@ function AddMessageForm({ ticketId }: { ticketId: string }) {
             } catch (error) {
               toast({
                 title: t('platform:supportDesk.noteFailed'),
-                description: failureDescription(error),
+                description: failureDescription(error, t),
                 variant: 'error',
               })
             }
@@ -741,7 +814,7 @@ function DossierCard({
               <Skeleton className="h-9 w-3/4" />
             </div>
           ) : isError ? (
-            <ErrorState title={t('platform:supportDesk.dossierError')} description={failureDescription(error)} />
+            <ErrorState title={t('platform:supportDesk.dossierError')} description={failureDescription(error, t)} />
           ) : (
             children
           )}
@@ -819,6 +892,7 @@ interface CustomerDossierData {
 
 function CustomerDossier({ userId }: { userId: string }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const query = usePlatformDossier('customer', userId)
   const data = query.data as CustomerDossierData | undefined
 
@@ -839,7 +913,7 @@ function CustomerDossier({ userId }: { userId: string }) {
                 <KeyValue label={t('common:field.locale')} value={data.identity.locale ?? '—'} />
                 <KeyValue
                   label={t('common:field.created')}
-                  value={new Date(data.identity.created_at).toLocaleDateString()}
+                  value={intl.date(data.identity.created_at)}
                 />
               </dl>
             ) : (
@@ -899,6 +973,7 @@ interface ProfessionalDossierData {
 
 function ProfessionalDossier({ professionalId }: { professionalId: string }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const query = usePlatformDossier('professional', professionalId)
   const data = query.data as ProfessionalDossierData | undefined
 
@@ -986,7 +1061,7 @@ function ProfessionalDossier({ professionalId }: { professionalId: string }) {
                       <TableCell>{claim.state}</TableCell>
                       <TableCell className="text-ink-500">{claim.claimant_email ?? '—'}</TableCell>
                       <TableCell className="whitespace-nowrap text-ink-500">
-                        {new Date(claim.submitted_at).toLocaleDateString()}
+                        {intl.date(claim.submitted_at)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1058,6 +1133,7 @@ interface OrganizationDossierData {
  */
 export function OrganizationDossier({ organizationId }: { organizationId: string }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const query = usePlatformDossier('organization', organizationId)
   const data = query.data as OrganizationDossierData | undefined
 
@@ -1129,7 +1205,7 @@ export function OrganizationDossier({ organizationId }: { organizationId: string
             {data.trial ? (
               <p className="text-sm text-ink-950">
                 {data.trial.status}
-                {data.trial.ends_at ? ` · ${new Date(data.trial.ends_at).toLocaleDateString()}` : ''}
+                {data.trial.ends_at ? ` · ${intl.date(data.trial.ends_at)}` : ''}
               </p>
             ) : (
               <DossierNothing />
@@ -1165,7 +1241,7 @@ export function OrganizationDossier({ organizationId }: { organizationId: string
               <ul className="flex flex-col gap-1 text-sm text-ink-950">
                 {data.support_sessions.map((session) => (
                   <li key={session.started_at}>
-                    {new Date(session.started_at).toLocaleString()}
+                    {intl.dateTime(session.started_at)}
                     {session.reason ? ` · ${session.reason}` : ''}
                   </li>
                 ))}
@@ -1190,6 +1266,7 @@ function AppointmentsTable({
   showOrganization: boolean
 }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { can } = usePlatformPermissions()
   const { toast } = useToast()
   const cancelAppointment = useCancelAppointmentAsPlatform()
@@ -1218,7 +1295,7 @@ function AppointmentsTable({
           {appointments.map((appointment) => (
             <TableRow key={appointment.id}>
               <TableCell className="whitespace-nowrap">
-                {new Date(appointment.starts_at).toLocaleString()}
+                {intl.dateTime(appointment.starts_at)}
               </TableCell>
               {showOrganization ? (
                 <TableCell className="text-ink-500">{appointment.organization_name ?? '—'}</TableCell>
@@ -1262,7 +1339,7 @@ function AppointmentsTable({
           } catch (error) {
             toast({
               title: t('platform:supportDesk.cancelFailed'),
-              description: failureDescription(error),
+              description: failureDescription(error, t),
               variant: 'error',
             })
           }
@@ -1280,6 +1357,7 @@ function QueueEntriesTable({
   showOrganization: boolean
 }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { can } = usePlatformPermissions()
   const { toast } = useToast()
   const removeEntry = useRemoveQueueEntryAsPlatform()
@@ -1307,7 +1385,7 @@ function QueueEntriesTable({
         <TableBody>
           {entries.map((entry) => (
             <TableRow key={entry.id}>
-              <TableCell className="whitespace-nowrap">{new Date(entry.created_at).toLocaleString()}</TableCell>
+              <TableCell className="whitespace-nowrap">{intl.dateTime(entry.created_at)}</TableCell>
               {showOrganization ? (
                 <TableCell className="text-ink-500">{entry.organization_name ?? '—'}</TableCell>
               ) : null}
@@ -1349,7 +1427,7 @@ function QueueEntriesTable({
           } catch (error) {
             toast({
               title: t('platform:supportDesk.removeFailed'),
-              description: failureDescription(error),
+              description: failureDescription(error, t),
               variant: 'error',
             })
           }
@@ -1361,6 +1439,7 @@ function QueueEntriesTable({
 
 function InterestRequestsTable({ requests }: { requests: DossierInterestRequest[] }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   if (requests.length === 0) return <DossierNothing />
 
   return (
@@ -1377,7 +1456,7 @@ function InterestRequestsTable({ requests }: { requests: DossierInterestRequest[
           <TableRow key={request.id}>
             <TableCell>{request.service_label ?? '—'}</TableCell>
             <TableCell className="whitespace-nowrap text-ink-500">
-              {request.preferred_starts_at ? new Date(request.preferred_starts_at).toLocaleString() : '—'}
+              {request.preferred_starts_at ? intl.dateTime(request.preferred_starts_at) : '—'}
             </TableCell>
             <TableCell>{request.status}</TableCell>
           </TableRow>
@@ -1389,6 +1468,7 @@ function InterestRequestsTable({ requests }: { requests: DossierInterestRequest[
 
 function EmailsTable({ emails }: { emails: DossierEmail[] }) {
   const { t } = useTranslation()
+  const intl = usePlatformIntl()
   const { can } = usePlatformPermissions()
   const { toast } = useToast()
   const resend = useResendPlatformEmail()
@@ -1417,7 +1497,7 @@ function EmailsTable({ emails }: { emails: DossierEmail[] }) {
             <TableRow key={email.id}>
               <TableCell className="font-mono text-xs">{email.template}</TableCell>
               <TableCell className="whitespace-nowrap text-ink-500">
-                {new Date(email.created_at).toLocaleString()}
+                {intl.dateTime(email.created_at)}
               </TableCell>
               <TableCell>
                 {email.status}
@@ -1463,7 +1543,7 @@ function EmailsTable({ emails }: { emails: DossierEmail[] }) {
           } catch (error) {
             toast({
               title: t('platform:supportDesk.resendFailed'),
-              description: failureDescription(error),
+              description: failureDescription(error, t),
               variant: 'error',
             })
           }

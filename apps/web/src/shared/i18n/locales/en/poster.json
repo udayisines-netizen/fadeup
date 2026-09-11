@@ -36,7 +36,7 @@
   },
   "claim": {
     "title": "Is this shop yours?",
-    "body": "{{name}} already has a FadeUp page, and nobody has claimed it. Claiming is free and immediate.",
+    "body": "{{name}} already has a FadeUp page, and nobody has claimed it. Claiming is free; someone at FadeUp reviews your request before handing the page over.",
     "cta": "See the page and claim it"
   }
 }

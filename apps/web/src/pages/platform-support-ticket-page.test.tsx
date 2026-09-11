@@ -30,6 +30,11 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 vi.mock('@/routes/require-platform-role', () => ({ usePlatformPermissions: vi.fn() }))
+// L'écran lit l'identité courante pour offrir « m'attribuer ce ticket » au
+// support, à qui `list_platform_team()` ne rend rien.
+vi.mock('@/lib/auth-context', () => ({
+  useAuth: () => ({ user: { id: 'me-support' }, session: {}, loading: false }),
+}))
 vi.mock('@/lib/queries/platform', () => ({ usePlatformTeam: vi.fn(), useAllOrganizations: vi.fn() }))
 vi.mock('@/lib/queries/platform-plat2', () => ({
   useSupportTicket: vi.fn(),
@@ -311,18 +316,40 @@ describe('PlatformSupportTicketPage — /platform/support/:ticketId', () => {
     }
   })
 
-  it('surfaces the named server refusal instead of a bare failure', () => {
+  /*
+   * CE TEST A ENCODÉ LE DÉFAUT AVANT DE LE GARDER. Sa première version
+   * exigeait que le CODE BRUT (`not_support`) apparaisse à l'écran : c'était
+   * exactement le défaut relevé par la revue, un support qui lit
+   * « … · email_bounced ». Il exige désormais la PHRASE TRADUITE, et que le
+   * code brut n'apparaisse PAS.
+   */
+  it('surfaces the named server refusal TRANSLATED, never the raw code', () => {
     mockTicket.mockReturnValue({
       data: undefined,
       isPending: false,
       isError: true,
-      error: { message: 'ticket introuvable', details: 'fadeup_support_refusal=not_support' },
+      error: { message: 'ticket introuvable', details: 'fadeup_support_refusal=dossier_not_authorized' },
     } as never)
 
     renderPage()
 
     expect(screen.getByText('platform:supportDesk.loadTicketFailed')).toBeInTheDocument()
-    expect(screen.getByText(/not_support/)).toBeInTheDocument()
+    expect(screen.getByText('platform:supportDesk.refusal_dossier_not_authorized')).toBeInTheDocument()
+    // Le message brut du serveur ne doit plus apparaître à côté.
+    expect(screen.queryByText(/ticket introuvable/)).toBeNull()
+  })
+
+  it('retombe sur le message serveur quand le refus n’est pas nommé', () => {
+    mockTicket.mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: true,
+      error: { message: 'connexion perdue' },
+    } as never)
+
+    renderPage()
+
+    expect(screen.getByText('connexion perdue')).toBeInTheDocument()
   })
 })
 

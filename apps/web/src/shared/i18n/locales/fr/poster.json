@@ -36,7 +36,7 @@
   },
   "claim": {
     "title": "Ce salon est le vôtre ?",
-    "body": "La fiche de {{name}} existe sur FadeUp mais n'est revendiquée par personne. La revendication est gratuite et immédiate.",
+    "body": "La fiche de {{name}} existe sur FadeUp et personne ne l'a revendiquée. La revendication est gratuite ; une personne de FadeUp vérifie votre demande avant de vous remettre la fiche.",
     "cta": "Voir la fiche et la revendiquer"
   }
 }
