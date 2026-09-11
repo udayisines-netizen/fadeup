@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { changeLocale } from '@/i18n'
 import { setExplicitLocale } from '@/lib/locale'
+import { ensureV2Locale } from '@/shared/i18n'
 import { V2_LOCALES, type V2Locale } from '@/shared/i18n/namespaces'
 import { SegmentedControl } from '@/shared/ui/SegmentedControl'
 
@@ -22,7 +23,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       onValueChange={(value) => {
         const locale = value === 'fr' ? 'fr' : 'en'
         setExplicitLocale(locale)
-        void changeLocale(locale)
+        // PERF : le bundle v2 de la cible est chargé en fond dès le démarrage ;
+        // cet await ne coûte rien dans le cas nominal et ferme la course si la
+        // bascule arrive avant la fin de ce chargement.
+        void ensureV2Locale(locale).then(() => changeLocale(locale))
       }}
       className={className}
     />

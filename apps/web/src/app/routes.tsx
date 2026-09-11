@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/routes/root-layout'
-import { PlatformLayout } from '@/routes/platform-layout'
 import { RouteErrorBoundary } from '@/routes/route-error-boundary'
 import { ConsumerShell } from '@/app/shells/ConsumerShell'
 import { RequireAuth } from '@/app/guards/RequireAuth'
@@ -64,7 +63,17 @@ const platformRoutes = [
   },
   {
     path: 'platform',
-    element: <PlatformLayout />,
+    /* PERF — paresseux : l'import statique de PlatformLayout tirait le
+       graphe /platform entier (et maplibre avec lui) dans l'entrée consumer
+       (~674 Ko gzip au premier chargement, D1 §11). Le routeur résout les
+       `lazy` de toutes les routes appariées EN PARALLÈLE : un accès direct
+       à /platform/x attendait déjà le module de sa page — aucun état de
+       chargement nouveau. La garde (RequirePlatformRole, refus par défaut)
+       vit DANS PlatformLayout et reste identique. */
+    lazy: async () => {
+      const { PlatformLayout } = await import('@/routes/platform-layout')
+      return { Component: PlatformLayout }
+    },
     children: [
       {
         index: true,

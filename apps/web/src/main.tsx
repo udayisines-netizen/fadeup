@@ -13,10 +13,11 @@ initErrorReporting()
 // Resolving the initial locale is synchronous (localStorage/browser only —
 // see src/lib/locale.ts), so this only waits on loading that one locale's
 // bundled JSON, not a network round-trip.
-void initI18n().then(() => {
-  // V2 (P1b) translations ride the same i18next instance, in their own
-  // airtight `v2` namespace — registered once init has built the store.
-  registerV2Bundles()
+// V2 (P1b) translations ride the same i18next instance, in their own
+// airtight `v2` namespace. PERF: only the ACTIVE locale is awaited (the
+// other loads in the background), IN PARALLEL with initI18n — both resolved
+// before the first render, so no raw key can flash on first paint.
+void Promise.all([initI18n(), registerV2Bundles()]).then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

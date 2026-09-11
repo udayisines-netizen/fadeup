@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/check-entry-graph.mjs",
     "lint": "oxlint && eslint --max-warnings 0 \"src/shared/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/app/**/*.{ts,tsx}\" && node scripts/check-fu-palette.mjs",
     "preview": "vite preview",
     "test": "vitest run",

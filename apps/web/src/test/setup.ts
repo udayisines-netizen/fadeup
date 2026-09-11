@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { initI18n } from '@/i18n'
-import { registerV2Bundles } from '@/shared/i18n'
+import { registerV2Bundles, ensureV2Locale } from '@/shared/i18n'
 
 // jsdom doesn't implement matchMedia — src/lib/theme.tsx reads it to
 // resolve the "system" theme option.
@@ -67,6 +67,9 @@ if (!('IntersectionObserver' in globalThis)) {
 // throws if i18next hasn't initialized yet — in the real app main.tsx
 // awaits this before the first render, so tests must too.
 await initI18n()
-// The V2 (P1b) namespace rides the same instance — registered exactly like
-// main.tsx does.
-registerV2Bundles()
+// The V2 (P1b) namespace rides the same instance — registered like main.tsx
+// does, plus an explicit await of BOTH locales: in the app the non-active
+// one loads in the background, but a test switching languages must never
+// race that load.
+await registerV2Bundles()
+await Promise.all(['fr', 'en'].map((l) => ensureV2Locale(l as 'fr' | 'en')))

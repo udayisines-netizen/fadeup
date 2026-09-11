@@ -6,7 +6,10 @@ import { PreferencesSync } from '@/components/preferences-sync'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider as LegacyThemeProvider } from '@/lib/theme'
 import { PricingProvider } from '@/lib/commerce/pricing-context'
-import { AnalyticsProvider } from '@/lib/analytics'
+// PERF — import direct du binding React : le baril `@/lib/analytics`
+// réexporte AUSSI client.ts/events.ts (zod) en statique, ce qui les
+// recollerait au graphe d'entrée que le provider vient d'en sortir.
+import { AnalyticsProvider } from '@/lib/analytics/analytics-context'
 import { queryClient } from '@/shared/data/queryClient'
 import { ThemeProvider } from '@/shared/theme/ThemeProvider'
 import { RealtimeProvider } from '@/shared/realtime/RealtimeProvider'
