@@ -1,7 +1,7 @@
 {
-  "orgHref": "/platform/organizations/b15023ae-8dc0-4ef6-bc3a-93c82489d5c1",
+  "orgHref": "/platform/organizations/9c114855-f4d6-499c-a8bc-27c1ace13c30",
   "banner": {
-    "text": "SUPPORT VIEW Acting on QA F1 mtwfqdro 30 min left No payment action is possible here Exit Support View",
+    "text": "SUPPORT VIEW Acting on ZZ dead QA F1 mtwg347o 30 min left No payment action is possible here Exit Support View",
     "buttons": [
       "Exit Support View"
     ],
@@ -23,7 +23,7 @@
   },
   "paymentBeforeSupportView": {
     "status": 200,
-    "body": "\"23e9124b-7586-4a4b-9293-ad5dc8cc87e4\""
+    "body": "\"5a331ac2-0d14-438b-bbc4-87a1076b616f\""
   },
   "paymentDuringSupportView": {
     "status": 403,
@@ -35,6 +35,6 @@
   },
   "founderPermissions": {
     "status": 200,
-    "body": "[\"appointment.cancel\", \"audit.read\", \"barber.delete\", \"billing.manage\", \"commercial.plan_assign\", \"crm.field_capture\", \"crm.read\", \"crm.write\", \"internal_roles.manage\", \"marketplace.publish\", \"marketplace.withdraw\", \"moderation.content\", \"onboarding.review\", \"support_view.enter\", \"tenant.read\"]"
+    "body": "[\"appointment.cancel\", \"audit.read\", \"barber.delete\", \"billing.manage\", \"commercial.plan_assign\", \"crm.field_capture\", \"crm.read\", \"crm.write\", \"internal_roles.manage\", \"internal_team.read\", \"marketplace.publish\", \"marketplace.withdraw\", \"moderation.content\", \"onboarding.review\", \"support_view.enter"
   }
 }

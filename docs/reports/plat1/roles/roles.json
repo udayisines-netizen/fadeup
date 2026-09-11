@@ -22,7 +22,7 @@
       },
       "audit": {
         "status": 200,
-        "rows": 36,
+        "rows": 52,
         "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Audit log Platform-level se"
       }
     },
@@ -55,7 +55,7 @@
       },
       "audit": {
         "status": 200,
-        "rows": 36,
+        "rows": 52,
         "text": "FadeUp Platform Overview Applications Organizations Acquisition Outreach Data science Team Audit log Theme: System (light) Sign out Audit log Platform-level se"
       }
     },
@@ -78,7 +78,7 @@
       "team": {
         "status": 200,
         "rows": 1,
-        "text": "FadeUp Platform Overview Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Members User Role"
+        "text": "FadeUp Platform Overview Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. The internal rost"
       },
       "audit": {
         "status": 200,
@@ -106,7 +106,7 @@
       "team": {
         "status": 200,
         "rows": 1,
-        "text": "FadeUp Platform Overview Applications Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Memb"
+        "text": "FadeUp Platform Overview Applications Organizations Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. The "
       },
       "audit": {
         "status": 200,
@@ -163,7 +163,7 @@
       "team": {
         "status": 200,
         "rows": 1,
-        "text": "FadeUp Platform Overview Acquisition Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. Members User Role Z"
+        "text": "FadeUp Platform Overview Acquisition Theme: System (light) Sign out Platform team Who has FadeUp platform access, and pending invitations. The internal roster"
       },
       "audit": {
         "status": 200,

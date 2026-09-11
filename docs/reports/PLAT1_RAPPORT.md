@@ -45,12 +45,14 @@ Les trois écarts :
    19 boutons au lieu de 5.
 2. **`/platform/audit`** — le journal, que ce lot devait rendre filtrable. Deux
    champs de filtre apparaissent.
-3. **`/platform/organizations`** — **pas une modification de PLAT-1.** Le nom
-   d'une organisation QA est passé de « QA F1 mtwesi6k » à « ZZ dead QA F1
-   mtwesi6k » **entre les deux relevés**, à 03:42:14, par un lot qui tournait en
+3. **`/platform/organizations`** — **pas une modification de PLAT-1.** Seule la
+   longueur du texte change, parce que **six organisations QA ont été renommées
+   en « ZZ dead QA … » pendant ma session**, par un lot qui tournait en
    parallèle et neutralisait ses données de test (règle 4 de `QA_DATA.md`).
-   Vérifié en base : `organizations.updated_at = 2026-09-11 03:42:14+00`. Aucune
-   ligne de code de cette page n'est touchée par PLAT-1.
+   Vérifié en base : six lignes `organizations` avec `updated_at` entre 03:52
+   et 04:24, toutes préfixées « ZZ dead ». Aucune ligne de code de cette page
+   n'est touchée par PLAT-1 — c'est le contenu de la table qui a bougé sous le
+   relevé.
 
 Le débordement de `/platform/team` mérite d'être nommé plutôt que caché : il
 existait **avant** ce lot (mesuré sur le dépôt intouché), et la colonne
