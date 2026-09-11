@@ -9066,6 +9066,19 @@ export type Database = {
         }[]
       }
       like_post: { Args: { p_post_id: string }; Returns: undefined }
+      /*
+       * PLAT-2 — LES DEUX SEULES RPC DE CE LOT QUE LA SURFACE V2 APPELLE
+       * (`/a/:code`, le scan d'affiche). Ajoutées À LA MAIN, comme PLAT-1 a
+       * ajouté l'énumération `platform_role` à la main : le générateur
+       * `postgres-meta` local produit désormais une forme différente (il
+       * n'émet plus `isOneToOne`), et une régénération complète mêlerait des
+       * centaines de lignes sans rapport au diff de ce lot. La régénération
+       * en une fois, avec un générateur épinglé, reste le chantier ouvert par
+       * PLAT-1 §13. Les autres RPC de PLAT-2 ne sont appelées que par
+       * `/platform`, dont le client n'est PAS typé sur `Database`.
+       */
+      resolve_poster_code: { Args: { p_code: string }; Returns: Json }
+      assign_poster: { Args: { p_code: string; p_location_id: string }; Returns: Json }
       list_marketplace_withdrawal_requests: {
         Args: { p_include_completed?: boolean }
         Returns: {

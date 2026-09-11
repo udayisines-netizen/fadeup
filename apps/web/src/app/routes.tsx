@@ -333,6 +333,54 @@ const platformRoutes = [
           return { Component: PlatformAuditLogPage }
         },
       },
+
+      /* PLAT-2 — les quatre écrans par rôle et les affiches QR. AJOUTÉS,
+         jamais substitués : aucune route existante n'est supprimée, renommée
+         ni déplacée, et chacun est un chunk paresseux de plus dans le graphe
+         /platform, jamais dans l'entrée consumer. Chaque écran repose sa
+         propre question de permission, et le serveur la repose derrière lui. */
+      {
+        path: 'support',
+        lazy: async () => {
+          const { PlatformSupportPage } = await import('@/pages/platform-support-page')
+          return { Component: PlatformSupportPage }
+        },
+      },
+      {
+        path: 'support/:ticketId',
+        lazy: async () => {
+          const { PlatformSupportTicketPage } = await import('@/pages/platform-support-ticket-page')
+          return { Component: PlatformSupportTicketPage }
+        },
+      },
+      {
+        path: 'moderation',
+        lazy: async () => {
+          const { PlatformModerationPage } = await import('@/pages/platform-moderation-page')
+          return { Component: PlatformModerationPage }
+        },
+      },
+      {
+        path: 'sales',
+        lazy: async () => {
+          const { PlatformSalesPage } = await import('@/pages/platform-sales-page')
+          return { Component: PlatformSalesPage }
+        },
+      },
+      {
+        path: 'field',
+        lazy: async () => {
+          const { PlatformFieldPage } = await import('@/pages/platform-field-page')
+          return { Component: PlatformFieldPage }
+        },
+      },
+      {
+        path: 'posters',
+        lazy: async () => {
+          const { PlatformPostersPage } = await import('@/pages/platform-posters-page')
+          return { Component: PlatformPostersPage }
+        },
+      },
     ],
   },
 ]
@@ -463,6 +511,18 @@ export const router = createBrowserRouter([
             lazy: async () => {
               const { InterestRequestPage } = await import('@/features/booking/routes/InterestRequestPage')
               return { Component: InterestRequestPage }
+            },
+          },
+          /* PLAT-2 — le scan d'une AFFICHE QR. Publique, et elle doit
+             l'être : un client qui scanne une affiche dans un salon n'a pas
+             de compte. L'écran décide selon l'état du code ET selon qui
+             scanne, et la garde est côté serveur (resolve_poster_code ne rend
+             la liste des établissements qu'à qui peut vraiment attribuer). */
+          {
+            path: 'a/:code',
+            lazy: async () => {
+              const { PosterScanPage } = await import('@/features/posters/routes/PosterScanPage')
+              return { Component: PosterScanPage }
             },
           },
           /* F1 — la file publique : consulter sans auth ni géoloc ; le QR du
