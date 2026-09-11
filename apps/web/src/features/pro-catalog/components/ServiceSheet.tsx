@@ -233,14 +233,18 @@ export function ServiceSheet({
             onChange={(event) => setPrice(event.target.value)}
             data-testid="pro-catalog-field-price"
           />
-        ) : service === null ? (
+        ) : (
+          /* Pas de champ prix pour un barber — mais on lui DIT pourquoi
+             plutôt que de laisser un trou inexpliqué au milieu du
+             formulaire. À la création, la phrase dit en plus ce qui va se
+             passer : le service naîtra brouillon. */
           <p
             className="rounded-[var(--radius-card)] border border-[var(--fu-border)] bg-[var(--fu-surface)] p-4 text-fu-sm text-[var(--fu-text-secondary)]"
-            data-testid="pro-catalog-draft-notice"
+            data-testid={service === null ? 'pro-catalog-draft-notice' : 'pro-catalog-price-reserved'}
           >
-            {t('pro.catalog.sheet.draftNotice')}
+            {service === null ? t('pro.catalog.sheet.draftNotice') : t('pro.catalog.sheet.priceReserved')}
           </p>
-        ) : null}
+        )}
 
         <div className="flex flex-col gap-2 border-t border-[var(--fu-border)] pt-4">
           {/* Un service archivé refuse l'édition côté serveur : on ne propose

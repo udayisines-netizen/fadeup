@@ -35,10 +35,13 @@
 --        §14). Sans désignation, la RPC REFUSE en donnant le nombre : on
 --        ne laisse pas un client avec un rendez-vous chez un absent, et on
 --        ne l'annule pas non plus dans le dos du salon.
---      · file en cours — les personnes en attente passent au barber
---        désigné s'il tient une file, sinon à la file générale de
---        l'établissement. Elles ne sont jamais jetées. Chaque déplacement
---        est écrit dans `queue_entry_moves`.
+--      · file en cours — les personnes EN ATTENTE passent au barber désigné
+--        s'il tient une file, sinon à la file générale de l'établissement.
+--        Elles ne sont jamais jetées, et chaque déplacement est écrit dans
+--        `queue_entry_moves`. Une personne APPELÉE ou AU FAUTEUIL reste sur
+--        le partant et termine sa prestation : c'est la règle de F1b, et
+--        la déplacer attribuerait au remplaçant une mesure de durée qu'il
+--        n'a pas produite.
 --      · clients — `customer_professional_relationships` est indexé par
 --        `professional_id`, pas par le lien d'emploi : les relations
 --        SUIVENT la personne et restent lisibles par le salon pour son
@@ -576,12 +579,19 @@ begin
       end;
     end if;
 
-    -- La file en cours : les personnes en attente ne sont jamais jetées.
+    -- La file en cours : les personnes EN ATTENTE ne sont jamais jetées.
+    -- Une personne APPELÉE ou AU FAUTEUIL reste sur le partant : F1b l'a
+    -- tranché pour `move_queue_entry` (« la déplacer serait réécrire
+    -- l'histoire »), et la raison vaut ici doublement — la prestation en
+    -- cours alimentera `service_duration_samples`, et l'attribuer au
+    -- remplaçant polluerait l'estimation apprise avec un travail qu'il n'a
+    -- pas fait. Le siège est fermé, pas amputé : la prestation en cours se
+    -- termine normalement.
     for v_entry in
       select q.id, q.organization_id, q.location_id, q.barber_id
       from public.queue_entries q
       where q.barber_id = v_barber.id
-        and q.status in ('waiting', 'called', 'in_service')
+        and q.status = 'waiting'
     loop
       perform set_config('fadeup.queue_move', '1', true);
       if v_target.id is not null and v_target.queue_enabled then
@@ -630,7 +640,7 @@ end;
 $$;
 
 comment on function public.remove_team_member(uuid, uuid) is
-  'Retire quelqu''un de l''équipe. Ferme l''accès (memberships), le lien d''emploi (barbers) et le profil interne (staff_profiles) ; ne touche JAMAIS professionals — handle, abonnés, portfolio et historique public survivent au départ (MASTER_SPEC §9). Les rendez-vous à venir exigent un remplaçant nommé ; la file en cours le suit, ou retombe dans la file générale ; les relations client restent attachées au professionnel.';
+  'Retire quelqu''un de l''équipe. Ferme l''accès (memberships), le lien d''emploi (barbers) et le profil interne (staff_profiles) ; ne touche JAMAIS professionals — handle, abonnés, portfolio et historique public survivent au départ (MASTER_SPEC §9). Les rendez-vous à venir exigent un remplaçant nommé ; les personnes EN ATTENTE dans sa file le suivent (une personne appelée ou au fauteuil reste et termine, règle F1b) ; les relations client restent attachées au professionnel.';
 
 revoke all on function public.remove_team_member(uuid, uuid) from public, anon;
 grant execute on function public.remove_team_member(uuid, uuid) to authenticated;

@@ -354,7 +354,7 @@
       "unit": "metres"
     },
     "save": "Save thresholds",
-    "thresholdsUnavailable": "This location's thresholds are not stored yet. They will appear here once the queue has served for the first time.",
+    "thresholdsUnavailable": "This location's settings cannot be read right now. Reload the page; if they are still missing, report it.",
     "sweepTitle": "Automatic sweep",
     "empty": {
       "title": "Nothing to set here",

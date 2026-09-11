@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { OrganizationBarber } from '@/shared/data/proBarbers'
+import { errorMessageKey, toAppError } from '@/shared/data/errors'
 import { Button } from '@/shared/ui/Button'
 import { Sheet } from '@/shared/ui/Sheet'
 import { Checkbox } from '@/shared/ui/Checkbox'
@@ -12,6 +13,9 @@ export interface AssignSheetProps {
   serviceName: string
   barbers: OrganizationBarber[]
   loading: boolean
+  /** L'échec de la requête des fauteuils, s'il y en a un. */
+  error: unknown
+  onRetry: () => void
   saving: boolean
   /** Les barbers déjà affectés (`assigned_barber_ids`). */
   assigned: string[]
@@ -25,6 +29,11 @@ export interface AssignSheetProps {
  * Aucune case cochée n'est pas un vide : côté disponibilité, une table
  * `barber_services` sans ligne signifie « pas de restriction », donc toute
  * l'équipe. C'est dit, pas deviné.
+ *
+ * D'où la sévérité sur l'erreur : une liste de fauteuils qu'on n'a PAS pu
+ * charger ressemble exactement à « aucun barber coché ». Enregistrer là
+ * effacerait toutes les affectations du service sans que personne l'ait
+ * demandé. Tant que la liste n'a pas abouti, le bouton n'existe pas.
  */
 export function AssignSheet({
   open,
@@ -32,6 +41,8 @@ export function AssignSheet({
   serviceName,
   barbers,
   loading,
+  error,
+  onRetry,
   saving,
   assigned,
   onSave,
@@ -56,6 +67,15 @@ export function AssignSheet({
             <SkeletonRow />
             <SkeletonRow />
           </div>
+        ) : error ? (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-fu-sm text-[var(--fu-text-secondary)]">{t(errorMessageKey(toAppError(error)))}</p>
+            <Button variant="secondary" onClick={onRetry}>
+              {t('common.action.retry')}
+            </Button>
+          </div>
+        ) : barbers.length === 0 ? (
+          <p className="text-fu-sm text-[var(--fu-text-secondary)]">{t('pro.catalog.assign.empty')}</p>
         ) : (
           <div className="flex flex-col">
             {barbers.map((barber) => (
@@ -69,14 +89,18 @@ export function AssignSheet({
           </div>
         )}
 
-        <Button
-          variant="primary"
-          loading={saving}
-          onClick={() => onSave(selected)}
-          data-testid="pro-catalog-assign-save"
-        >
-          {t('pro.catalog.assign.save')}
-        </Button>
+        {/* Ni pendant le chargement, ni après un échec : enregistrer une
+            liste qu'on n'a pas lue effacerait toutes les affectations. */}
+        {!loading && !error && barbers.length > 0 && (
+          <Button
+            variant="primary"
+            loading={saving}
+            onClick={() => onSave(selected)}
+            data-testid="pro-catalog-assign-save"
+          >
+            {t('pro.catalog.assign.save')}
+          </Button>
+        )}
       </div>
     </Sheet>
   )

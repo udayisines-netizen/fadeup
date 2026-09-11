@@ -34,7 +34,16 @@
 --    silencieux de ce que FadeUp a appris). C'est le trou que cette RPC
 --    ferme.
 --
--- 4. L'EFFET D'UNE DURÉE DÉCLARÉE. `private.estimated_service_duration_
+-- 4. UN SERVICE CRÉÉ EST RÉELLEMENT OFFERT. `service_locations` est la
+--    jointure que TOUS les chemins de réservation exigent — tunnel public,
+--    `get_available_slots`, `book_public_appointment`, l'agenda d'OS-1, la
+--    découverte. Un service créé sans elle serait « actif » à l'écran et
+--    réservable NULLE PART. `p_location_ids` à NULL signifie donc « tous les
+--    établissements de l'organisation », pas « aucun » : le défaut sûr est
+--    côté serveur, pour que l'oubli d'un appelant ne puisse plus produire un
+--    service fantôme.
+--
+-- 5. L'EFFET D'UNE DURÉE DÉCLARÉE. `private.estimated_service_duration_
 --    minutes` mélange déclaré et observé jusqu'à 20 mesures (poids
 --    (n-4)/16). La RPC de liste rend `observed_minutes`, `sample_count` et
 --    `declared_weight_percent` pour que l'écran puisse le DIRE au
@@ -288,7 +297,26 @@ begin
   )
   returning * into v_row;
 
-  if p_location_ids is not null then
+  -- SANS ligne service_locations, le service n'est réservable nulle part :
+  -- ni le tunnel public, ni get_available_slots, ni l'agenda ne le voient.
+  -- NULL vaut donc « partout », jamais « nulle part ».
+  if p_location_ids is null then
+    insert into public.service_locations (organization_id, service_id, location_id)
+    select p_organization_id, v_row.id, l.id
+    from public.locations l
+    where l.organization_id = p_organization_id
+    on conflict do nothing;
+  else
+    if exists (
+      select 1 from unnest(p_location_ids) as requested(location_id)
+      where not exists (
+        select 1 from public.locations l
+        where l.id = requested.location_id and l.organization_id = p_organization_id
+      )
+    ) then
+      raise exception 'every location must belong to this organization'
+        using errcode = '22023', detail = 'fadeup_service_refusal=location_foreign';
+    end if;
     foreach v_location_id in array p_location_ids loop
       insert into public.service_locations (organization_id, service_id, location_id)
       values (p_organization_id, v_row.id, v_location_id)
@@ -301,7 +329,7 @@ end;
 $$;
 
 comment on function public.create_service(uuid, text, integer, integer, text, uuid, uuid[]) is
-  'Crée un service. owner/manager : prix obligatoire, service actif. barber : AUCUN prix accepté (refus nommé si le champ est présent), le service naît brouillon — inactif, price_pending — donc absent de toute surface publique jusqu''à ce qu''un gestionnaire le tarife.';
+  'Crée un service. owner/manager : prix obligatoire, service actif. barber : AUCUN prix accepté (refus nommé si le champ est présent), le service naît brouillon — inactif, price_pending — donc absent de toute surface publique jusqu''à ce qu''un gestionnaire le tarife. p_location_ids à NULL = TOUS les établissements : sans ligne service_locations un service n''est réservable nulle part, et ce défaut évite le service fantôme.';
 
 revoke all on function public.create_service(uuid, text, integer, integer, text, uuid, uuid[]) from public, anon;
 grant execute on function public.create_service(uuid, text, integer, integer, text, uuid, uuid[]) to authenticated;

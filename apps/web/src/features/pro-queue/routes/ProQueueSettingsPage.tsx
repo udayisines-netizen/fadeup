@@ -364,15 +364,27 @@ export function ProQueueSettingsPage() {
           {canManage && checkIn.data && (
             <section className={BLOCK} data-testid="pro-queue-settings-sweep">
               <h2 className={BLOCK_TITLE}>{t('queue.settings.sweepTitle').toLocaleUpperCase()}</h2>
-              <div className="mt-2">
-                <Switch
-                  label={t('queue.pro.graceSweep.label')}
-                  checked={checkIn.data.queue_grace_sweep_enabled ?? false}
-                  disabled={setGraceSweep.isPending}
-                  onCheckedChange={(enabled) => setGraceSweep.mutate(enabled, mutationFailed)}
-                />
-              </div>
-              <p className="mt-1 text-fu-sm text-[var(--fu-text-secondary)]">{t('queue.pro.graceSweep.hint')}</p>
+              {/* `get_location_queue_check_in` joint les réglages en LEFT
+                  JOIN : la valeur peut être absente. Un `?? false` peindrait
+                  un inconnu en « désactivé » sur un interrupteur actionnable
+                  — exactement ce que le bloc des seuils refuse de faire. */}
+              {checkIn.data.queue_grace_sweep_enabled === null ? (
+                <p className="mt-2 text-fu-sm text-[var(--fu-text-secondary)]">
+                  {t('queue.settings.thresholdsUnavailable')}
+                </p>
+              ) : (
+                <>
+                  <div className="mt-2">
+                    <Switch
+                      label={t('queue.pro.graceSweep.label')}
+                      checked={checkIn.data.queue_grace_sweep_enabled}
+                      disabled={setGraceSweep.isPending}
+                      onCheckedChange={(enabled) => setGraceSweep.mutate(enabled, mutationFailed)}
+                    />
+                  </div>
+                  <p className="mt-1 text-fu-sm text-[var(--fu-text-secondary)]">{t('queue.pro.graceSweep.hint')}</p>
+                </>
+              )}
             </section>
           )}
 

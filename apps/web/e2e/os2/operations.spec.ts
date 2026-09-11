@@ -265,13 +265,20 @@ test('équipe — un solo_professional n’a pas cet écran, même par URL direc
 
 test('file — les seuils se lisent et s’écrivent en base depuis l’écran', async ({ page }) => {
   const errors = watchConsole(page)
+  // Des seuils volontairement inhabituels, écrits AVANT l'ouverture.
+  sql(`update public.location_service_settings
+         set queue_capacity_per_barber=17, queue_call_grace_minutes=9, queue_geofence_meters=275
+       where location_id='${fixture.locationId}'`)
   await signIn(page, QA_OWNER_EMAIL, QA_PASSWORD)
   await page.goto('/dashboard/queue/settings')
   await page.getByTestId('pro-queue-settings-thresholds').waitFor({ timeout: 30_000 })
 
-  // Les valeurs affichées viennent de la BASE, pas d'une constante.
-  await expect(page.getByTestId('pro-queue-threshold-capacity')).toHaveValue('20')
-  await expect(page.getByTestId('pro-queue-threshold-grace')).toHaveValue('5')
+  // Les valeurs affichées viennent de la BASE, pas d'une constante — et on
+  // le prouve avec des valeurs qui ne sont PAS les défauts SQL (20 / 5 / 150),
+  // sinon l'assertion ne distinguerait pas les deux hypothèses.
+  await expect(page.getByTestId('pro-queue-threshold-capacity')).toHaveValue('17')
+  await expect(page.getByTestId('pro-queue-threshold-grace')).toHaveValue('9')
+  await expect(page.getByTestId('pro-queue-threshold-geofence')).toHaveValue('275')
 
   await page.getByTestId('pro-queue-threshold-capacity').fill('14')
   await page.getByTestId('pro-queue-thresholds-save').click()
@@ -281,18 +288,19 @@ test('file — les seuils se lisent et s’écrivent en base depuis l’écran',
       { timeout: 20_000 },
     )
     // Le rayon, non touché, n'a pas été écrasé.
-    .toBe('14/150')
+    .toBe('14/275')
 
-  // Le réglage par barber se répercute côté client : la file d'un barber
-  // désactivé disparaît de la liste publique.
-  const barberId = fixture.barbers[0]!.id
+  // L'interrupteur de file par barber écrit bien en base depuis CET écran.
+  // (Que la désactivation se répercute côté CLIENT est prouvé séparément,
+  //  par `list_public_queues` dans contracts.spec.ts — ici on ne teste que
+  //  l'écran.)
   await page.getByTestId('pro-queue-settings-barbers').getByRole('switch').first().click()
   await expect
-    .poll(() => sql(`select count(*) from public.barbers where organization_id='${ORG_ID}' and not queue_enabled`), { timeout: 20_000 })
+    .poll(
+      () => sql(`select count(*) from public.barbers where organization_id='${ORG_ID}' and not queue_enabled`),
+      { timeout: 20_000 },
+    )
     .not.toBe('0')
-  const disabled = sql(`select id from public.barbers where organization_id='${ORG_ID}' and not queue_enabled limit 1`)
-  expect(disabled).not.toBe('')
-  expect(barberId).not.toBe('')
 
   await noSeriousViolations(page)
   expect(errors).toEqual([])

@@ -315,7 +315,8 @@
     "assign": {
       "title": "Qui réalise ce service",
       "hint": "Personne de coché : toute l'équipe le réalise.",
-      "save": "Enregistrer"
+      "save": "Enregistrer",
+      "empty": "Aucun fauteuil dans ce salon pour l'instant. Invitez un barber depuis l'écran Équipe."
     },
     "archive": {
       "action": "Archiver",
@@ -531,7 +532,8 @@
       "identityNotice": "Son profil professionnel n'est pas supprimé : son handle, ses abonnés, son portfolio et son historique public lui appartiennent et le suivent.",
       "effects": "Son accès au salon se ferme, son fauteuil n'est plus réservable et il sort de la file.",
       "reassignLabel": "Qui reprend ses rendez-vous",
-      "reassignHint": "{{count}} rendez-vous à venir doivent être repris par quelqu'un.",
+      "reassignHint_one": "{{count}} rendez-vous à venir doit être repris par quelqu'un.",
+      "reassignHint_other": "{{count}} rendez-vous à venir doivent être repris par quelqu'un.",
       "reassignRequired": "Choisissez qui reprend ses rendez-vous.",
       "confirm": "Retirer",
       "cancel": "Annuler"

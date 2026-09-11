@@ -354,7 +354,7 @@
       "unit": "mètres"
     },
     "save": "Enregistrer les seuils",
-    "thresholdsUnavailable": "Les seuils de cet établissement ne sont pas encore enregistrés en base. Ils apparaîtront ici dès que la file aura servi une première fois.",
+    "thresholdsUnavailable": "Les réglages de cet établissement ne sont pas lisibles pour l'instant. Rechargez la page ; s'ils manquent toujours, signalez-le.",
     "sweepTitle": "Sortie automatique",
     "empty": {
       "title": "Rien à régler ici",

@@ -236,8 +236,11 @@ test.describe.serial('F1b — files par barber, sorties, échéances, balayage',
     const proContext = await newClientContext(browser)
     const pro = await proContext.newPage()
     await login(pro, QA_EMAIL)
-    await pro.goto('/dashboard/queue')
-    await expect(pro.getByTestId('pro-queue-settings')).toBeVisible({ timeout: 20_000 })
+    // OS-2 a déplacé les réglages hors de l'écran opérationnel : la file se
+    // tient debout au comptoir, les seuils se règlent assis
+    // (/dashboard/queue/settings). Le geste et la RPC sont inchangés.
+    await pro.goto('/dashboard/queue/settings')
+    await expect(pro.getByTestId('pro-queue-settings-barbers')).toBeVisible({ timeout: 20_000 })
     await pro.getByRole('switch', { name: 'File de Karim Trois' }).click()
     await expect
       .poll(() => sql(`select queue_enabled from public.barbers where id='${barberKarimId}'`), { timeout: 15_000 })
@@ -484,8 +487,9 @@ test.describe.serial('F1b — files par barber, sorties, échéances, balayage',
     const proContext = await newClientContext(browser)
     const pro = await proContext.newPage()
     await login(pro, QA_EMAIL)
-    await pro.goto('/dashboard/queue')
-    await expect(pro.getByTestId('pro-queue-settings')).toBeVisible({ timeout: 20_000 })
+    // Idem : le balayage automatique vit désormais dans les réglages (OS-2).
+    await pro.goto('/dashboard/queue/settings')
+    await expect(pro.getByTestId('pro-queue-settings-sweep')).toBeVisible({ timeout: 20_000 })
     await pro.getByRole('switch', { name: /Sortie automatique/ }).click()
     await expect
       .poll(

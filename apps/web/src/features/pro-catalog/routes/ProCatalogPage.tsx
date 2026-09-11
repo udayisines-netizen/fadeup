@@ -61,9 +61,12 @@ export function ProCatalogPage() {
 
   const { organization, loading: orgLoading } = useProOrganization()
   const organizationId = organization?.organizationId ?? null
-  const role = organization?.role ?? 'barber'
   const currency = organization?.currency ?? 'EUR'
-  const permissions = catalogPermissions(role)
+  // Tant que l'organisation n'est pas résolue, on ne DEVINE pas de rôle :
+  // un défaut à « barber » rendrait « Créer un service » à un réceptionniste
+  // pendant le chargement, et la RPC le refuserait ensuite. Capacité
+  // inconnue = rien de rendu (P1PRO §0bis).
+  const permissions = catalogPermissions(organization?.role ?? null)
 
   const [showArchived, setShowArchived] = useState(false)
   const [sheet, setSheet] = useState<SheetTarget | null>(null)
@@ -102,6 +105,10 @@ export function ProCatalogPage() {
 
   const loading = orgLoading || catalogQuery.isPending
   const error = catalogQuery.error
+  // L'état vide du catalogue porte lui-même l'action : l'en-tête doit alors
+  // s'effacer, sinon deux boutons verts demandent la même chose.
+  const showEmptyCreate =
+    !loading && !error && !showArchived && (catalogQuery.data?.length ?? 0) === 0 && permissions.canWrite
 
   const onSave = (draft: Omit<ServiceDraft, 'serviceId'>) => {
     const serviceId = sheet?.kind === 'edit' ? sheet.serviceId : null
@@ -126,7 +133,9 @@ export function ProCatalogPage() {
           </h1>
           <p className="mt-1 text-fu-sm text-[var(--fu-text-secondary)]">{t('pro.catalog.subtitle')}</p>
         </div>
-        {permissions.canWrite && (
+        {/* UN SEUL CTA primaire par surface : quand l'état vide porte déjà
+            « Créer un service », celui de l'en-tête ne se rend pas. */}
+        {permissions.canWrite && !showEmptyCreate && (
           <Button variant="primary" onClick={() => setSheet({ kind: 'create' })} data-testid="pro-catalog-create">
             {t('pro.catalog.add')}
           </Button>
@@ -178,7 +187,7 @@ export function ProCatalogPage() {
               title={t('pro.catalog.empty.title')}
               description={t('pro.catalog.empty.description')}
               action={
-                permissions.canWrite ? (
+                showEmptyCreate ? (
                   <Button variant="primary" onClick={() => setSheet({ kind: 'create' })} data-testid="pro-catalog-empty-create">
                     {t('pro.catalog.empty.action')}
                   </Button>
@@ -225,7 +234,7 @@ export function ProCatalogPage() {
           service={editing}
           categories={categoriesQuery.data ?? []}
           permissions={permissions}
-          canCreateCategory={canCreateCategory(role)}
+          canCreateCategory={canCreateCategory(organization?.role ?? null)}
           saving={save.isPending || restore.isPending}
           onSave={onSave}
           onArchive={() => {
@@ -260,6 +269,8 @@ export function ProCatalogPage() {
           serviceName={assigning.name}
           barbers={barbersQuery.data ?? []}
           loading={barbersQuery.isPending}
+          error={barbersQuery.error}
+          onRetry={() => void barbersQuery.refetch()}
           saving={assign.isPending}
           assigned={assigning.assigned_barber_ids}
           onSave={(barberIds) =>
