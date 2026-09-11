@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Não foi possível revogar o acesso",
     "anyoneWithTheLink": "Qualquer pessoa com o link",
     "shareThisLink": "Partilhe este link:",
-    "couldntCreateInvitation": "Não foi possível criar o convite"
+    "couldntCreateInvitation": "Não foi possível criar o convite",
+    "notVisibleForYourRole": "O diretório interno é lido apenas pelo fundador e administradores."
   },
   "organizations": {
     "couldntLoadOrganizations": "Não foi possível carregar os negócios",
@@ -87,7 +88,9 @@
     "filterByAction": "Ação",
     "allActions": "Todas as ações",
     "search": "Pesquisar",
-    "reservedToFounderAndAdmins": "O registo de auditoria é lido apenas pelo fundador e administradores."
+    "reservedToFounderAndAdmins": "O registo de auditoria é lido apenas pelo fundador e administradores.",
+    "noResultForThisFilter": "Nenhuma entrada corresponde a este filtro.",
+    "showingLatest": "As {{count}} entradas mais recentes."
   },
   "organizationDetail": {
     "loadingOrganization": "A carregar o negócio",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Não foi possível entrar na vista de suporte",
     "enterSupportView": "Entrar na vista de suporte",
     "currentlyInSupportView": "Vista de suporte em curso",
-    "enteredSupportView": "Vista de suporte aberta para {{name}}"
+    "enteredSupportView": "Vista de suporte aberta para {{name}}",
+    "detailNotVisibleForYourRole": "As instalações, a equipa e os barbeiros não são visíveis com o seu papel."
   },
   "login": {
     "platformSignIn": "Início de sessão na plataforma",

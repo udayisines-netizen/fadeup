@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Couldn't revoke the access",
     "anyoneWithTheLink": "Anyone with the link",
     "shareThisLink": "Share this link with them:",
-    "couldntCreateInvitation": "Couldn't create the invitation"
+    "couldntCreateInvitation": "Couldn't create the invitation",
+    "notVisibleForYourRole": "The internal roster is read by the founder and admins only."
   },
   "organizations": {
     "couldntLoadOrganizations": "Couldn't load organizations",
@@ -87,7 +88,9 @@
     "filterByAction": "Action",
     "allActions": "All actions",
     "search": "Search",
-    "reservedToFounderAndAdmins": "The audit log is read by the founder and admins only."
+    "reservedToFounderAndAdmins": "The audit log is read by the founder and admins only.",
+    "noResultForThisFilter": "No entry matches this filter.",
+    "showingLatest": "Showing the {{count}} most recent entries."
   },
   "organizationDetail": {
     "loadingOrganization": "Loading organization",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Couldn't enter support view",
     "enterSupportView": "Enter support view",
     "currentlyInSupportView": "Currently in support view",
-    "enteredSupportView": "Support view opened for {{name}}"
+    "enteredSupportView": "Support view opened for {{name}}",
+    "detailNotVisibleForYourRole": "Locations, team and barbers are not visible with your role."
   },
   "login": {
     "platformSignIn": "Platform sign in",

@@ -56,7 +56,6 @@ export function PlatformSupportViewBanner() {
     <div
       data-plat1-support-banner="true"
       role="status"
-      aria-live="polite"
       /*
        * Encre sur ambre, dans les DEUX thèmes — pas de blanc sur ambre.
        * `--color-warning-600` vaut #b4790a en clair et #e0a02f en sombre :
@@ -76,7 +75,13 @@ export function PlatformSupportViewBanner() {
           <span className="truncate text-sm font-semibold">
             {t('platform:supportView.viewing', { target: workspaceLabel })}
           </span>
-          <span className="text-sm tabular-nums">
+          {/*
+            Le décompte change chaque minute : sans aria-live ici, un lecteur
+            d'écran ne relit pas tout le bandeau à chaque tick. Le bandeau
+            entier reste role="status" pour être annoncé UNE fois à son
+            apparition. Trouvé par la revue indépendante.
+          */}
+          <span className="text-sm tabular-nums" aria-live="off">
             {remaining === null
               ? null
               : remaining <= 0

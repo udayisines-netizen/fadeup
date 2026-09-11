@@ -38,6 +38,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { useToast } from '@/components/ui/toast'
 import { getErrorMessage } from '@/lib/get-error-message'
 import { usePlatformRole } from '@/routes/require-platform-role'
+import { usePlatformUserDirectory } from '@/lib/queries/platform'
 import {
   PROSPECT_OUTREACH_CHANNELS,
   PROSPECT_PIPELINE_STAGES,
@@ -61,6 +62,7 @@ function formatDateTime(iso: string): string {
 export function PlatformAcquisitionProspectDetailPage() {
   const { prospectId } = useParams<{ prospectId: string }>()
   const role = usePlatformRole()
+  const directory = usePlatformUserDirectory()
   const canManage = WRITE_ROLES.has(role)
   const { toast } = useToast()
 
@@ -152,8 +154,12 @@ export function PlatformAcquisitionProspectDetailPage() {
               {prospect.fieldObservation ? (
                 <p className="mt-1 text-sm text-ink-950">{prospect.fieldObservation}</p>
               ) : null}
-              <p className="mt-1 font-mono text-xs text-ink-500">
-                by {prospect.fieldCapturedBy ?? 'unknown (account removed)'}
+              {/* L'auteur : un e-mail quand on peut le résoudre, l'identifiant sinon. */}
+              <p className="mt-1 text-xs text-ink-500">
+                by{' '}
+                {directory.label(prospect.fieldCapturedBy) ?? (
+                  <span className="font-mono">{prospect.fieldCapturedBy ?? 'unknown (account removed)'}</span>
+                )}
               </p>
             </div>
           ) : null}

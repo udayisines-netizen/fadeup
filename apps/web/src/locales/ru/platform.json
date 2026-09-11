@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Не удалось отозвать доступ",
     "anyoneWithTheLink": "Любой, у кого есть ссылка",
     "shareThisLink": "Поделитесь этой ссылкой:",
-    "couldntCreateInvitation": "Не удалось создать приглашение"
+    "couldntCreateInvitation": "Не удалось создать приглашение",
+    "notVisibleForYourRole": "Внутренний список читают только основатель и администраторы."
   },
   "organizations": {
     "couldntLoadOrganizations": "Не удалось загрузить организации",
@@ -87,7 +88,9 @@
     "filterByAction": "Действие",
     "allActions": "Все действия",
     "search": "Поиск",
-    "reservedToFounderAndAdmins": "Журнал аудита читают только основатель и администраторы."
+    "reservedToFounderAndAdmins": "Журнал аудита читают только основатель и администраторы.",
+    "noResultForThisFilter": "Нет записей по этому фильтру.",
+    "showingLatest": "Последние {{count}} записей."
   },
   "organizationDetail": {
     "loadingOrganization": "Загружаем организацию",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Не удалось открыть режим поддержки",
     "enterSupportView": "Войти в режим поддержки",
     "currentlyInSupportView": "Режим поддержки активен",
-    "enteredSupportView": "Режим поддержки открыт для {{name}}"
+    "enteredSupportView": "Режим поддержки открыт для {{name}}",
+    "detailNotVisibleForYourRole": "Точки, команда и барберы недоступны для вашей роли."
   },
   "login": {
     "platformSignIn": "Вход на платформу",

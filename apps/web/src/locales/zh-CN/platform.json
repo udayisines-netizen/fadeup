@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "无法撤销访问权限",
     "anyoneWithTheLink": "任何拥有链接的人",
     "shareThisLink": "请分享此链接：",
-    "couldntCreateInvitation": "无法创建邀请"
+    "couldntCreateInvitation": "无法创建邀请",
+    "notVisibleForYourRole": "内部成员名单仅由创始人和管理员查看。"
   },
   "organizations": {
     "couldntLoadOrganizations": "无法加载商家",
@@ -87,7 +88,9 @@
     "filterByAction": "操作",
     "allActions": "所有操作",
     "search": "搜索",
-    "reservedToFounderAndAdmins": "审计日志仅由创始人和管理员查看。"
+    "reservedToFounderAndAdmins": "审计日志仅由创始人和管理员查看。",
+    "noResultForThisFilter": "没有条目符合此筛选条件。",
+    "showingLatest": "最近的 {{count}} 条记录。"
   },
   "organizationDetail": {
     "loadingOrganization": "正在加载商家",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "无法进入支持视图",
     "enterSupportView": "进入支持视图",
     "currentlyInSupportView": "支持视图进行中",
-    "enteredSupportView": "已为 {{name}} 开启支持视图"
+    "enteredSupportView": "已为 {{name}} 开启支持视图",
+    "detailNotVisibleForYourRole": "以您的角色无法查看门店、团队和理发师。"
   },
   "login": {
     "platformSignIn": "平台登录",

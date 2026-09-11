@@ -68,14 +68,20 @@ export function RequirePlatformRole({ children }: { children: ReactNode }) {
   // Les droits sont attendus AVANT le premier rendu : une console qui affiche
   // d'abord tout, puis retire ce que le rôle n'a pas, a montré ce qu'elle ne
   // devait pas montrer. Mieux vaut un instant de plus sur le même spinner.
-  if (roleQuery.isError || !roleQuery.data) {
+  // La panne des DROITS est une panne d'accès, pas un rôle vide : sans cette
+  // branche, un échec persistant de get_my_platform_permissions dégradait la
+  // console en silence — le fondateur voyait une navigation réduite à
+  // « Overview » et se croyait déchu. Trouvé par la revue indépendante.
+  if (roleQuery.isError || permissionsQuery.isError || !roleQuery.data) {
     return (
       <main className="flex min-h-svh items-center justify-center bg-paper-50 p-8">
         <Container size="sm">
           <Alert variant="error">
             {roleQuery.isError
               ? `Couldn't check platform access: ${roleQuery.error.message}`
-              : "This account doesn't have FadeUp platform access."}
+              : permissionsQuery.isError
+                ? `Couldn't check platform access: ${permissionsQuery.error.message}`
+                : "This account doesn't have FadeUp platform access."}
           </Alert>
           <Link to="/" className={buttonVariants({ variant: 'secondary' }, 'mt-4 w-full')}>
             {t('platform:nav.backToFadeup')}

@@ -280,17 +280,45 @@ interface PlatformAuditRow {
   created_at: string
 }
 
-/** Platform-level audit trail — platform_owner/platform_admin only (platform_audit_log_select policy). Most recent first. */
-export function usePlatformAuditLog() {
+export interface PlatformAuditFilters {
+  /** Une famille d'action exacte, ou rien pour toutes. */
+  action?: string
+  /** Cherche dans l'action, le type et l'identifiant de cible. */
+  search?: string
+  limit?: number
+}
+
+/**
+ * Le journal interne (`platform_audit_log_select` : porteurs de `audit.read`).
+ *
+ * LES FILTRES SONT SERVEUR, et c'est le point. Un filtrage côté client sur les
+ * 200 dernières lignes répondait « aucune activité » à une question dont la
+ * réponse était « il y en a, plus loin » — sur un journal qu'on présente comme
+ * opposable, c'est un mensonge. Trouvé par la revue indépendante.
+ */
+export function usePlatformAuditLog(filters: PlatformAuditFilters = {}) {
+  const action = filters.action?.trim() ?? ''
+  const search = filters.search?.trim() ?? ''
+  const limit = filters.limit ?? 200
+
   return useQuery({
-    queryKey: ['platform', 'audit-log'],
+    queryKey: ['platform', 'audit-log', action, search, limit],
     queryFn: async (): Promise<PlatformAuditEntry[]> => {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
+      let query = supabase
         .from('platform_audit_log')
         .select('id, actor_user_id, action, target_type, target_id, metadata, created_at')
         .order('created_at', { ascending: false })
-        .limit(200)
+        .limit(limit)
+
+      if (action) query = query.eq('action', action)
+      if (search) {
+        // PostgREST `or` : l'action, le type de cible ou son identifiant.
+        const escaped = search.replace(/[,()]/g, ' ')
+        query = query.or(`action.ilike.*${escaped}*,target_type.ilike.*${escaped}*,target_id::text.ilike.*${escaped}*`)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
       return ((data ?? []) as PlatformAuditRow[]).map((row) => ({
@@ -596,4 +624,47 @@ export function useCreatePlatformZone() {
       void queryClient.invalidateQueries({ queryKey: ['platform', 'audit-log'] })
     },
   })
+}
+
+/**
+ * Les familles d'action DISTINCTES présentes dans le journal, pour peupler le
+ * filtre. Lues sur une fenêtre large plutôt que sur la page affichée : un
+ * filtre qui ne propose que ce qui est déjà à l'écran ne sert à rien.
+ */
+export function usePlatformAuditActions() {
+  return useQuery({
+    queryKey: ['platform', 'audit-actions'],
+    queryFn: async (): Promise<string[]> => {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('platform_audit_log')
+        .select('action')
+        .order('created_at', { ascending: false })
+        .limit(2000)
+
+      if (error) throw error
+      return [...new Set(((data ?? []) as { action: string }[]).map((row) => row.action))].sort()
+    },
+    staleTime: 60_000,
+  })
+}
+
+/**
+ * Un annuaire `user_id → e-mail` pour rendre lisibles l'acteur du journal et
+ * l'auteur d'une fiche terrain. Un `c1a71000-…` n'est pas un auteur pour le
+ * commercial qui décroche son téléphone. S'appuie sur `list_platform_team()`,
+ * qui rend zéro ligne à qui n'a pas `internal_team.read` — l'annuaire est donc
+ * vide pour eux, et l'appelant retombe sur l'identifiant.
+ */
+export function usePlatformUserDirectory() {
+  const teamQuery = usePlatformTeam()
+  const byId = new Map<string, string>()
+  for (const member of teamQuery.data ?? []) {
+    byId.set(member.userId, member.email ?? member.fullName ?? member.userId)
+  }
+  return {
+    isPending: teamQuery.isPending,
+    label: (userId: string | null | undefined): string | null =>
+      userId ? (byId.get(userId) ?? null) : null,
+  }
 }

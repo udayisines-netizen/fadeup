@@ -127,8 +127,8 @@ select pg_temp.expect_count('A2 compte hors plateforme : aucun droit',
   'select count(*) from public.get_my_platform_permissions()', 0);
 
 select pg_temp.be('9a100000-0000-0000-0000-000000000001');
-select pg_temp.expect_count('A3 fondateur : quinze droits',
-  'select count(*) from public.get_my_platform_permissions()', 15);
+select pg_temp.expect_count('A3 fondateur : dix-sept droits',
+  'select count(*) from public.get_my_platform_permissions()', 17);
 
 select pg_temp.be('9a100000-0000-0000-0000-000000000006');
 select pg_temp.expect_count('A4 stagiaire : deux droits',
@@ -575,6 +575,40 @@ begin
   end if;
   raise notice 'ok — M2 le second stagiaire voit le prospect de la zone partagée';
 end $$;
+
+-- ============================================================================
+-- N. LES DURCISSEMENTS DE LA REVUE INDÉPENDANTE
+-- ============================================================================
+
+reset role;
+select pg_temp.expect('N1 le journal n''est pas tronçable, même en reset role',
+  $$truncate public.platform_audit_log$$, 'refus');
+set local role authenticated;
+
+select pg_temp.be('9a100000-0000-0000-0000-000000000002');
+select pg_temp.expect('N2 un admin ne révoque pas une invitation interne',
+  $$select public.revoke_platform_invitation('9a1b0000-0000-0000-0000-0000000000ff')$$, 'refus');
+select pg_temp.expect_count('N3 un admin voit le trombinoscope',
+  $$select case when count(*) > 0 then 1 else 0 end from public.list_platform_team()$$, 1);
+
+select pg_temp.be('9a100000-0000-0000-0000-000000000004');
+select pg_temp.expect_count('N4 un modérateur ne voit pas le trombinoscope',
+  $$select count(*) from public.list_platform_team()$$, 0);
+select pg_temp.expect_count('N5 un modérateur ne lit pas le détail d''une organisation',
+  $$select count(*) from public.locations$$, 0);
+select pg_temp.expect_count('N6 ni son équipe',
+  $$select count(*) from public.memberships$$, 0);
+select pg_temp.expect_count('N7 ni ses barbers',
+  $$select count(*) from public.barbers$$, 0);
+
+select pg_temp.be('9a100000-0000-0000-0000-000000000002');
+select pg_temp.expect_count('N8 un admin lit bien le détail d''une organisation',
+  $$select case when count(*) > 0 then 1 else 0 end from public.locations$$, 1);
+
+-- Et la restriction par zone survit à la réécriture de performance.
+select pg_temp.be('9a100000-0000-0000-0000-000000000006');
+select pg_temp.expect_count('N9 le stagiaire voit toujours sa zone, et elle seule',
+  $$select count(*) from public.prospects where id in ('9a1b0000-0000-0000-0000-000000000001','9a1b0000-0000-0000-0000-000000000002')$$, 1);
 
 reset role;
 

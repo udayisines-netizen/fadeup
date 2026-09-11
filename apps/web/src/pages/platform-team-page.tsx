@@ -72,6 +72,13 @@ export function PlatformTeamPage() {
   const { can } = usePlatformPermissions()
   const { toast } = useToast()
   const canManage = can('internal_roles.manage')
+  /*
+   * `list_platform_team()` est gardée par `internal_team.read` et rend zéro
+   * ligne aux autres : sans cette question, l'écran affichait un tableau vide
+   * sans un mot d'explication — alors que le journal, lui, sait le dire.
+   * Corrigé après revue.
+   */
+  const canReadRoster = can('internal_team.read')
 
   const teamQuery = usePlatformTeam()
   const zonesQuery = usePlatformZones()
@@ -131,6 +138,9 @@ export function PlatformTeamPage() {
         {canManage ? t('platform:team.founderManagesRoles') : t('platform:team.whoHasFadeupPlatformAccess')}
       </p>
 
+      {!canReadRoster ? (
+        <EmptyState className="mt-8" title={t('platform:team.notVisibleForYourRole')} />
+      ) : (
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-ink-950">{t('common:entity.members')}</h2>
         <div className="mt-3">
@@ -154,20 +164,27 @@ export function PlatformTeamPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(teamQuery.data ?? []).map((member) => (
-                  <MemberRow
-                    key={member.userId}
-                    member={member}
-                    canManage={canManage}
-                    roleLabel={roleLabel}
-                    zones={zonesQuery.data ?? []}
-                  />
-                ))}
+                {(teamQuery.data ?? []).length === 0 ? (
+                  <TableStateRow colSpan={canManage ? 5 : 4}>
+                    <EmptyState title={t('platform:team.notVisibleForYourRole')} className="border-none" />
+                  </TableStateRow>
+                ) : (
+                  (teamQuery.data ?? []).map((member) => (
+                    <MemberRow
+                      key={member.userId}
+                      member={member}
+                      canManage={canManage}
+                      roleLabel={roleLabel}
+                      zones={zonesQuery.data ?? []}
+                    />
+                  ))
+                )}
               </TableBody>
             </Table>
           )}
         </div>
       </section>
+      )}
 
       {canManage ? <ZoneSection /> : null}
 

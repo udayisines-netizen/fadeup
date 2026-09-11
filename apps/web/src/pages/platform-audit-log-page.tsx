@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { usePlatformAuditLog } from '@/lib/queries/platform'
+import { useState } from 'react'
+import { usePlatformAuditActions, usePlatformAuditLog, usePlatformUserDirectory } from '@/lib/queries/platform'
 import { usePlatformPermissions } from '@/routes/require-platform-role'
 import { SelectField } from '@/components/ui/select-field'
 import { TextField } from '@/components/ui/text-field'
@@ -49,37 +49,24 @@ const ACTION_KEYS = [
 export function PlatformAuditLogPage() {
   const { t } = useTranslation()
   const { can } = usePlatformPermissions()
-  const auditQuery = usePlatformAuditLog()
   const [action, setAction] = useState('')
   const [search, setSearch] = useState('')
+  const auditQuery = usePlatformAuditLog({ action, search })
+  const actionsQuery = usePlatformAuditActions()
+  const directory = usePlatformUserDirectory()
 
   /*
    * Le journal est lu par le fondateur et les admins SEULEMENT — sinon le
    * support et les modérateurs verraient les actions les uns des autres. La
    * garde qui compte est la policy platform_audit_log_select ; ce qui suit
    * évite seulement de rendre une page vide à qui n'a rien à y voir.
+   *
+   * Le filtre et la recherche sont poussés DANS la requête : filtrer les 200
+   * dernières lignes côté client répondait « aucune activité » à une question
+   * dont la réponse était « il y en a, plus loin ».
    */
-  // Référence stable : `auditQuery.data ?? []` fabriquerait un tableau neuf à
-  // chaque rendu et referait les deux mémos pour rien.
-  const entries = useMemo(() => auditQuery.data ?? [], [auditQuery.data])
-  const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase()
-    return entries.filter((entry) => {
-      if (action && entry.action !== action) return false
-      if (!needle) return true
-      return (
-        entry.action.toLowerCase().includes(needle) ||
-        (entry.actorUserId ?? '').toLowerCase().includes(needle) ||
-        (entry.targetType ?? '').toLowerCase().includes(needle) ||
-        (entry.targetId ?? '').toLowerCase().includes(needle)
-      )
-    })
-  }, [entries, action, search])
-
-  const presentActions = useMemo(
-    () => [...new Set(entries.map((entry) => entry.action))].sort(),
-    [entries],
-  )
+  const entries = auditQuery.data ?? []
+  const isFiltered = Boolean(action || search.trim())
 
   if (!can('audit.read')) {
     return (
@@ -103,7 +90,7 @@ export function PlatformAuditLogPage() {
             onChange={(event) => setAction(event.target.value)}
             options={[
               { value: '', label: t('platform:auditLog.allActions') },
-              ...presentActions.map((value) => ({ value, label: actionLabel(t, value) })),
+              ...(actionsQuery.data ?? []).map((value) => ({ value, label: actionLabel(t, value) })),
             ]}
           />
         </div>
@@ -134,12 +121,19 @@ export function PlatformAuditLogPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {entries.length === 0 ? (
                 <TableStateRow colSpan={4}>
-                  <EmptyState title={t('platform:auditLog.noPlatformActivityYet')} className="border-none" />
+                  <EmptyState
+                    title={
+                      isFiltered
+                        ? t('platform:auditLog.noResultForThisFilter')
+                        : t('platform:auditLog.noPlatformActivityYet')
+                    }
+                    className="border-none"
+                  />
                 </TableStateRow>
               ) : (
-                filtered.map((entry) => (
+                entries.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell className="whitespace-nowrap text-ink-500">
                       {new Date(entry.createdAt).toLocaleString()}
@@ -147,8 +141,11 @@ export function PlatformAuditLogPage() {
                     <TableCell className="font-medium text-ink-950">
                       {actionLabel(t, entry.action)}
                     </TableCell>
-                    <TableCell className="max-w-[12rem] truncate font-mono text-xs text-ink-500">
-                      {entry.actorUserId ?? '—'}
+                    <TableCell className="max-w-[16rem] truncate text-xs text-ink-500">
+                      {/* Un identifiant brut n'est pas un acteur : on résout vers l'e-mail quand on le peut. */}
+                      {directory.label(entry.actorUserId) ?? (
+                        <span className="font-mono">{entry.actorUserId ?? '—'}</span>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-[12rem] truncate font-mono text-xs text-ink-500">
                       {entry.targetType ? `${entry.targetType}: ${entry.targetId ?? '—'}` : '—'}

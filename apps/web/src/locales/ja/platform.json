@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "アクセスを取り消せませんでした",
     "anyoneWithTheLink": "リンクを知っている人",
     "shareThisLink": "このリンクを共有してください：",
-    "couldntCreateInvitation": "招待を作成できませんでした"
+    "couldntCreateInvitation": "招待を作成できませんでした",
+    "notVisibleForYourRole": "内部メンバー一覧を閲覧できるのは創業者と管理者のみです。"
   },
   "organizations": {
     "couldntLoadOrganizations": "事業者を読み込めませんでした",
@@ -87,7 +88,9 @@
     "filterByAction": "操作",
     "allActions": "すべての操作",
     "search": "検索",
-    "reservedToFounderAndAdmins": "監査ログを閲覧できるのは創業者と管理者のみです。"
+    "reservedToFounderAndAdmins": "監査ログを閲覧できるのは創業者と管理者のみです。",
+    "noResultForThisFilter": "この条件に一致する記録はありません。",
+    "showingLatest": "最新の {{count}} 件。"
   },
   "organizationDetail": {
     "loadingOrganization": "事業者を読み込んでいます",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "サポートビューに入れませんでした",
     "enterSupportView": "サポートビューに入る",
     "currentlyInSupportView": "サポートビュー中",
-    "enteredSupportView": "{{name}} のサポートビューを開始"
+    "enteredSupportView": "{{name}} のサポートビューを開始",
+    "detailNotVisibleForYourRole": "あなたのロールでは店舗・チーム・理容師は表示されません。"
   },
   "login": {
     "platformSignIn": "プラットフォームにログイン",

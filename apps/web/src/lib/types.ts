@@ -56,6 +56,8 @@ export type PlatformPermission =
   | 'moderation.content'
   | 'appointment.cancel'
   | 'tenant.read'
+  | 'tenant.read_detail'
+  | 'internal_team.read'
   | 'commercial.plan_assign'
   | 'support_view.enter'
   | 'billing.manage'

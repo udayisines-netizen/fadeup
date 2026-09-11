@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Impossible de révoquer l'accès",
     "anyoneWithTheLink": "Toute personne ayant le lien",
     "shareThisLink": "Partagez ce lien avec la personne :",
-    "couldntCreateInvitation": "Impossible de créer l'invitation"
+    "couldntCreateInvitation": "Impossible de créer l'invitation",
+    "notVisibleForYourRole": "Le trombinoscope interne est lu par le fondateur et les admins seulement."
   },
   "organizations": {
     "couldntLoadOrganizations": "Impossible de charger les établissements",
@@ -87,7 +88,9 @@
     "filterByAction": "Action",
     "allActions": "Toutes les actions",
     "search": "Rechercher",
-    "reservedToFounderAndAdmins": "Le journal d'audit est lu par le fondateur et les admins seulement."
+    "reservedToFounderAndAdmins": "Le journal d'audit est lu par le fondateur et les admins seulement.",
+    "noResultForThisFilter": "Aucune entrée ne correspond à ce filtre.",
+    "showingLatest": "Les {{count}} entrées les plus récentes."
   },
   "organizationDetail": {
     "loadingOrganization": "Chargement de l'établissement",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Impossible d'activer le mode support",
     "enterSupportView": "Entrer en vue en tant que",
     "currentlyInSupportView": "Vue en tant que en cours",
-    "enteredSupportView": "Vue en tant que ouverte sur {{name}}"
+    "enteredSupportView": "Vue en tant que ouverte sur {{name}}",
+    "detailNotVisibleForYourRole": "Les établissements, l'équipe et les barbers ne sont pas visibles avec votre rôle."
   },
   "login": {
     "platformSignIn": "Connexion plateforme",

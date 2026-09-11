@@ -35,6 +35,16 @@ export function PlatformOrganizationDetailPage() {
   const { activeSession, enterSupportView, isEntering } = useSupportView()
   const { can } = usePlatformPermissions()
   const canEnterSupportView = can('support_view.enter')
+  /*
+   * PLAT-1, correction de revue : sans ce droit, les établissements, l'équipe
+   * et les barbers ne sont PAS lisibles (policies locations_select,
+   * memberships_select, barbers_select, staff_profiles_select). La requête
+   * rend alors zéro ligne, et l'écran affichait « aucun établissement » sur un
+   * salon qui en a — de la donnée opérationnelle FAUSSE sur une console de
+   * production. On ne rend plus la section : l'absence de droit n'est pas une
+   * absence de données.
+   */
+  const canReadDetail = can('tenant.read_detail')
 
   const organizationQuery = useOrganization(organizationId)
   const locationsQuery = useOrgLocations(organizationId)
@@ -120,6 +130,7 @@ export function PlatformOrganizationDetailPage() {
         ) : null}
       </div>
 
+      {canReadDetail ? (
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.locations')}</h2>
         <div className="mt-3">
@@ -147,7 +158,9 @@ export function PlatformOrganizationDetailPage() {
           )}
         </div>
       </section>
+      ) : null}
 
+      {canReadDetail ? (
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">{t('common:entity.team')}</h2>
         <div className="mt-3">
@@ -202,6 +215,9 @@ export function PlatformOrganizationDetailPage() {
           )}
         </div>
       </section>
+      ) : (
+        <EmptyState className="mt-8" title={t('platform:organizationDetail.detailNotVisibleForYourRole')} />
+      )}
     </Container>
   )
 }

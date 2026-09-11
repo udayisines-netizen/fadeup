@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Zugang konnte nicht entzogen werden",
     "anyoneWithTheLink": "Jeder mit dem Link",
     "shareThisLink": "Teilen Sie diesen Link:",
-    "couldntCreateInvitation": "Einladung konnte nicht erstellt werden"
+    "couldntCreateInvitation": "Einladung konnte nicht erstellt werden",
+    "notVisibleForYourRole": "Das interne Verzeichnis lesen nur Gründer und Admins."
   },
   "organizations": {
     "couldntLoadOrganizations": "Betriebe konnten nicht geladen werden",
@@ -87,7 +88,9 @@
     "filterByAction": "Aktion",
     "allActions": "Alle Aktionen",
     "search": "Suchen",
-    "reservedToFounderAndAdmins": "Das Audit-Protokoll lesen nur Gründer und Admins."
+    "reservedToFounderAndAdmins": "Das Audit-Protokoll lesen nur Gründer und Admins.",
+    "noResultForThisFilter": "Kein Eintrag entspricht diesem Filter.",
+    "showingLatest": "Die {{count}} neuesten Einträge."
   },
   "organizationDetail": {
     "loadingOrganization": "Betrieb wird geladen",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Support-Ansicht konnte nicht geöffnet werden",
     "enterSupportView": "Support-Ansicht öffnen",
     "currentlyInSupportView": "Support-Ansicht aktiv",
-    "enteredSupportView": "Support-Ansicht für {{name}} geöffnet"
+    "enteredSupportView": "Support-Ansicht für {{name}} geöffnet",
+    "detailNotVisibleForYourRole": "Standorte, Team und Barbiere sind mit Ihrer Rolle nicht sichtbar."
   },
   "login": {
     "platformSignIn": "Plattform-Anmeldung",

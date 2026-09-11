@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "Impossibile revocare l'accesso",
     "anyoneWithTheLink": "Chiunque abbia il link",
     "shareThisLink": "Condividi questo link:",
-    "couldntCreateInvitation": "Impossibile creare l'invito"
+    "couldntCreateInvitation": "Impossibile creare l'invito",
+    "notVisibleForYourRole": "L'elenco interno è letto solo da fondatore e amministratori."
   },
   "organizations": {
     "couldntLoadOrganizations": "Impossibile caricare le attività",
@@ -87,7 +88,9 @@
     "filterByAction": "Azione",
     "allActions": "Tutte le azioni",
     "search": "Cerca",
-    "reservedToFounderAndAdmins": "Il registro di audit è letto solo da fondatore e amministratori."
+    "reservedToFounderAndAdmins": "Il registro di audit è letto solo da fondatore e amministratori.",
+    "noResultForThisFilter": "Nessuna voce corrisponde a questo filtro.",
+    "showingLatest": "Le {{count}} voci più recenti."
   },
   "organizationDetail": {
     "loadingOrganization": "Caricamento dell'attività",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "Impossibile aprire la vista assistenza",
     "enterSupportView": "Entra in vista di supporto",
     "currentlyInSupportView": "Vista di supporto in corso",
-    "enteredSupportView": "Vista di supporto aperta su {{name}}"
+    "enteredSupportView": "Vista di supporto aperta su {{name}}",
+    "detailNotVisibleForYourRole": "Sedi, squadra e barbieri non sono visibili con il tuo ruolo."
   },
   "login": {
     "platformSignIn": "Accesso alla piattaforma",

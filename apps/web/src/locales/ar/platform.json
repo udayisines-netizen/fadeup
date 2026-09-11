@@ -69,7 +69,8 @@
     "couldntRevokeAccess": "تعذّر إلغاء الوصول",
     "anyoneWithTheLink": "أي شخص لديه الرابط",
     "shareThisLink": "شارك هذا الرابط:",
-    "couldntCreateInvitation": "تعذّر إنشاء الدعوة"
+    "couldntCreateInvitation": "تعذّر إنشاء الدعوة",
+    "notVisibleForYourRole": "الدليل الداخلي يقرأه المؤسس والمديرون فقط."
   },
   "organizations": {
     "couldntLoadOrganizations": "تعذّر تحميل المنشآت",
@@ -87,7 +88,9 @@
     "filterByAction": "الإجراء",
     "allActions": "كل الإجراءات",
     "search": "بحث",
-    "reservedToFounderAndAdmins": "سجل التدقيق يقرأه المؤسس والمديرون فقط."
+    "reservedToFounderAndAdmins": "سجل التدقيق يقرأه المؤسس والمديرون فقط.",
+    "noResultForThisFilter": "لا يوجد سجل يطابق هذا المرشّح.",
+    "showingLatest": "أحدث {{count}} سجل."
   },
   "organizationDetail": {
     "loadingOrganization": "جارٍ تحميل المنشأة",
@@ -102,7 +105,8 @@
     "couldntEnterSupportView": "تعذّر الدخول إلى وضع الدعم",
     "enterSupportView": "الدخول إلى وضع الدعم",
     "currentlyInSupportView": "وضع الدعم جارٍ",
-    "enteredSupportView": "فُتح وضع الدعم لـ {{name}}"
+    "enteredSupportView": "فُتح وضع الدعم لـ {{name}}",
+    "detailNotVisibleForYourRole": "المواقع والفريق والحلاقون غير مرئيين بدورك الحالي."
   },
   "login": {
     "platformSignIn": "تسجيل الدخول إلى المنصة",
