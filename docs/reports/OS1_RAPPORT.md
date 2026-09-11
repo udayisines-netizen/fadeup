@@ -270,9 +270,12 @@ ici (`marketplace_visible` était déjà `false`).
 
 - Branche **`os1/agenda`**, worktree dédié `~/worktrees/os1`, créée depuis
   `rebuild/social-first-v2` à `3a0f5e4`.
-- Commits : `932af6b` feat(os1) — code, migrations, tests, captures ; puis le
-  commit docs(os1) qui porte ce rapport (le suivant sur la branche).
-- Poussée sur `origin` : `git push -u origin os1/agenda` exécuté après le commit du rapport (résultat vérifié : voir la ligne « Poussée » ci-dessous, complétée après push).
+- Commits : `932af6b` feat(os1) — code, migrations, tests, captures ;
+  `c7c0b83` docs(os1) — ce rapport ; puis un commit docs(os1) qui confirme
+  la poussée dans cette section.
+- Poussée sur `origin` : `git push -u origin os1/agenda` → `[new branch]
+  os1/agenda -> os1/agenda`, `origin/os1/agenda` contient `c7c0b83`
+  (vérifié `git branch -r --contains`). Arbre de travail propre.
 - **Aucune fusion n'a eu lieu**, ni dans `rebuild/social-first-v2`, ni
   ailleurs ; `/opt/fadeup` (checkout principal) n'a pas été touché ;
   `apps/mobile` n'a pas été touché ; `vite.config.ts` n'a pas été touché.
