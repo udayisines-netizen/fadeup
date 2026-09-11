@@ -92,5 +92,159 @@
       "rescheduled": "Déplacée",
       "closed": "Close"
     }
+  },
+  "agenda": {
+    "title": "Agenda",
+    "view": {
+      "label": "Vue",
+      "day": "Jour",
+      "week": "Semaine"
+    },
+    "nav": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "today": "Aujourd'hui",
+      "weekOf": "Semaine du {{date}}"
+    },
+    "barbers": {
+      "label": "Barber",
+      "all": "Toute l'équipe",
+      "shown_one": "{{count}} barber affiché",
+      "shown_other": "{{count}} barbers affichés",
+      "choose": "Choisir les barbers",
+      "noAccount": "Sans compte",
+      "revenueToggle": "Voit le revenu du salon",
+      "revenueHint": "Le patron décide, barber par barber. Par défaut, un barber ne voit pas les montants."
+    },
+    "revenue": {
+      "label": "Revenu calculé du jour",
+      "hint_one": "{{count}} prestation terminée",
+      "hint_other": "{{count}} prestations terminées"
+    },
+    "actions": {
+      "create": "Nouveau rendez-vous",
+      "block": "Bloquer du temps",
+      "moreActions": "Autres actions"
+    },
+    "empty": {
+      "title": "Rien de prévu ce jour",
+      "description": "Aucun rendez-vous ni temps bloqué. Créez une réservation pour un client qui appelle, ou bloquez un créneau.",
+      "action": "Créer une réservation",
+      "week": "Rien de prévu cette semaine",
+      "noBarbersTitle": "Aucun professionnel pour l’instant",
+      "noBarbersDescription": "L’agenda se remplit par fauteuil : ajoutez d’abord un professionnel à l’équipe."
+    },
+    "card": {
+      "pending": "En attente",
+      "completed": "Terminé",
+      "noShow": "Absent",
+      "forced": "Forcé",
+      "block": "Bloqué",
+      "cancelled": "Annulé",
+      "dragHandle": "Glisser pour déplacer {{name}}",
+      "open": "Ouvrir le rendez-vous de {{name}}",
+      "openBlock": "Ouvrir le temps bloqué",
+      "completeNow": "Marquer terminé : {{name}}"
+    },
+    "grid": {
+      "label": "Grille de l'agenda",
+      "column": "Agenda de {{name}}",
+      "now": "Maintenant",
+      "hour": "{{hour}} h",
+      "createAt": "Créer un rendez-vous à {{time}} avec {{name}}",
+      "dropTarget": "{{time}} · {{name}}",
+      "instructions": "Glissez un rendez-vous pour le déplacer. Sur mobile, appui long puis glisser — ou « Déplacer » dans la fiche."
+    },
+    "sheet": {
+      "title": "Rendez-vous",
+      "service": "Prestation",
+      "barber": "Barber",
+      "client": "Client",
+      "phone": "Téléphone",
+      "notes": "Note",
+      "when": "Horaire",
+      "forced": "Chevauchement forcé",
+      "forcedReason": "Motif : {{reason}}",
+      "requestExpires": "Demande en attente — expire {{time}}",
+      "complete": "Terminé",
+      "noShow": "Absent",
+      "noShowHint": "Enregistré, sans restriction pour le client.",
+      "move": "Déplacer",
+      "cancel": "Annuler la réservation",
+      "cancelTitle": "Annuler cette réservation ?",
+      "cancelBody": "Le client est prévenu immédiatement et peut réserver un autre créneau.",
+      "cancelNote": "Un mot pour le client (facultatif)",
+      "cancelConfirm": "Confirmer l'annulation",
+      "closed": "Cette réservation est close.",
+      "moveTitle": "Déplacer le rendez-vous",
+      "moveDate": "Date",
+      "moveTime": "Heure",
+      "moveBarber": "Barber",
+      "moveSubmit": "Déplacer"
+    },
+    "create": {
+      "title": "Nouveau rendez-vous",
+      "description": "Pour un client qui appelle — confirmé tout de suite.",
+      "service": "Prestation",
+      "barber": "Barber",
+      "date": "Date",
+      "time": "Heure",
+      "name": "Nom du client",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "notes": "Note",
+      "submit": "Créer le rendez-vous",
+      "hint": "Le client reçoit une confirmation s'il a un e-mail.",
+      "noService": "Aucune prestation active pour cet établissement.",
+      "noBarber": "Aucun barber ne propose cette prestation."
+    },
+    "block": {
+      "title": "Bloquer du temps",
+      "editTitle": "Temps bloqué",
+      "description": "Pause, congé, formation — le créneau n'est plus réservable.",
+      "barber": "Barber",
+      "date": "Date",
+      "start": "Début",
+      "end": "Fin",
+      "reason": "Motif",
+      "reasonPlaceholder": "Pause déjeuner, formation…",
+      "weekly": "Chaque semaine",
+      "until": "Jusqu'au",
+      "occurrences_one": "{{count}} occurrence",
+      "occurrences_other": "{{count}} occurrences",
+      "submit": "Bloquer",
+      "remove": "Retirer",
+      "removeSeries": "Retirer toute la série",
+      "seriesHint": "Ce blocage fait partie d'une série hebdomadaire.",
+      "overlapsAppointments_one": "{{count}} rendez-vous se trouve dans cette plage sur la période affichée : il reste en place, prévenez le client.",
+      "overlapsAppointments_other": "{{count}} rendez-vous se trouvent dans cette plage sur la période affichée : ils restent en place, prévenez les clients.",
+      "invalidRange": "La fin doit être après le début."
+    },
+    "conflict": {
+      "title": "Ce créneau est déjà pris",
+      "body": "Le créneau demandé chevauche :",
+      "blockBody": "Le créneau demandé tombe sur un temps bloqué :",
+      "forceLabel": "Forcer le chevauchement",
+      "reason": "Motif (obligatoire)",
+      "reasonPlaceholder": "Client fidèle, l'apprenti prend le shampoing…",
+      "forceHint": "Le chevauchement sera tracé : qui, quand, pourquoi.",
+      "cannotForce": "Seuls le propriétaire et le manager peuvent forcer un chevauchement.",
+      "blockCannotForce": "Un temps bloqué ne se force pas : retirez-le ou choisissez un autre créneau.",
+      "otherSlot": "Choisir un autre créneau",
+      "forceSubmit": "Forcer quand même"
+    },
+    "toast": {
+      "moved": "Rendez-vous déplacé. Le client est prévenu.",
+      "created": "Rendez-vous créé.",
+      "completed": "Terminé.",
+      "noShow": "Absence enregistrée, sans restriction pour le client.",
+      "cancelled": "Réservation annulée. Le client est prévenu.",
+      "blocked": "Temps bloqué.",
+      "unblocked": "Blocage retiré.",
+      "revenueOn": "{{name}} voit désormais le revenu.",
+      "revenueOff": "{{name}} ne voit plus le revenu.",
+      "slotConflict": "Ce créneau est déjà pris."
+    },
+    "loading": "Chargement de l'agenda"
   }
 }

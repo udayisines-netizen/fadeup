@@ -145,6 +145,19 @@ export const proKeys = {
   today: (organizationId: string, day: string) => [...proKeys.all, 'today', organizationId, day] as const,
   /** Résumé de file de l'accueil (`queue_entries` org, RLS). */
   queueSummary: (organizationId: string) => [...proKeys.all, 'queue-summary', organizationId] as const,
+  /** OS-1 — l'identité barber du compte connecté dans l'organisation. */
+  myBarber: (organizationId: string, userId: string) => [...proKeys.all, 'my-barber', organizationId, userId] as const,
+  /** OS-1 — les fauteuils de l'organisation (barbers + fiche staff + membership). */
+  barbers: (organizationId: string) => [...proKeys.all, 'barbers', organizationId] as const,
+  /** OS-1 — l'agenda fenêtré (`get_calendar_appointments`), TOUTES les clés d'une organisation sous `agendas`. */
+  agendas: (organizationId: string) => [...proKeys.all, 'agenda', organizationId] as const,
+  agenda: (organizationId: string, from: string, to: string, locationId = '', barberId = '') =>
+    [...proKeys.agendas(organizationId), from, to, locationId, barberId] as const,
+  /** OS-1 — les blocages de temps fenêtrés (`time_blocks`, RLS). */
+  timeBlocks: (organizationId: string, from: string, to: string) =>
+    [...proKeys.all, 'time-blocks', organizationId, from, to] as const,
+  /** OS-1 — services actifs d'un lieu et aptitudes barber/service (réservation manuelle). */
+  services: (organizationId: string, locationId: string) => [...proKeys.all, 'services', organizationId, locationId] as const,
 } as const
 
 /**

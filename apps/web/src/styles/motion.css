@@ -108,33 +108,24 @@
     }
   }
 
-  /* ── Modale — présence, pas spectacle. Les keyframes PORTENT le centrage
-        (translate ±50 %) : un `transform: none` final décentrerait la boîte. ── */
-  @keyframes fu-modal-in-ltr {
+  /* ── Modale — présence, pas spectacle. Le CENTRAGE appartient aux
+        utilitaires Tailwind v4 (`-translate-x-1/2` = propriété `translate`,
+        composée AVANT `transform`) ; les keyframes ne portent que l'opacité
+        et l'échelle. OS-1 : un `translate(-50%, …)` dans `transform` en plus
+        de la propriété `translate` décalait la boîte d'une largeur entière
+        (hors écran à 390 px). ── */
+  @keyframes fu-modal-in {
     from {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.96);
+      transform: scale(0.96);
     }
     to {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-  @keyframes fu-modal-in-rtl {
-    from {
-      opacity: 0;
-      transform: translate(50%, -50%) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translate(50%, -50%) scale(1);
+      transform: scale(1);
     }
   }
   .fu-modal-in {
-    animation: fu-modal-in-ltr var(--fu-dur-surface) var(--fu-ease) both;
-  }
-  [dir='rtl'] .fu-modal-in {
-    animation-name: fu-modal-in-rtl;
+    animation: fu-modal-in var(--fu-dur-surface) var(--fu-ease) both;
   }
 
   /* ── Voile d'overlay ── */

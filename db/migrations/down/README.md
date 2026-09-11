@@ -40,3 +40,19 @@ en ordre inverse, avant l'application en production. Particularités :
   `private.emit_booking_notification` dont la signature porte l'enum.
 - Les deux downs de buckets ne vident jamais un bucket : un bucket non vide
   est laissé en place et signalé.
+
+## OS-1 (2026-09-11)
+
+Deux downs, chacun exécuté deux fois contre une restauration fidèle de
+`backups/pre-os1-20260911-001947.dump` (pg_restore -U supabase_admin, sans
+`--no-owner`), en ordre inverse, avant l'application en production — diff
+ACL vide (`x3_acl_snapshot.sql`), définitions de `reschedule_appointment` et
+`get_calendar_appointments` restaurées identiques (md5). Particularités :
+
+- `20260911100000_*.down.sql` (série de blocages) tourne en **supabase_admin**
+  (propriétaire de `time_blocks`), comme son aller.
+- `20260911101000_*.down.sql` (agenda) REFUSE de tourner tant qu'un
+  rendez-vous ACTIF porte un chevauchement forcé (le prédicat d'origine le
+  mettrait en violation d'exclusion) ; il nomme la requête à faire au lieu
+  de détruire. Prouvé : refus avec une ligne forcée, succès une fois la
+  ligne annulée.

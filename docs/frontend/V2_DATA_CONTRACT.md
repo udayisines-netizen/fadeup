@@ -142,7 +142,7 @@ Légende : SD = SECURITY DEFINER ; auth = session requise ; écrans = consommate
 |---|---|---|---|
 | `get_booking_requests` | demandes `pending` (+ contact client, `expires_at`, colonnes counter **P1PRO**) | ✓ | P3 Demandes |
 | `get_booking_request_history` **P1PRO** | demandes traitées + issue (statut, résolution, trace counter) | ✓ | P3 Demandes (historique) |
-| `get_calendar_appointments` | agenda fenêtré, filtrable location/barber, prix service | ✓ | P3 Agenda, TODAY |
+| `get_calendar_appointments` | agenda fenêtré, filtrable location/barber, prix service — **OS-1** : + tampons, `overlap_forced_at/reason`, `completed_at` ; `price_cents` **NULL** pour qui ne voit pas le revenu (`private.can_view_revenue`) | ✓ | P3 Agenda, TODAY |
 | `get_available_slots` | slots côté staff | ✓ | P3 Réservation manuelle |
 | `get_service_mode_state` | modes par location/barber | ✓ | P3 TODAY/QUEUE, réglages |
 | `get_organization_entitlements` | **1 ligne** : plan, famille, statut, plafonds/usages, `live_capabilities text[]`, `packaged_capabilities text[]` | ✓ | Shell pro (gating), P3 Billing |
@@ -188,6 +188,11 @@ lectures `prospect_*`/`outreach_*`/`ml_*` restent hors périmètre frontend (non
 créneau proposé, retenu ; échéance redémarrée),
 `decline_booking_request`, `cancel_appointment_as_business`,
 `complete_appointment`, `mark_appointment_no_show`, `set_appointment_blocked_range`,
+`reschedule_appointment(id, starts_at, barber?, p_force?, p_force_reason?)` (**OS-1** :
+forçage explicite owner/manager, tracé sur la ligne + `appointment_overlap_forces`),
+`create_appointment_as_business(location, barber, service, starts_at, name, phone?, email?, notes?, p_force?, p_force_reason?)`
+(**OS-1** : réservation manuelle confirmée, gardes du tunnel public),
+`set_membership_revenue_visibility(membership, visible)` (**OS-1** : owner seul, cible rôle barber),
 `set_location_service_mode`, `set_barber_service_mode_override`,
 `set_service_mode_temporary_override`, `clear_service_mode_temporary_override`,
 `set_location_queue_open`, `set_organization_marketplace_visible`,
@@ -249,7 +254,7 @@ Statuts : OK = tout branché ; PARTIEL = fonctionne avec états vides honnêtes 
 | Écran | RPC principale | RPC secondaires | Realtime | Statut |
 |---|---|---|---|---|
 | TODAY / NOW / NEXT / QUEUE | `get_calendar_appointments` | `get_service_mode_state`, queue org (`.from('queue_entries')` RLS), `complete_appointment`, `mark_appointment_no_show` | `appointments`, `queue_entries` | **OK** |
-| Agenda (jour/semaine) | `get_calendar_appointments` | `reschedule_appointment`, `set_appointment_blocked_range`, `get_available_slots` | `appointments`, `time_blocks` | **OK** |
+| Agenda (jour/semaine) | `get_calendar_appointments` | `reschedule_appointment` (+ forçage), `create_appointment_as_business`, `complete_appointment`, `mark_appointment_no_show`, `cancel_appointment_as_business`, `.from('time_blocks')` insert/delete (RLS, `series_id` **OS-1**), `set_membership_revenue_visibility` | `appointments`, `time_blocks`, `memberships` | **OK — OS-1** (`/dashboard/agenda`, `features/pro-agenda`) |
 | Demandes | `get_booking_requests` | `confirm_booking_request`, `decline_booking_request` | `appointments` | **OK** — **B2** alimente enfin ce flux : toute réservation sur une organisation sans capacité `booking` y arrive |
 | File pro | `.from('queue_entries')` org (RLS) | `set_location_queue_open`, modes | `queue_entries` | **OK** |
 | Catalogue | `.from('services')` etc. (RLS org) | `apply_starter_services` | — | **OK** |
