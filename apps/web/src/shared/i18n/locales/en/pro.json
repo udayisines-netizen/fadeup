@@ -92,5 +92,159 @@
       "rescheduled": "Moved",
       "closed": "Closed"
     }
+  },
+  "agenda": {
+    "title": "Agenda",
+    "view": {
+      "label": "View",
+      "day": "Day",
+      "week": "Week"
+    },
+    "nav": {
+      "previous": "Previous",
+      "next": "Next",
+      "today": "Today",
+      "weekOf": "Week of {{date}}"
+    },
+    "barbers": {
+      "label": "Barber",
+      "all": "Whole team",
+      "shown_one": "{{count}} barber shown",
+      "shown_other": "{{count}} barbers shown",
+      "choose": "Choose barbers",
+      "noAccount": "No account",
+      "revenueToggle": "Sees the shop's revenue",
+      "revenueHint": "The owner decides, barber by barber. By default a barber does not see amounts."
+    },
+    "revenue": {
+      "label": "Calculated revenue today",
+      "hint_one": "{{count}} completed service",
+      "hint_other": "{{count}} completed services"
+    },
+    "actions": {
+      "create": "New appointment",
+      "block": "Block time",
+      "moreActions": "More actions"
+    },
+    "empty": {
+      "title": "Nothing planned today",
+      "description": "No appointment and no blocked time. Create a booking for a client who calls, or block a slot.",
+      "action": "Create a booking",
+      "week": "Nothing planned this week",
+      "noBarbersTitle": "No professional yet",
+      "noBarbersDescription": "The agenda fills up per chair: add a professional to the team first."
+    },
+    "card": {
+      "pending": "Pending",
+      "completed": "Done",
+      "noShow": "No-show",
+      "forced": "Forced",
+      "block": "Blocked",
+      "cancelled": "Cancelled",
+      "dragHandle": "Drag to move {{name}}",
+      "open": "Open {{name}}'s appointment",
+      "openBlock": "Open blocked time",
+      "completeNow": "Mark {{name}} as done"
+    },
+    "grid": {
+      "label": "Agenda grid",
+      "column": "{{name}}'s agenda",
+      "now": "Now",
+      "hour": "{{hour}}:00",
+      "createAt": "Create an appointment at {{time}} with {{name}}",
+      "dropTarget": "{{time}} · {{name}}",
+      "instructions": "Drag an appointment to move it. On mobile, long-press then drag — or use “Move” in the sheet."
+    },
+    "sheet": {
+      "title": "Appointment",
+      "service": "Service",
+      "barber": "Barber",
+      "client": "Client",
+      "phone": "Phone",
+      "notes": "Note",
+      "when": "Time",
+      "forced": "Forced overlap",
+      "forcedReason": "Reason: {{reason}}",
+      "requestExpires": "Pending request — expires {{time}}",
+      "complete": "Done",
+      "noShow": "No-show",
+      "noShowHint": "Recorded, no restriction for the client.",
+      "move": "Move",
+      "cancel": "Cancel the booking",
+      "cancelTitle": "Cancel this booking?",
+      "cancelBody": "The client is notified immediately and can book another slot.",
+      "cancelNote": "A word for the client (optional)",
+      "cancelConfirm": "Confirm cancellation",
+      "closed": "This booking is closed.",
+      "moveTitle": "Move the appointment",
+      "moveDate": "Date",
+      "moveTime": "Time",
+      "moveBarber": "Barber",
+      "moveSubmit": "Move"
+    },
+    "create": {
+      "title": "New appointment",
+      "description": "For a client who calls — confirmed right away.",
+      "service": "Service",
+      "barber": "Barber",
+      "date": "Date",
+      "time": "Time",
+      "name": "Client name",
+      "phone": "Phone",
+      "email": "Email",
+      "notes": "Note",
+      "submit": "Create the appointment",
+      "hint": "The client gets a confirmation if they have an email.",
+      "noService": "No active service at this establishment.",
+      "noBarber": "No barber offers this service."
+    },
+    "block": {
+      "title": "Block time",
+      "editTitle": "Blocked time",
+      "description": "Break, leave, training — the slot can no longer be booked.",
+      "barber": "Barber",
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "reason": "Reason",
+      "reasonPlaceholder": "Lunch break, training…",
+      "weekly": "Every week",
+      "until": "Until",
+      "occurrences_one": "{{count}} occurrence",
+      "occurrences_other": "{{count}} occurrences",
+      "submit": "Block",
+      "remove": "Remove",
+      "removeSeries": "Remove the whole series",
+      "seriesHint": "This block is part of a weekly series.",
+      "overlapsAppointments_one": "{{count}} appointment falls in this range within the displayed period: it stays in place, tell the client.",
+      "overlapsAppointments_other": "{{count}} appointments fall in this range within the displayed period: they stay in place, tell the clients.",
+      "invalidRange": "The end must be after the start."
+    },
+    "conflict": {
+      "title": "This slot is already taken",
+      "body": "The requested slot overlaps:",
+      "blockBody": "The requested slot falls on blocked time:",
+      "forceLabel": "Force the overlap",
+      "reason": "Reason (required)",
+      "reasonPlaceholder": "Loyal client, the apprentice does the shampoo…",
+      "forceHint": "The overlap will be recorded: who, when, why.",
+      "cannotForce": "Only the owner and a manager can force an overlap.",
+      "blockCannotForce": "Blocked time cannot be forced: remove it or pick another slot.",
+      "otherSlot": "Pick another slot",
+      "forceSubmit": "Force anyway"
+    },
+    "toast": {
+      "moved": "Appointment moved. The client is notified.",
+      "created": "Appointment created.",
+      "completed": "Done.",
+      "noShow": "No-show recorded, no restriction for the client.",
+      "cancelled": "Booking cancelled. The client is notified.",
+      "blocked": "Time blocked.",
+      "unblocked": "Block removed.",
+      "revenueOn": "{{name}} now sees revenue.",
+      "revenueOff": "{{name}} no longer sees revenue.",
+      "slotConflict": "This slot is already taken."
+    },
+    "loading": "Loading the agenda"
   }
 }

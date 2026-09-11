@@ -113,7 +113,9 @@
     "request_expired": "This request expired before the answer — it is closed.",
     "counter_pending": "A counter-proposal is already awaiting the customer's answer.",
     "not_a_pending_request": "This request has already been handled.",
-    "no_counter_pending": "No proposed time is awaiting an answer here."
+    "no_counter_pending": "No proposed time is awaiting an answer here.",
+    "force_not_allowed": "Only the owner or a manager can force an overlap.",
+    "force_reason_required": "Give the reason for the overlap (200 characters max)."
   },
   "interestRefusal": {
     "no_contact_channel": "An email or a phone number is needed to tell you about the reply.",

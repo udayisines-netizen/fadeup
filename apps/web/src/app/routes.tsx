@@ -543,6 +543,21 @@ export const router = createBrowserRouter([
                       return { Component: ProRequestsPage }
                     },
                   },
+                  /* OS-1 — l'agenda (jour / semaine par ressource), sous la
+                     capacité RÉELLE `booking` : un salon sans capacité ne pose
+                     pas de rendez-vous ferme (enforce_booking_service_mode). */
+                  {
+                    element: <RequireCapability capability="booking" />,
+                    children: [
+                      {
+                        path: 'agenda',
+                        lazy: async () => {
+                          const { ProAgendaPage } = await import('@/features/pro-agenda/routes/ProAgendaPage')
+                          return { Component: ProAgendaPage }
+                        },
+                      },
+                    ],
+                  },
                   /* F1 — file pro, conditionnée à la capacité RÉELLE
                      `liveQueue` (live_capabilities) : absente = non rendue. */
                   {

@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabase } from '@/shared/lib/supabase'
 import { proKeys, queueKeys } from '@/shared/data/keys'
 import { useChannel } from '@/shared/realtime/useChannel'
-import { useSession } from '@/shared/hooks/useSession'
 
 /**
  * P1PRO — les données RÉELLES de l'accueil pro. Aucun chiffre fabriqué :
@@ -86,30 +85,8 @@ export function useProQueueSummary(organizationId: string | null, enabled = true
   })
 }
 
-/**
- * L'identité barber du compte CONNECTÉ dans cette organisation — pour que
- * l'accueil d'un barber salarié parle de SA journée. `null` = ce compte n'a
- * pas de fauteuil (owner non coiffeur, réceptionniste).
- */
-export function useMyBarberId(organizationId: string | null) {
-  const { session } = useSession()
-  const userId = session?.user.id ?? null
-  return useQuery({
-    queryKey: [...proKeys.all, 'my-barber', organizationId ?? '', userId ?? ''] as const,
-    queryFn: async (): Promise<string | null> => {
-      const { data, error } = await getSupabase()
-        .from('barbers')
-        .select('id, staff_profiles!inner(user_id)')
-        .eq('organization_id', organizationId ?? '')
-        .eq('staff_profiles.user_id', userId ?? '')
-        .limit(1)
-      if (error) throw error
-      return data?.[0]?.id ?? null
-    },
-    enabled: Boolean(organizationId && userId),
-    staleTime: 300_000,
-  })
-}
+/** OS-1 — déplacé dans shared/data (l'agenda le consomme aussi). Ré-export de compatibilité. */
+export { useMyBarberId } from '@/shared/data/proBarbers'
 
 /** « Terminé » en un geste (MASTER_SPEC §14). */
 export function useCompleteAppointment(organizationId: string | null) {

@@ -39,6 +39,13 @@ export interface ProOrganization {
    * l'autorité (§8 du contrat de design pro).
    */
   role: ProMembershipRole
+  /** OS-1 — la ligne de membership du compte (cible de set_membership_revenue_visibility). */
+  membershipId: string
+  /**
+   * OS-1 — `memberships.can_view_revenue` : le patron décide, barber par
+   * barber. Défaut « ne voit pas ». N'a d'effet que pour le rôle barber.
+   */
+  canViewRevenue: boolean
   locations: Array<{ id: string; name: string; kind: 'physical_address' | 'service_area'; timezone: string }>
 }
 
@@ -70,7 +77,7 @@ export function useProOrganization() {
       // attrapé par l'e2e P1PRO). L'autorisation reste en base.
       const { data: memberships, error } = await supabase
         .from('memberships')
-        .select('organization_id, role, organizations(id, name, slug, business_type, currency)')
+        .select('id, organization_id, role, can_view_revenue, organizations(id, name, slug, business_type, currency)')
         .eq('user_id', session?.user.id ?? '')
       if (error) throw error
       if (!memberships || memberships.length === 0) return null
@@ -95,6 +102,8 @@ export function useProOrganization() {
         currency: membership.organizations.currency ?? 'EUR',
         // Repli conservateur : « barber » est le rôle qui voit le MOINS.
         role: (membership.role ?? 'barber') as ProMembershipRole,
+        membershipId: membership.id,
+        canViewRevenue: membership.can_view_revenue === true,
         locations: (locations ?? []).map((location) => ({
           id: location.id,
           name: location.name,
