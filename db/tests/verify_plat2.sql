@@ -587,12 +587,16 @@ select pg_temp.expect('G3 un anonyme non plus',
 select pg_temp.be('9a200000-0000-0000-0000-000000000001');
 select pg_temp.expect('G4 le fondateur génère un lot de six',
   $$select public.generate_poster_batch(6, 'ZZ QA PLAT2 lot')$$, 'ok');
+-- LES COMPTES SONT BORNÉS AU LOT QUE LA SUITE VIENT DE CRÉER. La production
+-- porte des affiches de fixture e2e (« ZZ dead QA PLAT2 e2e ») : compter la
+-- table entière rendrait cette suite fausse le jour où quelqu'un en ajoute
+-- une — ce qui est arrivé, et ce qui l'a fait rougir.
 select pg_temp.expect_count('G5 six codes, tous distincts',
-  $$select count(distinct code) from public.posters$$, 6);
+  $$select count(distinct p.code) from public.posters p join public.poster_batches b on b.id = p.batch_id where b.label = 'ZZ QA PLAT2 lot'$$, 6);
 select pg_temp.expect_count('G6 tous NON DEVINABLES : dix symboles base32 sans I, L, O ni U',
-  $$select count(*) from public.posters where code ~ '^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{10}$'$$, 6);
+  $$select count(*) from public.posters p join public.poster_batches b on b.id = p.batch_id where b.label = 'ZZ QA PLAT2 lot' and p.code ~ '^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{10}$'$$, 6);
 select pg_temp.expect_count('G7 tous LIBRES, aucun rattaché à quoi que ce soit',
-  $$select count(*) from public.posters where state = 'free' and organization_id is null$$, 6);
+  $$select count(*) from public.posters p join public.poster_batches b on b.id = p.batch_id where b.label = 'ZZ QA PLAT2 lot' and p.state = 'free' and p.organization_id is null$$, 6);
 select pg_temp.expect_count('G8 le journal des lots dit quand, combien, et où ils en sont',
   $$select count(*) from public.list_poster_batches() where label = 'ZZ QA PLAT2 lot' and code_count = 6 and free_count = 6$$, 1);
 
@@ -601,7 +605,10 @@ select pg_temp.expect_count('G8 le journal des lots dit quand, combien, et où i
 -- SON organisation. Dans la vraie vie il tient le code dans la main — c'est
 -- l'affiche imprimée. Ici, on le recopie une fois, en tant que fondateur.
 create temp table qa_plat2_codes as
-  select code, row_number() over (order by code) as rn from public.posters;
+  select p.code, row_number() over (order by p.code) as rn
+  from public.posters p
+  join public.poster_batches b on b.id = p.batch_id
+  where b.label = 'ZZ QA PLAT2 lot';
 
 -- ---- le patron ------------------------------------------------------------
 select pg_temp.be('9a200000-0000-0000-0000-000000000011');
@@ -614,6 +621,8 @@ select pg_temp.expect('G10 il attribue une affiche à l''un des siens',
 select pg_temp.expect_count('G10b et il la voit désormais, attribuée chez lui',
   $$select count(*) from public.posters where state = 'assigned'
      and organization_id = '9a20a000-0000-0000-0000-00000000000a'$$, 1);
+select pg_temp.expect_count('G10c et TOUJOURS aucune affiche libre : elles ne sont pas à lui',
+  $$select count(*) from public.posters where state = 'free'$$, 0);
 select pg_temp.expect('G11 IL NE PEUT PAS ATTRIBUER À UN SALON QUI N''EST PAS LE SIEN',
   $$select public.assign_poster((select code from qa_plat2_codes where rn = 2), '9a20c000-0000-0000-0000-00000000000b')$$, 'refus');
 select pg_temp.expect('G12 UNE AFFICHE ATTRIBUÉE N''EST PAS DÉTOURNABLE, même par celui qui l''a posée',
