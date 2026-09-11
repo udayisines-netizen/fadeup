@@ -17,7 +17,7 @@ export function Navbar({ brand, links, actions, className }: NavbarProps) {
         size="lg"
         className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex min-w-0 items-center gap-6">
+        <div className="flex min-w-0 items-start gap-6 sm:items-center">
           <div className="shrink-0">{brand}</div>
           {/*
             The link row scrolls sideways rather than pushing the page wider.
@@ -25,9 +25,20 @@ export function Navbar({ brand, links, actions, className }: NavbarProps) {
             the shell on a phone — the whole document gains a horizontal
             scrollbar, not just the nav. Negative margin + padding keeps the
             focus ring of the first and last link from being clipped.
+
+            PLAT-2 — MAIS IL NE DÉFILE PLUS SUR GRAND ÉCRAN, IL PASSE À LA
+            LIGNE. La barre de défilement de cette rangée est MASQUÉE
+            (`scrollbar-width: none`) : quand la console est passée de huit à
+            treize entrées, les cinq dernières — dont « Team » et « Audit
+            log » — sont devenues invisibles sur un écran de 1440 px, SANS LE
+            MOINDRE INDICE qu'elles existaient encore. Mesuré : le conteneur
+            est plafonné à 1024 px, la rangée en demandait 1059.
+            Le défilement reste le comportement du téléphone, où l'espace
+            manque de toute façon et où le geste est naturel ; au-delà de
+            `sm`, la rangée passe à la ligne et tout redevient atteignable.
           */}
           {links ? (
-            <nav className="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <nav className="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-x-visible [&::-webkit-scrollbar]:hidden">
               {links}
             </nav>
           ) : null}
