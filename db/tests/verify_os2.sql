@@ -13,7 +13,8 @@
 --   N3  notes : chaque lecture interne écrit une ligne platform_audit_log
 --       (customer_notes_read) ; une lecture par l'équipe n'en écrit AUCUNE
 --   N4  notes : droit d'accès RGPD — get_my_customer_notes rend au sujet ce
---       qui est écrit sur lui ; anonyme refusé
+--       qui est écrit sur lui ; anonyme refusé ; AUCUN privilège de table
+--       pour authenticated (la RPC tracée est le seul chemin)
 --   N5  notes : la colonne héritée customers.notes est inécrivable
 --   C1  catalogue : un barber modifie nom/durée ; le MÊME appel avec un prix
 --       est REFUSÉ (42501, price_forbidden_for_role) et le prix n'a pas bougé
@@ -337,6 +338,19 @@ begin
   select count(*) into v_count from public.get_my_customer_notes();
   if v_count <> 0 then
     raise exception 'N4b: un tiers ne doit recevoir aucune note, reçu %', v_count;
+  end if;
+
+  -- ==================================================================
+  -- N4bis. Aucun accès de TABLE : la RPC est le seul chemin
+  -- ==================================================================
+  if has_table_privilege('authenticated', 'public.customer_notes', 'select')
+     or has_table_privilege('authenticated', 'public.customer_notes', 'insert')
+     or has_table_privilege('authenticated', 'public.customer_notes', 'update')
+     or has_table_privilege('authenticated', 'public.customer_notes', 'delete') then
+    raise exception 'N4c: authenticated ne doit avoir AUCUN privilège de table sur customer_notes — PostgREST offrirait une lecture en masse à côté de la RPC tracée';
+  end if;
+  if has_table_privilege('anon', 'public.customer_notes', 'select') then
+    raise exception 'N4d: anon ne doit rien lire sur customer_notes';
   end if;
 
   -- ==================================================================

@@ -163,11 +163,21 @@ create policy customer_notes_delete
     )
   );
 
--- X3 a durci les privilèges de table par défaut : une table neuve ne naît
--- plus avec TRUNCATE/TRIGGER/REFERENCES/MAINTAIN pour les rôles client. Les
--- verbes utiles restent à accorder EXPLICITEMENT.
-grant select, insert, update, delete on public.customer_notes to authenticated;
-revoke all on public.customer_notes from anon;
+-- AUCUN privilège de table pour `authenticated`, et c'est le point de
+-- l'affaire. Les quatre policies ci-dessus restent en place comme SECONDE
+-- couche — si un jour un privilège de table revient, elles gouverneront —
+-- mais le chemin normal est FERMÉ : les quatre RPC ci-dessous sont
+-- SECURITY DEFINER et sont le SEUL accès.
+--
+-- Pourquoi cette sévérité ici et pas ailleurs : avec un simple
+-- `grant select`, PostgREST exposerait `/rest/v1/customer_notes` à tout
+-- membre d'un salon, avec filtre libre — un seul GET suffirait à aspirer
+-- toutes les notes de l'organisation. La RLS ne l'interdirait pas (l'équipe
+-- A le droit de les lire), mais une lecture en masse n'est pas une
+-- consultation de fiche. `list_customer_notes` lit UN client à la fois,
+-- et c'est elle qui porte la trace pour les rôles internes. On ne laisse
+-- pas une porte plus large à côté de la porte qu'on surveille.
+revoke all on public.customer_notes from authenticated, anon;
 
 -- ---------------------------------------------------------------------------
 -- 2. La colonne héritée `customers.notes` — condamnée, pas supprimée

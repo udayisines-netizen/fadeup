@@ -246,5 +246,300 @@
       "slotConflict": "Ce créneau est déjà pris."
     },
     "loading": "Chargement de l'agenda"
+  },
+  "catalog": {
+    "title": "Services",
+    "subtitle": "Ce que votre salon propose, et qui le réalise.",
+    "add": "Créer un service",
+    "showArchived": "Afficher les archives",
+    "categoryNone": "Sans catégorie",
+    "status": {
+      "active": "Actif",
+      "draft": "Prix à définir",
+      "inactive": "Inactif",
+      "archived": "Archivé"
+    },
+    "meta": {
+      "duration": "{{minutes}} min",
+      "noPrice": "Prix à définir",
+      "barbers_one": "{{count}} barber",
+      "barbers_other": "{{count}} barbers",
+      "everyone": "Toute l'équipe",
+      "observed": "Moyenne observée : {{observed}} min sur {{count}} prestation",
+      "observed_other": "Moyenne observée : {{observed}} min sur {{count}} prestations",
+      "noObservation": "Aucune prestation mesurée pour l'instant"
+    },
+    "empty": {
+      "title": "Votre catalogue est vide",
+      "description": "Un service, une durée, un prix : c'est ce qui rend votre profil réservable.",
+      "action": "Créer un service"
+    },
+    "emptyArchived": {
+      "title": "Aucun service archivé",
+      "description": "Les services retirés du catalogue apparaîtront ici, avec leur historique intact.",
+      "action": "Revenir au catalogue"
+    },
+    "sheet": {
+      "createTitle": "Nouveau service",
+      "editTitle": "Modifier le service",
+      "name": "Nom",
+      "duration": "Durée annoncée (minutes)",
+      "description": "Description",
+      "descriptionHint": "Facultatif. Ce que le client lit avant de réserver.",
+      "category": "Catégorie",
+      "categoryNew": "Nouvelle catégorie…",
+      "categoryNewLabel": "Nom de la catégorie",
+      "price": "Prix",
+      "priceHint": "En euros. Le client le voit avant de réserver.",
+      "priceReserved": "Le prix est réservé au propriétaire et au manager.",
+      "draftNotice": "Vous créez ce service sans prix : il restera hors catalogue tant que le propriétaire ne l'aura pas tarifé.",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "estimate": {
+      "title": "Ce que la durée annoncée change",
+      "declaredOnly": "Aucune prestation n'a encore été mesurée : le client voit exactement la durée que vous annoncez ici.",
+      "blended": "FadeUp a mesuré {{count}} prestation : ce que le client voit vient à {{percent}} % de votre durée annoncée, le reste de la moyenne observée.",
+      "blended_other": "FadeUp a mesuré {{count}} prestations : ce que le client voit vient à {{percent}} % de votre durée annoncée, le reste de la moyenne observée.",
+      "observedOnly": "FadeUp a mesuré {{count}} prestations : le client voit désormais la moyenne observée, pas la durée annoncée.",
+      "capped": "L'écart entre l'annoncé et l'observé dépasse 50 % : l'estimation est bornée. Corrigez la durée annoncée, ou vérifiez que « Terminé » est bien marqué à l'heure."
+    },
+    "price": {
+      "title": "Fixer le prix",
+      "save": "Enregistrer le prix"
+    },
+    "assign": {
+      "title": "Qui réalise ce service",
+      "hint": "Personne de coché : toute l'équipe le réalise.",
+      "save": "Enregistrer"
+    },
+    "archive": {
+      "action": "Archiver",
+      "title": "Archiver ce service ?",
+      "body": "Il sort du catalogue et des surfaces publiques. Les rendez-vous passés le gardent.",
+      "confirm": "Archiver",
+      "restore": "Restaurer"
+    },
+    "remove": {
+      "action": "Supprimer",
+      "title": "Supprimer ce service ?",
+      "body": "Définitif. Possible uniquement parce qu'aucun rendez-vous, passage de file ou publication ne s'y rattache.",
+      "confirm": "Supprimer"
+    },
+    "toast": {
+      "created": "Service créé",
+      "updated": "Service modifié",
+      "priced": "Prix enregistré",
+      "archived": "Service archivé",
+      "restored": "Service restauré",
+      "deleted": "Service supprimé",
+      "assigned": "Affectation enregistrée"
+    },
+    "errors": {
+      "priceForbidden": "Le prix est réservé au propriétaire et au manager. Votre modification n'a pas été enregistrée.",
+      "hasHistory": "Ce service a un historique : archivez-le au lieu de le supprimer.",
+      "nameRequired": "Un service a besoin d'un nom.",
+      "durationRequired": "Un service a besoin d'une durée supérieure à zéro.",
+      "priceRequired": "Un prix est nécessaire pour mettre ce service au catalogue.",
+      "archived": "Ce service est archivé. Restaurez-le avant de le modifier."
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle": "Qui revient, qui ne revient plus.",
+    "search": "Rechercher un client",
+    "searchPlaceholder": "Nom, téléphone ou e-mail",
+    "segment": {
+      "label": "Segment",
+      "all": "Tous",
+      "regular": "Réguliers",
+      "lapsed": "Non revenus",
+      "new": "Nouveaux",
+      "verified": "Vérifiés"
+    },
+    "count_one": "{{count}} client",
+    "count_other": "{{count}} clients",
+    "lapsedCallout_one": "{{count}} régulier n'est pas revenu à temps.",
+    "lapsedCallout_other": "{{count}} réguliers ne sont pas revenus à temps.",
+    "lapsedCalloutAction": "Les voir",
+    "row": {
+      "visits_one": "{{count}} prestation",
+      "visits_other": "{{count}} prestations",
+      "never": "Jamais venu",
+      "lastVisit": "Dernière visite il y a {{days}} j",
+      "lastVisitToday": "Venu aujourd'hui",
+      "cycle": "revient tous les {{days}} j",
+      "overdue": "en retard de {{days}} j",
+      "upcoming": "Prochain rendez-vous le {{date}}",
+      "usualBarber": "Habituellement chez {{name}}"
+    },
+    "badge": {
+      "verified": "Client vérifié",
+      "verifiedHint": "A une identité FadeUp et au moins une prestation délivrée chez vous.",
+      "lapsed": "Non revenu"
+    },
+    "empty": {
+      "title": "Aucun client pour l'instant",
+      "description": "Chaque prestation terminée crée une fiche client. Ouvrez votre file ou posez un rendez-vous.",
+      "action": "Voir la file"
+    },
+    "emptySearch": {
+      "title": "Aucun résultat",
+      "description": "Aucun client de votre salon ne correspond à cette recherche.",
+      "action": "Effacer la recherche"
+    },
+    "emptySegment": {
+      "title": "Personne dans ce segment",
+      "description": "C'est une bonne nouvelle : aucun de vos réguliers n'a dépassé son rythme habituel.",
+      "action": "Voir tous les clients"
+    },
+    "detail": {
+      "back": "Retour aux clients",
+      "visitsLabel": "Prestations terminées",
+      "lastVisitLabel": "Dernière visite",
+      "cycleLabel": "Rythme observé",
+      "cycleValue": "tous les {{days}} j",
+      "cycleUnknown": "Pas encore de rythme observé",
+      "cycleHint": "Calculé sur ses propres visites, à partir de trois prestations.",
+      "expectedLabel": "Retour attendu",
+      "barberLabel": "Barber habituel",
+      "contactLabel": "Contact",
+      "noContact": "Aucune coordonnée enregistrée",
+      "historyTitle": "Historique",
+      "historyEmpty": "Aucun passage enregistré pour l'instant.",
+      "historyQueue": "File d'attente",
+      "historyAppointment": "Rendez-vous",
+      "catalogPrice": "Prix catalogue",
+      "status": {
+        "pending": "En attente",
+        "confirmed": "Confirmé",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "no_show": "Absent",
+        "waiting": "En attente",
+        "called": "Appelé",
+        "in_service": "Au fauteuil"
+      }
+    },
+    "notes": {
+      "title": "Notes privées",
+      "hint": "Visibles par l'équipe du salon. Le support FadeUp peut y accéder pour traiter une demande, et chaque consultation est tracée.",
+      "add": "Ajouter une note",
+      "placeholder": "Ce qu'il faut savoir pour bien le recevoir",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer cette note ?",
+      "deleteBody": "Elle disparaît pour toute l'équipe.",
+      "deleteConfirm": "Supprimer",
+      "empty": "Aucune note pour l'instant.",
+      "author": "{{name}}",
+      "authorUnknown": "Auteur retiré de l'équipe",
+      "tooLong": "Une note tient en 2000 caractères."
+    },
+    "toast": {
+      "noteAdded": "Note enregistrée",
+      "noteUpdated": "Note modifiée",
+      "noteDeleted": "Note supprimée"
+    },
+    "errors": {
+      "notFound": "Cette fiche n'existe pas, ou elle n'appartient pas à votre salon.",
+      "noteForbidden": "Vous ne pouvez pas modifier une note écrite par quelqu'un d'autre."
+    }
+  },
+  "team": {
+    "title": "Équipe",
+    "subtitle": "Qui travaille ici, et avec quels droits.",
+    "invite": "Inviter par e-mail",
+    "membersTitle": "Membres",
+    "invitationsTitle": "Invitations en attente",
+    "role": {
+      "owner": "Propriétaire",
+      "manager": "Manager",
+      "receptionist": "Réceptionniste",
+      "barber": "Barber"
+    },
+    "row": {
+      "you": "Vous",
+      "noSeat": "Pas de fauteuil",
+      "notBookable": "Non réservable",
+      "noQueue": "Pas de file",
+      "upcoming_one": "{{count}} rendez-vous à venir",
+      "upcoming_other": "{{count}} rendez-vous à venir",
+      "handle": "@{{handle}}"
+    },
+    "revenue": {
+      "label": "Voit le revenu",
+      "hint": "Un barber salarié ne voit pas les montants du salon, sauf si vous l'autorisez ici.",
+      "ownerOnly": "Seul le propriétaire règle cette permission."
+    },
+    "empty": {
+      "title": "Vous êtes seul pour l'instant",
+      "description": "Invitez un barber par e-mail : il rejoint le salon avec son propre compte et garde son identité professionnelle.",
+      "action": "Inviter par e-mail"
+    },
+    "invitations": {
+      "empty": "Aucune invitation en attente.",
+      "expiresIn_one": "Expire dans {{count}} jour",
+      "expiresIn_other": "Expire dans {{count}} jours",
+      "expired": "Expirée",
+      "invitedBy": "Invité par {{name}}",
+      "resend": "Renvoyer",
+      "revoke": "Annuler l'invitation",
+      "revokeTitle": "Annuler cette invitation ?",
+      "revokeBody": "Le lien envoyé cesse de fonctionner immédiatement.",
+      "revokeConfirm": "Annuler l'invitation"
+    },
+    "inviteSheet": {
+      "title": "Inviter par e-mail",
+      "email": "Adresse e-mail",
+      "emailHint": "L'invitation n'est acceptable que depuis cette adresse.",
+      "role": "Rôle",
+      "location": "Établissement",
+      "locationAny": "Tous les établissements",
+      "expiryNotice": "Le lien expire dans 7 jours et ne sert qu'une fois. Le renvoyer annule le précédent.",
+      "send": "Envoyer l'invitation",
+      "cancel": "Annuler"
+    },
+    "roleSheet": {
+      "title": "Changer le rôle",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "ownerNotice": "Seul un propriétaire peut nommer ou remplacer un propriétaire."
+    },
+    "remove": {
+      "action": "Retirer de l'équipe",
+      "title": "Retirer {{name}} de l'équipe ?",
+      "identityNotice": "Son profil professionnel n'est pas supprimé : son handle, ses abonnés, son portfolio et son historique public lui appartiennent et le suivent.",
+      "effects": "Son accès au salon se ferme, son fauteuil n'est plus réservable et il sort de la file.",
+      "reassignLabel": "Qui reprend ses rendez-vous",
+      "reassignHint": "{{count}} rendez-vous à venir doivent être repris par quelqu'un.",
+      "reassignRequired": "Choisissez qui reprend ses rendez-vous.",
+      "confirm": "Retirer",
+      "cancel": "Annuler"
+    },
+    "toast": {
+      "invited": "Invitation envoyée à {{email}}",
+      "reinvited": "Nouvelle invitation envoyée à {{email}}",
+      "invitationRevoked": "Invitation annulée",
+      "roleChanged": "Rôle enregistré",
+      "revenueChanged": "Permission enregistrée",
+      "removed": "{{name}} a été retiré de l'équipe",
+      "removedWithReassign_one": "{{name}} a été retiré ; {{count}} rendez-vous réassigné",
+      "removedWithReassign_other": "{{name}} a été retiré ; {{count}} rendez-vous réassignés"
+    },
+    "errors": {
+      "alreadyMember": "Cette personne fait déjà partie de l'équipe.",
+      "emailInvalid": "Cette adresse e-mail n'est pas valide.",
+      "ownerForbidden": "Seul un propriétaire peut agir sur un propriétaire.",
+      "lastOwner": "Un salon garde au moins un propriétaire.",
+      "selfRemoval": "Vous ne pouvez pas vous retirer vous-même.",
+      "selfRole": "Vous ne pouvez pas changer votre propre rôle.",
+      "hasFutureAppointments": "Ce barber a encore des rendez-vous à venir : choisissez qui les reprend.",
+      "reassignConflict": "Le remplaçant est déjà pris sur au moins un de ces créneaux. Déplacez-les depuis l'agenda, puis réessayez.",
+      "targetInvalid": "Le remplaçant doit être un barber actif et réservable de ce salon.",
+      "capacity": "Votre plan ne couvre pas un fauteuil de plus."
+    }
   }
 }
