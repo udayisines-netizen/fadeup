@@ -14,7 +14,6 @@ import { defineConfig, devices } from '@playwright/test'
  * `E2E_PORT=<port> npm run e2e` isole chaque campagne.
  * Ports en usage : OS-1 4610, PERF 4620, PLAT-1 4630.
  */
- */
 const E2E_PORT = Number(process.env.E2E_PORT ?? 4610)
 
 export default defineConfig({
