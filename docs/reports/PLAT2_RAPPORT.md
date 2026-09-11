@@ -1,7 +1,7 @@
 # PLAT-2 — Les écrans par rôle, et les affiches QR
 
 **Branche** `plat2/role-screens`, créée depuis `rebuild/social-first-v2` (`585ddc2`).
-**Base** : quatre migrations appliquées en production le 2026-09-11.
+**Base** : cinq migrations appliquées en production le 2026-09-11.
 **Fusion** : aucune.
 
 ---
@@ -37,7 +37,7 @@ Comparateur : `apps/web/e2e/plat2/compare-baseline.mjs`.
 | Empreintes identiques une fois les **5 liens de navigation neufs** neutralisés | **31** |
 | … dont strictement identiques champ à champ | 5 |
 | … dont ne différant QUE par la barre de navigation | 26 |
-| Routes dont l'empreinte diffère **autrement** | **2**, toutes deux causées par un lot voisin (détail ci-dessous) |
+| Routes dont l'empreinte diffère **autrement** | **2**, aucune causée par le CODE de ce lot — l'une par les campagnes e2e (les miennes comprises), l'autre par un lot voisin (§1.2) |
 | Erreurs console, avant / après | **0 / 0** |
 | Réponses HTTP ≥ 400, avant / après | **0 / 0** |
 | Routes débordant horizontalement à 390 px, avant / après | **3 → 1** (deux CORRIGÉES, voir §1.3) |
@@ -474,7 +474,7 @@ Sauvegarde avant toute écriture :
 `/opt/fadeup/backups/pre-plat2-20260911-173414.dump` (3,5 Mo, `pg_dump -Fc`).
 
 **Toutes appliquées en `postgres`** (règle 1 de `DB_OWNERSHIP.md`).
-**Propriétaires vérifiés objet par objet avant écriture** : les deux fonctions
+**Propriétaires vérifiés objet par objet avant écriture** : les fonctions
 redéfinies et les seize tables lues ou modifiées appartiennent toutes à
 `postgres` — aucune moitié de migration possible.
 
@@ -484,6 +484,7 @@ redéfinies et les seize tables lues ou modifiées appartiennent toutes à
 | `20260911200100_plat2_moderation.sql` | 1 droit, 3 colonnes et 2 contraintes sur `posts`, **2 RPC redéfinies**, 5 files de lecture | **testé** |
 | `20260911200200_plat2_crm_prospect_insight.sql` | 3 fonctions de lecture (statistiques, relances, pipeline) | **testé** |
 | `20260911200300_plat2_qr_posters.sql` | 2 droits, 2 tables, 1 type, 8 RPC dont **la seule anonyme** | **testé** |
+| `20260911230000_plat2_review_hardening.sql` | les durcissements de la revue indépendante : 5 RPC redéfinies, 1 policy resserrée, 1 ACL de séquence révoquée (§16) | **testé** |
 
 **`create or replace` et jamais `drop` + `create`** sur les deux fonctions
 existantes : une signature inchangée conserve son ACL. Un DROP obligerait à
@@ -497,8 +498,14 @@ Bac d'essai **fidèle** (`db/tests/b3_restore_sandbox.sh`) : restauration sans
 production. **0 erreur `pg_restore`**, propriétaires conservés (104 objets
 `postgres`, 39 `supabase_admin`), 137 tables portant une ACL explicite.
 
-Puis : instantané ACL → les quatre migrations → la suite de permissions → les
-quatre retours arrière **dans l'ordre inverse** → nouvel instantané.
+Puis : instantané ACL → les migrations → la suite de permissions → les retours
+arrière **dans l'ordre inverse** → nouvel instantané.
+
+(Le chiffre de 4 464 lignes et les zéros qui suivent portent sur les **quatre
+premières** migrations, mesurés avant que la revue n'en ajoute une cinquième.
+Celle-ci a été montée et redescendue sur le même bac d'essai, et appliquée en
+production avec un relevé ACL avant/après : **le seul privilège retiré est
+celui de la séquence de tickets**, volontairement, et rien d'autre n'a bougé.)
 
 | | |
 |---|---|
@@ -526,6 +533,12 @@ qui ne lit que ce rapport doit l'avoir sous les yeux :
   que l'état après ce lot. C'est le sens d'un retour arrière, et c'est écrit
   pour qu'on le sache.
 - **`…200200` ne détruit aucune donnée** : trois fonctions de lecture.
+- **`…230000` ne détruit aucune donnée non plus**, mais son retour arrière est
+  **moins strict sur cinq points** — une affiche postée redevient
+  préemptable, un stagiaire peut de nouveau énumérer les codes, une lettre
+  peut repartir vers un salon non publié, un renvoi d'e-mail cesse de
+  consulter la liste d'opposition, et le drapeau de réattribution redevient
+  toujours faux. C'est écrit en tête du fichier.
 
 ### 6.3 Le contrat de surface anonyme : 44 → 45
 
@@ -582,7 +595,7 @@ concerné : toute redéfinition future de cette fonction doit passer **après**
 
 ## 7. La suite de permissions
 
-`db/tests/verify_plat2.sql` — **136 assertions**, une seule transaction
+`db/tests/verify_plat2.sql` — **151 assertions**, une seule transaction
 terminée par `ROLLBACK` (règle 1 de `QA_DATA.md`). **Passée contre la
 production : 0 ligne résiduelle**, vérifié après coup — 0 ticket, 0 compte, et
 la table des affiches revenue à ses 3 fixtures marquées (§14), pas une de
@@ -601,10 +614,10 @@ garde d'interface n'existe pas.
 | **A** (8) | la grille : l'anonyme et le compte extérieur n'ont rien ; le fondateur porte tout sauf le droit borné du stagiaire ; le stagiaire porte **exactement trois droits, nommés** ; le support porte les quatre droits d'appel et **aucun droit d'affiche ni d'annulation** ; le commercial n'a ni support ni modération |
 | **B** (22) | les tickets : qui ouvre, qui ne peut pas (commercial, modérateur, stagiaire, anonyme), **les deux origines non branchées refusées**, l'échéance RGPD **recopiée de la demande**, la résolution sans son mot refusée, l'assignation à un non-support refusée, les genres de message réservés, et **le fil en AJOUT SEUL — UPDATE, DELETE et TRUNCATE refusés en `reset role`** |
 | **C** (8) | les dossiers : le support lit les trois, **les trois consultations sont au journal**, le commercial, le stagiaire et l'anonyme sont refusés, un identifiant nul est refusé et non rendu vide |
-| **D** (13) | **support : pas de CRM, pas de facturation, pas de modération, pas d'onboarding** — et les trois actions de premier niveau qui, elles, passent, motif obligatoire compris |
+| **D** (14) | **support : pas de CRM, pas de facturation, pas de modération, pas d'onboarding** — et les trois actions de premier niveau qui, elles, passent, motif obligatoire compris |
 | **E** (25) | modération : **masquer sans motif refusé**, « mauvaise note » **hors vocabulaire**, **le modérateur ne remet pas en ligne, l'admin si**, le tampon posé puis effacé, **le modérateur sans CRM**, les deux files partagées enfin visibles au modérateur ET au commercial, l'arbitrage des revendications rivales, le support qui ne voit rien de tout ça |
 | **F** (13) | commercial : le pipeline **par origine**, les statistiques **réelles**, `is_published=false` qui rend des zéros et **le dit**, l'état des relances, **aucune note client**, le stagiaire borné à sa zone et **qui ne publie pas** |
-| **G** (45) | les affiches : génération réservée, codes **distincts et non devinables**, tous libres, le journal des lots ; le patron multi-établissements qui voit **les siens et eux seuls** ; **l'attribution hors de chez soi refusée** ; **le détournement refusé, y compris par celui qui a posé l'affiche** ; le barber salarié et le client refusés ; **le stagiaire borné à sa zone** ; la révocation réservée, motivée ; la réattribution interne ; **les cinq comportements de scan** ; la lettre, sa preuve, et **son absence de preuve** ; le crochet de revendication |
+| **G** (59) | les affiches : génération réservée, codes **distincts et non devinables**, tous libres, le journal des lots ; le patron multi-établissements qui voit **les siens et eux seuls** ; **l'attribution hors de chez soi refusée** ; **le détournement refusé, y compris par celui qui a posé l'affiche** ; le barber salarié et le client refusés ; **le stagiaire borné à sa zone** ; la révocation réservée, motivée, **et impossible deux fois** ; la réattribution interne, **distinguée au journal** ; **les cinq comportements de scan** ; la lettre, sa preuve, **son absence de preuve**, et **son refus vers un salon non publié** ; le crochet de revendication ; et les six assertions de la revue : **une affiche postée ne se préempte pas, mais son destinataire la reçoit**, et **personne n'énumère la table** |
 | **H** (2) | **les treize familles d'action de ce lot ont réellement écrit au journal**, et ce journal reste en ajout seul au plus haut privilège |
 
 `verify_plat1.sql` a dû être corrigée : ses deux assertions de comptage
@@ -622,14 +635,14 @@ nommés. Elle reste verte contre la production.
 |---|---|
 | `npm run typecheck` (`tsc -b` + `tsconfig.v2` strict) | **0 erreur** |
 | `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte |
-| `npm run test` (Vitest) | **818 / 818**, 93 fichiers (+1 sauté : la fabrication des PDF archivés, qui n'écrit sur disque que sur demande) |
-| `npm run build` | **succès** — graphe d'entrée **230,8 Ko gzip sous le budget de 240**, aucune famille interdite |
-| `db/tests/verify_plat2.sql` (production) | **136 assertions vertes, 0 résidu** |
+| `npm run test` (Vitest) | **819 / 819**, 93 fichiers (+1 sauté : la fabrication des PDF archivés, qui n'écrit sur disque que sur demande) |
+| `npm run build` | **succès** — graphe d'entrée **230,4 Ko gzip sous le budget de 240**, aucune famille interdite |
+| `db/tests/verify_plat2.sql` (production) | **151 assertions vertes, 0 résidu** |
 | `db/tests/verify_plat1.sql` (production) | **verte** |
 | `db/tests/probe_public_rpcs.sh --strict` | **vert** — toutes les lectures publiques en 200 |
 | `db/tests/x3_anon_surface.sh --strict` | **vert** — 143 tables balayées en anonyme et en authentifié-sans-droit, contrat de surface à **45** RPC, aucune dérive |
 | Relevé des 33 routes, avant / après | **31 identiques**, 2 écarts externes (§1.2) |
-| `npm run e2e` — suite PLAT-2 | **36 / 36**, 390 px et 1440 px |
+| `npm run e2e` — suite PLAT-2 | **36 / 36**, 390 px et 1440 px, rejouée sur l'état final |
 | `npm run e2e` — campagne complète | **283 verts**, 4 rouges (3 expliqués et rejoués, 1 cause externe), 1 instable — §8.4 |
 | axe, 7 écrans × 2 largeurs | voir §8.3 |
 
