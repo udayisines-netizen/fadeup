@@ -572,10 +572,37 @@ Aucune permission existante n'est retirée ni modifiée.
 ## 9. Git
 
 **Branche** : `os2/operations`, créée depuis `rebuild/social-first-v2` à
-`585ddc2`. Worktree dédié `~/worktrees/os2`.
+`585ddc2`. Worktree dédié `~/worktrees/os2`. **Poussée** sur
+`origin/os2/operations`.
 
-**Aucune fusion n'a eu lieu.** `git merge` n'a jamais été appelé ; la branche
-n'a pas été rebasée, et `rebuild/social-first-v2` n'a pas bougé de mon fait.
+**Neuf commits**, du plus ancien au plus récent :
+
+```
+0c26abe feat(os2): base — notes privées tracées, catalogue à prix réservé,
+                   seuils de file, équipe, CRM
+0f7231f feat(os2): échafaudage des quatre surfaces + durcissement de
+                   l'accès aux notes
+ce7d688 feat(os2): réglages de la file — seuils lus et écrits en base
+8245b56 feat(os2): catalogue de services — le prix réservé, l'archivage,
+                   l'estimation expliquée
+06ecae0 feat(os2): fiches clients et équipe
+6ff8d04 test(os2): campagne e2e verte — 15 tests, contrats serveur et
+                   quatre surfaces
+4fbde38 fix(os2): défauts de la revue, et un correctif de production hors
+                  périmètre
+dc7da38 test(i18n): une clé absente ne doit plus s'afficher en brut
+7dc9a76 docs(os2): rapport final, captures vérifiées, copie de rangée
+                   client raccourcie
+```
+
+66 fichiers, dont 6 migrations et leurs 6 retours arrière, 22 captures et
+ce rapport.
+
+**Aucune fusion n'a eu lieu**, et c'est vérifiable :
+`git log --merges rebuild/social-first-v2..HEAD` rend **0**. `git merge`
+n'a jamais été appelé, la branche n'a pas été rebasée, et
+`rebuild/social-first-v2` est toujours à `585ddc2`. L'arbre de travail est
+propre.
 Le worktree détaché temporaire créé pour départager une régression
 (`/tmp/os2-base-check`, en `--detach` sur 585ddc2) a été retiré.
 
