@@ -719,13 +719,15 @@ Les nouveaux tests unitaires :
 | | |
 |---|---|
 | Branche | `plat1/roles`, depuis `rebuild/social-first-v2` (`3a0f5e4`) |
-| Fichiers touchés | 24 modifiés, 11 ajoutés — **aucun hors périmètre** |
+| Commits | 6 : le socle, la chaîne de publication, les durcissements de revue, et trois de rapport |
+| Fichiers touchés | **aucun hors périmètre** |
 | `app/routes.tsx` | **intouché** (interdit : OS-1 et PERF y travaillent) |
 | `vite.config.ts` | **intouché** (interdit : PERF y travaille) |
 | `features/pro-*` | **intouché** (interdit : OS-1 y travaille) |
 | `apps/mobile` | **intouché** |
 | `apps/web/package.json` | **intouché** — aucune dépendance ajoutée |
-| Fusion | **aucune** |
+| Poussée | `origin/plat1/roles`, 6 commits |
+| Fusion | **aucune** — `git branch --contains HEAD` ne rend que `plat1/roles` |
 
 `/platform/team` et `/platform/audit` existaient déjà comme routes : les écrans
 neufs y sont posés **sans toucher au routeur**, ce qui satisfait à la fois
