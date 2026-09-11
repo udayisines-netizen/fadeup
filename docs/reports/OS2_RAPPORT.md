@@ -978,8 +978,16 @@ production et dont la branche porte la mise à jour de l'allowlist. Je ne
 l'ai pas modifiée pour ne pas fabriquer un conflit de fusion sur la même
 ligne ; convenu avec cette session. Tout le reste de la suite passe.
 
-**« Organisations de test documentées et neutralisées »** : OS-2 n'a créé
-**aucune organisation**. Il réutilise `qa-f1b-shared` (QA_DATA règle 3),
+**« Organisations de test documentées et neutralisées »** — et la
+neutralisation a été **vérifiée par un tiers**. La session PLAT-2, dont les
+fixtures d'affiches QR vivent dans la même organisation partagée, a contrôlé
+après mon passage que ses trois affiches étaient intactes dans leurs états
+déclarés (une attribuée, une libre, une révoquée), que ses sept droits
+étaient en place et que sa garde d'affiche répondait. Ma remise à zéro n'a
+rien emporté hors de mon périmètre. C'est la vérification que je ne pouvais
+pas faire moi-même, puisque je ne connais pas ses invariants.
+
+OS-2 n'a créé **aucune organisation**. Il réutilise `qa-f1b-shared` (QA_DATA règle 3),
 marque tout avant création (services et clients « QA OS2 … », invitations
 `qa-os2-…@fadeup.test`, notes de rendez-vous `qa-os2`) et neutralise en fin
 de campagne. La suite F1 historique, elle, continue de créer 2 organisations
@@ -1056,6 +1064,16 @@ par campagne complète — motif connu, BLOCKERS §12.2, inchangé par ce lot.
     d'abord à décider ce que « NEXT » doit dire près de minuit — une
     question de produit, c'est pourquoi OS-2 ne les corrige pas. Preuves
     mesurées au §11.
+
+    **Ce qui les rend coûteuses** (formulation de PLAT-2, meilleure que la
+    mienne) : elles sont **vertes toute la journée et rouges le soir**. On
+    les prend donc pour de l'instabilité — on relance, ça repasse le
+    lendemain matin, et le défaut de test survit à chaque campagne. Les
+    trois symptômes ne se ressemblent même pas (NEXT vide, réservation
+    refusée parce que la prestation finit après la fermeture, grille vide
+    parce que « demain » est un dimanche fermé), ce qui a empêché de voir
+    qu'il n'y avait qu'une cause. Il a fallu trois lots et deux sessions
+    pour la nommer.
 11. **La catégorie de service ne se renomme ni ne s'archive.** OS-2 crée des
    catégories (`create_service_category`) et les affecte, mais n'offre ni
    renommage ni archivage — `service_categories.is_active` existe et n'est
