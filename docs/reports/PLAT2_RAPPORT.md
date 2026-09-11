@@ -998,10 +998,21 @@ code.**
 | **PLAT-2** | « le QR fait au moins 8 cm » | elle mesurait le **carré blanc de fond**, pas le symbole — verte à 9 cm pendant que le symbole faisait 7,05 |
 | **OS-2** | « les seuils viennent de la BASE, pas d'une constante » | elle attendait `20` et `5` — **exactement les défauts SQL**. Verte que la valeur vienne de la base ou d'une constante |
 | **P1PRO** (trouvé par OS-2) | « le rendez-vous apparaît dans NEXT » | la fixture réserve à `now + 3 h` et teste « aujourd'hui » : après 21 h UTC, elle rougit alors que **l'écran a raison** |
+| **P1PRO** (mesuré ici, §8.5) | « la demande arrive en temps réel » | la fixture réserve à `now + 2 h` : à 21 h 54 UTC, **même la prestation la plus courte finit après la fermeture**, et la réservation est refusée en amont |
+| **F4** (trouvé par OS-2) | « un créneau indisponible n'est jamais sélectionnable » | la fixture avance d'un jour : après minuit à Paris, « demain » est un **dimanche**, le salon est fermé, la grille est vide — et le test lit ce vide comme un défaut |
 
 **La faute est la même à chaque fois : l'assertion ne peut pas distinguer
 l'hypothèse qu'elle valide de celle qu'elle devrait exclure.** Elle est verte
-dans les deux mondes. Ce n'est pas un test faible, c'est une case cochée à
+dans les deux mondes.
+
+**Et les trois dernières lignes sont une sous-famille à elles seules**, que les
+deux sessions ont fini par nommer ensemble : une fixture qui suppose que
+« dans N heures » ou « demain » tient **dans la journée OUVERTE**. Trois
+symptômes différents — un créneau vide, une réservation refusée en amont, une
+grille vide un dimanche — **une seule hypothèse tacite**, qui n'est vraie
+qu'aux heures où on écrit les tests. Elles sont vertes toute la journée et
+rouges le soir, ce qui les rend pires qu'un échec franc : on les prend pour de
+l'instabilité. Ce n'est pas un test faible, c'est une case cochée à
 vide — et elle est plus dangereuse qu'un test absent, parce qu'elle occupe la
 place.
 
