@@ -53,20 +53,22 @@ code HTTP, URL finale, erreurs, échecs réseau.
 
 ### 1.2 Les deux écarts restants — ni l'un ni l'autre n'est de PLAT-2
 
-1. **`/platform/organizations`**, +231 caractères. **Aucune ligne de code de
-   cette page n'est touchée par PLAT-2.** Vérifié en base : **quatre
-   organisations `qa-f1-*` ont été créées entre 18:20 et 18:51** par la
-   campagne e2e d'un lot voisin (la suite F1 crée 2 organisations par
-   campagne — c'est le motif connu de `QA_DATA.md` §3), et `qa-f1b-shared` a
-   été renommée pendant sa campagne. C'est le contenu de la table qui a bougé
-   sous le relevé. Même cause que l'écart n° 3 de PLAT-1.
+1. **`/platform/organizations`**, +1 047 caractères. **Aucune ligne de code de
+   cette page n'est touchée par PLAT-2.** Vérifié en base : **vingt et une
+   organisations `qa-f1-*` ont été créées entre 18:19 et 20:12** par les
+   campagnes e2e — celles d'un lot voisin **et les miennes**. C'est le motif
+   connu de `QA_DATA.md` §3 : la suite F1 crée 2 organisations par campagne,
+   parce que son premier test EST l'installation d'un salon. **La moitié de
+   cet écart est donc de ma main, et je ne l'attribue pas au voisin.** C'est
+   le contenu de la table qui a bougé sous le relevé, pas la page — même
+   cause que l'écart n° 3 de PLAT-1, et le même coût connu d'une campagne
+   complète.
 
-2. **`/platform/audit`**, +535 caractères. **Quatre lignes de journal
-   `customer_notes_read`** écrites entre 18:38 et 18:46 — c'est l'action
-   d'audit **d'OS-2**, qui tourne en parallèle. Vérifié en base : ce sont les
-   SEULES lignes écrites depuis le relevé « avant », et aucune ne vient de
-   PLAT-2 (la suite de permissions de ce lot tourne en transaction annulée et
-   ne laisse rien).
+2. **`/platform/audit`**, +654 caractères. **Cinq lignes de journal
+   `customer_notes_read`** — c'est l'action d'audit **d'OS-2**, qui tourne en
+   parallèle. Vérifié en base : ce sont les SEULES lignes écrites depuis le
+   relevé « avant », et aucune ne vient de PLAT-2 (la suite de permissions de
+   ce lot tourne en transaction annulée et ne laisse rien).
 
 ### 1.3 Ce que ce lot change VOLONTAIREMENT dans la surface existante
 
@@ -533,9 +535,21 @@ lui en demander un pour lire « cette affiche n'est pas encore active » serait
 absurde. Ce qu'elle rend à un anonyme est exactement ce qui est **déjà
 public** : l'état du code et, s'il est attribué, le slug du salon et son
 établissement — la même information que le QR de file imprimé par le salon
-lui-même (F1). Elle ne rend ni le lot, ni l'auteur de l'attribution, ni le
-prospect destinataire, ni la moindre liste d'établissements à qui ne peut pas
-attribuer.
+lui-même (F1). Elle ne rend ni le lot, ni l'auteur de l'attribution, ni la moindre liste
+d'établissements à qui ne peut pas attribuer.
+
+**RECTIFICATION, apportée par la revue.** Une première version de ce rapport
+écrivait « ni le prospect destinataire ». C'était FAUX, et la même phrase avait
+été recopiée dans le commentaire de l'allowlist — c'est-à-dire dans le contrat
+de sécurité lui-même. Sur un code **libre et déjà posté**, la fonction rend le
+`handle` et le nom d'affichage du professionnel, **parce que c'est le crochet
+que le lot demande** : « un salon non revendiqué : l'affiche devient un point
+d'entrée vers la revendication ». Le handle est public ; ce qui est neuf, et
+qu'il faut nommer, c'est **l'association « ce code d'affiche a été posté à ce
+commerce »**, rendue à qui tient le code. Le code est non devinable et
+physiquement dans l'enveloppe ou sur le mur : c'est le même modèle de menace
+que le QR de file imprimé par le salon (F1). **Le comportement est voulu ; le
+texte qui le décrivait était faux, et il est corrigé des deux côtés.**
 
 L'allowlist de `db/tests/x3_anon_surface.sh` est mise à jour **dans le même
 commit que la migration**, avec le motif écrit dedans. Les 25 autres RPC
@@ -608,7 +622,7 @@ nommés. Elle reste verte contre la production.
 |---|---|
 | `npm run typecheck` (`tsc -b` + `tsconfig.v2` strict) | **0 erreur** |
 | `npm run lint` (oxlint + eslint `--max-warnings 0` + garde palette) | **0 erreur**, garde palette verte |
-| `npm run test` (Vitest) | **813 / 813**, 92 fichiers (+1 sauté : la fabrication des PDF archivés, qui n'écrit sur disque que sur demande) |
+| `npm run test` (Vitest) | **818 / 818**, 93 fichiers (+1 sauté : la fabrication des PDF archivés, qui n'écrit sur disque que sur demande) |
 | `npm run build` | **succès** — graphe d'entrée **230,8 Ko gzip sous le budget de 240**, aucune famille interdite |
 | `db/tests/verify_plat2.sql` (production) | **136 assertions vertes, 0 résidu** |
 | `db/tests/verify_plat1.sql` (production) | **verte** |
@@ -616,7 +630,7 @@ nommés. Elle reste verte contre la production.
 | `db/tests/x3_anon_surface.sh --strict` | **vert** — 143 tables balayées en anonyme et en authentifié-sans-droit, contrat de surface à **45** RPC, aucune dérive |
 | Relevé des 33 routes, avant / après | **31 identiques**, 2 écarts externes (§1.2) |
 | `npm run e2e` — suite PLAT-2 | **36 / 36**, 390 px et 1440 px |
-| `npm run e2e` — campagne complète | voir §8.4 |
+| `npm run e2e` — campagne complète | **283 verts**, 4 rouges (3 expliqués et rejoués, 1 cause externe), 1 instable — §8.4 |
 | axe, 7 écrans × 2 largeurs | voir §8.3 |
 
 ### 8.1 Les tests unitaires neufs
@@ -634,7 +648,7 @@ clair présent, parenthèses et accents échappés en WinAnsi et non en UTF-8,
 lettre avec et **sans** preuve, refus d'encoder le japonais et l'arabe, et
 **le QR qui décode**.
 
-### 8.2 La QA navigateur — quatre défauts trouvés à l'œil, pas en relisant
+### 8.2 La QA navigateur — cinq défauts trouvés à l'œil, pas en relisant
 
 C'est la partie du lot où regarder a rapporté le plus.
 
@@ -672,9 +686,24 @@ rangs. Sous `sm`, le défilement reste le comportement.
 désormais **44 px de zone pour 32 px de rond visible** : c'est le `padding`
 transparent qui porte la cible, pas le dessin.
 
-**4. Deux `<main>` imbriqués** sur l'écran public de scan — la coque consumer
+**4. Une clé de traduction s'affichait EN BRUT** sur la page publique de scan :
+`poster.inactive.signedOut`, le nom de la clé, en clair, sous les yeux d'un
+client. **Rien dans la chaîne de validation ne l'a vue** — i18next replie en
+silence sur la clé, `locale-completeness` ne compare que les locales entre
+elles (toutes deux incomplètes, donc d'accord), rendu vert, typecheck vert, et
+axe ne s'intéresse pas au sens des mots. Il a fallu **regarder la capture**.
+Un test de parité relit désormais le fichier source ; le même contrôle passé à
+la main sur les cinq écrans de `/platform` et la barre de navigation n'a trouvé
+**aucune autre** clé manquante.
+
+**5. Deux `<main>` imbriqués** sur l'écran public de scan — la coque consumer
 en fournit déjà un. Deux repères principaux pour un lecteur d'écran. axe ne
 l'attrape pas sous les étiquettes WCAG AA ; c'est faux quand même. Corrigé.
+
+**Ce que ces cinq défauts ont en commun** : aucun n'était visible dans le code,
+aucun n'a fait rougir un test, et quatre sur cinq ont été trouvés en
+**regardant une image**. C'est l'argument entier du §« vérification navigateur
+d'abord » du CLAUDE.md, et il a payé cinq fois dans ce lot.
 
 ### 8.3 axe
 
@@ -746,23 +775,34 @@ densité de la console héritée, ni améliorée ni aggravée par ce lot.
 | | |
 |---|---|
 | Branche | `plat2/role-screens`, depuis `rebuild/social-first-v2` (`585ddc2`) |
-| Commits | 6 (+ le rapport) |
-| Fichiers touchés | 60, **aucun hors périmètre** |
+| Commits | 10 |
+| Fichiers touchés | **aucun hors périmètre** |
+| Poussée | `origin/plat2/role-screens` |
 | `apps/mobile` | **intouché** (interdit par le lot) |
 | `apps/web/src/features/pro-*` | **intouché** (interdit par le lot — OS-2 y travaille) |
 | `apps/web/package.json` | **intouché** — aucune dépendance ajoutée |
 | Fusion | **aucune** |
 
-Les commits :
+Les commits, du plus ancien au plus récent :
 
 ```
-c9af700  fix(plat2): la barre de navigation passe à la ligne au lieu de cacher cinq liens
-bc63d64  fix(plat2): le défilement horizontal à 390 px, et trois contrastes mesurés
-8131591  feat(plat2): les quatre écrans par rôle, le scan d'affiche et le PDF imprimable
-3ec1482  docs(plat2): l'addendum B5 est renommé, l'invariant d'ordre reste
-c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de B5
 7626d84  feat(plat2): le socle base des quatre écrans par rôle et des affiches QR
+c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de B5
+3ec1482  docs(plat2): l'addendum B5 est renommé, l'invariant d'ordre reste
+8131591  feat(plat2): les quatre écrans par rôle, le scan d'affiche et le PDF imprimable
+bc63d64  fix(plat2): le défilement horizontal à 390 px, et trois contrastes mesurés
+c9af700  fix(plat2): la barre de navigation passe à la ligne au lieu de cacher cinq liens
+0511a87  fix(plat2): la suite de permissions comptait la table des affiches entière
+ab5d226  fix(plat2): une clé de traduction s'affichait EN BRUT sur la page publique
+efc07c7  fix(plat2): les trouvailles de la revue indépendante
+         docs(plat2): le rapport et ses preuves
 ```
+
+**LES PREUVES SONT DANS LE DÉPÔT.** `docs/reports/plat2/` porte les deux
+empreintes JSON, les 132 captures avant/après, le relevé axe et ses captures,
+et les deux PDF. La revue indépendante a relevé qu'elles n'y étaient pas au
+moment où elle est passée, et que le rapport s'appuyait dessus à chaque point
+clé : un fichier qui ne survit pas à un `git clean` n'est pas une preuve.
 
 **Fichiers partagés touchés, à connaître pour la fusion** : `app/routes.tsx`
 (6 routes ajoutées, aucune modifiée), `routes/platform-layout.tsx` (5 liens),
@@ -909,6 +949,30 @@ c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de 
    en heredoc non protégé, `sm` a été interprété comme une commande shell et
    le mot a disparu du message. Corrigé par `--amend`.
 
+10. **J'ai coché « typecheck 0 » sans l'avoir relancé en entier.** J'avais
+    passé `tsconfig.app.json` et Vitest, pas le script `npm run typecheck`,
+    qui enchaîne aussi le projet strict. Le `build` ne l'attrape pas non plus
+    (`vite build` ne typecheck pas). **Une case cochée à tort est le pire
+    défaut d'un rapport**, et c'est une revue qui l'a trouvée, pas moi.
+
+11. **J'ai écrit un test qui mesurait la mauvaise chose, et il a caché le
+    défaut qu'il devait garder.** Le contrôle « QR ≥ 8 cm » mesurait le carré
+    blanc de FOND au lieu du symbole. Il ne vérifiait pas l'exigence : il la
+    contournait par construction, et il est resté vert pendant que le symbole
+    faisait 7,05 cm. La leçon est plus large que ce lot : **une assertion qui
+    ne peut pas échouer est une case cochée à vide.** Les tests neufs de ce
+    lot ont tous été vérifiés EN LES CASSANT.
+
+12. **Mon rapport attribuait à `resend_platform_email` une consultation de la
+    liste d'opposition qu'elle ne faisait pas**, et à `resolve_poster_code` une
+    discrétion sur le prospect destinataire qu'elle n'avait pas. Deux
+    affirmations écrites sur la foi de l'intention, pas de la mesure. La
+    première est corrigée dans le code ; la seconde dans le texte (§6.3).
+
+13. **J'ai écrit une lettre imprimable qui promettait une action impossible à
+    son destinataire.** Trois phrases, trois fausses (§16, B3). Elles
+    seraient parties sur du papier.
+
 ---
 
 ## 12. Cases non cochées, avec la raison exacte
@@ -917,7 +981,8 @@ c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de 
 |---|---|
 | **axe sans violation sérieuse** | Les deux seules violations restantes sont les défauts de **palette héritée** nommés par PLAT-1 (4,48:1 et 3,57:1), présents jusque sur la page de connexion. Les corriger veut dire repeindre toute la console et détruire la preuve d'équivalence du §1. Ce lot en a **retiré trois** et n'en a ajouté aucune. Décision de produit. |
 | **`/platform/acquisition/sources` déborde encore** | 241 px de défilement horizontal à 390 px, et c'est un **vrai** débordement de mise en page (`body.scrollWidth` = 631), pas le défaut de peinture corrigé ici. Écran hérité, hors périmètre, **consigné pour PLAT-3**. |
-| **Le PDF n'est pas vérifié à l'œil** | Il est vérifié **structurellement** (xref valide objet par objet, pages comptées, textes présents, QR mesuré à 9 cm) et **fonctionnellement** (le QR des fichiers archivés décode vers la bonne URL). Mais **aucun moteur de rendu PDF n'existe sur cette machine** : ni poppler, ni ghostscript, et le Chromium sans tête télécharge les PDF au lieu de les afficher. **Ouvrez `docs/reports/plat2/pdf/`** — c'est la seule vérification visuelle possible, et elle vous appartient. |
+| **Le PDF n'est pas vérifié à l'œil** | Il est vérifié **structurellement** (xref objet par objet, `/Length` à l'octet près, pages comptées, textes présents, **symbole mesuré à 9,00 cm sur le fichier archivé**) et **fonctionnellement** (le QR décode vers la bonne URL, syndromes Reed-Solomon tous nuls). Mais **aucun moteur de rendu PDF n'existe sur cette machine** : ni poppler, ni ghostscript, et le Chromium sans tête télécharge les PDF au lieu de les afficher — vérifié par la revue indépendante. **Ouvrez `docs/reports/plat2/pdf/`** — c'est la seule vérification visuelle possible, et elle vous appartient. |
+| **Le logo imprimé est le dérivé MONOCHROME** | Géométrie exacte de la marque, en vecteur, byte-identique au fichier source — mais ce fichier-là déclare « 16 à 32 px uniquement ». L'affiche l'imprime à 1,6 cm. Mon écrivain PDF n'a aucune primitive d'image, donc le master PNG lui est inimprimable. **À trancher par le fondateur** (§16). |
 | **La vue en tant que « agit en son nom »** | Toujours pas livrée, et PLAT-2 ne l'a pas livrée non plus. PLAT-1 §5 l'avait requalifiée : le cadre existe (trace, échéance, garde de paiement, bandeau), **l'élévation de lecture n'existe pas**. L'écran de modération offre l'entrée **en disant ce qu'elle fait et ce qu'elle ne fait pas**, plutôt que de laisser croire l'inverse. Reste PLAT-3. |
 | **La recherche de client pour le support** | **Il n'existe aucune recherche de client par téléphone ou par e-mail** : X3 a fermé les oracles d'existence et aucune RPC d'annuaire client n'existe. Le dossier client n'est donc atteignable que **depuis un ticket qui le référence**. L'écran le dit en une phrase. C'est le manque le plus gênant du lot pour un support qui décroche : voir §13. |
 | **« Installer un salon » pour le stagiaire** | **Aucun contrat « installer au nom de » n'existe.** Vérifié en base : `private.assert_organization_creation_authorized()` n'autorise la création que par `create_organization()` — qui fait de **l'appelant** le propriétaire — ou par l'approbation d'une candidature. Si le stagiaire ouvrait `/setup` avec son compte, il créerait un salon qui lui appartient. L'écran offre donc le lien **accompagné de la vérité** : le patron s'installe avec SON compte, sur le téléphone du stagiaire s'il le faut. Il manque un **contrat serveur**, pas un écran. |
@@ -973,6 +1038,23 @@ c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de 
 8. **Les énumérés bruts des dossiers** (§10.11) et **l'identité de l'interne
    côté professionnel** (PLAT-1 §11.3), toujours à ratifier.
 
+9. **La suite F1 fabrique deux organisations par campagne, et le tas grossit
+   vite.** Vingt et une en un après-midi, à trois lots qui rejouent leurs
+   campagnes. `QA_DATA.md` §3 la nomme déjà comme l'exception connue, et
+   `BLOCKERS` §12.2 comme un chantier de réécriture. Convenu avec le lot
+   voisin : cela mérite d'être remonté **une fois, comme chantier à part**,
+   plutôt que redéclaré par chaque lot qui en hérite le compte.
+
+10. **Le logo imprimable** : accepter le dérivé monochrome hors de sa plage,
+    ou donner à l'écrivain PDF une primitive d'image (§16).
+
+11. **Le libellé du canal « SMS » dans le CRM.** L'énuméré
+    `prospect_outreach_channel` porte `sms` parce qu'un commercial peut
+    CONSIGNER un échange par SMS qu'il a eu lui-même. Mais « FadeUp n'utilise
+    pas de SMS » est une règle produit, et un libellé nu le contredisait à
+    l'écran. Il dit désormais « SMS (consigné à la main) ». **À ratifier** :
+    faut-il retirer la valeur de l'énuméré, ou assumer la distinction ?
+
 ---
 
 ## 14. Données de test laissées en place
@@ -994,3 +1076,161 @@ delete from public.poster_batches where id = '9a20e100-0000-0000-0000-0000000000
 la suite de permissions tourne en transaction annulée, et les comptes
 `qa-plat1-*` de PLAT-1 ont été réutilisés tels quels. Vérifié après passage en
 production : 0 ticket, 0 affiche hors fixtures, 0 compte `qa-plat2-*`.
+
+---
+
+## 15. La campagne e2e complète, et ce qu'elle a rougi
+
+**283 verts, 4 rouges, 1 instable, 3 sautés** (31 min), toutes suites
+antérieures comprises. Et les quatre rouges sont **vérifiés, pas excusés**.
+
+| Rouge | Cause établie | Preuve |
+|---|---|---|
+| `f1/live-queue` — temps réel sur deux navigateurs | **croisement de campagnes.** Un lot voisin a relancé la sienne pendant la mienne, sur `qa-f1b-shared` — le motif exact de `QA_DATA.md` règle 2b, mesuré le 2026-09-07 | **rejouées en ISOLÉ immédiatement après : 44/44 vertes.** C'est la preuve, pas l'explication |
+| `f1b/barber-queues` — compte à rebours | idem | idem |
+| `f4/booking-funnel` — inscription légère OTP, aux DEUX largeurs | **cause externe** : `fadeup-supabase-auth` répond `550 You have reached your daily email sending quota`. Tout test qui traverse un envoi réel échoue aujourd'hui | verrou déjà consigné par X2 et M1b ; signalé par le lot voisin avant ma campagne |
+| `os1/agenda` (instable, passé au 2ᵉ essai) | `create_appointment_as_business` → `location_unavailable` pendant la fenêtre de croisement | passé au réessai |
+
+**Ce que ça a coûté, et que je ne cache pas** : les campagnes — les miennes
+comprises — ont créé **21 organisations `qa-f1-*`** dans la production. C'est
+le coût connu et documenté d'une campagne complète (`QA_DATA.md` §3, 2 par
+campagne), et c'est ce qui fait bouger l'empreinte de
+`/platform/organizations` (§1.2). Toutes marquées « ZZ dead », toutes
+invisibles de la marketplace.
+
+**La règle de coordination, appliquée et resserrée.** J'ai attendu que le
+runner se libère, prévenu le lot voisin, et repris la main quand il me l'a
+rendue. Nous avons convenu d'une règle plus stricte que « aucun processus
+Playwright ne tourne » : **on ne lance qu'après un « le runner est à toi »
+explicite.** L'absence de processus n'est pas une permission.
+
+---
+
+## 16. La revue indépendante, et ce qu'elle a trouvé
+
+Une revue adversariale a été lancée sur le lot avec pour consigne de chercher
+des défauts. **Elle en a trouvé quatorze, dont deux bloquants.** Tous sont
+corrigés. Ce §16 existe parce qu'un rapport qui ne dit pas ce qu'une revue lui
+a repris n'est pas un rapport.
+
+### Les deux bloquants
+
+**B1 — `npm run typecheck` ÉCHOUAIT au HEAD, et ma case était cochée.** Sur un
+test que je venais d'ajouter. J'avais relancé `tsconfig.app.json` et Vitest,
+**pas le script complet**, qui inclut le projet strict `tsconfig.v2`. Le
+`build` passe sans le voir, parce que `vite build` ne typecheck pas. Corrigé
+et re-mesuré.
+
+**B2 — LE QR NE FAISAIT PAS 9 cm MAIS 7,05 — sous le plancher de 8 exigé par
+le lot.** La zone de silence — quatre modules de chaque côté sur trente-sept,
+soit **21,6 % de la boîte** — était comptée DEDANS. Et le défaut a tenu parce
+que **le test censé le prouver mesurait le CARRÉ BLANC DE FOND** : il ne
+vérifiait pas l'exigence, il la contournait par construction. `QR_SYMBOL` est
+désormais le côté du SYMBOLE, la zone de silence s'ajoute autour, et le test
+mesure **l'emprise des modules noirs**. Vérifié en le cassant : à 7 cm il
+échoue en nommant l'écart (198,4 pt attendus ≥ 226,8). Mesure finale sur les
+fichiers archivés : **symbole 9,00 cm, emprise totale 11,48 cm**.
+
+**B3 — LA LETTRE IMPRIMÉE MENTAIT**, sur du papier qu'on ne rattrape plus.
+Trois affirmations, trois fausses :
+
+- « scannez-le et **il devient le vôtre** » — **impossible pour le
+  destinataire** : `assign_poster` exige une ligne `memberships` sur un
+  établissement actif, et un prospect qui reçoit la lettre n'a ni compte, ni
+  organisation. Il tombait sur « cette affiche n'est pas encore active ».
+- « **votre salon y est déjà référencé** » — **jamais vérifié** :
+  `prepare_poster_letter` ne regardait pas `is_published`, alors qu'elle le
+  testait déjà pour décider de l'élément de preuve. Une lettre pouvait donc
+  affirmer une fiche qui n'existe pas.
+- « la revendication est gratuite **et immédiate** », sur l'écran public de
+  scan — elle passe par la file de modération humaine **que ce lot livre
+  lui-même**.
+
+Les trois textes sont réécrits **dans les dix langues**, et la RPC refuse
+désormais une lettre vers un salon dont la fiche n'est pas publiée
+(`prospect_not_published`, assertion G39b).
+
+### Le défaut le plus grave après les bloquants
+
+**Une affiche PARTIE PAR LA POSTE se faisait préempter.** Mesuré par la revue,
+pas déduit : pendant les jours où l'enveloppe voyage, le code reste `free`, et
+`assign_poster` n'exigeait rien de plus. N'importe quel porteur de
+`poster.assign` pouvait se le donner ; le patron destinataire ouvrait son
+enveloppe, scannait, et tombait sur la file **d'un autre salon** — sans
+recours, puisqu'une affiche attribuée ne se détourne pas.
+
+**Et il y avait un amplificateur** : `posters_select` acceptait
+`poster.assign`, si bien qu'un stagiaire **énumérait par PostgREST tous les
+codes libres avec leur destinataire** et choisissait lequel préempter, sans
+jamais passer par la RPC censée porter la garde.
+
+Réparé **aux deux étages** — parce qu'une garde de RPC sans la policy qui va
+avec est une porte fermée dans un mur absent :
+
+- `assign_poster` réserve un code posté à son destinataire (le salon vers
+  lequel le prospect a converti) ou à un porteur de `poster.manage` ;
+- `posters_select` ne rend plus la table qu'à `poster.manage` et au patron de
+  l'établissement **attribué**. Un porteur de `poster.assign` attribue en
+  SCANNANT ; il n'a aucun besoin de lire la table.
+
+Six assertions neuves (G42 à G47) le verrouillent, dont **G43b : le salon
+destinataire, lui, reçoit bien son affiche** — une garde qui bloquerait aussi
+le bon destinataire ne serait pas une garde, ce serait une panne.
+
+### Les huit autres
+
+| Trouvaille | Suite donnée |
+|---|---|
+| `reassigned_after_revocation` était **toujours faux** : le drapeau se lisait APRÈS le `returning into`, où l'état vaut déjà « attribué » | lu avant ; assertions G51/G52 |
+| **Révoquer deux fois écrasait le motif d'origine** | refusé (`already_revoked`) ; G48/G49 |
+| `resend_platform_email` **ne consultait jamais la liste d'opposition** de X2 — que mon rapport lui attribuait pourtant | elle la consulte (`email_suppressed`) ; D11b |
+| **Le support ne pouvait assigner AUCUN ticket, pas même à lui-même** : `list_platform_team()` lui rend zéro ligne, et l'écran rendait une phrase à la place du champ. Le serveur, lui, autorisait | bouton « m'attribuer ce ticket », qui ne demande aucun annuaire |
+| Les deux écrans de support affichaient **le code de refus BRUT** à côté du message serveur — « cet e-mail a rebondi · `email_bounced` » — alors que les deux autres écrans du lot traduisaient déjà | 18 motifs traduits en dix langues. **Les tests qui exigeaient le code brut gardaient le défaut** : ils exigent la phrase |
+| Le CRM renvoyait vers `/platform/applications/:id`, **que son rôle ne peut pas lire** — l'écran de modération du même lot documente ce piège et refuse déjà le lien | lien retiré, contradiction interne levée |
+| **25 `toLocaleString()` sans argument** : dates et nombres dans la langue du NAVIGATEUR, pas de l'application | `usePlatformIntl()`, sur le modèle que l'écran de modération avait déjà seul |
+| `support_ticket_reference_seq`, **première séquence de `public`**, naissait `anon=rwU` : le durcissement d'ACL de X3 ne couvre pas les séquences | révoquée ; le seul écart d'ACL de la migration, dans le sens strict |
+| Une **chaîne française écrite EN BASE** (« non assigné »), irrattrapable par l'interface | jeton traduit par l'écran |
+| Un **caractère coréen** dans la traduction japonaise de la lettre | corrigé ; balayage des dix locales, aucun autre |
+
+### Ce que la revue a vérifié et trouvé EXACT
+
+Elle a rejoué le retour arrière de bout en bout sur sa propre restauration
+fidèle, avec un périmètre **plus large que le mien** (27 068 lignes : ACL de
+relations, de fonctions, de schémas, de types, de colonnes, séquences de tous
+les schémas, privilèges par défaut, ACL de base) : **zéro écart**. Elle a
+confirmé les 4 464 lignes, les 104/39 propriétaires, les 137 ACL de table, et
+les deux corps de fonction identiques au caractère près — en comparant leurs
+md5 avant, pendant et après, plutôt qu'en me croyant. Elle a re-appliqué les
+quatre montantes après les retours arrière : `rc=0` sur les quatre.
+
+Elle a vérifié le PDF **objet par objet** : les neuf décalages xref tombent
+tous exactement sur `N 0 obj`, les `/Length` correspondent à l'octet près, et
+elle a **décodé le QR indépendamment de jsQR** — trame reconstruite, format
+lu, démasquage, zigzag, et **les 26 syndromes Reed-Solomon des 70 mots-codes
+tous nuls**. Elle a confirmé que les tracés du logo sont **byte-identiques**
+aux fichiers de marque.
+
+Et elle a confirmé, en appelant les RPC, que les gardes tiennent : le patron
+hors de chez lui, le fondateur lui-même sur une affiche attribuée, les cas
+nuls tous traités, aucune garde en forme `colonne = auth.uid()`, et **aucune
+RPC de PLAT-2 n'appelant une SECURITY DEFINER dont la garde interne se
+réévalue au détriment de l'appelant** — le défaut n° 7 de PLAT-1 n'est pas
+reproduit.
+
+### Deux trouvailles mineures NON corrigées, déclarées
+
+- **Le retour arrière de la migration de modération laisse trois numéros
+  d'attribut morts** sur `public.posts` (`relnatts` 10 → 13), cumulatifs à
+  chaque cycle. Mon §6.1 dit « 0 colonne résiduelle » : c'est vrai au niveau
+  `information_schema`, **faux au niveau `pg_attribute`**. Portée pratique
+  nulle (≈ 530 cycles avant le plafond de 1 600, et un `pg_dump`/restore
+  renumérote), et le corriger exigerait de reconstruire la table.
+- **Le logo imprimé est le dérivé MONOCHROME**, dont le fichier de marque dit
+  « 16 à 32 px uniquement ; au-delà, toujours le master ». L'affiche
+  l'imprime à 1,6 cm, soit ≈ 189 px à 300 dpi. La cause est technique : mon
+  écrivain PDF n'a **aucune primitive d'image** (pas de XObject), donc le
+  master PNG est inimprimable par ce module. Je rectifie donc ce que
+  j'écrivais : c'est **la géométrie exacte de la marque, en vecteur**, mais
+  c'est le dérivé monochrome, hors de sa plage d'usage déclarée. **À trancher
+  par le fondateur** : accepter le dérivé à cette taille, ou ajouter
+  l'embarquement d'images au module.

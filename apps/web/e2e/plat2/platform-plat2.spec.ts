@@ -127,7 +127,12 @@ test.describe('PLAT-2 — un écran interdit se refuse honnêtement', () => {
     await page.goto('/platform/support', { waitUntil: 'networkidle' })
     await page.waitForTimeout(600)
     expect(await page.locator('tbody tr').count()).toBe(0)
-    const text = (await page.locator('main').innerText()).trim()
+    // La console /platform n'a pas de repère `main` : son contenu est rendu
+    // directement dans la coque. On lit donc le corps, moins l'en-tête.
+    const text = await page.evaluate(() => {
+      const header = document.querySelector('header')?.innerText ?? ''
+      return document.body.innerText.replace(header, '').trim()
+    })
     expect(text.length, "un écran refusé dit POURQUOI, il ne rend pas le vide").toBeGreaterThan(20)
   })
 
@@ -135,10 +140,13 @@ test.describe('PLAT-2 — un écran interdit se refuse honnêtement', () => {
     test.skip(!(await signIn(page, 'qa-plat1-sales@fadeup.test')), 'compte QA PLAT-1 absent')
     await page.goto('/platform/posters', { waitUntil: 'networkidle' })
     await page.waitForTimeout(600)
-    const text = (await page.locator('main').innerText()).trim()
+    const text = await page.evaluate(() => {
+      const header = document.querySelector('header')?.innerText ?? ''
+      return document.body.innerText.replace(header, '').trim()
+    })
     expect(text.length).toBeGreaterThan(20)
     // Aucun formulaire de génération n'est rendu à qui ne peut pas générer.
-    expect(await page.locator('main form').count()).toBe(0)
+    expect(await page.locator('form').count()).toBe(0)
   })
 })
 
@@ -146,7 +154,7 @@ test.describe("PLAT-2 — le scan d'une affiche, sans compte", () => {
   test("un code LIBRE dit honnêtement qu'il n'est pas encore actif, et ne propose rien", async ({ page }) => {
     await page.goto(`/a/${CODE_FREE}`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
-    const text = await page.locator('main').innerText()
+    const text = await page.locator('[data-plat2-poster-scan]').innerText()
     expect(text).toContain(CODE_FREE)
     // Aucune proposition d'attribution à un visiteur sans droit.
     expect(await page.getByRole('button', { name: /activ/i }).count()).toBe(0)
@@ -155,7 +163,7 @@ test.describe("PLAT-2 — le scan d'une affiche, sans compte", () => {
   test('un code RÉVOQUÉ le dit clairement', async ({ page }) => {
     await page.goto(`/a/${CODE_REVOKED}`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
-    expect(await page.locator('main').innerText()).toMatch(/plus active|no longer active/i)
+    expect(await page.locator('[data-plat2-poster-scan]').innerText()).toMatch(/plus active|no longer active/i)
   })
 
   test("un code ATTRIBUÉ mène à la file du salon, sans écran intermédiaire", async ({ page }) => {
@@ -167,7 +175,7 @@ test.describe("PLAT-2 — le scan d'une affiche, sans compte", () => {
   test("un code INCONNU ne dit rien de plus qu'« inconnu »", async ({ page }) => {
     await page.goto('/a/ZZZZZZZZZZ', { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
-    const text = await page.locator('main').innerText()
+    const text = await page.locator('[data-plat2-poster-scan]').innerText()
     expect(text).toMatch(/n'existe pas|does not exist/i)
     expect(await page.getByRole('button', { name: /activ/i }).count()).toBe(0)
   })
@@ -177,7 +185,7 @@ test.describe("PLAT-2 — le scan d'une affiche, sans compte", () => {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     await page.goto('/a/pas-un-code', { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
-    expect(await page.locator('main').innerText()).toMatch(/n'existe pas|does not exist/i)
+    expect(await page.locator('[data-plat2-poster-scan]').innerText()).toMatch(/n'existe pas|does not exist/i)
     expect(errors, 'aucune erreur console sur un code mal formé').toHaveLength(0)
   })
 })
