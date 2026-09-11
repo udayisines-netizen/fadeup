@@ -43,6 +43,12 @@ function HomeLink({ label }: { label: string }) {
   )
 }
 
+/*
+ * `<section>` et non `<main>` : la coque consumer fournit déjà le repère
+ * `<main id="fu-main">`. Deux `<main>` imbriqués sont du HTML invalide et
+ * donnent DEUX repères principaux à un lecteur d'écran — axe ne l'attrape pas
+ * sous les étiquettes WCAG AA, mais c'est faux quand même.
+ */
 export function PosterScanPage() {
   const { t } = useTranslation('v2')
   const { toast } = useToast()
@@ -67,21 +73,21 @@ export function PosterScanPage() {
 
   if (resolution.isPending) {
     return (
-      <main className="mx-auto w-full max-w-md px-4 py-10">
+      <section data-plat2-poster-scan className="mx-auto w-full max-w-md px-4 py-10">
         <SkeletonRect className="h-40 w-full" />
-      </main>
+      </section>
     )
   }
 
   if (resolution.isError) {
     return (
-      <main className="mx-auto w-full max-w-md px-4 py-10">
+      <section data-plat2-poster-scan className="mx-auto w-full max-w-md px-4 py-10">
         <EmptyState
           title={t('poster.error.title')}
           description={t('poster.error.body')}
           action={<HomeLink label={t('poster.backHome')} />}
         />
-      </main>
+      </section>
     )
   }
 
@@ -100,25 +106,25 @@ export function PosterScanPage() {
 
   if (data?.state === 'unknown') {
     return (
-      <main className="mx-auto w-full max-w-md px-4 py-10">
+      <section data-plat2-poster-scan className="mx-auto w-full max-w-md px-4 py-10">
         <EmptyState
           title={t('poster.unknown.title')}
           description={t('poster.unknown.body')}
           action={<HomeLink label={t('poster.backHome')} />}
         />
-      </main>
+      </section>
     )
   }
 
   if (data?.state === 'revoked') {
     return (
-      <main className="mx-auto w-full max-w-md px-4 py-10">
+      <section data-plat2-poster-scan className="mx-auto w-full max-w-md px-4 py-10">
         <EmptyState
           title={t('poster.revoked.title')}
           description={t('poster.revoked.body')}
           action={<HomeLink label={t('poster.backHome')} />}
         />
-      </main>
+      </section>
     )
   }
 
@@ -145,7 +151,7 @@ export function PosterScanPage() {
   const canAssign = Boolean(data?.can_assign) && locations.length > 0
 
   return (
-    <main className="mx-auto w-full max-w-md px-4 py-10">
+    <section data-plat2-poster-scan className="mx-auto w-full max-w-md px-4 py-10">
       <p className="text-fu-muted text-xs tracking-[0.18em] uppercase">{t('poster.codeLabel')}</p>
       <p className="text-fu-ink mt-1 font-mono text-2xl tracking-[0.22em]">{data?.code ?? normalized}</p>
 
@@ -221,6 +227,6 @@ export function PosterScanPage() {
           {!session ? <p className="text-fu-muted mt-6 text-xs">{t('poster.inactive.signedOut')}</p> : null}
         </section>
       )}
-    </main>
+    </section>
   )
 }

@@ -15,7 +15,8 @@
   },
   "inactive": {
     "title": "This poster is not active yet",
-    "body": "It has not been linked to a shop. Come back later, or let the shop know."
+    "body": "It has not been linked to a shop. Come back later, or let the shop know.",
+    "signedOut": "Are you the owner of this shop? Sign in: activating a poster requires an account."
   },
   "assign": {
     "title": "Activate this poster",

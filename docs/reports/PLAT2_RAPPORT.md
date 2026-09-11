@@ -68,17 +68,26 @@ code HTTP, URL finale, erreurs, échecs réseau.
    PLAT-2 (la suite de permissions de ce lot tourne en transaction annulée et
    ne laisse rien).
 
-### 1.3 Le seul changement volontaire à une surface existante, et pourquoi
+### 1.3 Ce que ce lot change VOLONTAIREMENT dans la surface existante
 
-Trois écrans hérités **faisaient défiler la page entière latéralement sur un
-téléphone** : PLAT-1 §15.5 les avait consignés comme un défaut « ni créé ni
-corrigé ». Deux sont corrigés ici — `/platform/team` (187 px de défilement
-parasite) et `/platform/acquisition/jobs` (585 px) — **par la même ligne qui
-corrige les trois écrans neufs de ce lot**. Détail en §8.2.
+Cinq primitives partagées de `/platform` sont touchées, **chacune pour un
+défaut mesuré, jamais pour un goût**. Une seule se voit dans l'empreinte ;
+les quatre autres ne changent ni un texte, ni une structure, ni un compte.
 
-Le troisième, `/platform/acquisition/sources`, déborde encore de 241 px : c'est
-un **vrai** débordement de mise en page (`body.scrollWidth` = 631), pas le même
-défaut. Hors périmètre, consigné en §12.
+| Primitive | Défaut mesuré | Effet sur l'empreinte |
+|---|---|---|
+| `index.css` → conteneur de tableau | trois écrans **faisaient défiler la page entière** latéralement sur un téléphone — PLAT-1 §15.5 les avait consignés « ni créés ni corrigés » | **visible** : `/platform/team` (187 px) et `/platform/acquisition/jobs` (585 px) passent de « déborde » à « ne déborde pas » |
+| `navbar.tsx` | cinq liens **inatteignables** sur 1440 px, défaut introduit par ce lot | aucun (mêmes liens, même texte) |
+| `metric.tsx` | contraste 2,41:1 | aucun |
+| `page-header.tsx` | contraste 2,26:1 | aucun |
+| `segmented-control.tsx` | contraste 4,14:1 | aucun |
+
+Détail et mesures en §8.2 et §8.3.
+
+Le troisième écran hérité qui débordait, `/platform/acquisition/sources`,
+déborde encore de 241 px : c'est un **vrai** débordement de mise en page
+(`body.scrollWidth` = 631), pas le défaut de peinture corrigé ici. Hors
+périmètre, consigné en §12.
 
 ### 1.4 La garde d'accès
 
@@ -130,7 +139,7 @@ proposer deux origines mortes.
 ### 2.4 Les 72 heures
 
 `list_marketplace_withdrawal_requests` existe depuis B2 avec `hours_remaining`
-et `is_overdue, et le commentaire de la fonction dit lui-même que « c'est la
+et `is_overdue`, et le commentaire de la fonction dit lui-même que « c'est la
 colonne sur laquelle un écran `/platform` doit alerter ». PLAT-1 §15.7
 constatait que **cet écran n'existait pas** et que « les 72 heures ne sont pour
 l'instant tenues par personne ».
@@ -380,8 +389,8 @@ contrainte du dépôt.
 
 | Exigence | Ce qui est livré |
 |---|---|
-| QR ≥ 8 cm | **9 cm** de côté, mesuré dans le flux de la page par un test. La marge d'un centimètre n'est pas décorative : un QR plastifié, scanné de biais dans un salon mal éclairé, perd de la marge de correction. |
-| Le code en clair, en tout petit, sous le QR | présent, espacé, précédé de « QR abîmé ? Saisissez plutôt ce code » |
+| QR ≥ 8 cm | **9,00 cm** de côté — mesuré non pas dans le code mais **dans les fichiers archivés** : 255,1 pt sur chacune des deux pages d'affiche. La marge d'un centimètre n'est pas décorative : un QR plastifié, scanné de biais dans un salon mal éclairé, perd de la marge de correction. |
+| Le code en clair, en tout petit, sous le QR | présent dans les deux documents (13 pt sur l'affiche, 20 pt sur la lettre), espacé, précédé de « QR abîmé ? Saisissez plutôt ce code » |
 | Une accroche | « Votre tour, en direct sur votre téléphone. » |
 | Le logo | **le VRAI logo**, en vecteur : les tracés de `public/brand/` traduits en instructions PDF (arcs elliptiques et quadratiques convertis en cubiques). Une commande de tracé non gérée **lève** au lieu de dessiner un faux logo. |
 
@@ -404,9 +413,16 @@ Les deux documents sont dans `docs/reports/plat2/pdf/`. **Ouvrez-les.**
 dit ce qui est vrai aujourd'hui : « Scannez ce code : vous voyez votre place
 dans la file en direct, vous pouvez donc sortir prendre un café en la
 surveillant. » Et ce n'est pas qu'une relecture : une **liste noire est
-exécutée AVANT la fabrication**, en français et en anglais, et refuse
-d'imprimer en nommant le mot fautif — si une traduction future introduisait
-une promesse, cent affiches ne partiraient pas à l'imprimeur avec elle.
+exécutée AVANT la fabrication** et refuse d'imprimer en nommant le mot fautif —
+si une traduction future introduisait une promesse, cent affiches ne
+partiraient pas à l'imprimeur avec elle.
+
+Vérifié de mon côté sur les **60 chaînes réellement imprimables** (les dix clés
+du PDF × les six langues d'impression), liste noire élargie aux six langues
+(`notif`, `alert`, `aviso`, `avviso`, `recordatorio`, `promemoria`, `lembrete`,
+`Erinnerung`, `benachricht`, `remind`, `SMS`, `push`, « on vous prévient »,
+« vous serez »…) : **aucune promesse**. Et aucune de ces 60 chaînes ne contient
+un caractère que les polices standard ne savent pas écrire.
 
 **La limite des polices, déclarée.** Les polices standard d'un PDF sont
 encodées en WinAnsi : le latin étendu passe, le japonais, l'arabe, le russe et
@@ -878,7 +894,18 @@ c6eb6b6  docs(plat2): nommer le piège de rejeu avec l'addendum d'effacement de 
    le contraire, et qui échouait. Le tokeniseur refuse désormais toute lettre
    hors de son alphabet.
 
-8. **Un message de commit a exécuté ses propres apostrophes inversées.** Écrit
+8. **Une clé de traduction manquante s'est affichée EN BRUT sur la page
+   publique de scan** — `poster.inactive.signedOut`, sous les yeux d'un client
+   qui scanne une affiche. **Rien ne l'a attrapée** : i18next replie en
+   silence sur la clé elle-même, `locale-completeness` ne compare que les
+   locales entre elles (toutes deux incomplètes, donc d'accord), le rendu
+   était vert, le typecheck aussi, et axe ne s'intéresse pas au sens des mots.
+   Trouvée en **regardant la capture** prise par le balayage axe. Corrigée, et
+   un test de parité relit désormais la page pour que le regard ne soit plus
+   nécessaire. Le même contrôle passé sur les cinq écrans de `/platform` et la
+   barre de navigation : **aucune autre clé manquante**.
+
+9. **Un message de commit a exécuté ses propres apostrophes inversées.** Écrit
    en heredoc non protégé, `sm` a été interprété comme une commande shell et
    le mot a disparu du message. Corrigé par `--amend`.
 
