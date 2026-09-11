@@ -476,41 +476,44 @@ fausse à une question de droit.
 | SQL déterministe | `db/tests/verify_os2.sql` (transaction annulée) | **24 groupes d'assertions verts** |
 | Surface anonyme | `db/tests/x3_anon_surface.sh --strict` | voir ci-dessous |
 | RPC publiques | `db/tests/probe_public_rpcs.sh --strict` | **ALL PUBLIC READ RPCs: 200** |
-| Campagne e2e | `E2E_PORT=4640 npx playwright test` | **257 verts, 4 rouges** — 2 tests × 2 largeurs, aucun imputable à OS-2 (§11). Mesurée sur `dc7da38`, voir l'encadré ci-dessous |
-| e2e du lot | `npx playwright test e2e/os2` | **22 verts, 8 ignorés** (les contrats serveur ne tournent qu'une fois), sur l'arbre FINAL |
+| Campagne e2e | `E2E_PORT=4640 npx playwright test` | **253 verts, 4 rouges, 2 instables**, sur l'arbre LIVRÉ `7da2f20` — 2 tests × 2 largeurs, aucun imputable à OS-2 (§11) |
+| Cascade levée | même arbre, toutes les suites SAUF `f4` et `p1pro` | **233 verts, 0 rouge** — les 26 non exécutés de la campagne étaient bien la cascade `mode: 'serial'`, pas des tests cassés en silence |
+| e2e du lot | `npx playwright test e2e/os2` | **22 verts, 8 ignorés** (les contrats serveur ne tournent qu'une fois) |
 
-### Sur quel arbre la campagne a été mesurée — et l'écart avec celui qui est livré
+### La campagne a été mesurée sur l'arbre LIVRÉ, et la cascade a été levée
 
-La question m'a été posée par la session PLAT-2, qui venait de constater que
-sa propre campagne mesurait un arbre antérieur à celui qu'elle livrait. Elle
-vaut pour moi aussi, donc voici le compte exact plutôt qu'un chiffre nu.
+La question vient de la session PLAT-2, qui venait de constater que sa
+propre campagne mesurait un arbre antérieur de quatre commits à celui
+qu'elle livrait. Elle valait pour moi : ma première campagne portait sur
+`dc7da38` alors que j'expédiais `4847034`. **J'ai donc rejoué sur l'arbre
+livré plutôt que de raisonner sur l'écart**, et je rapporte ici la mesure,
+pas la déduction.
 
-**La campagne complète (257/4) a tourné sur `dc7da38`.** L'arbre livré est
-`4847034`. Entre les deux, un seul écart de RUNTIME :
+**Campagne complète sur `7da2f20`, arbre de travail propre :**
 
 ```
-$ git diff --name-only dc7da38..HEAD | grep -vE "^docs/|captures.mjs"
-apps/web/src/shared/i18n/locales/{fr,en}/pro.json   ← 2 chaînes
-db/tests/verify_os2.sql                             ← suite SQL, hors Playwright
+253 passed · 4 failed · 2 flaky · 26 did not run · 13 skipped   (28,9 min)
 ```
 
-Les deux chaînes sont `pro.clients.row.lastVisit` et `lastVisitToday`,
-raccourcies après lecture d'une capture à 390 px (« Dernière visite il y
-a N j » se faisait couper). Elles ne sont consommées que par
-`features/pro-clients`, et **la suite de ce périmètre a été rejouée VERTE
-sur l'arbre final** (`e2e/os2`, 22 exécutions, 21 h 27), après le
-changement. `verify_os2.sql` a lui aussi été rejoué après sa dernière
-modification (sortie `Z0-Z1`).
+Les 4 rouges sont DEUX tests, chacun aux deux largeurs — `e2e/f4` et
+`e2e/p1pro`, tous deux dépendants de l'heure (§11). Les 2 instables sont
+un test de `f4` passé au second essai. Les 13 ignorés sont les contrats
+serveur d'OS-2, qui ne doivent tourner qu'une fois.
 
-Le reste de l'écart est de la documentation et le script de captures.
-`npm run typecheck`, `npm run lint`, les 822 tests unitaires et
-`npm run build` ont tous tourné sur l'arbre final.
+**Les 26 « did not run » ne cachent rien, et je l'ai levé au lieu de le
+supposer.** `mode: 'serial'` emporte la suite d'un groupe dès qu'un test
+tombe. J'ai donc rejoué, sur le même arbre, TOUTES les suites sauf les
+deux fautives :
 
-**Ce que ça ne prouve pas** : que les 24 suites antérieures rendent
-exactement 257 sur `4847034`. Je le déduis d'un raisonnement (deux chaînes,
-un seul consommateur, suite du consommateur verte) et non d'une mesure. Le
-raisonnement est solide mais ce n'est pas la même chose, et la distinction
-appartient au lecteur — pas à moi.
+```
+$ npx playwright test e2e/d1 e2e/f1 e2e/f1b e2e/f2 e2e/f3 \
+      e2e/os1 e2e/os2 e2e/p1b e2e/plat1
+233 passed · 0 failed · 13 skipped   (17,9 min)
+```
+
+Zéro rouge. Les 26 non exécutés étaient bien la cascade de `f4` et
+`p1pro`, pas des tests cassés en silence. (Technique reprise de PLAT-2,
+qui l'a appliquée à son propre lot le même soir.)
 
 ### Les tests d'OS-2
 
@@ -841,9 +844,14 @@ Une seule case de l'énoncé n'est pas cochée.
 
 ### ☐ « `npm run e2e` vert, suites antérieures comprises »
 
-Campagne finale : **257 verts, 4 rouges** — deux tests, chacun aux deux
-largeurs. **Aucun des deux n'est imputable à OS-2**, et je l'ai prouvé
-plutôt que de l'affirmer.
+Campagne finale sur l'arbre LIVRÉ `7da2f20` : **253 verts, 4 rouges,
+2 instables** — deux tests, chacun aux deux largeurs. La cascade levée rend
+**233 verts, 0 rouge** sur toutes les autres suites (§7). **Aucun des deux
+rouges n'est imputable à OS-2**, et je l'ai prouvé plutôt que de
+l'affirmer.
+
+Les deux ont la MÊME cause de fond, et c'est l'heure : la campagne a
+tourné entre 22 h et 23 h UTC, soit après minuit à Paris.
 
 #### Rouge n° 1 — `e2e/p1pro/pro-direction.spec.ts` : un test qui dépend de l'heure
 
@@ -867,9 +875,45 @@ bornant la réservation à la journée du lieu (`min(now + 3 h, aujourd'hui
 d'un autre lot, et le correctif engage ce que « NEXT » doit dire près de
 minuit — une question de produit, pas de test.
 
-#### Rouge n° 2 — `e2e/f4/booking-funnel.spec.ts` : le quota d'envoi
+#### Rouge n° 2 — `e2e/f4/booking-funnel.spec.ts` : le tunnel après minuit
 
-Ce n'est pas un défaut de code :
+Sur l'arbre livré, le rouge de `f4` a CHANGÉ de test : ce n'est plus
+l'étape OTP mais « un créneau indisponible n'est jamais sélectionnable »
+(`f4:195`), avec `expect(shown).toBeGreaterThan(0)` → reçu `0`. Un
+troisième test du même fichier est instable (passé au second essai), et
+rejouer `e2e/f4` seul à 23 h fait tomber encore un autre test sur un
+`waitFor` de la grille de créneaux.
+
+La cause est mesurée, pas supposée :
+
+```
+jour_paris | heure_paris | créneaux aujourd'hui | créneaux demain
+2026-09-12 | 00:45:56    |                   35 |               0
+```
+
+À 00 h 45 à Paris, « demain » est un DIMANCHE et `demo-atelier-fadel` est
+fermé : zéro créneau, et la grille a raison de n'en montrer aucun. Le
+helper `throughSlot` balaie les jours 1 à 6 avec 8 s de budget chacun sur
+une machine à deux cœurs qui enchaîne les campagnes depuis six heures —
+d'où l'instabilité qui s'ajoute.
+
+**OS-2 est exclu par construction** : ces mêmes tests étaient VERTS à
+20 h 45 sur `dc7da38`, un arbre qui contenait déjà les six migrations et
+les quatre surfaces. Entre les deux, deux chaînes d'i18n que F4 ne rend
+jamais — et trois heures.
+
+La session PLAT-2 a mesuré le symptôme jumeau de son côté, sur la même
+organisation : sa fixture réserve à `now + 2 h`, ce qui à 21 h 54 UTC
+tombe vendredi 23 h 54, et **même une prestation de 15 minutes finit après
+la fermeture de 23 h 59** → `book_public_appointment` refuse avec
+`outside_hours`. Deux symptômes, une fixture qui suppose que « dans deux
+heures » tient toujours dans la journée ouvrée.
+
+#### Rouge n° 3 (première campagne) — l'étape OTP et le quota d'envoi
+
+Dans la campagne de 20 h 45, le rouge de `f4` était l'étape OTP. Il n'est
+plus atteint sur l'arbre livré (la cascade s'arrête avant), mais la cause
+reste vraie et vaut d'être consignée :
 
 `e2e/f4/booking-funnel.spec.ts` › « inscription légère DANS le flux :
 e-mail → code à 6 chiffres ». L'étape OTP échoue parce que GoTrue ne peut
@@ -890,9 +934,11 @@ lot. **C'est un verrou d'exploitation, pas une régression** : il est déjà
 consigné comme défaut de production connu (X2, M1b), et OS-2 ne le corrige
 pas parce qu'il ne s'agit pas de code mais d'un abonnement d'envoi.
 
-#### Ce que ces deux rouges laissent non prouvé de mon périmètre
+#### Ce que ces rouges laissent non prouvé de mon périmètre
 
-**Rien.** OS-2 ne dépend d'aucun envoi réel : l'invitation par e-mail est
+**Rien**, et c'est la cascade levée qui l'établit : 233 verts, 0 rouge sur
+toutes les suites hors `f4` et `p1pro`, sur l'arbre livré. OS-2 ne dépend
+d'aucun envoi réel : l'invitation par e-mail est
 vérifiée sur la ligne `email_outbox` déposée par le trigger, qui est
 exactement le contrat que l'énoncé demande (« n'invente pas un second
 système d'envoi »). La distribution appartient à B2 et à l'exploitation.
@@ -999,11 +1045,17 @@ par campagne complète — motif connu, BLOCKERS §12.2, inchangé par ce lot.
    nombres différents — tous deux vrais, mais pas la même chose. À
    trancher : un sélecteur de lieu sur le catalogue, ou un libellé qui dit
    « tous établissements ».
-10. **La fixture de P1PRO dépend de l'heure.** `e2e/p1pro` réserve à
-    `now + 3 h` et vérifie que le rendez-vous apparaît dans NEXT
-    (aujourd'hui) : le test échoue mécaniquement après 21 h UTC. À borner
-    à la journée du lieu — ce qui oblige à décider ce que « NEXT » doit
-    dire près de minuit. Détail et preuve au §11.
+10. **DEUX fixtures supposent que « dans N heures » tient dans la journée
+    ouvrée.** `e2e/p1pro` réserve à `now + 3 h` et vérifie que le
+    rendez-vous apparaît dans NEXT (= aujourd'hui) : échec mécanique après
+    21 h UTC. `e2e/f4` walk les jours 1 à 6 et tombe sur un dimanche fermé
+    passé minuit à Paris ; PLAT-2 a mesuré le jumeau chez elle
+    (`now + 2 h` → 23 h 54, prestation finissant après la fermeture,
+    `outside_hours`). Les trois se réparent de la même façon : borner
+    l'horaire à la journée OUVERTE du lieu, pas à l'horloge. Cela oblige
+    d'abord à décider ce que « NEXT » doit dire près de minuit — une
+    question de produit, c'est pourquoi OS-2 ne les corrige pas. Preuves
+    mesurées au §11.
 11. **La catégorie de service ne se renomme ni ne s'archive.** OS-2 crée des
    catégories (`create_service_category`) et les affecte, mais n'offre ni
    renommage ni archivage — `service_categories.is_active` existe et n'est
