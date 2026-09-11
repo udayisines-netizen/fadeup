@@ -164,27 +164,29 @@ create index support_ticket_messages_ticket_idx
   on public.support_ticket_messages (ticket_id, created_at);
 
 -- ===========================================================================
--- PIÈGE DE REJEU — À LIRE AVANT TOUTE FUSION (motif PLAT-1 §15.9)
+-- CETTE FONCTION EST REDÉFINIE PAR B5 — À SAVOIR AVANT DE LA RÉÉCRIRE
 --
 -- B5 (`b5/missing-contracts`, NON FUSIONNÉE, migrations APPLIQUÉES en
 -- production) redéfinit CETTE fonction dans
--- `20260911160300_b5_account_erasure_addendum.sql` pour y ouvrir UNE seule
+-- `20260911210000_b5_account_erasure_addendum.sql` pour y ouvrir UNE seule
 -- porte : le caviardage d'un fil dont le sujet a effacé son compte
 -- (`body -> '[deleted]'`, auteur -> NULL, metadata -> '{}'), vérifié colonne
 -- par colonne, sous un GUC transactionnel posé par la seule
 -- `private.erase_customer_account()`. Le DELETE y reste refusé à tout le
 -- monde : l'invariant d'ajout seul tient, le fil n'est jamais amputé.
 --
--- OR SON HORODATAGE (…160300) EST ANTÉRIEUR AU MIEN (…200000). Un rejeu à
--- blanc depuis les seules migrations, dans l'ordre des noms, appliquerait
--- B5 PUIS celle-ci — et CETTE version, qui ne connaît pas le caviardage,
--- ÉCRASERAIT la porte de B5. L'effacement de compte se casserait alors sur
--- un fil de support, silencieusement, à la première suppression réelle.
+-- SON PREMIER HORODATAGE (…160300) ÉTAIT ANTÉRIEUR AU MIEN (…200000). Un
+-- rejeu à blanc depuis les seules migrations, dans l'ordre des noms, aurait
+-- appliqué B5 PUIS celle-ci — et CETTE version, qui ne connaît pas le
+-- caviardage, aurait ÉCRASÉ la porte de B5. L'effacement de compte se serait
+-- cassé sur un fil de support, silencieusement, à la première suppression
+-- réelle ; en production l'ordre d'application le masquait.
 --
--- CE QU'IL FAUT FAIRE À LA FUSION : rejouer l'addendum B5 APRÈS ce fichier,
--- ou le renommer avec un horodatage postérieur. Ne PAS reprendre le corps de
--- B5 ici — cette migration doit rester lisible seule, et B5 doit rester
--- propriétaire de sa propre exemption.
+-- CORRIGÉ : B5 a renommé son addendum en `20260911210000_…`, donc APRÈS ce
+-- fichier. L'invariant à tenir reste celui-ci — **toute redéfinition future
+-- de cette fonction doit passer APRÈS 20260911200000**, sinon elle perd la
+-- porte de caviardage. Ne PAS reprendre le corps de B5 ici : cette migration
+-- doit rester lisible seule, et B5 reste propriétaire de sa propre exemption.
 --
 -- ÉTAT EN PRODUCTION AU 2026-09-11 : c'est la version de B5 qui tourne, et
 -- les assertions B19/B20/B21 de `verify_plat2.sql` restent vertes avec elle.
