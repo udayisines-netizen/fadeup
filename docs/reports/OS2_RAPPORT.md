@@ -433,3 +433,54 @@ la valeur `NULL` ne lève pas. Les sept RPC d'entrée refusent explicitement
 un appelant anonyme (assertions Z1a–Z1g), y compris
 `get_my_customer_notes()`, où rendre une liste vide aurait été une réponse
 fausse à une question de droit.
+
+---
+
+## 7. Validation
+
+| Porte | Commande | Résultat |
+|---|---|---|
+| TypeScript | `npm run typecheck` (`tsc -b --noEmit` + `tsc -p tsconfig.v2.json --noEmit`, `noUncheckedIndexedAccess`) | **0** |
+| Lint | `npm run lint` (oxlint + eslint `--max-warnings 0` + garde de palette) | **0** |
+| Unitaires | `npx vitest run` | **95 fichiers, 819 tests verts** (+98 tests par OS-2) |
+| Build | `npm run build` | **OK** |
+| Graphe d'entrée | `scripts/check-entry-graph.mjs` (dans `build`) | **230,8 Ko ≤ 240 Ko**, aucune famille interdite — les quatre surfaces restent paresseuses |
+| SQL déterministe | `db/tests/verify_os2.sql` (transaction annulée) | **24 groupes d'assertions verts** |
+| Surface anonyme | `db/tests/x3_anon_surface.sh --strict` | voir ci-dessous |
+| RPC publiques | `db/tests/probe_public_rpcs.sh --strict` | **toutes en 200** |
+
+### Les tests d'OS-2
+
+**Vitest — 98 tests neufs**, tous sur de la logique PURE, miroir des gardes SQL :
+
+- `pro-catalog` : `catalogPermissions` (owner/manager tout, barber sans prix,
+  réceptionniste rien), `estimateNotice` (0 / 1–4 / 5 / 12 / 20 mesures,
+  observé nul, écart plafonné), `groupByCategory`, `parseServiceRefusal`.
+- `pro-clients` : `displayCustomerName` (jeton `[deleted]` exact),
+  `frequencyLabel`, `overdueDays`, `lapsedSummary`.
+- `pro-team` : `teamPermissions` (owner face à lui-même, manager face à un
+  owner, dernier owner, membre sans fauteuil), `invitationExpiry`
+  (0 jour ≠ expirée), `reassignCandidates`, refus nommés dont `count=N`.
+- `pro-queue` : `thresholdErrors` (bornes, vide, décimal, négatif),
+  `changedThresholds` (le delta seul), `canManageQueueSettings`.
+
+**Playwright — 15 tests**, sur les deux projets (390 et 1440), répartis en
+deux fichiers :
+
+- `e2e/os2/contracts.spec.ts` — **les vérités serveur par HTTP réel à travers
+  Kong**, sans DOM : le prix refusé à un barber (et rien d'écrit), le service
+  à historique qui s'archive, la matrice d'accès aux notes avec la trace
+  d'audit comptée avant/après, le commercial et le stagiaire refusés, le GET
+  PostgREST de masse refusé, l'invitation (jeton 64 caractères, 7 jours,
+  révocation au renvoi, expiration), le retrait qui préserve `professionals`,
+  les clients non revenus, la minimisation inter-organisation, le réglage de
+  file répercuté sur `list_public_queues`, les seuils lus par
+  `private.queue_capacity`. Exécuté une seule fois (les écritures ne doivent
+  pas être rejouées par le second navigateur).
+- `e2e/os2/operations.spec.ts` — **les quatre surfaces dans le navigateur**,
+  aux deux largeurs, avec axe et surveillance de la console à chaque écran.
+
+**axe** (`@axe-core/playwright`) sur le catalogue, les clients, l'équipe et
+les réglages de file, aux deux largeurs : **aucune violation `serious` ou
+`critical`**. La console est surveillée sur les mêmes écrans : **aucune
+erreur**.

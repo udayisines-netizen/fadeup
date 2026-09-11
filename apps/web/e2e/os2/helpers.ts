@@ -169,9 +169,14 @@ export async function signIn(page: Page, email: string, password: string): Promi
 export function seedCustomer(name: string, completedCount = 0, daysSinceLast = 7, intervalDays = 28): string {
   const fullName = `QA OS2 ${name}`
   const existing = sql(`select id from public.customers where organization_id='${ORG_ID}' and name='${fullName}' limit 1`)
+  // `psql -At -c "insert … returning id"` imprime l'identifiant PUIS l'étiquette
+  // de commande (« INSERT 0 1 ») : la CTE rend une ligne et une seule.
   const customerId =
     existing ||
-    sql(`insert into public.customers (organization_id, name, phone) values ('${ORG_ID}', '${fullName}', null) returning id`)
+    sql(`with created as (
+           insert into public.customers (organization_id, name, phone)
+           values ('${ORG_ID}', '${fullName}', null) returning id
+         ) select id from created`)
   const locationId = sql(`select id from public.locations where organization_id='${ORG_ID}' limit 1`)
   const barberId = sql(`select id from public.barbers where organization_id='${ORG_ID}' order by id limit 1`)
   const serviceId = sql(`select id from public.services where organization_id='${ORG_ID}' and is_active order by name limit 1`)

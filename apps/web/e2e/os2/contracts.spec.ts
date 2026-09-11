@@ -35,7 +35,11 @@ import {
 
 test.describe.configure({ mode: 'serial' })
 
-test.skip(({}, testInfo) => testInfo.project.name !== 'chromium-desktop', 'contrats serveur : une seule exécution')
+// Les écritures de ce fichier ne doivent pas être rejouées par le second
+// projet de navigateur : `testInfo` n'est disponible que dans un hook.
+test.beforeEach(({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'contrats serveur : une seule exécution')
+})
 
 let fixture: Fixture
 let ownerToken = ''
@@ -257,10 +261,14 @@ test('l’invitation : jeton serveur, sept jours, usage unique, le renvoi révoq
 
 test('retirer un barber ne supprime pas son profil public', async () => {
   // Le REMPLAÇANT : un fauteuil jetable, sans compte.
-  const standInStaff = sql(`insert into public.staff_profiles (organization_id, user_id, location_id, display_name, is_public, is_active)
-    values ('${ORG_ID}', null, '${fixture.locationId}', 'QA OS2 Remplacant', true, true) returning id`)
-  const standIn = sql(`insert into public.barbers (organization_id, staff_profile_id, is_bookable, queue_enabled)
-    values ('${ORG_ID}', '${standInStaff}', true, true) returning id`)
+  const standInStaff = sql(`with created as (
+      insert into public.staff_profiles (organization_id, user_id, location_id, display_name, is_public, is_active)
+      values ('${ORG_ID}', null, '${fixture.locationId}', 'QA OS2 Remplacant', true, true) returning id
+    ) select id from created`)
+  const standIn = sql(`with created as (
+      insert into public.barbers (organization_id, staff_profile_id, is_bookable, queue_enabled)
+      values ('${ORG_ID}', '${standInStaff}', true, true) returning id
+    ) select id from created`)
 
   // LE PARTANT : le compte barber QA, qui porte une VRAIE identité
   // professionnelle (professionals) — c'est elle qui doit survivre.
@@ -293,6 +301,14 @@ test('retirer un barber ne supprime pas son profil public', async () => {
     expect(refusal(refused.body)).toContain('fadeup_team_refusal=has_future_appointments')
     expect(sql(`select count(*) from public.memberships where id='${membershipId}'`)).toBe('1')
 
+    // Le compte exact vient de la base, pas d'une constante : les tests
+    // précédents du fichier ont pu poser d'autres rendez-vous sur ce siège.
+    const futureBefore = Number(
+      sql(`select count(*) from public.appointments
+           where barber_id='${leavingBarber}' and starts_at > now() and status in ('pending','confirmed')`),
+    )
+    expect(futureBefore).toBeGreaterThanOrEqual(1)
+
     const removed = await rpc(
       'remove_team_member',
       { p_membership_id: membershipId, p_reassign_to_barber_id: standIn },
@@ -300,7 +316,7 @@ test('retirer un barber ne supprime pas son profil public', async () => {
     )
     expect(removed.status).toBe(200)
     const summary = (removed.body as Array<{ reassigned_appointments: number; moved_queue_entries: number }>)[0]!
-    expect(summary.reassigned_appointments).toBe(1)
+    expect(summary.reassigned_appointments).toBe(futureBefore)
     expect(summary.moved_queue_entries).toBe(1)
 
     // LA loi produit : l'identité publique survit au départ.
@@ -312,7 +328,7 @@ test('retirer un barber ne supprime pas son profil public', async () => {
     // L'accès, lui, est retiré.
     expect(sql(`select count(*) from public.memberships where id='${membershipId}'`)).toBe('0')
     // Les rendez-vous et la file ont suivi le repreneur.
-    expect(sql(`select count(*) from public.appointments where barber_id='${standIn}' and notes='${QA_MARK}'`)).toBe('1')
+    expect(Number(sql(`select count(*) from public.appointments where barber_id='${standIn}'`))).toBe(futureBefore)
     expect(sql(`select count(*) from public.queue_entries where barber_id='${standIn}' and customer_name='QA OS2 File Un'`)).toBe('1')
     expect(sql(`select count(*) from public.queue_entry_moves where to_barber_id='${standIn}'`)).not.toBe('0')
   } finally {

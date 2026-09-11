@@ -69,13 +69,14 @@ const services = JSON.parse(
 )
 
 // Un catalogue réaliste : une catégorie, un brouillon sans prix, un archivé.
-const categoryId = sql(`insert into public.service_categories (organization_id, name, display_order)
-  values ('${ORG_ID}', 'QA OS2 Soins', 0) returning id`)
+const categoryId = sql(`with created as (
+  insert into public.service_categories (organization_id, name, display_order)
+  values ('${ORG_ID}', 'QA OS2 Soins', 0) returning id) select id from created`)
 sql(`update public.services set category_id='${categoryId}' where organization_id='${ORG_ID}' and name='${services[0].name}'`)
-const draftId = sql(`insert into public.services (organization_id, name, duration_minutes, price_cents, is_active, price_pending)
-  values ('${ORG_ID}', 'QA OS2 Rasage traditionnel', 25, 0, false, true) returning id`)
-const archivedId = sql(`insert into public.services (organization_id, name, duration_minutes, price_cents, is_active, archived_at)
-  values ('${ORG_ID}', 'QA OS2 Coloration', 60, 4500, false, now()) returning id`)
+sql(`insert into public.services (organization_id, name, duration_minutes, price_cents, is_active, price_pending)
+  values ('${ORG_ID}', 'QA OS2 Rasage traditionnel', 25, 0, false, true)`)
+sql(`insert into public.services (organization_id, name, duration_minutes, price_cents, is_active, archived_at)
+  values ('${ORG_ID}', 'QA OS2 Coloration', 60, 4500, false, now())`)
 sql(`insert into public.barber_services (organization_id, barber_id, service_id)
      select '${ORG_ID}', b.id, s.id from public.barbers b cross join public.services s
      where b.organization_id='${ORG_ID}' and s.organization_id='${ORG_ID}' and s.is_active on conflict do nothing`)
@@ -90,7 +91,8 @@ for (let i = 0; i < 34; i += 1) {
 
 // Des clients : un régulier en retard, un régulier à l'heure, un nouveau.
 function seedCustomer(name, count, daysSinceLast, interval) {
-  const id = sql(`insert into public.customers (organization_id, name, phone) values ('${ORG_ID}', 'QA OS2 ${name}', null) returning id`)
+  const id = sql(`with created as (insert into public.customers (organization_id, name, phone)
+    values ('${ORG_ID}', 'QA OS2 ${name}', null) returning id) select id from created`)
   for (let i = 0; i < count; i += 1) {
     const offset = daysSinceLast + i * interval
     sql(`insert into public.appointments
@@ -101,7 +103,7 @@ function seedCustomer(name, count, daysSinceLast, interval) {
   }
   return id
 }
-const lapsed = seedCustomer('Mehdi A.', 5, 104, 26)
+seedCustomer('Mehdi A.', 5, 104, 26)
 seedCustomer('Nadia R.', 4, 12, 28)
 seedCustomer('Tom G.', 1, 3, 0)
 seedCustomer('Rayan B.', 6, 21, 21)

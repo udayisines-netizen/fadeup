@@ -27,6 +27,14 @@ import {
 
 test.describe.configure({ mode: 'serial' })
 
+/* La langue de l'interface suit celle du navigateur : sans ce réglage, le
+   contexte Playwright est en `en-US` et l'écran pro s'affiche en anglais.
+   Les captures du rapport sont en français, la campagne doit l'être aussi. */
+test.use({ locale: 'fr-FR' })
+
+/** Les deux langues du produit, pour qu'une assertion ne dépende pas d'un réglage. */
+const OBSERVED = /moyenne observée|observed average/i
+
 let fixture: Fixture
 let suffix = ''
 
@@ -132,7 +140,7 @@ test('catalogue — la durée observée s’affiche quand elle existe, et RIEN q
   await page.goto('/dashboard/catalog')
   await page.getByTestId('pro-catalog-list').waitFor({ timeout: 30_000 })
   // Sans mesure : aucune moyenne observée nulle part, et surtout pas un zéro.
-  await expect(page.getByText(/moyenne observée/i)).toHaveCount(0)
+  await expect(page.getByText(OBSERVED)).toHaveCount(0)
 
   // Huit mesures réelles de 27 minutes.
   for (let i = 0; i < 8; i += 1) {
@@ -144,7 +152,7 @@ test('catalogue — la durée observée s’affiche quand elle existe, et RIEN q
   }
   await page.reload()
   await page.getByTestId('pro-catalog-list').waitFor()
-  await expect(page.getByText(/moyenne observée/i).first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText(OBSERVED).first()).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText(/27/).first()).toBeVisible()
 
   // Et l'effet sur l'estimation est EXPLIQUÉ au professionnel.
@@ -217,9 +225,23 @@ test('équipe — inviter par e-mail, et le retrait qui préserve le profil prof
   expect(sql(`select count(*) from public.email_outbox where template='team_invitation' and to_email='${email}'`)).toBe('1')
   await expect(page.getByTestId('pro-team-invitations').getByText(email)).toBeVisible({ timeout: 20_000 })
 
-  // Le dialogue de retrait DIT que le profil professionnel survit.
-  const barberRow = page.getByTestId('pro-team-member').filter({ hasText: /barber/i }).first()
-  await barberRow.getByTestId('pro-team-remove').click()
+  // Le dialogue de retrait DIT que le profil professionnel survit. Les
+  // actions d'une rangée vivent derrière un popover (régime dense).
+  const rows = page.getByTestId('pro-team-member')
+  const count = await rows.count()
+  let opened = false
+  for (let i = 0; i < count && !opened; i += 1) {
+    const trigger = rows.nth(i).getByRole('button').first()
+    if (!(await trigger.isVisible())) continue
+    await trigger.click()
+    if (await page.getByTestId('pro-team-remove').isVisible().catch(() => false)) {
+      opened = true
+      break
+    }
+    await page.keyboard.press('Escape')
+  }
+  expect(opened, 'au moins un membre doit être retirable par le propriétaire').toBe(true)
+  await page.getByTestId('pro-team-remove').click()
   await page.getByTestId('pro-team-remove-dialog').waitFor()
   await expect(page.getByTestId('pro-team-remove-identity-notice')).toBeVisible()
   await page.keyboard.press('Escape')
@@ -235,7 +257,7 @@ test('équipe — un solo_professional n’a pas cet écran, même par URL direc
     await page.goto('/dashboard/team')
     await page.waitForURL((url) => url.pathname === '/dashboard', { timeout: 30_000 })
     // L'entrée de menu n'existe pas non plus dans le DOM.
-    await expect(page.getByRole('link', { name: /^Équipe$/ })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /^(Équipe|Team)$/ })).toHaveCount(0)
   } finally {
     sql(`update public.organizations set business_type='barbershop' where id='${ORG_ID}'`)
   }
@@ -248,10 +270,10 @@ test('file — les seuils se lisent et s’écrivent en base depuis l’écran',
   await page.getByTestId('pro-queue-settings-thresholds').waitFor({ timeout: 30_000 })
 
   // Les valeurs affichées viennent de la BASE, pas d'une constante.
-  await expect(page.getByTestId('pro-queue-threshold-capacity').locator('input')).toHaveValue('20')
-  await expect(page.getByTestId('pro-queue-threshold-grace').locator('input')).toHaveValue('5')
+  await expect(page.getByTestId('pro-queue-threshold-capacity')).toHaveValue('20')
+  await expect(page.getByTestId('pro-queue-threshold-grace')).toHaveValue('5')
 
-  await page.getByTestId('pro-queue-threshold-capacity').locator('input').fill('14')
+  await page.getByTestId('pro-queue-threshold-capacity').fill('14')
   await page.getByTestId('pro-queue-thresholds-save').click()
   await expect
     .poll(
