@@ -57,6 +57,18 @@ ok()   { printf 'ok     %s\n' "$*"; }
 #    2026-09-07). Chaque entrée est là parce qu'un écran public l'appelle ou
 #    parce qu'elle est volontairement publique. En ajouter une = décision.
 #
+#    OS-3 (2026-09-12) en ajoute UNE, et une seule :
+#    `unsubscribe_customer_marketing`. Motif : le destinataire d'une
+#    sollicitation marketing n'a pas de session — c'est l'exigence même de
+#    RFC 8058 (« List-Unsubscribe-Post: One-Click »), dont l'en-tête est
+#    POSTé par le client mail lui-même. Vérifié AVANT ajout qu'elle n'y
+#    était pas déjà (seule `unsubscribe_prospect_outreach`, la jumelle B2
+#    côté prospects, y figurait). Ce qu'elle rend à un anonyme est
+#    TOUJOURS `{unsubscribed: true}` — jeton valide, jeton inconnu, jeton
+#    inventé : la même réponse, donc aucun oracle d'existence. Elle
+#    n'expose ni nom, ni adresse, ni organisation, ni la moindre liste.
+#    Le contrat passe de 45 à 46.
+#
 #    PLAT-2 (2026-09-11) en ajoute UNE, et une seule : `resolve_poster_code`.
 #    Motif : un client qui scanne une affiche dans un salon n'a pas de compte.
 #    Ce qu'elle rend à un anonyme est exactement ce qui est déjà public — le
@@ -110,6 +122,7 @@ submit_marketplace_withdrawal_request
 suggested_currency_for_country
 suggested_timezone_for_country
 track_analytics_event
+unsubscribe_customer_marketing
 unsubscribe_prospect_outreach"
 
 ACTUAL="$($DB "

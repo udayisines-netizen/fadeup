@@ -1,0 +1,42 @@
+-- FadeUp — OS-3 : l'étiquette `marketing` du flux d'e-mail.
+--
+-- RÔLE D'APPLICATION : postgres (propriétaire de `public.email_stream`,
+-- vérifié avant écriture).
+--
+-- POURQUOI CE FICHIER EST SEUL AU MONDE
+--
+-- `alter type ... add value` ne peut pas être SUIVI, dans la même
+-- transaction, d'un usage de la valeur ajoutée : Postgres refuse
+-- (« unsafe use of new value of enum type »), parce que l'étiquette n'est
+-- pas encore visible aux instantanés concurrents. La migration qui insère la
+-- ligne `email_streams` du flux marketing et ses gabarits doit donc être une
+-- AUTRE transaction. D'où ce fichier d'une ligne utile.
+--
+-- POURQUOI UN FLUX DISTINCT PLUTÔT QUE `prospecting`
+--
+-- `email_streams.requires_unsubscribe` commande les en-têtes RFC 8058
+-- (`List-Unsubscribe`, `List-Unsubscribe-Post`) que `email_dispatch_batch`
+-- ajoute au corps Resend. Sans eux, la seule action possible du destinataire
+-- est « signaler comme spam », et c'est le domaine d'envoi qui paie. Le flux
+-- `transactional` ne les porte pas (à raison : une confirmation de
+-- réservation ne se désabonne pas). Le flux `prospecting` les porte, mais
+-- écrit AUX PROFESSIONNELS depuis `pro@contact.fade-up.com` : y faire passer
+-- les offres d'un salon à ses clients mélangerait deux réputations d'envoi
+-- et deux populations dans un même flux. Le marketing salon → client est une
+-- troisième chose, et il la dit.
+--
+-- LE RETOUR ARRIÈRE, DÉCLARÉ
+--
+-- Postgres ne sait pas retirer une étiquette d'un enum. Le retour arrière ne
+-- peut donc que retirer la LIGNE `email_streams` et les gabarits (c'est ce
+-- que fait le down de la migration suivante) ; l'étiquette `marketing`
+-- survit, inutilisée. La retirer exigerait de recréer le type et de
+-- réécrire les trois colonnes qui en dépendent (`email_outbox.stream`,
+-- `email_templates.stream`, `email_streams.stream`) plus le type de retour
+-- de `private.render_email_template` — une opération infiniment plus
+-- dangereuse que l'étiquette morte qu'elle supprimerait. C'est un écart
+-- assumé et nommé, pas un oubli.
+
+-- Pas de `begin;` : cette instruction est volontairement HORS transaction
+-- explicite (voir ci-dessus), et `if not exists` la rend rejouable.
+alter type public.email_stream add value if not exists 'marketing';
