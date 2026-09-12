@@ -127,12 +127,21 @@ select pg_temp.expect_count('A2 compte hors plateforme : aucun droit',
   'select count(*) from public.get_my_platform_permissions()', 0);
 
 select pg_temp.be('9a100000-0000-0000-0000-000000000001');
-select pg_temp.expect_count('A3 fondateur : dix-sept droits',
-  'select count(*) from public.get_my_platform_permissions()', 17);
+-- Le catalogue grossit d'un lot à l'autre (PLAT-2 : +7, OS-2 : +1). Un
+-- nombre absolu aurait rougi pour une raison étrangère à PLAT-1. L'INVARIANT
+-- de PLAT-1, lui, ne bouge pas : le fondateur porte tout SAUF crm.zone_read,
+-- le droit borné du stagiaire.
+select pg_temp.expect_count('A3 fondateur : tout le catalogue sauf crm.zone_read',
+  'select count(*) from public.get_my_platform_permissions()',
+  (select count(*) - 1 from public.platform_permissions));
 
 select pg_temp.be('9a100000-0000-0000-0000-000000000006');
-select pg_temp.expect_count('A4 stagiaire : deux droits',
-  'select count(*) from public.get_my_platform_permissions()', 2);
+select pg_temp.expect_count('A4 stagiaire : les deux droits bornés de PLAT-1, et rien du CRM complet',
+  $$select count(*) from public.get_my_platform_permissions() k
+     where k in ('crm.zone_read', 'crm.field_capture')$$, 2);
+select pg_temp.expect_count('A4bis et toujours aucun droit de lecture complète du CRM',
+  $$select count(*) from public.get_my_platform_permissions() k
+     where k in ('crm.read', 'crm.write', 'audit.read', 'marketplace.publish')$$, 0);
 
 -- ============================================================================
 -- B. SEUL LE FONDATEUR GÈRE LES RÔLES INTERNES

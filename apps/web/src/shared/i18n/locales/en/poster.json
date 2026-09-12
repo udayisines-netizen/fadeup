@@ -1,0 +1,42 @@
+{
+  "codeLabel": "Poster code",
+  "backHome": "Go to home",
+  "error": {
+    "title": "This code could not be read",
+    "body": "Try again in a moment, or ask the shop."
+  },
+  "unknown": {
+    "title": "This code does not exist",
+    "body": "The poster may be damaged. The code is printed in plain text under the QR: check it, or ask the shop."
+  },
+  "revoked": {
+    "title": "This poster is no longer active",
+    "body": "It has been taken out of service. Ask the shop for its queue link, or search for it on FadeUp."
+  },
+  "inactive": {
+    "title": "This poster is not active yet",
+    "body": "It has not been linked to a shop. Come back later, or let the shop know.",
+    "signedOut": "Are you the owner of this shop? Sign in: activating a poster requires an account."
+  },
+  "assign": {
+    "title": "Activate this poster",
+    "body": "Choose the establishment that will receive it. The QR will then lead to its queue.",
+    "cta": "Activate for this establishment",
+    "pending": "Activating…",
+    "done": "Poster activated",
+    "failed": "Activation failed",
+    "irreversible": "An activated poster cannot be moved: only the FadeUp team can revoke it and reassign it.",
+    "refusal": {
+      "already_assigned": "This poster is already linked to a shop.",
+      "revoked": "This poster has been taken out of service.",
+      "location_not_mine": "This establishment is not yours.",
+      "unknown_code": "This code does not exist.",
+      "not_authenticated": "Sign in to activate a poster."
+    }
+  },
+  "claim": {
+    "title": "Is this shop yours?",
+    "body": "{{name}} already has a FadeUp page, and nobody has claimed it. Claiming is free; someone at FadeUp reviews your request before handing the page over.",
+    "cta": "See the page and claim it"
+  }
+}

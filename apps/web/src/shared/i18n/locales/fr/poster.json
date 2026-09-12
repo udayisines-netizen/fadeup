@@ -1,0 +1,42 @@
+{
+  "codeLabel": "Code de l'affiche",
+  "backHome": "Aller à l'accueil",
+  "error": {
+    "title": "Ce code n'a pas pu être lu",
+    "body": "Réessayez dans un instant, ou demandez au salon."
+  },
+  "unknown": {
+    "title": "Ce code n'existe pas",
+    "body": "L'affiche est peut-être abîmée. Le code figure en clair sous le QR : vérifiez-le, ou demandez au salon."
+  },
+  "revoked": {
+    "title": "Cette affiche n'est plus active",
+    "body": "Elle a été retirée du service. Demandez au salon son lien de file, ou cherchez-le sur FadeUp."
+  },
+  "inactive": {
+    "title": "Cette affiche n'est pas encore active",
+    "body": "Elle n'a pas encore été rattachée à un salon. Revenez plus tard, ou signalez-le au salon.",
+    "signedOut": "Vous êtes le patron de ce salon ? Connectez-vous : l'activation d'une affiche demande un compte."
+  },
+  "assign": {
+    "title": "Activer cette affiche",
+    "body": "Choisissez l'établissement qui la recevra. Le QR mènera ensuite à sa file d'attente.",
+    "cta": "Activer pour cet établissement",
+    "pending": "Activation…",
+    "done": "Affiche activée",
+    "failed": "L'activation a échoué",
+    "irreversible": "Une affiche activée ne peut plus être déplacée : seule l'équipe FadeUp peut la révoquer puis la réattribuer.",
+    "refusal": {
+      "already_assigned": "Cette affiche est déjà rattachée à un salon.",
+      "revoked": "Cette affiche a été retirée du service.",
+      "location_not_mine": "Cet établissement n'est pas le vôtre.",
+      "unknown_code": "Ce code n'existe pas.",
+      "not_authenticated": "Connectez-vous pour activer une affiche."
+    }
+  },
+  "claim": {
+    "title": "Ce salon est le vôtre ?",
+    "body": "La fiche de {{name}} existe sur FadeUp et personne ne l'a revendiquée. La revendication est gratuite ; une personne de FadeUp vérifie votre demande avant de vous remettre la fiche.",
+    "cta": "Voir la fiche et la revendiquer"
+  }
+}

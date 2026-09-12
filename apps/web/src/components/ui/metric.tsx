@@ -67,7 +67,11 @@ export function Metric({
       {/* text-pretty stops a two-word label orphaning its second word, which
           happens constantly once these are translated into German. */}
       <span className="text-pretty text-xs leading-snug text-ink-500">{label}</span>
-      {context ? <span className="text-pretty text-xs text-ink-300">{context}</span> : null}
+      {/* PLAT-2 — `ink-300` donnait 2,41:1 sur blanc, mesuré par axe. Ce
+          n'est pas un état désactivé : c'est du texte qu'on doit lire.
+          `ink-500` le porte à 4,62:1 sur `paper-0`, c'est-à-dire au niveau
+          du reste de la console. */}
+      {context ? <span className="text-pretty text-xs text-ink-500">{context}</span> : null}
     </div>
   )
 }

@@ -64,3 +64,15 @@ export type PlatformPermission =
   | 'audit.read'
   | 'internal_roles.manage'
   | 'barber.delete'
+  /* PLAT-2 — les sept droits des écrans par rôle et des affiches QR. Le
+     catalogue qui fait foi est `public.platform_permissions` ; ce type n'est
+     qu'un garde-fou de frappe côté interface. Il ne porte PAS les droits
+     posés par d'autres lots en parallèle (OS-2 : `customer_notes.read`), dont
+     aucune surface de PLAT-2 ne dépend. */
+  | 'support.tickets'
+  | 'support.dossier'
+  | 'queue.remove'
+  | 'email.resend'
+  | 'moderation.revert'
+  | 'poster.assign'
+  | 'poster.manage'

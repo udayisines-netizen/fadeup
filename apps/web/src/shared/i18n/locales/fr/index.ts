@@ -11,6 +11,7 @@ import discovery from './discovery.json'
 import home from './home.json'
 import booking from './booking.json'
 import pro from './pro.json'
+import poster from './poster.json'
 import type { V2Section } from '@/shared/i18n/namespaces'
 
 /**
@@ -32,6 +33,7 @@ const sections: Record<V2Section, object> = {
   home,
   booking,
   pro,
+  poster,
 }
 
 export default sections

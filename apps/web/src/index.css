@@ -421,6 +421,31 @@ body {
  * direction.
  */
 .fu-scroll-shadow-x {
+  /*
+   * PLAT-2 — LE CONFINEMENT DE PEINTURE, et il corrige un vrai défaut.
+   *
+   * Sans lui, une page portant un tableau large FAIT DÉFILER LA PAGE ENTIÈRE
+   * horizontalement sur un téléphone, alors même que le tableau est dans un
+   * conteneur `overflow-x: auto` qui devrait le contenir. Mesuré à 390 px :
+   * /platform/team défilait de 187 px, /platform/acquisition/jobs de 585 px,
+   * et les trois écrans neufs de ce lot de 93 à 496 px. Le défilement va dans
+   * du VIDE — `elementFromPoint` ne rend rien là-bas — ce qui est la signature
+   * d'un débordement de PEINTURE remonté au défileur racine, pas d'un
+   * débordement de mise en page.
+   *
+   * Trois correctifs ont été essayés et mesurés dans le navigateur :
+   * `max-width: 100%` (sans effet), `overflow-x: clip` (sans effet),
+   * `overflow-x: clip` sur `body` (sans effet). Seul `contain: paint` ramène
+   * le défilement à ZÉRO, sur les six écrans, parce qu'il coupe exactement ce
+   * qui déborde : la peinture.
+   *
+   * PLAT-1 §15.5 avait consigné ces trois écrans hérités comme un défaut
+   * « ni créé ni corrigé ». Il est corrigé ici, à la CAUSE — une ligne sur la
+   * primitive partagée — plutôt qu'écran par écran. C'est la seule
+   * modification que ce lot apporte à une surface existante, et la seule
+   * différence d'empreinte qui ne vienne pas d'un lot voisin.
+   */
+  contain: paint;
   background:
     linear-gradient(to right, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,
     linear-gradient(to left, var(--color-paper-0) 30%, rgba(255, 255, 255, 0)) local,

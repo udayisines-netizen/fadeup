@@ -49,6 +49,25 @@ function PlatformShell() {
   // (fondateur et admin). Le fondateur y accède aussi pour GÉRER.
   const canSeeTeam = can('internal_roles.manage') || can('audit.read')
 
+  /*
+   * PLAT-2 — les quatre écrans par rôle. Même règle : un lien absent plutôt
+   * qu'un lien grisé.
+   *
+   * Le SUPPORT est le seul à porter `support.tickets` ; la MODÉRATION est
+   * partagée, parce que ses deux derniers onglets (onboardings,
+   * revendications) appartiennent aussi au commercial — c'est une décision du
+   * fondateur, pas une commodité. Le CRM du commercial est bâti sur
+   * `crm.read`, que le stagiaire n'a pas ; le TERRAIN est bâti sur
+   * `crm.zone_read` ou `crm.field_capture`, si bien que le commercial y a
+   * accès aussi (il saisit aussi sur le terrain) mais y voit tout, pas une
+   * zone. Les AFFICHES restent au fondateur et à l'admin.
+   */
+  const canSeeSupport = can('support.tickets')
+  const canSeeModeration = can('moderation.content') || can('onboarding.review')
+  const canSeeSales = can('crm.read')
+  const canSeeField = can('crm.zone_read') || can('crm.field_capture')
+  const canSeePosters = can('poster.manage')
+
   async function handleSignOut() {
     const supabase = getSupabaseClient()
     await supabase.auth.signOut()
@@ -68,6 +87,13 @@ function PlatformShell() {
             <AppNavLink to="/platform" end>
               {t('platform:nav.overview')}
             </AppNavLink>
+            {canSeeSupport ? <AppNavLink to="/platform/support">{t('platform:nav.support')}</AppNavLink> : null}
+            {canSeeModeration ? (
+              <AppNavLink to="/platform/moderation">{t('platform:nav.moderation')}</AppNavLink>
+            ) : null}
+            {canSeeSales ? <AppNavLink to="/platform/sales">{t('platform:nav.sales')}</AppNavLink> : null}
+            {canSeeField ? <AppNavLink to="/platform/field">{t('platform:nav.field')}</AppNavLink> : null}
+            {canSeePosters ? <AppNavLink to="/platform/posters">{t('platform:nav.posters')}</AppNavLink> : null}
             {can('onboarding.review') ? (
               <AppNavLink to="/platform/applications">{t('platform:nav.applications')}</AppNavLink>
             ) : null}
