@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { accountQueryKeys } from '@/features/account/api/account'
+import { DeleteAccountSheet } from '@/features/account/DeleteAccountSheet'
 import { FavoritesSection } from '@/features/account/FavoritesSection'
 import { FollowsSection } from '@/features/account/FollowsSection'
 import { NotificationsSection } from '@/features/account/NotificationsSection'
 import { Card, Section } from '@/features/account/parts'
+import { PreferencesSection } from '@/features/account/PreferencesSection'
 import { ProfileSection } from '@/features/account/ProfileSection'
 import { signOut, useSession } from '@/shared/data/auth'
 import { setLocaleOverride, V2_LOCALES, type V2Locale } from '@/shared/i18n'
@@ -17,25 +19,28 @@ import { AuthSheet } from '@/shared/ui/AuthSheet'
 import { Badge } from '@/shared/ui/Badge'
 import { Button } from '@/shared/ui/Button'
 import { OptionRow } from '@/shared/ui/OptionRow'
-import { Sheet } from '@/shared/ui/Sheet'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { FuText } from '@/shared/ui/Text'
 import { color, spacing, touchTarget } from '@/shared/theme/tokens'
 
 /**
  * L'onglet Compte (M1b) — l'ordre est le contrat :
- *   profil · Fade Passport · favoris · abonnements · langue · notifications
- *   · déconnexion, puis la suppression de compte.
+ *   profil · Fade Passport · favoris · abonnements · préférences de
+ *   recommandation · langue · notifications · déconnexion, puis la
+ *   suppression de compte.
  *
  * Sans session, l'écran ne barre RIEN : il propose la connexion (la feuille
  * se pose PAR-DESSUS, la session arrive sans navigation et l'écran se
  * remplit sur place) et laisse la langue réglable — le choix de langue est
  * une exigence de globalisation, pas une préférence de compte.
  *
- * Deux manques sont dits ici plutôt que masqués :
- *   - le Fade Passport a sa PLACE réservée, sans action ni promesse ;
- *   - la suppression de compte en libre-service n'a AUCUNE RPC en base :
- *     l'écran ouvre une feuille qui le dit et n'appelle rien.
+ * Un manque est dit ici plutôt que masqué : le Fade Passport a sa PLACE
+ * réservée, sans action ni promesse.
+ *
+ * L'autre manque de M1b est comblé : la suppression de compte en libre-service
+ * a désormais sa RPC (B5, `delete_my_account`), et la feuille l'appelle
+ * vraiment — avec l'export à côté, parce que le MASTER_SPEC §16 exige les
+ * deux et qu'on n'efface pas ce qu'on n'a pas pu emporter.
  */
 export function AccountScreen() {
   const { t, i18n } = useTranslation('v2')
@@ -125,6 +130,7 @@ export function AccountScreen() {
 
             <FavoritesSection enabled={Boolean(userId)} />
             <FollowsSection enabled={Boolean(userId)} />
+            <PreferencesSection userId={session.user.id} />
             {languageSection}
             <NotificationsSection />
 
@@ -177,27 +183,17 @@ export function AccountScreen() {
 
       <AuthSheet open={authOpen} context="account" onClose={() => setAuthOpen(false)} />
 
-      {/* Suppression : AUCUNE RPC n'existe en base. On ouvre la vérité, on
-          n'appelle rien — un faux bouton serait pire que l'absence. */}
-      <Sheet
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        title={t('mobile.account.deleteTitle')}
-      >
-        <View style={styles.deleteSheet}>
-          <FuText variant="title">{t('mobile.account.deleteTitle')}</FuText>
-          <FuText variant="sm" tone="secondary">
-            {t('mobile.account.deleteBody')}
-          </FuText>
-          <Button
-            label={t('mobile.account.deleteAck')}
-            variant="secondary"
-            size="lg"
-            fullWidth
-            onPress={() => setDeleteOpen(false)}
-          />
-        </View>
-      </Sheet>
+      {/* Suppression réelle (B5). La feuille explique, propose l'export,
+          puis demande une confirmation séparée : la RPC est immédiate et
+          définitive, il n'existe aucune fenêtre d'annulation en base. */}
+      {userId ? (
+        <DeleteAccountSheet
+          open={deleteOpen}
+          userId={userId}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => void onSignOut()}
+        />
+      ) : null}
     </SafeAreaView>
   )
 }
@@ -222,5 +218,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pressed: { opacity: 0.6 },
-  deleteSheet: { gap: spacing(3), paddingBottom: spacing(2) },
 })
