@@ -21,6 +21,7 @@ DO
 DO
 DO
 DO
+DO
    chantier    |                          check_name                          | verdict |                   detail                   
 ---------------+--------------------------------------------------------------+---------+--------------------------------------------
  jetons        | anonyme + place vivante : enregistrement accepté             | PASS    | 
@@ -48,7 +49,7 @@ DO
  préférences   | un émetteur ne déguise pas un post en appel de file          | PASS    | 0
  heures calmes | un fuseau de nuit et un fuseau de jour ont été trouvés       | PASS    | Etc/GMT-13 / Etc/GMT+6
  heures calmes | en heure calme, l'envoi est DIFFÉRÉ à 08:00 locale           | PASS    | Etc/GMT-13 -> 2026-09-12 19:00:00+00
- heures calmes | en journée, l'envoi part tout de suite                       | PASS    | Etc/GMT+6 -> 2026-09-12 17:53:52.006402+00
+ heures calmes | en journée, l'envoi part tout de suite                       | PASS    | Etc/GMT+6 -> 2026-09-12 18:00:14.952705+00
  heures calmes | fuseau illisible : repli, pas d'erreur                       | PASS    | 
  événements    | appareil anonyme : rien en file avant son appel              | PASS    | 0
  événements    | anonyme : aucune catégorie hors appel de file                | PASS    | 0
@@ -63,6 +64,12 @@ DO
  rappel        | demande acceptée : push en plus de l'in-app et de l'e-mail   | PASS    | 4 (2 appareils × 2 chemins d'émission)
  rappel        | chaque push de réponse porte une clé distincte               | PASS    | 4
  rappel        | la réponse à une demande est transactionnelle (immédiate)    | PASS    | 0
+ post          | un nouveau post est diffusé une fois, et une seule           | PASS    | 1er=2 2e=0
+ post          | le registre de diffusion est posé                            | PASS    | 1
+ post          | un push social par appareil, JAMAIS urgent                   | PASS    | 2
+ post          | aucun push social daté dans le passé                         | PASS    | 0
+ post          | catégorie sociale coupée : aucun push                        | PASS    | 0
+ post          | un post masqué n'est pas diffusé                             | PASS    | 0
  transport     | la dépêche prend des lignes en file                          | PASS    | 5
  transport     | une ligne dépêchée retient son identifiant pg_net            | PASS    | 5
  transport     | aucune ligne n'est dépêchée deux fois                        | PASS    | 0
@@ -86,11 +93,11 @@ DO
  RLS           | un tiers ne lit aucun jeton d'appareil                       | PASS    | 0
  RLS           | un tiers ne lit aucune préférence                            | PASS    | 0
  RLS           | un tiers ne lit aucun envoi                                  | PASS    | 0
-(63 rows)
+(69 rows)
 
  verdict | count 
 ---------+-------
- PASS    |    63
+ PASS    |    69
 (1 row)
 
 ROLLBACK

@@ -538,6 +538,83 @@ begin
 end $$;
 
 -- ===========================================================================
+-- 4bis. LE NOUVEAU POST D'UN PROFESSIONNEL SUIVI
+-- ===========================================================================
+
+do $$
+declare
+  v_n integer;
+  v_first integer;
+  v_second integer;
+  v_user uuid := '1caa0001-0000-4000-8000-000000000001';
+begin
+  -- Le compte suit le salon, et accepte les notifications sociales.
+  insert into public.organization_follows (follower_user_id, organization_id, is_following, followed_at)
+  values (v_user, '1ca00001-0000-4000-8000-000000000001', true, now())
+  on conflict (follower_user_id, organization_id) do update set is_following = true;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_user::text, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.set_my_notification_preference('social_post', true);
+  execute 'set local role none';
+  perform set_config('request.jwt.claims', '', true);
+
+  insert into public.posts (id, author_kind, organization_id, caption, visibility)
+  values ('1cad0001-0000-4000-8000-000000000001', 'organization',
+          '1ca00001-0000-4000-8000-000000000001', 'Post QA M1ca', 'public');
+
+  v_first := private.enqueue_post_pushes(20);
+  v_second := private.enqueue_post_pushes(20);
+
+  perform pg_temp.record('post', 'un nouveau post est diffusé une fois, et une seule',
+    v_first >= 1 and v_second = 0, format('1er=%s 2e=%s', v_first, v_second));
+
+  select count(*) into v_n from public.push_post_fanout
+   where post_id = '1cad0001-0000-4000-8000-000000000001';
+  perform pg_temp.record('post', 'le registre de diffusion est posé', v_n = 1, v_n::text);
+
+  select count(*) into v_n from public.push_outbox
+   where category = 'social_post' and type = 'post_published' and not urgent;
+  perform pg_temp.record('post', 'un push social par appareil, JAMAIS urgent', v_n >= 1, v_n::text);
+
+  -- Heures calmes : non urgent, donc soit tout de suite (journée au lieu),
+  -- soit différé — mais JAMAIS avant maintenant.
+  select count(*) into v_n from public.push_outbox
+   where category = 'social_post' and next_attempt_at < now() - interval '1 minute';
+  perform pg_temp.record('post', 'aucun push social daté dans le passé', v_n = 0, v_n::text);
+
+  -- Préférence coupée : plus rien pour un nouveau post.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_user::text, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  perform public.set_my_notification_preference('social_post', false);
+  execute 'set local role none';
+  perform set_config('request.jwt.claims', '', true);
+
+  insert into public.posts (id, author_kind, organization_id, caption, visibility)
+  values ('1cad0002-0000-4000-8000-000000000002', 'organization',
+          '1ca00001-0000-4000-8000-000000000001', 'Post QA M1ca 2', 'public');
+  perform private.enqueue_post_pushes(20);
+  select count(*) into v_n from public.push_outbox
+   where data ->> 'post_id' = '1cad0002-0000-4000-8000-000000000002';
+  perform pg_temp.record('post', 'catégorie sociale coupée : aucun push', v_n = 0, v_n::text);
+
+  -- Un post CACHÉ n'est jamais diffusé.
+  -- `posts_moderation_stamp_complete` exige un MOTIF avec la date de masquage :
+  -- un post caché sans raison n'est pas représentable (PLAT-2).
+  insert into public.posts (id, author_kind, organization_id, caption, visibility, hidden_at, hidden_reason)
+  values ('1cad0003-0000-4000-8000-000000000003', 'organization',
+          '1ca00001-0000-4000-8000-000000000001', 'Post QA M1ca cache', 'public', now(), 'abusive_content');
+  perform private.enqueue_post_pushes(20);
+  select count(*) into v_n from public.push_post_fanout
+   where post_id = '1cad0003-0000-4000-8000-000000000003';
+  perform pg_temp.record('post', 'un post masqué n''est pas diffusé', v_n = 0, v_n::text);
+exception when others then
+  perform pg_temp.record('post', 'diffusion d''un nouveau post', false, sqlerrm);
+end $$;
+
+-- ===========================================================================
 -- 5. LE TRANSPORT — dépêche, tickets, reçus, jetons morts
 -- ===========================================================================
 

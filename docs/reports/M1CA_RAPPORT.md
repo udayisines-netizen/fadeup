@@ -376,7 +376,7 @@ la forme de la réponse est **exactement** celle que la réconciliation lit
 `DeviceNotRegistered`. Il ne manque que le dernier saut, APNs → téléphone.
 
 **La machine complète, sur restauration fidèle de la production puis en
-production** : 63 contrôles, 63 PASS (§7.1), dont la dépêche, la réconciliation
+production** : 69 contrôles, 69 PASS (§7.1), dont la dépêche, la réconciliation
 d'un ticket `ok`, la révocation d'un jeton sur `DeviceNotRegistered` **au ticket
 ET au reçu**, le non-réessai d'un jeton mort, le non-envoi à un appareil
 révoqué. Les réponses du fournisseur y sont **synthétisées** dans
@@ -489,9 +489,9 @@ contrat serveur n'existait. Il existe.
    `pg_dump -s` d'avant et d'après. **Diff de 5 lignes**, toutes attendues : les
    trois étiquettes d'enum ajoutées à `notification_type`. Artefact :
    `docs/reports/artifacts/m1ca/rollback_diff_T0_vs_T2.txt`.
-5. **Suite de vérification sur le bac** : 63 PASS, 0 FAIL.
+5. **Suite de vérification sur le bac** : 69 PASS, 0 FAIL.
 6. **Application en production**, même ordre, 0 erreur.
-7. **Suite de vérification en production** : 63 PASS, 0 FAIL, **rien de
+7. **Suite de vérification en production** : 69 PASS, 0 FAIL, **rien de
    commité** (transaction + rollback final). Artefacts
    `verify_m1ca_sandbox.txt` et `verify_m1ca_production.txt`.
 8. **`grant execute` explicites** : `register_push_device` et
@@ -543,15 +543,15 @@ docker compose -f infra/scheduler/docker-compose.yml up -d --force-recreate
 
 | Contrôle | Résultat |
 | --- | --- |
-| `verify_m1ca.sql` sur restauration fidèle | **63 PASS / 0 FAIL** |
-| `verify_m1ca.sql` en production | **63 PASS / 0 FAIL**, rien de commité |
+| `verify_m1ca.sql` sur restauration fidèle | **69 PASS / 0 FAIL** |
+| `verify_m1ca.sql` en production | **69 PASS / 0 FAIL**, rien de commité |
 | Retour arrière `up → down → up` | schéma identique **à 3 étiquettes d'enum près** |
 | Sonde réelle API Expo depuis la production | 200, forme de réponse conforme |
 | Tick sous `fadeup_scheduler` en production | `0|0|0|0|0|0` |
 
 Les chantiers de la suite : jetons (10 contrôles), préférences (4), événements
-(9), heures calmes (4), gabarits (3), rappel (6), transport (11), privilèges
-(8), RLS (3). Les heures calmes sont éprouvées **sans coder aucune heure** : le
+(9), heures calmes (4), gabarits (3), rappel (6), **nouveau post (6)**,
+transport (11), privilèges (8), RLS (3). Les heures calmes sont éprouvées **sans coder aucune heure** : le
 test cherche un fuseau actuellement en heure calme et un fuseau actuellement en
 journée, puis vérifie les deux comportements — il donne donc le même verdict à
 3 h du matin et à midi.
@@ -683,29 +683,34 @@ de route `/platform` n'est touché — même preuve, c'est du web.
 5. **L'appel de file est un trigger**, pas un appel dans une RPC (§3.2).
 6. **Un appareil anonyme peut être joint pour l'appel de sa file**, contre
    l'identifiant d'entrée — justifié par le contrat F1 existant (§3.2).
-7. **Trois passes de transport** (dépêche, tickets, reçus) plutôt que deux : sans
+7. **La diffusion d'un post est BORNÉE à 500 insertions par tick**, et le
+   budget ne compte que les insertions réelles : au tick suivant, les abonnés
+   déjà servis ne coûtent rien, donc la diffusion avance au lieu de repartir
+   en boucle. Le registre de fin n'est posé qu'une fois le tour achevé. Sans
+   cette borne, un salon à dix mille abonnés tiendrait le tick.
+8. **Trois passes de transport** (dépêche, tickets, reçus) plutôt que deux : sans
    les reçus, un jeton mort resterait en base indéfiniment, et l'exigence
    « un jeton devenu invalide doit être retiré » ne serait pas tenue.
-8. **La liste blanche de persistance hors ligne est explicite**, et refuse par
+9. **La liste blanche de persistance hors ligne est explicite**, et refuse par
    défaut (§5).
-9. **L'identifiant de bundle `com.fadeup.app`** posé dans `app.json` (iOS et
+10. **L'identifiant de bundle `com.fadeup.app`** posé dans `app.json` (iOS et
    Android) — demandé en cours de lot par le fondateur.
-10. **La liste blanche de redirection GoTrue n'a PAS été modifiée** en
+11. **La liste blanche de redirection GoTrue n'a PAS été modifiée** en
     production : aucun gain avant le premier build, surface de redirection
     élargie tout de suite (§2.5). Documenté comme une ligne à appliquer en
     M1c-b.
-11. **`database.types.ts` n'a pas été régénéré.** C'est une copie **verbatim**
+12. **`database.types.ts` n'a pas été régénéré.** C'est une copie **verbatim**
     du fichier du web sous la garde anti-dérive : le régénérer pour le mobile
     seul rendrait `check:drift` rouge, et le régénérer des deux côtés toucherait
     `apps/web`, interdit ici. À la place, `features/notifications/api/pushClient.ts`
     déclare localement les quatre RPC du lot et fait **un** cast, entièrement
     typé aux appels. **Dette déclarée** : un lot propriétaire d'`apps/web` doit
     régénérer les types des deux côtés, après quoi ce fichier disparaît.
-12. **Les préférences locales de M1b ont été supprimées** (`account/prefs.ts`,
+13. **Les préférences locales de M1b ont été supprimées** (`account/prefs.ts`,
     `prefs.test.ts`, `useNotifPrefs.ts`) au profit du contrat serveur. Elles
     n'activaient rien et le disaient ; aucune donnée n'est perdue (l'application
     n'est pas publiée).
-13. **Aucun `exp://**` en production** : cela autoriserait l'envoi de jetons de
+14. **Aucun `exp://**` en production** : cela autoriserait l'envoi de jetons de
     session vers n'importe quel serveur de développement Expo (§2.5).
 
 ### 10.2 Erreurs commises, déclarées
@@ -831,7 +836,7 @@ lot.
 7. **Liens universels** : identifiant d'équipe, `apple-app-site-association`
    servi par `apps/web`, `associatedDomains` dans `app.json`.
 8. **Régénérer `database.types.ts` des deux côtés** et supprimer la déclaration
-   locale de `pushClient.ts` (§10.1-11).
+   locale de `pushClient.ts` (§10.1-12).
 9. **Traiter le quota Resend** avant de compter sur l'e-mail de rappel.
 10. **Publication** : seulement après 3, 5 et 7.
 

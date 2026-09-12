@@ -909,6 +909,16 @@ declare
   v_tz text;
   v_queued integer;
   v_total integer := 0;
+  /* Budget d'INSERTIONS par tick. Un salon à dix mille abonnés ne doit pas
+     tenir le tick pendant dix mille insertions — et il ne doit pas non plus
+     rester à moitié diffusé sans que rien ne reprenne.
+     Ce budget ne compte que les insertions RÉELLES : au tick suivant, les
+     abonnés déjà servis renvoient 0 (ON CONFLICT DO NOTHING sur la clé de
+     dédoublonnage) et ne consomment donc rien — la diffusion AVANCE au lieu
+     de repartir en boucle sur les mêmes. Le registre de fin de diffusion
+     n'est posé que si le tour des abonnés s'est achevé. */
+  v_budget integer := 500;
+  v_complete boolean;
 begin
   for v_post in
     select p.* from public.posts p
@@ -948,6 +958,8 @@ begin
         order by l.created_at limit 1;
     end if;
 
+    v_complete := true;
+
     for v_follower in
       select f.follower_user_id
         from public.professional_follows f
@@ -961,6 +973,11 @@ begin
           and f.organization_id = v_post.organization_id
           and f.is_following
     loop
+      if v_budget <= 0 then
+        v_complete := false;
+        exit;
+      end if;
+
       v_queued := v_queued + private.enqueue_push(
         p_template_key := 'post_published',
         p_type := 'post_published',
@@ -973,11 +990,21 @@ begin
       );
     end loop;
 
-    insert into public.push_post_fanout (post_id, devices_queued)
-    values (v_post.id, v_queued)
-    on conflict (post_id) do nothing;
+    v_budget := v_budget - v_queued;
+
+    if v_complete then
+      insert into public.push_post_fanout (post_id, devices_queued)
+      values (v_post.id, v_queued)
+      on conflict (post_id) do nothing;
+    end if;
 
     v_total := v_total + v_queued;
+
+    -- Budget épuisé : on rend la main, le tick suivant reprend ce post là où
+    -- il en est (les abonnés déjà servis ne coûtent plus une insertion).
+    if not v_complete then
+      exit;
+    end if;
   end loop;
 
   return v_total;
