@@ -1,0 +1,1122 @@
+--- /tmp/claude-1002/-home-fadeup-worktrees-b5/ee69521e-1d1c-4d96-9a9b-d6b25cab501e/scratchpad/rb/n_T0.sql	2026-09-12 06:31:42.659486936 +0000
++++ /tmp/claude-1002/-home-fadeup-worktrees-b5/ee69521e-1d1c-4d96-9a9b-d6b25cab501e/scratchpad/rb/n_T1.sql	2026-09-12 06:31:42.670487039 +0000
+@@ -283,6 +283,26 @@
+ ALTER TYPE public.customer_appointment_preference OWNER TO postgres;
+ 
+ --
++-- Name: customer_gender; Type: TYPE; Schema: public; Owner: postgres
++--
++
++CREATE TYPE public.customer_gender AS ENUM (
++    'man',
++    'woman',
++    'no_preference'
++);
++
++
++ALTER TYPE public.customer_gender OWNER TO postgres;
++
++--
++-- Name: TYPE customer_gender; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON TYPE public.customer_gender IS 'Réponse à la question de genre de l''onboarding client (M1a). Valeurs VERBATIM celles du client mobile (GENDER_ANSWERS) — aucune table de traduction. « no_preference » est la réponse « peu importe », pas une absence de réponse : l''absence est NULL.';
++
++
++--
+ -- Name: customer_haircut_frequency; Type: TYPE; Schema: public; Owner: postgres
+ --
+ 
+@@ -1249,6 +1269,70 @@
+ ALTER TYPE public.whatsapp_message_status OWNER TO supabase_admin;
+ 
+ --
++-- Name: account_erasure_active(); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.account_erasure_active() RETURNS boolean
++    LANGUAGE sql STABLE
++    SET search_path TO ''
++    AS $$
++  select coalesce(current_setting('fadeup.account_erasure', true), '') = 'on'
++     and current_user in ('postgres', 'supabase_admin');
++$$;
++
++
++ALTER FUNCTION private.account_erasure_active() OWNER TO postgres;
++
++--
++-- Name: FUNCTION account_erasure_active(); Type: COMMENT; Schema: private; Owner: postgres
++--
++
++COMMENT ON FUNCTION private.account_erasure_active() IS 'Vrai seulement à l''intérieur de private.erase_customer_account(). Deux conditions, pas une : le GUC transactionnel ET le rôle propriétaire. current_user vaut le PROPRIÉTAIRE dans un SECURITY DEFINER, et ''authenticated'' sur tout accès direct PostgREST — un client qui poserait le GUC lui-même ne franchit donc pas cette porte. Ce n''est pas la protection principale : celle-là est private.erasure_update_allowed(), qui compare la ligne colonne par colonne.';
++
++
++--
++-- Name: account_erasure_blockers(uuid); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.account_erasure_blockers(p_user_id uuid) RETURNS jsonb
++    LANGUAGE sql STABLE
++    SET search_path TO ''
++    AS $$
++  select jsonb_build_object(
++    'memberships', (
++      select count(*) from public.memberships m where m.user_id = p_user_id),
++    'platform_member', (
++      select count(*) from public.platform_members pm where pm.user_id = p_user_id),
++    'professional', (
++      select count(*) from public.professionals p where p.user_id = p_user_id),
++    'staff_profiles', (
++      select count(*) from public.staff_profiles sp where sp.user_id = p_user_id),
++    'active_queue_entries', (
++      select count(*) from public.queue_entries q
++      where q.booked_by_user_id = p_user_id
++        and q.status in ('waiting', 'called', 'in_service')),
++    'future_appointments', (
++      select count(*) from public.appointments a
++      where a.booked_by_user_id = p_user_id
++        and a.status in ('pending', 'confirmed')
++        and a.starts_at > now()),
++    'storage_objects', (
++      select count(*) from storage.objects o
++      where (storage.foldername(o.name))[1] = p_user_id::text)
++  );
++$$;
++
++
++ALTER FUNCTION private.account_erasure_blockers(p_user_id uuid) OWNER TO postgres;
++
++--
++-- Name: FUNCTION account_erasure_blockers(p_user_id uuid); Type: COMMENT; Schema: private; Owner: postgres
++--
++
++COMMENT ON FUNCTION private.account_erasure_blockers(p_user_id uuid) IS 'Ce qui empêche l''effacement du compte, en compteurs. Mesuré AVANT toute écriture, pour que le refus soit nommé et chiffré plutôt que découvert au milieu du travail. p_user_id NULL rend des zéros partout — l''appelant traite le cas nul avant d''arriver ici, jamais l''inverse.';
++
++
++--
+ -- Name: analytics_actor_type_for(uuid); Type: FUNCTION; Schema: private; Owner: postgres
+ --
+ 
+@@ -4086,6 +4170,337 @@
+ 
+ 
+ --
++-- Name: erase_customer_account(uuid); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.erase_customer_account(p_user_id uuid) RETURNS jsonb
++    LANGUAGE plpgsql SECURITY DEFINER
++    SET search_path TO ''
++    AS $$
++declare
++  v_scope jsonb := '{}'::jsonb;
++  v_emails text[];
++  v_sentinel text := private.erasure_display_sentinel();
++  v_customer_ids uuid[];
++  v_request_ids uuid[];
++  v_review_ids uuid[];
++  v_appointment_ids uuid[];
++  v_queue_ids uuid[];
++  v_ticket_ids uuid[];
++  v_n integer;
++begin
++  if p_user_id is null then
++    raise exception 'private.erase_customer_account requires a user id'
++      using errcode = '22023';
++  end if;
++
++  perform set_config('fadeup.account_erasure', 'on', true);
++
++  select array_remove(array_agg(distinct lower(e)), null) into v_emails
++  from (
++    select u.email::text as e from auth.users u where u.id = p_user_id
++    union all
++    select cp.email from public.customer_profiles cp where cp.user_id = p_user_id
++  ) s;
++
++  select array_remove(array_agg(c.id), null) into v_customer_ids
++  from public.customers c where c.user_id = p_user_id;
++
++  -- 6.1 La fiche client du salon : elle RESTE (c'est sa comptabilité), elle
++  --     ne nomme plus personne. `notes` est la colonne héritée qu'OS-2 a
++  --     retirée du service : la mettre à NULL reste permis (la garde ne
++  --     refuse qu'une ÉCRITURE non vide) et garantit qu'une ligne ancienne
++  --     ne la porte plus.
++  update public.customers c
++     set name = v_sentinel, phone = null, email = null, notes = null
++   where c.user_id = p_user_id;
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('customers_anonymised', v_n);
++
++  -- 6.1bis La note du salon sur son client (OS-2) : supprimée.
++  if v_customer_ids is not null and array_length(v_customer_ids, 1) > 0 then
++    delete from public.customer_notes cn where cn.customer_id = any(v_customer_ids);
++    get diagnostics v_n = row_count;
++  else
++    v_n := 0;
++  end if;
++  v_scope := v_scope || jsonb_build_object('customer_notes_deleted', v_n);
++
++  -- 6.2 Les rendez-vous. Les faits comptables restent intacts.
++  select array_remove(array_agg(a.id), null) into v_appointment_ids
++  from public.appointments a
++  where a.booked_by_user_id = p_user_id
++     or (v_customer_ids is not null and a.customer_id = any(v_customer_ids));
++
++  update public.appointments a
++     set customer_name = v_sentinel,
++         customer_phone = null,
++         customer_email = null,
++         notes = null
++   where a.booked_by_user_id = p_user_id
++      or (v_customer_ids is not null and a.customer_id = any(v_customer_ids));
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('appointments_anonymised', v_n);
++
++  -- 6.3 Les files.
++  select array_remove(array_agg(q.id), null) into v_queue_ids
++  from public.queue_entries q
++  where q.booked_by_user_id = p_user_id
++     or (v_customer_ids is not null and q.customer_id = any(v_customer_ids));
++
++  update public.queue_entries q
++     set customer_name = v_sentinel,
++         customer_phone = null,
++         notes = null
++   where q.booked_by_user_id = p_user_id
++      or (v_customer_ids is not null and q.customer_id = any(v_customer_ids));
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('queue_entries_anonymised', v_n);
++
++  -- 6.3bis Les billets de support (PLAT-2) : caviardés, jamais supprimés —
++  --        le fil est en ajout seul et le reste.
++  select array_remove(array_agg(st.id), null) into v_ticket_ids
++  from public.support_tickets st
++  where st.subject_user_id = p_user_id
++     or st.opened_by = p_user_id
++     or (v_appointment_ids is not null and st.appointment_id = any(v_appointment_ids))
++     or (v_queue_ids is not null and st.queue_entry_id = any(v_queue_ids));
++
++  if v_ticket_ids is not null and array_length(v_ticket_ids, 1) > 0 then
++    update public.support_tickets st
++       set subject = v_sentinel,
++           body = v_sentinel,
++           resolution = case when st.resolution is null then null else v_sentinel end
++     where st.id = any(v_ticket_ids);
++    get diagnostics v_n = row_count;
++    v_scope := v_scope || jsonb_build_object('support_tickets_redacted', v_n);
++
++    update public.support_ticket_messages sm
++       set body = v_sentinel,
++           author_user_id = null,
++           metadata = '{}'::jsonb
++     where sm.ticket_id = any(v_ticket_ids)
++       and (sm.body is distinct from v_sentinel
++            or sm.author_user_id is not null
++            or sm.metadata is distinct from '{}'::jsonb);
++    get diagnostics v_n = row_count;
++    v_scope := v_scope || jsonb_build_object('support_messages_redacted', v_n);
++  else
++    v_scope := v_scope || jsonb_build_object(
++      'support_tickets_redacted', 0, 'support_messages_redacted', 0);
++  end if;
++
++  -- 6.4 Les listes d'attente.
++  update public.waitlist_entries w
++     set customer_name = v_sentinel,
++         customer_phone = null,
++         customer_email = null,
++         notes = null
++   where w.created_by = p_user_id
++      or (v_customer_ids is not null and w.customer_id = any(v_customer_ids));
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('waitlist_entries_anonymised', v_n);
++
++  -- 6.5 Les avis : ils restent publiés, leur auteur part. Les identifiants
++  --     sont capturés AVANT l'anonymisation.
++  select array_remove(array_agg(r.id), null) into v_review_ids
++  from public.reviews r where r.customer_user_id = p_user_id;
++
++  update public.reviews r
++     set customer_user_id = null,
++         reviewer_display_name = v_sentinel
++   where r.customer_user_id = p_user_id;
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('reviews_anonymised', v_n);
++
++  -- 6.6 Les demandes d'intérêt (profils non revendiqués, F4).
++  select array_remove(array_agg(pirc.request_id), null) into v_request_ids
++  from public.professional_interest_request_contacts pirc
++  where pirc.booked_by_user_id = p_user_id
++     or (v_emails is not null and lower(pirc.customer_email) = any(v_emails));
++
++  if v_request_ids is not null and array_length(v_request_ids, 1) > 0 then
++    delete from public.professional_interest_request_contacts pirc
++     where pirc.request_id = any(v_request_ids);
++    get diagnostics v_n = row_count;
++    v_scope := v_scope || jsonb_build_object('interest_contacts_deleted', v_n);
++
++    update public.professional_interest_requests pir
++       set customer_display_name = v_sentinel, notes = null
++     where pir.id = any(v_request_ids);
++    get diagnostics v_n = row_count;
++    v_scope := v_scope || jsonb_build_object('interest_requests_anonymised', v_n);
++  else
++    v_scope := v_scope || jsonb_build_object(
++      'interest_contacts_deleted', 0, 'interest_requests_anonymised', 0);
++  end if;
++
++  -- 6.7 Les photos d'avis : les objets de stockage sont DÉJÀ partis
++  --     (précondition media_not_purged) ; les lignes partent avec.
++  if v_review_ids is not null and array_length(v_review_ids, 1) > 0 then
++    delete from public.review_photos rp where rp.review_id = any(v_review_ids);
++    get diagnostics v_n = row_count;
++  else
++    v_n := 0;
++  end if;
++  v_scope := v_scope || jsonb_build_object('review_photos_deleted', v_n);
++
++  -- 6.7bis Les notifications reçues par le SALON (voir 20260911160200 §6.7bis).
++  if v_appointment_ids is not null and array_length(v_appointment_ids, 1) > 0 then
++    update public.notifications n
++       set body = v_sentinel
++     where n.appointment_id = any(v_appointment_ids)
++       and n.body is not null
++       and n.body <> v_sentinel;
++    get diagnostics v_n = row_count;
++  else
++    v_n := 0;
++  end if;
++  v_scope := v_scope || jsonb_build_object('shop_notifications_anonymised', v_n);
++
++  delete from public.notifications n
++   where n.dedupe_key like '%' || p_user_id::text || '%';
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('shop_notifications_deleted', v_n);
++
++  -- 6.8 Les e-mails transactionnels — LES DEUX COPIES, PAS SEULEMENT CELLE
++  --     ADRESSÉE AU CLIENT.
++  --     Défaut corrigé ici : private.emit_booking_notification écrit DEUX
++  --     lignes par événement de réservation — une pour le client
++  --     (p_audience => 'customer') et une pour le SALON
++  --     (p_audience => 'business'), toutes deux portant le MÊME payload, qui
++  --     contient customer_name. Ne filtrer que sur to_email laissait donc
++  --     le nom du client dans la copie salon. Mesuré en production avant
++  --     correction : 290 lignes ':business' portant un customer_name.
++  --     La jointure se fait sur payload->>'appointment_id', qui est
++  --     l'identifiant que les deux copies partagent — mesuré : AUCUNE des
++  --     lignes ':business' portant un customer_name n'est dépourvue
++  --     d'appointment_id, la couverture est donc totale.
++  --     Suppression et non caviardage : la table est une file d'envoi, pas
++  --     un registre comptable — c'est déjà la doctrine de la ligne client.
++  --     La comparaison se fait EN TEXTE, jamais par un cast de la charge
++  --     utile en uuid : une ligne de production porte
++  --     payload->>'appointment_id' = '-' (mesuré), et
++  --     `(payload->>'appointment_id')::uuid` fait alors échouer l'effacement
++  --     ENTIER sur « invalid input syntax for type uuid ». Une donnée libre
++  --     écrite par un tiers ne se caste pas ; c'est elle qu'on adapte au
++  --     type sûr, pas l'inverse.
++  delete from public.email_outbox eo
++   where (v_emails is not null and lower(eo.to_email) = any(v_emails))
++      or (v_appointment_ids is not null
++          and (eo.payload ->> 'appointment_id') = any(v_appointment_ids::text[]));
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('email_outbox_deleted', v_n);
++
++  -- 6.8bis Le journal d'authentification de GoTrue.
++  --     auth.audit_log_entries n'a AUCUNE clé étrangère vers auth.users :
++  --     la cascade du 6.9 ne l'atteint pas, et ses lignes survivaient donc
++  --     indéfiniment. Or son payload porte l'ADRESSE E-MAIL d'ouverture de
++  --     session (actor_username, traits.user_email), le nom civil
++  --     (actor_name) et le téléphone (traits.user_phone). Mesuré en
++  --     production avant correction : 619 entrées orphelines, sur
++  --     146 comptes déjà disparus.
++  --     Deux chemins de rattachement, parce que GoTrue en emploie deux :
++  --     actor_id quand la personne agit elle-même, et traits.user_id quand
++  --     c'est le service qui agit sur elle (inscription, suppression).
++  --     C'est un journal technique d'authentification, pas un journal
++  --     comptable : rien côté salon n'en dépend, et aucune garde d'ajout
++  --     seul ne le protège. Il est donc SUPPRIMÉ, pas caviardé.
++  delete from auth.audit_log_entries ale
++   where (ale.payload ->> 'actor_id') = p_user_id::text
++      or (ale.payload -> 'traits' ->> 'user_id') = p_user_id::text;
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('auth_audit_entries_deleted', v_n);
++
++  -- 6.9 Le compte lui-même, et toutes ses cascades.
++  delete from auth.users u where u.id = p_user_id;
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('auth_users_deleted', v_n);
++
++  -- 6.10 Le journal analytique, EN DERNIER.
++  update public.analytics_events ae
++     set actor_user_id = null,
++         actor_type = 'anonymous'
++   where ae.actor_user_id = p_user_id;
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('analytics_events_deidentified', v_n);
++
++  update public.analytics_events ae
++     set dedupe_key = null
++   where ae.dedupe_key like '%' || p_user_id::text || '%';
++  get diagnostics v_n = row_count;
++  v_scope := v_scope || jsonb_build_object('analytics_dedupe_keys_cleared', v_n);
++
++  return v_scope;
++end;
++$$;
++
++
++ALTER FUNCTION private.erase_customer_account(p_user_id uuid) OWNER TO postgres;
++
++--
++-- Name: FUNCTION erase_customer_account(p_user_id uuid); Type: COMMENT; Schema: private; Owner: postgres
++--
++
++COMMENT ON FUNCTION private.erase_customer_account(p_user_id uuid) IS 'L''effaceur. AUCUN grant : ni anon, ni authenticated, ni service_role ne peuvent l''appeler — c''est ce qui fait qu''un utilisateur ne peut pas effacer le compte d''un autre en contournant public.delete_my_account(). Ne vérifie AUCUN droit et ne doit jamais en vérifier : c''est son appelant public qui décide de qui il parle, et il ne parle que de son propre appelant. Suppose les préconditions déjà mesurées (private.account_erasure_blockers). Correctif 20260912060000 : les e-mails transactionnels sont supprimés dans LEURS DEUX COPIES — celle du client et celle du salon, jointes par payload->>''appointment_id'' — et auth.audit_log_entries, que nulle clé étrangère ne rattache à auth.users, est purgée des deux chemins par lesquels GoTrue y désigne quelqu''un (actor_id et traits.user_id).';
++
++
++--
++-- Name: erasure_display_sentinel(); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.erasure_display_sentinel() RETURNS text
++    LANGUAGE sql IMMUTABLE
++    SET search_path TO ''
++    AS $$ select '[deleted]'::text $$;
++
++
++ALTER FUNCTION private.erasure_display_sentinel() OWNER TO postgres;
++
++--
++-- Name: FUNCTION erasure_display_sentinel(); Type: COMMENT; Schema: private; Owner: postgres
++--
++
++COMMENT ON FUNCTION private.erasure_display_sentinel() IS 'Le jeton qui remplace un nom dans une colonne NOT NULL après effacement de compte. Volontairement ASCII et non localisé : il traverse des surfaces (agenda pro, fiche client) que ce lot n''a pas le droit de toucher, et « [deleted] » y reste lisible dans toutes les langues. Une valeur localisée aurait figé une langue dans la donnée.';
++
++
++--
++-- Name: erasure_update_allowed(jsonb, jsonb, jsonb); Type: FUNCTION; Schema: private; Owner: postgres
++--
++
++CREATE FUNCTION private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) RETURNS boolean
++    LANGUAGE sql STABLE
++    SET search_path TO ''
++    AS $$
++  select private.account_erasure_active()
++     and not exists (
++       select 1
++       from jsonb_each(p_old) o
++       full join jsonb_each(p_new) n on n.key = o.key
++       where o.value is distinct from n.value
++         and (
++              o.key is null                       -- colonne apparue
++           or n.key is null                       -- colonne disparue
++           or not (p_allowed ? o.key)             -- colonne non autorisée
++           or not exists (                        -- valeur non autorisée
++                select 1
++                from jsonb_array_elements(p_allowed -> o.key) e
++                where e.value is not distinct from n.value)
++         )
++     );
++$$;
++
++
++ALTER FUNCTION private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) OWNER TO postgres;
++
++--
++-- Name: FUNCTION erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb); Type: COMMENT; Schema: private; Owner: postgres
++--
++
++COMMENT ON FUNCTION private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) IS 'LA garde des exemptions d''effacement. p_allowed est un objet colonne -> TABLEAU DES VALEURS AUTORISÉES pour elle. Rend vrai seulement si TOUTE différence entre l''ancienne et la nouvelle ligne porte sur une colonne nommée dans cet objet, ET remplace sa valeur par l''une des valeurs énumérées pour elle. Une colonne non nommée qui bouge, une valeur non énumérée, une colonne apparue ou disparue : faux. C''est ce qui fait que l''exemption ne peut pas servir à réécrire un journal — seulement à en retirer un identifiant. Énumérer les valeurs plutôt que de dire « NULL ou le jeton » est ce qui permet à analytics_events de passer actor_type à ''anonymous'' — sa contrainte analytics_events_actor_coherent INTERDIT un acteur ''customer'' sans identifiant — sans ouvrir cette colonne à autre chose.';
++
++
++--
+ -- Name: estimated_service_duration_minutes(uuid, uuid, uuid); Type: FUNCTION; Schema: private; Owner: postgres
+ --
+ 
+@@ -12464,6 +12879,78 @@
+ 
+ 
+ --
++-- Name: delete_my_account(); Type: FUNCTION; Schema: public; Owner: postgres
++--
++
++CREATE FUNCTION public.delete_my_account() RETURNS TABLE(erasure_id uuid, erased_at timestamp with time zone, scope jsonb)
++    LANGUAGE plpgsql SECURITY DEFINER
++    SET search_path TO ''
++    AS $$
++declare
++  v_user_id uuid;
++  v_blockers jsonb;
++  v_scope jsonb;
++  v_id uuid;
++  v_at timestamptz;
++begin
++  v_user_id := auth.uid();
++
++  -- LE MOTIF NUL, traité en tête : pas de session, pas d'effacement, et un
++  -- refus nommé plutôt qu'un succès vide sur zéro ligne.
++  if v_user_id is null then
++    raise exception 'fadeup_erasure_refusal=not_authenticated'
++      using errcode = '42501';
++  end if;
++
++  v_blockers := private.account_erasure_blockers(v_user_id);
++
++  if (v_blockers ->> 'memberships')::int > 0
++     or (v_blockers ->> 'platform_member')::int > 0
++     or (v_blockers ->> 'professional')::int > 0
++     or (v_blockers ->> 'staff_profiles')::int > 0 then
++    raise exception 'fadeup_erasure_refusal=business_account'
++      using errcode = '42501',
++            detail = v_blockers::text,
++            hint = 'Un compte qui fait tourner une organisation ne peut pas être effacé en libre-service : sa suppression orphelinerait l''organisation, son personnel et les rendez-vous de ses clients. Transférez la propriété, puis recommencez.';
++  end if;
++
++  if (v_blockers ->> 'active_queue_entries')::int > 0
++     or (v_blockers ->> 'future_appointments')::int > 0 then
++    raise exception 'fadeup_erasure_refusal=active_commitments'
++      using errcode = '42501',
++            detail = v_blockers::text,
++            hint = 'Quittez la file et annulez vos rendez-vous à venir d''abord : les effacer laisserait au salon un créneau tenu par un client injoignable.';
++  end if;
++
++  if (v_blockers ->> 'storage_objects')::int > 0 then
++    raise exception 'fadeup_erasure_refusal=media_not_purged'
++      using errcode = '42501',
++            detail = v_blockers::text,
++            hint = 'Vos photos doivent être supprimées par l''API Storage, qui efface le fichier et pas seulement sa ligne. L''application le fait avant d''appeler cette RPC ; ce refus signifie qu''elle a échoué.';
++  end if;
++
++  v_scope := private.erase_customer_account(v_user_id);
++
++  insert into public.account_erasure_log (actor_kind, requested_via, account_kind, scope)
++  values ('self', 'delete_my_account', 'customer', v_scope)
++  returning public.account_erasure_log.id, public.account_erasure_log.erased_at
++  into v_id, v_at;
++
++  return query select v_id, v_at, v_scope;
++end;
++$$;
++
++
++ALTER FUNCTION public.delete_my_account() OWNER TO postgres;
++
++--
++-- Name: FUNCTION delete_my_account(); Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON FUNCTION public.delete_my_account() IS 'Supprime le compte de l''appelant, IMMÉDIATEMENT ET DÉFINITIVEMENT — aucune fenêtre d''annulation (justification : en-tête de la migration 20260911160200, §5). Sans paramètre : la cible est toujours auth.uid(), il n''y a rien à forger. Anonymise l''historique du salon plutôt que de le supprimer, garde les avis publiés sans leur auteur, et efface tout le reste. Refuse, avec un motif nommé (fadeup_erasure_refusal=…), un compte d''entreprise, un compte engagé (file en cours ou rendez-vous à venir) et un compte dont les photos n''ont pas encore été purgées par l''API Storage. Rend un reçu (erasure_id) et le périmètre chiffré.';
++
++
++--
+ -- Name: delete_post(uuid); Type: FUNCTION; Schema: public; Owner: postgres
+ --
+ 
+@@ -13377,6 +13864,143 @@
+ 
+ 
+ --
++-- Name: export_my_data(); Type: FUNCTION; Schema: public; Owner: postgres
++--
++
++CREATE FUNCTION public.export_my_data() RETURNS jsonb
++    LANGUAGE plpgsql STABLE SECURITY DEFINER
++    SET search_path TO ''
++    AS $$
++declare
++  v_user_id uuid;
++  v_customer_ids uuid[];
++  v_base jsonb;
++begin
++  v_user_id := auth.uid();
++
++  if v_user_id is null then
++    raise exception 'fadeup_export_refusal=not_authenticated'
++      using errcode = '42501';
++  end if;
++
++  select array_remove(array_agg(c.id), null) into v_customer_ids
++  from public.customers c where c.user_id = v_user_id;
++
++  v_base := jsonb_build_object(
++    'exported_at', to_jsonb(now()),
++    'account', (
++      select to_jsonb(x) from (
++        select u.email::text as email, u.phone::text as phone,
++               u.created_at, u.last_sign_in_at
++        from auth.users u where u.id = v_user_id) x),
++    'profile', (
++      select to_jsonb(x) from (
++        select cp.display_name, cp.phone, cp.email, cp.haircut_frequency,
++               cp.gender, cp.style_preference, cp.style_notes,
++               cp.appointment_preference, cp.onboarding_completed_at,
++               cp.created_at
++        from public.customer_profiles cp where cp.user_id = v_user_id) x),
++    'account_profile', (
++      select to_jsonb(x) from (
++        select p.full_name, p.avatar_url, p.locale, p.theme
++        from public.profiles p where p.id = v_user_id) x),
++    'passport', (
++      select to_jsonb(x) from (
++        select cpp.passport_number, cpp.issued_at, cpp.usual_haircut,
++               cpp.fade_type, cpp.side_length, cpp.top_length,
++               cpp.beard_preferences, cpp.preferences_notes
++        from public.customer_passports cpp where cpp.user_id = v_user_id) x),
++    'passport_photos', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select ph.storage_path, ph.caption, ph.created_at
++        from public.customer_passport_photos ph
++        where ph.user_id = v_user_id order by ph.created_at) x), '[]'::jsonb),
++    'appointments', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select a.starts_at, a.ends_at, a.status, a.notes,
++               a.customer_name, a.customer_phone, a.customer_email,
++               o.name as organization_name, s.name as service_name
++        from public.appointments a
++        join public.organizations o on o.id = a.organization_id
++        left join public.services s on s.id = a.service_id
++        where a.booked_by_user_id = v_user_id
++           or (v_customer_ids is not null and a.customer_id = any(v_customer_ids))
++        order by a.starts_at desc) x), '[]'::jsonb),
++    'queue_entries', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select q.created_at, q.status, q.customer_name, q.customer_phone,
++               q.notes, o.name as organization_name
++        from public.queue_entries q
++        join public.organizations o on o.id = q.organization_id
++        where q.booked_by_user_id = v_user_id
++           or (v_customer_ids is not null and q.customer_id = any(v_customer_ids))
++        order by q.created_at desc) x), '[]'::jsonb),
++    'reviews', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select r.created_at, r.rating, r.comment, r.reviewer_display_name,
++               r.status, o.name as organization_name
++        from public.reviews r
++        join public.organizations o on o.id = r.organization_id
++        where r.customer_user_id = v_user_id
++        order by r.created_at desc) x), '[]'::jsonb),
++    'followed_organizations', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select o.name, o.slug, f.followed_at
++        from public.organization_follows f
++        join public.organizations o on o.id = f.organization_id
++        where f.follower_user_id = v_user_id and f.is_following
++        order by f.followed_at desc) x), '[]'::jsonb),
++    'followed_professionals', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select p.display_name, p.handle, f.followed_at
++        from public.professional_follows f
++        join public.professionals p on p.id = f.professional_id
++        where f.follower_user_id = v_user_id and f.state = 'following'
++        order by f.followed_at desc) x), '[]'::jsonb),
++    'favorites', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select o.name as organization_name, cf.created_at
++        from public.customer_favorites cf
++        join public.organizations o on o.id = cf.organization_id
++        where cf.user_id = v_user_id order by cf.created_at desc) x), '[]'::jsonb),
++    'notifications', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select n.created_at, n.type, n.title, n.body, n.read_at
++        from public.notifications n
++        where n.user_id = v_user_id order by n.created_at desc) x), '[]'::jsonb),
++    'shop_records', coalesce((
++      select jsonb_agg(to_jsonb(x)) from (
++        select o.name as organization_name, c.name, c.phone, c.email, c.notes,
++               c.created_at
++        from public.customers c
++        join public.organizations o on o.id = c.organization_id
++        where c.user_id = v_user_id order by c.created_at) x), '[]'::jsonb));
++
++  -- shop_notes DÉLÈGUE à public.get_my_customer_notes() (OS-2) plutôt que de
++  -- relire la table. Ce n'est pas de la paresse : cette RPC EST la définition
++  -- côté client de « ce que le salon a écrit sur moi », et l'écran compte la
++  -- rend déjà. Si l'export répondait autrement — en cachant l'auteur, par
++  -- exemple — FadeUp donnerait DEUX réponses à UNE question RGPD, et c'est
++  -- exactement ce qu'un export ne doit jamais faire. Le jour où OS-2 change
++  -- ce que le sujet a le droit de voir, l'export suit sans qu'on y touche.
++  return v_base || jsonb_build_object(
++    'shop_notes', coalesce((
++      select jsonb_agg(to_jsonb(n))
++      from public.get_my_customer_notes() n), '[]'::jsonb));
++end;
++$$;
++
++
++ALTER FUNCTION public.export_my_data() OWNER TO postgres;
++
++--
++-- Name: FUNCTION export_my_data(); Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON FUNCTION public.export_my_data() IS 'MASTER_SPEC §16 — ce que FadeUp détient sur l''appelant, en un seul objet JSON lisible. Sans paramètre : la cible est toujours auth.uid(). Lecture seule. Inclut la fiche que chaque salon tient sur lui (shop_records) et les notes que le salon écrit sur lui (shop_notes) — ces dernières DÉLÉGUÉES à public.get_my_customer_notes() (OS-2), qui est la définition unique de ce que le sujet a le droit de voir : l''export ne doit jamais répondre autrement que l''écran. Les CHEMINS des photos du Passport sont rendus, pas les fichiers : ils se téléchargent par l''API Storage avec les mêmes droits. N''expose rien d''autrui.';
++
++
++--
+ -- Name: favorite_shop(uuid); Type: FUNCTION; Schema: public; Owner: postgres
+ --
+ 
+@@ -16655,6 +17279,16 @@
+     return new;
+   end if;
+ 
++  -- B5 : le détachement de la fiche client d'un compte effacé. C'est une
++  -- action de la clé étrangère (ON DELETE SET NULL), qui traverse ce
++  -- trigger comme un UPDATE ordinaire. Seul user_id -> NULL passe.
++  if private.erasure_update_allowed(
++       to_jsonb(old), to_jsonb(new),
++       jsonb_build_object('user_id', jsonb_build_array(null))
++     ) then
++    return new;
++  end if;
++
+   -- X3 : l'absence de JWT n'exempte que les sessions serveur — jamais le
+   -- rôle-claim 'anon' d'un client PostgREST.
+   if ((select auth.uid()) is null
+@@ -17805,7 +18439,7 @@
+ -- Name: list_my_followed_organizations(); Type: FUNCTION; Schema: public; Owner: postgres
+ --
+ 
+-CREATE FUNCTION public.list_my_followed_organizations() RETURNS TABLE(organization_id uuid, followed_at timestamp with time zone)
++CREATE FUNCTION public.list_my_followed_organizations() RETURNS TABLE(organization_id uuid, organization_name text, organization_slug text, city text, country_code text, followed_at timestamp with time zone)
+     LANGUAGE plpgsql STABLE SECURITY DEFINER
+     SET search_path TO ''
+     AS $$
+@@ -17822,10 +18456,22 @@
+   return query
+   select
+     f.organization_id,
++    o.name,
++    o.slug,
++    loc.city,
++    o.country_code,
+     f.followed_at
+   from public.organization_follows f
+   join public.organizations o
+     on o.id = f.organization_id
++  left join lateral (
++    select l.city
++    from public.locations l
++    where l.organization_id = o.id
++      and l.is_active
++    order by l.created_at, l.id
++    limit 1
++  ) loc on true
+   where f.follower_user_id = v_user_id
+     and f.is_following = true
+     and exists (
+@@ -17843,7 +18489,7 @@
+ -- Name: FUNCTION list_my_followed_organizations(); Type: COMMENT; Schema: public; Owner: postgres
+ --
+ 
+-COMMENT ON FUNCTION public.list_my_followed_organizations() IS 'Returns the authenticated customer current active barbershop follows.';
++COMMENT ON FUNCTION public.list_my_followed_organizations() IS 'Authentifié uniquement. Les abonnements actifs de l''appelant, résolus en lignes affichables. AUCUN paramètre : l''abonné est toujours auth.uid(), il n''y a rien à forger. N''expose que ce qu''un profil public expose déjà en anonyme — nom et slug (get_public_organization), ville (list_public_locations rend l''adresse complète) — et rien de plus : ni nombre d''abonnés, ni état commercial, ni visibilité marketplace, ni imagerie (aucune colonne d''imagerie d''établissement n''existe en base, manque D1 §13.1). La ville est celle de la plus ancienne localisation ACTIVE (déterministe) ; NULL si l''organisation n''en a aucune.';
+ 
+ 
+ --
+@@ -18986,7 +19632,7 @@
+ CREATE TABLE public.reviews (
+     id uuid DEFAULT gen_random_uuid() NOT NULL,
+     appointment_id uuid NOT NULL,
+-    customer_user_id uuid NOT NULL,
++    customer_user_id uuid,
+     professional_id uuid NOT NULL,
+     organization_id uuid NOT NULL,
+     rating smallint NOT NULL,
+@@ -19028,6 +19674,13 @@
+ 
+ 
+ --
++-- Name: COLUMN reviews.customer_user_id; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON COLUMN public.reviews.customer_user_id IS 'Auteur de l''avis. NULL après effacement de son compte (B5) : l''avis reste publié, sa note continue de compter dans la réputation, mais il n''est plus rattaché à personne. NULL ne signifie donc jamais « avis anonyme à la publication » — submit_review exige une session.';
++
++
++--
+ -- Name: COLUMN reviews.reviewer_display_name; Type: COMMENT; Schema: public; Owner: postgres
+ --
+ 
+@@ -21168,6 +21821,30 @@
+ 
+ 
+ --
++-- Name: reject_account_erasure_log_mutation(); Type: FUNCTION; Schema: public; Owner: postgres
++--
++
++CREATE FUNCTION public.reject_account_erasure_log_mutation() RETURNS trigger
++    LANGUAGE plpgsql
++    SET search_path TO ''
++    AS $$
++begin
++  raise exception 'account_erasure_log est en ajout seul : % n''est pas permis', tg_op
++    using errcode = '42501';
++end;
++$$;
++
++
++ALTER FUNCTION public.reject_account_erasure_log_mutation() OWNER TO postgres;
++
++--
++-- Name: FUNCTION reject_account_erasure_log_mutation(); Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON FUNCTION public.reject_account_erasure_log_mutation() IS 'Aucune exemption de rôle, volontairement — motif de reject_commercial_history_mutation(). Une trace d''effacement que l''on peut effacer ne trace rien. Cette table n''a AUCUNE exemption d''effacement de compte (§4 de la migration) parce qu''elle ne contient aucune donnée personnelle à effacer.';
++
++
++--
+ -- Name: reject_analytics_event_mutation(); Type: FUNCTION; Schema: public; Owner: postgres
+ --
+ 
+@@ -21177,6 +21854,26 @@
+     AS $$
+ begin
+   if tg_op = 'UPDATE' then
++    -- B5 : l'unique exception, et elle ne peut retirer qu'un identifiant.
++    -- Tout le reste de la ligne — l'événement, l'horodatage, l'organisation,
++    -- les propriétés — doit être rigoureusement identique.
++    -- actor_type DOIT suivre : analytics_events_actor_coherent interdit un
++    -- acteur 'customer' sans identifiant. Un événement désidentifié est
++    -- exactement un événement anonyme, et le dire est plus juste que de
++    -- laisser un type d'acteur qui ne correspond plus à rien.
++    -- dedupe_key aussi : certaines clés d'idempotence portent l'identifiant
++    -- EN TEXTE ('organization_follow:<org>:<uid>') — invisible d'un balayage
++    -- de colonnes uuid, et tout aussi rattachable.
++    if private.erasure_update_allowed(
++         to_jsonb(old), to_jsonb(new),
++         jsonb_build_object(
++           'actor_user_id', jsonb_build_array(null),
++           'actor_type', jsonb_build_array('anonymous'),
++           'dedupe_key', jsonb_build_array(null))
++       ) then
++      return new;
++    end if;
++
+     raise exception 'analytics_events is append-only: a recorded event cannot be modified'
+       using errcode = '22023';
+   end if;
+@@ -21319,6 +22016,16 @@
+     SET search_path TO ''
+     AS $$
+ begin
++  if tg_op = 'UPDATE'
++     and private.erasure_update_allowed(
++           to_jsonb(old), to_jsonb(new),
++           jsonb_build_object(
++             'body', jsonb_build_array(private.erasure_display_sentinel()),
++             'author_user_id', jsonb_build_array(null),
++             'metadata', jsonb_build_array('{}'::jsonb))) then
++    return new;
++  end if;
++
+   raise exception
+     'support_ticket_messages est en ajout seul : % n''est pas permis', tg_op
+     using errcode = '42501';
+@@ -22381,6 +23088,24 @@
+     SET search_path TO ''
+     AS $$
+ begin
++  -- B5 : effacement de compte. Les faits comptables du rendez-vous
++  -- (date, service, barber, statut, durée) sont intouchables ; seules les
++  -- colonnes de contact et la note libre partent.
++  if private.erasure_update_allowed(
++       to_jsonb(old), to_jsonb(new),
++       jsonb_build_object(
++         'customer_name', jsonb_build_array(private.erasure_display_sentinel()),
++         'customer_phone', jsonb_build_array(null),
++         'customer_email', jsonb_build_array(null),
++         'notes', jsonb_build_array(null),
++         'booked_by_user_id', jsonb_build_array(null),
++         'created_by', jsonb_build_array(null),
++         'decided_by', jsonb_build_array(null),
++         'overlap_forced_by', jsonb_build_array(null))
++     ) then
++    return new;
++  end if;
++
+   -- Managing roles keep full edit rights untouched by this trigger.
+   if (select private.has_org_role(new.organization_id, array['owner', 'manager', 'receptionist']::public.membership_role[])) then
+     return new;
+@@ -22436,6 +23161,19 @@
+     SET search_path TO ''
+     AS $$
+ begin
++  -- B5 : effacement de compte, même règle que pour les rendez-vous.
++  if private.erasure_update_allowed(
++       to_jsonb(old), to_jsonb(new),
++       jsonb_build_object(
++         'customer_name', jsonb_build_array(private.erasure_display_sentinel()),
++         'customer_phone', jsonb_build_array(null),
++         'notes', jsonb_build_array(null),
++         'booked_by_user_id', jsonb_build_array(null),
++         'created_by', jsonb_build_array(null))
++     ) then
++    return new;
++  end if;
++
+   -- Une RPC de déplacement F1b (move_queue_entry) a déjà vérifié le droit —
+   -- y compris pour un barber qui déplace vers un CONFRÈRE, ce que la règle
+   -- ci-dessous interdit à raison en accès direct.
+@@ -22936,6 +23674,18 @@
+     SET search_path TO ''
+     AS $$
+ begin
++  -- B5 : effacement de compte. L'avis reste — note, texte, statut,
++  -- réponse du salon, horodatages — seule l'identité de l'auteur part.
++  if private.erasure_update_allowed(
++       to_jsonb(old), to_jsonb(new),
++       jsonb_build_object(
++         'customer_user_id', jsonb_build_array(null),
++         'reviewer_display_name',
++           jsonb_build_array(private.erasure_display_sentinel()))
++     ) then
++    return new;
++  end if;
++
+   if new.appointment_id  is distinct from old.appointment_id
+      or new.customer_user_id is distinct from old.customer_user_id
+      or new.professional_id  is distinct from old.professional_id
+@@ -27157,6 +27907,40 @@
+ 
+ 
+ --
++-- Name: account_erasure_log; Type: TABLE; Schema: public; Owner: postgres
++--
++
++CREATE TABLE public.account_erasure_log (
++    id uuid DEFAULT gen_random_uuid() NOT NULL,
++    erased_at timestamp with time zone DEFAULT now() NOT NULL,
++    actor_kind text DEFAULT 'self'::text NOT NULL,
++    requested_via text DEFAULT 'delete_my_account'::text NOT NULL,
++    account_kind text DEFAULT 'customer'::text NOT NULL,
++    scope jsonb DEFAULT '{}'::jsonb NOT NULL,
++    CONSTRAINT account_erasure_log_actor_kind_check CHECK ((actor_kind = 'self'::text)),
++    CONSTRAINT account_erasure_log_scope_is_object CHECK ((jsonb_typeof(scope) = 'object'::text))
++);
++
++ALTER TABLE ONLY public.account_erasure_log FORCE ROW LEVEL SECURITY;
++
++
++ALTER TABLE public.account_erasure_log OWNER TO postgres;
++
++--
++-- Name: TABLE account_erasure_log; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON TABLE public.account_erasure_log IS 'Trace des suppressions de compte : QUAND (erased_at), PAR QUI (actor_kind — ''self'' est la seule valeur possible, delete_my_account n''efface jamais que son propre appelant), et QUEL PÉRIMÈTRE (scope : des COMPTEURS par table). Volontairement DÉPOURVUE de tout identifiant — pas d''user_id, pas d''e-mail, pas de condensat : un identifiant conservé ici resterait rattachable aux lignes qu''on vient d''anonymiser, et annulerait l''anonymisation qu''il prétend tracer. La preuve côté personne est le reçu (id) rendu par la RPC. Table en ajout seul.';
++
++
++--
++-- Name: COLUMN account_erasure_log.scope; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON COLUMN public.account_erasure_log.scope IS 'Compteurs par table de ce qui a été supprimé ou anonymisé, plus les drapeaux booléens du périmètre. Des nombres, jamais des lignes ni des clés.';
++
++
++--
+ -- Name: analytics_event_definitions; Type: TABLE; Schema: public; Owner: postgres
+ --
+ 
+@@ -28293,6 +29077,7 @@
+     onboarding_completed_at timestamp with time zone,
+     created_at timestamp with time zone DEFAULT now() NOT NULL,
+     updated_at timestamp with time zone DEFAULT now() NOT NULL,
++    gender public.customer_gender,
+     CONSTRAINT customer_profiles_style_notes_length CHECK (((style_notes IS NULL) OR (char_length(style_notes) <= 500)))
+ );
+ 
+@@ -28309,6 +29094,20 @@
+ 
+ 
+ --
++-- Name: COLUMN customer_profiles.haircut_frequency; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON COLUMN public.customer_profiles.haircut_frequency IS 'Fréquence de coupe déclarée à l''onboarding (M1a), enum customer_haircut_frequency. Donnée personnelle optionnelle, modifiable et effaçable (NULL) par son titulaire. Sert aux recommandations ; le rappel de rebooking fondé dessus est hors périmètre B5 (OS-3). Part avec public.delete_my_account().';
++
++
++--
++-- Name: COLUMN customer_profiles.gender; Type: COMMENT; Schema: public; Owner: postgres
++--
++
++COMMENT ON COLUMN public.customer_profiles.gender IS 'Préférence de recommandation déclarée par le client. FINALITÉ UNIQUE ET EXCLUSIVE : orienter la découverte vers barbershop ou salon mixte. Donnée personnelle, OPTIONNELLE (NULL = pas de réponse ou réponse retirée), modifiable et effaçable par son titulaire via la RLS de customer_profiles. N''est exposée par AUCUNE surface publique ni professionnelle : aucune RPC ne la projette, aucun profil ne l''affiche, aucune recherche ne l''utilise aujourd''hui. Part avec public.delete_my_account().';
++
++
++--
+ -- Name: customers; Type: TABLE; Schema: public; Owner: postgres
+ --
+ 
+@@ -31291,6 +32090,14 @@
+ 
+ 
+ --
++-- Name: account_erasure_log account_erasure_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
++--
++
++ALTER TABLE ONLY public.account_erasure_log
++    ADD CONSTRAINT account_erasure_log_pkey PRIMARY KEY (id);
++
++
++--
+ -- Name: analytics_event_definitions analytics_event_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+ --
+ 
+@@ -34820,6 +35627,20 @@
+ 
+ 
+ --
++-- Name: account_erasure_log account_erasure_log_append_only; Type: TRIGGER; Schema: public; Owner: postgres
++--
++
++CREATE TRIGGER account_erasure_log_append_only BEFORE DELETE OR UPDATE ON public.account_erasure_log FOR EACH ROW EXECUTE FUNCTION public.reject_account_erasure_log_mutation();
++
++
++--
++-- Name: account_erasure_log account_erasure_log_append_only_truncate; Type: TRIGGER; Schema: public; Owner: postgres
++--
++
++CREATE TRIGGER account_erasure_log_append_only_truncate BEFORE TRUNCATE ON public.account_erasure_log FOR EACH STATEMENT EXECUTE FUNCTION public.reject_account_erasure_log_mutation();
++
++
++--
+ -- Name: analytics_event_definitions analytics_event_definitions_set_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+ --
+ 
+@@ -38174,7 +38995,7 @@
+ --
+ 
+ ALTER TABLE ONLY public.reviews
+-    ADD CONSTRAINT reviews_customer_user_id_fkey FOREIGN KEY (customer_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
++    ADD CONSTRAINT reviews_customer_user_id_fkey FOREIGN KEY (customer_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+ 
+ 
+ --
+@@ -38626,6 +39447,12 @@
+ 
+ 
+ --
++-- Name: account_erasure_log; Type: ROW SECURITY; Schema: public; Owner: postgres
++--
++
++ALTER TABLE public.account_erasure_log ENABLE ROW LEVEL SECURITY;
++
++--
+ -- Name: analytics_event_definitions; Type: ROW SECURITY; Schema: public; Owner: postgres
+ --
+ 
+@@ -42025,6 +42852,21 @@
+ 
+ 
+ --
++-- Name: FUNCTION account_erasure_active(); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.account_erasure_active() FROM PUBLIC;
++GRANT ALL ON FUNCTION private.account_erasure_active() TO authenticated;
++
++
++--
++-- Name: FUNCTION account_erasure_blockers(p_user_id uuid); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.account_erasure_blockers(p_user_id uuid) FROM PUBLIC;
++
++
++--
+ -- Name: FUNCTION analytics_actor_type_for(p_user_id uuid); Type: ACL; Schema: private; Owner: postgres
+ --
+ 
+@@ -42582,6 +43424,29 @@
+ 
+ 
+ --
++-- Name: FUNCTION erase_customer_account(p_user_id uuid); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.erase_customer_account(p_user_id uuid) FROM PUBLIC;
++
++
++--
++-- Name: FUNCTION erasure_display_sentinel(); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.erasure_display_sentinel() FROM PUBLIC;
++GRANT ALL ON FUNCTION private.erasure_display_sentinel() TO authenticated;
++
++
++--
++-- Name: FUNCTION erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb); Type: ACL; Schema: private; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) FROM PUBLIC;
++GRANT ALL ON FUNCTION private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) TO authenticated;
++
++
++--
+ -- Name: FUNCTION estimated_service_duration_minutes(p_location_id uuid, p_barber_id uuid, p_service_id uuid); Type: ACL; Schema: private; Owner: postgres
+ --
+ 
+@@ -44101,6 +44966,15 @@
+ 
+ 
+ --
++-- Name: FUNCTION delete_my_account(); Type: ACL; Schema: public; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION public.delete_my_account() FROM PUBLIC;
++GRANT ALL ON FUNCTION public.delete_my_account() TO service_role;
++GRANT ALL ON FUNCTION public.delete_my_account() TO authenticated;
++
++
++--
+ -- Name: FUNCTION delete_post(p_post_id uuid); Type: ACL; Schema: public; Owner: postgres
+ --
+ 
+@@ -44242,6 +45116,15 @@
+ 
+ 
+ --
++-- Name: FUNCTION export_my_data(); Type: ACL; Schema: public; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION public.export_my_data() FROM PUBLIC;
++GRANT ALL ON FUNCTION public.export_my_data() TO service_role;
++GRANT ALL ON FUNCTION public.export_my_data() TO authenticated;
++
++
++--
+ -- Name: FUNCTION favorite_shop(p_organization_id uuid); Type: ACL; Schema: public; Owner: postgres
+ --
+ 
+@@ -45604,6 +46487,14 @@
+ 
+ 
+ --
++-- Name: FUNCTION reject_account_erasure_log_mutation(); Type: ACL; Schema: public; Owner: postgres
++--
++
++REVOKE ALL ON FUNCTION public.reject_account_erasure_log_mutation() FROM PUBLIC;
++GRANT ALL ON FUNCTION public.reject_account_erasure_log_mutation() TO service_role;
++
++
++--
+ -- Name: FUNCTION reject_analytics_event_mutation(); Type: ACL; Schema: public; Owner: postgres
+ --
+ 
+@@ -46747,6 +47638,13 @@
+ 
+ 
+ --
++-- Name: TABLE account_erasure_log; Type: ACL; Schema: public; Owner: postgres
++--
++
++GRANT ALL ON TABLE public.account_erasure_log TO service_role;
++
++
++--
+ -- Name: TABLE analytics_event_definitions; Type: ACL; Schema: public; Owner: postgres
+ --
+ 

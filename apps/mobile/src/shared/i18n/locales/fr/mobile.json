@@ -16,7 +16,7 @@
     },
     "gender": {
       "title": "Vous êtes… ?",
-      "why": "Optionnel. Sert uniquement à mettre en avant barbershops ou salons mixtes. Cette réponse reste sur votre appareil.",
+      "why": "Optionnel. Sert uniquement à mettre en avant barbershops ou salons mixtes. Modifiable et effaçable à tout moment depuis votre compte.",
       "man": "Un homme",
       "woman": "Une femme",
       "noPreference": "Peu importe"
@@ -127,8 +127,32 @@
     "passportBody": "Votre passeport FadeUp — il arrive dans une prochaine version, sa place est réservée ici.",
     "deleteRow": "Supprimer mon compte",
     "deleteTitle": "Supprimer votre compte",
-    "deleteBody": "La suppression en libre-service depuis l'application n'est pas encore disponible — elle exige un chantier côté serveur, déjà identifié. Aucune donnée n'est exploitée en attendant ; vous pouvez vous déconnecter de cet appareil dès maintenant.",
-    "deleteAck": "Compris"
+    "deleteBody": "La suppression est immédiate et définitive : il n'y a pas de délai de rétractation. Vos données personnelles partent — compte, profil, Passport et ses photos, abonnements, favoris, notifications, coordonnées chez les salons.",
+    "prefsSection": "Préférences de recommandation",
+    "prefsPurpose": "Ces deux réponses servent uniquement à orienter la découverte — mettre en avant des barbershops ou des salons mixtes. Elles ne sont affichées nulle part : ni sur votre profil, ni auprès des salons.",
+    "prefsGender": {
+      "man": "Un homme",
+      "woman": "Une femme",
+      "no_preference": "Peu importe"
+    },
+    "prefsClear": "Effacer ces réponses",
+    "deleteKept": "Ce qui reste, et pourquoi : vos rendez-vous passés restent au salon sans votre nom ni vos coordonnées, parce que c'est sa comptabilité ; vos avis publiés restent en ligne sans auteur, pour ne pas modifier la réputation d'un professionnel en fermant votre compte.",
+    "deleteContinue": "Continuer vers la suppression",
+    "deleteFinal": "Dernière étape. Ce geste ne peut pas être annulé.",
+    "deleteConfirm": "Supprimer définitivement",
+    "deleteDoneTitle": "Votre compte est supprimé",
+    "deleteDoneBody": "C'est fait. Vous allez être déconnecté de cet appareil.",
+    "deleteReceipt": "Votre reçu de suppression (conservez-le si vous voulez pouvoir nous en reparler) :",
+    "deleteRefusal": {
+      "not_authenticated": "Votre session a expiré. Reconnectez-vous, puis recommencez.",
+      "business_account": "Ce compte fait tourner un établissement sur FadeUp. Le supprimer laisserait son équipe et les rendez-vous de ses clients sans responsable. Transférez la propriété de l'établissement, puis recommencez.",
+      "active_commitments": "Vous avez une file en cours ou un rendez-vous à venir. Quittez la file et annulez vos rendez-vous d'abord : les effacer laisserait au salon un créneau tenu par quelqu'un d'injoignable.",
+      "media_not_purged": "Vos photos n'ont pas pu être supprimées. Réessayez — sans elles, rien n'est effacé.",
+      "unknown": "La suppression n'a pas abouti. Réessayez dans un instant."
+    },
+    "exportAction": "Exporter mes données",
+    "exportDone": "Données exportées",
+    "exportReady": "Voici ce que FadeUp détient sur vous."
   },
   "queuex": {
     "scanTitle": "Scanner le QR du salon",

@@ -16,7 +16,7 @@
     },
     "gender": {
       "title": "You are… ?",
-      "why": "Optional. Only used to surface barbershops or mixed salons. This answer stays on your device.",
+      "why": "Optional. Only used to surface barbershops or mixed salons. You can change or clear it any time from your account.",
       "man": "A man",
       "woman": "A woman",
       "noPreference": "No preference"
@@ -127,8 +127,32 @@
     "passportBody": "Your FadeUp passport — it arrives in an upcoming version; its place is reserved here.",
     "deleteRow": "Delete my account",
     "deleteTitle": "Delete your account",
-    "deleteBody": "Self-service deletion from the app isn't available yet — it requires server-side work that has been identified. No data is exploited in the meantime; you can sign out of this device right away.",
-    "deleteAck": "Got it"
+    "deleteBody": "Deletion is immediate and permanent — there is no cooling-off period. Your personal data goes: account, profile, Passport and its photos, follows, favourites, notifications, and the contact details shops hold for you.",
+    "prefsSection": "Recommendation preferences",
+    "prefsPurpose": "These two answers only shape discovery — surfacing barbershops or mixed salons. They are shown nowhere: not on your profile, not to shops.",
+    "prefsGender": {
+      "man": "A man",
+      "woman": "A woman",
+      "no_preference": "Doesn't matter"
+    },
+    "prefsClear": "Clear these answers",
+    "deleteKept": "What stays, and why: your past appointments stay with the shop without your name or contact details, because they are its books; your published reviews stay online without an author, so that closing your account cannot change a professional's reputation.",
+    "deleteContinue": "Continue to deletion",
+    "deleteFinal": "Last step. This cannot be undone.",
+    "deleteConfirm": "Delete permanently",
+    "deleteDoneTitle": "Your account is deleted",
+    "deleteDoneBody": "It's done. You'll be signed out of this device.",
+    "deleteReceipt": "Your deletion receipt (keep it if you may want to ask us about this later):",
+    "deleteRefusal": {
+      "not_authenticated": "Your session has expired. Sign in again, then retry.",
+      "business_account": "This account runs a business on FadeUp. Deleting it would leave its team and its customers' appointments without an owner. Transfer ownership of the business, then retry.",
+      "active_commitments": "You have an active queue or an upcoming appointment. Leave the queue and cancel your appointments first: erasing them would leave the shop a slot held by someone unreachable.",
+      "media_not_purged": "Your photos could not be deleted. Try again — without that, nothing is erased.",
+      "unknown": "The deletion did not go through. Try again in a moment."
+    },
+    "exportAction": "Export my data",
+    "exportDone": "Data exported",
+    "exportReady": "Here is what FadeUp holds about you."
   },
   "queuex": {
     "scanTitle": "Scan the shop's QR",

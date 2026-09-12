@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      account_erasure_log: {
+        Row: {
+          account_kind: string
+          actor_kind: string
+          erased_at: string
+          id: string
+          requested_via: string
+          scope: Json
+        }
+        Insert: {
+          account_kind?: string
+          actor_kind?: string
+          erased_at?: string
+          id?: string
+          requested_via?: string
+          scope?: Json
+        }
+        Update: {
+          account_kind?: string
+          actor_kind?: string
+          erased_at?: string
+          id?: string
+          requested_via?: string
+          scope?: Json
+        }
+        Relationships: []
+      }
       analytics_event_definitions: {
         Row: {
           created_at: string
@@ -1550,6 +1577,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          gender: Database["public"]["Enums"]["customer_gender"] | null
           haircut_frequency:
             | Database["public"]["Enums"]["customer_haircut_frequency"]
             | null
@@ -1570,6 +1598,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          gender?: Database["public"]["Enums"]["customer_gender"] | null
           haircut_frequency?:
             | Database["public"]["Enums"]["customer_haircut_frequency"]
             | null
@@ -1590,6 +1619,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          gender?: Database["public"]["Enums"]["customer_gender"] | null
           haircut_frequency?:
             | Database["public"]["Enums"]["customer_haircut_frequency"]
             | null
@@ -6321,7 +6351,7 @@ export type Database = {
           appointment_id: string
           comment: string | null
           created_at: string
-          customer_user_id: string
+          customer_user_id: string | null
           external_attribution: Json | null
           id: string
           moderated_at: string | null
@@ -6342,7 +6372,7 @@ export type Database = {
           appointment_id: string
           comment?: string | null
           created_at?: string
-          customer_user_id: string
+          customer_user_id?: string | null
           external_attribution?: Json | null
           id?: string
           moderated_at?: string | null
@@ -6363,7 +6393,7 @@ export type Database = {
           appointment_id?: string
           comment?: string | null
           created_at?: string
-          customer_user_id?: string
+          customer_user_id?: string | null
           external_attribution?: Json | null
           id?: string
           moderated_at?: string | null
@@ -8308,6 +8338,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      delete_my_account: {
+        Args: never
+        Returns: {
+          erased_at: string
+          erasure_id: string
+          scope: Json
+        }[]
+      }
       delete_post: { Args: { p_post_id: string }; Returns: undefined }
       end_platform_support_session: {
         Args: { p_id: string }
@@ -8343,6 +8381,7 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: number
       }
+      export_my_data: { Args: never; Returns: Json }
       favorite_shop: { Args: { p_organization_id: string }; Returns: undefined }
       follow_organization: {
         Args: { p_organization_id: string }
@@ -9086,8 +9125,12 @@ export type Database = {
       list_my_followed_organizations: {
         Args: never
         Returns: {
+          city: string
+          country_code: string
           followed_at: string
           organization_id: string
+          organization_name: string
+          organization_slug: string
         }[]
       }
       list_my_followed_professionals: {
@@ -9252,7 +9295,7 @@ export type Database = {
           appointment_id: string
           comment: string | null
           created_at: string
-          customer_user_id: string
+          customer_user_id: string | null
           external_attribution: Json | null
           id: string
           moderated_at: string | null
@@ -9473,7 +9516,7 @@ export type Database = {
           appointment_id: string
           comment: string | null
           created_at: string
-          customer_user_id: string
+          customer_user_id: string | null
           external_attribution: Json | null
           id: string
           moderated_at: string | null
@@ -10307,7 +10350,7 @@ export type Database = {
           appointment_id: string
           comment: string | null
           created_at: string
-          customer_user_id: string
+          customer_user_id: string | null
           external_attribution: Json | null
           id: string
           moderated_at: string | null
@@ -10445,6 +10488,7 @@ export type Database = {
       commercial_family: "free" | "independent" | "salon" | "multi_salon"
       commercial_status: "active" | "past_due" | "canceled"
       customer_appointment_preference: "appointment" | "walk_in" | "either"
+      customer_gender: "man" | "woman" | "no_preference"
       customer_haircut_frequency:
         | "weekly"
         | "every_2_weeks"
@@ -10857,6 +10901,7 @@ export const Constants = {
       commercial_family: ["free", "independent", "salon", "multi_salon"],
       commercial_status: ["active", "past_due", "canceled"],
       customer_appointment_preference: ["appointment", "walk_in", "either"],
+      customer_gender: ["man", "woman", "no_preference"],
       customer_haircut_frequency: [
         "weekly",
         "every_2_weeks",

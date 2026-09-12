@@ -1,0 +1,37 @@
+BEGIN
+NOTICE:  A1 ok  fixture complète : compte, profil, fiche salon, rendez-vous, file, abonnement, favori, notification, e-mail, événement analytique, Passport, photo
+NOTICE:  B1 ok  genre et fréquence stockés (man / every_2_weeks)
+NOTICE:  B2 ok  genre et fréquence modifiables
+NOTICE:  B3 ok  genre et fréquence effaçables (NULL)
+NOTICE:  B4 ok  l'enum refuse toute valeur hors contrat client
+NOTICE:  A2 ok  avis publié (note 5), réputation du professionnel = 5.0000000000000000 (somme/compte)
+NOTICE:  C1 ok  delete_my_account() est unique et sans paramètre : rien à forger
+NOTICE:  C2 ok  private.erase_customer_account n'est exécutable par aucun rôle client
+NOTICE:  C3 ok  appel direct de l'effaceur sur le compte d'autrui : 42501
+NOTICE:  D1 ok  sans session : fadeup_erasure_refusal=not_authenticated
+NOTICE:  D2 ok  file en cours : fadeup_erasure_refusal=active_commitments
+NOTICE:  D3 ok  compte d'entreprise : fadeup_erasure_refusal=business_account
+NOTICE:  D4 ok  photo encore en stockage : fadeup_erasure_refusal=media_not_purged
+NOTICE:  H1 ok  list_my_followed_organizations rend nom, slug, ville et pays
+NOTICE:  H2 ok  signature exacte : organization_id,organization_name,organization_slug,city,country_code,followed_at — aucune colonne de plus
+NOTICE:  I1 ok  export complet : compte, profil, Passport, rendez-vous, files, avis, abonnements, favoris, notifications, fiches salon, notes de salon
+NOTICE:  I2 ok  genre et fréquence font partie de l'export
+NOTICE:  I3 ok  l'export d'un autre compte ne contient rien de celui-ci
+NOTICE:  E0 ok  compte effacé, reçu 5166c2e4-8bbe-429e-ad88-2f9b2235c600, périmètre {"auth_users_deleted": 1, "reviews_anonymised": 1, "customers_anonymised": 1, "email_outbox_deleted": 3, "review_photos_deleted": 0, "customer_notes_deleted": 1, "appointments_anonymised": 1, "queue_entries_anonymised": 2, "support_tickets_redacted": 1, "interest_contacts_deleted": 0, "support_messages_redacted": 1, "auth_audit_entries_deleted": 2, "shop_notifications_deleted": 3, "waitlist_entries_anonymised": 0, "interest_requests_anonymised": 0, "analytics_dedupe_keys_cleared": 4, "analytics_events_deidentified": 8, "shop_notifications_anonymised": 2}
+NOTICE:  E1 ok  BALAYAGE DU SCHÉMA auth : 144 colonnes balayées (users, identities, sessions, refresh_tokens, mfa_*, ET audit_log_entries) — ni identifiant, ni e-mail, ni téléphone, ni nom
+NOTICE:  E2 ok  BALAYAGE UNIVERSEL : l'identifiant du compte est absent des 418 colonnes uuid de public (profil, Passport, photos, partages, favoris, abonnements, likes, notifications, signalements, relations, candidatures, revendications, profiles compris)
+NOTICE:  E3 ok  BALAYAGE LITTÉRAL sur 436 colonnes texte ET jsonb de public : e-mail, téléphone, nom et identifiant-en-texte introuvables, y compris NOYÉS dans un texte libre ou une charge utile
+NOTICE:  E4 ok  textes libres effacés : rendez-vous, file, fiche salon, note de salon (OS-2), billet et messages de support caviardés sans être amputés (PLAT-2)
+NOTICE:  E5 ok  analytics_events : actor_user_id à NULL, l'événement lui-même intact
+NOTICE:  E6 ok  hors effacement, analytics_events reste en ajout seul
+NOTICE:  E7 ok  le drapeau n'ouvre QUE l'effacement d'un identifiant vers NULL
+NOTICE:  E8 ok  aucun objet de stockage sous l'identifiant (précondition + cascade)
+NOTICE:  F1 ok  le rendez-vous reste : date, service, barber, statut, horodatage de fin intacts
+NOTICE:  F2 ok  file et fiche client conservées, détachées du compte
+NOTICE:  F3 ok  l'avis reste publié, note 5, sans auteur — réputation inchangée (5.0000000000000000)
+NOTICE:  G1 ok  trace présente (quand, acteur, périmètre chiffré), aucune donnée personnelle, aucune colonne d'identité
+NOTICE:  G2 ok  la trace est en ajout seul
+NOTICE:  J1 ok  AUCUNE fonction hors export_my_data/erase_customer_account ne mentionne gender, et l'export n'est pas exécutable en anonyme
+NOTICE:  --- B5 : toutes les assertions passent ---
+DO
+ROLLBACK
