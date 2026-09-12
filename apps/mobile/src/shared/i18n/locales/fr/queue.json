@@ -330,5 +330,49 @@
       "title": "Encore aucune mesure",
       "description": "Dès qu'une prestation est terminée — en file ou sur rendez-vous —, sa durée réelle apparaît ici."
     }
+  },
+  "settings": {
+    "title": "Réglages de la file",
+    "description": "Ce qui décide de la capacité, du délai de grâce et du rayon de pointage. Tout est lu en base : rien n'est écrit en dur dans l'application.",
+    "back": "Retour à la file",
+    "link": "Réglages de la file",
+    "linkHint": "Seuils, files par barber, sortie automatique",
+    "thresholdsTitle": "Seuils",
+    "capacity": {
+      "label": "Capacité par barber",
+      "hint": "Au-delà, la file refuse les nouvelles arrivées. Entre 1 et 200.",
+      "unit": "personnes"
+    },
+    "grace": {
+      "label": "Délai de grâce après l'appel",
+      "hint": "Le temps qu'un client appelé a pour se présenter. Entre 0 et 120 minutes.",
+      "unit": "minutes"
+    },
+    "geofence": {
+      "label": "Rayon de pointage",
+      "hint": "Distance maximale au salon pour rejoindre la file depuis un téléphone. Entre 25 et 2000 mètres.",
+      "unit": "mètres"
+    },
+    "save": "Enregistrer les seuils",
+    "thresholdsUnavailable": "Les réglages de cet établissement ne sont pas lisibles pour l'instant. Rechargez la page ; s'ils manquent toujours, signalez-le.",
+    "sweepTitle": "Sortie automatique",
+    "empty": {
+      "title": "Rien à régler ici",
+      "description": "Les seuils, les files par barber et la sortie automatique se règlent par le propriétaire ou un manager. Aucune durée n'a encore été mesurée."
+    },
+    "durationsTitle": "Ce que FadeUp a appris",
+    "durationsHint": "La durée réelle mesurée par barber et par service.",
+    "durationsEmpty": "Aucune prestation mesurée pour l'instant. Les durées observées apparaîtront ici dès les premières prestations terminées.",
+    "durationsLink": "Voir les durées observées",
+    "toast": {
+      "thresholdsSaved": "Seuils enregistrés"
+    },
+    "errors": {
+      "capacityRange": "La capacité par barber va de 1 à 200.",
+      "graceRange": "Le délai de grâce va de 0 à 120 minutes.",
+      "geofenceRange": "Le rayon de pointage va de 25 à 2000 mètres.",
+      "noChange": "Rien n'a changé.",
+      "notAuthorized": "Seuls le propriétaire et un manager peuvent modifier ces seuils."
+    }
   }
 }

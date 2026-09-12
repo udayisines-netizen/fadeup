@@ -113,7 +113,9 @@
     "request_expired": "Cette demande a expiré avant la réponse — elle est close.",
     "counter_pending": "Une contre-proposition attend déjà la réponse du client.",
     "not_a_pending_request": "Cette demande a déjà été traitée.",
-    "no_counter_pending": "Aucune proposition d'horaire n'attend de réponse ici."
+    "no_counter_pending": "Aucune proposition d'horaire n'attend de réponse ici.",
+    "force_not_allowed": "Forcer un chevauchement est réservé au propriétaire et au manager.",
+    "force_reason_required": "Indiquez le motif du chevauchement (200 caractères au plus)."
   },
   "interestRefusal": {
     "no_contact_channel": "Un e-mail ou un téléphone est nécessaire pour vous prévenir de la réponse.",

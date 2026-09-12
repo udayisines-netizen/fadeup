@@ -145,6 +145,39 @@ export const proKeys = {
   today: (organizationId: string, day: string) => [...proKeys.all, 'today', organizationId, day] as const,
   /** Résumé de file de l'accueil (`queue_entries` org, RLS). */
   queueSummary: (organizationId: string) => [...proKeys.all, 'queue-summary', organizationId] as const,
+  /** OS-1 — l'identité barber du compte connecté dans l'organisation. */
+  myBarber: (organizationId: string, userId: string) => [...proKeys.all, 'my-barber', organizationId, userId] as const,
+  /** OS-1 — les fauteuils de l'organisation (barbers + fiche staff + membership). */
+  barbers: (organizationId: string) => [...proKeys.all, 'barbers', organizationId] as const,
+  /** OS-1 — l'agenda fenêtré (`get_calendar_appointments`), TOUTES les clés d'une organisation sous `agendas`. */
+  agendas: (organizationId: string) => [...proKeys.all, 'agenda', organizationId] as const,
+  agenda: (organizationId: string, from: string, to: string, locationId = '', barberId = '') =>
+    [...proKeys.agendas(organizationId), from, to, locationId, barberId] as const,
+  /** OS-1 — les blocages de temps fenêtrés (`time_blocks`, RLS). */
+  timeBlocks: (organizationId: string, from: string, to: string) =>
+    [...proKeys.all, 'time-blocks', organizationId, from, to] as const,
+  /** OS-1 — services actifs d'un lieu et aptitudes barber/service (réservation manuelle). */
+  services: (organizationId: string, locationId: string) => [...proKeys.all, 'services', organizationId, locationId] as const,
+  /** OS-2 — le catalogue complet (`list_organization_services`), archives comprises ou non. */
+  catalogs: (organizationId: string) => [...proKeys.all, 'catalog', organizationId] as const,
+  catalog: (organizationId: string, includeArchived: boolean) =>
+    [...proKeys.catalogs(organizationId), includeArchived] as const,
+  /** OS-2 — les catégories de services (`service_categories`, RLS). */
+  serviceCategories: (organizationId: string) => [...proKeys.all, 'service-categories', organizationId] as const,
+  /** OS-2 — le CRM : TOUTES les clés d'une organisation sous `clients`, pour l'invalidation par préfixe. */
+  clients: (organizationId: string) => [...proKeys.all, 'clients', organizationId] as const,
+  clientList: (organizationId: string, search: string, segment: string) =>
+    [...proKeys.clients(organizationId), 'list', search, segment] as const,
+  client: (organizationId: string, customerId: string) =>
+    [...proKeys.clients(organizationId), 'detail', customerId] as const,
+  clientHistory: (organizationId: string, customerId: string) =>
+    [...proKeys.clients(organizationId), 'history', customerId] as const,
+  clientNotes: (organizationId: string, customerId: string) =>
+    [...proKeys.clients(organizationId), 'notes', customerId] as const,
+  /** OS-2 — l'équipe : membres et invitations en attente sous le même préfixe. */
+  teams: (organizationId: string) => [...proKeys.all, 'team', organizationId] as const,
+  teamMembers: (organizationId: string) => [...proKeys.teams(organizationId), 'members'] as const,
+  teamInvitations: (organizationId: string) => [...proKeys.teams(organizationId), 'invitations'] as const,
 } as const
 
 /**

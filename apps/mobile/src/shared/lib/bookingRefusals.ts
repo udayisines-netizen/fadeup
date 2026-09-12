@@ -37,6 +37,9 @@ export const BOOKING_REFUSAL_CODES = [
   'counter_pending',
   'not_a_pending_request',
   'no_counter_pending',
+  /* OS-1 — le forçage de chevauchement (agenda pro). */
+  'force_not_allowed',
+  'force_reason_required',
 ] as const
 
 export type BookingRefusalCode = (typeof BOOKING_REFUSAL_CODES)[number]

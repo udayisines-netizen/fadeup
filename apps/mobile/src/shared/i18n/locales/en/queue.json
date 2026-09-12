@@ -330,5 +330,49 @@
       "title": "No measurements yet",
       "description": "As soon as a service is completed — walk-in or appointment — its real duration shows up here."
     }
+  },
+  "settings": {
+    "title": "Queue settings",
+    "description": "What decides capacity, grace delay and check-in radius. Everything is read from the database: nothing is hard-coded in the app.",
+    "back": "Back to the queue",
+    "link": "Queue settings",
+    "linkHint": "Thresholds, per-barber queues, automatic sweep",
+    "thresholdsTitle": "Thresholds",
+    "capacity": {
+      "label": "Capacity per barber",
+      "hint": "Beyond it, the queue refuses new arrivals. Between 1 and 200.",
+      "unit": "people"
+    },
+    "grace": {
+      "label": "Grace delay after the call",
+      "hint": "How long a called customer has to show up. Between 0 and 120 minutes.",
+      "unit": "minutes"
+    },
+    "geofence": {
+      "label": "Check-in radius",
+      "hint": "Maximum distance to the shop to join the queue from a phone. Between 25 and 2000 metres.",
+      "unit": "metres"
+    },
+    "save": "Save thresholds",
+    "thresholdsUnavailable": "This location's settings cannot be read right now. Reload the page; if they are still missing, report it.",
+    "sweepTitle": "Automatic sweep",
+    "empty": {
+      "title": "Nothing to set here",
+      "description": "Thresholds, per-barber queues and the automatic sweep are set by the owner or a manager. No duration has been measured yet."
+    },
+    "durationsTitle": "What FadeUp has learned",
+    "durationsHint": "The real duration measured per barber and per service.",
+    "durationsEmpty": "No service measured yet. Observed durations appear here as soon as the first services are completed.",
+    "durationsLink": "See observed durations",
+    "toast": {
+      "thresholdsSaved": "Thresholds saved"
+    },
+    "errors": {
+      "capacityRange": "Capacity per barber goes from 1 to 200.",
+      "graceRange": "The grace delay goes from 0 to 120 minutes.",
+      "geofenceRange": "The check-in radius goes from 25 to 2000 metres.",
+      "noChange": "Nothing changed.",
+      "notAuthorized": "Only the owner and a manager can change these thresholds."
+    }
   }
 }
