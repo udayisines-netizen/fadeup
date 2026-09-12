@@ -48,7 +48,7 @@ DO
  préférences   | un émetteur ne déguise pas un post en appel de file          | PASS    | 0
  heures calmes | un fuseau de nuit et un fuseau de jour ont été trouvés       | PASS    | Etc/GMT-13 / Etc/GMT+6
  heures calmes | en heure calme, l'envoi est DIFFÉRÉ à 08:00 locale           | PASS    | Etc/GMT-13 -> 2026-09-12 19:00:00+00
- heures calmes | en journée, l'envoi part tout de suite                       | PASS    | Etc/GMT+6 -> 2026-09-12 17:12:50.689851+00
+ heures calmes | en journée, l'envoi part tout de suite                       | PASS    | Etc/GMT+6 -> 2026-09-12 17:53:52.006402+00
  heures calmes | fuseau illisible : repli, pas d'erreur                       | PASS    | 
  événements    | appareil anonyme : rien en file avant son appel              | PASS    | 0
  événements    | anonyme : aucune catégorie hors appel de file                | PASS    | 0
