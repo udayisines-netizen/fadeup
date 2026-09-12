@@ -33,11 +33,20 @@ export function remainingParts(deadlineIso: string, now: Date): { hours: number;
   return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 }
 }
 
-/** Fenêtre d'annulation libre : jusqu'à 12 h avant le début (MASTER_SPEC §6). */
+/**
+ * Fenêtre d'annulation libre : jusqu'à 12 h avant le début (MASTER_SPEC §6).
+ *
+ * PLAT-3 — repli, plus source de vérité : le défaut vit en base
+ * (`booking.free_cancel_hours`) et se lit par `usePublicPlatformSettings()`.
+ *
+ * Rien ne REFUSE une annulation tardive, ici ni côté serveur, et c'est voulu :
+ * le produit l'autorise et la consigne (MASTER_SPEC §6). Ce seuil ne décide
+ * donc que d'un avertissement.
+ */
 export const FREE_CANCEL_HOURS = 12
 
-export function isLateCancellation(startsAtIso: string, now: Date): boolean {
+export function isLateCancellation(startsAtIso: string, now: Date, freeCancelHours: number = FREE_CANCEL_HOURS): boolean {
   const starts = Date.parse(startsAtIso)
   if (Number.isNaN(starts)) return false
-  return starts - now.getTime() < FREE_CANCEL_HOURS * 3_600_000
+  return starts - now.getTime() < Math.max(0, freeCancelHours) * 3_600_000
 }

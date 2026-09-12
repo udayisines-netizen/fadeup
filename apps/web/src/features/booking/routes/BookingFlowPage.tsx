@@ -24,6 +24,7 @@ import {
   type BookAppointmentResult,
 } from '@/features/booking/api/booking'
 import { bookableDays, dateInTimezone, firstPopulatedPart, mergeSlotsAcrossBarbers, type PartOfDay } from '@/features/booking/lib/slots'
+import { usePublicPlatformSettings } from '@/features/booking/api/platformSettings'
 import { useAvailableSlotsPerBarber } from '@/features/booking/api/booking'
 import { bookingRefusalIsSlotRelated, bookingRefusalMessageKey, type BookingRefusalCode } from '@/features/booking/lib/refusals'
 import { DayStrip } from '@/features/booking/components/DayStrip'
@@ -94,9 +95,17 @@ export function BookingFlowPage() {
     return (barbers.data ?? []).find((row) => row.barber_id === barberChoice)?.display_name ?? null
   }, [barbers.data, barberChoice])
 
+  const platformSettings = usePublicPlatformSettings()
+
   // Jour et créneaux.
   const day = searchParams.get('d') ?? (timezone ? dateInTimezone(now, timezone) : null)
-  const days = useMemo(() => (timezone ? bookableDays(timezone, now) : []), [timezone, now])
+  // PLAT-3 — l'horizon vient du réglage plateforme, pas d'une constante
+  // compilée : `book_public_appointment` REFUSE au-delà, et un sélecteur plus
+  // large proposerait des dates que le serveur rejetterait.
+  const days = useMemo(
+    () => (timezone ? bookableDays(timezone, now, platformSettings.bookingWindowDays) : []),
+    [timezone, now, platformSettings.bookingWindowDays],
+  )
   const slotBarberIds = useMemo(() => {
     if (barberChoice && barberChoice !== 'any') return [barberChoice]
     return (barbers.data ?? []).map((row) => row.barber_id)

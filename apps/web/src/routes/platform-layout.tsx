@@ -68,6 +68,22 @@ function PlatformShell() {
   const canSeeField = can('crm.zone_read') || can('crm.field_capture')
   const canSeePosters = can('poster.manage')
 
+  /*
+   * PLAT-3 — quatre écrans de plus, même règle : absent plutôt que grisé.
+   *
+   * Les DÉFAUTS et le WORKER restent au fondateur et à l'admin — ce sont les
+   * deux seuls rôles porteurs de `platform.settings` et de `worker.operate`.
+   * Les PROMOTIONS s'ouvrent au commercial : il porte `promotions.apply`
+   * (pose une offre dans les bornes de son rôle) sans porter
+   * `promotions.manage` (créer, arrêter, révoquer), et l'écran lui-même
+   * retire ce qu'il ne peut pas faire. Le TUNNEL d'acquisition se lit avec
+   * `crm.read`, comme l'atelier du commercial.
+   */
+  const canSeeSettings = can('platform.settings')
+  const canSeePromotions = can('promotions.apply')
+  const canSeeFunnel = can('crm.read')
+  const canSeeWorker = can('worker.operate')
+
   async function handleSignOut() {
     const supabase = getSupabaseClient()
     await supabase.auth.signOut()
@@ -94,6 +110,14 @@ function PlatformShell() {
             {canSeeSales ? <AppNavLink to="/platform/sales">{t('platform:nav.sales')}</AppNavLink> : null}
             {canSeeField ? <AppNavLink to="/platform/field">{t('platform:nav.field')}</AppNavLink> : null}
             {canSeePosters ? <AppNavLink to="/platform/posters">{t('platform:nav.posters')}</AppNavLink> : null}
+            {canSeePromotions ? (
+              <AppNavLink to="/platform/promotions">{t('platform:nav.promotions')}</AppNavLink>
+            ) : null}
+            {canSeeFunnel ? <AppNavLink to="/platform/funnel">{t('platform:nav.funnel')}</AppNavLink> : null}
+            {canSeeWorker ? <AppNavLink to="/platform/worker">{t('platform:nav.worker')}</AppNavLink> : null}
+            {canSeeSettings ? (
+              <AppNavLink to="/platform/settings">{t('platform:nav.settings')}</AppNavLink>
+            ) : null}
             {can('onboarding.review') ? (
               <AppNavLink to="/platform/applications">{t('platform:nav.applications')}</AppNavLink>
             ) : null}

@@ -76,3 +76,13 @@ export type PlatformPermission =
   | 'moderation.revert'
   | 'poster.assign'
   | 'poster.manage'
+  /* PLAT-3 — les quatre droits des défauts, des promotions et du worker. Le
+     catalogue qui fait foi reste `public.platform_permissions` ; ce type n'est
+     qu'un garde-fou de frappe côté interface. `platform.settings` et
+     `worker.operate` sont portés par le fondateur et l'admin,
+     `promotions.manage` par les deux mêmes, `promotions.apply` par eux plus le
+     commercial. Le tunnel d'acquisition se lit avec `crm.read`, déjà au type. */
+  | 'platform.settings'
+  | 'promotions.manage'
+  | 'promotions.apply'
+  | 'worker.operate'

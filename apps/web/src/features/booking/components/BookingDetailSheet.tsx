@@ -20,6 +20,7 @@ import {
 import { isExpired, isLateCancellation, remainingParts } from '@/features/booking/lib/deadline'
 import { bookingRefusalMessageKey, type BookingRefusalCode } from '@/features/booking/lib/refusals'
 import { bookableDays, dateInTimezone, firstPopulatedPart, type PartOfDay } from '@/features/booking/lib/slots'
+import { usePublicPlatformSettings } from '@/features/booking/api/platformSettings'
 import { DayStrip } from '@/features/booking/components/DayStrip'
 import { TimeSlotGrid } from '@/features/booking/components/TimeSlotGrid'
 
@@ -62,10 +63,17 @@ export function BookingDetailSheet({
     (appointment.status === 'pending' || appointment.status === 'confirmed') &&
     appointment.resolution === null &&
     Date.parse(appointment.starts_at) > now.getTime()
-  const late = isLateCancellation(appointment.starts_at, now)
+  // PLAT-3 — l'avertissement « annulation tardive » et l'horizon de report
+  // suivent tous deux le réglage plateforme. Rien ne REFUSE une annulation
+  // tardive, ici ni côté serveur : le produit l'autorise et la consigne.
+  const platformSettings = usePublicPlatformSettings()
+  const late = isLateCancellation(appointment.starts_at, now, platformSettings.freeCancelHours)
 
   const timezone = appointment.location_timezone
-  const days = useMemo(() => bookableDays(timezone, now), [timezone, now])
+  const days = useMemo(
+    () => bookableDays(timezone, now, platformSettings.bookingWindowDays),
+    [timezone, now, platformSettings.bookingWindowDays],
+  )
   const activeDay = day ?? dateInTimezone(now, timezone)
   const slots = useAvailableSlots(
     rescheduling ? appointment.organization_slug : null,

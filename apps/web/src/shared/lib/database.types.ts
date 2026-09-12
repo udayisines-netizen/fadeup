@@ -9686,6 +9686,19 @@ export type Database = {
         Args: { p_organization_id: string }
         Returns: number
       }
+      /* PLAT-3 — ajoutée À LA MAIN, comme PLAT-1 et PLAT-2 l'ont fait avant :
+         le générateur `postgres-meta` local produit désormais une forme
+         différente, et une régénération complète mêlerait des centaines de
+         lignes sans rapport au diff de ce lot. Seule la RPC que la surface V2
+         appelle réellement est déclarée ici. La régénération intégrale, avec un
+         générateur épinglé, reste à faire en une fois. */
+      get_public_platform_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          booking_window_days: number
+          booking_free_cancel_hours: number
+        }[]
+      }
       get_public_professional: {
         Args: { p_professional_id: string }
         Returns: {

@@ -73,17 +73,28 @@ export function dateInTimezone(value: Date, timeZone: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value)
 }
 
-/** Fenêtre de réservation : aujourd'hui + 90 jours (MASTER_SPEC §6). */
+/**
+ * Fenêtre de réservation : aujourd'hui + 90 jours (MASTER_SPEC §6).
+ *
+ * PLAT-3 — ce n'est plus LA valeur, c'est le REPLI. Le défaut vit désormais en
+ * base (`booking.window_days`), il est appliqué par `book_public_appointment`
+ * et lu par `usePublicPlatformSettings()`. Cette constante reste ce qu'on
+ * affiche tant que la lecture n'a pas répondu, et si elle échoue.
+ */
 export const BOOKING_WINDOW_DAYS = 90
 
 /**
  * Les jours proposables, en AAAA-MM-JJ du fuseau du lieu. Des JOURS ne sont
  * pas des CRÉNEAUX : proposer un jour n'affirme aucune disponibilité — c'est
  * `get_public_available_slots` qui répond, jour par jour.
+ *
+ * `windowDays` vient du réglage plateforme. Le serveur refuse au-delà : ce
+ * sélecteur ne doit donc jamais proposer une date plus lointaine que lui.
  */
-export function bookableDays(timeZone: string, now: Date): string[] {
+export function bookableDays(timeZone: string, now: Date, windowDays: number = BOOKING_WINDOW_DAYS): string[] {
   const days: string[] = []
-  for (let i = 0; i <= BOOKING_WINDOW_DAYS; i += 1) {
+  const span = Math.max(0, Math.floor(windowDays))
+  for (let i = 0; i <= span; i += 1) {
     days.push(dateInTimezone(new Date(now.getTime() + i * 86_400_000), timeZone))
   }
   return days

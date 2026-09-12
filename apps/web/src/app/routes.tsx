@@ -382,6 +382,41 @@ const platformRoutes = [
           return { Component: PlatformPostersPage }
         },
       },
+
+      /* PLAT-3 — les défauts plateforme, les promotions, le tunnel
+         d'acquisition et le pilotage du worker. AJOUTÉS, jamais substitués :
+         aucune route existante n'est supprimée, renommée ni déplacée, et
+         chacun est un chunk paresseux de plus dans le graphe /platform,
+         jamais dans l'entrée consumer. Chaque écran repose sa propre question
+         de permission, et le serveur la repose derrière lui. */
+      {
+        path: 'settings',
+        lazy: async () => {
+          const { PlatformSettingsPage } = await import('@/pages/platform-settings-page')
+          return { Component: PlatformSettingsPage }
+        },
+      },
+      {
+        path: 'promotions',
+        lazy: async () => {
+          const { PlatformPromotionsPage } = await import('@/pages/platform-promotions-page')
+          return { Component: PlatformPromotionsPage }
+        },
+      },
+      {
+        path: 'funnel',
+        lazy: async () => {
+          const { PlatformFunnelPage } = await import('@/pages/platform-funnel-page')
+          return { Component: PlatformFunnelPage }
+        },
+      },
+      {
+        path: 'worker',
+        lazy: async () => {
+          const { PlatformWorkerPage } = await import('@/pages/platform-worker-page')
+          return { Component: PlatformWorkerPage }
+        },
+      },
     ],
   },
 ]

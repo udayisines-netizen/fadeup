@@ -72,4 +72,26 @@ describe('slots — dérivés purs, dans le fuseau du LIEU', () => {
     // À 23:30 UTC, Paris est déjà le lendemain — le « jour 0 » aussi.
     expect(dateInTimezone(new Date('2026-09-07T23:30:00Z'), 'Europe/Paris')).toBe('2026-09-08')
   })
+
+  // PLAT-3 — la fenêtre vient du réglage plateforme, et le serveur REFUSE
+  // au-delà (`fadeup_booking_refusal=beyond_booking_window`). Le sélecteur ne
+  // doit donc jamais proposer plus loin que ce qu'on lui donne.
+  it('la fenêtre suit le réglage plateforme quand il est fourni', () => {
+    const now = new Date('2026-09-07T12:00:00Z')
+    const days = bookableDays('Europe/Paris', now, 7)
+    expect(days).toHaveLength(8)
+    expect(days[0]).toBe('2026-09-07')
+    expect(days.at(-1)).toBe('2026-09-14')
+  })
+
+  it('sans réglage, elle reste à 90 jours — le repli est le comportement d’avant', () => {
+    const now = new Date('2026-09-07T12:00:00Z')
+    expect(bookableDays('Europe/Paris', now)).toEqual(bookableDays('Europe/Paris', now, BOOKING_WINDOW_DAYS))
+  })
+
+  it('une fenêtre absurde ne casse rien : zéro jour rend le jour même', () => {
+    const now = new Date('2026-09-07T12:00:00Z')
+    expect(bookableDays('Europe/Paris', now, 0)).toEqual(['2026-09-07'])
+    expect(bookableDays('Europe/Paris', now, -5)).toEqual(['2026-09-07'])
+  })
 })

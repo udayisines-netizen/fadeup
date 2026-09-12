@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isExpired, isLateCancellation, remainingMs, remainingParts } from '@/shared/lib/deadline'
+import { FREE_CANCEL_HOURS, isExpired, isLateCancellation, remainingMs, remainingParts } from '@/shared/lib/deadline'
 
 const NOW = new Date('2026-09-07T12:00:00Z')
 
@@ -31,5 +31,19 @@ describe('deadline — l’échéance est lue, jamais recalculée, jamais négat
     expect(isLateCancellation('2026-09-08T01:00:00Z', NOW)).toBe(false) // 13 h avant
     expect(isLateCancellation('2026-09-07T23:59:00Z', NOW)).toBe(true) // 11 h 59 avant
     expect(isLateCancellation('2026-09-07T11:00:00Z', NOW)).toBe(true) // déjà passé
+  })
+
+  // PLAT-3 — le seuil vient du réglage plateforme `booking.free_cancel_hours`.
+  // Il ne décide QUE d'un avertissement : rien ne refuse une annulation
+  // tardive, ici ni côté serveur.
+  it('le seuil suit le réglage plateforme quand il est fourni', () => {
+    expect(isLateCancellation('2026-09-08T01:00:00Z', NOW, 24)).toBe(true) // 13 h avant, seuil à 24 h
+    expect(isLateCancellation('2026-09-07T23:59:00Z', NOW, 6)).toBe(false) // 11 h 59 avant, seuil à 6 h
+  })
+
+  it('sans réglage, il reste à 12 h — le repli est le comportement d’avant', () => {
+    expect(isLateCancellation('2026-09-07T23:59:00Z', NOW)).toBe(
+      isLateCancellation('2026-09-07T23:59:00Z', NOW, FREE_CANCEL_HOURS),
+    )
   })
 })
