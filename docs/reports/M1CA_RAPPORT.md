@@ -776,7 +776,15 @@ Repris de M1a/M1b, non traités ici :
    composant rend `row.title`, pas une clé i18n — mais la cloche du web reste
    à câbler, et il faudra alors compléter l'union. Constaté, non corrigé :
    c'est du web.
-5. **Le dépôt principal `/opt/fadeup` porte des modifications non commitées**
+5. **1 510 lignes d'`email_outbox` visent `@fadeup.test`**, un domaine qui
+   n'existe pas, et le scheduler en dépêche encore (les plus récentes datent
+   de ce matin 07:07, d'une campagne de QA d'un autre lot — aucune n'est de
+   celui-ci, vérifié). Chaque envoi est un **rebond**, et les rebonds abîment
+   la délivrabilité du domaine dont dépendent les liens de connexion ET le
+   rappel de rendez-vous que ce lot vient de brancher. À purger, et les
+   campagnes de QA devraient viser une adresse supprimée côté fournisseur
+   plutôt qu'un domaine inexistant. **Constaté, non traité : hors périmètre.**
+6. **Le dépôt principal `/opt/fadeup` porte des modifications non commitées**
    d'autres lots (dont `infra/scheduler/tick.sh` côté X2). Ce lot n'y a pas
    touché ; sa propre version de `tick.sh` vit dans la branche. **La fusion
    devra réconcilier les deux ajouts** — ils sont indépendants (X2 ajoute
