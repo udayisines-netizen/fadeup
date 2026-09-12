@@ -439,7 +439,7 @@ begin
         using errcode = '22023', detail = 'fadeup_promotion_refusal=bad_percent';
     end if;
     if p_percent_off > v_limits.max_percent_off then
-      raise exception 'your role may not grant more than %%% off', v_limits.max_percent_off
+      raise exception 'your role may not grant more than % percent off', v_limits.max_percent_off
         using errcode = '42501', detail = 'fadeup_promotion_refusal=above_role_ceiling';
     end if;
   else
