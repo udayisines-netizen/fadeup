@@ -680,8 +680,14 @@ la campagne est `e2e/f4`, et sa cause est mesurée hors code (§10.9).
 
 ## 8. Git
 
-Branche **`os3/growth`**, créée depuis `rebuild/social-first-v2` (`3a2939f`).
-Commits et push : voir la fin de ce rapport (il est commité avec eux).
+Branche **`os3/growth`**, créée depuis `rebuild/social-first-v2` (`3a2939f`),
+**poussée** (`origin/os3/growth`). Trois commits :
+
+| | |
+|---|---|
+| `edc64a4` | les quatre migrations, leurs quatre retours arrière, `verify_os3.sql`, le contrat de surface |
+| `65fadfb` | les trois écrans, la fonction Edge, la redirection `/pro/billing`, les clés, la nav, les icônes, l'i18n, les types régénérés |
+| `d9d9640` | la campagne e2e, les 20 captures, les preuves archivées, ce rapport |
 
 **Aucune fusion effectuée.** Aucun `git add .`, aucun `git add -A`, aucun
 `git reset --hard`, aucun `git clean`, aucun `docker prune`.
