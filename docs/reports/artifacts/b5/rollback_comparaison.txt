@@ -1,0 +1,13 @@
+================ COMPARAISON T0 / T2 ================
+ok    tabacl : T0 == T2 (158 lignes)
+ok    funacl : T0 == T2 (456 lignes)
+ok    md5 : T0 == T2 (6 lignes)
+ECHEC schema : 4 lignes divergentes
+5c5
+< \restrict E9cmf4fntJALHuwvSLkQIybrqve7t1TXRQQd2TnGDWubAYS0VYlFZEqXxAtO2Rf
+---
+> \restrict fgegBMX7M46yIU2UTO7mTUbjrifD6XC67uQnkfvvBuus7BMwzDm7B6Ng749q4B4
+48064c48064
+< \unrestrict E9cmf4fntJALHuwvSLkQIybrqve7t1TXRQQd2TnGDWubAYS0VYlFZEqXxAtO2Rf
+---
+> \unrestrict fgegBMX7M46yIU2UTO7mTUbjrifD6XC67uQnkfvvBuus7BMwzDm7B6Ng749q4B4

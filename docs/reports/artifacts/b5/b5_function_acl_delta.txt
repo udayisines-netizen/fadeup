@@ -1,0 +1,13 @@
+0a1,2
+> private.account_erasure_active() :: postgres :: postgres=X/postgres | authenticated=X/postgres
+> private.account_erasure_blockers(p_user_id uuid) :: postgres :: postgres=X/postgres
+49a52,54
+> private.erase_customer_account(p_user_id uuid) :: postgres :: postgres=X/postgres
+> private.erasure_display_sentinel() :: postgres :: postgres=X/postgres | authenticated=X/postgres
+> private.erasure_update_allowed(p_old jsonb, p_new jsonb, p_allowed jsonb) :: postgres :: postgres=X/postgres | authenticated=X/postgres
+210a216
+> public.delete_my_account() :: postgres :: postgres=X/postgres | service_role=X/postgres | authenticated=X/postgres
+226a233
+> public.export_my_data() :: postgres :: postgres=X/postgres | service_role=X/postgres | authenticated=X/postgres
+370a378
+> public.reject_account_erasure_log_mutation() :: postgres :: postgres=X/postgres | service_role=X/postgres
