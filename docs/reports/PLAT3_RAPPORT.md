@@ -831,10 +831,12 @@ produira un conflit à la fusion sur ce fichier. §12.7.
 | `src/features/pro-*` et `src/features/pro/` | **intouchés** (interdit : OS-3 y travaille) |
 | `db/migrations/*os3*`, `*m1ca*` | **intouchés** |
 
-| Commits | 3 : le socle de base, les quatre écrans, le rapport |
+| Commits | **5** : le socle de base, les quatre écrans, le rapport, les résultats e2e/axe, un correctif de message |
 | Fichiers hors périmètre | **aucun** |
 | `apps/web/package.json` | **intouché** — aucune dépendance ajoutée |
-| Poussée | `origin/plat3/controls` |
+| Poussée | `origin/plat3/controls`, 5 commits |
+| **Fusion** | **AUCUNE** — `git branch -a --contains HEAD` ne rend que `plat3/controls` et son miroir distant |
+| Fichiers du lot (hors captures) | 49 |
 
 **Les fichiers partagés touchés, et pourquoi chacun.**
 
