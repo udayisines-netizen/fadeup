@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
+\restrict kX0GFBEQAtHSIekXs7sORdehgFiWa9B3FYrQtetJW1dGsnAwGKxFIMUPlk6qsZk
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -247,6 +247,24 @@ CREATE TYPE public.customer_appointment_preference AS ENUM (
 
 
 --
+-- Name: customer_gender; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.customer_gender AS ENUM (
+    'man',
+    'woman',
+    'no_preference'
+);
+
+
+--
+-- Name: TYPE customer_gender; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.customer_gender IS 'Réponse à la question de genre de l''onboarding client (M1a). Valeurs VERBATIM celles du client mobile (GENDER_ANSWERS) — aucune table de traduction. « no_preference » est la réponse « peu importe », pas une absence de réponse : l''absence est NULL.';
+
+
+--
 -- Name: customer_haircut_frequency; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -458,7 +476,8 @@ CREATE TYPE public.notification_type AS ENUM (
     'post_liked',
     'review_received',
     'review_reply',
-    'queue_grace_removed'
+    'queue_grace_removed',
+    'booking_counter_proposed'
 );
 
 
@@ -594,7 +613,10 @@ COMMENT ON TYPE public.outreach_template_status IS 'Only ''approved'' templates 
 CREATE TYPE public.platform_role AS ENUM (
     'platform_owner',
     'platform_admin',
-    'platform_support'
+    'platform_support',
+    'platform_sales',
+    'platform_moderator',
+    'platform_intern'
 );
 
 
@@ -602,7 +624,18 @@ CREATE TYPE public.platform_role AS ENUM (
 -- Name: TYPE platform_role; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TYPE public.platform_role IS 'FadeUp platform staff role — NOT a barbershop role (see public.membership_role for that unrelated concept).';
+COMMENT ON TYPE public.platform_role IS 'Rôle interne FadeUp — À NE PAS CONFONDRE avec public.membership_role, qui est le rôle dans un salon. Six valeurs depuis PLAT-1 : platform_owner (fondateur, seul à gérer les rôles internes et à supprimer un barber), platform_admin (tout sauf ces deux gestes), platform_support (appels clients et pros, sans CRM), platform_sales (CRM, publication marketplace, onboardings, plans commerciaux), platform_moderator (contenu, avis, onboardings, vue en tant que, sans CRM), platform_intern (stagiaire terrain : saisit des prospects dans sa zone, rien de public). Le rôle seul n''autorise rien : les droits sont dans public.platform_role_permissions et se vérifient par private.platform_can().';
+
+
+--
+-- Name: poster_state; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.poster_state AS ENUM (
+    'free',
+    'assigned',
+    'revoked'
+);
 
 
 --
@@ -760,6 +793,23 @@ CREATE TYPE public.prospect_locale_source AS ENUM (
 --
 
 COMMENT ON TYPE public.prospect_locale_source IS 'Evidence that determined a prospect''s locale, in the spec''s priority order. Business NAME is deliberately absent — a name is never sufficient evidence of language.';
+
+
+--
+-- Name: prospect_origin; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.prospect_origin AS ENUM (
+    'worker',
+    'field'
+);
+
+
+--
+-- Name: TYPE prospect_origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.prospect_origin IS 'D''où vient un prospect. « worker » : découvert par Worker V2, la fiche est scrapée. « field » : vu par un interne sur le terrain. La distinction est celle que le commercial doit connaître AVANT d''appeler — un salon vu de ses yeux ne vaut pas une fiche scrapée.';
 
 
 --
@@ -990,6 +1040,43 @@ CREATE TYPE public.stripe_billing_interval AS ENUM (
 
 
 --
+-- Name: support_ticket_message_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.support_ticket_message_kind AS ENUM (
+    'note',
+    'inbound',
+    'outbound',
+    'status_change',
+    'assignment',
+    'action'
+);
+
+
+--
+-- Name: support_ticket_origin; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.support_ticket_origin AS ENUM (
+    'phone',
+    'gdpr_withdrawal',
+    'report',
+    'inbound_email'
+);
+
+
+--
+-- Name: support_ticket_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.support_ticket_status AS ENUM (
+    'open',
+    'waiting',
+    'resolved'
+);
+
+
+--
 -- Name: waitlist_status; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -1060,6 +1147,11 @@ CREATE TABLE public.email_outbox (
     provider_message_id text,
     dedupe_key text,
     dispatched_at timestamp with time zone,
+    delivered_at timestamp with time zone,
+    opened_at timestamp with time zone,
+    bounced_at timestamp with time zone,
+    complained_at timestamp with time zone,
+    bounce_classification text,
     CONSTRAINT email_outbox_attempts_sane CHECK ((attempts >= 0)),
     CONSTRAINT email_outbox_to_email_not_blank CHECK ((btrim(to_email) <> ''::text))
 );
@@ -1093,6 +1185,20 @@ COMMENT ON COLUMN public.email_outbox.net_request_id IS 'L''identifiant de requ�
 --
 
 COMMENT ON COLUMN public.email_outbox.dedupe_key IS 'Clé d''idempotence. Deux lignes de même clé ne peuvent pas coexister, donc un scheduler redémarré au milieu d''un lot ne produit jamais un doublon d''envoi. NULL autorisé : les écritures antérieures à B2 n''en portent pas, et un index unique partiel ne contraint que les lignes qui en ont une.';
+
+
+--
+-- Name: COLUMN email_outbox.delivered_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.delivered_at IS 'Posé par le webhook Resend (email.delivered). NULL ne veut pas dire « non délivré » : avant l''activation du webhook, aucun retour n''existe (BLOCKERS §7).';
+
+
+--
+-- Name: COLUMN email_outbox.bounce_classification; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.email_outbox.bounce_classification IS 'Le type de rebond tel que Resend le nomme (permanent/transient…), en minuscules. Un rebond permanent supprime l''adresse de toute prospection future.';
 
 
 --
@@ -1168,8 +1274,17 @@ CREATE TABLE public.appointments (
     rescheduled_to uuid,
     completed_at timestamp with time zone,
     booked_by_user_id uuid,
+    counter_proposed_at timestamp with time zone,
+    counter_original_starts_at timestamp with time zone,
+    counter_note text,
+    was_request boolean DEFAULT false NOT NULL,
+    overlap_forced_at timestamp with time zone,
+    overlap_forced_by uuid,
+    overlap_forced_reason text,
     CONSTRAINT appointments_buffers_nonnegative CHECK (((buffer_before_minutes >= 0) AND (buffer_after_minutes >= 0))),
     CONSTRAINT appointments_customer_name_not_blank CHECK ((btrim(customer_name) <> ''::text)),
+    CONSTRAINT appointments_overlap_forced_consistent CHECK (((overlap_forced_at IS NULL) = (overlap_forced_reason IS NULL))),
+    CONSTRAINT appointments_overlap_forced_reason_length CHECK (((overlap_forced_reason IS NULL) OR (char_length(overlap_forced_reason) <= 200))),
     CONSTRAINT appointments_resolution_note_length CHECK (((resolution_note IS NULL) OR (char_length(resolution_note) <= 500))),
     CONSTRAINT appointments_resolution_terminal_only CHECK (((resolution IS NULL) OR (status = ANY (ARRAY['cancelled'::public.appointment_status, 'no_show'::public.appointment_status])))),
     CONSTRAINT appointments_time_order CHECK ((ends_at > starts_at))
@@ -1225,6 +1340,55 @@ COMMENT ON COLUMN public.appointments.completed_at IS 'When the service was actu
 --
 
 COMMENT ON COLUMN public.appointments.booked_by_user_id IS 'The authenticated account that ITSELF created this booking, stamped from auth.uid() inside book_public_appointment. NULL for anonymous bookings and for rows created by staff. This is the ONLY trustworthy account attribution for an appointment: customer_id is resolved from caller-typed contact details and must never be used to attribute social or verified-client facts.';
+
+
+--
+-- Name: COLUMN appointments.counter_proposed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_proposed_at IS 'P1PRO — posé quand le salon propose un autre horaire pour une demande pending. Sur une ligne pending, le consentement est côté client : confirm_booking_request refuse. Conservé après issue comme trace (l''historique distingue « contre-proposée puis acceptée/refusée »).';
+
+
+--
+-- Name: COLUMN appointments.counter_original_starts_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_original_starts_at IS 'P1PRO — l''horaire DEMANDÉ par le client avant la première contre-proposition (starts_at porte l''horaire proposé). Jamais réécrit par une re-proposition.';
+
+
+--
+-- Name: COLUMN appointments.counter_note; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.counter_note IS 'P1PRO — mot facultatif du salon accompagnant la contre-proposition.';
+
+
+--
+-- Name: COLUMN appointments.was_request; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.was_request IS 'P1PRO — la ligne est née demande (pending). Stampé par set_appointment_request_expiry, jamais remis à false. Backfill 2026-09-08 approximatif sur les lignes déjà décidées (voir P1PRO_RAPPORT §7).';
+
+
+--
+-- Name: COLUMN appointments.overlap_forced_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.overlap_forced_at IS 'OS-1 — posé quand un rôle habilité (owner/manager) a FORCÉ ce rendez-vous sur un créneau déjà pris. Tant qu''il est posé, la ligne est hors de l''exclusion appointments_barber_no_overlap ; un déplacement ordinaire le remet à NULL et la ligne redevient arbitrée.';
+
+
+--
+-- Name: COLUMN appointments.overlap_forced_by; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.overlap_forced_by IS 'OS-1 — qui a forcé (auth.users). Journal complet : appointment_overlap_forces.';
+
+
+--
+-- Name: COLUMN appointments.overlap_forced_reason; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.appointments.overlap_forced_reason IS 'OS-1 — pourquoi (obligatoire pour forcer, 200 caractères max).';
 
 
 --
@@ -1286,6 +1450,88 @@ COMMENT ON COLUMN public.queue_entries.auto_marked_no_show_at IS 'Horodatage du 
 
 
 --
+-- Name: accept_booking_counter_proposal(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_is_customer boolean;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  -- X3 : coalesce anti-NULL — sans lui, customer_id NULL rend la condition
+  -- NULL et « if not » ne lève pas.
+  v_is_customer := coalesce(v_appointment.customer_id in (
+    select c.id from public.customers c where c.user_id = (select auth.uid())
+  ), false);
+
+  if not v_is_customer then
+    raise exception 'not authorized to answer this proposal'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  -- Idempotent : si le salon a re-proposé PUIS que deux réponses se
+  -- croisent, la ligne réglée est rendue telle quelle.
+  if v_appointment.status = 'confirmed' then
+    return v_appointment;
+  end if;
+
+  if v_appointment.status <> 'pending' or v_appointment.counter_proposed_at is null then
+    raise exception 'no counter-proposal is awaiting an answer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=no_counter_pending';
+  end if;
+
+  if v_appointment.expires_at is not null and v_appointment.expires_at <= now() then
+    raise exception 'this proposal has expired'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=request_expired';
+  end if;
+
+  -- Le salon a proposé ce créneau, le client y consent : confirmé. Le
+  -- créneau était déjà retenu par la ligne pending — aucune course possible
+  -- sur le chevauchement.
+  update public.appointments
+    set status = 'confirmed',
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_confirmed', 'customer',
+    'Your appointment is confirmed',
+    null, 'booking_confirmed', ':counter-accept'
+  );
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_confirmed', 'business',
+    'Proposed time accepted',
+    v_appointment.customer_name, null, ':counter-accept'
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION accept_booking_counter_proposal(p_appointment_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.accept_booking_counter_proposal(p_appointment_id uuid) IS 'P1PRO — le client accepte le créneau contre-proposé : pending → confirmed (créneau déjà retenu par la ligne). Notifie les deux parties.';
+
+
+--
 -- Name: memberships; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1295,7 +1541,8 @@ CREATE TABLE public.memberships (
     user_id uuid NOT NULL,
     role public.membership_role NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    can_view_revenue boolean DEFAULT false NOT NULL
 );
 
 ALTER TABLE ONLY public.memberships FORCE ROW LEVEL SECURITY;
@@ -1306,6 +1553,13 @@ ALTER TABLE ONLY public.memberships FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.memberships IS 'Core tenant-authorization table. One row per (user, organization) with an org-scoped role.';
+
+
+--
+-- Name: COLUMN memberships.can_view_revenue; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.memberships.can_view_revenue IS 'OS-1 — le patron décide, barber par barber, si ce membre voit les montants (prix des prestations à l''agenda, revenu calculé). Défaut FALSE. N''a d''effet que pour le rôle barber : owner/manager voient toujours, receptionist jamais (contrat P1PRO §8). Réglé par set_membership_revenue_visibility (owner seulement).';
 
 
 --
@@ -1480,6 +1734,158 @@ $$;
 --
 
 COMMENT ON FUNCTION public.accept_platform_invitation(p_token text) IS 'Redeems a platform_admin/platform_support invitation for the calling authenticated user. Requires the caller''s auth email to match invited_email when one was set.';
+
+
+--
+-- Name: customer_notes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customer_notes (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    customer_id uuid NOT NULL,
+    author_user_id uuid,
+    body text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT customer_notes_body_length CHECK ((char_length(body) <= 2000)),
+    CONSTRAINT customer_notes_body_not_blank CHECK ((btrim(body) <> ''::text))
+);
+
+ALTER TABLE ONLY public.customer_notes FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE customer_notes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.customer_notes IS 'Notes privées du salon sur un client. Une note = une ligne, un auteur, une date. Lisible par l''équipe de l''organisation (RLS) ; les rôles internes passent OBLIGATOIREMENT par list_customer_notes(), qui exige customer_notes.read et trace. Le sujet lit les siennes par get_my_customer_notes() (droit d''accès RGPD).';
+
+
+--
+-- Name: COLUMN customer_notes.author_user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_notes.author_user_id IS 'Auteur. Nullable : un compte supprimé ne fait pas disparaître la note du salon (ON DELETE SET NULL) — l''information reste, la personne non.';
+
+
+--
+-- Name: add_customer_note(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.add_customer_note(p_customer_id uuid, p_body text) RETURNS public.customer_notes
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_organization_id uuid;
+  v_body text := btrim(coalesce(p_body, ''));
+  v_row public.customer_notes;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=anonymous';
+  end if;
+
+  if v_body = '' then
+    raise exception 'a note cannot be empty'
+      using errcode = '22023', detail = 'fadeup_customer_notes_refusal=empty_body';
+  end if;
+
+  if char_length(v_body) > 2000 then
+    raise exception 'a note is limited to 2000 characters'
+      using errcode = '22023', detail = 'fadeup_customer_notes_refusal=body_too_long';
+  end if;
+
+  select c.organization_id into v_organization_id
+  from public.customers c where c.id = p_customer_id;
+
+  if v_organization_id is null
+     or not (select private.is_org_member(v_organization_id)) then
+    raise exception 'not authorized to write a note on this customer'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=not_authorized';
+  end if;
+
+  insert into public.customer_notes (organization_id, customer_id, author_user_id, body)
+  values (v_organization_id, p_customer_id, v_actor, v_body)
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION add_customer_note(p_customer_id uuid, p_body text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.add_customer_note(p_customer_id uuid, p_body text) IS 'Écrit une note privée. Tout membre de l''organisation, pour lui-même (l''auteur est auth.uid(), jamais un paramètre). Un rôle interne n''écrit PAS : il ne fait que consulter, sous trace.';
+
+
+--
+-- Name: support_ticket_messages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.support_ticket_messages (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    ticket_id uuid NOT NULL,
+    kind public.support_ticket_message_kind NOT NULL,
+    body text NOT NULL,
+    author_user_id uuid,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT support_ticket_messages_body_length CHECK ((char_length(body) <= 5000)),
+    CONSTRAINT support_ticket_messages_body_not_blank CHECK ((btrim(body) <> ''::text)),
+    CONSTRAINT support_ticket_messages_metadata_object CHECK ((jsonb_typeof(metadata) = 'object'::text))
+);
+
+ALTER TABLE ONLY public.support_ticket_messages FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE support_ticket_messages; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.support_ticket_messages IS 'PLAT-2 : l''historique des échanges d''un ticket, en AJOUT SEUL (déclencheur, sans exemption de rôle).';
+
+
+--
+-- Name: add_support_ticket_message(uuid, text, public.support_ticket_message_kind); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.add_support_ticket_message(p_ticket_id uuid, p_body text, p_kind public.support_ticket_message_kind DEFAULT 'note'::public.support_ticket_message_kind) RETURNS public.support_ticket_messages
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_tickets());
+  v_body text := nullif(btrim(coalesce(p_body, '')), '');
+  v_message public.support_ticket_messages;
+begin
+  if v_body is null then
+    raise exception 'un message a besoin de son texte'
+      using errcode = '22023', detail = 'fadeup_support_refusal=body_required';
+  end if;
+  -- Les trois genres système ne s'écrivent pas à la main : ils sont la trace
+  -- d'un geste, et un geste qu'on peut raconter sans l'avoir fait n'est plus
+  -- une trace.
+  if p_kind in ('status_change', 'assignment', 'action') then
+    raise exception 'ce genre de message est écrit par le système'
+      using errcode = '22023', detail = 'fadeup_support_refusal=kind_reserved';
+  end if;
+  if not exists (select 1 from public.support_tickets where id = p_ticket_id) then
+    raise exception 'ticket introuvable' using errcode = '42704';
+  end if;
+
+  insert into public.support_ticket_messages (ticket_id, kind, body, author_user_id)
+  values (p_ticket_id, p_kind, v_body, v_actor)
+  returning * into v_message;
+
+  update public.support_tickets set updated_at = now() where id = p_ticket_id;
+  return v_message;
+end;
+$$;
 
 
 --
@@ -2618,6 +3024,94 @@ $$;
 
 
 --
+-- Name: services; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.services (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    category_id uuid,
+    name text NOT NULL,
+    description text,
+    duration_minutes integer NOT NULL,
+    buffer_before_minutes integer DEFAULT 0 NOT NULL,
+    buffer_after_minutes integer DEFAULT 0 NOT NULL,
+    price_cents integer NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    archived_at timestamp with time zone,
+    price_pending boolean DEFAULT false NOT NULL,
+    CONSTRAINT services_buffers_nonnegative CHECK (((buffer_before_minutes >= 0) AND (buffer_after_minutes >= 0))),
+    CONSTRAINT services_duration_positive CHECK ((duration_minutes > 0)),
+    CONSTRAINT services_name_not_blank CHECK ((btrim(name) <> ''::text)),
+    CONSTRAINT services_pending_price_not_active CHECK ((NOT (price_pending AND is_active))),
+    CONSTRAINT services_price_nonnegative CHECK ((price_cents >= 0))
+);
+
+ALTER TABLE ONLY public.services FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE services; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.services IS 'Service catalog entry: duration/buffers drive appointment-engine slot math (LOT 8), not built here. price_cents is integer cents.';
+
+
+--
+-- Name: COLUMN services.archived_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.services.archived_at IS 'Date d''archivage. NULL = pas archivé. Archiver met aussi is_active à false ; la distinction permet de ne pas confondre « archivé » (retiré du catalogue, historique conservé) et « désactivé » (pause) ou « brouillon » (price_pending).';
+
+
+--
+-- Name: COLUMN services.price_pending; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.services.price_pending IS 'Vrai pour un service créé par un barber, qui n''a pas le droit de fixer un prix. price_cents vaut alors 0 par défaut technique — ce n''est PAS un prix affichable. Le service reste is_active = false, donc absent de toute surface publique, jusqu''à ce qu''un owner/manager fixe le prix.';
+
+
+--
+-- Name: archive_service(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.archive_service(p_service_id uuid) RETURNS public.services
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_row public.services;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null
+     or not (select private.has_org_role(v_service.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to archive this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  update public.services s
+     set is_active = false, archived_at = coalesce(s.archived_at, now())
+   where s.id = p_service_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION archive_service(p_service_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.archive_service(p_service_id uuid) IS 'Archive un service : il sort du catalogue et de toute surface publique, son historique reste intact. C''est le geste qui remplace la suppression.';
+
+
+--
 -- Name: assign_barber_professional(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2699,6 +3193,7 @@ declare
   v_used_pro integer;
   v_change_id uuid;
 begin
+  perform private.assert_not_in_support_view('assign_commercial_plan');
   v_actor := (select auth.uid());
 
   if v_actor is null then
@@ -2710,7 +3205,7 @@ begin
   -- and never from an argument. An owner of the organization is NOT sufficient:
   -- the organization is the party being charged, and a party cannot decide what
   -- it owes.
-  if not (select private.is_platform_admin()) then
+  if (select auth.uid()) is null or not (select private.platform_can('commercial.plan_assign')) then
     raise exception 'only FadeUp platform staff may change an organization commercial plan'
       using errcode = '42501';
   end if;
@@ -2806,6 +3301,198 @@ $$;
 --
 
 COMMENT ON FUNCTION public.assign_commercial_plan(p_organization_id uuid, p_plan_key text, p_status public.commercial_status, p_note text) IS 'The ONLY way a commercial plan changes. Platform admin only, resolved from auth.uid() and never from an argument — an owner of the organization is deliberately not sufficient, because the party being charged cannot decide what it owes. Refuses unknown and withdrawn plans, refuses a downgrade that the organization''s current establishments or roster would not fit (nothing is ever deleted to make one fit), takes the same row lock the capacity triggers take so a downgrade cannot interleave with a location being created, and appends an immutable audit row. entitlement_source is hard-coded to platform_grant: no argument to this function can dress a staff decision up as a payment.';
+
+
+--
+-- Name: assign_poster(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assign_poster(p_code text, p_location_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_code text := upper(btrim(coalesce(p_code, '')));
+  v_poster public.posters;
+  v_location public.locations;
+  v_internal boolean;
+  v_was_revoked boolean;
+begin
+  if v_actor is null then
+    raise exception 'attribution non autorisée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=not_authenticated';
+  end if;
+  if v_code = '' or p_location_id is null then
+    raise exception 'un code et un établissement sont attendus'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=arguments_required';
+  end if;
+
+  select * into v_poster from public.posters where code = v_code for update;
+  if not found then
+    raise exception 'affiche inconnue'
+      using errcode = '42704', detail = 'fadeup_poster_refusal=unknown_code';
+  end if;
+
+  v_internal := (select private.platform_can('poster.manage'));
+  -- LU AVANT L'UPDATE. La version précédente lisait `v_poster.state` APRÈS le
+  -- `returning into`, où il vaut déjà 'assigned' : le seul fait qui distingue
+  -- une attribution d'une réattribution après révocation n'était donc JAMAIS
+  -- journalisé — il valait `false` en toute circonstance.
+  v_was_revoked := v_poster.state = 'revoked';
+
+  if v_poster.state = 'assigned' then
+    raise exception 'cette affiche est déjà attribuée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=already_assigned';
+  end if;
+
+  if v_poster.state = 'revoked' and not v_internal then
+    raise exception 'cette affiche a été révoquée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=revoked';
+  end if;
+
+  -- UNE AFFICHE POSTÉE EST RÉSERVÉE À SON DESTINATAIRE. Deux chemins, et deux
+  -- seulement : un interne porteur de `poster.manage` (qui a décidé de
+  -- l'envoi et peut le défaire), ou le salon vers lequel le prospect a
+  -- effectivement converti. Tout le reste est une préemption.
+  if v_poster.letter_prospect_id is not null and not v_internal then
+    if not exists (
+      select 1
+      from public.prospects p
+      join public.locations l on l.id = p_location_id
+      where p.id = v_poster.letter_prospect_id
+        and p.converted_organization_id is not null
+        and p.converted_organization_id = l.organization_id
+    ) then
+      raise exception 'cette affiche est réservée au salon à qui elle a été envoyée'
+        using errcode = '42501', detail = 'fadeup_poster_refusal=reserved_for_addressee';
+    end if;
+  end if;
+
+  if not (select private.poster_can_assign_to_location(p_location_id)) then
+    raise exception 'cet établissement n''est pas le vôtre'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=location_not_mine';
+  end if;
+
+  select * into v_location from public.locations where id = p_location_id;
+  if not found then
+    raise exception 'établissement introuvable' using errcode = '42704';
+  end if;
+
+  update public.posters
+     set state = 'assigned',
+         organization_id = v_location.organization_id,
+         location_id = v_location.id,
+         assigned_by = v_actor,
+         assigned_at = now(),
+         revoked_by = null, revoked_at = null, revoke_reason = null,
+         updated_at = now()
+   where id = v_poster.id
+  returning * into v_poster;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'poster_assigned', 'posters', v_poster.id,
+          jsonb_build_object('code', v_poster.code,
+                             'organization_id', v_location.organization_id,
+                             'location_id', v_location.id,
+                             'reassigned_after_revocation', v_was_revoked,
+                             'was_mailed_to_prospect', v_poster.letter_prospect_id is not null));
+
+  return jsonb_build_object(
+    'code', v_poster.code, 'state', v_poster.state,
+    'organization_id', v_poster.organization_id,
+    'location_id', v_poster.location_id,
+    'organization_slug', (select o.slug from public.organizations o where o.id = v_poster.organization_id)
+  );
+end;
+$$;
+
+
+--
+-- Name: support_tickets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.support_tickets (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    reference text NOT NULL,
+    origin public.support_ticket_origin NOT NULL,
+    subject text NOT NULL,
+    body text,
+    status public.support_ticket_status DEFAULT 'open'::public.support_ticket_status NOT NULL,
+    assigned_to uuid,
+    subject_user_id uuid,
+    organization_id uuid,
+    professional_id uuid,
+    appointment_id uuid,
+    queue_entry_id uuid,
+    withdrawal_request_id uuid,
+    due_at timestamp with time zone,
+    opened_by uuid,
+    resolution text,
+    resolved_at timestamp with time zone,
+    resolved_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT support_tickets_body_length CHECK (((body IS NULL) OR (char_length(body) <= 5000))),
+    CONSTRAINT support_tickets_gdpr_shape CHECK (((origin <> 'gdpr_withdrawal'::public.support_ticket_origin) OR (withdrawal_request_id IS NOT NULL))),
+    CONSTRAINT support_tickets_resolution_length CHECK (((resolution IS NULL) OR (char_length(resolution) <= 2000))),
+    CONSTRAINT support_tickets_resolution_stamped CHECK ((((status = 'resolved'::public.support_ticket_status) = (resolved_at IS NOT NULL)) AND ((status <> 'resolved'::public.support_ticket_status) OR (NULLIF(btrim(COALESCE(resolution, ''::text)), ''::text) IS NOT NULL)))),
+    CONSTRAINT support_tickets_subject_length CHECK ((char_length(subject) <= 200)),
+    CONSTRAINT support_tickets_subject_not_blank CHECK ((btrim(subject) <> ''::text))
+);
+
+ALTER TABLE ONLY public.support_tickets FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE support_tickets; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.support_tickets IS 'PLAT-2 : la file du support. Quatre origines déclarées, deux branchées (phone, gdpr_withdrawal) ; report et inbound_email refusent l''ouverture tant que rien ne les alimente.';
+
+
+--
+-- Name: assign_support_ticket(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assign_support_ticket(p_ticket_id uuid, p_assignee uuid) RETURNS public.support_tickets
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_tickets());
+  v_ticket public.support_tickets;
+begin
+  if p_assignee is not null and not exists (
+    select 1
+    from public.platform_members pm
+    join public.platform_role_permissions rp on rp.role = pm.role
+    where pm.user_id = p_assignee and rp.permission_key = 'support.tickets'
+  ) then
+    raise exception 'ce compte ne traite pas les tickets'
+      using errcode = '22023', detail = 'fadeup_support_refusal=assignee_not_support';
+  end if;
+
+  update public.support_tickets
+     set assigned_to = p_assignee, updated_at = now()
+   where id = p_ticket_id
+  returning * into v_ticket;
+  if not found then
+    raise exception 'ticket introuvable' using errcode = '42704';
+  end if;
+
+  insert into public.support_ticket_messages (ticket_id, kind, body, author_user_id, metadata)
+  values (v_ticket.id, 'assignment',
+          coalesce((select au.email::text from auth.users au where au.id = p_assignee), 'unassigned'),
+          v_actor, jsonb_build_object('assigned_to', p_assignee));
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'support_ticket_assigned', 'support_tickets', v_ticket.id,
+          jsonb_build_object('assigned_to', p_assignee, 'reference', v_ticket.reference));
+
+  return v_ticket;
+end;
+$$;
 
 
 --
@@ -3085,6 +3772,72 @@ COMMENT ON FUNCTION public.cancel_appointment_as_business(p_appointment_id uuid,
 
 
 --
+-- Name: cancel_appointment_as_platform(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.cancel_appointment_as_platform(p_appointment_id uuid, p_reason text) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_appointment public.appointments;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+begin
+  if v_actor is null or not (select private.platform_can('appointment.cancel')) then
+    raise exception 'annulation interne non autorisée'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=appointment_cancel_required';
+  end if;
+
+  if v_reason is null then
+    raise exception 'une annulation interne a besoin de son motif'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=reason_required';
+  end if;
+
+  select * into v_appointment from public.appointments where id = p_appointment_id for update;
+  if not found then
+    raise exception 'rendez-vous introuvable' using errcode = '42704';
+  end if;
+
+  if v_appointment.status = 'cancelled' then
+    return v_appointment;
+  end if;
+
+  if v_appointment.status not in ('pending', 'confirmed') then
+    raise exception 'ce rendez-vous ne peut plus être annulé' using errcode = '22023';
+  end if;
+
+  update public.appointments
+     set status = 'cancelled',
+         resolution = 'cancelled_by_business',
+         resolution_note = v_reason,
+         decided_at = now(),
+         decided_by = v_actor
+   where id = p_appointment_id
+  returning * into v_appointment;
+
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_cancelled', 'customer',
+    'Your appointment was cancelled', v_reason, 'booking_cancelled'
+  );
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'appointment_cancelled_by_platform', 'appointments', v_appointment.id,
+          jsonb_build_object('organization_id', v_appointment.organization_id, 'reason', v_reason));
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION cancel_appointment_as_platform(p_appointment_id uuid, p_reason text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.cancel_appointment_as_platform(p_appointment_id uuid, p_reason text) IS 'Annule un rendez-vous depuis la console interne. Le support est un support CLIENT autant que pro : c''est pour ça qu''il a ce geste, et pour ça qu''il est tracé — motif obligatoire, journal d''audit, notification au client. Ne remplace pas cancel_appointment_as_business, qui reste le geste du salon.';
+
+
+--
 -- Name: cancel_my_appointment(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3177,6 +3930,117 @@ $$;
 --
 
 COMMENT ON FUNCTION public.cancel_prospect_job(p_id uuid) IS 'Platform owner/admin only. Cancels a queued/retry/running job. No-op-safe: raises if the job is already terminal.';
+
+
+--
+-- Name: capture_field_prospect(public.prospect_type, text, text, text, text, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.capture_field_prospect(p_type public.prospect_type, p_canonical_name text, p_country text, p_city text, p_observation text, p_address_line text DEFAULT NULL::text, p_postal_code text DEFAULT NULL::text, p_phone text DEFAULT NULL::text, p_email text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+declare
+  v_actor uuid := (select auth.uid());
+  v_country text := upper(btrim(coalesce(p_country, '')));
+  v_city text := btrim(coalesce(p_city, ''));
+  v_city_key text;
+  v_name text := btrim(coalesce(p_canonical_name, ''));
+  v_observation text := nullif(btrim(coalesce(p_observation, '')), '');
+  v_prospect_id uuid;
+  v_existing uuid;
+begin
+  if v_actor is null or not (select private.platform_can('crm.field_capture')) then
+    raise exception 'saisie terrain non autorisée'
+      using errcode = '42501', detail = 'fadeup_field_capture_refusal=not_authorized';
+  end if;
+
+  if v_name = '' then
+    raise exception 'un prospect a besoin d''un nom'
+      using errcode = '22023', detail = 'fadeup_field_capture_refusal=name_required';
+  end if;
+
+  if v_country !~ '^[A-Z]{2}$' then
+    raise exception 'pays attendu au format ISO-2'
+      using errcode = '22023', detail = 'fadeup_field_capture_refusal=country_required';
+  end if;
+
+  v_city_key := (select private.platform_zone_key(v_city));
+  if v_city_key is null then
+    raise exception 'une fiche terrain a besoin de sa ville'
+      using errcode = '22023', detail = 'fadeup_field_capture_refusal=city_required';
+  end if;
+
+  -- Ce que le stagiaire a VU est la raison d'être de la fiche. Sans
+  -- observation, elle ne vaut pas mieux qu'une ligne scrapée.
+  if v_observation is null then
+    raise exception 'une fiche terrain a besoin de ce que vous avez observé'
+      using errcode = '22023', detail = 'fadeup_field_capture_refusal=observation_required';
+  end if;
+
+  -- Un rôle borné à ses zones ne saisit que dans ses zones.
+  if (select private.platform_is_zone_limited()) and not exists (
+    select 1
+    from public.platform_member_zones mz
+    join public.platform_zones z on z.id = mz.zone_id and z.is_active
+    where mz.user_id = v_actor and z.country = v_country and z.city_key = v_city_key
+  ) then
+    raise exception 'cette ville n''est pas dans vos zones'
+      using errcode = '42501', detail = 'fadeup_field_capture_refusal=outside_my_zones';
+  end if;
+
+  -- Pas de fusion automatique : si la fiche existe déjà dans cette ville, on
+  -- refuse en la nommant, et l'humain décide. Le rapprochement est le métier
+  -- de prospect_duplicates, pas d'un INSERT.
+  select p.id into v_existing
+  from public.prospects p
+  join public.prospect_locations pl on pl.prospect_id = p.id
+  where lower(btrim(p.canonical_name)) = lower(v_name)
+    and pl.country = v_country
+    and (select private.platform_zone_key(pl.city)) = v_city_key
+  limit 1;
+
+  if v_existing is not null then
+    raise exception 'ce prospect est déjà connu (%)', v_existing
+      using errcode = '23505', detail = 'fadeup_field_capture_refusal=prospect_already_known';
+  end if;
+
+  insert into public.prospects (
+    type, canonical_name, country, status,
+    phone_e164, email,
+    origin, field_captured_by, field_captured_at, field_observation
+  )
+  values (
+    p_type, v_name, v_country, 'discovered',
+    (select public.normalize_phone_number(p_phone, v_country)),
+    nullif(lower(btrim(coalesce(p_email, ''))), ''),
+    'field', v_actor, now(), v_observation
+  )
+  returning id into v_prospect_id;
+
+  insert into public.prospect_locations (prospect_id, is_primary, address_line, city, postal_code, country)
+  values (
+    v_prospect_id, true,
+    nullif(btrim(coalesce(p_address_line, '')), ''),
+    v_city,
+    nullif(btrim(coalesce(p_postal_code, '')), ''),
+    v_country
+  );
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'field_prospect_captured', 'prospects', v_prospect_id,
+          jsonb_build_object('country', v_country, 'city', v_city, 'type', p_type));
+
+  return v_prospect_id;
+end;
+$_$;
+
+
+--
+-- Name: FUNCTION capture_field_prospect(p_type public.prospect_type, p_canonical_name text, p_country text, p_city text, p_observation text, p_address_line text, p_postal_code text, p_phone text, p_email text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.capture_field_prospect(p_type public.prospect_type, p_canonical_name text, p_country text, p_city text, p_observation text, p_address_line text, p_postal_code text, p_phone text, p_email text) IS 'Enregistre un salon VU sur le terrain. Le prospect naît avec origin = ''field'', son auteur, sa date et son observation — c''est ce qui le distingue d''une fiche scrapée par Worker V2, et ce que le commercial doit savoir avant d''appeler. Un rôle borné à ses zones ne saisit que dans ses zones. Aucune fusion automatique : un doublon est refusé en le nommant. Tracé.';
 
 
 --
@@ -3331,6 +4195,76 @@ begin
   return new;
 end;
 $$;
+
+
+--
+-- Name: check_appointment_forced_overlap(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_appointment_forced_overlap() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+declare
+  v_range tstzrange;
+begin
+  -- Une annulation ou une absence libère : jamais bloquée.
+  if new.status in ('cancelled', 'no_show') then
+    return new;
+  end if;
+
+  -- Une ligne FORCÉE peut recouvrir n'importe quoi : c'est le sens du geste.
+  if new.overlap_forced_at is not null then
+    return new;
+  end if;
+
+  -- Une mise à jour qui ne déplace pas la ligne (statut, note, décision) et
+  -- qui n'était pas forcée avant n'a rien à vérifier — la ligne est déjà là.
+  if tg_op = 'UPDATE'
+     and new.starts_at = old.starts_at
+     and new.ends_at = old.ends_at
+     and new.barber_id is not distinct from old.barber_id
+     and new.buffer_before_minutes = old.buffer_before_minutes
+     and new.buffer_after_minutes = old.buffer_after_minutes
+     and old.overlap_forced_at is null then
+    return new;
+  end if;
+
+  -- Ce trigger passe AVANT set_appointment_blocked_range (ordre alphabétique
+  -- des triggers BEFORE) : la plage se calcule ici, tampons compris, comme
+  -- la contrainte la verra.
+  v_range := tstzrange(
+    new.starts_at - make_interval(mins => new.buffer_before_minutes),
+    new.ends_at + make_interval(mins => new.buffer_after_minutes),
+    '[)'
+  );
+
+  if exists (
+    select 1
+    from public.appointments a
+    where a.barber_id = new.barber_id
+      and a.id <> new.id
+      and a.status not in ('cancelled', 'no_show')
+      and a.overlap_forced_at is not null
+      and a.blocked_range && v_range
+  ) then
+    -- Même SQLSTATE et même motif nommé que la contrainte : pour le client,
+    -- c'est le même fait — ce créneau n'est pas libre.
+    raise exception 'that time is already taken by a forced appointment'
+      using errcode = '23P01',
+            detail = 'fadeup_booking_refusal=slot_conflict';
+  end if;
+
+  return new;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION check_appointment_forced_overlap(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.check_appointment_forced_overlap() IS 'OS-1 — BEFORE INSERT/UPDATE sur appointments : une ligne ORDINAIRE ne peut pas se poser sur une ligne FORCÉE du même barber (les lignes forcées sont hors de l''exclusion GiST ; sans ce trigger un créneau forcé serait une brèche). Une ligne forcée passe toujours.';
 
 
 --
@@ -3508,6 +4442,34 @@ begin
   return new;
 end;
 $$;
+
+
+--
+-- Name: check_customer_note_consistency(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_customer_note_consistency() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if not exists (
+    select 1 from public.customers c
+    where c.id = new.customer_id and c.organization_id = new.organization_id
+  ) then
+    raise exception 'customer_id must belong to the same organization_id as the note'
+      using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION check_customer_note_consistency(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.check_customer_note_consistency() IS 'Interdit une note rattachée à un client d''une autre organisation. Motif des triggers check_*_consistency du domaine.';
 
 
 --
@@ -4221,7 +5183,7 @@ declare
   v_row public.marketplace_withdrawal_requests;
 begin
   v_actor := (select auth.uid());
-  if v_actor is null or not (select private.is_platform_admin()) then
+  if v_actor is null or not (select private.platform_can('marketplace.withdraw')) then
     raise exception 'only FadeUp platform administrators can complete a withdrawal'
       using errcode = '42501';
   end if;
@@ -4409,6 +5371,15 @@ begin
     raise exception 'this request has already been answered' using errcode = '22023';
   end if;
 
+  -- P1PRO : une contre-proposition attend le client — le consentement a
+  -- changé de camp. Le salon peut toujours refuser, pas « accepter » à la
+  -- place du client.
+  if v_appointment.counter_proposed_at is not null then
+    raise exception 'a counter-proposal is awaiting the customer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=counter_pending';
+  end if;
+
   -- The accept-versus-expire race. The row is locked, so the sweep is either
   -- already done (status is no longer pending, caught above) or is waiting
   -- behind this lock and will find the row confirmed. This check closes the
@@ -4443,6 +5414,306 @@ COMMENT ON FUNCTION public.confirm_booking_request(p_appointment_id uuid) IS 'Ac
 
 
 --
+-- Name: counter_propose_booking_request(uuid, timestamp with time zone, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid DEFAULT NULL::uuid, p_note text DEFAULT NULL::text) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_barber_id uuid;
+  v_duration integer;
+  v_ends_at timestamptz;
+  v_timezone text;
+  v_ttl integer;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  if not (select private.can_manage_appointments(v_appointment.organization_id)) then
+    raise exception 'not authorized to manage this booking'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  if v_appointment.status <> 'pending' then
+    raise exception 'only a pending request can receive a counter-proposal'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=not_a_pending_request';
+  end if;
+
+  if v_appointment.expires_at is not null and v_appointment.expires_at <= now() then
+    raise exception 'this request has expired'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=request_expired';
+  end if;
+
+  if p_starts_at is null then
+    raise exception 'the proposed time is required'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=missing_time';
+  end if;
+
+  if p_starts_at <= now() then
+    raise exception 'the proposed time must be in the future'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=past_time';
+  end if;
+
+  v_barber_id := coalesce(p_barber_id, v_appointment.barber_id);
+
+  -- Même règle que reschedule_appointment : un autre professionnel doit
+  -- appartenir au salon et rester apte au service. Jamais cru sur parole.
+  if v_barber_id is distinct from v_appointment.barber_id then
+    if not exists (
+      select 1
+      from public.barbers b
+      join public.staff_profiles sp on sp.id = b.staff_profile_id
+      join public.barber_services bs on bs.barber_id = b.id and bs.service_id = v_appointment.service_id
+      where b.id = v_barber_id
+        and b.organization_id = v_appointment.organization_id
+        and b.is_bookable and sp.is_active and sp.is_public
+    ) then
+      raise exception 'that professional is not available for this service'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=barber_unavailable';
+    end if;
+  end if;
+
+  -- Durée depuis le SNAPSHOT de la demande, pas depuis le service du jour.
+  v_duration := (extract(epoch from (v_appointment.ends_at - v_appointment.starts_at)) / 60)::integer;
+  v_ends_at := p_starts_at + make_interval(mins => v_duration);
+
+  select l.timezone into v_timezone
+    from public.locations l where l.id = v_appointment.location_id;
+
+  -- Le créneau proposé doit être réellement proposable : dans les heures
+  -- d'ouverture ; le chevauchement est tranché par la contrainte d'exclusion
+  -- au moment de l'UPDATE (l'autorité, comme pour reschedule).
+  if not private.slot_is_within_hours(v_barber_id, v_appointment.location_id, p_starts_at, v_ends_at, v_timezone) then
+    raise exception 'proposed time is outside available hours'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=outside_hours';
+  end if;
+
+  select o.booking_request_ttl_minutes into v_ttl
+    from public.organizations o where o.id = v_appointment.organization_id;
+
+  -- Voie sanctionnée de déplacement (garde de colonnes LOT 11) — exactement
+  -- comme reschedule_appointment.
+  perform set_config('fadeup.appointment_reschedule', 'on', true);
+
+  -- Une seule instruction : la contrainte d'exclusion est l'autorité sur la
+  -- liberté du créneau proposé. La ligne pending déplacée RETIENT ce
+  -- créneau ; l'horaire d'origine est libéré. L'échéance redémarre :
+  -- least(horaire proposé, now() + TTL) — le trigger la re-plafonne.
+  update public.appointments
+    set starts_at = p_starts_at,
+        ends_at = v_ends_at,
+        barber_id = v_barber_id,
+        counter_proposed_at = now(),
+        counter_original_starts_at = coalesce(v_appointment.counter_original_starts_at, v_appointment.starts_at),
+        counter_note = nullif(btrim(coalesce(p_note, '')), ''),
+        expires_at = least(p_starts_at, now() + make_interval(mins => coalesce(v_ttl, 1440))),
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  -- Suffixe daté : une re-proposition est une NOUVELLE information — la clé
+  -- de dédoublonnage ne doit pas avaler la seconde notification.
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_counter_proposed', 'customer',
+    'A new time was proposed for your request',
+    v_appointment.counter_note, 'booking_counter_proposed',
+    ':' || to_char(now(), 'YYYYMMDDHH24MISS')
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.counter_propose_booking_request(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_note text) IS 'P1PRO — le salon propose un autre horaire pour une demande pending. Déplace la ligne sur le créneau proposé (retenu par l''exclusion), pose counter_proposed_at (le client répond), redémarre l''échéance : least(proposé, now()+TTL).';
+
+
+--
+-- Name: create_appointment_as_business(uuid, uuid, uuid, timestamp with time zone, text, text, text, text, boolean, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_appointment_as_business(p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text DEFAULT NULL::text, p_customer_email text DEFAULT NULL::text, p_notes text DEFAULT NULL::text, p_force boolean DEFAULT false, p_force_reason text DEFAULT NULL::text) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_organization_id uuid;
+  v_timezone text;
+  v_duration_minutes integer;
+  v_buffer_before_minutes integer;
+  v_buffer_after_minutes integer;
+  v_ends_at timestamptz;
+  v_appointment public.appointments;
+  v_force boolean := coalesce(p_force, false);
+  v_reason text := nullif(btrim(coalesce(p_force_reason, '')), '');
+  v_range tstzrange;
+  v_conflicts uuid[];
+begin
+  select l.organization_id, l.timezone into v_organization_id, v_timezone
+    from public.locations l
+    where l.id = p_location_id and l.is_active;
+  if not found then
+    raise exception 'location is not available for booking'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=location_unavailable';
+  end if;
+
+  if not (select private.can_manage_appointments(v_organization_id)) then
+    raise exception 'not authorized to create appointments for this organization'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  if v_force then
+    if not (select private.can_force_overlap(v_organization_id)) then
+      raise exception 'not authorized to force an overlap'
+        using errcode = '42501',
+              detail = 'fadeup_booking_refusal=force_not_allowed';
+    end if;
+    if v_reason is null or char_length(v_reason) > 200 then
+      raise exception 'a reason (200 characters max) is required to force an overlap'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=force_reason_required';
+    end if;
+  end if;
+
+  if btrim(coalesce(p_customer_name, '')) = '' then
+    raise exception 'customer_name is required'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=missing_name';
+  end if;
+
+  if p_starts_at is null then
+    raise exception 'starts_at is required'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=missing_time';
+  end if;
+
+  if p_starts_at <= now() then
+    raise exception 'starts_at must be in the future'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=past_time';
+  end if;
+
+  select s.duration_minutes, s.buffer_before_minutes, s.buffer_after_minutes
+    into v_duration_minutes, v_buffer_before_minutes, v_buffer_after_minutes
+    from public.services s
+    where s.id = p_service_id and s.organization_id = v_organization_id and s.is_active
+      and exists (select 1 from public.service_locations sl where sl.service_id = s.id and sl.location_id = p_location_id);
+  if not found then
+    raise exception 'service is not available for booking at this location'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=service_unavailable';
+  end if;
+
+  -- Même aptitude que le tunnel public : le barber fait ce service, ici.
+  -- (sp.is_public n'est PAS exigé : un barber non publié reste réservable
+  -- par le comptoir — c'est le sens d'une réservation manuelle.)
+  if not exists (
+    select 1
+    from public.barbers b
+    join public.staff_profiles sp on sp.id = b.staff_profile_id
+    join public.barber_services bs on bs.barber_id = b.id and bs.service_id = p_service_id
+    where b.id = p_barber_id
+      and b.organization_id = v_organization_id
+      and b.is_bookable
+      and sp.is_active
+      and sp.location_id = p_location_id
+  ) then
+    raise exception 'barber is not available for this service at this location'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=barber_unavailable';
+  end if;
+
+  v_ends_at := p_starts_at + make_interval(mins => v_duration_minutes);
+
+  if not private.slot_is_within_hours(p_barber_id, p_location_id, p_starts_at, v_ends_at, v_timezone) then
+    raise exception 'requested time is outside available hours'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=outside_hours';
+  end if;
+
+  -- Un forçage ne se pose que sur un conflit RÉEL (même règle que reschedule).
+  if v_force then
+    v_range := tstzrange(
+      p_starts_at - make_interval(mins => v_buffer_before_minutes),
+      v_ends_at + make_interval(mins => v_buffer_after_minutes),
+      '[)'
+    );
+    select coalesce(array_agg(a.id order by a.starts_at), '{}'::uuid[]) into v_conflicts
+    from public.appointments a
+    where a.barber_id = p_barber_id
+      and a.status not in ('cancelled', 'no_show')
+      and a.blocked_range && v_range;
+    if coalesce(array_length(v_conflicts, 1), 0) = 0 then
+      v_force := false;
+    end if;
+  end if;
+
+  -- created_by = le membre du comptoir ; booked_by_user_id reste NULL (ce
+  -- n'est pas le client qui a réservé — le plafond de 5 ne le concerne pas).
+  insert into public.appointments (
+    organization_id, location_id, barber_id, service_id,
+    customer_name, customer_phone, customer_email,
+    starts_at, ends_at, buffer_before_minutes, buffer_after_minutes,
+    status, notes, created_by, booked_by_user_id,
+    decided_at, decided_by,
+    overlap_forced_at, overlap_forced_by, overlap_forced_reason
+  )
+  values (
+    v_organization_id, p_location_id, p_barber_id, p_service_id,
+    btrim(p_customer_name),
+    nullif(btrim(coalesce(p_customer_phone, '')), ''),
+    nullif(btrim(coalesce(p_customer_email, '')), ''),
+    p_starts_at, v_ends_at, v_buffer_before_minutes, v_buffer_after_minutes,
+    'confirmed', nullif(btrim(coalesce(p_notes, '')), ''), (select auth.uid()), null,
+    now(), (select auth.uid()),
+    case when v_force then now() else null end,
+    case when v_force then (select auth.uid()) else null end,
+    case when v_force then v_reason else null end
+  )
+  returning * into v_appointment;
+
+  if v_force then
+    insert into public.appointment_overlap_forces
+      (organization_id, appointment_id, barber_id, action, forced_by, reason, starts_at, ends_at, conflicting_appointment_ids)
+    values
+      (v_organization_id, v_appointment.id, p_barber_id, 'create', (select auth.uid()),
+       v_reason, v_appointment.starts_at, v_appointment.ends_at, v_conflicts);
+  end if;
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_appointment_as_business(p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text, p_force boolean, p_force_reason text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_appointment_as_business(p_location_id uuid, p_barber_id uuid, p_service_id uuid, p_starts_at timestamp with time zone, p_customer_name text, p_customer_phone text, p_customer_email text, p_notes text, p_force boolean, p_force_reason text) IS 'OS-1 — réservation MANUELLE par le comptoir (owner/manager/receptionist) : statut confirmé, durée et tampons du service, gardes du tunnel public (lieu, service, barber apte, horaires, futur). `p_force` (owner/manager, motif obligatoire) pose la trace de chevauchement forcé quand un conflit réel existe. Les blocages de temps ne se forcent pas. Motifs nommés fadeup_booking_refusal=…';
+
+
+--
 -- Name: create_external_professional(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4471,7 +5742,7 @@ begin
   -- the check unverifiable from any test harness. Requiring the absence of a
   -- session as well makes it both stricter and testable.
   if not (
-    (select private.is_platform_admin())
+    (select private.platform_can('marketplace.publish'))
     or ((select auth.uid()) is null and session_user = 'prospect_worker')
   ) then
     raise exception 'only FadeUp platform staff or the acquisition worker can create external profiles'
@@ -4706,20 +5977,17 @@ declare
   v_raw_token text;
   v_id uuid;
   v_expires_at timestamptz;
-  v_is_owner boolean;
 begin
+  -- SEUL LE FONDATEUR GÈRE LES RÔLES INTERNES. Avant PLAT-1, un admin pouvait
+  -- inviter un support ; c'est précisément ce que le fondateur a retiré, pour
+  -- garder le contrôle du périmètre.
+  if (select auth.uid()) is null or not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur invite un membre interne'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
+  end if;
+
   if p_role = 'platform_owner' then
     raise exception 'platform_owner cannot be granted through an invitation';
-  end if;
-
-  v_is_owner := (select private.is_platform_owner());
-
-  if p_role = 'platform_admin' and not v_is_owner then
-    raise exception 'only a platform owner may invite a platform_admin';
-  end if;
-
-  if p_role = 'platform_support' and not (select private.is_platform_admin()) then
-    raise exception 'only a platform owner or platform_admin may invite platform_support';
   end if;
 
   v_raw_token := encode(extensions.gen_random_bytes(32), 'hex');
@@ -4736,7 +6004,8 @@ begin
   returning platform_invitations.id into v_id;
 
   insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
-  values ((select auth.uid()), 'platform_invitation_created', 'platform_invitations', v_id, jsonb_build_object('role', p_role));
+  values ((select auth.uid()), 'platform_invitation_created', 'platform_invitations', v_id,
+          jsonb_build_object('role', p_role));
 
   return query select v_id, v_raw_token, v_expires_at;
 end;
@@ -4747,7 +6016,102 @@ $$;
 -- Name: FUNCTION create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval) IS 'Creates a platform_admin/platform_support invitation and returns the raw token once. platform_admin invites require platform_owner; platform_support invites require platform_owner or platform_admin.';
+COMMENT ON FUNCTION public.create_platform_invitation(p_role public.platform_role, p_invited_email text, p_expires_in interval) IS 'Crée une invitation interne à usage unique. FONDATEUR SEUL depuis PLAT-1 (droit internal_roles.manage) : un admin ne crée plus un support. platform_owner reste hors invitation (contrainte platform_invitations_role_not_owner). Tracé.';
+
+
+--
+-- Name: platform_zones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_zones (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    country text NOT NULL,
+    city text NOT NULL,
+    city_key text NOT NULL,
+    postal_code_hint text,
+    label text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT platform_zones_city_key_not_blank CHECK ((btrim(city_key) <> ''::text)),
+    CONSTRAINT platform_zones_city_not_blank CHECK ((btrim(city) <> ''::text)),
+    CONSTRAINT platform_zones_country_iso CHECK ((country ~ '^[A-Z]{2}$'::text)),
+    CONSTRAINT platform_zones_label_not_blank CHECK ((btrim(label) <> ''::text))
+);
+
+ALTER TABLE ONLY public.platform_zones FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE platform_zones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.platform_zones IS 'Une zone commerciale FadeUp : un couple (pays ISO-2, ville normalisée). Motif du découpage, documenté en tête de migration : la base ne porte aucune autre géographie utilisable — pas de PostGIS, pas de géocodeur, pas de table de communes, et les coordonnées sont saisies à la main. La ville est ce qu''un stagiaire sait dire de son terrain. Le code postal est une INDICATION (postal_code_hint), pas l''identité de la zone : une ville en porte plusieurs.';
+
+
+--
+-- Name: COLUMN platform_zones.city_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.platform_zones.city_key IS 'La ville normalisée par private.platform_zone_key() — minuscules, sans accents, sans espaces de bord. C''est elle qui porte l''unicité, pour que « Saint-Étienne » et « saint-etienne » soient la même zone.';
+
+
+--
+-- Name: COLUMN platform_zones.postal_code_hint; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.platform_zones.postal_code_hint IS 'Indication pour l''humain qui assigne la zone. Jamais utilisée pour décider ce qu''un stagiaire voit.';
+
+
+--
+-- Name: create_platform_zone(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_platform_zone(p_country text, p_city text, p_label text DEFAULT NULL::text, p_postal_code_hint text DEFAULT NULL::text) RETURNS public.platform_zones
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_key text;
+  v_zone public.platform_zones;
+begin
+  if not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur définit les zones'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
+  end if;
+
+  v_key := (select private.platform_zone_key(p_city));
+  if v_key is null then
+    raise exception 'une zone a besoin d''une ville' using errcode = '22023';
+  end if;
+
+  insert into public.platform_zones (country, city, city_key, label, postal_code_hint, created_by)
+  values (
+    upper(btrim(coalesce(p_country, ''))),
+    btrim(p_city),
+    v_key,
+    coalesce(nullif(btrim(coalesce(p_label, '')), ''), btrim(p_city)),
+    nullif(btrim(coalesce(p_postal_code_hint, '')), ''),
+    (select auth.uid())
+  )
+  on conflict (country, city_key) do update set is_active = true, updated_at = now()
+  returning * into v_zone;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values ((select auth.uid()), 'platform_zone_created', 'platform_zones', v_zone.id,
+          jsonb_build_object('country', v_zone.country, 'city', v_zone.city));
+
+  return v_zone;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_platform_zone(p_country text, p_city text, p_label text, p_postal_code_hint text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_platform_zone(p_country text, p_city text, p_label text, p_postal_code_hint text) IS 'Crée une zone (pays ISO-2 + ville), ou réactive celle qui existe déjà pour ce couple. FONDATEUR SEUL. Tracé.';
 
 
 --
@@ -4765,11 +6129,16 @@ CREATE TABLE public.posts (
     like_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    hidden_at timestamp with time zone,
+    hidden_by uuid,
+    hidden_reason text,
     CONSTRAINT posts_attachment_professional_only CHECK (((author_kind = 'professional'::text) OR (posted_at_organization_id IS NULL))),
     CONSTRAINT posts_author_consistency CHECK ((((author_kind = 'professional'::text) AND (professional_id IS NOT NULL) AND (organization_id IS NULL)) OR ((author_kind = 'organization'::text) AND (organization_id IS NOT NULL) AND (professional_id IS NULL)))),
     CONSTRAINT posts_author_kind_valid CHECK ((author_kind = ANY (ARRAY['professional'::text, 'organization'::text]))),
     CONSTRAINT posts_caption_length CHECK (((caption IS NULL) OR (char_length(caption) <= 2200))),
+    CONSTRAINT posts_hidden_reason_valid CHECK (((hidden_reason IS NULL) OR (hidden_reason = ANY (ARRAY['fraud'::text, 'abusive_content'::text, 'personal_data'::text, 'hate_speech'::text, 'conflict_of_interest'::text])))),
     CONSTRAINT posts_like_count_nonnegative CHECK ((like_count >= 0)),
+    CONSTRAINT posts_moderation_stamp_complete CHECK ((((hidden_at IS NULL) AND (hidden_by IS NULL) AND (hidden_reason IS NULL)) OR ((hidden_at IS NOT NULL) AND (hidden_reason IS NOT NULL)))),
     CONSTRAINT posts_visibility_valid CHECK ((visibility = ANY (ARRAY['public'::text, 'followers'::text, 'hidden'::text])))
 );
 
@@ -4795,6 +6164,13 @@ COMMENT ON COLUMN public.posts.posted_at_organization_id IS 'Rattachement au sal
 --
 
 COMMENT ON COLUMN public.posts.visibility IS 'public = lisible de tous (y compris anon, via RPC) ; followers = réservé aux abonnés du profil auteur ; hidden = visible du seul auteur.';
+
+
+--
+-- Name: COLUMN posts.hidden_reason; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.posts.hidden_reason IS 'PLAT-2 : le motif de modération, pris dans le MÊME vocabulaire fermé que reviews.moderation_reason. « La note est mauvaise » n''y est pas représentable.';
 
 
 --
@@ -5089,6 +6465,180 @@ COMMENT ON FUNCTION public.create_prospect_discovery_job(p_job_type text, p_payl
 
 
 --
+-- Name: create_service(uuid, text, integer, integer, text, uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_service(p_organization_id uuid, p_name text, p_duration_minutes integer, p_price_cents integer DEFAULT NULL::integer, p_description text DEFAULT NULL::text, p_category_id uuid DEFAULT NULL::uuid, p_location_ids uuid[] DEFAULT NULL::uuid[]) RETURNS public.services
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_can_price boolean;
+  v_name text := nullif(btrim(coalesce(p_name, '')), '');
+  v_row public.services;
+  v_location_id uuid;
+begin
+  select ac.can_price into v_can_price
+  from private.assert_catalog_author(p_organization_id, p_price_cents) ac;
+
+  if v_name is null then
+    raise exception 'a service needs a name'
+      using errcode = '22023', detail = 'fadeup_service_refusal=name_required';
+  end if;
+
+  if p_duration_minutes is null or p_duration_minutes <= 0 then
+    raise exception 'a service needs a positive duration'
+      using errcode = '22023', detail = 'fadeup_service_refusal=duration_required';
+  end if;
+
+  if p_category_id is not null and not exists (
+    select 1 from public.service_categories c
+    where c.id = p_category_id and c.organization_id = p_organization_id
+  ) then
+    raise exception 'category does not belong to this organization'
+      using errcode = '22023', detail = 'fadeup_service_refusal=category_foreign';
+  end if;
+
+  if v_can_price and p_price_cents is null then
+    raise exception 'a service created by an owner or manager needs a price'
+      using errcode = '22023', detail = 'fadeup_service_refusal=price_required';
+  end if;
+
+  if p_price_cents is not null and p_price_cents < 0 then
+    raise exception 'a price cannot be negative'
+      using errcode = '22023', detail = 'fadeup_service_refusal=price_negative';
+  end if;
+
+  insert into public.services (
+    organization_id, name, description, category_id,
+    duration_minutes, price_cents, is_active, price_pending
+  )
+  values (
+    p_organization_id, v_name, nullif(btrim(coalesce(p_description, '')), ''), p_category_id,
+    p_duration_minutes,
+    coalesce(p_price_cents, 0),
+    v_can_price,              -- un brouillon de barber naît inactif
+    not v_can_price
+  )
+  returning * into v_row;
+
+  -- SANS ligne service_locations, le service n'est réservable nulle part :
+  -- ni le tunnel public, ni get_available_slots, ni l'agenda ne le voient.
+  -- NULL vaut donc « partout », jamais « nulle part ».
+  if p_location_ids is null then
+    insert into public.service_locations (organization_id, service_id, location_id)
+    select p_organization_id, v_row.id, l.id
+    from public.locations l
+    where l.organization_id = p_organization_id
+    on conflict do nothing;
+  else
+    if exists (
+      select 1 from unnest(p_location_ids) as requested(location_id)
+      where not exists (
+        select 1 from public.locations l
+        where l.id = requested.location_id and l.organization_id = p_organization_id
+      )
+    ) then
+      raise exception 'every location must belong to this organization'
+        using errcode = '22023', detail = 'fadeup_service_refusal=location_foreign';
+    end if;
+    foreach v_location_id in array p_location_ids loop
+      insert into public.service_locations (organization_id, service_id, location_id)
+      values (p_organization_id, v_row.id, v_location_id)
+      on conflict do nothing;
+    end loop;
+  end if;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_service(p_organization_id uuid, p_name text, p_duration_minutes integer, p_price_cents integer, p_description text, p_category_id uuid, p_location_ids uuid[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_service(p_organization_id uuid, p_name text, p_duration_minutes integer, p_price_cents integer, p_description text, p_category_id uuid, p_location_ids uuid[]) IS 'Crée un service. owner/manager : prix obligatoire, service actif. barber : AUCUN prix accepté (refus nommé si le champ est présent), le service naît brouillon — inactif, price_pending — donc absent de toute surface publique jusqu''à ce qu''un gestionnaire le tarife. p_location_ids à NULL = TOUS les établissements : sans ligne service_locations un service n''est réservable nulle part, et ce défaut évite le service fantôme.';
+
+
+--
+-- Name: service_categories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.service_categories (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    name text NOT NULL,
+    display_order integer DEFAULT 0 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT service_categories_name_not_blank CHECK ((btrim(name) <> ''::text))
+);
+
+ALTER TABLE ONLY public.service_categories FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE service_categories; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.service_categories IS 'Optional grouping for services (e.g. "Haircuts", "Beard", "Color"). A service without a category is still valid.';
+
+
+--
+-- Name: create_service_category(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_service_category(p_organization_id uuid, p_name text) RETURNS public.service_categories
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_name text := nullif(btrim(coalesce(p_name, '')), '');
+  v_row public.service_categories;
+begin
+  if p_organization_id is null
+     or not (select private.has_org_role(p_organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to change this catalogue'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  if v_name is null then
+    raise exception 'a category needs a name'
+      using errcode = '22023', detail = 'fadeup_service_refusal=name_required';
+  end if;
+
+  select * into v_row
+  from public.service_categories c
+  where c.organization_id = p_organization_id
+    and lower(btrim(c.name)) = lower(v_name)
+  limit 1;
+
+  if v_row.id is not null then
+    return v_row;      -- idempotent : deux clics ne font pas deux catégories
+  end if;
+
+  insert into public.service_categories (organization_id, name, display_order)
+  values (p_organization_id, v_name,
+          coalesce((select max(c.display_order) + 1 from public.service_categories c
+                    where c.organization_id = p_organization_id), 0))
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION create_service_category(p_organization_id uuid, p_name text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_service_category(p_organization_id uuid, p_name text) IS 'Crée (ou retrouve) une catégorie de services. Idempotent sur le nom, insensible à la casse : deux clics ne font pas deux catégories.';
+
+
+--
 -- Name: customer_profiles_issue_passport(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5108,6 +6658,74 @@ $$;
 --
 
 COMMENT ON FUNCTION public.customer_profiles_issue_passport() IS 'AFTER INSERT on customer_profiles. Becoming a FadeUp customer IS having a Fade Passport (Constitution §2.2) — there is no "Get Passport" action to take, and no state in which a registered customer is missing one.';
+
+
+--
+-- Name: decline_booking_counter_proposal(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) RETURNS public.appointments
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_appointment public.appointments;
+  v_is_customer boolean;
+begin
+  select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
+  if not found then
+    raise exception 'appointment not found'
+      using errcode = '42704',
+            detail = 'fadeup_booking_refusal=appointment_not_found';
+  end if;
+
+  v_is_customer := coalesce(v_appointment.customer_id in (
+    select c.id from public.customers c where c.user_id = (select auth.uid())
+  ), false);
+
+  if not v_is_customer then
+    raise exception 'not authorized to answer this proposal'
+      using errcode = '42501',
+            detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  if v_appointment.status = 'cancelled' and v_appointment.resolution = 'cancelled_by_customer' then
+    return v_appointment;
+  end if;
+
+  if v_appointment.status <> 'pending' or v_appointment.counter_proposed_at is null then
+    raise exception 'no counter-proposal is awaiting an answer'
+      using errcode = '22023',
+            detail = 'fadeup_booking_refusal=no_counter_pending';
+  end if;
+
+  -- Le salon avait déjà dit non à l'horaire d'origine : refuser la
+  -- proposition clôt la demande. cancelled libère le créneau (prédicat
+  -- d'exclusion intact) ; la résolution dit QUI a tranché.
+  update public.appointments
+    set status = 'cancelled',
+        resolution = 'cancelled_by_customer',
+        decided_at = now(),
+        decided_by = (select auth.uid())
+    where id = p_appointment_id
+    returning * into v_appointment;
+
+  perform private.emit_booking_notification(
+    v_appointment, 'booking_cancelled', 'business',
+    'Proposed time declined',
+    v_appointment.customer_name, null, ':counter-decline'
+  );
+
+  return v_appointment;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION decline_booking_counter_proposal(p_appointment_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.decline_booking_counter_proposal(p_appointment_id uuid) IS 'P1PRO — le client refuse le créneau contre-proposé : la demande se clôt (cancelled / cancelled_by_customer), le salon est notifié.';
 
 
 --
@@ -5169,6 +6787,172 @@ COMMENT ON FUNCTION public.decline_booking_request(p_appointment_id uuid, p_note
 
 
 --
+-- Name: delete_barber_as_platform(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_barber_as_platform(p_barber_id uuid, p_reason text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_org uuid;
+  v_staff uuid;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+begin
+  if v_actor is null or not (select private.platform_can('barber.delete')) then
+    raise exception 'seul le fondateur supprime un barber'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=barber_delete_required';
+  end if;
+
+  if v_reason is null then
+    raise exception 'une suppression a besoin de son motif' using errcode = '22023';
+  end if;
+
+  select organization_id, staff_profile_id into v_org, v_staff
+  from public.barbers where id = p_barber_id for update;
+
+  if v_org is null then
+    raise exception 'barber introuvable' using errcode = '42704';
+  end if;
+
+  -- appointments.barber_id est ON DELETE RESTRICT : un barber qui a servi ne
+  -- s'efface pas, sinon l'historique de rendez-vous partirait avec lui. On
+  -- refuse en le nommant plutôt que de laisser remonter une violation de clé.
+  if exists (select 1 from public.appointments where barber_id = p_barber_id) then
+    raise exception 'ce barber a un historique de rendez-vous : désactivez-le (offboard_barber) plutôt que de le supprimer'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=barber_has_history';
+  end if;
+
+  delete from public.barbers where id = p_barber_id;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'barber_deleted_by_platform', 'barbers', p_barber_id,
+          jsonb_build_object('organization_id', v_org, 'staff_profile_id', v_staff, 'reason', v_reason));
+end;
+$$;
+
+
+--
+-- Name: FUNCTION delete_barber_as_platform(p_barber_id uuid, p_reason text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.delete_barber_as_platform(p_barber_id uuid, p_reason text) IS 'Supprime définitivement un barber. FONDATEUR SEUL — un admin fait tout, sauf ça. Refuse si le barber porte un historique de rendez-vous : la base l''interdit déjà (ON DELETE RESTRICT), la RPC le dit clairement et renvoie vers offboard_barber. Tracé, motif obligatoire.';
+
+
+--
+-- Name: delete_customer_note(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_customer_note(p_note_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_note public.customer_notes;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=anonymous';
+  end if;
+
+  select * into v_note from public.customer_notes n where n.id = p_note_id;
+
+  if v_note.id is null
+     or not (select private.is_org_member(v_note.organization_id))
+     or not (
+       v_note.author_user_id is not distinct from v_actor
+       or (select private.has_org_role(v_note.organization_id,
+             array['owner', 'manager']::public.membership_role[]))
+     ) then
+    raise exception 'not authorized to delete this note'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=not_authorized';
+  end if;
+
+  delete from public.customer_notes n where n.id = p_note_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION delete_customer_note(p_note_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.delete_customer_note(p_note_id uuid) IS 'Supprime une note. L''auteur, ou owner/manager. Une note n''est pas un historique commercial : elle est effaçable, et c''est aussi ce qui permet de répondre à un droit d''effacement.';
+
+
+--
+-- Name: delete_my_account(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_my_account() RETURNS TABLE(erasure_id uuid, erased_at timestamp with time zone, scope jsonb)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_user_id uuid;
+  v_blockers jsonb;
+  v_scope jsonb;
+  v_id uuid;
+  v_at timestamptz;
+begin
+  v_user_id := auth.uid();
+
+  -- LE MOTIF NUL, traité en tête : pas de session, pas d'effacement, et un
+  -- refus nommé plutôt qu'un succès vide sur zéro ligne.
+  if v_user_id is null then
+    raise exception 'fadeup_erasure_refusal=not_authenticated'
+      using errcode = '42501';
+  end if;
+
+  v_blockers := private.account_erasure_blockers(v_user_id);
+
+  if (v_blockers ->> 'memberships')::int > 0
+     or (v_blockers ->> 'platform_member')::int > 0
+     or (v_blockers ->> 'professional')::int > 0
+     or (v_blockers ->> 'staff_profiles')::int > 0 then
+    raise exception 'fadeup_erasure_refusal=business_account'
+      using errcode = '42501',
+            detail = v_blockers::text,
+            hint = 'Un compte qui fait tourner une organisation ne peut pas être effacé en libre-service : sa suppression orphelinerait l''organisation, son personnel et les rendez-vous de ses clients. Transférez la propriété, puis recommencez.';
+  end if;
+
+  if (v_blockers ->> 'active_queue_entries')::int > 0
+     or (v_blockers ->> 'future_appointments')::int > 0 then
+    raise exception 'fadeup_erasure_refusal=active_commitments'
+      using errcode = '42501',
+            detail = v_blockers::text,
+            hint = 'Quittez la file et annulez vos rendez-vous à venir d''abord : les effacer laisserait au salon un créneau tenu par un client injoignable.';
+  end if;
+
+  if (v_blockers ->> 'storage_objects')::int > 0 then
+    raise exception 'fadeup_erasure_refusal=media_not_purged'
+      using errcode = '42501',
+            detail = v_blockers::text,
+            hint = 'Vos photos doivent être supprimées par l''API Storage, qui efface le fichier et pas seulement sa ligne. L''application le fait avant d''appeler cette RPC ; ce refus signifie qu''elle a échoué.';
+  end if;
+
+  v_scope := private.erase_customer_account(v_user_id);
+
+  insert into public.account_erasure_log (actor_kind, requested_via, account_kind, scope)
+  values ('self', 'delete_my_account', 'customer', v_scope)
+  returning public.account_erasure_log.id, public.account_erasure_log.erased_at
+  into v_id, v_at;
+
+  return query select v_id, v_at, v_scope;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION delete_my_account(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.delete_my_account() IS 'Supprime le compte de l''appelant, IMMÉDIATEMENT ET DÉFINITIVEMENT — aucune fenêtre d''annulation (justification : en-tête de la migration 20260911160200, §5). Sans paramètre : la cible est toujours auth.uid(), il n''y a rien à forger. Anonymise l''historique du salon plutôt que de le supprimer, garde les avis publiés sans leur auteur, et efface tout le reste. Refuse, avec un motif nommé (fadeup_erasure_refusal=…), un compte d''entreprise, un compte engagé (file en cours ou rendez-vous à venir) et un compte dont les photos n''ont pas encore été purgées par l''API Storage. Rend un reçu (erasure_id) et le périmètre chiffré.';
+
+
+--
 -- Name: delete_post(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5189,6 +6973,59 @@ $$;
 
 
 --
+-- Name: delete_service(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_service(p_service_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_appointments integer;
+  v_queue integer;
+  v_samples integer;
+  v_posts integer;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null
+     or not (select private.has_org_role(v_service.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to delete this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  select count(*) into v_appointments from public.appointments a where a.service_id = p_service_id;
+  select count(*) into v_queue       from public.queue_entries q where q.service_id = p_service_id;
+  select count(*) into v_samples     from public.service_duration_samples d where d.service_id = p_service_id;
+  select count(*) into v_posts       from public.post_services ps where ps.service_id = p_service_id;
+
+  -- La clé étrangère des rendez-vous est déjà en RESTRICT ; les entrées de
+  -- file sont en SET NULL et les mesures de durée en CASCADE. Sans ce refus,
+  -- supprimer un service effacerait en silence ce que FadeUp a appris de sa
+  -- durée réelle, et détacherait un passage de file de sa prestation.
+  if v_appointments + v_queue + v_samples + v_posts > 0 then
+    raise exception 'this service has history and cannot be deleted; archive it instead'
+      using errcode = '23503',
+            detail = format('fadeup_service_refusal=has_history appointments=%s queue=%s samples=%s posts=%s',
+                            v_appointments, v_queue, v_samples, v_posts),
+            hint = 'Archivez le service : un rendez-vous passé doit garder sa prestation.';
+  end if;
+
+  delete from public.services s where s.id = p_service_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION delete_service(p_service_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.delete_service(p_service_id uuid) IS 'Supprime définitivement un service NEUF, sans aucun historique. Dès qu''un rendez-vous, un passage de file, une mesure de durée ou une publication le référence, la RPC refuse en le disant et renvoie vers l''archivage.';
+
+
+--
 -- Name: platform_support_sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5201,6 +7038,8 @@ CREATE TABLE public.platform_support_sessions (
     reason text,
     started_at timestamp with time zone DEFAULT now() NOT NULL,
     ended_at timestamp with time zone,
+    expires_at timestamp with time zone DEFAULT (now() + '00:30:00'::interval) NOT NULL,
+    CONSTRAINT platform_support_sessions_expiry_after_start CHECK ((expires_at > started_at)),
     CONSTRAINT platform_support_sessions_target_type_valid CHECK ((target_type = ANY (ARRAY['organization'::text, 'barber'::text])))
 );
 
@@ -5212,6 +7051,13 @@ ALTER TABLE ONLY public.platform_support_sessions FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.platform_support_sessions IS 'Explicit, audited "viewing organization X for support" context — drives the persistent support-view banner. Does not itself grant any read access beyond what is_platform_admin() already has; see this migration''s header.';
+
+
+--
+-- Name: COLUMN platform_support_sessions.expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.platform_support_sessions.expires_at IS 'Échéance de la session, trente minutes par défaut. Motif : un dépannage réel dure entre cinq et quinze minutes ; trente laisse le temps d''un appel difficile et ferme la session avant l''heure de travail suivante. Au-delà, le bandeau disparaît et les lectures redeviennent ordinaires — on RE-ENTRE, ce qui laisse une seconde trace, plutôt que de prolonger sans trace.';
 
 
 --
@@ -5986,6 +7832,141 @@ COMMENT ON FUNCTION public.expire_pending_appointments(p_limit integer) IS 'Tran
 
 
 --
+-- Name: export_my_data(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.export_my_data() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_user_id uuid;
+  v_customer_ids uuid[];
+  v_base jsonb;
+begin
+  v_user_id := auth.uid();
+
+  if v_user_id is null then
+    raise exception 'fadeup_export_refusal=not_authenticated'
+      using errcode = '42501';
+  end if;
+
+  select array_remove(array_agg(c.id), null) into v_customer_ids
+  from public.customers c where c.user_id = v_user_id;
+
+  v_base := jsonb_build_object(
+    'exported_at', to_jsonb(now()),
+    'account', (
+      select to_jsonb(x) from (
+        select u.email::text as email, u.phone::text as phone,
+               u.created_at, u.last_sign_in_at
+        from auth.users u where u.id = v_user_id) x),
+    'profile', (
+      select to_jsonb(x) from (
+        select cp.display_name, cp.phone, cp.email, cp.haircut_frequency,
+               cp.gender, cp.style_preference, cp.style_notes,
+               cp.appointment_preference, cp.onboarding_completed_at,
+               cp.created_at
+        from public.customer_profiles cp where cp.user_id = v_user_id) x),
+    'account_profile', (
+      select to_jsonb(x) from (
+        select p.full_name, p.avatar_url, p.locale, p.theme
+        from public.profiles p where p.id = v_user_id) x),
+    'passport', (
+      select to_jsonb(x) from (
+        select cpp.passport_number, cpp.issued_at, cpp.usual_haircut,
+               cpp.fade_type, cpp.side_length, cpp.top_length,
+               cpp.beard_preferences, cpp.preferences_notes
+        from public.customer_passports cpp where cpp.user_id = v_user_id) x),
+    'passport_photos', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select ph.storage_path, ph.caption, ph.created_at
+        from public.customer_passport_photos ph
+        where ph.user_id = v_user_id order by ph.created_at) x), '[]'::jsonb),
+    'appointments', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select a.starts_at, a.ends_at, a.status, a.notes,
+               a.customer_name, a.customer_phone, a.customer_email,
+               o.name as organization_name, s.name as service_name
+        from public.appointments a
+        join public.organizations o on o.id = a.organization_id
+        left join public.services s on s.id = a.service_id
+        where a.booked_by_user_id = v_user_id
+           or (v_customer_ids is not null and a.customer_id = any(v_customer_ids))
+        order by a.starts_at desc) x), '[]'::jsonb),
+    'queue_entries', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select q.created_at, q.status, q.customer_name, q.customer_phone,
+               q.notes, o.name as organization_name
+        from public.queue_entries q
+        join public.organizations o on o.id = q.organization_id
+        where q.booked_by_user_id = v_user_id
+           or (v_customer_ids is not null and q.customer_id = any(v_customer_ids))
+        order by q.created_at desc) x), '[]'::jsonb),
+    'reviews', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select r.created_at, r.rating, r.comment, r.reviewer_display_name,
+               r.status, o.name as organization_name
+        from public.reviews r
+        join public.organizations o on o.id = r.organization_id
+        where r.customer_user_id = v_user_id
+        order by r.created_at desc) x), '[]'::jsonb),
+    'followed_organizations', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select o.name, o.slug, f.followed_at
+        from public.organization_follows f
+        join public.organizations o on o.id = f.organization_id
+        where f.follower_user_id = v_user_id and f.is_following
+        order by f.followed_at desc) x), '[]'::jsonb),
+    'followed_professionals', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select p.display_name, p.handle, f.followed_at
+        from public.professional_follows f
+        join public.professionals p on p.id = f.professional_id
+        where f.follower_user_id = v_user_id and f.state = 'following'
+        order by f.followed_at desc) x), '[]'::jsonb),
+    'favorites', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select o.name as organization_name, cf.created_at
+        from public.customer_favorites cf
+        join public.organizations o on o.id = cf.organization_id
+        where cf.user_id = v_user_id order by cf.created_at desc) x), '[]'::jsonb),
+    'notifications', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select n.created_at, n.type, n.title, n.body, n.read_at
+        from public.notifications n
+        where n.user_id = v_user_id order by n.created_at desc) x), '[]'::jsonb),
+    'shop_records', coalesce((
+      select jsonb_agg(to_jsonb(x)) from (
+        select o.name as organization_name, c.name, c.phone, c.email, c.notes,
+               c.created_at
+        from public.customers c
+        join public.organizations o on o.id = c.organization_id
+        where c.user_id = v_user_id order by c.created_at) x), '[]'::jsonb));
+
+  -- shop_notes DÉLÈGUE à public.get_my_customer_notes() (OS-2) plutôt que de
+  -- relire la table. Ce n'est pas de la paresse : cette RPC EST la définition
+  -- côté client de « ce que le salon a écrit sur moi », et l'écran compte la
+  -- rend déjà. Si l'export répondait autrement — en cachant l'auteur, par
+  -- exemple — FadeUp donnerait DEUX réponses à UNE question RGPD, et c'est
+  -- exactement ce qu'un export ne doit jamais faire. Le jour où OS-2 change
+  -- ce que le sujet a le droit de voir, l'export suit sans qu'on y touche.
+  return v_base || jsonb_build_object(
+    'shop_notes', coalesce((
+      select jsonb_agg(to_jsonb(n))
+      from public.get_my_customer_notes() n), '[]'::jsonb));
+end;
+$$;
+
+
+--
+-- Name: FUNCTION export_my_data(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.export_my_data() IS 'MASTER_SPEC §16 — ce que FadeUp détient sur l''appelant, en un seul objet JSON lisible. Sans paramètre : la cible est toujours auth.uid(). Lecture seule. Inclut la fiche que chaque salon tient sur lui (shop_records) et les notes que le salon écrit sur lui (shop_notes) — ces dernières DÉLÉGUÉES à public.get_my_customer_notes() (OS-2), qui est la définition unique de ce que le sujet a le droit de voir : l''export ne doit jamais répondre autrement que l''écran. Les CHEMINS des photos du Passport sont rendus, pas les fichiers : ils se téléchargent par l''API Storage avec les mêmes droits. N''expose rien d''autrui.';
+
+
+--
 -- Name: favorite_shop(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6159,6 +8140,70 @@ COMMENT ON FUNCTION public.follow_professional(p_professional_id uuid) IS 'Authe
 
 
 --
+-- Name: generate_poster_batch(integer, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.generate_poster_batch(p_count integer, p_label text, p_note text DEFAULT NULL::text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_label text := nullif(btrim(coalesce(p_label, '')), '');
+  v_batch public.poster_batches;
+  v_code text;
+  v_made integer := 0;
+  v_tries integer;
+begin
+  if v_actor is null or not (select private.platform_can('poster.manage')) then
+    raise exception 'génération d''affiches non autorisée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=not_authorized';
+  end if;
+  if v_label is null then
+    raise exception 'un lot a besoin de son libellé'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=label_required';
+  end if;
+  if p_count is null or p_count < 1 or p_count > 500 then
+    raise exception 'un lot contient entre 1 et 500 affiches'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=count_out_of_range';
+  end if;
+
+  insert into public.poster_batches (label, code_count, note, created_by)
+  values (v_label, p_count, nullif(btrim(coalesce(p_note, '')), ''), v_actor)
+  returning * into v_batch;
+
+  while v_made < p_count loop
+    v_tries := 0;
+    loop
+      v_code := (select private.generate_poster_code());
+      exit when not exists (select 1 from public.posters p where p.code = v_code);
+      v_tries := v_tries + 1;
+      -- Une collision sur 10^15 est déjà improbable ; dix d'affilée signifie
+      -- que le générateur ne génère plus, et il vaut mieux le dire que de
+      -- boucler sans fin.
+      if v_tries > 10 then
+        raise exception 'le générateur de codes ne produit plus de code libre'
+          using errcode = '55000', detail = 'fadeup_poster_refusal=code_generator_exhausted';
+      end if;
+    end loop;
+    insert into public.posters (batch_id, code) values (v_batch.id, v_code);
+    v_made := v_made + 1;
+  end loop;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'poster_batch_generated', 'poster_batches', v_batch.id,
+          jsonb_build_object('label', v_label, 'count', p_count));
+
+  return jsonb_build_object(
+    'batch_id', v_batch.id, 'label', v_batch.label, 'code_count', v_batch.code_count,
+    'created_at', v_batch.created_at,
+    'codes', (select jsonb_agg(p.code order by p.code) from public.posters p where p.batch_id = v_batch.id)
+  );
+end;
+$$;
+
+
+--
 -- Name: get_available_slots(uuid, uuid, uuid, uuid, date, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6247,10 +8292,53 @@ COMMENT ON FUNCTION public.get_billing_catalog() IS 'Le catalogue tarifaire comp
 
 
 --
+-- Name: get_booking_request_history(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_display_name text, service_name text, price_cents integer, currency text, customer_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, resolution public.appointment_resolution, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, decided_at timestamp with time zone, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  -- L'issue se dérive côté front, sans invention :
+  --   confirmed/completed              → acceptée (contre-proposée si counter_proposed_at)
+  --   cancelled + declined             → refusée par le salon
+  --   cancelled + expired              → expirée sans réponse
+  --   cancelled + cancelled_by_customer→ retirée par le client
+  --                                      (contre-proposition refusée si counter_proposed_at)
+  select
+    a.id, a.location_id, l.name, sp.display_name, s.name,
+    s.price_cents, coalesce(o.currency, 'EUR'),
+    a.customer_name, a.starts_at, a.ends_at,
+    a.status, a.resolution,
+    a.counter_proposed_at, a.counter_original_starts_at,
+    a.decided_at, a.created_at
+  from public.appointments a
+  join public.locations l on l.id = a.location_id
+  join public.organizations o on o.id = a.organization_id
+  left join public.barbers b on b.id = a.barber_id
+  left join public.staff_profiles sp on sp.id = b.staff_profile_id
+  left join public.services s on s.id = a.service_id
+  where a.organization_id = p_organization_id
+    and a.was_request
+    and a.status <> 'pending'
+    and (select private.can_manage_appointments(p_organization_id))
+  order by coalesce(a.decided_at, a.created_at) desc
+  limit least(greatest(coalesce(p_limit, 100), 1), 200);
+$$;
+
+
+--
+-- Name: FUNCTION get_booking_request_history(p_organization_id uuid, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_booking_request_history(p_organization_id uuid, p_limit integer) IS 'P1PRO — les demandes traitées d''une organisation avec leur issue (statut + résolution + trace de contre-proposition). C''est la preuve de ce que FadeUp apporte au salon.';
+
+
+--
 -- Name: get_booking_requests(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, duration_minutes integer, price_cents integer, customer_name text, customer_phone text, customer_email text, notes text, starts_at timestamp with time zone, ends_at timestamp with time zone, expires_at timestamp with time zone, created_at timestamp with time zone)
+CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABLE(id uuid, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, duration_minutes integer, price_cents integer, customer_name text, customer_phone text, customer_email text, notes text, starts_at timestamp with time zone, ends_at timestamp with time zone, expires_at timestamp with time zone, created_at timestamp with time zone, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, counter_note text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6260,7 +8348,8 @@ CREATE FUNCTION public.get_booking_requests(p_organization_id uuid) RETURNS TABL
     (extract(epoch from (a.ends_at - a.starts_at)) / 60)::integer,
     s.price_cents,
     a.customer_name, a.customer_phone, a.customer_email, a.notes,
-    a.starts_at, a.ends_at, a.expires_at, a.created_at
+    a.starts_at, a.ends_at, a.expires_at, a.created_at,
+    a.counter_proposed_at, a.counter_original_starts_at, a.counter_note
   from public.appointments a
   join public.locations l on l.id = a.location_id
   left join public.barbers b on b.id = a.barber_id
@@ -6280,14 +8369,14 @@ $$;
 -- Name: FUNCTION get_booking_requests(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.get_booking_requests(p_organization_id uuid) IS 'Pending booking requests awaiting a decision, for staff who may decide them. Returns nothing — rather than raising — for a caller without the role, so it is safe to call from a shared layout. Hides requests already past their deadline, since accepting one would fail.';
+COMMENT ON FUNCTION public.get_booking_requests(p_organization_id uuid) IS 'Demandes pending d''une organisation, la plus urgente en tête. P1PRO ajoute les colonnes de contre-proposition : counter_proposed_at non nul = en attente du CLIENT (le front sépare les deux groupes).';
 
 
 --
 -- Name: get_calendar_appointments(uuid, timestamp with time zone, timestamp with time zone, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid DEFAULT NULL::uuid, p_barber_id uuid DEFAULT NULL::uuid) RETURNS TABLE(id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, resolution public.appointment_resolution, expires_at timestamp with time zone, location_id uuid, location_name text, location_timezone text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, price_cents integer, currency text, customer_name text, customer_phone text, notes text, created_at timestamp with time zone)
+CREATE FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid DEFAULT NULL::uuid, p_barber_id uuid DEFAULT NULL::uuid) RETURNS TABLE(id uuid, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, resolution public.appointment_resolution, expires_at timestamp with time zone, location_id uuid, location_name text, location_timezone text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, price_cents integer, currency text, customer_name text, customer_phone text, notes text, created_at timestamp with time zone, buffer_before_minutes integer, buffer_after_minutes integer, overlap_forced_at timestamp with time zone, overlap_forced_reason text, completed_at timestamp with time zone)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6295,8 +8384,15 @@ CREATE FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from 
     a.id, a.starts_at, a.ends_at, a.status, a.resolution, a.expires_at,
     a.location_id, l.name, l.timezone,
     a.barber_id, sp.display_name,
-    a.service_id, s.name, s.price_cents, coalesce(o.currency, 'EUR'),
-    a.customer_name, a.customer_phone, a.notes, a.created_at
+    a.service_id, s.name,
+    -- OS-1 : le prix n'est rendu qu'à qui voit le revenu (owner/manager, ou
+    -- barber autorisé par le patron). NULL sinon — pas zéro.
+    case when (select private.can_view_revenue(p_organization_id)) then s.price_cents else null end,
+    coalesce(o.currency, 'EUR'),
+    a.customer_name, a.customer_phone, a.notes, a.created_at,
+    a.buffer_before_minutes, a.buffer_after_minutes,
+    a.overlap_forced_at, a.overlap_forced_reason,
+    a.completed_at
   from public.appointments a
   join public.locations l on l.id = a.location_id
   join public.organizations o on o.id = a.organization_id
@@ -6318,7 +8414,7 @@ $$;
 -- Name: FUNCTION get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) IS 'Range-bounded, pre-joined calendar read. Returns nothing — rather than raising — for a non-member, so it is safe to call from a shared layout. Carries the organization''s currency so a group operating in several countries prices each shop''s calendar correctly. Still deliberately omits customer_email and customer_id.';
+COMMENT ON FUNCTION public.get_calendar_appointments(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone, p_location_id uuid, p_barber_id uuid) IS 'Agenda fenêtré d''une organisation (membres). OS-1 : tampons, trace de forçage et completed_at exposés ; price_cents NULL pour qui ne voit pas le revenu (private.can_view_revenue).';
 
 
 --
@@ -6575,7 +8671,7 @@ COMMENT ON FUNCTION public.get_my_access() IS 'The authoritative post-authentica
 -- Name: get_my_appointments(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization_id uuid, organization_name text, organization_slug text, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, price_cents integer, currency text, location_timezone text, resolution public.appointment_resolution, resolution_note text, expires_at timestamp with time zone, created_at timestamp with time zone)
+CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization_id uuid, organization_name text, organization_slug text, location_id uuid, location_name text, barber_id uuid, barber_display_name text, service_id uuid, service_name text, starts_at timestamp with time zone, ends_at timestamp with time zone, status public.appointment_status, price_cents integer, currency text, location_timezone text, resolution public.appointment_resolution, resolution_note text, expires_at timestamp with time zone, created_at timestamp with time zone, counter_proposed_at timestamp with time zone, counter_original_starts_at timestamp with time zone, counter_note text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -6587,7 +8683,8 @@ CREATE FUNCTION public.get_my_appointments() RETURNS TABLE(id uuid, organization
     -- The shop's timezone travels with the appointment: a customer abroad must
     -- still read the time the salon means, not the one their phone assumes.
     l.timezone,
-    a.resolution, a.resolution_note, a.expires_at, a.created_at
+    a.resolution, a.resolution_note, a.expires_at, a.created_at,
+    a.counter_proposed_at, a.counter_original_starts_at, a.counter_note
   from public.appointments a
   join public.organizations o on o.id = a.organization_id
   join public.locations l on l.id = a.location_id
@@ -6605,7 +8702,54 @@ $$;
 -- Name: FUNCTION get_my_appointments(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.get_my_appointments() IS 'A signed-in customer''s own appointments across every shop they use. Now carries each shop''s currency AND its location timezone, because a customer''s list genuinely spans businesses in different countries and both were previously assumed from the device.';
+COMMENT ON FUNCTION public.get_my_appointments() IS 'Rendez-vous et demandes du client connecté. P1PRO ajoute la contre-proposition : counter_proposed_at non nul sur une ligne pending = le salon propose starts_at (l''horaire demandé est counter_original_starts_at) — répondre via accept/decline_booking_counter_proposal.';
+
+
+--
+-- Name: get_my_customer_notes(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_my_customer_notes() RETURNS TABLE(organization_id uuid, organization_name text, note_id uuid, body text, author_display_name text, created_at timestamp with time zone, updated_at timestamp with time zone)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+begin
+  -- Le motif nul : sans ce refus explicite, un appel anonyme joindrait
+  -- `c.user_id = NULL` — zéro ligne, donc pas de fuite, mais un 200 qui
+  -- ferait croire « rien d'écrit sur vous ». On répond ce qui est vrai.
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=anonymous';
+  end if;
+
+  return query
+  select
+    n.organization_id,
+    o.name,
+    n.id,
+    n.body,
+    coalesce(nullif(btrim(sp.display_name), ''), nullif(btrim(pr.full_name), '')),
+    n.created_at,
+    n.updated_at
+  from public.customer_notes n
+  join public.customers c on c.id = n.customer_id
+  join public.organizations o on o.id = n.organization_id
+  left join public.staff_profiles sp
+    on sp.organization_id = n.organization_id and sp.user_id = n.author_user_id
+  left join public.profiles pr on pr.id = n.author_user_id
+  where c.user_id = v_actor
+  order by n.created_at desc;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_my_customer_notes(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_my_customer_notes() IS 'DROIT D''ACCÈS RGPD (art. 15) : tout ce que les salons ont écrit sur le demandeur, tous salons confondus, résolu par customers.user_id. Rend la donnée extractible sans intervention humaine ; l''écran client viendra plus tard.';
 
 
 --
@@ -6665,6 +8809,29 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_my_interest_requests() IS 'Les demandes d''intérêt du client connecté. Ne retourne rien à un appelant anonyme : sans compte il n''y a rien à rattacher, et l''écran « demande envoyée » de P2 lui montre le retour de create_professional_interest_request.';
+
+
+--
+-- Name: get_my_platform_permissions(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_my_platform_permissions() RETURNS SETOF text
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select rp.permission_key
+  from public.platform_members pm
+  join public.platform_role_permissions rp on rp.role = pm.role
+  where pm.user_id = (select auth.uid())
+  order by 1;
+$$;
+
+
+--
+-- Name: FUNCTION get_my_platform_permissions(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_my_platform_permissions() IS 'Les droits internes de l''APPELANT, pour que l''interface conditionne son rendu — une capacité absente n''est pas rendue, jamais grisée. Ne prend aucun paramètre : on ne peut pas l''interroger sur autrui. N''AUTORISE RIEN : chaque RPC repose la question côté serveur. Zéro ligne pour un anonyme.';
 
 
 --
@@ -6848,6 +9015,165 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_organization_analytics_summary(p_organization_id uuid, p_from timestamp with time zone, p_to timestamp with time zone) IS 'The §18 primitive set for ONE organization, over a bounded window, as counts only. Owner/manager or platform admin — deliberately not every member, since a barber has no business reading the shop''s conversion rates. Returns no event row, no actor id and no session id: a shop learns HOW MANY people viewed its profile and never WHO, per §12. Conversion is completions over appointments CREATED, never over booking_started, because intent is a client event and §5 forbids resting conversion on one.';
+
+
+--
+-- Name: get_organization_customer(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organization_customer(p_customer_id uuid) RETURNS TABLE(customer_id uuid, organization_id uuid, display_name text, phone text, email text, user_id uuid, is_verified_client boolean, verified_since timestamp with time zone, completed_count integer, first_completed_at timestamp with time zone, last_completed_at timestamp with time zone, days_since_last integer, average_interval_days integer, expected_return_at timestamp with time zone, is_lapsed boolean, usual_barber_id uuid, usual_barber_name text, note_count integer, created_at timestamp with time zone)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_organization_id uuid;
+begin
+  select c.organization_id into v_organization_id
+  from public.customers c where c.id = p_customer_id;
+
+  if v_organization_id is null
+     or not (select private.is_org_member(v_organization_id)) then
+    raise exception 'not authorized to read this customer'
+      using errcode = '42501', detail = 'fadeup_crm_refusal=not_authorized';
+  end if;
+
+  return query
+  with s as (
+    select * from private.customer_visit_stats(v_organization_id) st
+    where st.customer_id = p_customer_id
+  )
+  select
+    c.id,
+    c.organization_id,
+    c.name,
+    c.phone,
+    c.email,
+    c.user_id,
+    r.id is not null,
+    r.first_completed_at,
+    coalesce(s.completed_count, 0),
+    s.first_completed_at,
+    s.last_completed_at,
+    case when s.last_completed_at is null then null
+         else greatest(0, (extract(epoch from now() - s.last_completed_at) / 86400.0)::integer)
+    end,
+    v.average_interval_days,
+    case when v.average_interval_days is null then null
+         else s.last_completed_at + make_interval(days => v.average_interval_days)
+    end,
+    (v.average_interval_days is not null
+     and (extract(epoch from now() - s.last_completed_at) / 86400.0) >= 30
+     and (extract(epoch from now() - s.last_completed_at) / 86400.0) > (v.average_interval_days * 1.75)),
+    s.usual_barber_id,
+    sp.display_name,
+    (select count(*)::integer from public.customer_notes n where n.customer_id = c.id),
+    c.created_at
+  from public.customers c
+  left join s on true
+  left join lateral (
+    select case when coalesce(s.completed_count, 0) >= 3
+                     and s.last_completed_at > s.first_completed_at
+                then greatest(1, round(
+                       (extract(epoch from s.last_completed_at - s.first_completed_at) / 86400.0)
+                       / (s.completed_count - 1))::integer)
+                else null end as average_interval_days
+  ) v on true
+  left join public.barbers b on b.id = s.usual_barber_id
+  left join public.staff_profiles sp on sp.id = b.staff_profile_id
+  left join lateral (
+    select rel.id, rel.first_completed_at
+    from public.customer_professional_relationships rel
+    where rel.organization_id = c.organization_id
+      and c.user_id is not null
+      and rel.customer_user_id = c.user_id
+    order by rel.first_completed_at
+    limit 1
+  ) r on true
+  where c.id = p_customer_id;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_organization_customer(p_customer_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_organization_customer(p_customer_id uuid) IS 'La fiche d''un client du salon : identité, compteurs réels, barber habituel, statut de client vérifié (relation FadeUp, jamais déduite d''un abonnement) et NOMBRE de notes — pas leur contenu, qui passe par list_customer_notes.';
+
+
+--
+-- Name: get_organization_customer_history(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organization_customer_history(p_customer_id uuid, p_limit integer DEFAULT 30) RETURNS TABLE(kind text, source_id uuid, occurred_at timestamp with time zone, status text, service_id uuid, service_name text, barber_id uuid, barber_name text, price_cents integer)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_organization_id uuid;
+  v_limit integer := least(greatest(coalesce(p_limit, 30), 1), 100);
+begin
+  select c.organization_id into v_organization_id
+  from public.customers c where c.id = p_customer_id;
+
+  if v_organization_id is null
+     or not (select private.is_org_member(v_organization_id)) then
+    raise exception 'not authorized to read this customer'
+      using errcode = '42501', detail = 'fadeup_crm_refusal=not_authorized';
+  end if;
+
+  return query
+  select * from (
+    select
+      'appointment'::text as kind,
+      a.id as source_id,
+      a.starts_at as occurred_at,
+      a.status::text as status,
+      a.service_id as service_id,
+      s.name as service_name,
+      a.barber_id as barber_id,
+      sp.display_name as barber_name,
+      -- Le prix COURANT du catalogue, pas un instantané : OS-1 §12.8 a posé
+      -- la question, elle reste ouverte pour OS-3. L'interface le nomme
+      -- « prix catalogue », jamais « payé ».
+      s.price_cents as price_cents
+    from public.appointments a
+    left join public.services s on s.id = a.service_id
+    left join public.barbers b on b.id = a.barber_id
+    left join public.staff_profiles sp on sp.id = b.staff_profile_id
+    where a.customer_id = p_customer_id
+      and a.organization_id = v_organization_id
+
+    union all
+
+    select
+      'queue'::text as kind,
+      q.id as source_id,
+      coalesce(q.completed_at, q.called_at, q.created_at) as occurred_at,
+      q.status::text as status,
+      q.service_id as service_id,
+      s.name as service_name,
+      q.barber_id as barber_id,
+      sp.display_name as barber_name,
+      s.price_cents as price_cents
+    from public.queue_entries q
+    left join public.services s on s.id = q.service_id
+    left join public.barbers b on b.id = q.barber_id
+    left join public.staff_profiles sp on sp.id = b.staff_profile_id
+    where q.customer_id = p_customer_id
+      and q.organization_id = v_organization_id
+  ) history
+  order by history.occurred_at desc
+  limit v_limit;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_organization_customer_history(p_customer_id uuid, p_limit integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_organization_customer_history(p_customer_id uuid, p_limit integer) IS 'L''historique d''un client dans CE salon : rendez-vous et passages de file confondus, du plus récent au plus ancien. Le montant rendu est le prix COURANT du catalogue — pas un instantané de facturation (OS-1 §12.8, à trancher avec OS-3) — et l''interface le nomme comme tel.';
 
 
 --
@@ -7313,6 +9639,221 @@ COMMENT ON FUNCTION public.get_platform_analytics_funnel(p_from timestamp with t
 
 
 --
+-- Name: get_platform_customer_dossier(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_platform_customer_dossier(p_user_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_dossier('customer', p_user_id));
+begin
+  return jsonb_build_object(
+    'identity', (
+      select jsonb_build_object(
+        'user_id', u.id, 'email', u.email::text, 'created_at', u.created_at,
+        'full_name', pf.full_name, 'locale', pf.locale)
+      from auth.users u
+      left join public.profiles pf on pf.id = u.id
+      where u.id = p_user_id
+    ),
+    'appointments', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', a.id, 'organization_name', o.name, 'organization_slug', o.slug,
+               'starts_at', a.starts_at, 'status', a.status, 'resolution', a.resolution,
+               'was_request', a.was_request, 'expires_at', a.expires_at,
+               'service_name', s.name)
+             order by a.starts_at desc)
+      from public.appointments a
+      join public.organizations o on o.id = a.organization_id
+      left join public.services s on s.id = a.service_id
+      where a.booked_by_user_id = p_user_id
+      -- Dix-huit mois : un dossier de support n'est pas un export.
+      and a.starts_at > now() - interval '18 months'
+    ), '[]'::jsonb),
+    'queue_entries', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', q.id, 'organization_name', o.name, 'location_id', q.location_id,
+               'status', q.status, 'created_at', q.created_at, 'customer_name', q.customer_name)
+             order by q.created_at desc)
+      from public.queue_entries q
+      join public.organizations o on o.id = q.organization_id
+      where q.booked_by_user_id = p_user_id
+    ), '[]'::jsonb),
+    'interest_requests', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', r.id, 'professional_handle', pr.handle, 'professional_display_name', pr.display_name,
+               'service_label', r.service_label, 'preferred_starts_at', r.preferred_starts_at,
+               'status', r.status, 'expires_at', r.expires_at)
+             order by r.created_at desc)
+      from public.professional_interest_requests r
+      join public.professional_interest_request_contacts c on c.request_id = r.id
+      join public.professionals pr on pr.id = r.professional_id
+      where c.booked_by_user_id = p_user_id
+    ), '[]'::jsonb),
+    'recent_emails', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', e.id, 'template', e.template, 'status', e.status,
+               'created_at', e.created_at, 'sent_at', e.sent_at,
+               'bounced_at', e.bounced_at, 'last_error', e.last_error)
+             order by e.created_at desc)
+      from public.email_outbox e
+      where e.to_email = (select lower(u.email::text) from auth.users u where u.id = p_user_id)
+        and e.created_at > now() - interval '90 days'
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+
+--
+-- Name: get_platform_organization_dossier(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_platform_organization_dossier(p_organization_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_dossier('organization', p_organization_id));
+begin
+  return jsonb_build_object(
+    'identity', (
+      select jsonb_build_object('id', o.id, 'name', o.name, 'slug', o.slug,
+                                'business_type', o.business_type, 'country_code', o.country_code,
+                                'marketplace_visible', o.marketplace_visible,
+                                'onboarding_completed_at', o.onboarding_completed_at,
+                                'created_at', o.created_at)
+      from public.organizations o where o.id = p_organization_id
+    ),
+    'locations', coalesce((
+      select jsonb_agg(jsonb_build_object('id', l.id, 'name', l.name, 'city', l.city,
+                                          'country', l.country, 'is_active', l.is_active, 'kind', l.kind)
+             order by l.name)
+      from public.locations l where l.organization_id = p_organization_id
+    ), '[]'::jsonb),
+    -- L'ABONNEMENT, EN LECTURE. Aucun geste de paiement n'est offert ici :
+    -- `billing.manage` n'appartient ni au support ni au modérateur, et cette
+    -- fonction ne fait que lire.
+    'subscription', (
+      select jsonb_build_object('plan_key', cs.plan_key, 'status', cs.status,
+                                'entitlement_source', cs.entitlement_source,
+                                'provider', cs.provider, 'assigned_at', cs.assigned_at)
+      from public.organization_commercial_state cs where cs.organization_id = p_organization_id
+    ),
+    'trial', (
+      select jsonb_build_object('status', tr.status, 'started_at', tr.started_at,
+                                'ends_at', tr.ends_at, 'converted_at', tr.converted_at)
+      from public.organization_trials tr where tr.organization_id = p_organization_id
+    ),
+    'team', coalesce((
+      select jsonb_agg(jsonb_build_object('role', m.role,
+                                          'email', (select u.email::text from auth.users u where u.id = m.user_id))
+             order by m.role)
+      from public.memberships m where m.organization_id = p_organization_id
+    ), '[]'::jsonb),
+    'upcoming_appointments', coalesce((
+      select jsonb_agg(jsonb_build_object('id', a.id, 'starts_at', a.starts_at, 'status', a.status,
+                                          'customer_name', a.customer_name, 'was_request', a.was_request,
+                                          'expires_at', a.expires_at)
+             order by a.starts_at)
+      from public.appointments a
+      where a.organization_id = p_organization_id
+        and a.starts_at >= now() - interval '1 day'
+        and a.status in ('pending', 'confirmed')
+    ), '[]'::jsonb),
+    'queue', coalesce((
+      select jsonb_agg(jsonb_build_object('id', q.id, 'location_id', q.location_id,
+                                          'customer_name', q.customer_name, 'status', q.status,
+                                          'created_at', q.created_at, 'called_at', q.called_at)
+             order by q.created_at)
+      from public.queue_entries q
+      where q.organization_id = p_organization_id
+        and q.status in ('waiting', 'called', 'in_service')
+    ), '[]'::jsonb),
+    'support_sessions', coalesce((
+      select jsonb_agg(jsonb_build_object('started_at', ss.started_at, 'ended_at', ss.ended_at,
+                                          'expires_at', ss.expires_at, 'reason', ss.reason)
+             order by ss.started_at desc)
+      from public.platform_support_sessions ss
+      where ss.organization_id = p_organization_id
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+
+--
+-- Name: get_platform_professional_dossier(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_platform_professional_dossier(p_professional_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_dossier('professional', p_professional_id));
+begin
+  return jsonb_build_object(
+    'identity', (
+      select jsonb_build_object(
+        'id', pr.id, 'display_name', pr.display_name, 'handle', pr.handle,
+        'claim_state', pr.claim_state, 'is_public', pr.is_public, 'source', pr.source,
+        'claimed_at', pr.claimed_at, 'created_at', pr.created_at,
+        'account_email', (select u.email::text from auth.users u where u.id = pr.user_id))
+      from public.professionals pr where pr.id = p_professional_id
+    ),
+    'claims', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', c.id, 'state', c.state, 'submitted_at', c.submitted_at,
+               'decided_at', c.decided_at, 'decision_note', c.decision_note,
+               'claimant_email', (select u.email::text from auth.users u where u.id = c.claimant_user_id))
+             order by c.submitted_at desc)
+      from public.professional_claims c where c.professional_id = p_professional_id
+    ), '[]'::jsonb),
+    'withdrawal_requests', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', w.id, 'status', w.status, 'requested_via', w.requested_via,
+               'requested_at', w.requested_at, 'deadline_at', w.deadline_at,
+               'hours_remaining', round(extract(epoch from (w.deadline_at - now())) / 3600.0, 1),
+               'is_overdue', w.status = 'pending' and w.deadline_at < now(),
+               'decided_at', w.decided_at)
+             order by w.requested_at desc)
+      from public.marketplace_withdrawal_requests w where w.professional_id = p_professional_id
+    ), '[]'::jsonb),
+    'interest_requests', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', r.id, 'status', r.status, 'service_label', r.service_label,
+               'preferred_starts_at', r.preferred_starts_at, 'expires_at', r.expires_at,
+               'created_at', r.created_at)
+             order by r.created_at desc)
+      from public.professional_interest_requests r where r.professional_id = p_professional_id
+    ), '[]'::jsonb),
+    'reviews', jsonb_build_object(
+      'published', (select count(*) from public.reviews rv where rv.professional_id = p_professional_id and rv.status = 'published'),
+      'moderated', (select count(*) from public.reviews rv where rv.professional_id = p_professional_id and rv.status <> 'published')
+    ),
+    'workplace', (
+      select jsonb_build_object('organization_id', o.id, 'organization_name', o.name, 'organization_slug', o.slug)
+      from public.barbers b
+      join public.organizations o on o.id = b.organization_id
+      where b.professional_id = p_professional_id
+      limit 1
+    ),
+    'prospect', (
+      select jsonb_build_object('prospect_id', pp.prospect_id, 'canonical_name', p.canonical_name,
+                                'origin', p.origin, 'status', p.status, 'do_not_contact', p.do_not_contact)
+      from public.prospect_professionals pp
+      join public.prospects p on p.id = pp.prospect_id
+      where pp.professional_id = p_professional_id
+    )
+  );
+end;
+$$;
+
+
+--
 -- Name: get_professional_analytics_summary(uuid, timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -7423,6 +9964,178 @@ $$;
 --
 
 COMMENT ON FUNCTION public.get_professional_posts_by_id(p_professional_id uuid, p_cursor timestamp with time zone, p_limit integer) IS 'Même contrat que get_professional_posts, par id — parce que handle est nullable (non rétro-rempli, décision R2) et qu''un portfolio ne doit pas dépendre d''un handle qui n''existe pas encore. Miroir du couple get_public_professional / _by_handle.';
+
+
+--
+-- Name: get_prospect_acquisition_stats(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_prospect_acquisition_stats(p_prospect_id uuid, p_days integer DEFAULT 90) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_professional_id uuid;
+  v_is_public boolean := false;
+  v_claim public.professional_claim_state;
+  v_since timestamptz := now() - make_interval(days => greatest(coalesce(p_days, 90), 1));
+begin
+  -- Le cas nul EXPLICITEMENT, avant toute lecture.
+  if v_actor is null or p_prospect_id is null
+     or not (select private.platform_prospect_visible(p_prospect_id)) then
+    raise exception 'ce prospect n''est pas visible avec votre rôle'
+      using errcode = '42501', detail = 'fadeup_crm_refusal=prospect_not_visible';
+  end if;
+
+  select pp.professional_id, pr.is_public, pr.claim_state
+    into v_professional_id, v_is_public, v_claim
+  from public.prospect_professionals pp
+  join public.professionals pr on pr.id = pp.professional_id
+  where pp.prospect_id = p_prospect_id;
+
+  return jsonb_build_object(
+    'prospect_id', p_prospect_id,
+    'window_days', greatest(coalesce(p_days, 90), 1),
+    'since', v_since,
+    -- CE QUI EXPLIQUE LES ZÉROS. Sans ce drapeau, un commercial lit « 0 vue »
+    -- et croit que le salon n'intéresse personne, alors que sa fiche n'est
+    -- pas en ligne.
+    'is_published', v_professional_id is not null and coalesce(v_is_public, false),
+    'professional_id', v_professional_id,
+    'claim_state', v_claim,
+    'profile_views', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.analytics_events e
+      where e.event_name = 'public_profile_viewed'
+        and e.professional_id = v_professional_id
+        and e.occurred_at >= v_since) end,
+    'profile_views_all_time', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.analytics_events e
+      where e.event_name = 'public_profile_viewed'
+        and e.professional_id = v_professional_id) end,
+    'last_profile_view_at', case when v_professional_id is null then null else (
+      select max(e.occurred_at) from public.analytics_events e
+      where e.event_name = 'public_profile_viewed'
+        and e.professional_id = v_professional_id) end,
+    -- TENTATIVES DE RÉSERVATION. Deux sources, distinctes et toutes deux
+    -- réelles : le tunnel ouvert (`booking_started`) et la demande d'intérêt
+    -- effectivement déposée (B2). La seconde est l'argument le plus fort —
+    -- c'est un client qui a laissé ses coordonnées.
+    'booking_started', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.analytics_events e
+      where e.event_name = 'booking_started'
+        and e.professional_id = v_professional_id
+        and e.occurred_at >= v_since) end,
+    'interest_requests', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.professional_interest_requests r
+      where r.professional_id = v_professional_id
+        and r.created_at >= v_since) end,
+    'interest_requests_pending', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.professional_interest_requests r
+      where r.professional_id = v_professional_id
+        and r.status = 'pending' and r.expires_at > now()) end,
+    'followers', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.professional_follows f
+      where f.professional_id = v_professional_id and f.state = 'following') end,
+    'search_result_views', case when v_professional_id is null then 0 else (
+      select count(*)::integer from public.analytics_events e
+      where e.event_name = 'search_result_viewed'
+        and e.professional_id = v_professional_id
+        and e.occurred_at >= v_since) end
+  );
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_prospect_acquisition_stats(p_prospect_id uuid, p_days integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_prospect_acquisition_stats(p_prospect_id uuid, p_days integer) IS 'PLAT-2 : les statistiques RÉELLES d''un prospect (R3). Un prospect non publié rend is_published=false et des zéros — jamais une estimation.';
+
+
+--
+-- Name: get_prospect_outreach_state(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_prospect_outreach_state(p_prospect_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_prospect public.prospects;
+begin
+  if v_actor is null or p_prospect_id is null
+     or not (select private.platform_prospect_visible(p_prospect_id)) then
+    raise exception 'ce prospect n''est pas visible avec votre rôle'
+      using errcode = '42501', detail = 'fadeup_crm_refusal=prospect_not_visible';
+  end if;
+
+  select * into v_prospect from public.prospects where id = p_prospect_id;
+  if not found then
+    raise exception 'prospect introuvable' using errcode = '42704';
+  end if;
+
+  return jsonb_build_object(
+    'prospect_id', p_prospect_id,
+    'do_not_contact', v_prospect.do_not_contact,
+    'has_email', v_prospect.email is not null,
+    'suppressed', exists (
+      select 1 from public.prospect_suppressions s
+      where s.scope = 'prospect' and s.prospect_id = p_prospect_id),
+    -- Le motif de blocage calculé par B2 lui-même : une seconde implémentation
+    -- ici finirait par diverger de celle qui décide vraiment.
+    'block_reason', (select public.outreach_block_reason(p_prospect_id, 'email')),
+    -- LES TOUCHES, telles que B2 les compte : une ligne d'email_outbox par
+    -- touche, repérée par son dedupe_key `interest:<demande>:<n>`.
+    'requests', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'request_id', r.id,
+               'status', r.status,
+               'service_label', r.service_label,
+               'preferred_starts_at', r.preferred_starts_at,
+               'expires_at', r.expires_at,
+               'touches_sent', (
+                 select count(*)::integer from public.email_outbox o
+                 where o.dedupe_key like 'interest:' || r.id::text || ':%'),
+               'touches', coalesce((
+                 select jsonb_agg(jsonb_build_object(
+                          'touch', split_part(o.dedupe_key, ':', 3),
+                          'template', o.template,
+                          'status', o.status,
+                          'created_at', o.created_at,
+                          'sent_at', o.sent_at,
+                          'delivered_at', o.delivered_at,
+                          'opened_at', o.opened_at,
+                          'bounced_at', o.bounced_at)
+                        order by o.created_at)
+                 from public.email_outbox o
+                 where o.dedupe_key like 'interest:' || r.id::text || ':%'), '[]'::jsonb))
+             order by r.created_at desc)
+      from public.professional_interest_requests r
+      join public.prospect_professionals pp on pp.professional_id = r.professional_id
+      where pp.prospect_id = p_prospect_id
+    ), '[]'::jsonb),
+    -- Les échanges saisis à la main par un commercial, qui ne sont PAS des
+    -- relances automatiques et ne doivent pas se confondre avec elles.
+    'logged_contacts', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', po.id, 'channel', po.channel, 'direction', po.direction,
+               'summary', po.summary, 'occurred_at', po.occurred_at)
+             order by po.occurred_at desc)
+      from public.prospect_outreach po where po.prospect_id = p_prospect_id
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_prospect_outreach_state(p_prospect_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_prospect_outreach_state(p_prospect_id uuid) IS 'PLAT-2 : où en sont les trois relances automatiques de B2 pour ce prospect, et pourquoi la prochaine ne part pas.';
 
 
 --
@@ -7578,6 +10291,37 @@ COMMENT ON FUNCTION public.get_public_booking_alternatives(p_latitude double pre
 Ne promet AUCUNE disponibilité et n''en vérifie aucune : elle retourne `accepts_immediate_booking`, qui dit si l''organisation détient la capacité `booking` et peut donc confirmer, ou si elle recevra une nouvelle demande. Une interface qui affiche « réservez ici » sur une ligne à false envoie le client vers une seconde attente juste après la première.
 
 Un professionnel en zone de service apparaît si sa zone couvre le point cherché, avec covers_search_point = true et sans adresse inventée.';
+
+
+--
+-- Name: get_public_booking_capabilities(text[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) RETURNS TABLE(organization_slug text, accepts_immediate_booking boolean)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if cardinality(coalesce(p_organization_slugs, '{}')) > 50 then
+    raise exception 'too many organizations requested at once (max 50)'
+      using errcode = '22023';
+  end if;
+
+  -- Même prédicat que le singulier F4 (le slug seul) : la recherche et le
+  -- tunnel doivent voir le même monde.
+  return query
+  select o.slug, private.org_has_capability(o.id, 'booking')
+  from public.organizations o
+  where o.slug = any(coalesce(p_organization_slugs, '{}'));
+end;
+$$;
+
+
+--
+-- Name: FUNCTION get_public_booking_capabilities(p_organization_slugs text[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_public_booking_capabilities(p_organization_slugs text[]) IS 'P1PRO — get_public_booking_capability en lot (max 50 slugs), pour que la découverte distingue « Réservable » (confirmation immédiate) de « Sur demande » (pending sous échéance) sans N+1.';
 
 
 --
@@ -8063,6 +10807,38 @@ COMMENT ON FUNCTION public.get_queue_entry_tracking(p_entry_id uuid) IS 'Anon-ca
 
 
 --
+-- Name: get_sales_pipeline_summary(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_sales_pipeline_summary() RETURNS TABLE(status public.prospect_pipeline_stage, origin public.prospect_origin, prospect_count integer, published_count integer, contacted_count integer)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    p.status,
+    p.origin,
+    count(*)::integer,
+    count(*) filter (where exists (
+      select 1 from public.prospect_professionals pp
+      join public.professionals pr on pr.id = pp.professional_id
+      where pp.prospect_id = p.id and pr.is_public))::integer,
+    count(*) filter (where exists (
+      select 1 from public.prospect_outreach po where po.prospect_id = p.id))::integer
+  from public.prospects p
+  where (select private.platform_can('crm.read'))
+  group by p.status, p.origin
+  order by p.status, p.origin;
+$$;
+
+
+--
+-- Name: FUNCTION get_sales_pipeline_summary(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_sales_pipeline_summary() IS 'PLAT-2 : le tunnel d''acquisition (MASTER_SPEC §5) compté par statut ET par origine (worker / terrain). Réservé à crm.read — un stagiaire n''a pas de vue d''ensemble.';
+
+
+--
 -- Name: get_service_duration_insights(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -8262,6 +11038,58 @@ COMMENT ON FUNCTION public.get_shared_passport(p_token text) IS 'Anon-callable. 
 
 
 --
+-- Name: get_support_ticket(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_support_ticket(p_ticket_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_tickets());
+  v_ticket public.support_tickets;
+  v_out jsonb;
+begin
+  select * into v_ticket from public.support_tickets where id = p_ticket_id;
+  if not found then
+    raise exception 'ticket introuvable' using errcode = '42704';
+  end if;
+
+  select jsonb_build_object(
+    'ticket', to_jsonb(v_ticket)
+      || jsonb_build_object(
+           'assigned_to_email', (select au.email::text from auth.users au where au.id = v_ticket.assigned_to),
+           'opened_by_email',   (select au.email::text from auth.users au where au.id = v_ticket.opened_by),
+           'organization_name', (select o.name from public.organizations o where o.id = v_ticket.organization_id),
+           'organization_slug', (select o.slug from public.organizations o where o.id = v_ticket.organization_id),
+           'professional_display_name', (select pr.display_name from public.professionals pr where pr.id = v_ticket.professional_id),
+           'professional_handle', (select pr.handle from public.professionals pr where pr.id = v_ticket.professional_id),
+           'subject_user_email', (select au.email::text from auth.users au where au.id = v_ticket.subject_user_id),
+           'hours_remaining', case when v_ticket.due_at is null then null
+                                   else round(extract(epoch from (v_ticket.due_at - now())) / 3600.0, 1) end,
+           'is_overdue', v_ticket.status <> 'resolved' and v_ticket.due_at is not null and v_ticket.due_at < now()
+         ),
+    'messages', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', m.id, 'kind', m.kind, 'body', m.body,
+               'author_email', (select au.email::text from auth.users au where au.id = m.author_user_id),
+               'metadata', m.metadata, 'created_at', m.created_at)
+             order by m.created_at)
+      from public.support_ticket_messages m where m.ticket_id = v_ticket.id
+    ), '[]'::jsonb)
+  ) into v_out;
+
+  -- OUVRIR UN TICKET, C'EST CONSULTER UN DOSSIER. Tracé comme tel.
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'support_ticket_viewed', 'support_tickets', v_ticket.id,
+          jsonb_build_object('reference', v_ticket.reference));
+
+  return v_out;
+end;
+$$;
+
+
+--
 -- Name: guard_customer_professional_relationship(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -8298,6 +11126,16 @@ CREATE FUNCTION public.guard_customers_identity() RETURNS trigger
     AS $$
 begin
   if new.user_id is not distinct from old.user_id then
+    return new;
+  end if;
+
+  -- B5 : le détachement de la fiche client d'un compte effacé. C'est une
+  -- action de la clé étrangère (ON DELETE SET NULL), qui traverse ce
+  -- trigger comme un UPDATE ordinaire. Seul user_id -> NULL passe.
+  if private.erasure_update_allowed(
+       to_jsonb(old), to_jsonb(new),
+       jsonb_build_object('user_id', jsonb_build_array(null))
+     ) then
     return new;
   end if;
 
@@ -8737,6 +11575,108 @@ COMMENT ON FUNCTION public.handle_new_user() IS 'Trigger on auth.users: creates 
 
 
 --
+-- Name: invite_team_member(uuid, text, public.membership_role, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.invite_team_member(p_organization_id uuid, p_email text, p_role public.membership_role, p_location_id uuid DEFAULT NULL::uuid) RETURNS TABLE(id uuid, email text, role public.membership_role, expires_at timestamp with time zone, replaced_previous boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+declare
+  v_actor uuid := (select auth.uid());
+  v_email text := lower(nullif(btrim(coalesce(p_email, '')), ''));
+  v_previous uuid;
+  v_row public.invitations;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_team_refusal=anonymous';
+  end if;
+
+  if p_organization_id is null
+     or not (select private.has_org_role(p_organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to invite into this team'
+      using errcode = '42501', detail = 'fadeup_team_refusal=not_authorized';
+  end if;
+
+  if p_role is null then
+    raise exception 'a role is required'
+      using errcode = '22023', detail = 'fadeup_team_refusal=role_required';
+  end if;
+
+  if p_role = 'owner'
+     and not (select private.has_org_role(p_organization_id,
+                array['owner']::public.membership_role[])) then
+    raise exception 'only an owner may invite another owner'
+      using errcode = '42501', detail = 'fadeup_team_refusal=owner_role_forbidden';
+  end if;
+
+  if v_email is null or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'a valid email address is required'
+      using errcode = '22023', detail = 'fadeup_team_refusal=email_invalid';
+  end if;
+
+  if exists (
+    select 1 from public.memberships m
+    join auth.users u on u.id = m.user_id
+    where m.organization_id = p_organization_id and lower(u.email) = v_email
+  ) then
+    raise exception 'this person is already on the team'
+      using errcode = '23505', detail = 'fadeup_team_refusal=already_member';
+  end if;
+
+  if p_location_id is not null and not exists (
+    select 1 from public.locations l
+    where l.id = p_location_id and l.organization_id = p_organization_id
+  ) then
+    raise exception 'location does not belong to this organization'
+      using errcode = '22023', detail = 'fadeup_team_refusal=location_foreign';
+  end if;
+
+  -- Un barber invité occupera un siège : le refus de capacité doit arriver
+  -- MAINTENANT, pas à l'acceptation, où il humilierait l'invité.
+  if p_role = 'barber' then
+    perform private.assert_professional_capacity(p_organization_id);
+  end if;
+
+  -- Renvoyer une invitation révoque la précédente : un lien fuité devient
+  -- inoffensif dès le renvoi, et l'index unique partiel
+  -- (organization_id, email) WHERE pending reste satisfait.
+  select i.id into v_previous
+  from public.invitations i
+  where i.organization_id = p_organization_id
+    and i.email = v_email
+    and i.accepted_at is null
+    and i.revoked_at is null
+  limit 1;
+
+  if v_previous is not null then
+    update public.invitations i set revoked_at = now() where i.id = v_previous;
+  end if;
+
+  insert into public.invitations (organization_id, email, role, token, invited_by, location_id)
+  values (
+    p_organization_id, v_email, p_role,
+    -- Le secret naît ICI, pas dans le navigateur.
+    encode(extensions.gen_random_bytes(32), 'hex'),
+    v_actor, p_location_id
+  )
+  returning * into v_row;
+
+  return query select v_row.id, v_row.email, v_row.role, v_row.expires_at, v_previous is not null;
+end;
+$_$;
+
+
+--
+-- Name: FUNCTION invite_team_member(p_organization_id uuid, p_email text, p_role public.membership_role, p_location_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.invite_team_member(p_organization_id uuid, p_email text, p_role public.membership_role, p_location_id uuid) IS 'Invite une personne par e-mail. Le jeton est fabriqué côté serveur (32 octets aléatoires), l''envoi passe par le trigger notify_new_invitation → email_outbox → gabarit team_invitation : AUCUN second système d''envoi. Échéance : 7 jours, usage unique. Renvoyer révoque l''invitation précédente. Le JETON n''est jamais rendu à l''appelant.';
+
+
+--
 -- Name: join_public_queue(text, uuid, text, text, uuid, uuid, text, double precision, double precision); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9100,6 +12040,95 @@ COMMENT ON FUNCTION public.link_customer_from_contact_info() IS 'BEFORE INSERT t
 
 
 --
+-- Name: list_customer_notes(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_customer_notes(p_customer_id uuid) RETURNS TABLE(id uuid, body text, author_user_id uuid, author_display_name text, author_is_me boolean, can_edit boolean, created_at timestamp with time zone, updated_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_organization_id uuid;
+  v_is_member boolean;
+  v_can_manage boolean;
+  v_internal boolean;
+  v_count integer;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=anonymous';
+  end if;
+
+  select c.organization_id into v_organization_id
+  from public.customers c where c.id = p_customer_id;
+
+  -- Client inconnu : même refus qu'un client d'autrui, pour ne pas servir
+  -- d'oracle d'existence.
+  if v_organization_id is null then
+    raise exception 'not authorized to read this customer''s notes'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=not_authorized';
+  end if;
+
+  v_is_member  := (select private.is_org_member(v_organization_id));
+  v_can_manage := (select private.has_org_role(v_organization_id,
+                     array['owner', 'manager']::public.membership_role[]));
+  v_internal   := (select private.platform_can('customer_notes.read'));
+
+  if not v_is_member and not v_internal then
+    raise exception 'not authorized to read this customer''s notes'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=not_authorized';
+  end if;
+
+  -- LA TRACE. Un membre du salon lit ses propres notes : rien à tracer. Un
+  -- rôle interne lit celles d'autrui : c'est consigné, même si la fiche est
+  -- vide — la tentative compte autant que le résultat.
+  if v_internal and not v_is_member then
+    select count(*)::integer into v_count
+    from public.customer_notes n where n.customer_id = p_customer_id;
+
+    insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+    values (
+      v_actor,
+      'customer_notes_read',
+      'customers',
+      p_customer_id,
+      jsonb_build_object(
+        'organization_id', v_organization_id,
+        'note_count', v_count,
+        'support_session_id', (select private.platform_active_support_session())
+      )
+    );
+  end if;
+
+  return query
+  select
+    n.id,
+    n.body,
+    n.author_user_id,
+    coalesce(nullif(btrim(sp.display_name), ''), nullif(btrim(pr.full_name), '')),
+    n.author_user_id is not distinct from v_actor,
+    v_is_member and (n.author_user_id is not distinct from v_actor or v_can_manage),
+    n.created_at,
+    n.updated_at
+  from public.customer_notes n
+  left join public.staff_profiles sp
+    on sp.organization_id = n.organization_id and sp.user_id = n.author_user_id
+  left join public.profiles pr on pr.id = n.author_user_id
+  where n.customer_id = p_customer_id
+  order by n.created_at desc;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION list_customer_notes(p_customer_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_customer_notes(p_customer_id uuid) IS 'Les notes privées d''un client. Équipe du salon : lecture directe, non tracée (ce sont ses notes). Rôle interne portant customer_notes.read : lecture TRACÉE dans platform_audit_log (action customer_notes_read). Tout autre appelant : 42501.';
+
+
+--
 -- Name: list_marketplace_withdrawal_requests(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9115,7 +12144,7 @@ CREATE FUNCTION public.list_marketplace_withdrawal_requests(p_include_completed 
     w.status, w.decided_at
   from public.marketplace_withdrawal_requests w
   join public.professionals p on p.id = w.professional_id
-  where (select private.is_platform_admin())
+  where (select private.platform_can('marketplace.withdraw'))
     and (p_include_completed or w.status = 'pending')
   -- Les retards en premier : une liste triée par date de demande enterre
   -- l'urgence sous l'historique.
@@ -9131,10 +12160,94 @@ COMMENT ON FUNCTION public.list_marketplace_withdrawal_requests(p_include_comple
 
 
 --
+-- Name: list_moderation_posts(text, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_moderation_posts(p_visibility text DEFAULT NULL::text, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, author_kind text, author_label text, author_handle text, caption text, visibility text, hidden_at timestamp with time zone, hidden_by_email text, hidden_reason text, media_count integer, like_count integer, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    p.id, p.author_kind,
+    coalesce(pr.display_name, o.name),
+    coalesce(pr.handle, o.slug),
+    p.caption, p.visibility,
+    p.hidden_at,
+    (select u.email::text from auth.users u where u.id = p.hidden_by),
+    p.hidden_reason,
+    (select count(*)::integer from public.post_media pm where pm.post_id = p.id),
+    p.like_count, p.created_at
+  from public.posts p
+  left join public.professionals pr on pr.id = p.professional_id
+  left join public.organizations o on o.id = p.organization_id
+  where (select private.platform_can('moderation.content'))
+    and (p_visibility is null or p.visibility = p_visibility)
+  order by p.created_at desc
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
+
+
+--
+-- Name: list_moderation_review_reports(boolean, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_moderation_review_reports(p_include_resolved boolean DEFAULT false, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, review_id uuid, reason text, detail text, status text, created_at timestamp with time zone, resolved_at timestamp with time zone, resolved_by_email text, review_rating smallint, review_comment text, review_status text, professional_display_name text, organization_name text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    rr.id, rr.review_id, rr.reason, rr.detail, rr.status, rr.created_at,
+    rr.resolved_at,
+    (select u.email::text from auth.users u where u.id = rr.resolved_by),
+    r.rating, r.comment, r.status,
+    pr.display_name, o.name
+  from public.review_reports rr
+  join public.reviews r on r.id = rr.review_id
+  join public.professionals pr on pr.id = r.professional_id
+  join public.organizations o on o.id = r.organization_id
+  where (select private.platform_can('moderation.content'))
+    and (p_include_resolved or rr.status = 'open')
+  order by (rr.status = 'open') desc, rr.created_at desc
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
+
+
+--
+-- Name: list_moderation_reviews(text, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_moderation_reviews(p_status text DEFAULT NULL::text, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, rating smallint, comment text, reviewer_display_name text, status text, moderation_reason text, moderated_at timestamp with time zone, moderated_by_email text, professional_id uuid, professional_display_name text, professional_handle text, organization_id uuid, organization_name text, open_report_count integer, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    r.id, r.rating, r.comment, r.reviewer_display_name,
+    r.status, r.moderation_reason, r.moderated_at,
+    (select u.email::text from auth.users u where u.id = r.moderated_by),
+    r.professional_id, pr.display_name, pr.handle,
+    r.organization_id, o.name,
+    (select count(*)::integer from public.review_reports rr
+      where rr.review_id = r.id and rr.status = 'open'),
+    r.created_at
+  from public.reviews r
+  join public.professionals pr on pr.id = r.professional_id
+  join public.organizations o on o.id = r.organization_id
+  where (select private.platform_can('moderation.content'))
+    and (p_status is null or r.status = p_status)
+  -- Ce qui est signalé d'abord : une file de modération triée par date fait
+  -- lire ce qui va bien avant ce qui va mal.
+  order by
+    (select count(*) from public.review_reports rr where rr.review_id = r.id and rr.status = 'open') desc,
+    r.created_at desc
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
+
+
+--
 -- Name: list_my_followed_organizations(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.list_my_followed_organizations() RETURNS TABLE(organization_id uuid, followed_at timestamp with time zone)
+CREATE FUNCTION public.list_my_followed_organizations() RETURNS TABLE(organization_id uuid, organization_name text, organization_slug text, city text, country_code text, followed_at timestamp with time zone)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -9151,10 +12264,22 @@ begin
   return query
   select
     f.organization_id,
+    o.name,
+    o.slug,
+    loc.city,
+    o.country_code,
     f.followed_at
   from public.organization_follows f
   join public.organizations o
     on o.id = f.organization_id
+  left join lateral (
+    select l.city
+    from public.locations l
+    where l.organization_id = o.id
+      and l.is_active
+    order by l.created_at, l.id
+    limit 1
+  ) loc on true
   where f.follower_user_id = v_user_id
     and f.is_following = true
     and exists (
@@ -9170,7 +12295,7 @@ $$;
 -- Name: FUNCTION list_my_followed_organizations(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.list_my_followed_organizations() IS 'Returns the authenticated customer current active barbershop follows.';
+COMMENT ON FUNCTION public.list_my_followed_organizations() IS 'Authentifié uniquement. Les abonnements actifs de l''appelant, résolus en lignes affichables. AUCUN paramètre : l''abonné est toujours auth.uid(), il n''y a rien à forger. N''expose que ce qu''un profil public expose déjà en anonyme — nom et slug (get_public_organization), ville (list_public_locations rend l''adresse complète) — et rien de plus : ni nombre d''abonnés, ni état commercial, ni visibilité marketplace, ni imagerie (aucune colonne d''imagerie d''établissement n''existe en base, manque D1 §13.1). La ville est celle de la plus ancienne localisation ACTIVE (déterministe) ; NULL si l''organisation n''en a aucune.';
 
 
 --
@@ -9195,6 +12320,413 @@ $$;
 --
 
 COMMENT ON FUNCTION public.list_my_followed_professionals() IS 'Authenticated-only. The caller''s own follow list, resolved to identities. Takes NO parameter, so there is nothing to forge — the follower is always auth.uid(). Deliberately does not filter on is_public: a customer who followed a professional keeps seeing them if the professional later goes private, which is their own relationship rather than a public listing.';
+
+
+--
+-- Name: list_my_poster_locations(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_my_poster_locations() RETURNS TABLE(location_id uuid, location_name text, city text, country text, organization_id uuid, organization_name text, organization_slug text, via text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    l.id, l.name, l.city, l.country,
+    o.id, o.name, o.slug,
+    case when (select private.has_org_role(o.id, array['owner','manager']::public.membership_role[]))
+         then 'membership' else 'platform' end
+  from public.locations l
+  join public.organizations o on o.id = l.organization_id
+  where l.is_active
+    and (select auth.uid()) is not null
+    and (
+      -- LE PATRON : vérifié sur `memberships`, owner ou manager seulement.
+      (select private.has_org_role(o.id, array['owner','manager']::public.membership_role[]))
+      -- L'INTERNE HABILITÉ, borné à ses zones s'il l'est.
+      or (
+        (select private.platform_can('poster.assign'))
+        and (
+          not (select private.platform_is_zone_limited())
+          or exists (
+            select 1
+            from public.platform_member_zones mz
+            join public.platform_zones z on z.id = mz.zone_id and z.is_active
+            where mz.user_id = (select auth.uid())
+              and z.country = l.country
+              and z.city_key = (select private.platform_zone_key(l.city))
+          )
+        )
+      )
+    )
+  order by o.name, l.name;
+$$;
+
+
+--
+-- Name: list_organization_customers(uuid, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_organization_customers(p_organization_id uuid, p_search text DEFAULT NULL::text, p_segment text DEFAULT 'all'::text, p_limit integer DEFAULT 50, p_offset integer DEFAULT 0) RETURNS TABLE(customer_id uuid, display_name text, phone text, email text, user_id uuid, is_verified_client boolean, completed_count integer, first_completed_at timestamp with time zone, last_completed_at timestamp with time zone, days_since_last integer, average_interval_days integer, expected_return_at timestamp with time zone, is_lapsed boolean, usual_barber_id uuid, usual_barber_name text, upcoming_at timestamp with time zone, total_count integer)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_segment text := lower(coalesce(nullif(btrim(p_segment), ''), 'all'));
+  v_search text := nullif(btrim(coalesce(p_search, '')), '');
+  v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 200);
+  v_offset integer := greatest(coalesce(p_offset, 0), 0);
+begin
+  if p_organization_id is null
+     or not (select private.is_org_member(p_organization_id)) then
+    raise exception 'not authorized to read this customer list'
+      using errcode = '42501', detail = 'fadeup_crm_refusal=not_authorized';
+  end if;
+
+  if v_segment not in ('all', 'regular', 'lapsed', 'new', 'verified') then
+    raise exception 'unknown segment'
+      using errcode = '22023', detail = 'fadeup_crm_refusal=unknown_segment';
+  end if;
+
+  return query
+  with stats as (
+    select * from private.customer_visit_stats(p_organization_id)
+  ),
+  rows_all as (
+    select
+      c.id as customer_id,
+      c.name as display_name,
+      c.phone,
+      c.email,
+      c.user_id,
+      exists (
+        select 1 from public.customer_professional_relationships r
+        where r.organization_id = p_organization_id
+          and c.user_id is not null
+          and r.customer_user_id = c.user_id
+      ) as is_verified_client,
+      coalesce(s.completed_count, 0) as completed_count,
+      s.first_completed_at,
+      s.last_completed_at,
+      case when s.last_completed_at is null then null
+           else greatest(0, (extract(epoch from now() - s.last_completed_at) / 86400.0)::integer)
+      end as days_since_last,
+      -- L'intervalle moyen n'a de sens qu'à partir de deux intervalles
+      -- observés, donc trois prestations.
+      case when coalesce(s.completed_count, 0) >= 3
+                and s.last_completed_at > s.first_completed_at
+           then greatest(1, round(
+                  (extract(epoch from s.last_completed_at - s.first_completed_at) / 86400.0)
+                  / (s.completed_count - 1))::integer)
+           else null
+      end as average_interval_days,
+      s.usual_barber_id,
+      sp.display_name as usual_barber_name,
+      (select min(a.starts_at) from public.appointments a
+        where a.customer_id = c.id
+          and a.organization_id = p_organization_id
+          and a.starts_at > now()
+          and a.status in ('pending', 'confirmed')) as upcoming_at
+    from public.customers c
+    left join stats s on s.customer_id = c.id
+    left join public.barbers b on b.id = s.usual_barber_id
+    left join public.staff_profiles sp on sp.id = b.staff_profile_id
+    where c.organization_id = p_organization_id
+      and (
+        v_search is null
+        or c.name ilike '%' || v_search || '%'
+        or coalesce(c.phone, '') ilike '%' || v_search || '%'
+        or coalesce(c.email, '') ilike '%' || v_search || '%'
+      )
+  ),
+  rows_scored as (
+    select r.*,
+           case when r.average_interval_days is null then null
+                else r.last_completed_at + make_interval(days => r.average_interval_days)
+           end as expected_return_at,
+           (r.average_interval_days is not null
+            and r.days_since_last >= 30
+            and r.days_since_last > (r.average_interval_days * 1.75)) as is_lapsed
+    from rows_all r
+  ),
+  rows_filtered as (
+    select * from rows_scored r
+    where case v_segment
+            when 'regular'  then r.completed_count >= 3
+            when 'lapsed'   then r.is_lapsed
+            when 'new'      then r.completed_count <= 1
+            when 'verified' then r.is_verified_client
+            else true
+          end
+  )
+  select
+    f.customer_id, f.display_name, f.phone, f.email, f.user_id, f.is_verified_client,
+    f.completed_count, f.first_completed_at, f.last_completed_at, f.days_since_last,
+    f.average_interval_days, f.expected_return_at, f.is_lapsed,
+    f.usual_barber_id, f.usual_barber_name, f.upcoming_at,
+    (select count(*)::integer from rows_filtered)
+  from rows_filtered f
+  order by
+    -- Le segment « en retard » se lit du plus en retard au moins ; partout
+    -- ailleurs, la dernière visite d'abord — c'est ce que le comptoir
+    -- cherche.
+    case when v_segment = 'lapsed' then f.days_since_last end desc nulls last,
+    f.last_completed_at desc nulls last,
+    f.display_name
+  limit v_limit offset v_offset;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION list_organization_customers(p_organization_id uuid, p_search text, p_segment text, p_limit integer, p_offset integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_organization_customers(p_organization_id uuid, p_search text, p_segment text, p_limit integer, p_offset integer) IS 'Les clients d''un salon, avec leur fréquence observée, leur dernière visite et leur nombre de prestations terminées. Segments : all, regular (3 prestations et plus), lapsed (a dépassé 1,75 fois SON propre intervalle et 30 jours), new (0 ou 1), verified (a une identité FadeUp et une prestation délivrée). Bornée à une organisation, réservée à ses membres. Ne rend AUCUNE note : elles ont leur RPC tracée.';
+
+
+--
+-- Name: list_organization_services(uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_organization_services(p_organization_id uuid, p_include_archived boolean DEFAULT false) RETURNS TABLE(id uuid, name text, description text, category_id uuid, category_name text, duration_minutes integer, price_cents integer, price_pending boolean, is_active boolean, archived_at timestamp with time zone, status text, barber_count integer, assigned_barber_ids uuid[], observed_minutes numeric, sample_count integer, declared_weight_percent integer, has_history boolean, created_at timestamp with time zone)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if p_organization_id is null
+     or not (select private.is_org_member(p_organization_id)) then
+    raise exception 'not authorized to read this catalogue'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  return query
+  select
+    s.id,
+    s.name,
+    s.description,
+    s.category_id,
+    c.name,
+    s.duration_minutes,
+    s.price_cents,
+    s.price_pending,
+    s.is_active,
+    s.archived_at,
+    case
+      when s.archived_at is not null then 'archived'
+      when s.price_pending then 'draft'
+      when s.is_active then 'active'
+      else 'inactive'
+    end,
+    coalesce(bs.barber_count, 0),
+    coalesce(bs.barber_ids, array[]::uuid[]),
+    o.observed_minutes,
+    o.sample_count,
+    -- Part du DÉCLARÉ dans l'estimation montrée au client, en pourcentage :
+    -- 100 % tant qu'il y a moins de 5 mesures, puis décroissante jusqu'à
+    -- 0 % à 20 mesures. C'est ce nombre qui permet de dire honnêtement au
+    -- professionnel si changer la durée déclarée change encore quelque chose.
+    case
+      when coalesce(o.sample_count, 0) < 5 or o.observed_minutes is null then 100
+      else greatest(0, 100 - least(100, round(((o.sample_count - 4)::numeric / 16.0) * 100)))::integer
+    end,
+    exists (select 1 from public.appointments a where a.service_id = s.id)
+      or exists (select 1 from public.queue_entries q where q.service_id = s.id)
+      or exists (select 1 from public.service_duration_samples d where d.service_id = s.id)
+      or exists (select 1 from public.post_services ps where ps.service_id = s.id),
+    s.created_at
+  from public.services s
+  left join public.service_categories c on c.id = s.category_id
+  left join lateral (
+    select count(*)::integer as barber_count,
+           array_agg(b.barber_id order by b.barber_id) as barber_ids
+    from public.barber_services b where b.service_id = s.id
+  ) bs on true
+  cross join lateral private.observed_service_duration(s.id, null, null) o
+  where s.organization_id = p_organization_id
+    and (p_include_archived or s.archived_at is null)
+  order by s.archived_at nulls first, s.name;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION list_organization_services(p_organization_id uuid, p_include_archived boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_organization_services(p_organization_id uuid, p_include_archived boolean) IS 'Le catalogue d''une organisation pour l''écran pro : état réel (active/draft/inactive/archived), affectations barber, durée observée contre durée déclarée, et présence d''un historique (qui interdit la suppression). Tout membre de l''organisation lit ; les écritures ont leurs propres gardes.';
+
+
+--
+-- Name: list_organization_support_sessions(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_organization_support_sessions(p_organization_id uuid) RETURNS TABLE(id uuid, started_at timestamp with time zone, ended_at timestamp with time zone, expires_at timestamp with time zone, target_type text, reason text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select s.id, s.started_at, s.ended_at, s.expires_at, s.target_type, s.reason
+  from public.platform_support_sessions s
+  where s.organization_id = p_organization_id
+    and (select auth.uid()) is not null
+    and (select private.has_org_role(p_organization_id, array['owner', 'manager']::public.membership_role[]))
+  order by s.started_at desc
+  limit 100;
+$$;
+
+
+--
+-- Name: FUNCTION list_organization_support_sessions(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_organization_support_sessions(p_organization_id uuid) IS 'Les vues empruntées qu''une organisation a subies, pour son propriétaire ou son manager. C''est la réponse de PLAT-1 à « le propriétaire doit pouvoir le savoir » : une trace consultable — un professionnel a le droit de savoir qui a agi sur son compte. L''identité de l''interne n''est PAS exposée : ce qui est opposable est qu''une session a eu lieu, quand, et pourquoi ; qui exactement est une donnée RH qui appartient au journal interne. Zéro ligne pour tout autre appelant.';
+
+
+--
+-- Name: list_platform_team(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_platform_team() RETURNS TABLE(user_id uuid, email text, full_name text, role public.platform_role, note text, created_at timestamp with time zone, zones jsonb)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    pm.user_id,
+    u.email::text,
+    nullif(btrim(coalesce(u.raw_user_meta_data ->> 'full_name', '')), ''),
+    pm.role,
+    pm.note,
+    pm.created_at,
+    coalesce(
+      (
+        select jsonb_agg(jsonb_build_object('id', z.id, 'label', z.label, 'country', z.country, 'city', z.city) order by z.label)
+        from public.platform_member_zones mz
+        join public.platform_zones z on z.id = mz.zone_id
+        where mz.user_id = pm.user_id
+      ),
+      '[]'::jsonb
+    )
+  from public.platform_members pm
+  join auth.users u on u.id = pm.user_id
+  where (select private.platform_can('internal_team.read'))
+  order by pm.created_at;
+$$;
+
+
+--
+-- Name: FUNCTION list_platform_team(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_platform_team() IS 'Le trombinoscope interne : qui est là, avec quel rôle, quelles zones, depuis quand. Gardée par internal_team.read — la grille, et non is_platform_admin(), pour qu''il n''existe qu''UN endroit où cette décision se lit. Rend zéro ligne à tout autre appelant plutôt que de lever : c''est une lecture de liste. L''e-mail vient de auth.users, hors de portée d''une policy — d''où le SECURITY DEFINER.';
+
+
+--
+-- Name: list_poster_batches(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_poster_batches(p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, label text, note text, code_count integer, free_count integer, assigned_count integer, revoked_count integer, letters_prepared integer, created_by_email text, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    b.id, b.label, b.note, b.code_count,
+    count(*) filter (where p.state = 'free')::integer,
+    count(*) filter (where p.state = 'assigned')::integer,
+    count(*) filter (where p.state = 'revoked')::integer,
+    count(*) filter (where p.letter_generated_at is not null)::integer,
+    (select u.email::text from auth.users u where u.id = b.created_by),
+    b.created_at
+  from public.poster_batches b
+  left join public.posters p on p.batch_id = b.id
+  where (select private.platform_can('poster.manage'))
+  group by b.id
+  order by b.created_at desc
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
+
+
+--
+-- Name: list_posters(uuid, public.poster_state, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_posters(p_batch_id uuid DEFAULT NULL::uuid, p_state public.poster_state DEFAULT NULL::public.poster_state, p_limit integer DEFAULT 500) RETURNS TABLE(id uuid, code text, state public.poster_state, batch_id uuid, batch_label text, organization_id uuid, organization_name text, organization_slug text, location_id uuid, location_name text, assigned_at timestamp with time zone, assigned_by_email text, revoked_at timestamp with time zone, revoke_reason text, letter_prospect_id uuid, letter_prospect_name text, letter_generated_at timestamp with time zone, created_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    p.id, p.code, p.state, p.batch_id, b.label,
+    p.organization_id, o.name, o.slug,
+    p.location_id, l.name,
+    p.assigned_at, (select u.email::text from auth.users u where u.id = p.assigned_by),
+    p.revoked_at, p.revoke_reason,
+    p.letter_prospect_id, pr.canonical_name, p.letter_generated_at,
+    p.created_at
+  from public.posters p
+  join public.poster_batches b on b.id = p.batch_id
+  left join public.organizations o on o.id = p.organization_id
+  left join public.locations l on l.id = p.location_id
+  left join public.prospects pr on pr.id = p.letter_prospect_id
+  where (select private.platform_can('poster.manage'))
+    and (p_batch_id is null or p.batch_id = p_batch_id)
+    and (p_state is null or p.state = p_state)
+  order by b.created_at desc, p.code
+  limit greatest(coalesce(p_limit, 500), 1);
+$$;
+
+
+--
+-- Name: list_professional_applications_queue(public.professional_application_status, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_professional_applications_queue(p_status public.professional_application_status DEFAULT NULL::public.professional_application_status, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, status public.professional_application_status, first_name text, last_name text, email text, phone text, business_name text, professional_type public.professional_type, city text, postal_code text, country text, staff_count integer, website text, instagram text, business_identifier text, submitted_at timestamp with time zone, reviewed_at timestamp with time zone, reviewed_by_email text, rejection_reason text, internal_note text, organization_id uuid)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    a.id, a.status, a.first_name, a.last_name, a.email, a.phone,
+    a.business_name, a.professional_type, a.city, a.postal_code, a.country,
+    a.staff_count, a.website, a.instagram, a.business_identifier,
+    a.submitted_at, a.reviewed_at,
+    (select u.email::text from auth.users u where u.id = a.reviewed_by),
+    a.rejection_reason, a.internal_note, a.organization_id
+  from public.professional_applications a
+  where (select private.platform_can('onboarding.review'))
+    and (p_status is null or a.status = p_status)
+  order by (a.status = 'pending_review') desc, a.submitted_at
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
+
+
+--
+-- Name: list_professional_claims_queue(boolean, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_professional_claims_queue(p_include_decided boolean DEFAULT false, p_limit integer DEFAULT 100) RETURNS TABLE(id uuid, professional_id uuid, professional_display_name text, professional_handle text, professional_claim_state public.professional_claim_state, claimant_user_id uuid, claimant_email text, state public.professional_claim_status, evidence text, submitted_at timestamp with time zone, decided_at timestamp with time zone, decided_by_email text, decision_note text, competing_pending integer)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    c.id, c.professional_id, pr.display_name, pr.handle, pr.claim_state,
+    c.claimant_user_id,
+    (select u.email::text from auth.users u where u.id = c.claimant_user_id),
+    c.state, c.evidence, c.submitted_at, c.decided_at,
+    (select u.email::text from auth.users u where u.id = c.decided_by),
+    c.decision_note,
+    (select count(*)::integer from public.professional_claims c2
+      where c2.professional_id = c.professional_id
+        and c2.state = 'pending'
+        and c2.id <> c.id)
+  from public.professional_claims c
+  join public.professionals pr on pr.id = c.professional_id
+  where (select private.platform_can('onboarding.review'))
+    and (p_include_decided or c.state = 'pending')
+  -- Les revendications CONTESTÉES en tête : c'est là qu'un humain doit
+  -- trancher, et c'est ce qu'une file triée par date enterre.
+  order by
+    (select count(*) from public.professional_claims c2
+      where c2.professional_id = c.professional_id and c2.state = 'pending') desc,
+    c.submitted_at
+  limit greatest(coalesce(p_limit, 100), 1);
+$$;
 
 
 --
@@ -9448,6 +12980,152 @@ COMMENT ON FUNCTION public.list_public_services(p_organization_slug text, p_loca
 
 
 --
+-- Name: list_support_tickets(boolean, boolean, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_support_tickets(p_include_resolved boolean DEFAULT false, p_assigned_to_me boolean DEFAULT false, p_limit integer DEFAULT 200) RETURNS TABLE(id uuid, reference text, origin public.support_ticket_origin, subject text, status public.support_ticket_status, assigned_to uuid, assigned_to_email text, due_at timestamp with time zone, hours_remaining numeric, is_overdue boolean, organization_id uuid, organization_name text, professional_id uuid, professional_display_name text, withdrawal_request_id uuid, message_count integer, created_at timestamp with time zone, updated_at timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select
+    t.id, t.reference, t.origin, t.subject, t.status,
+    t.assigned_to, au.email::text,
+    t.due_at,
+    case when t.due_at is null then null
+         else round(extract(epoch from (t.due_at - now())) / 3600.0, 1) end,
+    -- Un ticket résolu n'est jamais « en retard » : l'échéance ne court plus.
+    t.status <> 'resolved' and t.due_at is not null and t.due_at < now(),
+    t.organization_id, o.name,
+    t.professional_id, pr.display_name,
+    t.withdrawal_request_id,
+    (select count(*)::integer from public.support_ticket_messages m where m.ticket_id = t.id),
+    t.created_at, t.updated_at
+  from public.support_tickets t
+  left join auth.users au on au.id = t.assigned_to
+  left join public.organizations o on o.id = t.organization_id
+  left join public.professionals pr on pr.id = t.professional_id
+  where (select private.platform_can('support.tickets'))
+    and (p_include_resolved or t.status <> 'resolved')
+    and (not p_assigned_to_me or t.assigned_to = (select auth.uid()))
+  -- L'URGENCE EN TÊTE. Une file triée par date d'arrivée enterre les 72 h
+  -- sous l'historique : c'est exactement le reproche de PLAT-1 §15.7.
+  order by
+    (t.status <> 'resolved' and t.due_at is not null and t.due_at < now()) desc,
+    (t.due_at is null),
+    t.due_at,
+    t.created_at desc
+  limit greatest(coalesce(p_limit, 200), 1);
+$$;
+
+
+--
+-- Name: list_team_invitations(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_team_invitations(p_organization_id uuid) RETURNS TABLE(id uuid, email text, role public.membership_role, location_id uuid, location_name text, invited_by uuid, invited_by_name text, expires_at timestamp with time zone, is_expired boolean, created_at timestamp with time zone)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+begin
+  if p_organization_id is null
+     or not (select private.has_org_role(p_organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to read these invitations'
+      using errcode = '42501', detail = 'fadeup_team_refusal=not_authorized';
+  end if;
+
+  return query
+  select
+    i.id, i.email, i.role, i.location_id, l.name, i.invited_by,
+    coalesce(nullif(btrim(sp.display_name), ''), nullif(btrim(pr.full_name), '')),
+    i.expires_at, i.expires_at < now(), i.created_at
+  from public.invitations i
+  left join public.locations l on l.id = i.location_id
+  left join public.staff_profiles sp
+    on sp.organization_id = i.organization_id and sp.user_id = i.invited_by
+  left join public.profiles pr on pr.id = i.invited_by
+  where i.organization_id = p_organization_id
+    and i.accepted_at is null
+    and i.revoked_at is null
+  order by i.created_at desc;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION list_team_invitations(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_team_invitations(p_organization_id uuid) IS 'Les invitations en attente d''une organisation. Le JETON n''est jamais rendu : il ne vit que dans l''e-mail.';
+
+
+--
+-- Name: list_team_members(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_team_members(p_organization_id uuid) RETURNS TABLE(membership_id uuid, user_id uuid, role public.membership_role, can_view_revenue boolean, is_me boolean, staff_profile_id uuid, display_name text, title text, avatar_url text, location_id uuid, location_name text, is_active boolean, barber_id uuid, is_bookable boolean, queue_enabled boolean, professional_id uuid, professional_handle text, upcoming_appointments integer, created_at timestamp with time zone)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+begin
+  if p_organization_id is null
+     or not (select private.has_org_role(p_organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to read this team'
+      using errcode = '42501', detail = 'fadeup_team_refusal=not_authorized';
+  end if;
+
+  return query
+  select
+    m.id,
+    m.user_id,
+    m.role,
+    m.can_view_revenue,
+    m.user_id is not distinct from v_actor,
+    sp.id,
+    coalesce(nullif(btrim(sp.display_name), ''), '—'),
+    sp.title,
+    sp.avatar_url,
+    sp.location_id,
+    l.name,
+    coalesce(sp.is_active, false),
+    b.id,
+    b.is_bookable,
+    b.queue_enabled,
+    b.professional_id,
+    pro.handle,
+    coalesce((
+      select count(*)::integer from public.appointments a
+      where a.barber_id = b.id
+        and a.starts_at > now()
+        and a.status in ('pending', 'confirmed')
+    ), 0),
+    m.created_at
+  from public.memberships m
+  left join public.staff_profiles sp
+    on sp.organization_id = m.organization_id and sp.user_id = m.user_id
+  left join public.locations l on l.id = sp.location_id
+  left join public.barbers b on b.staff_profile_id = sp.id
+  left join public.professionals pro on pro.id = b.professional_id
+  where m.organization_id = p_organization_id
+  order by
+    case m.role when 'owner' then 0 when 'manager' then 1 when 'receptionist' then 2 else 3 end,
+    coalesce(nullif(btrim(sp.display_name), ''), ''),
+    m.created_at;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION list_team_members(p_organization_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.list_team_members(p_organization_id uuid) IS 'L''équipe d''une organisation, les trois couches d''identité réunies : membership (accès), staff_profile (profil interne), barber (lien d''emploi) et le handle du professionnel. Réservée aux rôles gestionnaires : un barber n''a pas d''écran équipe.';
+
+
+--
 -- Name: maintain_post_like_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -9629,13 +13307,82 @@ COMMENT ON FUNCTION public.mark_platform_notification_read(p_notification_id uui
 
 
 --
+-- Name: moderate_post(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.moderate_post(p_post_id uuid, p_visibility text, p_reason text DEFAULT NULL::text) RETURNS public.posts
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_post public.posts;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+begin
+  if v_actor is null or not (select private.platform_can('moderation.content')) then
+    raise exception 'modération de contenu non autorisée'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=moderation_required';
+  end if;
+
+  if p_visibility not in ('public', 'followers', 'hidden') then
+    raise exception 'visibilité invalide'
+      using errcode = '22023', detail = 'fadeup_moderation_refusal=invalid_status';
+  end if;
+
+  if p_visibility <> 'hidden' and not (select private.platform_can('moderation.revert')) then
+    raise exception 'seul un administrateur annule une décision de modération'
+      using errcode = '42501', detail = 'fadeup_moderation_refusal=revert_requires_admin';
+  end if;
+
+  if p_visibility = 'hidden' then
+    if v_reason is null then
+      raise exception 'un masquage a besoin de son motif'
+        using errcode = '22023', detail = 'fadeup_moderation_refusal=reason_required';
+    end if;
+    if v_reason not in ('fraud', 'abusive_content', 'personal_data', 'hate_speech', 'conflict_of_interest') then
+      raise exception 'motif de modération hors vocabulaire'
+        using errcode = '22023', detail = 'fadeup_moderation_refusal=reason_not_allowed';
+    end if;
+  end if;
+
+  update public.posts
+     set visibility = p_visibility,
+         hidden_at = case when p_visibility = 'hidden' then now() else null end,
+         hidden_by = case when p_visibility = 'hidden' then v_actor else null end,
+         hidden_reason = case when p_visibility = 'hidden' then v_reason else null end,
+         updated_at = now()
+   where id = p_post_id
+  returning * into v_post;
+
+  if not found then
+    raise exception 'post introuvable' using errcode = '42704';
+  end if;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'post_moderated', 'posts', v_post.id,
+          jsonb_build_object('visibility', p_visibility, 'reason', v_reason,
+                             'reverted', p_visibility <> 'hidden'));
+
+  return v_post;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION moderate_post(p_post_id uuid, p_visibility text, p_reason text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.moderate_post(p_post_id uuid, p_visibility text, p_reason text) IS 'Masque ou rétablit un post depuis la console interne (posts.visibility porte déjà « hidden »). Ne SUPPRIME pas : effacer le contenu d''un professionnel n''est pas de la modération, et delete_post reste le geste de son auteur. Tracé.';
+
+
+--
 -- Name: reviews; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.reviews (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     appointment_id uuid NOT NULL,
-    customer_user_id uuid NOT NULL,
+    customer_user_id uuid,
     professional_id uuid NOT NULL,
     organization_id uuid NOT NULL,
     rating smallint NOT NULL,
@@ -9675,6 +13422,13 @@ COMMENT ON TABLE public.reviews IS 'Avis natifs FadeUp. Un par prestation termin
 
 
 --
+-- Name: COLUMN reviews.customer_user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.reviews.customer_user_id IS 'Auteur de l''avis. NULL après effacement de son compte (B5) : l''avis reste publié, sa note continue de compter dans la réputation, mais il n''est plus rattaché à personne. NULL ne signifie donc jamais « avis anonyme à la publication » — submit_review exige une session.';
+
+
+--
 -- Name: COLUMN reviews.reviewer_display_name; Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -9690,26 +13444,59 @@ CREATE FUNCTION public.moderate_review(p_review_id uuid, p_status text, p_reason
     SET search_path TO ''
     AS $$
 declare
+  v_actor uuid := (select auth.uid());
   v_review public.reviews;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
 begin
-  if not private.is_platform_admin() then
-    raise exception 'platform moderation only' using errcode = '42501';
+  -- Le cas nul EXPLICITEMENT, même si platform_can rend un booléen strict.
+  if v_actor is null or not (select private.platform_can('moderation.content')) then
+    raise exception 'platform moderation only'
+      using errcode = '42501', detail = 'fadeup_moderation_refusal=not_authorized';
   end if;
-  if p_status not in ('published','under_review','removed') then
-    raise exception 'invalid moderation status';
+  if p_status not in ('published', 'under_review', 'removed') then
+    raise exception 'invalid moderation status'
+      using errcode = '22023', detail = 'fadeup_moderation_refusal=invalid_status';
   end if;
-  -- « La note est mauvaise » n'est pas un motif : seuls les cinq motifs de
-  -- la contrainte reviews_moderation_reason_valid sont représentables.
+
+  -- ANNULER EST UN GESTE D'ADMINISTRATEUR. Le modérateur masque, il ne défait
+  -- pas : sinon « réversible par un admin » ne veut rien dire de plus que
+  -- « réversible ». Décision de ce lot, déclarée dans le rapport.
+  if p_status = 'published' and not (select private.platform_can('moderation.revert')) then
+    raise exception 'seul un administrateur annule une décision de modération'
+      using errcode = '42501', detail = 'fadeup_moderation_refusal=revert_requires_admin';
+  end if;
+
+  -- UN MOTIF EST OBLIGATOIRE, et pris dans le vocabulaire fermé de la
+  -- contrainte reviews_moderation_reason_valid. La contrainte l'aurait dit
+  -- aussi, mais avec un message de violation de contrainte ; ici c'est un
+  -- refus nommé, que l'interface peut traduire.
+  if p_status <> 'published' then
+    if v_reason is null then
+      raise exception 'un masquage a besoin de son motif'
+        using errcode = '22023', detail = 'fadeup_moderation_refusal=reason_required';
+    end if;
+    if v_reason not in ('fraud', 'abusive_content', 'personal_data', 'hate_speech', 'conflict_of_interest') then
+      raise exception 'motif de modération hors vocabulaire'
+        using errcode = '22023', detail = 'fadeup_moderation_refusal=reason_not_allowed';
+    end if;
+  end if;
+
   update public.reviews
      set status = p_status,
-         moderation_reason = case when p_status = 'published' then null else p_reason end,
+         moderation_reason = case when p_status = 'published' then null else v_reason end,
          moderated_at = case when p_status = 'published' then null else now() end,
-         moderated_by = case when p_status = 'published' then null else (select auth.uid()) end
+         moderated_by = case when p_status = 'published' then null else v_actor end
    where id = p_review_id
   returning * into v_review;
   if not found then
-    raise exception 'review not found';
+    raise exception 'review not found' using errcode = '42704';
   end if;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'review_moderated', 'reviews', v_review.id,
+          jsonb_build_object('status', p_status, 'reason', v_reason,
+                             'reverted', p_status = 'published'));
+
   return v_review;
 end;
 $$;
@@ -10268,6 +14055,74 @@ COMMENT ON FUNCTION public.offboard_barber(p_barber_id uuid) IS 'Owner/manager o
 
 
 --
+-- Name: open_support_ticket(public.support_ticket_origin, text, text, uuid, uuid, uuid, uuid, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.open_support_ticket(p_origin public.support_ticket_origin, p_subject text, p_body text DEFAULT NULL::text, p_subject_user_id uuid DEFAULT NULL::uuid, p_organization_id uuid DEFAULT NULL::uuid, p_professional_id uuid DEFAULT NULL::uuid, p_appointment_id uuid DEFAULT NULL::uuid, p_queue_entry_id uuid DEFAULT NULL::uuid, p_withdrawal_request_id uuid DEFAULT NULL::uuid) RETURNS public.support_tickets
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_tickets());
+  v_ticket public.support_tickets;
+  v_subject text := nullif(btrim(coalesce(p_subject, '')), '');
+  v_due timestamptz;
+begin
+  if v_subject is null then
+    raise exception 'un ticket a besoin de son sujet'
+      using errcode = '22023', detail = 'fadeup_support_refusal=subject_required';
+  end if;
+
+  -- Les deux origines non branchées ne s'ouvrent pas à la main : les laisser
+  -- passer donnerait l'illusion qu'un circuit existe derrière.
+  if p_origin in ('report', 'inbound_email') then
+    raise exception 'cette origine n''est pas encore branchée'
+      using errcode = '22023', detail = 'fadeup_support_refusal=origin_not_wired';
+  end if;
+
+  if p_origin = 'gdpr_withdrawal' then
+    if p_withdrawal_request_id is null then
+      raise exception 'un ticket de retrait a besoin de la demande qu''il traite'
+        using errcode = '22023', detail = 'fadeup_support_refusal=withdrawal_required';
+    end if;
+    -- L'ÉCHÉANCE VIENT DE LA DEMANDE, jamais d'un calcul local : c'est la
+    -- promesse faite au professionnel par X2, pas une durée que le support
+    -- redécide.
+    select w.deadline_at into v_due
+    from public.marketplace_withdrawal_requests w
+    where w.id = p_withdrawal_request_id;
+    if v_due is null then
+      raise exception 'demande de retrait introuvable' using errcode = '42704';
+    end if;
+  end if;
+
+  insert into public.support_tickets (
+    reference, origin, subject, body, opened_by, assigned_to, due_at,
+    subject_user_id, organization_id, professional_id, appointment_id,
+    queue_entry_id, withdrawal_request_id
+  )
+  values (
+    'T-' || lpad(nextval('public.support_ticket_reference_seq')::text, 5, '0'),
+    p_origin, v_subject, nullif(btrim(coalesce(p_body, '')), ''), v_actor, v_actor, v_due,
+    p_subject_user_id, p_organization_id, p_professional_id, p_appointment_id,
+    p_queue_entry_id, p_withdrawal_request_id
+  )
+  returning * into v_ticket;
+
+  insert into public.support_ticket_messages (ticket_id, kind, body, author_user_id, metadata)
+  values (v_ticket.id, 'note', coalesce(v_ticket.body, v_ticket.subject), v_actor,
+          jsonb_build_object('event', 'opened', 'origin', p_origin));
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'support_ticket_opened', 'support_tickets', v_ticket.id,
+          jsonb_build_object('origin', p_origin, 'reference', v_ticket.reference));
+
+  return v_ticket;
+end;
+$$;
+
+
+--
 -- Name: outreach_block_reason(uuid, public.outreach_channel_kind); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -10579,6 +14434,7 @@ declare
   v_used_pro integer;
   v_sub_status text;
 begin
+  perform private.assert_not_in_support_view('prepare_billing_checkout');
   perform private.assert_billing_owner(p_organization_id);
 
   select * into v_plan from public.commercial_plans p
@@ -10665,6 +14521,7 @@ CREATE FUNCTION public.prepare_billing_portal(p_organization_id uuid) RETURNS TA
 declare
   v_customer text;
 begin
+  perform private.assert_not_in_support_view('prepare_billing_portal');
   perform private.assert_billing_owner(p_organization_id);
 
   select b.stripe_customer_id into v_customer
@@ -10686,6 +14543,93 @@ $$;
 --
 
 COMMENT ON FUNCTION public.prepare_billing_portal(p_organization_id uuid) IS 'Autorise l''ouverture du portail client Stripe (moyen de paiement, factures, résiliation en libre-service) : propriétaire uniquement, même garde que tout le reste de la facturation.';
+
+
+--
+-- Name: prepare_poster_letter(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.prepare_poster_letter(p_code text, p_prospect_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_code text := upper(btrim(coalesce(p_code, '')));
+  v_poster public.posters;
+  v_prospect public.prospects;
+  v_location public.prospect_locations;
+  v_stats jsonb;
+begin
+  if v_actor is null or not (select private.platform_can('poster.manage')) then
+    raise exception 'préparation de lettre non autorisée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=letter_not_authorized';
+  end if;
+  if p_prospect_id is null or not (select private.platform_prospect_visible(p_prospect_id)) then
+    raise exception 'ce prospect n''est pas visible avec votre rôle'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=prospect_not_visible';
+  end if;
+
+  select * into v_poster from public.posters where code = v_code for update;
+  if not found then
+    raise exception 'affiche inconnue'
+      using errcode = '42704', detail = 'fadeup_poster_refusal=unknown_code';
+  end if;
+  if v_poster.state <> 'free' then
+    raise exception 'seule une affiche libre part par la poste'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=not_free';
+  end if;
+
+  -- LA FICHE DOIT EXISTER AVANT QU'UNE LETTRE L'AFFIRME.
+  if not exists (
+    select 1
+    from public.prospect_professionals pp
+    join public.professionals pr on pr.id = pp.professional_id
+    where pp.prospect_id = p_prospect_id and pr.is_public
+  ) then
+    raise exception 'la fiche de ce prospect n''est pas publiée : la lettre affirmerait ce qui n''existe pas'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=prospect_not_published';
+  end if;
+
+  select * into v_prospect from public.prospects where id = p_prospect_id;
+  select * into v_location from public.prospect_locations
+   where prospect_id = p_prospect_id order by is_primary desc limit 1;
+
+  update public.posters
+     set letter_prospect_id = p_prospect_id,
+         letter_generated_at = now(),
+         letter_generated_by = v_actor,
+         updated_at = now()
+   where id = v_poster.id;
+
+  v_stats := (select public.get_prospect_acquisition_stats(p_prospect_id, 90));
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'poster_letter_prepared', 'posters', v_poster.id,
+          jsonb_build_object('code', v_poster.code, 'prospect_id', p_prospect_id));
+
+  return jsonb_build_object(
+    'code', v_poster.code,
+    'prospect_id', p_prospect_id,
+    'business_name', v_prospect.canonical_name,
+    'address', jsonb_build_object(
+      'line', v_location.address_line, 'postal_code', v_location.postal_code,
+      'city', v_location.city, 'country', coalesce(v_location.country, v_prospect.country)),
+    -- L'ÉLÉMENT DE PREUVE, ou rien. Aucune phrase de repli chiffrée.
+    'proof', case
+      when coalesce((v_stats ->> 'profile_views_all_time')::integer, 0) > 0
+           or coalesce((v_stats ->> 'interest_requests')::integer, 0) > 0
+      then jsonb_build_object(
+             'profile_views_all_time', v_stats -> 'profile_views_all_time',
+             'profile_views_window', v_stats -> 'profile_views',
+             'window_days', v_stats -> 'window_days',
+             'interest_requests', v_stats -> 'interest_requests',
+             'last_profile_view_at', v_stats -> 'last_profile_view_at')
+      else null end,
+    'stats', v_stats
+  );
+end;
+$$;
 
 
 --
@@ -10922,16 +14866,11 @@ declare
   v_name text;
 begin
   v_actor := (select auth.uid());
-  if v_actor is null or not (select private.is_platform_admin()) then
+  if v_actor is null or not (select private.platform_can('marketplace.publish')) then
     raise exception 'only FadeUp platform administrators can publish an external professional identity'
       using errcode = '42501';
   end if;
 
-  -- Lock the PROSPECT, not the linkage row, because the linkage row is what we
-  -- are about to create and therefore cannot be locked. Two administrators
-  -- double-clicking Publish on the same candidate serialise here; the loser
-  -- re-reads a gate that now says already_published and returns the winner's
-  -- identity instead of a 23505 they would have to interpret.
   perform 1 from public.prospects where id = p_prospect_id for update;
   if not found then
     raise exception 'prospect not found' using errcode = '42704';
@@ -10942,19 +14881,34 @@ begin
   where pp.prospect_id = p_prospect_id;
 
   if v_existing is not null then
-    -- Idempotent, and self-healing for identities minted while the R1B CHECK
-    -- still forbade publication: those rows exist, are linked, and are
-    -- invisible. Pressing Publish again finishes the job.
+    -- Idempotente et auto-réparatrice (B1) — mais plus jamais au mépris d'un
+    -- retrait ou d'une suppression. LE MÊME garde que la branche neuve
+    -- (publication_block_reason), en ignorant seulement already_published,
+    -- vrai par construction ici : deux définitions de l'éligibilité avaient
+    -- déjà divergé une fois (revue X2, suppressed_email ignoré).
+    v_reason := public.publication_block_reason(p_prospect_id);
+    if v_reason is not null and v_reason <> 'already_published' then
+      perform 1 from public.professionals p
+      where p.id = v_existing and not p.is_public;
+      if found then
+        raise exception 'prospect is not eligible for publication: %', v_reason
+          using errcode = '42501';
+      end if;
+      -- Déjà public ET bloqué : état hérité — on ne dépublie pas en douce
+      -- depuis un chemin de publication, on rend l'identité telle qu'elle
+      -- est. Le retrait a son propre circuit. Et on n'informe PAS : les
+      -- gardes de contact de l'enqueue refuseront de toute façon.
+    end if;
+
     update public.professionals
     set is_public = true
     where id = v_existing and not is_public;
 
+    perform private.enqueue_publication_information(v_existing);
+
     return v_existing;
   end if;
 
-  -- Checked here so the operator gets the reason by name. The trigger would
-  -- refuse the insert regardless; this is ergonomics on top of the guarantee,
-  -- never in place of it.
   v_reason := public.publication_block_reason(p_prospect_id);
   if v_reason is not null then
     raise exception 'prospect is not eligible for publication: %', v_reason
@@ -10965,17 +14919,10 @@ begin
 
   v_professional_id := public.create_external_professional(p_prospect_id);
 
-  -- Publication is the point of this function. It happens AFTER the linkage
-  -- row exists, because professionals_guard_publication reads the linkage to
-  -- find the anchor — the same ordering the guard's INSERT branch describes.
   update public.professionals
   set is_public = true
   where id = v_professional_id;
 
-  -- Constitution §4.4's discipline, applied to acquisition: a decision that
-  -- creates a durable public-facing identity records who took it and when.
-  -- The prospect's name is captured AS PUBLISHED, so a later rename of the
-  -- prospect does not rewrite the history of what was approved.
   insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
   values (
     v_actor,
@@ -10990,10 +14937,11 @@ begin
     )
   );
 
-  -- Fold the verdict forward immediately so the review queue stops offering a
-  -- candidate that has just been published, without waiting for the next
-  -- Worker sweep.
   perform public.refresh_prospect_publication_eligibility(p_prospect_id);
+
+  -- Publier, puis informer — dans la même transaction : si la mise en file
+  -- échoue, la publication échoue avec elle. On ne publie pas sans informer.
+  perform private.enqueue_publication_information(v_professional_id);
 
   return v_professional_id;
 end;
@@ -11413,8 +15361,7 @@ declare
   v_row public.prospect_publication_eligibility;
 begin
   if not (
-    (select private.has_platform_role(
-       array['platform_owner', 'platform_admin']::public.platform_role[]))
+    (select private.platform_can('marketplace.publish'))
     or ((select auth.uid()) is null and session_user = 'prospect_worker')
   ) then
     raise exception 'only FadeUp platform administrators or the acquisition worker can evaluate publication eligibility'
@@ -11542,6 +15489,28 @@ COMMENT ON FUNCTION public.reissue_platform_owner_bootstrap_token(p_expires_in i
 
 
 --
+-- Name: reject_account_erasure_log_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reject_account_erasure_log_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  raise exception 'account_erasure_log est en ajout seul : % n''est pas permis', tg_op
+    using errcode = '42501';
+end;
+$$;
+
+
+--
+-- Name: FUNCTION reject_account_erasure_log_mutation(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.reject_account_erasure_log_mutation() IS 'Aucune exemption de rôle, volontairement — motif de reject_commercial_history_mutation(). Une trace d''effacement que l''on peut effacer ne trace rien. Cette table n''a AUCUNE exemption d''effacement de compte (§4 de la migration) parce qu''elle ne contient aucune donnée personnelle à effacer.';
+
+
+--
 -- Name: reject_analytics_event_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -11551,6 +15520,26 @@ CREATE FUNCTION public.reject_analytics_event_mutation() RETURNS trigger
     AS $$
 begin
   if tg_op = 'UPDATE' then
+    -- B5 : l'unique exception, et elle ne peut retirer qu'un identifiant.
+    -- Tout le reste de la ligne — l'événement, l'horodatage, l'organisation,
+    -- les propriétés — doit être rigoureusement identique.
+    -- actor_type DOIT suivre : analytics_events_actor_coherent interdit un
+    -- acteur 'customer' sans identifiant. Un événement désidentifié est
+    -- exactement un événement anonyme, et le dire est plus juste que de
+    -- laisser un type d'acteur qui ne correspond plus à rien.
+    -- dedupe_key aussi : certaines clés d'idempotence portent l'identifiant
+    -- EN TEXTE ('organization_follow:<org>:<uid>') — invisible d'un balayage
+    -- de colonnes uuid, et tout aussi rattachable.
+    if private.erasure_update_allowed(
+         to_jsonb(old), to_jsonb(new),
+         jsonb_build_object(
+           'actor_user_id', jsonb_build_array(null),
+           'actor_type', jsonb_build_array('anonymous'),
+           'dedupe_key', jsonb_build_array(null))
+       ) then
+      return new;
+    end if;
+
     raise exception 'analytics_events is append-only: a recorded event cannot be modified'
       using errcode = '22023';
   end if;
@@ -11597,6 +15586,61 @@ COMMENT ON FUNCTION public.reject_commercial_history_mutation() IS 'Refuses UPDA
 
 
 --
+-- Name: reject_legacy_customer_notes(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reject_legacy_customer_notes() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if new.notes is not null and btrim(new.notes) <> ''
+     and (tg_op = 'INSERT' or new.notes is distinct from old.notes) then
+    raise exception 'customers.notes is retired: write to public.customer_notes instead'
+      using errcode = '42501',
+            detail = 'fadeup_customer_notes_refusal=legacy_column',
+            hint = 'La case unique n''a ni auteur, ni date, ni trace de consultation. OS-2 lui substitue customer_notes.';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION reject_legacy_customer_notes(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.reject_legacy_customer_notes() IS 'Condamne customers.notes (0 ligne en production, aucun écrivain V2). Sans ce refus, une écriture future contournerait en silence la frontière d''audit de customer_notes.';
+
+
+--
+-- Name: reject_platform_audit_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reject_platform_audit_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  -- Aucune exemption de rôle, volontairement — c'est le motif de
+  -- reject_commercial_history_mutation(), et sa raison : un journal que le
+  -- rôle le plus puissant peut réécrire n'est pas un journal. BYPASSRLS ne
+  -- contourne pas un déclencheur ; postgres et service_role sont refusés
+  -- comme les autres.
+  raise exception 'platform_audit_log est en ajout seul : % n''est pas permis', tg_op
+    using errcode = '42501';
+end;
+$$;
+
+
+--
+-- Name: FUNCTION reject_platform_audit_mutation(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.reject_platform_audit_mutation() IS 'Refuse toute MODIFICATION et toute SUPPRESSION dans platform_audit_log, pour tous les rôles sans exception. C''est ce qui rend le journal opposable.';
+
+
+--
 -- Name: reject_service_mode_history_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -11617,6 +15661,39 @@ $$;
 --
 
 COMMENT ON FUNCTION public.reject_service_mode_history_mutation() IS 'Makes service_mode_changes append-only for EVERY writer including service_role and postgres. A trigger rather than a grant, because BYPASSRLS roles would otherwise be able to rewrite the audit trail.';
+
+
+--
+-- Name: reject_support_ticket_message_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reject_support_ticket_message_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO ''
+    AS $$
+begin
+  if tg_op = 'UPDATE'
+     and private.erasure_update_allowed(
+           to_jsonb(old), to_jsonb(new),
+           jsonb_build_object(
+             'body', jsonb_build_array(private.erasure_display_sentinel()),
+             'author_user_id', jsonb_build_array(null),
+             'metadata', jsonb_build_array('{}'::jsonb))) then
+    return new;
+  end if;
+
+  raise exception
+    'support_ticket_messages est en ajout seul : % n''est pas permis', tg_op
+    using errcode = '42501';
+end;
+$$;
+
+
+--
+-- Name: FUNCTION reject_support_ticket_message_mutation(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.reject_support_ticket_message_mutation() IS 'PLAT-2 : aucune exemption de rôle. BYPASSRLS ne contourne pas un déclencheur — postgres et service_role sont refusés comme les autres.';
 
 
 --
@@ -11649,6 +15726,246 @@ $$;
 --
 
 COMMENT ON FUNCTION public.remove_favorite(p_favorite_id uuid) IS 'Authenticated removal contract for the caller own favorite. Also lets customers remove historical pre-V2 barber favorites without permitting new barber favorites. A foreign/nonexistent id is an indistinguishable no-op.';
+
+
+--
+-- Name: remove_queue_entry_as_platform(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.remove_queue_entry_as_platform(p_entry_id uuid, p_reason text) RETURNS public.queue_entries
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_entry public.queue_entries;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+begin
+  if v_actor is null or not (select private.platform_can('queue.remove')) then
+    raise exception 'sortie de file non autorisée'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=queue_remove_required';
+  end if;
+  if v_reason is null then
+    raise exception 'une sortie de file interne a besoin de son motif'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=reason_required';
+  end if;
+
+  select * into v_entry from public.queue_entries where id = p_entry_id for update;
+  if not found then
+    raise exception 'entrée de file introuvable' using errcode = '42704';
+  end if;
+  if v_entry.status = 'cancelled' then
+    return v_entry;
+  end if;
+  -- Une prestation commencée ou terminée ne se « sort » pas de la file : elle
+  -- s'est produite. Le support ne réécrit pas l'histoire du salon.
+  if v_entry.status not in ('waiting', 'called') then
+    raise exception 'cette entrée n''est plus en attente'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=queue_entry_not_waiting';
+  end if;
+
+  update public.queue_entries
+     set status = 'cancelled',
+         notes = trim(both ' ' from coalesce(v_entry.notes, '') || ' [support] ' || v_reason),
+         updated_at = now()
+   where id = p_entry_id
+  returning * into v_entry;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'queue_entry_removed_by_platform', 'queue_entries', v_entry.id,
+          jsonb_build_object('organization_id', v_entry.organization_id,
+                             'location_id', v_entry.location_id, 'reason', v_reason));
+
+  return v_entry;
+end;
+$$;
+
+
+--
+-- Name: remove_team_member(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.remove_team_member(p_membership_id uuid, p_reassign_to_barber_id uuid DEFAULT NULL::uuid) RETURNS TABLE(removed_membership_id uuid, professional_id uuid, reassigned_appointments integer, moved_queue_entries integer, released_queue_entries integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_membership public.memberships;
+  v_barber public.barbers;
+  v_target public.barbers;
+  v_owner_count integer;
+  v_future integer := 0;
+  v_reassigned integer := 0;
+  v_moved integer := 0;
+  v_released integer := 0;
+  v_entry record;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_team_refusal=anonymous';
+  end if;
+
+  select * into v_membership from public.memberships m where m.id = p_membership_id;
+
+  if v_membership.id is null
+     or not (select private.has_org_role(v_membership.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to remove this member'
+      using errcode = '42501', detail = 'fadeup_team_refusal=not_authorized';
+  end if;
+
+  if v_membership.role = 'owner'
+     and not (select private.has_org_role(v_membership.organization_id,
+                array['owner']::public.membership_role[])) then
+    raise exception 'only an owner may remove an owner'
+      using errcode = '42501', detail = 'fadeup_team_refusal=owner_role_forbidden';
+  end if;
+
+  if v_membership.user_id is not distinct from v_actor then
+    raise exception 'you cannot remove yourself from the team'
+      using errcode = '42501', detail = 'fadeup_team_refusal=self_removal';
+  end if;
+
+  if v_membership.role = 'owner' then
+    select count(*)::integer into v_owner_count
+    from public.memberships m
+    where m.organization_id = v_membership.organization_id and m.role = 'owner';
+    if v_owner_count <= 1 then
+      raise exception 'an organization keeps at least one owner'
+        using errcode = '22023', detail = 'fadeup_team_refusal=last_owner';
+    end if;
+  end if;
+
+  select b.* into v_barber
+  from public.barbers b
+  join public.staff_profiles sp on sp.id = b.staff_profile_id
+  where sp.organization_id = v_membership.organization_id
+    and sp.user_id = v_membership.user_id;
+
+  if p_reassign_to_barber_id is not null then
+    select b.* into v_target
+    from public.barbers b
+    join public.staff_profiles sp on sp.id = b.staff_profile_id
+    where b.id = p_reassign_to_barber_id
+      and b.organization_id = v_membership.organization_id
+      and b.is_bookable
+      and sp.is_active;
+
+    if v_target.id is null then
+      raise exception 'the replacement must be an active, bookable barber of this organization'
+        using errcode = '22023', detail = 'fadeup_team_refusal=target_invalid';
+    end if;
+
+    if v_barber.id is not null and v_target.id = v_barber.id then
+      raise exception 'the replacement cannot be the person being removed'
+        using errcode = '22023', detail = 'fadeup_team_refusal=target_is_self';
+    end if;
+  end if;
+
+  if v_barber.id is not null then
+    select count(*)::integer into v_future
+    from public.appointments a
+    where a.barber_id = v_barber.id
+      and a.starts_at > now()
+      and a.status in ('pending', 'confirmed');
+
+    -- On ne laisse pas un client devant un fauteuil vide, et on n'annule pas
+    -- dans le dos du salon : le remplaçant est OBLIGATOIRE dès qu'il reste
+    -- un rendez-vous à venir.
+    if v_future > 0 and v_target.id is null then
+      raise exception 'this barber still has % upcoming appointment(s); name a replacement', v_future
+        using errcode = '22023',
+              detail = format('fadeup_team_refusal=has_future_appointments count=%s', v_future),
+              hint = 'Choisissez le barber qui les reprend, ou annulez-les d''abord depuis l''agenda.';
+    end if;
+
+    if v_future > 0 then
+      begin
+        update public.appointments a
+           set barber_id = v_target.id
+         where a.barber_id = v_barber.id
+           and a.starts_at > now()
+           and a.status in ('pending', 'confirmed');
+        get diagnostics v_reassigned = row_count;
+      exception
+        when exclusion_violation or check_violation then
+          -- La contrainte d'exclusion a parlé : le remplaçant est déjà pris
+          -- sur l'un de ces créneaux. On refuse en le disant, on ne force
+          -- pas un chevauchement dans le dos du salon.
+          raise exception 'the replacement is already booked over at least one of these appointments'
+            using errcode = '23P01',
+                  detail = 'fadeup_team_refusal=reassign_conflict',
+                  hint = 'Déplacez d''abord les créneaux en conflit depuis l''agenda, puis réessayez.';
+      end;
+    end if;
+
+    -- La file en cours : les personnes EN ATTENTE ne sont jamais jetées.
+    -- Une personne APPELÉE ou AU FAUTEUIL reste sur le partant : F1b l'a
+    -- tranché pour `move_queue_entry` (« la déplacer serait réécrire
+    -- l'histoire »), et la raison vaut ici doublement — la prestation en
+    -- cours alimentera `service_duration_samples`, et l'attribuer au
+    -- remplaçant polluerait l'estimation apprise avec un travail qu'il n'a
+    -- pas fait. Le siège est fermé, pas amputé : la prestation en cours se
+    -- termine normalement.
+    for v_entry in
+      select q.id, q.organization_id, q.location_id, q.barber_id
+      from public.queue_entries q
+      where q.barber_id = v_barber.id
+        and q.status = 'waiting'
+    loop
+      perform set_config('fadeup.queue_move', '1', true);
+      if v_target.id is not null and v_target.queue_enabled then
+        update public.queue_entries q set barber_id = v_target.id where q.id = v_entry.id;
+        v_moved := v_moved + 1;
+      else
+        update public.queue_entries q set barber_id = null where q.id = v_entry.id;
+        v_released := v_released + 1;
+      end if;
+
+      insert into public.queue_entry_moves
+        (organization_id, location_id, entry_id, from_barber_id, to_barber_id, kind, moved_by)
+      values
+        (v_entry.organization_id, v_entry.location_id, v_entry.id, v_entry.barber_id,
+         case when v_target.id is not null and v_target.queue_enabled then v_target.id else null end,
+         'staff_move', v_actor);
+    end loop;
+
+    -- Le lien d'emploi se ferme. `professionals` n'est PAS touché : handle,
+    -- abonnés, portfolio et historique public appartiennent à la personne.
+    update public.barbers b
+       set is_bookable = false, queue_enabled = false
+     where b.id = v_barber.id;
+
+    update public.staff_profiles sp
+       set is_active = false, is_public = false
+     where sp.id = v_barber.staff_profile_id;
+  else
+    -- Pas de siège barber (réceptionniste, manager) : seul le profil interne
+    -- se désactive.
+    update public.staff_profiles sp
+       set is_active = false, is_public = false
+     where sp.organization_id = v_membership.organization_id
+       and sp.user_id = v_membership.user_id;
+  end if;
+
+  delete from public.memberships m where m.id = p_membership_id;
+
+  return query select
+    p_membership_id,
+    v_barber.professional_id,
+    v_reassigned,
+    v_moved,
+    v_released;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION remove_team_member(p_membership_id uuid, p_reassign_to_barber_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.remove_team_member(p_membership_id uuid, p_reassign_to_barber_id uuid) IS 'Retire quelqu''un de l''équipe. Ferme l''accès (memberships), le lien d''emploi (barbers) et le profil interne (staff_profiles) ; ne touche JAMAIS professionals — handle, abonnés, portfolio et historique public survivent au départ (MASTER_SPEC §9). Les rendez-vous à venir exigent un remplaçant nommé ; les personnes EN ATTENTE dans sa file le suivent (une personne appelée ou au fauteuil reste et termine, règle F1b) ; les relations client restent attachées au professionnel.';
 
 
 --
@@ -11726,6 +16043,7 @@ CREATE FUNCTION public.request_billing_cancellation(p_organization_id uuid) RETU
 declare
   v_billing public.organization_billing;
 begin
+  perform private.assert_not_in_support_view('request_billing_cancellation');
   perform private.assert_billing_owner(p_organization_id);
 
   select * into v_billing from public.organization_billing b
@@ -11764,6 +16082,7 @@ CREATE FUNCTION public.request_billing_quote(p_organization_id uuid, p_establish
 declare
   v_id uuid;
 begin
+  perform private.assert_not_in_support_view('request_billing_quote');
   perform private.assert_billing_owner(p_organization_id);
 
   if p_establishments is null or p_establishments <= 0 then
@@ -11808,7 +16127,7 @@ declare
   v_claim_state public.professional_claim_state;
 begin
   v_actor := (select auth.uid());
-  if v_actor is null or not (select private.is_platform_admin()) then
+  if v_actor is null or not (select private.platform_can('marketplace.withdraw')) then
     raise exception 'only FadeUp platform administrators can record a withdrawal request'
       using errcode = '42501';
   end if;
@@ -11869,6 +16188,7 @@ declare
   v_used_pro integer;
   v_upgrade boolean;
 begin
+  perform private.assert_not_in_support_view('request_plan_change');
   perform private.assert_billing_owner(p_organization_id);
 
   select * into v_billing from public.organization_billing b
@@ -11977,10 +16297,10 @@ COMMENT ON FUNCTION public.request_plan_change(p_organization_id uuid, p_new_pla
 
 
 --
--- Name: reschedule_appointment(uuid, timestamp with time zone, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: reschedule_appointment(uuid, timestamp with time zone, uuid, boolean, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid DEFAULT NULL::uuid) RETURNS public.appointments
+CREATE FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid DEFAULT NULL::uuid, p_force boolean DEFAULT false, p_force_reason text DEFAULT NULL::text) RETURNS public.appointments
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -11992,6 +16312,10 @@ declare
   v_duration integer;
   v_ends_at timestamptz;
   v_timezone text;
+  v_force boolean := coalesce(p_force, false);
+  v_reason text := nullif(btrim(coalesce(p_force_reason, '')), '');
+  v_range tstzrange;
+  v_conflicts uuid[];
 begin
   select * into v_appointment from public.appointments a where a.id = p_appointment_id for update;
   if not found then
@@ -12011,6 +16335,26 @@ begin
     raise exception 'not authorized to reschedule this booking'
       using errcode = '42501',
             detail = 'fadeup_booking_refusal=not_authorized';
+  end if;
+
+  -- OS-1 : forcer est un paramètre EXPLICITE, réservé à owner/manager.
+  -- Un client ne force jamais ; un réceptionniste non plus (tranché OS-1).
+  if v_force then
+    if not v_is_business or not (select private.can_force_overlap(v_appointment.organization_id)) then
+      raise exception 'not authorized to force an overlap'
+        using errcode = '42501',
+              detail = 'fadeup_booking_refusal=force_not_allowed';
+    end if;
+    if v_reason is null then
+      raise exception 'a reason is required to force an overlap'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=force_reason_required';
+    end if;
+    if char_length(v_reason) > 200 then
+      raise exception 'the reason is limited to 200 characters'
+        using errcode = '22023',
+              detail = 'fadeup_booking_refusal=force_reason_required';
+    end if;
   end if;
 
   if v_appointment.status not in ('pending', 'confirmed') then
@@ -12069,6 +16413,27 @@ begin
             detail = 'fadeup_booking_refusal=outside_hours';
   end if;
 
+  -- OS-1 : un forçage ne se pose que sur un conflit RÉEL. Les conflits sont
+  -- lus sous le verrou de la ligne déplacée ; pour les autres lignes, c'est
+  -- l'exclusion (lignes ordinaires) et le trigger (lignes forcées) qui
+  -- restent l'autorité — la trace, elle, dit ce qu'on a vu au moment du geste.
+  if v_force then
+    v_range := tstzrange(
+      p_starts_at - make_interval(mins => v_appointment.buffer_before_minutes),
+      v_ends_at + make_interval(mins => v_appointment.buffer_after_minutes),
+      '[)'
+    );
+    select coalesce(array_agg(a.id order by a.starts_at), '{}'::uuid[]) into v_conflicts
+    from public.appointments a
+    where a.barber_id = v_barber_id
+      and a.id <> v_appointment.id
+      and a.status not in ('cancelled', 'no_show')
+      and a.blocked_range && v_range;
+    if coalesce(array_length(v_conflicts, 1), 0) = 0 then
+      v_force := false;
+    end if;
+  end if;
+
   -- The status is PRESERVED. A confirmed appointment moved to another valid
   -- slot is still a confirmed appointment: the shop said yes to the slot, and
   -- the customer has not stopped being expected.
@@ -12082,16 +16447,30 @@ begin
   -- the destination is free; if it raises, nothing here has changed and the
   -- original appointment is left exactly as it was. There is never a moment
   -- with two appointments.
+  --
+  -- OS-1 : sans forçage, la trace est EFFACÉE (la ligne rentre dans l'index
+  -- et la contrainte arbitre la destination) ; avec, elle est posée.
   update public.appointments
     set starts_at = p_starts_at,
         ends_at = v_ends_at,
         barber_id = v_barber_id,
+        overlap_forced_at = case when v_force then now() else null end,
+        overlap_forced_by = case when v_force then (select auth.uid()) else null end,
+        overlap_forced_reason = case when v_force then v_reason else null end,
         decided_at = case when v_is_business then now() else decided_at end,
         decided_by = case when v_is_business then (select auth.uid()) else decided_by end
     where id = p_appointment_id
     returning * into v_appointment;
 
   perform set_config('fadeup.appointment_reschedule', 'off', true);
+
+  if v_force then
+    insert into public.appointment_overlap_forces
+      (organization_id, appointment_id, barber_id, action, forced_by, reason, starts_at, ends_at, conflicting_appointment_ids)
+    values
+      (v_appointment.organization_id, v_appointment.id, v_barber_id, 'reschedule', (select auth.uid()),
+       v_reason, v_appointment.starts_at, v_appointment.ends_at, v_conflicts);
+  end if;
 
   perform private.emit_booking_notification(
     v_appointment, 'booking_rescheduled',
@@ -12108,10 +16487,150 @@ $$;
 
 
 --
--- Name: FUNCTION reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_force boolean, p_force_reason text); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid) IS 'Moves an appointment and PRESERVES its status — a confirmed booking moved to another genuinely available slot stays confirmed, for customers as well as staff. The destination is validated against real opening/working hours (private.slot_is_within_hours), against blocked time (the LOT D trigger) and finally against the GiST exclusion constraint, which leaves the original row untouched if the destination is taken. The dedupe suffix carries the new start time so a customer moving twice is notified twice.';
+COMMENT ON FUNCTION public.reschedule_appointment(p_appointment_id uuid, p_starts_at timestamp with time zone, p_barber_id uuid, p_force boolean, p_force_reason text) IS 'Déplace un rendez-vous (heure et/ou barber). Client propriétaire ou rôle gestionnaire. OS-1 : `p_force` (owner/manager seulement, motif obligatoire) pose la trace de chevauchement forcé quand un conflit réel existe ; sans forçage la trace est effacée et l''exclusion arbitre. Motifs nommés fadeup_booking_refusal=…';
+
+
+--
+-- Name: resend_platform_email(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resend_platform_email(p_email_id uuid, p_reason text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_source public.email_outbox;
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+  v_new_id uuid;
+begin
+  if v_actor is null or not (select private.platform_can('email.resend')) then
+    raise exception 'renvoi d''e-mail non autorisé'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=email_resend_required';
+  end if;
+  if v_reason is null then
+    raise exception 'un renvoi a besoin de son motif'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=reason_required';
+  end if;
+
+  select * into v_source from public.email_outbox where id = p_email_id;
+  if not found then
+    raise exception 'e-mail introuvable' using errcode = '42704';
+  end if;
+  if v_source.bounced_at is not null then
+    raise exception 'cet e-mail a rebondi, il ne se renvoie pas'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=email_bounced';
+  end if;
+  -- LA LISTE D'OPPOSITION, celle que X2 a construite, posée sur l'ADRESSE et
+  -- non sur la ligne : un rebond dur ou un désabonnement vaut pour tout ce
+  -- qui part vers cette adresse, pas seulement pour le message qui l'a causé.
+  if (select private.is_prospect_value_suppressed('email', v_source.to_email)) then
+    raise exception 'cette adresse est sur la liste d''opposition'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=email_suppressed';
+  end if;
+  if v_source.stream <> 'transactional' then
+    raise exception 'seul un e-mail transactionnel se renvoie'
+      using errcode = '22023', detail = 'fadeup_platform_refusal=email_not_transactional';
+  end if;
+
+  insert into public.email_outbox (to_email, template, locale, payload, stream, dedupe_key)
+  values (v_source.to_email, v_source.template, v_source.locale, v_source.payload, v_source.stream,
+          -- `extract(epoch from now())` est FIGÉ dans la transaction : deux
+          -- renvois du même e-mail levaient un 23505 brut, affiché tel quel au
+          -- support. `clock_timestamp()` avance, et le hasard ferme la fenêtre.
+          'resend:' || v_source.id::text || ':' || extract(epoch from clock_timestamp())::bigint::text
+            || ':' || substr(md5(gen_random_uuid()::text), 1, 8))
+  returning id into v_new_id;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'platform_email_resent', 'email_outbox', v_new_id,
+          jsonb_build_object('source_email_id', v_source.id, 'template', v_source.template, 'reason', v_reason));
+
+  return v_new_id;
+end;
+$$;
+
+
+--
+-- Name: resolve_poster_code(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_poster_code(p_code text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+declare
+  v_code text := upper(btrim(coalesce(p_code, '')));
+  v_poster public.posters;
+  v_can_assign boolean := false;
+  v_locations jsonb := '[]'::jsonb;
+  v_claim jsonb := null;
+begin
+  -- Un code de mauvaise forme ne touche même pas la table : la réponse est
+  -- la même que pour un code inconnu, pour ne rien apprendre à qui tâtonne.
+  if v_code !~ '^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{10}$' then
+    return jsonb_build_object('code', null, 'state', 'unknown');
+  end if;
+
+  select * into v_poster from public.posters where code = v_code;
+  if not found then
+    return jsonb_build_object('code', null, 'state', 'unknown');
+  end if;
+
+  if v_poster.state = 'revoked' then
+    return jsonb_build_object('code', v_poster.code, 'state', 'revoked');
+  end if;
+
+  if v_poster.state = 'assigned' then
+    return jsonb_build_object(
+      'code', v_poster.code,
+      'state', 'assigned',
+      'organization_slug', (select o.slug from public.organizations o where o.id = v_poster.organization_id),
+      'organization_name', (select o.name from public.organizations o where o.id = v_poster.organization_id),
+      'location_id', v_poster.location_id,
+      'location_name', (select l.name from public.locations l where l.id = v_poster.location_id)
+    );
+  end if;
+
+  -- ---- état LIBRE : la réponse dépend de qui scanne ----------------------
+  if (select auth.uid()) is not null then
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'location_id', m.location_id, 'location_name', m.location_name,
+             'city', m.city, 'organization_id', m.organization_id,
+             'organization_name', m.organization_name, 'via', m.via)
+           order by m.organization_name, m.location_name), '[]'::jsonb)
+      into v_locations
+    from public.list_my_poster_locations() m;
+    v_can_assign := jsonb_array_length(v_locations) > 0;
+  end if;
+
+  -- LE CROCHET. Le code est parti par la poste à un prospect dont la fiche
+  -- est publiée mais NON REVENDIQUÉE : l'affiche devient un chemin vers la
+  -- revendication. On ne rend le handle que si la fiche est DÉJÀ publique —
+  -- sinon ce serait exposer un prospect qui n'a rien demandé.
+  if v_poster.letter_prospect_id is not null then
+    select jsonb_build_object('professional_handle', pr.handle,
+                              'display_name', pr.display_name)
+      into v_claim
+    from public.prospect_professionals pp
+    join public.professionals pr on pr.id = pp.professional_id
+    where pp.prospect_id = v_poster.letter_prospect_id
+      and pr.is_public
+      and pr.claim_state = 'unclaimed';
+  end if;
+
+  return jsonb_build_object(
+    'code', v_poster.code,
+    'state', 'free',
+    'can_assign', v_can_assign,
+    'assignable_locations', case when v_can_assign then v_locations else '[]'::jsonb end,
+    'claim', v_claim
+  );
+end;
+$_$;
 
 
 --
@@ -12123,7 +16642,7 @@ CREATE FUNCTION public.resolve_review_report(p_report_id uuid, p_status text) RE
     SET search_path TO ''
     AS $$
 begin
-  if not private.is_platform_admin() then
+  if (select auth.uid()) is null or not private.platform_can('moderation.content') then
     raise exception 'platform moderation only' using errcode = '42501';
   end if;
   if p_status not in ('reviewed','dismissed','actioned') then
@@ -12137,8 +16656,53 @@ begin
   if not found then
     raise exception 'report not found';
   end if;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values ((select auth.uid()), 'review_report_resolved', 'review_reports', p_report_id,
+          jsonb_build_object('status', p_status));
 end;
 $$;
+
+
+--
+-- Name: restore_service(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.restore_service(p_service_id uuid) RETURNS public.services
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_row public.services;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null
+     or not (select private.has_org_role(v_service.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to restore this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  update public.services s
+     set archived_at = null,
+         -- Un brouillon restauré reste un brouillon : il lui manque toujours
+         -- un prix.
+         is_active = not s.price_pending
+   where s.id = p_service_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION restore_service(p_service_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.restore_service(p_service_id uuid) IS 'Sort un service de l''archive. Un service sans prix (price_pending) reste inactif : il lui manque toujours un prix.';
 
 
 --
@@ -12150,6 +16714,24 @@ CREATE FUNCTION public.restrict_appointment_self_update() RETURNS trigger
     SET search_path TO ''
     AS $$
 begin
+  -- B5 : effacement de compte. Les faits comptables du rendez-vous
+  -- (date, service, barber, statut, durée) sont intouchables ; seules les
+  -- colonnes de contact et la note libre partent.
+  if private.erasure_update_allowed(
+       to_jsonb(old), to_jsonb(new),
+       jsonb_build_object(
+         'customer_name', jsonb_build_array(private.erasure_display_sentinel()),
+         'customer_phone', jsonb_build_array(null),
+         'customer_email', jsonb_build_array(null),
+         'notes', jsonb_build_array(null),
+         'booked_by_user_id', jsonb_build_array(null),
+         'created_by', jsonb_build_array(null),
+         'decided_by', jsonb_build_array(null),
+         'overlap_forced_by', jsonb_build_array(null))
+     ) then
+    return new;
+  end if;
+
   -- Managing roles keep full edit rights untouched by this trigger.
   if (select private.has_org_role(new.organization_id, array['owner', 'manager', 'receptionist']::public.membership_role[])) then
     return new;
@@ -12203,6 +16785,19 @@ CREATE FUNCTION public.restrict_queue_entry_self_update() RETURNS trigger
     SET search_path TO ''
     AS $$
 begin
+  -- B5 : effacement de compte, même règle que pour les rendez-vous.
+  if private.erasure_update_allowed(
+       to_jsonb(old), to_jsonb(new),
+       jsonb_build_object(
+         'customer_name', jsonb_build_array(private.erasure_display_sentinel()),
+         'customer_phone', jsonb_build_array(null),
+         'notes', jsonb_build_array(null),
+         'booked_by_user_id', jsonb_build_array(null),
+         'created_by', jsonb_build_array(null))
+     ) then
+    return new;
+  end if;
+
   -- Une RPC de déplacement F1b (move_queue_entry) a déjà vérifié le droit —
   -- y compris pour un barber qui déplace vers un CONFRÈRE, ce que la règle
   -- ci-dessous interdit à raison en accès direct.
@@ -12342,7 +16937,7 @@ declare
   v_location_id uuid;
 begin
   v_reviewer := (select auth.uid());
-  if v_reviewer is null or not (select private.is_platform_admin()) then
+  if v_reviewer is null or not (select private.platform_can('onboarding.review')) then
     raise exception 'only FadeUp platform staff can review professional applications';
   end if;
 
@@ -12570,7 +17165,7 @@ declare
   v_converted boolean := false;
 begin
   v_reviewer := (select auth.uid());
-  if v_reviewer is null or not (select private.is_platform_admin()) then
+  if v_reviewer is null or not (select private.platform_can('onboarding.review')) then
     raise exception 'only FadeUp platform staff can review professional claims'
       using errcode = '42501';
   end if;
@@ -12691,6 +17286,18 @@ CREATE FUNCTION public.reviews_guard_immutable() RETURNS trigger
     SET search_path TO ''
     AS $$
 begin
+  -- B5 : effacement de compte. L'avis reste — note, texte, statut,
+  -- réponse du salon, horodatages — seule l'identité de l'auteur part.
+  if private.erasure_update_allowed(
+       to_jsonb(old), to_jsonb(new),
+       jsonb_build_object(
+         'customer_user_id', jsonb_build_array(null),
+         'reviewer_display_name',
+           jsonb_build_array(private.erasure_display_sentinel()))
+     ) then
+    return new;
+  end if;
+
   if new.appointment_id  is distinct from old.appointment_id
      or new.customer_user_id is distinct from old.customer_user_id
      or new.professional_id  is distinct from old.professional_id
@@ -12855,8 +17462,13 @@ CREATE FUNCTION public.revoke_platform_invitation(p_id uuid) RETURNS public.plat
 declare
   v_invitation public.platform_invitations;
 begin
-  if not (select private.is_platform_admin()) then
-    raise exception 'only a platform owner or platform_admin may revoke a platform invitation';
+  -- Révoquer une invitation est un geste de gestion des rôles internes au même
+  -- titre que l'émettre : un admin ne doit pas pouvoir annuler ce que le
+  -- fondateur vient d'émettre. (La création était déjà passée au fondateur ;
+  -- la révocation avait été oubliée — trouvé par la revue.)
+  if (select auth.uid()) is null or not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur révoque une invitation interne'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
   end if;
 
   update public.platform_invitations
@@ -12881,6 +17493,113 @@ $$;
 --
 
 COMMENT ON FUNCTION public.revoke_platform_invitation(p_id uuid) IS 'Platform owner/admin cancels a pending platform invitation.';
+
+
+--
+-- Name: revoke_platform_member(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.revoke_platform_member(p_user_id uuid, p_reason text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_role public.platform_role;
+begin
+  if not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur gère les rôles internes'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
+  end if;
+
+  if p_user_id = (select auth.uid()) then
+    raise exception 'on ne révoque pas son propre accès interne'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=cannot_revoke_self';
+  end if;
+
+  select role into v_role from public.platform_members where user_id = p_user_id for update;
+  if v_role is null then
+    raise exception 'ce compte n''a pas d''accès interne' using errcode = '42704';
+  end if;
+
+  if v_role = 'platform_owner'
+     and (select count(*) from public.platform_members where role = 'platform_owner') <= 1 then
+    raise exception 'le dernier fondateur ne peut pas être révoqué'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=last_owner';
+  end if;
+
+  -- Une vue empruntée ouverte par quelqu'un qui perd son accès doit se fermer
+  -- avec lui : sinon le bandeau disparaît mais la trace reste ouverte.
+  update public.platform_support_sessions
+  set ended_at = now()
+  where platform_actor_id = p_user_id and ended_at is null;
+
+  delete from public.platform_members where user_id = p_user_id;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values ((select auth.uid()), 'platform_member_revoked', 'platform_members', p_user_id,
+          jsonb_build_object('previous_role', v_role, 'reason', nullif(btrim(coalesce(p_reason, '')), '')));
+end;
+$$;
+
+
+--
+-- Name: FUNCTION revoke_platform_member(p_user_id uuid, p_reason text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.revoke_platform_member(p_user_id uuid, p_reason text) IS 'Retire l''accès interne d''un compte. FONDATEUR SEUL. Refuse l''auto-révocation et la révocation du dernier fondateur. Ferme au passage la vue empruntée que la personne aurait laissée ouverte. Tracé. Les lignes du journal qu''elle a écrites survivent : actor_user_id est ON DELETE SET NULL et le journal est en ajout seul.';
+
+
+--
+-- Name: revoke_poster(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.revoke_poster(p_code text, p_reason text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_code text := upper(btrim(coalesce(p_code, '')));
+  v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+  v_poster public.posters;
+begin
+  if v_actor is null or not (select private.platform_can('poster.manage')) then
+    raise exception 'révocation non autorisée'
+      using errcode = '42501', detail = 'fadeup_poster_refusal=revoke_not_authorized';
+  end if;
+  if v_reason is null then
+    raise exception 'une révocation a besoin de son motif'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=reason_required';
+  end if;
+
+  select * into v_poster from public.posters where code = v_code for update;
+  if not found then
+    raise exception 'affiche inconnue'
+      using errcode = '42704', detail = 'fadeup_poster_refusal=unknown_code';
+  end if;
+  -- Révoquer une affiche DÉJÀ révoquée écrasait le motif d'origine par le
+  -- nouveau. Une affiche hors service l'est déjà : le geste n'apporte rien et
+  -- coûte la raison pour laquelle elle est sortie.
+  if v_poster.state = 'revoked' then
+    raise exception 'cette affiche est déjà révoquée'
+      using errcode = '22023', detail = 'fadeup_poster_refusal=already_revoked';
+  end if;
+
+  update public.posters
+     set state = 'revoked',
+         revoked_by = v_actor, revoked_at = now(), revoke_reason = v_reason,
+         updated_at = now()
+   where id = v_poster.id
+  returning * into v_poster;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'poster_revoked', 'posters', v_poster.id,
+          jsonb_build_object('code', v_poster.code, 'reason', v_reason,
+                             'previous_organization_id', v_poster.organization_id));
+
+  return jsonb_build_object('code', v_poster.code, 'state', v_poster.state);
+end;
+$$;
 
 
 --
@@ -13124,6 +17843,25 @@ $$;
 --
 
 COMMENT ON FUNCTION public.run_email_delivery() IS 'Le tick d''envoi, appelé par le conteneur fadeup-scheduler. Réconcilie les envois du tick précédent puis en dépêche de nouveaux. Ne fait rien du tout si aucune clé Resend n''est installée dans le vault, ce qui est le cas normal d''une base de test ou d''une restauration.';
+
+
+--
+-- Name: run_email_feedback_maintenance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.run_email_feedback_maintenance() RETURNS TABLE(events_processed integer, addresses_suppressed integer)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select * from private.apply_resend_webhook_feedback(100);
+$$;
+
+
+--
+-- Name: FUNCTION run_email_feedback_maintenance(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.run_email_feedback_maintenance() IS 'Passe scheduler X2 : applique le retour de délivrabilité Resend. Sans événement en attente, ne fait rien. Grantée au seul fadeup_scheduler, comme les autres run_*.';
 
 
 --
@@ -13955,6 +18693,10 @@ declare
   v_ttl integer;
 begin
   if new.status = 'pending' then
+    -- P1PRO : la ligne est (ou redevient) une demande — marqueur durable
+    -- pour l'historique. Jamais remis à false.
+    new.was_request := true;
+
     -- Only derive on the way IN to pending. A row already carrying a deadline
     -- keeps it, so a reschedule or a staff edit never silently extends the
     -- window a customer is already watching count down.
@@ -14332,6 +19074,75 @@ COMMENT ON FUNCTION public.set_location_queue_open(p_location_id uuid, p_queue_o
 
 
 --
+-- Name: set_location_queue_thresholds(uuid, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_location_queue_thresholds(p_location_id uuid, p_capacity_per_barber integer DEFAULT NULL::integer, p_call_grace_minutes integer DEFAULT NULL::integer, p_geofence_meters integer DEFAULT NULL::integer) RETURNS public.location_service_settings
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_organization_id uuid;
+  v_row public.location_service_settings;
+begin
+  select l.organization_id into v_organization_id
+  from public.locations l where l.id = p_location_id;
+
+  -- Motif nul : v_organization_id est testé AVANT d'être passé à la garde.
+  if v_organization_id is null
+     or not (select private.has_org_role(v_organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to manage queue settings for this location'
+      using errcode = '42501', detail = 'fadeup_queue_refusal=not_authorized';
+  end if;
+
+  if p_capacity_per_barber is null
+     and p_call_grace_minutes is null
+     and p_geofence_meters is null then
+    raise exception 'nothing to change'
+      using errcode = '22023', detail = 'fadeup_queue_refusal=no_change';
+  end if;
+
+  if p_capacity_per_barber is not null
+     and (p_capacity_per_barber < 1 or p_capacity_per_barber > 200) then
+    raise exception 'queue capacity per barber must be between 1 and 200'
+      using errcode = '22023', detail = 'fadeup_queue_refusal=capacity_out_of_range';
+  end if;
+
+  if p_call_grace_minutes is not null
+     and (p_call_grace_minutes < 0 or p_call_grace_minutes > 120) then
+    raise exception 'the call grace delay must be between 0 and 120 minutes'
+      using errcode = '22023', detail = 'fadeup_queue_refusal=grace_out_of_range';
+  end if;
+
+  if p_geofence_meters is not null
+     and (p_geofence_meters < 25 or p_geofence_meters > 2000) then
+    raise exception 'the check-in radius must be between 25 and 2000 metres'
+      using errcode = '22023', detail = 'fadeup_queue_refusal=geofence_out_of_range';
+  end if;
+
+  perform private.ensure_location_service_settings(p_location_id);
+
+  update public.location_service_settings s
+     set queue_capacity_per_barber = coalesce(p_capacity_per_barber, s.queue_capacity_per_barber),
+         queue_call_grace_minutes  = coalesce(p_call_grace_minutes,  s.queue_call_grace_minutes),
+         queue_geofence_meters     = coalesce(p_geofence_meters,     s.queue_geofence_meters)
+   where s.location_id = p_location_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_location_queue_thresholds(p_location_id uuid, p_capacity_per_barber integer, p_call_grace_minutes integer, p_geofence_meters integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_location_queue_thresholds(p_location_id uuid, p_capacity_per_barber integer, p_call_grace_minutes integer, p_geofence_meters integer) IS 'Règle les seuils de file d''un établissement : capacité par barber, délai de grâce après l''appel, rayon de pointage. Propriétaire et manager. Un paramètre NULL laisse la valeur en place — l''écran n''envoie que ce que le professionnel a touché.';
+
+
+--
 -- Name: set_location_service_mode(uuid, public.service_mode); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -14386,6 +19197,52 @@ $$;
 --
 
 COMMENT ON FUNCTION public.set_location_service_mode(p_location_id uuid, p_mode public.service_mode) IS 'Sets the ESTABLISHMENT default service mode. owner/manager only. Per location, never per organization — a multi-salon group changes one salon at a time. Takes the establishment mutex before reading, so it orders deterministically against concurrent admissions and other mode changes. Governs NEW admissions only: existing appointments and queue entries are never touched, cancelled or altered by this call. Writes the audit row in the same transaction, including when the value is unchanged.';
+
+
+--
+-- Name: set_membership_revenue_visibility(uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_membership_revenue_visibility(p_membership_id uuid, p_visible boolean) RETURNS public.memberships
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_membership public.memberships;
+begin
+  select * into v_membership from public.memberships m where m.id = p_membership_id for update;
+  if not found then
+    raise exception 'membership not found' using errcode = '42704';
+  end if;
+
+  -- L'OWNER seul — pas le manager : c'est le chiffre d'affaires du patron.
+  if not (select private.has_org_role(v_membership.organization_id, array['owner']::public.membership_role[])) then
+    raise exception 'only the owner can change who sees revenue' using errcode = '42501';
+  end if;
+
+  if v_membership.role <> 'barber' then
+    raise exception 'the revenue setting only applies to the barber role' using errcode = '22023';
+  end if;
+
+  if p_visible is null then
+    raise exception 'p_visible is required' using errcode = '22023';
+  end if;
+
+  update public.memberships
+    set can_view_revenue = p_visible
+    where id = p_membership_id
+    returning * into v_membership;
+
+  return v_membership;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_membership_revenue_visibility(p_membership_id uuid, p_visible boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_membership_revenue_visibility(p_membership_id uuid, p_visible boolean) IS 'OS-1 — le propriétaire règle, barber par barber, la visibilité du revenu (memberships.can_view_revenue). Refuse tout autre rôle (42501) et toute cible qui n''est pas un barber (22023).';
 
 
 --
@@ -14550,6 +19407,123 @@ $$;
 
 
 --
+-- Name: set_platform_member_role(uuid, public.platform_role, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_platform_member_role(p_user_id uuid, p_role public.platform_role, p_note text DEFAULT NULL::text) RETURNS public.platform_members
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_previous public.platform_role;
+  v_member public.platform_members;
+begin
+  if not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur gère les rôles internes'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
+  end if;
+
+  if p_user_id is null then
+    raise exception 'utilisateur non désigné' using errcode = '22023';
+  end if;
+
+  if not exists (select 1 from auth.users where id = p_user_id) then
+    raise exception 'compte introuvable' using errcode = '42704';
+  end if;
+
+  select role into v_previous from public.platform_members where user_id = p_user_id for update;
+
+  -- Le dernier fondateur ne se rétrograde pas lui-même : il n'y aurait plus
+  -- personne pour gérer les rôles, et le périmètre serait perdu.
+  if v_previous = 'platform_owner' and p_role <> 'platform_owner'
+     and (select count(*) from public.platform_members where role = 'platform_owner') <= 1 then
+    raise exception 'le dernier fondateur ne peut pas être rétrogradé'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=last_owner';
+  end if;
+
+  insert into public.platform_members (user_id, role, note)
+  values (p_user_id, p_role, nullif(btrim(coalesce(p_note, '')), ''))
+  on conflict (user_id) do update
+    set role = excluded.role,
+        note = coalesce(excluded.note, public.platform_members.note),
+        updated_at = now()
+  returning * into v_member;
+
+  -- Un rôle qui ne lit plus le CRM par zone n'a plus de zone à porter.
+  if not exists (
+    select 1 from public.platform_role_permissions rp
+    where rp.role = p_role and rp.permission_key = 'crm.zone_read'
+  ) then
+    delete from public.platform_member_zones where user_id = p_user_id;
+  end if;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (
+    (select auth.uid()),
+    case when v_previous is null then 'platform_member_granted' else 'platform_member_role_changed' end,
+    'platform_members',
+    p_user_id,
+    jsonb_build_object('previous_role', v_previous, 'new_role', p_role)
+  );
+
+  return v_member;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_platform_member_role(p_user_id uuid, p_role public.platform_role, p_note text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_platform_member_role(p_user_id uuid, p_role public.platform_role, p_note text) IS 'Donne ou change le rôle interne d''un compte existant. FONDATEUR SEUL (droit internal_roles.manage) — un admin ne crée pas un admin, et c''est ce qui garde le périmètre au fondateur. Refuse de rétrograder le dernier fondateur. Purge les zones d''un rôle qui ne lit plus par zone. Tracé.';
+
+
+--
+-- Name: set_platform_member_zones(uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_platform_member_zones(p_user_id uuid, p_zone_ids uuid[]) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_count integer;
+begin
+  if not (select private.platform_can('internal_roles.manage')) then
+    raise exception 'seul le fondateur assigne les zones'
+      using errcode = '42501', detail = 'fadeup_platform_refusal=internal_roles_manage_required';
+  end if;
+
+  if not exists (select 1 from public.platform_members where user_id = p_user_id) then
+    raise exception 'ce compte n''a pas d''accès interne' using errcode = '42704';
+  end if;
+
+  delete from public.platform_member_zones where user_id = p_user_id;
+
+  insert into public.platform_member_zones (user_id, zone_id, assigned_by)
+  select p_user_id, z.id, (select auth.uid())
+  from public.platform_zones z
+  where z.id = any(coalesce(p_zone_ids, '{}'::uuid[]));
+
+  get diagnostics v_count = row_count;
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values ((select auth.uid()), 'platform_member_zones_set', 'platform_members', p_user_id,
+          jsonb_build_object('zone_count', v_count));
+
+  return v_count;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_platform_member_zones(p_user_id uuid, p_zone_ids uuid[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_platform_member_zones(p_user_id uuid, p_zone_ids uuid[]) IS 'Remplace les zones d''un interne par la liste fournie (liste vide = aucune zone). FONDATEUR SEUL. Plusieurs stagiaires peuvent partager une zone : rien n''impose l''exclusivité. Tracé.';
+
+
+--
 -- Name: prospect_sources; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -14684,6 +19658,65 @@ begin
   return v_health;
 end;
 $$;
+
+
+--
+-- Name: set_service_barbers(uuid, uuid[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_service_barbers(p_service_id uuid, p_barber_ids uuid[]) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_ids uuid[] := coalesce(p_barber_ids, array[]::uuid[]);
+  v_foreign integer;
+  v_count integer;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null
+     or not (select private.has_org_role(v_service.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to assign this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  select count(*) into v_foreign
+  from unnest(v_ids) as requested(barber_id)
+  where not exists (
+    select 1 from public.barbers b
+    where b.id = requested.barber_id and b.organization_id = v_service.organization_id
+  );
+
+  if v_foreign > 0 then
+    raise exception 'every barber must belong to this organization'
+      using errcode = '22023', detail = 'fadeup_service_refusal=barber_foreign';
+  end if;
+
+  delete from public.barber_services bs
+   where bs.service_id = p_service_id
+     and not (bs.barber_id = any (v_ids));
+
+  insert into public.barber_services (organization_id, barber_id, service_id)
+  select v_service.organization_id, requested.barber_id, p_service_id
+  from unnest(v_ids) as requested(barber_id)
+  on conflict do nothing;
+
+  select count(*)::integer into v_count
+  from public.barber_services bs where bs.service_id = p_service_id;
+
+  return v_count;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_service_barbers(p_service_id uuid, p_barber_ids uuid[]); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_service_barbers(p_service_id uuid, p_barber_ids uuid[]) IS 'Remplace la liste des barbers qui exécutent un service. Propriétaire et manager. Une liste vide signifie « tout le monde » côté disponibilité (barber_services vide = pas de restriction), et c''est dit dans l''interface.';
 
 
 --
@@ -14824,6 +19857,176 @@ COMMENT ON FUNCTION public.set_service_mode_temporary_override(p_scope public.se
 
 
 --
+-- Name: set_service_price(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_service_price(p_service_id uuid, p_price_cents integer) RETURNS public.services
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_row public.services;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null then
+    raise exception 'not authorized to price this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  if p_price_cents is null or p_price_cents < 0 then
+    raise exception 'a price of zero or more is required'
+      using errcode = '22023', detail = 'fadeup_service_refusal=price_required';
+  end if;
+
+  -- La même garde : un barber qui appelle CETTE RPC envoie forcément un prix,
+  -- donc il est refusé par le même motif que sur update_service.
+  perform private.assert_catalog_author(v_service.organization_id, p_price_cents);
+
+  update public.services s
+     set price_cents = p_price_cents,
+         price_pending = false,
+         -- Tarifer un brouillon le rend publiable ; un service archivé le
+         -- reste (on ne ressuscite pas par un prix).
+         is_active = case when s.archived_at is null and s.price_pending then true else s.is_active end
+   where s.id = p_service_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_service_price(p_service_id uuid, p_price_cents integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_service_price(p_service_id uuid, p_price_cents integer) IS 'Fixe le prix d''un service. Propriétaire et manager seulement. Tarifer un brouillon de barber l''active — c''est le geste qui termine la création à deux mains.';
+
+
+--
+-- Name: set_support_ticket_status(uuid, public.support_ticket_status, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_support_ticket_status(p_ticket_id uuid, p_status public.support_ticket_status, p_resolution text DEFAULT NULL::text) RETURNS public.support_tickets
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select private.assert_support_tickets());
+  v_ticket public.support_tickets;
+  v_resolution text := nullif(btrim(coalesce(p_resolution, '')), '');
+begin
+  if p_status = 'resolved' and v_resolution is null then
+    raise exception 'une résolution a besoin de son mot'
+      using errcode = '22023', detail = 'fadeup_support_refusal=resolution_required';
+  end if;
+
+  update public.support_tickets
+     set status = p_status,
+         resolution = case when p_status = 'resolved' then v_resolution else null end,
+         resolved_at = case when p_status = 'resolved' then now() else null end,
+         resolved_by = case when p_status = 'resolved' then v_actor else null end,
+         updated_at = now()
+   where id = p_ticket_id
+  returning * into v_ticket;
+  if not found then
+    raise exception 'ticket introuvable' using errcode = '42704';
+  end if;
+
+  insert into public.support_ticket_messages (ticket_id, kind, body, author_user_id, metadata)
+  values (v_ticket.id, 'status_change', coalesce(v_resolution, p_status::text), v_actor,
+          jsonb_build_object('status', p_status));
+
+  insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
+  values (v_actor, 'support_ticket_status_changed', 'support_tickets', v_ticket.id,
+          jsonb_build_object('status', p_status, 'reference', v_ticket.reference, 'resolution', v_resolution));
+
+  return v_ticket;
+end;
+$$;
+
+
+--
+-- Name: set_team_member_role(uuid, public.membership_role); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_team_member_role(p_membership_id uuid, p_role public.membership_role) RETURNS public.memberships
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_membership public.memberships;
+  v_is_owner boolean;
+  v_owner_count integer;
+  v_row public.memberships;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_team_refusal=anonymous';
+  end if;
+
+  select * into v_membership from public.memberships m where m.id = p_membership_id;
+
+  if v_membership.id is null
+     or not (select private.has_org_role(v_membership.organization_id,
+               array['owner', 'manager']::public.membership_role[])) then
+    raise exception 'not authorized to change this role'
+      using errcode = '42501', detail = 'fadeup_team_refusal=not_authorized';
+  end if;
+
+  v_is_owner := (select private.has_org_role(v_membership.organization_id,
+                   array['owner']::public.membership_role[]));
+
+  -- La même règle que la policy : toucher un owner, ou en créer un, exige
+  -- d'être owner.
+  if (v_membership.role = 'owner' or p_role = 'owner') and not v_is_owner then
+    raise exception 'only an owner may change an owner''s role'
+      using errcode = '42501', detail = 'fadeup_team_refusal=owner_role_forbidden';
+  end if;
+
+  if v_membership.user_id is not distinct from v_actor then
+    raise exception 'you cannot change your own role'
+      using errcode = '42501', detail = 'fadeup_team_refusal=self_role';
+  end if;
+
+  if v_membership.role = 'owner' and p_role <> 'owner' then
+    select count(*)::integer into v_owner_count
+    from public.memberships m
+    where m.organization_id = v_membership.organization_id and m.role = 'owner';
+    if v_owner_count <= 1 then
+      raise exception 'an organization keeps at least one owner'
+        using errcode = '22023', detail = 'fadeup_team_refusal=last_owner';
+    end if;
+  end if;
+
+  if p_role = 'barber' and v_membership.role <> 'barber' then
+    perform private.assert_professional_capacity(v_membership.organization_id);
+  end if;
+
+  update public.memberships m
+     set role = p_role,
+         -- Le revenu ne suit pas le rôle : un barber promu manager le voit
+         -- par son rôle, un manager rétrogradé perd l'exception explicite.
+         can_view_revenue = case when p_role = 'barber' then m.can_view_revenue else false end
+   where m.id = p_membership_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION set_team_member_role(p_membership_id uuid, p_role public.membership_role); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_team_member_role(p_membership_id uuid, p_role public.membership_role) IS 'Change le rôle d''un membre. Seul un owner touche un owner ou en crée un ; personne ne change son propre rôle ; une organisation garde au moins un owner ; passer quelqu''un barber consomme un siège et peut être refusé par le plan.';
+
+
+--
 -- Name: set_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -14955,33 +20158,43 @@ CREATE FUNCTION public.start_platform_support_session(p_organization_id uuid, p_
     SET search_path TO ''
     AS $$
 declare
+  v_actor uuid := (select auth.uid());
   v_session public.platform_support_sessions;
 begin
-  if not (select private.is_platform_admin()) then
-    raise exception 'only a platform owner or platform_admin may start a support-view session';
+  -- C'est une fonctionnalité d'ÉLÉVATION DE PRIVILÈGES : si sa garde est
+  -- faible, n'importe quel interne devient propriétaire de n'importe quel
+  -- salon. Le cas nul est traité avant tout le reste.
+  if v_actor is null or not (select private.platform_can('support_view.enter')) then
+    raise exception 'vue en tant que non autorisée'
+      using errcode = '42501', detail = 'fadeup_support_view_refusal=not_authorized';
+  end if;
+
+  if p_target_type not in ('organization', 'barber') then
+    raise exception 'cible de vue invalide' using errcode = '22023';
   end if;
 
   if not exists (select 1 from public.organizations where id = p_organization_id) then
-    raise exception 'organization not found';
+    raise exception 'organization not found' using errcode = '42704';
   end if;
 
-  -- Close any session this actor left open — starting a new one always
-  -- means "I'm switching what I'm looking at now", not stacking contexts.
+  -- Toute session laissée ouverte par cet acteur se ferme : entrer quelque
+  -- part veut dire « je regarde ÇA maintenant », jamais empiler des contextes.
   update public.platform_support_sessions
   set ended_at = now()
-  where platform_actor_id = (select auth.uid()) and ended_at is null;
+  where platform_actor_id = v_actor and ended_at is null;
 
-  insert into public.platform_support_sessions (platform_actor_id, organization_id, target_type, target_user_id, reason)
-  values ((select auth.uid()), p_organization_id, p_target_type, p_target_user_id, nullif(btrim(p_reason), ''))
+  insert into public.platform_support_sessions
+    (platform_actor_id, organization_id, target_type, target_user_id, reason, expires_at)
+  values
+    (v_actor, p_organization_id, p_target_type, p_target_user_id,
+     nullif(btrim(coalesce(p_reason, '')), ''), now() + interval '30 minutes')
   returning * into v_session;
 
   insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
   values (
-    (select auth.uid()),
-    'platform_support_session_started',
-    'organizations',
-    p_organization_id,
-    jsonb_build_object('session_id', v_session.id, 'target_type', p_target_type, 'target_user_id', p_target_user_id)
+    v_actor, 'platform_support_session_started', 'organizations', p_organization_id,
+    jsonb_build_object('session_id', v_session.id, 'target_type', p_target_type,
+                       'target_user_id', p_target_user_id, 'expires_at', v_session.expires_at)
   );
 
   return v_session;
@@ -14993,7 +20206,127 @@ $$;
 -- Name: FUNCTION start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) IS 'Platform owner/admin only. Opens (and audits) an explicit support-view session for one organization, closing any session the caller left open.';
+COMMENT ON FUNCTION public.start_platform_support_session(p_organization_id uuid, p_target_type text, p_target_user_id uuid, p_reason text) IS 'Ouvre une vue en tant que propriétaire, pour trente minutes. Réservée aux rôles portant support_view.enter (fondateur, admin, modérateur) — un support ou un commercial est refusé, et la RPC est refusée même appelée directement. Ne donne AUCUN droit de lecture supplémentaire : elle rend explicite, traçable et bornée une capacité que is_platform_admin() portait déjà. Aucun geste de paiement n''est possible tant qu''elle est ouverte.';
+
+
+--
+-- Name: submit_marketplace_withdrawal_request(uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text DEFAULT NULL::text, p_requester_note text DEFAULT NULL::text, p_token text DEFAULT NULL::text) RETURNS TABLE(request_id uuid, deadline_at timestamp with time zone, already_pending boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $_$
+declare
+  v_claim_state public.professional_claim_state;
+  v_is_public boolean;
+  v_channel text := 'public_form';
+  v_email text;
+  v_note text;
+  v_row public.marketplace_withdrawal_requests;
+  v_attempt integer;
+begin
+  select p.claim_state, p.is_public into v_claim_state, v_is_public
+  from public.professionals p where p.id = p_professional_id;
+
+  if not found then
+    raise exception 'professional not found' using errcode = '42704';
+  end if;
+
+  if v_claim_state = 'claimed' then
+    raise exception 'this profile is claimed; its owner controls its visibility'
+      using errcode = '42501',
+            detail = 'fadeup_withdrawal_refusal=professional_is_claimed';
+  end if;
+
+  -- Revue X2 : une fiche non publiée n'a rien à retirer — accepter la
+  -- demande ouvrirait une échéance de 72 h factice dans l'écran opérateur
+  -- (et permettrait d'en ouvrir une par identité jamais publiée). Le refus
+  -- est nommé ; la page explique et renvoie au désabonnement/contact.
+  if not v_is_public then
+    raise exception 'this profile is not published on the marketplace'
+      using errcode = '42501',
+            detail = 'fadeup_withdrawal_refusal=profile_not_published';
+  end if;
+
+  v_email := nullif(btrim(coalesce(p_requester_email, '')), '');
+  if v_email is not null
+     and v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'requester email is not a valid address'
+      using errcode = '22023',
+            detail = 'fadeup_withdrawal_refusal=invalid_email';
+  end if;
+
+  -- La garde de volume « 200/24 h » de la première version est RETIRÉE, et
+  -- c'est une décision, pas un oubli : l'index unique « une demande en cours
+  -- par professionnel » plafonne déjà le total au nombre d'identités
+  -- publiées non revendiquées — la garde était inatteignable, et globale
+  -- elle aurait permis à un attaquant de fermer le canal d'opposition RGPD
+  -- aux personnes légitimes.
+
+  if nullif(btrim(coalesce(p_token, '')), '') is not null then
+    perform 1
+    from public.prospects pr
+    join public.prospect_professionals pp on pp.prospect_id = pr.id
+    where pp.professional_id = p_professional_id
+      and pr.outreach_unsubscribe_token = btrim(p_token);
+    if found then
+      v_channel := 'email_link';
+    end if;
+  end if;
+
+  v_note := nullif(left(btrim(coalesce(p_requester_note, '')), 2000), '');
+
+  -- Deux tentatives : la première perd si une demande en cours existe (index
+  -- unique partiel) ; la seconde ne court que si cette demande vient d'être
+  -- décidée dans l'intervalle — et porte son propre on conflict (revue X2 :
+  -- la première version pouvait lever un 23505 nu dans cette fenêtre).
+  for v_attempt in 1..2 loop
+    insert into public.marketplace_withdrawal_requests
+      (professional_id, requested_via, requester_note, requester_email)
+    values (p_professional_id, v_channel, v_note, v_email)
+    on conflict (professional_id) where status = 'pending' do nothing
+    returning * into v_row;
+
+    if v_row.id is not null then
+      return query select v_row.id, v_row.deadline_at, false;
+      return;
+    end if;
+
+    select * into v_row
+    from public.marketplace_withdrawal_requests w
+    where w.professional_id = p_professional_id and w.status = 'pending';
+
+    if v_row.id is not null then
+      if v_row.requested_via in ('public_form', 'email_link') then
+        -- La re-soumission du même formulaire : dite telle quelle.
+        return query select v_row.id, v_row.deadline_at, true;
+        return;
+      end if;
+      -- Une demande EXISTE mais elle est entrée par un autre canal
+      -- (opérateur, e-mail, légal). Le demandeur public n'a pas à apprendre
+      -- que quelqu'un a déjà demandé le retrait de ce commerce : il reçoit
+      -- l'engagement GÉNÉRIQUE (« au plus tard 72 h après validation »),
+      -- jamais l'échéance réelle — qui est plus proche, l'engagement est
+      -- donc tenu a fortiori. Sa note/adresse ne sont pas perdues pour
+      -- l'opérateur : la demande existante est déjà dans sa file.
+      return query select v_row.id, now() + interval '72 hours', false;
+      return;
+    end if;
+    -- Aucune pending : la demande concurrente vient d'être décidée — la
+    -- boucle retente une insertion.
+  end loop;
+
+  raise exception 'could not record the withdrawal request' using errcode = '40001';
+end;
+$_$;
+
+
+--
+-- Name: FUNCTION submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.submit_marketplace_withdrawal_request(p_professional_id uuid, p_requester_email text, p_requester_note text, p_token text) IS 'Anon-callable — le formulaire public de la page d''information RGPD. ENREGISTRE une demande de retrait dans le circuit B2 pour une fiche PUBLIÉE non revendiquée ; l''opérateur vérifie l''identité puis complete_marketplace_withdrawal exécute, sous l''engagement des 72 h. Canal email_link quand le jeton de l''e-mail prouve le contrôle de la boîte. Refus nommés : professional_is_claimed, profile_not_published, invalid_email. Ne révèle jamais l''existence d''une demande entrée par un autre canal.';
 
 
 --
@@ -15079,7 +20412,9 @@ begin
     v_application.first_name || ' ' || v_application.last_name,
     'professional_applications',
     v_application.id
-  from public.platform_members pm;
+  from public.platform_members pm
+  join public.platform_role_permissions rp
+    on rp.role = pm.role and rp.permission_key = 'onboarding.review';
 
   insert into public.platform_audit_log (actor_user_id, action, target_type, target_id, metadata)
   values (
@@ -15379,8 +20714,7 @@ declare
   v_row public.prospect_publication_eligibility;
 begin
   if not (
-    (select private.has_platform_role(
-       array['platform_owner', 'platform_admin']::public.platform_role[]))
+    (select private.platform_can('marketplace.publish'))
     or ((select auth.uid()) is null and session_user = 'prospect_worker')
   ) then
     raise exception 'only FadeUp platform administrators or the acquisition worker can evaluate publication eligibility'
@@ -15813,6 +21147,139 @@ Répond toujours true, y compris sur un jeton inconnu : une réponse distincte p
 
 
 --
+-- Name: update_customer_note(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_customer_note(p_note_id uuid, p_body text) RETURNS public.customer_notes
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_note public.customer_notes;
+  v_body text := btrim(coalesce(p_body, ''));
+  v_row public.customer_notes;
+begin
+  if v_actor is null then
+    raise exception 'authentication required'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=anonymous';
+  end if;
+
+  if v_body = '' then
+    raise exception 'a note cannot be empty'
+      using errcode = '22023', detail = 'fadeup_customer_notes_refusal=empty_body';
+  end if;
+
+  if char_length(v_body) > 2000 then
+    raise exception 'a note is limited to 2000 characters'
+      using errcode = '22023', detail = 'fadeup_customer_notes_refusal=body_too_long';
+  end if;
+
+  select * into v_note from public.customer_notes n where n.id = p_note_id;
+
+  if v_note.id is null
+     or not (select private.is_org_member(v_note.organization_id))
+     or not (
+       v_note.author_user_id is not distinct from v_actor
+       or (select private.has_org_role(v_note.organization_id,
+             array['owner', 'manager']::public.membership_role[]))
+     ) then
+    raise exception 'not authorized to edit this note'
+      using errcode = '42501', detail = 'fadeup_customer_notes_refusal=not_authorized';
+  end if;
+
+  update public.customer_notes n set body = v_body
+   where n.id = p_note_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION update_customer_note(p_note_id uuid, p_body text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.update_customer_note(p_note_id uuid, p_body text) IS 'Corrige une note. L''auteur, ou owner/manager. L''auteur d''origine n''est jamais réécrit.';
+
+
+--
+-- Name: update_service(uuid, text, integer, text, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_service(p_service_id uuid, p_name text, p_duration_minutes integer, p_description text DEFAULT NULL::text, p_category_id uuid DEFAULT NULL::uuid, p_price_cents integer DEFAULT NULL::integer) RETURNS public.services
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+declare
+  v_service public.services;
+  v_can_price boolean;
+  v_name text := nullif(btrim(coalesce(p_name, '')), '');
+  v_row public.services;
+begin
+  select * into v_service from public.services s where s.id = p_service_id;
+
+  if v_service.id is null then
+    raise exception 'not authorized to change this service'
+      using errcode = '42501', detail = 'fadeup_service_refusal=not_authorized';
+  end if;
+
+  select ac.can_price into v_can_price
+  from private.assert_catalog_author(v_service.organization_id, p_price_cents) ac;
+
+  if v_service.archived_at is not null then
+    raise exception 'an archived service cannot be edited; restore it first'
+      using errcode = '22023', detail = 'fadeup_service_refusal=archived';
+  end if;
+
+  if v_name is null then
+    raise exception 'a service needs a name'
+      using errcode = '22023', detail = 'fadeup_service_refusal=name_required';
+  end if;
+
+  if p_duration_minutes is null or p_duration_minutes <= 0 then
+    raise exception 'a service needs a positive duration'
+      using errcode = '22023', detail = 'fadeup_service_refusal=duration_required';
+  end if;
+
+  if p_category_id is not null and not exists (
+    select 1 from public.service_categories c
+    where c.id = p_category_id and c.organization_id = v_service.organization_id
+  ) then
+    raise exception 'category does not belong to this organization'
+      using errcode = '22023', detail = 'fadeup_service_refusal=category_foreign';
+  end if;
+
+  if p_price_cents is not null and p_price_cents < 0 then
+    raise exception 'a price cannot be negative'
+      using errcode = '22023', detail = 'fadeup_service_refusal=price_negative';
+  end if;
+
+  update public.services s
+     set name = v_name,
+         duration_minutes = p_duration_minutes,
+         description = nullif(btrim(coalesce(p_description, '')), ''),
+         category_id = p_category_id,
+         -- Le prix ne bouge QUE si l'appelant avait le droit de l'envoyer.
+         price_cents = case when p_price_cents is not null then p_price_cents else s.price_cents end,
+         price_pending = case when p_price_cents is not null then false else s.price_pending end
+   where s.id = p_service_id
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+
+--
+-- Name: FUNCTION update_service(p_service_id uuid, p_name text, p_duration_minutes integer, p_description text, p_category_id uuid, p_price_cents integer); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.update_service(p_service_id uuid, p_name text, p_duration_minutes integer, p_description text, p_category_id uuid, p_price_cents integer) IS 'Modifie un service. `p_description` et `p_category_id` sont APPLIQUÉS tels quels (null efface). `p_price_cents` est optionnel : absent = prix inchangé ; présent chez un barber = REFUS nommé (fadeup_service_refusal=price_forbidden_for_role), jamais un champ ignoré en silence.';
+
+
+--
 -- Name: withdraw_external_professional(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -15825,7 +21292,7 @@ declare
   v_claim_state public.professional_claim_state;
 begin
   v_actor := (select auth.uid());
-  if v_actor is null or not (select private.is_platform_admin()) then
+  if v_actor is null or not (select private.platform_can('marketplace.withdraw')) then
     raise exception 'only FadeUp platform administrators can withdraw an external professional identity'
       using errcode = '42501';
   end if;
@@ -15911,6 +21378,38 @@ $$;
 --
 
 COMMENT ON FUNCTION public.withdraw_professional_claim(p_claim_id uuid) IS 'Authenticated-only. Withdraws the caller''s own pending claim. Never a silent no-op: a claim that is missing, someone else''s, or already decided raises rather than pretending to succeed.';
+
+
+--
+-- Name: account_erasure_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.account_erasure_log (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    erased_at timestamp with time zone DEFAULT now() NOT NULL,
+    actor_kind text DEFAULT 'self'::text NOT NULL,
+    requested_via text DEFAULT 'delete_my_account'::text NOT NULL,
+    account_kind text DEFAULT 'customer'::text NOT NULL,
+    scope jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT account_erasure_log_actor_kind_check CHECK ((actor_kind = 'self'::text)),
+    CONSTRAINT account_erasure_log_scope_is_object CHECK ((jsonb_typeof(scope) = 'object'::text))
+);
+
+ALTER TABLE ONLY public.account_erasure_log FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE account_erasure_log; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.account_erasure_log IS 'Trace des suppressions de compte : QUAND (erased_at), PAR QUI (actor_kind — ''self'' est la seule valeur possible, delete_my_account n''efface jamais que son propre appelant), et QUEL PÉRIMÈTRE (scope : des COMPTEURS par table). Volontairement DÉPOURVUE de tout identifiant — pas d''user_id, pas d''e-mail, pas de condensat : un identifiant conservé ici resterait rattachable aux lignes qu''on vient d''anonymiser, et annulerait l''anonymisation qu''il prétend tracer. La preuve côté personne est le reçu (id) rendu par la RPC. Table en ajout seul.';
+
+
+--
+-- Name: COLUMN account_erasure_log.scope; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account_erasure_log.scope IS 'Compteurs par table de ce qui a été supprimé ou anonymisé, plus les drapeaux booléens du périmètre. Des nombres, jamais des lignes ni des clés.';
 
 
 --
@@ -16180,6 +21679,36 @@ ALTER TABLE ONLY public.appointment_claim_tokens FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.appointment_claim_tokens IS 'Single-use, time-limited proof that the holder is the person who made a specific anonymous booking. Issued by book_public_appointment when there is no session, redeemed by redeem_appointment_claim after the customer creates an account. Only the sha256 hash is stored — the raw token exists exactly once, in the booking response.';
+
+
+--
+-- Name: appointment_overlap_forces; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.appointment_overlap_forces (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    organization_id uuid NOT NULL,
+    appointment_id uuid NOT NULL,
+    barber_id uuid NOT NULL,
+    action text NOT NULL,
+    forced_by uuid,
+    forced_at timestamp with time zone DEFAULT now() NOT NULL,
+    reason text NOT NULL,
+    starts_at timestamp with time zone NOT NULL,
+    ends_at timestamp with time zone NOT NULL,
+    conflicting_appointment_ids uuid[] NOT NULL,
+    CONSTRAINT appointment_overlap_forces_action_valid CHECK ((action = ANY (ARRAY['create'::text, 'reschedule'::text]))),
+    CONSTRAINT appointment_overlap_forces_reason_length CHECK (((char_length(reason) >= 1) AND (char_length(reason) <= 200)))
+);
+
+ALTER TABLE ONLY public.appointment_overlap_forces FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE appointment_overlap_forces; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.appointment_overlap_forces IS 'OS-1 — journal des chevauchements FORCÉS : qui, quand, pourquoi, sur quel créneau, contre quels rendez-vous. Écrit uniquement par create_appointment_as_business / reschedule_appointment (postgres, BYPASSRLS). Lisible par les rôles gestionnaires de l''organisation. Aucune écriture client.';
 
 
 --
@@ -16653,11 +22182,16 @@ CREATE TABLE public.prospects (
     review_count integer,
     estimated_barber_count integer,
     outreach_unsubscribe_token text DEFAULT encode(extensions.gen_random_bytes(16), 'hex'::text) NOT NULL,
+    origin public.prospect_origin DEFAULT 'worker'::public.prospect_origin NOT NULL,
+    field_captured_by uuid,
+    field_captured_at timestamp with time zone,
+    field_observation text,
     CONSTRAINT prospects_canonical_name_check CHECK ((btrim(canonical_name) <> ''::text)),
     CONSTRAINT prospects_country_check CHECK ((country ~ '^[A-Z]{2}$'::text)),
     CONSTRAINT prospects_current_score_check CHECK (((current_score >= 0) AND (current_score <= 100))),
     CONSTRAINT prospects_estimated_barber_count_check CHECK (((estimated_barber_count IS NULL) OR (estimated_barber_count >= 0))),
     CONSTRAINT prospects_fadeup_fit_score_check CHECK (((fadeup_fit_score IS NULL) OR ((fadeup_fit_score >= 0) AND (fadeup_fit_score <= 100)))),
+    CONSTRAINT prospects_field_origin_shape CHECK (((origin = 'field'::public.prospect_origin) = (field_captured_at IS NOT NULL))),
     CONSTRAINT prospects_migration_potential_score_check CHECK (((migration_potential_score IS NULL) OR ((migration_potential_score >= 0) AND (migration_potential_score <= 100)))),
     CONSTRAINT prospects_parent_not_self CHECK (((parent_group_id IS NULL) OR (parent_group_id <> id))),
     CONSTRAINT prospects_rating_check CHECK (((rating IS NULL) OR ((rating >= (0)::numeric) AND (rating <= (5)::numeric)))),
@@ -16693,6 +22227,34 @@ COMMENT ON COLUMN public.prospects.rating IS 'Provider-reported rating (0-5). NU
 --
 
 COMMENT ON COLUMN public.prospects.outreach_unsubscribe_token IS 'Le jeton du lien « ne plus recevoir ces messages ». Porté par le PROSPECT et non par la demande : on se désabonne d''un émetteur, et un lien reçu il y a trois mois doit encore fonctionner. Jamais retourné par une RPC de lecture — il ne circule que dans le corps des e-mails de prospection.';
+
+
+--
+-- Name: COLUMN prospects.origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.prospects.origin IS 'Worker ou terrain. Défaut « worker » : les 52 lignes antérieures à PLAT-1 viennent toutes de Worker V2, et leur provenance fine reste dans prospect_source_records.';
+
+
+--
+-- Name: COLUMN prospects.field_captured_by; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.prospects.field_captured_by IS 'L''interne qui a saisi la fiche sur le terrain. NULL pour un prospect Worker. ON DELETE SET NULL : un stagiaire qui part n''efface pas ce qu''il a observé.';
+
+
+--
+-- Name: COLUMN prospects.field_observation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.prospects.field_observation IS 'Ce que l''interne a VU. Texte libre, court, écrit sur place : l''enseigne, le nombre de fauteuils, l''affluence, le logiciel affiché à la caisse. C''est la valeur ajoutée d''une visite sur une fiche scrapée.';
+
+
+--
+-- Name: CONSTRAINT prospects_field_origin_shape ON prospects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT prospects_field_origin_shape ON public.prospects IS 'Une fiche terrain porte sa date de saisie, une fiche Worker n''en porte pas. Empêche qu''une origine soit affichée sans la date qui la rend vérifiable.';
 
 
 --
@@ -16933,6 +22495,7 @@ CREATE TABLE public.customer_profiles (
     onboarding_completed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    gender public.customer_gender,
     CONSTRAINT customer_profiles_style_notes_length CHECK (((style_notes IS NULL) OR (char_length(style_notes) <= 500)))
 );
 
@@ -16944,6 +22507,20 @@ ALTER TABLE ONLY public.customer_profiles FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.customer_profiles IS 'The customer-owned, portable identity — one row per auth.users account, org-agnostic. Not created automatically at signup (an account that never touches the customer app has no row here, which is a legitimate normal state); created/updated by the customer themselves via onboarding or their profile screen. Distinct from public.customers, the per-organization staff-owned CRM contact.';
+
+
+--
+-- Name: COLUMN customer_profiles.haircut_frequency; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_profiles.haircut_frequency IS 'Fréquence de coupe déclarée à l''onboarding (M1a), enum customer_haircut_frequency. Donnée personnelle optionnelle, modifiable et effaçable (NULL) par son titulaire. Sert aux recommandations ; le rappel de rebooking fondé dessus est hors périmètre B5 (OS-3). Part avec public.delete_my_account().';
+
+
+--
+-- Name: COLUMN customer_profiles.gender; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_profiles.gender IS 'Préférence de recommandation déclarée par le client. FINALITÉ UNIQUE ET EXCLUSIVE : orienter la découverte vers barbershop ou salon mixte. Donnée personnelle, OPTIONNELLE (NULL = pas de réponse ou réponse retirée), modifiable et effaçable par son titulaire via la RLS de customer_profiles. N''est exposée par AUCUNE surface publique ni professionnelle : aucune RPC ne la projette, aucun profil ne l''affiche, aucune recherche ne l''utilise aujourd''hui. Part avec public.delete_my_account().';
 
 
 --
@@ -16971,6 +22548,13 @@ ALTER TABLE ONLY public.customers FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.customers IS 'Real customer entity, org-scoped. Populated both by staff directly (LOT 12 CRM UI) and automatically by the link_customer_from_contact_info trigger on appointments/queue_entries (matches or creates by phone/email at booking time).';
+
+
+--
+-- Name: COLUMN customers.notes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customers.notes IS 'RETIRÉE par OS-2 (2026-09-11). Conservée pour ne rien détruire ; inécrivable (trigger customers_reject_legacy_notes). Les notes privées vivent dans public.customer_notes.';
 
 
 --
@@ -17344,9 +22928,11 @@ CREATE TABLE public.marketplace_withdrawal_requests (
     decision_note text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    requester_email text,
     CONSTRAINT marketplace_withdrawal_requests_deadline_after_request CHECK ((deadline_at > requested_at)),
     CONSTRAINT marketplace_withdrawal_requests_decision_matches_status CHECK (((status = 'pending'::public.marketplace_withdrawal_status) = (decided_at IS NULL))),
-    CONSTRAINT marketplace_withdrawal_requests_via_valid CHECK ((requested_via = ANY (ARRAY['email'::text, 'phone'::text, 'platform_operator'::text, 'legal'::text, 'other'::text])))
+    CONSTRAINT marketplace_withdrawal_requests_requester_email_shape CHECK (((requester_email IS NULL) OR (requester_email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'::text))),
+    CONSTRAINT marketplace_withdrawal_requests_via_valid CHECK ((requested_via = ANY (ARRAY['email'::text, 'phone'::text, 'platform_operator'::text, 'legal'::text, 'other'::text, 'public_form'::text, 'email_link'::text])))
 );
 
 
@@ -17355,6 +22941,13 @@ CREATE TABLE public.marketplace_withdrawal_requests (
 --
 
 COMMENT ON TABLE public.marketplace_withdrawal_requests IS 'Une demande de retrait de la marketplace, datée, avec son échéance de 72 h (MASTER_SPEC §5). Une seule demande en cours par profil à la fois — index unique partiel ci-dessous. Le retrait lui-même reste withdraw_external_professional ; cette table est ce qui le DÉCLENCHE et ce qui rend le délai visible.';
+
+
+--
+-- Name: COLUMN marketplace_withdrawal_requests.requester_email; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.marketplace_withdrawal_requests.requester_email IS 'Adresse laissée par le demandeur du formulaire public, pour la vérification et la réponse de l''opérateur. Optionnelle : le RGPD n''exige pas une adresse pour s''opposer.';
 
 
 --
@@ -17915,7 +23508,28 @@ ALTER TABLE ONLY public.platform_audit_log FORCE ROW LEVEL SECURITY;
 -- Name: TABLE platform_audit_log; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.platform_audit_log IS 'Append-only platform-level security event log (bootstrap/invitation/role events). Insert only via this migration''s SECURITY DEFINER RPCs — never a client write path.';
+COMMENT ON TABLE public.platform_audit_log IS 'Le journal des actions internes significatives : qui, quand, quoi, sur quelle ressource, et le résultat. EN AJOUT SEUL — déclencheur platform_audit_log_append_only, sans exemption de rôle. Écrit uniquement par des RPC SECURITY DEFINER ; aucun chemin d''écriture client. Lu par le fondateur et les admins seulement (policy platform_audit_log_select) : le support et les modérateurs n''y accèdent pas, sinon ils voient les actions les uns des autres.';
+
+
+--
+-- Name: platform_member_zones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_member_zones (
+    user_id uuid NOT NULL,
+    zone_id uuid NOT NULL,
+    assigned_by uuid,
+    assigned_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.platform_member_zones FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE platform_member_zones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.platform_member_zones IS 'Les zones d''un interne. Plusieurs stagiaires par zone et plusieurs zones par stagiaire : c''est une table d''association, sans unicité d''un côté ni de l''autre. Assignée par le fondateur seul (set_platform_member_zones). Une ligne ici n''autorise rien à elle seule : elle RESTREINT ce que voit un rôle porteur de crm.zone_read.';
 
 
 --
@@ -17967,6 +23581,46 @@ ALTER TABLE ONLY public.platform_owner_bootstrap_tokens FORCE ROW LEVEL SECURITY
 --
 
 COMMENT ON TABLE public.platform_owner_bootstrap_tokens IS 'Single-use hashed bootstrap tokens for claiming platform_owner. Zero client-facing policies — read/write only through claim_platform_owner_bootstrap()/reissue_platform_owner_bootstrap_token() or operator SQL.';
+
+
+--
+-- Name: platform_permissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_permissions (
+    key text NOT NULL,
+    description text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT platform_permissions_key_shape CHECK ((key ~ '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'::text))
+);
+
+ALTER TABLE ONLY public.platform_permissions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE platform_permissions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.platform_permissions IS 'Le catalogue des droits internes FadeUp. Une ligne par droit, décrite en clair. Sert de référence à public.platform_role_permissions : un droit qui n''est pas ici ne peut être accordé à personne (clé étrangère).';
+
+
+--
+-- Name: platform_role_permissions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.platform_role_permissions (
+    role public.platform_role NOT NULL,
+    permission_key text NOT NULL
+);
+
+ALTER TABLE ONLY public.platform_role_permissions FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE platform_role_permissions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.platform_role_permissions IS 'La grille rôle interne × droit. LE défaut est le refus : une paire absente n''autorise rien, et il n''existe aucun chemin d''écriture client vers cette table (seul le fondateur, par set_platform_member_role, change le rôle d''une personne ; la grille elle-même ne change que par migration). C''est ici qu''on lit « ce que le commercial a le droit de faire », et nulle part ailleurs.';
 
 
 --
@@ -18041,6 +23695,57 @@ COMMENT ON TABLE public.post_services IS 'Lien optionnel post → service réser
 
 
 --
+-- Name: poster_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.poster_batches (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    label text NOT NULL,
+    code_count integer NOT NULL,
+    note text,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT poster_batches_count_bounded CHECK (((code_count >= 1) AND (code_count <= 500))),
+    CONSTRAINT poster_batches_label_length CHECK ((char_length(label) <= 120)),
+    CONSTRAINT poster_batches_label_not_blank CHECK ((btrim(label) <> ''::text)),
+    CONSTRAINT poster_batches_note_length CHECK (((note IS NULL) OR (char_length(note) <= 1000)))
+);
+
+ALTER TABLE ONLY public.poster_batches FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: posters; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.posters (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
+    code text NOT NULL,
+    state public.poster_state DEFAULT 'free'::public.poster_state NOT NULL,
+    organization_id uuid,
+    location_id uuid,
+    assigned_by uuid,
+    assigned_at timestamp with time zone,
+    revoked_by uuid,
+    revoked_at timestamp with time zone,
+    revoke_reason text,
+    letter_prospect_id uuid,
+    letter_generated_at timestamp with time zone,
+    letter_generated_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT posters_assigned_shape CHECK (((state <> 'assigned'::public.poster_state) OR ((organization_id IS NOT NULL) AND (location_id IS NOT NULL) AND (assigned_at IS NOT NULL) AND (assigned_by IS NOT NULL)))),
+    CONSTRAINT posters_code_shape CHECK ((code ~ '^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{10}$'::text)),
+    CONSTRAINT posters_free_shape CHECK (((state <> 'free'::public.poster_state) OR ((organization_id IS NULL) AND (location_id IS NULL) AND (assigned_at IS NULL)))),
+    CONSTRAINT posters_revoke_reason_length CHECK (((revoke_reason IS NULL) OR (char_length(revoke_reason) <= 500))),
+    CONSTRAINT posters_revoked_shape CHECK (((state <> 'revoked'::public.poster_state) OR ((revoked_at IS NOT NULL) AND (revoked_by IS NOT NULL) AND (NULLIF(btrim(COALESCE(revoke_reason, ''::text)), ''::text) IS NOT NULL))))
+);
+
+ALTER TABLE ONLY public.posters FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: professional_follows; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -18086,6 +23791,32 @@ COMMENT ON COLUMN public.professional_follows.followed_at IS 'When following beg
 --
 
 COMMENT ON COLUMN public.professional_follows.unfollowed_at IS 'The customer''s explicit decision to stop, and the timestamp of it. Preserved across repeat unfollows: the first refusal is the truthful one.';
+
+
+--
+-- Name: professional_information_notices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.professional_information_notices (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    professional_id uuid NOT NULL,
+    prospect_id uuid,
+    channel text NOT NULL,
+    email text,
+    outbox_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT professional_information_notices_channel_valid CHECK ((channel = ANY (ARRAY['email'::text, 'public_page_only'::text]))),
+    CONSTRAINT professional_information_notices_email_shape CHECK (((channel = 'email'::text) = (email IS NOT NULL)))
+);
+
+ALTER TABLE ONLY public.professional_information_notices FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE professional_information_notices; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.professional_information_notices IS 'La trace de l''information article 14 : une ligne par (professionnel, canal). Le RÉSULTAT de l''envoi se lit en joignant email_outbox (status, sent_at, delivered_at, bounced_at) — jamais dupliqué ici.';
 
 
 --
@@ -19038,6 +24769,34 @@ COMMENT ON TABLE public.queue_entry_moves IS 'Trace d''audit des déplacements e
 
 
 --
+-- Name: resend_webhook_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resend_webhook_events (
+    event_id text NOT NULL,
+    event_type text NOT NULL,
+    payload jsonb NOT NULL,
+    status text DEFAULT 'queued'::text NOT NULL,
+    error text,
+    attempts integer DEFAULT 0 NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    processed_at timestamp with time zone,
+    CONSTRAINT resend_webhook_events_id_shape CHECK (((btrim(event_id) <> ''::text) AND (char_length(event_id) <= 200))),
+    CONSTRAINT resend_webhook_events_status_valid CHECK ((status = ANY (ARRAY['queued'::text, 'processed'::text, 'skipped'::text, 'failed'::text]))),
+    CONSTRAINT resend_webhook_events_type_not_blank CHECK ((btrim(event_type) <> ''::text))
+);
+
+ALTER TABLE ONLY public.resend_webhook_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: TABLE resend_webhook_events; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.resend_webhook_events IS 'Journal brut des événements Resend (délivré, rebond, plainte, ouverture), clé primaire = identifiant Svix (idempotence). La fonction Edge resend-webhook n''écrit qu''ici et seulement après vérification de signature ; private.apply_resend_webhook_feedback traite, le scheduler cadence.';
+
+
+--
 -- Name: review_photos; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -19116,31 +24875,6 @@ ALTER TABLE ONLY public.review_reputation FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.review_reputation IS 'Réputation agrégée par sujet, maintenue par maintain_review_reputation depuis les seuls avis status=published. rating_count = 0 (ou absence de ligne) signifie « pas encore d''avis » et DOIT être exposé comme note NULL, jamais 0 : un profil neuf n''est pas un profil mal noté. L''exposition passe par get_public_reputation, qui rend null quand le compte est nul.';
-
-
---
--- Name: service_categories; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.service_categories (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    organization_id uuid NOT NULL,
-    name text NOT NULL,
-    display_order integer DEFAULT 0 NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT service_categories_name_not_blank CHECK ((btrim(name) <> ''::text))
-);
-
-ALTER TABLE ONLY public.service_categories FORCE ROW LEVEL SECURITY;
-
-
---
--- Name: TABLE service_categories; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.service_categories IS 'Optional grouping for services (e.g. "Haircuts", "Beard", "Color"). A service without a category is still valid.';
 
 
 --
@@ -19232,39 +24966,6 @@ COMMENT ON TABLE public.service_mode_changes IS 'Append-only history of every se
 
 
 --
--- Name: services; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.services (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    organization_id uuid NOT NULL,
-    category_id uuid,
-    name text NOT NULL,
-    description text,
-    duration_minutes integer NOT NULL,
-    buffer_before_minutes integer DEFAULT 0 NOT NULL,
-    buffer_after_minutes integer DEFAULT 0 NOT NULL,
-    price_cents integer NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT services_buffers_nonnegative CHECK (((buffer_before_minutes >= 0) AND (buffer_after_minutes >= 0))),
-    CONSTRAINT services_duration_positive CHECK ((duration_minutes > 0)),
-    CONSTRAINT services_name_not_blank CHECK ((btrim(name) <> ''::text)),
-    CONSTRAINT services_price_nonnegative CHECK ((price_cents >= 0))
-);
-
-ALTER TABLE ONLY public.services FORCE ROW LEVEL SECURITY;
-
-
---
--- Name: TABLE services; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.services IS 'Service catalog entry: duration/buffers drive appointment-engine slot math (LOT 8), not built here. price_cents is integer cents.';
-
-
---
 -- Name: staff_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -19328,6 +25029,18 @@ ALTER TABLE ONLY public.stripe_webhook_events FORCE ROW LEVEL SECURITY;
 --
 
 COMMENT ON TABLE public.stripe_webhook_events IS 'Journal des webhooks Stripe : charge utile brute et résultat de traitement. Clé primaire = identifiant d''événement Stripe, donc idempotence par construction. Écrit par la fonction Edge stripe-webhook APRÈS vérification de signature ; traité en asynchrone par run_billing_maintenance.';
+
+
+--
+-- Name: support_ticket_reference_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.support_ticket_reference_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
@@ -19397,6 +25110,7 @@ CREATE TABLE public.time_blocks (
     created_by uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    series_id uuid,
     CONSTRAINT time_blocks_reason_length CHECK (((reason IS NULL) OR (char_length(reason) <= 200))),
     CONSTRAINT time_blocks_time_order CHECK ((ends_at > starts_at))
 );
@@ -19416,6 +25130,13 @@ COMMENT ON TABLE public.time_blocks IS 'Time a professional is unavailable for r
 --
 
 COMMENT ON COLUMN public.time_blocks.reason IS 'Shown to staff on the calendar. Never shown to a customer — the public booking surface only learns that the time is unavailable, not why.';
+
+
+--
+-- Name: COLUMN time_blocks.series_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.time_blocks.series_id IS 'OS-1 — identifiant de SÉRIE d''un blocage récurrent : chaque occurrence est une ligne ordinaire (les lecteurs existants ne changent pas), la série est le lien qui permet de la retirer d''un coup. NULL = blocage ponctuel. Généré côté client (uuid v4) au moment de l''insertion multi-lignes.';
 
 
 --
@@ -19607,6 +25328,14 @@ COMMENT ON TABLE public.whatsapp_webhook_events IS 'Raw inbound webhook envelope
 
 
 --
+-- Name: account_erasure_log account_erasure_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_erasure_log
+    ADD CONSTRAINT account_erasure_log_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: analytics_event_definitions analytics_event_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -19687,11 +25416,19 @@ ALTER TABLE ONLY public.appointment_claim_tokens
 
 
 --
+-- Name: appointment_overlap_forces appointment_overlap_forces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_overlap_forces
+    ADD CONSTRAINT appointment_overlap_forces_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: appointments appointments_barber_no_overlap; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.appointments
-    ADD CONSTRAINT appointments_barber_no_overlap EXCLUDE USING gist (barber_id WITH =, blocked_range WITH &&) WHERE ((status <> ALL (ARRAY['cancelled'::public.appointment_status, 'no_show'::public.appointment_status])));
+    ADD CONSTRAINT appointments_barber_no_overlap EXCLUDE USING gist (barber_id WITH =, blocked_range WITH &&) WHERE (((status <> ALL (ARRAY['cancelled'::public.appointment_status, 'no_show'::public.appointment_status])) AND (overlap_forced_at IS NULL)));
 
 
 --
@@ -19699,7 +25436,7 @@ ALTER TABLE ONLY public.appointments
 --
 
 ALTER TABLE ONLY public.appointments
-    ADD CONSTRAINT appointments_chair_no_overlap EXCLUDE USING gist (chair_id WITH =, blocked_range WITH &&) WHERE ((status <> ALL (ARRAY['cancelled'::public.appointment_status, 'no_show'::public.appointment_status])));
+    ADD CONSTRAINT appointments_chair_no_overlap EXCLUDE USING gist (chair_id WITH =, blocked_range WITH &&) WHERE (((status <> ALL (ARRAY['cancelled'::public.appointment_status, 'no_show'::public.appointment_status])) AND (overlap_forced_at IS NULL)));
 
 
 --
@@ -19883,6 +25620,14 @@ ALTER TABLE ONLY public.customer_favorites
 
 ALTER TABLE ONLY public.customer_memberships
     ADD CONSTRAINT customer_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customer_notes customer_notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_notes
+    ADD CONSTRAINT customer_notes_pkey PRIMARY KEY (id);
 
 
 --
@@ -20390,6 +26135,14 @@ ALTER TABLE ONLY public.platform_invitations
 
 
 --
+-- Name: platform_member_zones platform_member_zones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_member_zones
+    ADD CONSTRAINT platform_member_zones_pkey PRIMARY KEY (user_id, zone_id);
+
+
+--
 -- Name: platform_members platform_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20422,11 +26175,35 @@ ALTER TABLE ONLY public.platform_owner_bootstrap_tokens
 
 
 --
+-- Name: platform_permissions platform_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_permissions
+    ADD CONSTRAINT platform_permissions_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: platform_role_permissions platform_role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_role_permissions
+    ADD CONSTRAINT platform_role_permissions_pkey PRIMARY KEY (role, permission_key);
+
+
+--
 -- Name: platform_support_sessions platform_support_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.platform_support_sessions
     ADD CONSTRAINT platform_support_sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: platform_zones platform_zones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_zones
+    ADD CONSTRAINT platform_zones_pkey PRIMARY KEY (id);
 
 
 --
@@ -20459,6 +26236,30 @@ ALTER TABLE ONLY public.post_media
 
 ALTER TABLE ONLY public.post_services
     ADD CONSTRAINT post_services_pkey PRIMARY KEY (post_id, service_id);
+
+
+--
+-- Name: poster_batches poster_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.poster_batches
+    ADD CONSTRAINT poster_batches_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: posters posters_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_code_key UNIQUE (code);
+
+
+--
+-- Name: posters posters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_pkey PRIMARY KEY (id);
 
 
 --
@@ -20499,6 +26300,14 @@ ALTER TABLE ONLY public.professional_follows
 
 ALTER TABLE ONLY public.professional_follows
     ADD CONSTRAINT professional_follows_unique UNIQUE (follower_user_id, professional_id);
+
+
+--
+-- Name: professional_information_notices professional_information_notices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_pkey PRIMARY KEY (id);
 
 
 --
@@ -20846,6 +26655,14 @@ ALTER TABLE ONLY public.queue_entry_moves
 
 
 --
+-- Name: resend_webhook_events resend_webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resend_webhook_events
+    ADD CONSTRAINT resend_webhook_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: review_photos review_photos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20987,6 +26804,30 @@ ALTER TABLE ONLY public.staff_profiles
 
 ALTER TABLE ONLY public.stripe_webhook_events
     ADD CONSTRAINT stripe_webhook_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: support_ticket_messages support_ticket_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_ticket_messages
+    ADD CONSTRAINT support_ticket_messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: support_tickets support_tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: support_tickets support_tickets_reference_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_reference_key UNIQUE (reference);
 
 
 --
@@ -21152,6 +26993,20 @@ CREATE INDEX api_usage_source_id_requested_at_idx ON public.api_usage USING btre
 --
 
 CREATE INDEX appointment_claim_tokens_appointment_id_idx ON public.appointment_claim_tokens USING btree (appointment_id);
+
+
+--
+-- Name: appointment_overlap_forces_appointment_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX appointment_overlap_forces_appointment_idx ON public.appointment_overlap_forces USING btree (appointment_id);
+
+
+--
+-- Name: appointment_overlap_forces_org_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX appointment_overlap_forces_org_idx ON public.appointment_overlap_forces USING btree (organization_id, forced_at DESC);
 
 
 --
@@ -21477,6 +27332,27 @@ CREATE INDEX customer_memberships_plan_id_idx ON public.customer_memberships USI
 
 
 --
+-- Name: customer_notes_author_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX customer_notes_author_idx ON public.customer_notes USING btree (author_user_id) WHERE (author_user_id IS NOT NULL);
+
+
+--
+-- Name: customer_notes_customer_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX customer_notes_customer_idx ON public.customer_notes USING btree (customer_id, created_at DESC);
+
+
+--
+-- Name: customer_notes_organization_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX customer_notes_organization_idx ON public.customer_notes USING btree (organization_id);
+
+
+--
 -- Name: customer_passport_photos_user_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -21579,6 +27455,13 @@ CREATE INDEX email_outbox_dispatchable_idx ON public.email_outbox USING btree (n
 --
 
 CREATE INDEX email_outbox_pending_idx ON public.email_outbox USING btree (next_attempt_at) WHERE (status = 'queued'::public.email_delivery_status);
+
+
+--
+-- Name: email_outbox_provider_message_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX email_outbox_provider_message_id_idx ON public.email_outbox USING btree (provider_message_id) WHERE (provider_message_id IS NOT NULL);
 
 
 --
@@ -21932,6 +27815,13 @@ CREATE INDEX platform_audit_log_created_at_idx ON public.platform_audit_log USIN
 
 
 --
+-- Name: platform_member_zones_zone_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX platform_member_zones_zone_idx ON public.platform_member_zones USING btree (zone_id);
+
+
+--
 -- Name: platform_members_role_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -21981,6 +27871,13 @@ CREATE INDEX platform_support_sessions_organization_id_idx ON public.platform_su
 
 
 --
+-- Name: platform_zones_country_city_key_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX platform_zones_country_city_key_unique ON public.platform_zones USING btree (country, city_key);
+
+
+--
 -- Name: post_likes_user_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -21999,6 +27896,41 @@ CREATE INDEX post_media_post_position_idx ON public.post_media USING btree (post
 --
 
 CREATE INDEX post_services_service_idx ON public.post_services USING btree (service_id);
+
+
+--
+-- Name: posters_batch_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posters_batch_idx ON public.posters USING btree (batch_id, code);
+
+
+--
+-- Name: posters_letter_prospect_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posters_letter_prospect_idx ON public.posters USING btree (letter_prospect_id) WHERE (letter_prospect_id IS NOT NULL);
+
+
+--
+-- Name: posters_organization_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posters_organization_idx ON public.posters USING btree (organization_id) WHERE (organization_id IS NOT NULL);
+
+
+--
+-- Name: posters_state_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posters_state_idx ON public.posters USING btree (state);
+
+
+--
+-- Name: posts_moderated_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_moderated_idx ON public.posts USING btree (hidden_at DESC) WHERE (hidden_at IS NOT NULL);
 
 
 --
@@ -22090,6 +28022,13 @@ CREATE INDEX professional_follows_follower_idx ON public.professional_follows US
 --
 
 CREATE INDEX professional_follows_professional_idx ON public.professional_follows USING btree (professional_id) WHERE (state = 'following'::public.follow_state);
+
+
+--
+-- Name: professional_information_notices_one_per_channel; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX professional_information_notices_one_per_channel ON public.professional_information_notices USING btree (professional_id, channel);
 
 
 --
@@ -22485,10 +28424,24 @@ CREATE INDEX prospects_fadeup_fit_idx ON public.prospects USING btree (fadeup_fi
 
 
 --
+-- Name: prospects_field_captured_by_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX prospects_field_captured_by_idx ON public.prospects USING btree (field_captured_by) WHERE (field_captured_by IS NOT NULL);
+
+
+--
 -- Name: prospects_migration_potential_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX prospects_migration_potential_idx ON public.prospects USING btree (migration_potential_score DESC NULLS LAST);
+
+
+--
+-- Name: prospects_origin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX prospects_origin_idx ON public.prospects USING btree (origin, first_discovered_at DESC);
 
 
 --
@@ -22587,6 +28540,20 @@ CREATE INDEX queue_entry_moves_entry_idx ON public.queue_entry_moves USING btree
 --
 
 CREATE INDEX queue_entry_moves_location_idx ON public.queue_entry_moves USING btree (location_id, created_at DESC);
+
+
+--
+-- Name: resend_webhook_events_queued_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX resend_webhook_events_queued_idx ON public.resend_webhook_events USING btree (received_at) WHERE (status = 'queued'::text);
+
+
+--
+-- Name: resend_webhook_events_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX resend_webhook_events_type_idx ON public.resend_webhook_events USING btree (event_type, received_at DESC);
 
 
 --
@@ -22716,6 +28683,13 @@ CREATE INDEX services_category_id_idx ON public.services USING btree (category_i
 
 
 --
+-- Name: services_org_active_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX services_org_active_idx ON public.services USING btree (organization_id, is_active) WHERE (archived_at IS NULL);
+
+
+--
 -- Name: services_organization_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -22765,6 +28739,41 @@ CREATE INDEX stripe_webhook_events_type_idx ON public.stripe_webhook_events USIN
 
 
 --
+-- Name: support_ticket_messages_ticket_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX support_ticket_messages_ticket_idx ON public.support_ticket_messages USING btree (ticket_id, created_at);
+
+
+--
+-- Name: support_tickets_assigned_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX support_tickets_assigned_idx ON public.support_tickets USING btree (assigned_to) WHERE (assigned_to IS NOT NULL);
+
+
+--
+-- Name: support_tickets_one_open_per_withdrawal; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX support_tickets_one_open_per_withdrawal ON public.support_tickets USING btree (withdrawal_request_id) WHERE ((withdrawal_request_id IS NOT NULL) AND (status <> 'resolved'::public.support_ticket_status));
+
+
+--
+-- Name: support_tickets_open_due_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX support_tickets_open_due_idx ON public.support_tickets USING btree (due_at) WHERE (status <> 'resolved'::public.support_ticket_status);
+
+
+--
+-- Name: support_tickets_status_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX support_tickets_status_created_idx ON public.support_tickets USING btree (status, created_at DESC);
+
+
+--
 -- Name: time_blocks_barber_range_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -22776,6 +28785,13 @@ CREATE INDEX time_blocks_barber_range_idx ON public.time_blocks USING btree (bar
 --
 
 CREATE INDEX time_blocks_organization_range_idx ON public.time_blocks USING btree (organization_id, starts_at);
+
+
+--
+-- Name: time_blocks_series_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX time_blocks_series_idx ON public.time_blocks USING btree (series_id) WHERE (series_id IS NOT NULL);
 
 
 --
@@ -22849,6 +28865,20 @@ CREATE INDEX whatsapp_webhook_events_unprocessed_idx ON public.whatsapp_webhook_
 
 
 --
+-- Name: account_erasure_log account_erasure_log_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER account_erasure_log_append_only BEFORE DELETE OR UPDATE ON public.account_erasure_log FOR EACH ROW EXECUTE FUNCTION public.reject_account_erasure_log_mutation();
+
+
+--
+-- Name: account_erasure_log account_erasure_log_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER account_erasure_log_append_only_truncate BEFORE TRUNCATE ON public.account_erasure_log FOR EACH STATEMENT EXECUTE FUNCTION public.reject_account_erasure_log_mutation();
+
+
+--
 -- Name: analytics_event_definitions analytics_event_definitions_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -22909,6 +28939,13 @@ CREATE TRIGGER appointments_auto_follow AFTER INSERT OR UPDATE OF status ON publ
 --
 
 CREATE TRIGGER appointments_check_consistency BEFORE INSERT OR UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.check_appointment_consistency();
+
+
+--
+-- Name: appointments appointments_check_forced_overlap; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER appointments_check_forced_overlap BEFORE INSERT OR UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.check_appointment_forced_overlap();
 
 
 --
@@ -23150,6 +29187,20 @@ CREATE TRIGGER customer_memberships_set_updated_at BEFORE UPDATE ON public.custo
 
 
 --
+-- Name: customer_notes customer_notes_check_consistency; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER customer_notes_check_consistency BEFORE INSERT OR UPDATE ON public.customer_notes FOR EACH ROW EXECUTE FUNCTION public.check_customer_note_consistency();
+
+
+--
+-- Name: customer_notes customer_notes_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER customer_notes_set_updated_at BEFORE UPDATE ON public.customer_notes FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
 -- Name: customer_passports customer_passports_analytics; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -23217,6 +29268,13 @@ CREATE TRIGGER customer_profiles_set_updated_at BEFORE UPDATE ON public.customer
 --
 
 CREATE TRIGGER customers_guard_identity BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.guard_customers_identity();
+
+
+--
+-- Name: customers customers_reject_legacy_notes; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER customers_reject_legacy_notes BEFORE INSERT OR UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.reject_legacy_customer_notes();
 
 
 --
@@ -23493,6 +29551,20 @@ CREATE TRIGGER outreach_templates_stamp_approval BEFORE UPDATE ON public.outreac
 
 
 --
+-- Name: platform_audit_log platform_audit_log_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER platform_audit_log_append_only BEFORE DELETE OR UPDATE ON public.platform_audit_log FOR EACH ROW EXECUTE FUNCTION public.reject_platform_audit_mutation();
+
+
+--
+-- Name: platform_audit_log platform_audit_log_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER platform_audit_log_append_only_truncate BEFORE TRUNCATE ON public.platform_audit_log FOR EACH STATEMENT EXECUTE FUNCTION public.reject_platform_audit_mutation();
+
+
+--
 -- Name: platform_members platform_members_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -23532,6 +29604,13 @@ CREATE TRIGGER post_media_limit AFTER INSERT ON public.post_media FOR EACH ROW E
 --
 
 CREATE TRIGGER post_services_check_consistency BEFORE INSERT ON public.post_services FOR EACH ROW EXECUTE FUNCTION public.check_post_services_consistency();
+
+
+--
+-- Name: posters posters_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER posters_set_updated_at BEFORE UPDATE ON public.posters FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -24067,6 +30146,27 @@ CREATE TRIGGER staff_profiles_set_updated_at BEFORE UPDATE ON public.staff_profi
 
 
 --
+-- Name: support_ticket_messages support_ticket_messages_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER support_ticket_messages_append_only BEFORE DELETE OR UPDATE ON public.support_ticket_messages FOR EACH ROW EXECUTE FUNCTION public.reject_support_ticket_message_mutation();
+
+
+--
+-- Name: support_ticket_messages support_ticket_messages_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER support_ticket_messages_append_only_truncate BEFORE TRUNCATE ON public.support_ticket_messages FOR EACH STATEMENT EXECUTE FUNCTION public.reject_support_ticket_message_mutation();
+
+
+--
+-- Name: support_tickets support_tickets_set_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER support_tickets_set_updated_at BEFORE UPDATE ON public.support_tickets FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+
+--
 -- Name: time_blocks time_blocks_check_consistency; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -24185,6 +30285,38 @@ ALTER TABLE ONLY public.appointment_claim_tokens
 
 
 --
+-- Name: appointment_overlap_forces appointment_overlap_forces_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_overlap_forces
+    ADD CONSTRAINT appointment_overlap_forces_appointment_id_fkey FOREIGN KEY (appointment_id) REFERENCES public.appointments(id) ON DELETE CASCADE;
+
+
+--
+-- Name: appointment_overlap_forces appointment_overlap_forces_barber_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_overlap_forces
+    ADD CONSTRAINT appointment_overlap_forces_barber_id_fkey FOREIGN KEY (barber_id) REFERENCES public.barbers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: appointment_overlap_forces appointment_overlap_forces_forced_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_overlap_forces
+    ADD CONSTRAINT appointment_overlap_forces_forced_by_fkey FOREIGN KEY (forced_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: appointment_overlap_forces appointment_overlap_forces_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_overlap_forces
+    ADD CONSTRAINT appointment_overlap_forces_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
 -- Name: appointments appointments_barber_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24246,6 +30378,14 @@ ALTER TABLE ONLY public.appointments
 
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: appointments appointments_overlap_forced_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT appointments_overlap_forced_by_fkey FOREIGN KEY (overlap_forced_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 
 --
@@ -24526,6 +30666,30 @@ ALTER TABLE ONLY public.customer_memberships
 
 ALTER TABLE ONLY public.customer_memberships
     ADD CONSTRAINT customer_memberships_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.membership_plans(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: customer_notes customer_notes_author_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_notes
+    ADD CONSTRAINT customer_notes_author_user_id_fkey FOREIGN KEY (author_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: customer_notes customer_notes_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_notes
+    ADD CONSTRAINT customer_notes_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_notes customer_notes_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_notes
+    ADD CONSTRAINT customer_notes_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 
 
 --
@@ -25185,6 +31349,30 @@ ALTER TABLE ONLY public.platform_invitations
 
 
 --
+-- Name: platform_member_zones platform_member_zones_assigned_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_member_zones
+    ADD CONSTRAINT platform_member_zones_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: platform_member_zones platform_member_zones_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_member_zones
+    ADD CONSTRAINT platform_member_zones_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.platform_members(user_id) ON DELETE CASCADE;
+
+
+--
+-- Name: platform_member_zones platform_member_zones_zone_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_member_zones
+    ADD CONSTRAINT platform_member_zones_zone_id_fkey FOREIGN KEY (zone_id) REFERENCES public.platform_zones(id) ON DELETE CASCADE;
+
+
+--
 -- Name: platform_members platform_members_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25209,6 +31397,14 @@ ALTER TABLE ONLY public.platform_owner_bootstrap_tokens
 
 
 --
+-- Name: platform_role_permissions platform_role_permissions_permission_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_role_permissions
+    ADD CONSTRAINT platform_role_permissions_permission_key_fkey FOREIGN KEY (permission_key) REFERENCES public.platform_permissions(key) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
 -- Name: platform_support_sessions platform_support_sessions_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25230,6 +31426,14 @@ ALTER TABLE ONLY public.platform_support_sessions
 
 ALTER TABLE ONLY public.platform_support_sessions
     ADD CONSTRAINT platform_support_sessions_target_user_id_fkey FOREIGN KEY (target_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: platform_zones platform_zones_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platform_zones
+    ADD CONSTRAINT platform_zones_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 
 --
@@ -25270,6 +31474,78 @@ ALTER TABLE ONLY public.post_services
 
 ALTER TABLE ONLY public.post_services
     ADD CONSTRAINT post_services_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.services(id) ON DELETE CASCADE;
+
+
+--
+-- Name: poster_batches poster_batches_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.poster_batches
+    ADD CONSTRAINT poster_batches_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_assigned_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.poster_batches(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: posters posters_letter_generated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_letter_generated_by_fkey FOREIGN KEY (letter_generated_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_letter_prospect_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_letter_prospect_id_fkey FOREIGN KEY (letter_prospect_id) REFERENCES public.prospects(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_location_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posters posters_revoked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posters
+    ADD CONSTRAINT posters_revoked_by_fkey FOREIGN KEY (revoked_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: posts posts_hidden_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_hidden_by_fkey FOREIGN KEY (hidden_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 
 --
@@ -25358,6 +31634,30 @@ ALTER TABLE ONLY public.professional_follows
 
 ALTER TABLE ONLY public.professional_follows
     ADD CONSTRAINT professional_follows_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: professional_information_notices professional_information_notices_outbox_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_outbox_id_fkey FOREIGN KEY (outbox_id) REFERENCES public.email_outbox(id) ON DELETE SET NULL;
+
+
+--
+-- Name: professional_information_notices professional_information_notices_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: professional_information_notices professional_information_notices_prospect_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.professional_information_notices
+    ADD CONSTRAINT professional_information_notices_prospect_id_fkey FOREIGN KEY (prospect_id) REFERENCES public.prospects(id) ON DELETE SET NULL;
 
 
 --
@@ -25777,6 +32077,14 @@ ALTER TABLE ONLY public.prospects
 
 
 --
+-- Name: prospects prospects_field_captured_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.prospects
+    ADD CONSTRAINT prospects_field_captured_by_fkey FOREIGN KEY (field_captured_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: prospects prospects_parent_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25925,7 +32233,7 @@ ALTER TABLE ONLY public.reviews
 --
 
 ALTER TABLE ONLY public.reviews
-    ADD CONSTRAINT reviews_customer_user_id_fkey FOREIGN KEY (customer_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT reviews_customer_user_id_fkey FOREIGN KEY (customer_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 
 --
@@ -26129,6 +32437,94 @@ ALTER TABLE ONLY public.staff_profiles
 
 
 --
+-- Name: support_ticket_messages support_ticket_messages_author_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_ticket_messages
+    ADD CONSTRAINT support_ticket_messages_author_user_id_fkey FOREIGN KEY (author_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_ticket_messages support_ticket_messages_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_ticket_messages
+    ADD CONSTRAINT support_ticket_messages_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.support_tickets(id) ON DELETE CASCADE;
+
+
+--
+-- Name: support_tickets support_tickets_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_appointment_id_fkey FOREIGN KEY (appointment_id) REFERENCES public.appointments(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_assigned_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_opened_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_opened_by_fkey FOREIGN KEY (opened_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_organization_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_professional_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_professional_id_fkey FOREIGN KEY (professional_id) REFERENCES public.professionals(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_queue_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_queue_entry_id_fkey FOREIGN KEY (queue_entry_id) REFERENCES public.queue_entries(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_resolved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_subject_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_subject_user_id_fkey FOREIGN KEY (subject_user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: support_tickets support_tickets_withdrawal_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.support_tickets
+    ADD CONSTRAINT support_tickets_withdrawal_request_id_fkey FOREIGN KEY (withdrawal_request_id) REFERENCES public.marketplace_withdrawal_requests(id) ON DELETE SET NULL;
+
+
+--
 -- Name: time_blocks time_blocks_barber_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26289,6 +32685,12 @@ ALTER TABLE ONLY public.whatsapp_webhook_events
 
 
 --
+-- Name: account_erasure_log; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.account_erasure_log ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: analytics_event_definitions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -26323,7 +32725,7 @@ CREATE POLICY api_source_health_all_prospect_worker ON public.api_source_health 
 -- Name: api_source_health api_source_health_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY api_source_health_select_platform_staff ON public.api_source_health FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY api_source_health_select_platform_staff ON public.api_source_health FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -26343,7 +32745,7 @@ CREATE POLICY api_source_limits_all_prospect_worker ON public.api_source_limits 
 -- Name: api_source_limits api_source_limits_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY api_source_limits_select_platform_staff ON public.api_source_limits FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY api_source_limits_select_platform_staff ON public.api_source_limits FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -26363,7 +32765,7 @@ CREATE POLICY api_usage_all_prospect_worker ON public.api_usage TO prospect_work
 -- Name: api_usage api_usage_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY api_usage_select_platform_staff ON public.api_usage FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY api_usage_select_platform_staff ON public.api_usage FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -26371,6 +32773,19 @@ CREATE POLICY api_usage_select_platform_staff ON public.api_usage FOR SELECT TO 
 --
 
 ALTER TABLE public.appointment_claim_tokens ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: appointment_overlap_forces; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.appointment_overlap_forces ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: appointment_overlap_forces appointment_overlap_forces_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY appointment_overlap_forces_select ON public.appointment_overlap_forces FOR SELECT TO authenticated USING (( SELECT private.can_manage_appointments(appointment_overlap_forces.organization_id) AS can_manage_appointments));
+
 
 --
 -- Name: appointments; Type: ROW SECURITY; Schema: public; Owner: -
@@ -26545,7 +32960,7 @@ CREATE POLICY barbers_insert ON public.barbers FOR INSERT TO authenticated WITH 
 -- Name: barbers barbers_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY barbers_select ON public.barbers FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(barbers.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY barbers_select ON public.barbers FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(barbers.organization_id) AS is_org_member) OR ( SELECT private.platform_can('tenant.read_detail'::text) AS platform_can)));
 
 
 --
@@ -26611,28 +33026,28 @@ CREATE POLICY booking_provider_observations_all_prospect_worker ON public.bookin
 -- Name: booking_provider_observations booking_provider_observations_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_provider_observations_delete_platform_admin ON public.booking_provider_observations FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_provider_observations_delete_platform_admin ON public.booking_provider_observations FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: booking_provider_observations booking_provider_observations_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_provider_observations_insert_platform_admin ON public.booking_provider_observations FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_provider_observations_insert_platform_admin ON public.booking_provider_observations FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: booking_provider_observations booking_provider_observations_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_provider_observations_select_platform_staff ON public.booking_provider_observations FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY booking_provider_observations_select_platform_staff ON public.booking_provider_observations FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: booking_provider_observations booking_provider_observations_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_provider_observations_update_platform_admin ON public.booking_provider_observations FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_provider_observations_update_platform_admin ON public.booking_provider_observations FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -26645,21 +33060,21 @@ ALTER TABLE public.booking_providers ENABLE ROW LEVEL SECURITY;
 -- Name: booking_providers booking_providers_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_providers_delete_platform_admin ON public.booking_providers FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_providers_delete_platform_admin ON public.booking_providers FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: booking_providers booking_providers_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_providers_insert_platform_admin ON public.booking_providers FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_providers_insert_platform_admin ON public.booking_providers FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: booking_providers booking_providers_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_providers_select_platform_staff ON public.booking_providers FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY booking_providers_select_platform_staff ON public.booking_providers FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -26673,7 +33088,7 @@ CREATE POLICY booking_providers_select_prospect_worker ON public.booking_provide
 -- Name: booking_providers booking_providers_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY booking_providers_update_platform_admin ON public.booking_providers FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY booking_providers_update_platform_admin ON public.booking_providers FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -26808,6 +33223,47 @@ CREATE POLICY customer_memberships_select ON public.customer_memberships FOR SEL
 --
 
 CREATE POLICY customer_memberships_update ON public.customer_memberships FOR UPDATE TO authenticated USING (( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role, 'receptionist'::public.membership_role]) AS has_org_role)) WITH CHECK (( SELECT private.has_org_role(customer_memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role, 'receptionist'::public.membership_role]) AS has_org_role));
+
+
+--
+-- Name: customer_notes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.customer_notes ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: customer_notes customer_notes_delete; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY customer_notes_delete ON public.customer_notes FOR DELETE TO authenticated USING ((( SELECT private.is_org_member(customer_notes.organization_id) AS is_org_member) AND ((author_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.has_org_role(customer_notes.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role))));
+
+
+--
+-- Name: customer_notes customer_notes_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY customer_notes_insert ON public.customer_notes FOR INSERT TO authenticated WITH CHECK ((( SELECT private.is_org_member(customer_notes.organization_id) AS is_org_member) AND (author_user_id = ( SELECT auth.uid() AS uid))));
+
+
+--
+-- Name: customer_notes customer_notes_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY customer_notes_select ON public.customer_notes FOR SELECT TO authenticated USING (( SELECT private.is_org_member(customer_notes.organization_id) AS is_org_member));
+
+
+--
+-- Name: POLICY customer_notes_select ON customer_notes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY customer_notes_select ON public.customer_notes IS 'L''équipe du salon, et elle seule. AUCUN rôle plateforme ici : l''accès interne passe par list_customer_notes(), qui trace. Ajouter is_platform_admin() ici rouvrirait une lecture non tracée.';
+
+
+--
+-- Name: customer_notes customer_notes_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY customer_notes_update ON public.customer_notes FOR UPDATE TO authenticated USING ((( SELECT private.is_org_member(customer_notes.organization_id) AS is_org_member) AND ((author_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.has_org_role(customer_notes.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role)))) WITH CHECK ((( SELECT private.is_org_member(customer_notes.organization_id) AS is_org_member) AND ((author_user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.has_org_role(customer_notes.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role))));
 
 
 --
@@ -27108,7 +33564,7 @@ CREATE POLICY locations_insert ON public.locations FOR INSERT TO authenticated W
 -- Name: locations locations_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY locations_select ON public.locations FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(locations.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY locations_select ON public.locations FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(locations.organization_id) AS is_org_member) OR ( SELECT private.platform_can('tenant.read_detail'::text) AS platform_can)));
 
 
 --
@@ -27175,7 +33631,14 @@ ALTER TABLE public.memberships ENABLE ROW LEVEL SECURITY;
 -- Name: memberships memberships_delete; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY memberships_delete ON public.memberships FOR DELETE TO authenticated USING ((( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) OR (user_id = ( SELECT auth.uid() AS uid))));
+CREATE POLICY memberships_delete ON public.memberships FOR DELETE TO authenticated USING (((( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND ((role <> 'owner'::public.membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role))) OR (user_id = ( SELECT auth.uid() AS uid))));
+
+
+--
+-- Name: POLICY memberships_delete ON memberships; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY memberships_delete ON public.memberships IS 'Owner/manager retirent un membre ; seul un owner retire un owner ; chacun peut partir de lui-même. La restriction sur le rôle owner est neuve (OS-2) : un manager pouvait retirer son propriétaire.';
 
 
 --
@@ -27189,14 +33652,21 @@ CREATE POLICY memberships_insert ON public.memberships FOR INSERT TO authenticat
 -- Name: memberships memberships_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY memberships_select ON public.memberships FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(memberships.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY memberships_select ON public.memberships FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(memberships.organization_id) AS is_org_member) OR ( SELECT private.platform_can('tenant.read_detail'::text) AS platform_can)));
 
 
 --
 -- Name: memberships memberships_update; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY memberships_update ON public.memberships FOR UPDATE TO authenticated USING (( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role)) WITH CHECK ((( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND ((role <> 'owner'::public.membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role))));
+CREATE POLICY memberships_update ON public.memberships FOR UPDATE TO authenticated USING ((( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND ((role <> 'owner'::public.membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role)))) WITH CHECK ((( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role) AND ((role <> 'owner'::public.membership_role) OR ( SELECT private.has_org_role(memberships.organization_id, ARRAY['owner'::public.membership_role]) AS has_org_role))));
+
+
+--
+-- Name: POLICY memberships_update ON memberships; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY memberships_update ON public.memberships IS 'Owner/manager modifient l''équipe. La ligne d''un OWNER n''est modifiable que par un owner (USING), et attribuer le rôle owner exige d''être owner (WITH CHECK). Sans la première condition, un manager pouvait rétrograder son propriétaire — corrigé par OS-2.';
 
 
 --
@@ -27216,7 +33686,7 @@ CREATE POLICY ml_datasets_all_prospect_worker ON public.ml_datasets TO prospect_
 -- Name: ml_datasets ml_datasets_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_datasets_select_platform_staff ON public.ml_datasets FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_datasets_select_platform_staff ON public.ml_datasets FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27229,7 +33699,7 @@ ALTER TABLE public.ml_feature_schemas ENABLE ROW LEVEL SECURITY;
 -- Name: ml_feature_schemas ml_feature_schemas_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_feature_schemas_select_platform_staff ON public.ml_feature_schemas FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_feature_schemas_select_platform_staff ON public.ml_feature_schemas FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27256,7 +33726,7 @@ CREATE POLICY ml_metrics_all_prospect_worker ON public.ml_metrics TO prospect_wo
 -- Name: ml_metrics ml_metrics_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_metrics_select_platform_staff ON public.ml_metrics FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_metrics_select_platform_staff ON public.ml_metrics FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27276,28 +33746,28 @@ CREATE POLICY ml_model_versions_all_prospect_worker ON public.ml_model_versions 
 -- Name: ml_model_versions ml_model_versions_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_model_versions_delete_platform_admin ON public.ml_model_versions FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY ml_model_versions_delete_platform_admin ON public.ml_model_versions FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: ml_model_versions ml_model_versions_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_model_versions_insert_platform_admin ON public.ml_model_versions FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY ml_model_versions_insert_platform_admin ON public.ml_model_versions FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: ml_model_versions ml_model_versions_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_model_versions_select_platform_staff ON public.ml_model_versions FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_model_versions_select_platform_staff ON public.ml_model_versions FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: ml_model_versions ml_model_versions_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_model_versions_update_platform_admin ON public.ml_model_versions FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY ml_model_versions_update_platform_admin ON public.ml_model_versions FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27317,7 +33787,7 @@ CREATE POLICY ml_predictions_all_prospect_worker ON public.ml_predictions TO pro
 -- Name: ml_predictions ml_predictions_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_predictions_select_platform_staff ON public.ml_predictions FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_predictions_select_platform_staff ON public.ml_predictions FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27337,7 +33807,7 @@ CREATE POLICY ml_training_runs_all_prospect_worker ON public.ml_training_runs TO
 -- Name: ml_training_runs ml_training_runs_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY ml_training_runs_select_platform_staff ON public.ml_training_runs FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY ml_training_runs_select_platform_staff ON public.ml_training_runs FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27463,7 +33933,14 @@ CREATE POLICY organizations_delete ON public.organizations FOR DELETE TO authent
 -- Name: organizations organizations_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY organizations_select ON public.organizations FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(organizations.id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY organizations_select ON public.organizations FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(organizations.id) AS is_org_member) OR ( SELECT private.platform_can('tenant.read'::text) AS platform_can)));
+
+
+--
+-- Name: POLICY organizations_select ON organizations; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY organizations_select ON public.organizations IS 'Un membre de l''organisation, ou un interne portant tenant.read (fondateur, admin, support, modérateur). Remplace is_platform_admin(), qui excluait le support et le modérateur — deux rôles dont le métier est de traiter un appel ou un signalement sur une organisation nommée.';
 
 
 --
@@ -27490,7 +33967,7 @@ CREATE POLICY outreach_assignments_all_prospect_worker ON public.outreach_assign
 -- Name: outreach_assignments outreach_assignments_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_assignments_select_platform_staff ON public.outreach_assignments FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_assignments_select_platform_staff ON public.outreach_assignments FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27510,28 +33987,28 @@ CREATE POLICY outreach_campaigns_all_prospect_worker ON public.outreach_campaign
 -- Name: outreach_campaigns outreach_campaigns_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_campaigns_delete_platform_admin ON public.outreach_campaigns FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_campaigns_delete_platform_admin ON public.outreach_campaigns FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_campaigns outreach_campaigns_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_campaigns_insert_platform_admin ON public.outreach_campaigns FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_campaigns_insert_platform_admin ON public.outreach_campaigns FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_campaigns outreach_campaigns_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_campaigns_select_platform_staff ON public.outreach_campaigns FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_campaigns_select_platform_staff ON public.outreach_campaigns FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: outreach_campaigns outreach_campaigns_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_campaigns_update_platform_admin ON public.outreach_campaigns FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_campaigns_update_platform_admin ON public.outreach_campaigns FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27544,21 +34021,21 @@ ALTER TABLE public.outreach_channel_policies ENABLE ROW LEVEL SECURITY;
 -- Name: outreach_channel_policies outreach_channel_policies_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_channel_policies_delete_platform_admin ON public.outreach_channel_policies FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_channel_policies_delete_platform_admin ON public.outreach_channel_policies FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_channel_policies outreach_channel_policies_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_channel_policies_insert_platform_admin ON public.outreach_channel_policies FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_channel_policies_insert_platform_admin ON public.outreach_channel_policies FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_channel_policies outreach_channel_policies_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_channel_policies_select_platform_staff ON public.outreach_channel_policies FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_channel_policies_select_platform_staff ON public.outreach_channel_policies FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27572,7 +34049,7 @@ CREATE POLICY outreach_channel_policies_select_prospect_worker ON public.outreac
 -- Name: outreach_channel_policies outreach_channel_policies_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_channel_policies_update_platform_admin ON public.outreach_channel_policies FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_channel_policies_update_platform_admin ON public.outreach_channel_policies FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27592,7 +34069,7 @@ CREATE POLICY outreach_events_all_prospect_worker ON public.outreach_events TO p
 -- Name: outreach_events outreach_events_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_events_select_platform_staff ON public.outreach_events FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_events_select_platform_staff ON public.outreach_events FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27605,21 +34082,21 @@ ALTER TABLE public.outreach_experiment_arms ENABLE ROW LEVEL SECURITY;
 -- Name: outreach_experiment_arms outreach_experiment_arms_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiment_arms_delete_platform_admin ON public.outreach_experiment_arms FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiment_arms_delete_platform_admin ON public.outreach_experiment_arms FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_experiment_arms outreach_experiment_arms_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiment_arms_insert_platform_admin ON public.outreach_experiment_arms FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiment_arms_insert_platform_admin ON public.outreach_experiment_arms FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_experiment_arms outreach_experiment_arms_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiment_arms_select_platform_staff ON public.outreach_experiment_arms FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_experiment_arms_select_platform_staff ON public.outreach_experiment_arms FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27633,7 +34110,7 @@ CREATE POLICY outreach_experiment_arms_select_prospect_worker ON public.outreach
 -- Name: outreach_experiment_arms outreach_experiment_arms_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiment_arms_update_platform_admin ON public.outreach_experiment_arms FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiment_arms_update_platform_admin ON public.outreach_experiment_arms FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27646,21 +34123,21 @@ ALTER TABLE public.outreach_experiments ENABLE ROW LEVEL SECURITY;
 -- Name: outreach_experiments outreach_experiments_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiments_delete_platform_admin ON public.outreach_experiments FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiments_delete_platform_admin ON public.outreach_experiments FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_experiments outreach_experiments_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiments_insert_platform_admin ON public.outreach_experiments FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiments_insert_platform_admin ON public.outreach_experiments FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_experiments outreach_experiments_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiments_select_platform_staff ON public.outreach_experiments FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_experiments_select_platform_staff ON public.outreach_experiments FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27674,7 +34151,7 @@ CREATE POLICY outreach_experiments_select_prospect_worker ON public.outreach_exp
 -- Name: outreach_experiments outreach_experiments_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_experiments_update_platform_admin ON public.outreach_experiments FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_experiments_update_platform_admin ON public.outreach_experiments FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27694,28 +34171,28 @@ CREATE POLICY outreach_recipients_all_prospect_worker ON public.outreach_recipie
 -- Name: outreach_recipients outreach_recipients_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_recipients_delete_platform_admin ON public.outreach_recipients FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_recipients_delete_platform_admin ON public.outreach_recipients FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_recipients outreach_recipients_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_recipients_insert_platform_admin ON public.outreach_recipients FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_recipients_insert_platform_admin ON public.outreach_recipients FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_recipients outreach_recipients_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_recipients_select_platform_staff ON public.outreach_recipients FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_recipients_select_platform_staff ON public.outreach_recipients FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: outreach_recipients outreach_recipients_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_recipients_update_platform_admin ON public.outreach_recipients FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_recipients_update_platform_admin ON public.outreach_recipients FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27728,7 +34205,7 @@ ALTER TABLE public.outreach_sales_angles ENABLE ROW LEVEL SECURITY;
 -- Name: outreach_sales_angles outreach_sales_angles_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_sales_angles_select_platform_staff ON public.outreach_sales_angles FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_sales_angles_select_platform_staff ON public.outreach_sales_angles FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27748,21 +34225,21 @@ ALTER TABLE public.outreach_templates ENABLE ROW LEVEL SECURITY;
 -- Name: outreach_templates outreach_templates_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_templates_delete_platform_admin ON public.outreach_templates FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_templates_delete_platform_admin ON public.outreach_templates FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_templates outreach_templates_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_templates_insert_platform_admin ON public.outreach_templates FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_templates_insert_platform_admin ON public.outreach_templates FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: outreach_templates outreach_templates_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_templates_select_platform_staff ON public.outreach_templates FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY outreach_templates_select_platform_staff ON public.outreach_templates FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -27776,7 +34253,7 @@ CREATE POLICY outreach_templates_select_prospect_worker ON public.outreach_templ
 -- Name: outreach_templates outreach_templates_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY outreach_templates_update_platform_admin ON public.outreach_templates FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY outreach_templates_update_platform_admin ON public.outreach_templates FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -27802,7 +34279,14 @@ ALTER TABLE public.platform_audit_log ENABLE ROW LEVEL SECURITY;
 -- Name: platform_audit_log platform_audit_log_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY platform_audit_log_select ON public.platform_audit_log FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY platform_audit_log_select ON public.platform_audit_log FOR SELECT TO authenticated USING (( SELECT private.platform_can('audit.read'::text) AS platform_can));
+
+
+--
+-- Name: POLICY platform_audit_log_select ON platform_audit_log; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_audit_log_select ON public.platform_audit_log IS 'Le journal est lu par les porteurs de audit.read — fondateur et admins. Passe par la grille et non par is_platform_admin(), pour qu''il n''existe qu''UN endroit où cette décision se lit.';
 
 
 --
@@ -27816,6 +34300,26 @@ ALTER TABLE public.platform_invitations ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY platform_invitations_select_admin ON public.platform_invitations FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
+-- Name: platform_member_zones; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_member_zones ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_member_zones platform_member_zones_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY platform_member_zones_select ON public.platform_member_zones FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.platform_can('internal_roles.manage'::text) AS platform_can)));
+
+
+--
+-- Name: POLICY platform_member_zones_select ON platform_member_zones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_member_zones_select ON public.platform_member_zones IS 'Chacun voit ses propres zones ; le fondateur voit celles de tout le monde. La comparaison user_id = auth.uid() vaut NULL pour un anonyme — ce qui, dans un USING, ne laisse passer AUCUNE ligne (NULL n''est pas true) — et la branche fondateur rend false. Refus des deux côtés.';
 
 
 --
@@ -27848,14 +34352,27 @@ ALTER TABLE public.platform_notifications ENABLE ROW LEVEL SECURITY;
 -- Name: platform_notifications platform_notifications_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY platform_notifications_select ON public.platform_notifications FOR SELECT TO authenticated USING (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role)));
+CREATE POLICY platform_notifications_select ON public.platform_notifications FOR SELECT TO authenticated USING (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid))))));
+
+
+--
+-- Name: POLICY platform_notifications_select ON platform_notifications; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_notifications_select ON public.platform_notifications IS 'Sa propre cloche, et seulement si l''on est encore interne. L''énumération de rôles qui tenait lieu de garde est remplacée par une EXISTENCE : elle vaut false pour un anonyme et reste juste quand la liste des rôles change. Ce qu''un rôle reçoit est décidé à la diffusion, par la grille, pas à la lecture.';
 
 
 --
 -- Name: platform_notifications platform_notifications_update_own; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY platform_notifications_update_own ON public.platform_notifications FOR UPDATE TO authenticated USING (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role))) WITH CHECK (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role)));
+CREATE POLICY platform_notifications_update_own ON public.platform_notifications FOR UPDATE TO authenticated USING (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid)))))) WITH CHECK (((recipient_user_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid))))));
 
 
 --
@@ -27863,6 +34380,43 @@ CREATE POLICY platform_notifications_update_own ON public.platform_notifications
 --
 
 ALTER TABLE public.platform_owner_bootstrap_tokens ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_permissions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_permissions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_permissions platform_permissions_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY platform_permissions_select ON public.platform_permissions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid)))));
+
+
+--
+-- Name: POLICY platform_permissions_select ON platform_permissions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_permissions_select ON public.platform_permissions IS 'Le catalogue est lisible par tout interne — savoir quels droits existent n''est pas un droit. Un appelant anonyme n''a pas de ligne dans platform_members : l''EXISTS rend false, jamais NULL.';
+
+
+--
+-- Name: platform_role_permissions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_role_permissions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_role_permissions platform_role_permissions_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY platform_role_permissions_select ON public.platform_role_permissions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid)))));
+
 
 --
 -- Name: platform_support_sessions; Type: ROW SECURITY; Schema: public; Owner: -
@@ -27874,7 +34428,36 @@ ALTER TABLE public.platform_support_sessions ENABLE ROW LEVEL SECURITY;
 -- Name: platform_support_sessions platform_support_sessions_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY platform_support_sessions_select ON public.platform_support_sessions FOR SELECT TO authenticated USING (((platform_actor_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY platform_support_sessions_select ON public.platform_support_sessions FOR SELECT TO authenticated USING (((platform_actor_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_platform_admin() AS is_platform_admin) OR ( SELECT private.has_org_role(platform_support_sessions.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role)));
+
+
+--
+-- Name: POLICY platform_support_sessions_select ON platform_support_sessions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_support_sessions_select ON public.platform_support_sessions IS 'Trois lecteurs : l''interne pour ses propres sessions, le fondateur et les admins pour toutes, et le PROPRIÉTAIRE (ou manager) de l''organisation concernée pour celles qui la visent. Cette troisième branche est la réponse de PLAT-1 à « le propriétaire doit pouvoir le savoir » : une trace consultable, pas une notification. Chaque branche rend false ou ne joint rien pour un anonyme.';
+
+
+--
+-- Name: platform_zones; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.platform_zones ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: platform_zones platform_zones_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY platform_zones_select ON public.platform_zones FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.platform_members pm
+  WHERE (pm.user_id = ( SELECT auth.uid() AS uid)))));
+
+
+--
+-- Name: POLICY platform_zones_select ON platform_zones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY platform_zones_select ON public.platform_zones IS 'Tout interne voit la liste des zones — un stagiaire doit pouvoir nommer la sienne. Ce qu''il voit DANS une zone est une autre question, tranchée sur prospects. EXISTS : false pour un anonyme, jamais NULL.';
 
 
 --
@@ -27956,6 +34539,32 @@ CREATE POLICY post_services_insert_own ON public.post_services FOR INSERT TO aut
 --
 
 CREATE POLICY post_services_select_visible ON public.post_services FOR SELECT TO authenticated USING (private.can_view_post(post_id));
+
+
+--
+-- Name: poster_batches; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.poster_batches ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: poster_batches poster_batches_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY poster_batches_select ON public.poster_batches FOR SELECT TO authenticated USING (( SELECT private.platform_can('poster.manage'::text) AS platform_can));
+
+
+--
+-- Name: posters; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.posters ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: posters posters_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY posters_select ON public.posters FOR SELECT TO authenticated USING ((( SELECT private.platform_can('poster.manage'::text) AS platform_can) OR ((organization_id IS NOT NULL) AND ( SELECT private.has_org_role(posters.organization_id, ARRAY['owner'::public.membership_role, 'manager'::public.membership_role]) AS has_org_role))));
 
 
 --
@@ -28046,6 +34655,19 @@ CREATE POLICY professional_follows_select ON public.professional_follows FOR SEL
 
 
 --
+-- Name: professional_information_notices; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.professional_information_notices ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: professional_information_notices professional_information_notices_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY professional_information_notices_select ON public.professional_information_notices FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
 -- Name: professional_interest_request_contacts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -28132,7 +34754,7 @@ CREATE POLICY prospect_contacts_all_prospect_worker ON public.prospect_contacts 
 -- Name: prospect_contacts prospect_contacts_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_contacts_select_platform_staff ON public.prospect_contacts FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_contacts_select_platform_staff ON public.prospect_contacts FOR SELECT TO authenticated USING ((( SELECT private.platform_can('crm.read'::text) AS platform_can) OR ( SELECT private.platform_prospect_visible(prospect_contacts.prospect_id) AS platform_prospect_visible)));
 
 
 --
@@ -28152,7 +34774,7 @@ CREATE POLICY prospect_data_quality_all_prospect_worker ON public.prospect_data_
 -- Name: prospect_data_quality prospect_data_quality_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_data_quality_select_platform_staff ON public.prospect_data_quality FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_data_quality_select_platform_staff ON public.prospect_data_quality FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28165,28 +34787,28 @@ ALTER TABLE public.prospect_duplicates ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_duplicates prospect_duplicates_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_duplicates_delete_platform_admin ON public.prospect_duplicates FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_duplicates_delete_platform_admin ON public.prospect_duplicates FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_duplicates prospect_duplicates_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_duplicates_select_platform_staff ON public.prospect_duplicates FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_duplicates_select_platform_staff ON public.prospect_duplicates FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_duplicates prospect_duplicates_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_duplicates_update_platform_admin ON public.prospect_duplicates FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_duplicates_update_platform_admin ON public.prospect_duplicates FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_duplicates prospect_duplicates_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_duplicates_write_platform_admin ON public.prospect_duplicates FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_duplicates_write_platform_admin ON public.prospect_duplicates FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28206,7 +34828,7 @@ CREATE POLICY prospect_events_all_prospect_worker ON public.prospect_events TO p
 -- Name: prospect_events prospect_events_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_events_select_platform_staff ON public.prospect_events FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_events_select_platform_staff ON public.prospect_events FOR SELECT TO authenticated USING ((( SELECT private.platform_can('crm.read'::text) AS platform_can) OR ( SELECT private.platform_prospect_visible(prospect_events.prospect_id) AS platform_prospect_visible)));
 
 
 --
@@ -28226,7 +34848,7 @@ CREATE POLICY prospect_features_all_prospect_worker ON public.prospect_features 
 -- Name: prospect_features prospect_features_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_features_select_platform_staff ON public.prospect_features FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_features_select_platform_staff ON public.prospect_features FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28246,7 +34868,7 @@ CREATE POLICY prospect_fit_scores_all_prospect_worker ON public.prospect_fit_sco
 -- Name: prospect_fit_scores prospect_fit_scores_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_fit_scores_select_platform_staff ON public.prospect_fit_scores FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_fit_scores_select_platform_staff ON public.prospect_fit_scores FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28266,28 +34888,28 @@ CREATE POLICY prospect_identity_matches_all_prospect_worker ON public.prospect_i
 -- Name: prospect_identity_matches prospect_identity_matches_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_identity_matches_delete_platform_admin ON public.prospect_identity_matches FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_identity_matches_delete_platform_admin ON public.prospect_identity_matches FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_identity_matches prospect_identity_matches_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_identity_matches_insert_platform_admin ON public.prospect_identity_matches FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_identity_matches_insert_platform_admin ON public.prospect_identity_matches FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_identity_matches prospect_identity_matches_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_identity_matches_select_platform_staff ON public.prospect_identity_matches FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_identity_matches_select_platform_staff ON public.prospect_identity_matches FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_identity_matches prospect_identity_matches_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_identity_matches_update_platform_admin ON public.prospect_identity_matches FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_identity_matches_update_platform_admin ON public.prospect_identity_matches FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28307,7 +34929,7 @@ CREATE POLICY prospect_job_sources_all_prospect_worker ON public.prospect_job_so
 -- Name: prospect_job_sources prospect_job_sources_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_job_sources_select_platform_staff ON public.prospect_job_sources FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_job_sources_select_platform_staff ON public.prospect_job_sources FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28327,14 +34949,14 @@ CREATE POLICY prospect_jobs_all_prospect_worker ON public.prospect_jobs TO prosp
 -- Name: prospect_jobs prospect_jobs_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_jobs_insert_platform_admin ON public.prospect_jobs FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_jobs_insert_platform_admin ON public.prospect_jobs FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_jobs prospect_jobs_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_jobs_select_platform_staff ON public.prospect_jobs FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_jobs_select_platform_staff ON public.prospect_jobs FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28354,28 +34976,28 @@ CREATE POLICY prospect_locales_all_prospect_worker ON public.prospect_locales TO
 -- Name: prospect_locales prospect_locales_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_locales_delete_platform_admin ON public.prospect_locales FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_locales_delete_platform_admin ON public.prospect_locales FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_locales prospect_locales_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_locales_insert_platform_admin ON public.prospect_locales FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_locales_insert_platform_admin ON public.prospect_locales FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_locales prospect_locales_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_locales_select_platform_staff ON public.prospect_locales FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_locales_select_platform_staff ON public.prospect_locales FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_locales prospect_locales_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_locales_update_platform_admin ON public.prospect_locales FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_locales_update_platform_admin ON public.prospect_locales FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28395,7 +35017,7 @@ CREATE POLICY prospect_locations_all_prospect_worker ON public.prospect_location
 -- Name: prospect_locations prospect_locations_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_locations_select_platform_staff ON public.prospect_locations FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_locations_select_platform_staff ON public.prospect_locations FOR SELECT TO authenticated USING ((( SELECT private.platform_can('crm.read'::text) AS platform_can) OR ( SELECT private.platform_prospect_visible(prospect_locations.prospect_id) AS platform_prospect_visible)));
 
 
 --
@@ -28408,28 +35030,28 @@ ALTER TABLE public.prospect_notes ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_notes prospect_notes_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_notes_delete_platform_admin ON public.prospect_notes FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_notes_delete_platform_admin ON public.prospect_notes FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_notes prospect_notes_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_notes_select_platform_staff ON public.prospect_notes FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_notes_select_platform_staff ON public.prospect_notes FOR SELECT TO authenticated USING ((( SELECT private.platform_can('crm.read'::text) AS platform_can) OR ( SELECT private.platform_prospect_visible(prospect_notes.prospect_id) AS platform_prospect_visible)));
 
 
 --
 -- Name: prospect_notes prospect_notes_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_notes_update_platform_admin ON public.prospect_notes FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_notes_update_platform_admin ON public.prospect_notes FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_notes prospect_notes_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_notes_write_platform_admin ON public.prospect_notes FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_notes_write_platform_admin ON public.prospect_notes FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28442,7 +35064,7 @@ ALTER TABLE public.prospect_outreach ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_outreach prospect_outreach_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_delete_platform_admin ON public.prospect_outreach FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_delete_platform_admin ON public.prospect_outreach FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28462,49 +35084,49 @@ CREATE POLICY prospect_outreach_eligibility_all_prospect_worker ON public.prospe
 -- Name: prospect_outreach_eligibility prospect_outreach_eligibility_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_eligibility_delete_platform_admin ON public.prospect_outreach_eligibility FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_eligibility_delete_platform_admin ON public.prospect_outreach_eligibility FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach_eligibility prospect_outreach_eligibility_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_eligibility_insert_platform_admin ON public.prospect_outreach_eligibility FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_eligibility_insert_platform_admin ON public.prospect_outreach_eligibility FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach_eligibility prospect_outreach_eligibility_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_eligibility_select_platform_staff ON public.prospect_outreach_eligibility FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_outreach_eligibility_select_platform_staff ON public.prospect_outreach_eligibility FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach_eligibility prospect_outreach_eligibility_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_eligibility_update_platform_admin ON public.prospect_outreach_eligibility FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_eligibility_update_platform_admin ON public.prospect_outreach_eligibility FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach prospect_outreach_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_select_platform_staff ON public.prospect_outreach FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_outreach_select_platform_staff ON public.prospect_outreach FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach prospect_outreach_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_update_platform_admin ON public.prospect_outreach FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_update_platform_admin ON public.prospect_outreach FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_outreach prospect_outreach_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_outreach_write_platform_admin ON public.prospect_outreach FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_outreach_write_platform_admin ON public.prospect_outreach FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28517,7 +35139,7 @@ ALTER TABLE public.prospect_professionals ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_professionals prospect_professionals_select_platform; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_professionals_select_platform ON public.prospect_professionals FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_professionals_select_platform ON public.prospect_professionals FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28537,7 +35159,7 @@ ALTER TABLE public.prospect_publication_eligibility ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_publication_eligibility prospect_publication_eligibility_select_platform; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_publication_eligibility_select_platform ON public.prospect_publication_eligibility FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_publication_eligibility_select_platform ON public.prospect_publication_eligibility FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28557,21 +35179,21 @@ ALTER TABLE public.prospect_score_rulesets ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_score_rulesets prospect_score_rulesets_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_score_rulesets_delete_platform_admin ON public.prospect_score_rulesets FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_score_rulesets_delete_platform_admin ON public.prospect_score_rulesets FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_score_rulesets prospect_score_rulesets_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_score_rulesets_insert_platform_admin ON public.prospect_score_rulesets FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_score_rulesets_insert_platform_admin ON public.prospect_score_rulesets FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_score_rulesets prospect_score_rulesets_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_score_rulesets_select_platform_staff ON public.prospect_score_rulesets FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_score_rulesets_select_platform_staff ON public.prospect_score_rulesets FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28585,7 +35207,7 @@ CREATE POLICY prospect_score_rulesets_select_prospect_worker ON public.prospect_
 -- Name: prospect_score_rulesets prospect_score_rulesets_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_score_rulesets_update_platform_admin ON public.prospect_score_rulesets FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_score_rulesets_update_platform_admin ON public.prospect_score_rulesets FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28605,7 +35227,7 @@ CREATE POLICY prospect_scores_all_prospect_worker ON public.prospect_scores TO p
 -- Name: prospect_scores prospect_scores_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_scores_select_platform_staff ON public.prospect_scores FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_scores_select_platform_staff ON public.prospect_scores FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28625,7 +35247,7 @@ CREATE POLICY prospect_search_partitions_all_prospect_worker ON public.prospect_
 -- Name: prospect_search_partitions prospect_search_partitions_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_search_partitions_select_platform_staff ON public.prospect_search_partitions FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_search_partitions_select_platform_staff ON public.prospect_search_partitions FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28645,28 +35267,28 @@ CREATE POLICY prospect_searches_all_prospect_worker ON public.prospect_searches 
 -- Name: prospect_searches prospect_searches_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_searches_delete_platform_admin ON public.prospect_searches FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_searches_delete_platform_admin ON public.prospect_searches FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_searches prospect_searches_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_searches_insert_platform_admin ON public.prospect_searches FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_searches_insert_platform_admin ON public.prospect_searches FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_searches prospect_searches_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_searches_select_platform_staff ON public.prospect_searches FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_searches_select_platform_staff ON public.prospect_searches FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_searches prospect_searches_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_searches_update_platform_admin ON public.prospect_searches FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_searches_update_platform_admin ON public.prospect_searches FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28679,7 +35301,7 @@ ALTER TABLE public.prospect_segment_definitions ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_segment_definitions prospect_segment_definitions_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_segment_definitions_select_platform_staff ON public.prospect_segment_definitions FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_segment_definitions_select_platform_staff ON public.prospect_segment_definitions FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28706,7 +35328,7 @@ CREATE POLICY prospect_segments_all_prospect_worker ON public.prospect_segments 
 -- Name: prospect_segments prospect_segments_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_segments_select_platform_staff ON public.prospect_segments FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_segments_select_platform_staff ON public.prospect_segments FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28726,7 +35348,7 @@ CREATE POLICY prospect_social_profiles_all_prospect_worker ON public.prospect_so
 -- Name: prospect_social_profiles prospect_social_profiles_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_social_profiles_select_platform_staff ON public.prospect_social_profiles FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_social_profiles_select_platform_staff ON public.prospect_social_profiles FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28746,7 +35368,7 @@ CREATE POLICY prospect_source_records_all_prospect_worker ON public.prospect_sou
 -- Name: prospect_source_records prospect_source_records_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_source_records_select_platform_staff ON public.prospect_source_records FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_source_records_select_platform_staff ON public.prospect_source_records FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28759,14 +35381,14 @@ ALTER TABLE public.prospect_sources ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_sources prospect_sources_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_sources_delete_platform_admin ON public.prospect_sources FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_sources_delete_platform_admin ON public.prospect_sources FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_sources prospect_sources_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_sources_select_platform_staff ON public.prospect_sources FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_sources_select_platform_staff ON public.prospect_sources FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -28780,14 +35402,14 @@ CREATE POLICY prospect_sources_select_prospect_worker ON public.prospect_sources
 -- Name: prospect_sources prospect_sources_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_sources_update_platform_admin ON public.prospect_sources FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_sources_update_platform_admin ON public.prospect_sources FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_sources prospect_sources_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_sources_write_platform_admin ON public.prospect_sources FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_sources_write_platform_admin ON public.prospect_sources FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28800,28 +35422,28 @@ ALTER TABLE public.prospect_suppressions ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_suppressions prospect_suppressions_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_suppressions_delete_platform_admin ON public.prospect_suppressions FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_suppressions_delete_platform_admin ON public.prospect_suppressions FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_suppressions prospect_suppressions_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_suppressions_select_platform_staff ON public.prospect_suppressions FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_suppressions_select_platform_staff ON public.prospect_suppressions FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_suppressions prospect_suppressions_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_suppressions_update_platform_admin ON public.prospect_suppressions FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_suppressions_update_platform_admin ON public.prospect_suppressions FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_suppressions prospect_suppressions_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_suppressions_write_platform_admin ON public.prospect_suppressions FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_suppressions_write_platform_admin ON public.prospect_suppressions FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28834,28 +35456,28 @@ ALTER TABLE public.prospect_tags ENABLE ROW LEVEL SECURITY;
 -- Name: prospect_tags prospect_tags_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_tags_delete_platform_admin ON public.prospect_tags FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_tags_delete_platform_admin ON public.prospect_tags FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_tags prospect_tags_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_tags_select_platform_staff ON public.prospect_tags FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospect_tags_select_platform_staff ON public.prospect_tags FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- Name: prospect_tags prospect_tags_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_tags_update_platform_admin ON public.prospect_tags FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_tags_update_platform_admin ON public.prospect_tags FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospect_tags prospect_tags_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospect_tags_write_platform_admin ON public.prospect_tags FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospect_tags_write_platform_admin ON public.prospect_tags FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28875,28 +35497,35 @@ CREATE POLICY prospects_all_prospect_worker ON public.prospects TO prospect_work
 -- Name: prospects prospects_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospects_delete_platform_admin ON public.prospects FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospects_delete_platform_admin ON public.prospects FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospects prospects_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospects_select_platform_staff ON public.prospects FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY prospects_select_platform_staff ON public.prospects FOR SELECT TO authenticated USING ((( SELECT private.platform_can('crm.read'::text) AS platform_can) OR ( SELECT private.platform_prospect_visible(prospects.id) AS platform_prospect_visible)));
+
+
+--
+-- Name: POLICY prospects_select_platform_staff ON prospects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON POLICY prospects_select_platform_staff ON public.prospects IS 'Lecture complète pour crm.read ; sinon, pour un rôle borné (le stagiaire), ses zones et ses propres saisies ; rien pour le support, le modérateur et l''extérieur. Le premier terme ne référence AUCUNE colonne : le planificateur en fait un InitPlan évalué une seule fois, et n''exécute la sous-requête corrélée que pour les rôles qui en ont besoin.';
 
 
 --
 -- Name: prospects prospects_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospects_update_platform_admin ON public.prospects FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospects_update_platform_admin ON public.prospects FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: prospects prospects_write_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY prospects_write_platform_admin ON public.prospects FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY prospects_write_platform_admin ON public.prospects FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -28951,6 +35580,19 @@ ALTER TABLE public.queue_entry_moves ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY queue_entry_moves_select ON public.queue_entry_moves FOR SELECT TO authenticated USING (( SELECT private.is_org_member(queue_entry_moves.organization_id) AS is_org_member));
+
+
+--
+-- Name: resend_webhook_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.resend_webhook_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: resend_webhook_events resend_webhook_events_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY resend_webhook_events_select ON public.resend_webhook_events FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
 
 
 --
@@ -29167,7 +35809,7 @@ CREATE POLICY staff_profiles_insert ON public.staff_profiles FOR INSERT TO authe
 -- Name: staff_profiles staff_profiles_select; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY staff_profiles_select ON public.staff_profiles FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(staff_profiles.organization_id) AS is_org_member) OR ( SELECT private.is_platform_admin() AS is_platform_admin)));
+CREATE POLICY staff_profiles_select ON public.staff_profiles FOR SELECT TO authenticated USING ((( SELECT private.is_org_member(staff_profiles.organization_id) AS is_org_member) OR ( SELECT private.platform_can('tenant.read_detail'::text) AS platform_can)));
 
 
 --
@@ -29188,6 +35830,32 @@ ALTER TABLE public.stripe_webhook_events ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY stripe_webhook_events_select_platform ON public.stripe_webhook_events FOR SELECT TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+
+
+--
+-- Name: support_ticket_messages; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.support_ticket_messages ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: support_ticket_messages support_ticket_messages_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY support_ticket_messages_select ON public.support_ticket_messages FOR SELECT TO authenticated USING (( SELECT private.platform_can('support.tickets'::text) AS platform_can));
+
+
+--
+-- Name: support_tickets; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: support_tickets support_tickets_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY support_tickets_select ON public.support_tickets FOR SELECT TO authenticated USING (( SELECT private.platform_can('support.tickets'::text) AS platform_can));
 
 
 --
@@ -29268,21 +35936,21 @@ ALTER TABLE public.whatsapp_accounts ENABLE ROW LEVEL SECURITY;
 -- Name: whatsapp_accounts whatsapp_accounts_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_accounts_delete_platform_admin ON public.whatsapp_accounts FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_accounts_delete_platform_admin ON public.whatsapp_accounts FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: whatsapp_accounts whatsapp_accounts_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_accounts_insert_platform_admin ON public.whatsapp_accounts FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_accounts_insert_platform_admin ON public.whatsapp_accounts FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: whatsapp_accounts whatsapp_accounts_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_accounts_select_platform_staff ON public.whatsapp_accounts FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY whatsapp_accounts_select_platform_staff ON public.whatsapp_accounts FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -29296,7 +35964,7 @@ CREATE POLICY whatsapp_accounts_select_prospect_worker ON public.whatsapp_accoun
 -- Name: whatsapp_accounts whatsapp_accounts_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_accounts_update_platform_admin ON public.whatsapp_accounts FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_accounts_update_platform_admin ON public.whatsapp_accounts FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -29316,7 +35984,7 @@ CREATE POLICY whatsapp_conversations_all_prospect_worker ON public.whatsapp_conv
 -- Name: whatsapp_conversations whatsapp_conversations_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_conversations_select_platform_staff ON public.whatsapp_conversations FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY whatsapp_conversations_select_platform_staff ON public.whatsapp_conversations FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -29336,7 +36004,7 @@ CREATE POLICY whatsapp_messages_all_prospect_worker ON public.whatsapp_messages 
 -- Name: whatsapp_messages whatsapp_messages_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_messages_select_platform_staff ON public.whatsapp_messages FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY whatsapp_messages_select_platform_staff ON public.whatsapp_messages FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -29349,21 +36017,21 @@ ALTER TABLE public.whatsapp_template_mappings ENABLE ROW LEVEL SECURITY;
 -- Name: whatsapp_template_mappings whatsapp_template_mappings_delete_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_template_mappings_delete_platform_admin ON public.whatsapp_template_mappings FOR DELETE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_template_mappings_delete_platform_admin ON public.whatsapp_template_mappings FOR DELETE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: whatsapp_template_mappings whatsapp_template_mappings_insert_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_template_mappings_insert_platform_admin ON public.whatsapp_template_mappings FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_template_mappings_insert_platform_admin ON public.whatsapp_template_mappings FOR INSERT TO authenticated WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
 -- Name: whatsapp_template_mappings whatsapp_template_mappings_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_template_mappings_select_platform_staff ON public.whatsapp_template_mappings FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY whatsapp_template_mappings_select_platform_staff ON public.whatsapp_template_mappings FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
@@ -29377,7 +36045,7 @@ CREATE POLICY whatsapp_template_mappings_select_prospect_worker ON public.whatsa
 -- Name: whatsapp_template_mappings whatsapp_template_mappings_update_platform_admin; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_template_mappings_update_platform_admin ON public.whatsapp_template_mappings FOR UPDATE TO authenticated USING (( SELECT private.is_platform_admin() AS is_platform_admin)) WITH CHECK (( SELECT private.is_platform_admin() AS is_platform_admin));
+CREATE POLICY whatsapp_template_mappings_update_platform_admin ON public.whatsapp_template_mappings FOR UPDATE TO authenticated USING (( SELECT private.platform_can('crm.write'::text) AS platform_can)) WITH CHECK (( SELECT private.platform_can('crm.write'::text) AS platform_can));
 
 
 --
@@ -29397,12 +36065,12 @@ CREATE POLICY whatsapp_webhook_events_all_prospect_worker ON public.whatsapp_web
 -- Name: whatsapp_webhook_events whatsapp_webhook_events_select_platform_staff; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_webhook_events FOR SELECT TO authenticated USING (( SELECT private.has_platform_role(ARRAY['platform_owner'::public.platform_role, 'platform_admin'::public.platform_role, 'platform_support'::public.platform_role]) AS has_platform_role));
+CREATE POLICY whatsapp_webhook_events_select_platform_staff ON public.whatsapp_webhook_events FOR SELECT TO authenticated USING (( SELECT private.platform_can('crm.read'::text) AS platform_can));
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict A11x7L89eA1ompZc6BXBskiqSwlagfNyI3lFcaeKUi5hHQeVW5fAA14dULmuNaJ
+\unrestrict kX0GFBEQAtHSIekXs7sORdehgFiWa9B3FYrQtetJW1dGsnAwGKxFIMUPlk6qsZk
 
