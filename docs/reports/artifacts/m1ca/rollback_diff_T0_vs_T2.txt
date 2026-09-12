@@ -1,0 +1,7 @@
+544c544,547
+<     'booking_counter_proposed'
+---
+>     'booking_counter_proposed',
+>     'queue_called',
+>     'booking_reminder',
+>     'post_published'

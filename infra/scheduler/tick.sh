@@ -4,6 +4,12 @@
 # Six jobs in the main statement, plus one separate call (F1b queue grace
 # sweep, further down), on the same fixed interval:
 #
+#   run_push_maintenance()         M1c-a: queue the appointment reminders that
+#                                  are due and the new-post fan-out, then
+#                                  dispatch pushes through Expo and reconcile
+#                                  the previous tick's tickets and receipts.
+#                                  SEPARATE psql call, like the queue sweep.
+#
 #   run_booking_maintenance()      expire unanswered booking requests so the
 #                                  slot is released, whether or not anybody has
 #                                  the app open.
@@ -109,6 +115,22 @@ while true; do
     fi
   else
     echo "$(date -u +%FT%TZ) fadeup-scheduler: queue grace sweep failed: ${sweep}" >&2
+  fi
+
+  # M1c-a: the push tick is a THIRD separate psql call, for the same reason the
+  # queue sweep is the second one — a provider outage must not stop slots being
+  # released, and a slow fan-out must not delay a confirmation email. It also
+  # does nothing at all until a device registers a token, so it is free on a
+  # database that has none.
+  if push=$(psql -v ON_ERROR_STOP=1 -At \
+        -c "select reminders_queued || '|' || post_pushes_queued || '|' || dispatched || '|' || reconciled
+                || '|' || receipts_requested || '|' || receipts_resolved
+              from public.run_push_maintenance();" 2>&1); then
+    if [ "$push" != "0|0|0|0|0|0" ]; then
+      echo "$(date -u +%FT%TZ) fadeup-scheduler: reminders|post_pushes|push_dispatched|push_reconciled|receipts_requested|receipts_resolved = ${push}"
+    fi
+  else
+    echo "$(date -u +%FT%TZ) fadeup-scheduler: push maintenance failed: ${push}" >&2
   fi
 
   sleep "$INTERVAL"

@@ -1,0 +1,23 @@
+-- FadeUp — retour arrière de M1c-a (1/2) : les types de notification.
+--
+-- PostgreSQL NE SAIT PAS retirer une valeur d'un enum. Il n'existe pas de
+-- `ALTER TYPE ... DROP VALUE`, et la seule voie serait de recréer le type puis
+-- de réécrire toutes les colonnes qui s'en servent — `notifications.type` et
+-- `push_outbox.type` ici, plus toute fonction qui les nomme. Sur un enum
+-- utilisé par une table de production, c'est un risque très supérieur au gain.
+--
+-- Ce fichier ne fait donc RIEN, sciemment. Les trois étiquettes ajoutées
+-- (`queue_called`, `booking_reminder`, `post_published`) restent dans le type
+-- après retour arrière. Elles sont inertes : plus aucune fonction ne les
+-- produit, et aucune contrainte ne les exige. Même constat qu'en F1b pour
+-- `queue_grace_removed`.
+--
+-- À vérifier après retour arrière : aucune ligne de `public.notifications` ne
+-- porte un des trois types (sinon, les garder est le comportement voulu — une
+-- notification déjà reçue ne doit pas disparaître d'un historique) :
+--
+--   select type, count(*) from public.notifications
+--    where type in ('queue_called', 'booking_reminder', 'post_published')
+--    group by 1;
+
+select 'les valeurs d''enum ajoutees par M1c-a ne sont pas retirables ; voir le commentaire de ce fichier' as note;
