@@ -15,8 +15,20 @@ import { test, expect, type Page } from '@playwright/test'
 const PASSWORD = 'Plat1-QA!2026'
 const NEW_LINKS = ['/platform/settings', '/platform/promotions', '/platform/funnel', '/platform/worker']
 
+/**
+ * PAS DE `networkidle` DANS CE FICHIER, et c'est une correction payée.
+ *
+ * `/platform/worker` rafraîchit son état toutes les DIX SECONDES : le réseau
+ * n'y devient jamais inactif, et `waitUntil: 'networkidle'` y attend une
+ * condition qui ne peut pas arriver. Sur les autres écrans il finit par
+ * passer, mais il devient le premier à céder dès que la machine est chargée —
+ * mesuré : 45 s de dépassement pendant qu'une campagne voisine tournait.
+ *
+ * On attend donc ce qu'on veut VRAIMENT voir : un élément précis à l'écran.
+ */
 async function signIn(page: Page, email: string): Promise<boolean> {
-  await page.goto('/platform/login', { waitUntil: 'networkidle' })
+  await page.goto('/platform/login', { waitUntil: 'domcontentloaded' })
+  await page.waitForSelector('input[type="email"]', { timeout: 15_000 })
   await page.fill('input[type="email"]', email)
   await page.fill('input[type="password"]', PASSWORD)
   await page.click('button[type="submit"]')
@@ -67,7 +79,7 @@ async function overflows(page: Page): Promise<boolean> {
 test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
   test('le fondateur voit les quatre écrans neufs', async ({ page }) => {
     test.skip(!(await signIn(page, 'qa-plat1-founder@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
     const nav = await platformNav(page)
     for (const href of NEW_LINKS) {
       expect(nav, `le fondateur devrait voir ${href}`).toContain(href)
@@ -76,7 +88,7 @@ test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
 
   test("le commercial voit les promotions et le tunnel, PAS les défauts ni le worker", async ({ page }) => {
     test.skip(!(await signIn(page, 'qa-plat1-sales@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
     const nav = await platformNav(page)
     expect(nav).toContain('/platform/promotions')
     expect(nav).toContain('/platform/funnel')
@@ -88,7 +100,7 @@ test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
 
   test("le support ne voit aucun des quatre", async ({ page }) => {
     test.skip(!(await signIn(page, 'qa-plat1-support@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
     const nav = await platformNav(page)
     for (const href of NEW_LINKS) {
       expect(nav, `le support ne devrait pas voir ${href}`).not.toContain(href)
@@ -97,7 +109,7 @@ test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
 
   test("le stagiaire ne voit aucun des quatre", async ({ page }) => {
     test.skip(!(await signIn(page, 'qa-plat1-intern@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
     const nav = await platformNav(page)
     for (const href of NEW_LINKS) {
       expect(nav).not.toContain(href)
@@ -107,7 +119,9 @@ test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
   test("les écrans refusés se disent honnêtement, sans tableau vide", async ({ page }) => {
     test.skip(!(await signIn(page, 'qa-plat1-support@fadeup.test')), 'compte QA PLAT-1 absent')
     for (const path of ['/platform/settings', '/platform/worker', '/platform/promotions']) {
-      await page.goto(path, { waitUntil: 'networkidle' })
+      await page.goto(path, { waitUntil: 'domcontentloaded' })
+      // On attend le TEXTE, pas le silence réseau : c'est ce que le test veut.
+      await expect(page.locator('main')).not.toBeEmpty({ timeout: 20_000 })
       expect(await page.locator('tbody tr').count(), `${path} ne doit rien tabuler`).toBe(0)
       expect(await page.locator('main').innerText(), `${path} doit dire quelque chose`).not.toBe('')
     }
@@ -123,9 +137,12 @@ test.describe('PLAT-3 — les écrans rendent, avec données et sans', () => {
       page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 200)))
       page.on('response', (r) => r.status() >= 400 && failures.push(`${r.status()} ${r.url().split('?')[0]}`))
 
-      await page.goto(path, { waitUntil: 'networkidle' })
-      await page.waitForTimeout(800)
-      await expect(page.locator('h1')).toBeVisible()
+      await page.goto(path, { waitUntil: 'domcontentloaded' })
+      await expect(page.locator('h1')).toBeVisible({ timeout: 20_000 })
+      // Laisse les requêtes de l'écran se conclure — sans exiger un silence
+      // réseau que /platform/worker, qui sonde toutes les dix secondes, ne
+      // peut pas atteindre.
+      await page.waitForTimeout(1500)
       expect(errors, `erreurs console sur ${path}`).toEqual([])
       expect(failures, `réponses >= 400 sur ${path}`).toEqual([])
       expect(await overflows(page), `${path} déborde horizontalement`).toBe(false)
@@ -137,7 +154,8 @@ test.describe('PLAT-3 — les écrans rendent, avec données et sans', () => {
     const anon = process.env.QA_ANON_KEY
     test.skip(!url || !anon, 'QA_SUPABASE_URL / QA_ANON_KEY absents')
     test.skip(!(await signIn(page, 'qa-plat1-founder@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform/funnel', { waitUntil: 'networkidle' })
+    await page.goto('/platform/funnel', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('h1')).toBeVisible({ timeout: 20_000 })
 
     const funnel = await callRpc(page, 'get_platform_acquisition_funnel', {
       p_from: null,
@@ -168,7 +186,7 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
     const anon = process.env.QA_ANON_KEY
     test.skip(!url || !anon, 'QA_SUPABASE_URL / QA_ANON_KEY absents')
     test.skip(!(await signIn(page, 'qa-plat1-sales@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
 
     const refusal = await callRpc(page, 'set_platform_setting', {
       p_key: 'queue.capacity_per_barber',
@@ -184,7 +202,7 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
     const anon = process.env.QA_ANON_KEY
     test.skip(!url || !anon, 'QA_SUPABASE_URL / QA_ANON_KEY absents')
     test.skip(!(await signIn(page, 'qa-plat1-sales@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform', { waitUntil: 'networkidle' })
+    await page.goto('/platform', { waitUntil: 'domcontentloaded' })
 
     const refusal = await callRpc(page, 'set_prospect_worker_paused', {
       p_paused: true,
@@ -199,7 +217,7 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
     const anon = process.env.QA_ANON_KEY
     test.skip(!url || !anon, 'QA_SUPABASE_URL / QA_ANON_KEY absents')
     test.skip(!(await signIn(page, 'qa-plat1-founder@fadeup.test')), 'compte QA PLAT-1 absent')
-    await page.goto('/platform/settings', { waitUntil: 'networkidle' })
+    await page.goto('/platform/settings', { waitUntil: 'domcontentloaded' })
 
     const refusal = await callRpc(page, 'set_platform_setting', {
       p_key: 'queue.call_grace_minutes',
@@ -214,7 +232,7 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
     const url = process.env.QA_SUPABASE_URL
     const anon = process.env.QA_ANON_KEY
     test.skip(!url || !anon, 'QA_SUPABASE_URL / QA_ANON_KEY absents')
-    await page.goto('/platform/login', { waitUntil: 'networkidle' })
+    await page.goto('/platform/login', { waitUntil: 'domcontentloaded' })
 
     const result = await page.evaluate(
       async ([apiUrl, apiKey]) => {

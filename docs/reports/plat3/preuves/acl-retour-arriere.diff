@@ -1,0 +1,13 @@
+# PLAT-3 — retour arrière : comparaison ACL avant / après.
+#
+# Bac d'essai FIDÈLE (db/tests/b3_restore_sandbox.sh, restauration SANS
+# --no-owner, base possédée par postgres comme en production), restauré depuis
+# /opt/fadeup/backups/pre-plat3-20260912-165220.dump.
+#
+# Protocole : instantané ACL -> les 5 migrations -> verify_plat3.sql (117
+# assertions vertes) -> les 5 retours arrière DANS L'ORDRE INVERSE -> second
+# instantané.
+#
+# Lignes comparées : 4749 (db/tests/x3_acl_snapshot.sql)
+# ÉCARTS : 0 — ce fichier est vide en dessous de cet en-tête, et c'est le
+# résultat.

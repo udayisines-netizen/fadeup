@@ -1,0 +1,79 @@
+# PLAT-3 — objets de base : production comparee au bac d'essai RETOURNE EN ARRIERE.
+#
+# Le bac d'essai est la sauvegarde pre-plat3-20260912-165220.dump, sur laquelle
+# les cinq migrations PLAT-3 ont ete montees PUIS redescendues. Il represente
+# donc l'etat d'avant PLAT-3. La production, elle, a recu entre-temps les
+# migrations de DEUX LOTS VOISINS (M1c-a : push ; OS-3 : campagnes, insights).
+#
+# OBJETS DISPARUS : 0 — c'est le point qui compte.
+#
+# === en production et pas dans le bac d'essai ===
+TABLE notification_campaign_recipients
+TABLE notification_campaigns
+TABLE notification_push_preferences
+TABLE platform_settings
+TABLE promotion_redemptions
+TABLE promotion_role_limits
+TABLE promotions
+TABLE prospect_worker_state
+TABLE push_devices
+TABLE push_outbox
+TABLE push_post_fanout
+TABLE push_receipt_requests
+TABLE push_templates
+private.assert_campaign_text
+private.assert_promotion_applicable
+private.campaign_audience
+private.campaign_free_slots_tomorrow
+private.campaign_monthly_allowance
+private.declared_cadence_days
+private.enqueue_appointment_reminders
+private.enqueue_post_pushes
+private.enqueue_push
+private.expo_access_token
+private.insights_window
+private.marketing_next_attempt_at
+private.organization_delivered_in_window
+private.platform_setting_int
+private.platform_setting_num
+private.promotion_actor_limits
+private.push_category_enabled
+private.push_dispatch_batch
+private.push_next_window
+private.push_receipt_request_batch
+private.push_receipt_resolve_batch
+private.push_reconcile_batch
+private.record_promotion_redemption
+private.render_push_template
+private.stripe_create_promotion_coupon
+public.apply_promotion
+public.create_promotion
+public.end_promotion
+public.get_campaign_quota
+public.get_my_notification_preferences
+public.get_my_organization_promotion
+public.get_organization_duration_gaps
+public.get_organization_insights
+public.get_platform_acquisition_funnel
+public.get_prospect_worker_state
+public.get_public_platform_settings
+public.list_notification_campaigns
+public.list_platform_settings
+public.list_promotion_redemptions
+public.list_promotions
+public.list_prospect_worker_passes
+public.preview_notification_campaign
+public.queue_entries_notify_called
+public.redeem_promotion_code
+public.register_push_device
+public.resolve_checkout_discount
+public.revoke_promotion_redemption
+public.revoke_push_device
+public.run_push_maintenance
+public.send_notification_campaign
+public.set_my_notification_preference
+public.set_platform_setting
+public.set_prospect_worker_paused
+public.unsubscribe_customer_marketing
+public.verify_promotion_sync
+# === disparus (vide) ===
