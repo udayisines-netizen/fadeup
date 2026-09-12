@@ -51,4 +51,7 @@ export {
   BadgeCheck as IconVerified,
   Store as IconShop,
   MessageSquare as IconReviews,
+  // OS-3 — l'abonnement du professionnel. `CreditCard` et non une icône de
+  // facture : ce que le pro cherche dans ce menu est son moyen de paiement.
+  CreditCard as IconBilling,
 } from 'lucide-react'

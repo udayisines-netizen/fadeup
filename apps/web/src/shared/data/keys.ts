@@ -178,6 +178,22 @@ export const proKeys = {
   teams: (organizationId: string) => [...proKeys.all, 'team', organizationId] as const,
   teamMembers: (organizationId: string) => [...proKeys.teams(organizationId), 'members'] as const,
   teamInvitations: (organizationId: string) => [...proKeys.teams(organizationId), 'invitations'] as const,
+  /* OS-3 — insights, sollicitations, abonnement. Un préfixe par famille pour
+     que l'invalidation reste large : envoyer une campagne change le
+     compteur, l'historique ET le quota. */
+  insights: (organizationId: string) => [...proKeys.all, 'insights', organizationId] as const,
+  insightsWindow: (organizationId: string, from: string, to: string) =>
+    [...proKeys.insights(organizationId), from, to] as const,
+  durationGaps: (organizationId: string, locationId = '') =>
+    [...proKeys.all, 'duration-gaps', organizationId, locationId] as const,
+  campaigns: (organizationId: string) => [...proKeys.all, 'campaigns', organizationId] as const,
+  campaignQuota: (organizationId: string) => [...proKeys.campaigns(organizationId), 'quota'] as const,
+  campaignHistory: (organizationId: string) => [...proKeys.campaigns(organizationId), 'history'] as const,
+  campaignPreview: (organizationId: string, kind: string, params: string) =>
+    [...proKeys.campaigns(organizationId), 'preview', kind, params] as const,
+  billing: (organizationId: string) => [...proKeys.all, 'billing', organizationId] as const,
+  billingState: (organizationId: string) => [...proKeys.billing(organizationId), 'state'] as const,
+  billingCatalog: () => [...proKeys.all, 'billing-catalog'] as const,
 } as const
 
 /**

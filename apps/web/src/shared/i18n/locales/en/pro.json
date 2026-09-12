@@ -562,5 +562,249 @@
       "locationForeign": "This location does not belong to this shop.",
       "capacity": "Your plan does not cover one more chair."
     }
+  },
+  "insights": {
+    "title": "Analytics",
+    "subtitle": "What FadeUp brings you, and what your numbers say.",
+    "period": {
+      "label": "Period",
+      "days30": "30 days",
+      "days90": "90 days",
+      "months12": "12 months"
+    },
+    "contributionLabel": "Bookings received through FadeUp",
+    "contributionHint_one": "{{count}} distinct customer",
+    "contributionHint_other": "{{count}} distinct customers",
+    "trend": {
+      "up": "+{{percent}}% versus the previous period",
+      "down": "−{{percent}}% versus the previous period",
+      "flat": "Flat versus the previous period",
+      "fromNothing": "None in the previous period"
+    },
+    "revenueLabel": "Calculated revenue",
+    "revenueHint": "Sum of catalogue prices for completed services.",
+    "requestsLabel": "Requests",
+    "requestsHint": "{{percent}}% of requests turned into a booking.",
+    "requestsNone": "No request in this period.",
+    "customersLabel": "Customers",
+    "lapsed_one": "{{count}} regular has not come back on time.",
+    "lapsed_other": "{{count}} regulars have not come back on time.",
+    "lapsedAction": "See customers",
+    "lapsedCampaign": "Write to them",
+    "durationsLabel": "Declared versus observed durations",
+    "durationsEmpty": "Not enough measured services yet to compare a duration.",
+    "durationGap": "You announce {{declared}} min; the observed average is {{observed}} min over {{samples}} services.",
+    "durationAligned": "Declared duration of {{declared}} min confirmed over {{samples}} services.",
+    "minutesSuffix": " min",
+    "viewsSince": "Views measured since",
+    "stat": {
+      "profileViews": "Profile views",
+      "newFollowers": "New followers",
+      "delivered": "Completed services",
+      "counter": "Entered at the counter",
+      "averageTicket": "Average ticket",
+      "absences_one": "{{count}} absence",
+      "absences_other": "{{count}} absences",
+      "newCustomers": "New customers",
+      "returningCustomers": "Returning customers"
+    },
+    "empty": {
+      "title": "Nothing to measure yet",
+      "description": "From your first booking, this is where you will see what FadeUp brings you: bookings received, profile views, new followers, customers who come back.",
+      "action": "Share my profile"
+    }
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "subtitle": "Four templates. Your customers, never another shop's.",
+    "quotaLabel": "Sends left this month",
+    "unlimited": "Unlimited",
+    "quotaHint": "{{used}} of {{allowance}} used — {{plan}} plan.",
+    "quotaUnlimitedHint": "{{used}} sent this month. Your plan has no cap.",
+    "historyLabel": "History",
+    "historyEmpty": "No campaign sent yet.",
+    "kind": {
+      "lapsed_customers": {
+        "title": "Customers who stopped coming",
+        "description": "Your regulars who have not booked for a while. You choose the threshold."
+      },
+      "free_slots_tomorrow": {
+        "title": "Free slots tomorrow",
+        "description": "The agenda knows your gaps. Telling your regulars is revenue that already existed."
+      },
+      "promotion": {
+        "title": "One-off promotion",
+        "description": "An offer, a period, a message. To every reachable customer."
+      },
+      "loyalty_reminder": {
+        "title": "Loyalty reminder",
+        "description": "Based on the frequency the customer declared themselves. With no declared frequency, nobody is reminded."
+      }
+    },
+    "field": {
+      "headline": "Opening line",
+      "headlineHint": "One line, {{max}} characters at most. No links: the only link in the e-mail is your profile.",
+      "threshold": "Threshold, in days",
+      "thresholdHint": "Between 14 and 365 days since the last service.",
+      "service": "Service",
+      "servicePlaceholder": "Pick a service",
+      "offer": "The offer",
+      "offerHint": "Short and concrete: “10% off a haircut”.",
+      "validUntil": "Valid until"
+    },
+    "refusal": {
+      "missing": "This field is required.",
+      "tooLong": "Too long: {{max}} characters at most.",
+      "multiline": "One line only.",
+      "link": "No links in the message.",
+      "templateToken": "Double braces are reserved for the template."
+    },
+    "serverRefusal": {
+      "allowance_reached": "This month's cap is reached. It resets on the 1st.",
+      "no_recipient": "Nobody to reach with this template: nothing was sent and your cap did not move.",
+      "no_free_slot": "No free slot tomorrow: this template would announce slots that do not exist.",
+      "unknown_service": "That service is not yours.",
+      "missing_service": "Pick a service.",
+      "invalid_period": "That period is not valid.",
+      "not_authorized": "You are not allowed to write to this shop's customers.",
+      "unknown": "The send was refused."
+    },
+    "preview": {
+      "none": "Nothing to preview yet.",
+      "reachable_one": "{{count}} customer will be contacted.",
+      "reachable_other": "{{count}} customers will be contacted.",
+      "suppressed": {
+        "noEmail_one": "{{count}} matching customer has no e-mail address.",
+        "noEmail_other": "{{count}} matching customers have no e-mail address.",
+        "doNotContact_one": "{{count}} customer unsubscribed.",
+        "doNotContact_other": "{{count}} customers unsubscribed.",
+        "frequency_one": "{{count}} customer already received two campaigns this week.",
+        "frequency_other": "{{count}} customers already received two campaigns this week."
+      },
+      "slots_one": "{{count}} slot genuinely free tomorrow.",
+      "slots_other": "{{count}} slots genuinely free tomorrow.",
+      "quietHours": "Quiet hours: the send will go out on"
+    },
+    "cap": {
+      "title": "Monthly cap reached",
+      "reached": "{{used}} sends of {{allowance}} this month.",
+      "upgrade": "The {{plan}} plan opens {{allowance}} sends a month.",
+      "resets": "The counter resets on the 1st of next month.",
+      "action": "See plans"
+    },
+    "action": {
+      "prepare": "Prepare",
+      "send": "Send",
+      "sendTo_one": "Send to {{count}} customer",
+      "sendTo_other": "Send to {{count}} customers"
+    },
+    "sent": {
+      "title_one": "{{count}} customer contacted",
+      "title_other": "{{count}} customers contacted",
+      "now": "The send goes out within the minute.",
+      "deferred": "Quiet hours apply: the send will go out tomorrow morning."
+    },
+    "row": {
+      "deferred": "deferred",
+      "recipientsLabel": "Recipients",
+      "openedLabel": "Opens",
+      "bookedLabel": "Booked afterwards"
+    },
+    "forbidden": {
+      "title": "Owner and manager only",
+      "description": "Writing to the shop's customers puts its reputation on the line: only the owner and the manager can do it.",
+      "action": "Back to home"
+    }
+  },
+  "unsubscribe": {
+    "title": "Unsubscribe",
+    "doneTitle": "Done",
+    "doneBody": "You will no longer receive offers from FadeUp shops. This applies to every shop, not only the one that wrote to you.",
+    "transactional": "Your booking confirmations, reminders and schedule changes still arrive: those are not offers.",
+    "errorTitle": "Link unavailable",
+    "errorBody": "We could not process this link. Try again from the e-mail, or reply to it to tell us."
+  },
+  "billing": {
+    "title": "Subscription",
+    "subtitle": "Your plan, your renewal date, your invoices.",
+    "stateLabel": "State",
+    "planFree": "Free",
+    "renewsAt": "Next renewal",
+    "endsAt": "Subscription ends",
+    "trialEndsAt": "Trial ends",
+    "establishments": "Active locations",
+    "current": "Current plan",
+    "plansLabel": "Plans",
+    "intervalLabel": "Billing",
+    "interval": {
+      "month": "Monthly",
+      "year": "Yearly"
+    },
+    "perMonth": "per month, excluding tax",
+    "perYear": "per year, excluding tax — {{free}} months free",
+    "subscribe": "Subscribe",
+    "tierRange": "From {{min}} to {{max}} locations",
+    "tierCurrent": "{{plan}} tier, for your {{count}} locations.",
+    "scheduled": "Change scheduled to {{plan}} on",
+    "situation": {
+      "free": "No subscription. Your profile stays published and your data is untouched.",
+      "trial_one": "Trial running — {{count}} day left.",
+      "trial_other": "Trial running — {{count}} days left.",
+      "trialExpired": "Your trial has ended. Back to Free: nothing was deleted.",
+      "activeMonth": "Subscription active, billed monthly.",
+      "activeYear": "Subscription active, billed yearly.",
+      "cancelling": "Cancellation scheduled: the subscription stops at the end of the paid period.",
+      "canceled": "Subscription closed. Your profile, reviews and history are kept.",
+      "grace": "A payment failed."
+    },
+    "grace": {
+      "label": "Payment to settle",
+      "body_one": "A payment did not go through. You have {{count}} day to settle it.",
+      "body_other": "A payment did not go through. You have {{count}} days to settle it.",
+      "bodyNoDate": "A payment did not go through. Update your payment method.",
+      "kept": "Nothing is cut off until then: your paid features stay open.",
+      "action": "Update payment method"
+    },
+    "trial": {
+      "action": "Start the 14-day trial",
+      "started": "Trial started — 14 days, no card."
+    },
+    "portal": {
+      "action": "Payment method and invoices",
+      "note": "The payment method and invoices are held by Stripe: FadeUp does not store them. The portal opens them."
+    },
+    "change": {
+      "action": "Pick this plan",
+      "immediate": "Change applied immediately, prorated.",
+      "scheduled": "Change scheduled for the end of the current period."
+    },
+    "cancel": {
+      "action": "Cancel",
+      "confirmTitle": "Cancel the subscription?",
+      "confirmBody": "The subscription stops at the end of the period you already paid for. Your profile, reviews, customers and history are kept — you simply return to Free.",
+      "confirmAction": "Cancel at period end",
+      "done": "Cancellation recorded for the end of the period."
+    },
+    "quote": {
+      "body_one": "You run {{count}} location, beyond the grid. Nothing is blocked: we will quote you.",
+      "body_other": "You run {{count}} locations, beyond the grid. Nothing is blocked: we will quote you.",
+      "action": "Request a quote",
+      "sent": "Quote request sent.",
+      "pending": "Quote requested on"
+    },
+    "checkout": {
+      "successTitle": "Payment received",
+      "successBody": "Your subscription activates in a moment, once Stripe confirms.",
+      "cancelled": "Payment abandoned. Nothing was charged."
+    },
+    "refusal": {
+      "payment_forbidden": "No payment action is possible from a borrowed view.",
+      "unknown": "The operation was refused."
+    },
+    "forbidden": {
+      "title": "Owner only",
+      "description": "The subscription commits the business: only the shop owner can reach it. This is not an interface setting — the database refuses too.",
+      "action": "Back to home"
+    }
   }
 }

@@ -562,5 +562,249 @@
       "locationForeign": "Cet établissement n'appartient pas à ce salon.",
       "capacity": "Votre plan ne couvre pas un fauteuil de plus."
     }
+  },
+  "insights": {
+    "title": "Analytics",
+    "subtitle": "Ce que FadeUp vous apporte, et ce que vos chiffres disent.",
+    "period": {
+      "label": "Période",
+      "days30": "30 jours",
+      "days90": "90 jours",
+      "months12": "12 mois"
+    },
+    "contributionLabel": "Réservations reçues via FadeUp",
+    "contributionHint_one": "{{count}} client distinct",
+    "contributionHint_other": "{{count}} clients distincts",
+    "trend": {
+      "up": "+{{percent}} % contre la période précédente",
+      "down": "−{{percent}} % contre la période précédente",
+      "flat": "Stable contre la période précédente",
+      "fromNothing": "Aucune sur la période précédente"
+    },
+    "revenueLabel": "Revenu calculé",
+    "revenueHint": "Somme des prix du catalogue des prestations terminées.",
+    "requestsLabel": "Demandes",
+    "requestsHint": "{{percent}} % des demandes converties en réservation.",
+    "requestsNone": "Aucune demande sur la période.",
+    "customersLabel": "Clients",
+    "lapsed_one": "{{count}} régulier n'est pas revenu à temps.",
+    "lapsed_other": "{{count}} réguliers ne sont pas revenus à temps.",
+    "lapsedAction": "Voir les clients",
+    "lapsedCampaign": "Leur écrire",
+    "durationsLabel": "Durées annoncées contre observées",
+    "durationsEmpty": "Pas encore assez de prestations mesurées pour comparer une durée.",
+    "durationGap": "Vous annoncez {{declared}} min ; la moyenne observée est de {{observed}} min sur {{samples}} prestations.",
+    "durationAligned": "Durée annoncée de {{declared}} min confirmée sur {{samples}} prestations.",
+    "minutesSuffix": " min",
+    "viewsSince": "Vues mesurées depuis le",
+    "stat": {
+      "profileViews": "Vues de profil",
+      "newFollowers": "Nouveaux abonnés",
+      "delivered": "Prestations terminées",
+      "counter": "Saisies au comptoir",
+      "averageTicket": "Panier moyen",
+      "absences_one": "{{count}} absence",
+      "absences_other": "{{count}} absences",
+      "newCustomers": "Nouveaux clients",
+      "returningCustomers": "Clients revenus"
+    },
+    "empty": {
+      "title": "Rien à mesurer encore",
+      "description": "Dès votre première réservation, vous verrez ici ce que FadeUp vous apporte : réservations reçues, vues de profil, nouveaux abonnés, clients qui reviennent.",
+      "action": "Partager mon profil"
+    }
+  },
+  "campaigns": {
+    "title": "Sollicitations",
+    "subtitle": "Quatre modèles. Vos clients, jamais ceux d'un autre salon.",
+    "quotaLabel": "Envois restants ce mois-ci",
+    "unlimited": "Illimité",
+    "quotaHint": "{{used}} sur {{allowance}} utilisés — plan {{plan}}.",
+    "quotaUnlimitedHint": "{{used}} envoyés ce mois-ci. Votre plan n'a pas de plafond.",
+    "historyLabel": "Historique",
+    "historyEmpty": "Aucune sollicitation envoyée pour l'instant.",
+    "kind": {
+      "lapsed_customers": {
+        "title": "Clients non revenus",
+        "description": "Vos réguliers qui n'ont rien réservé depuis un certain temps. Vous choisissez le seuil."
+      },
+      "free_slots_tomorrow": {
+        "title": "Créneaux libres demain",
+        "description": "L'agenda connaît vos trous. Prévenir vos réguliers, c'est du revenu qui existait déjà."
+      },
+      "promotion": {
+        "title": "Promotion ponctuelle",
+        "description": "Une offre, une période, un message. À tous vos clients joignables."
+      },
+      "loyalty_reminder": {
+        "title": "Rappel de fidélité",
+        "description": "Fondé sur la fréquence que le client a lui-même déclarée. Sans fréquence déclarée, personne n'est rappelé."
+      }
+    },
+    "field": {
+      "headline": "Message d'accroche",
+      "headlineHint": "Une ligne, {{max}} caractères au maximum. Sans lien : le seul lien de l'e-mail est celui de votre profil.",
+      "threshold": "Seuil, en jours",
+      "thresholdHint": "Entre 14 et 365 jours depuis la dernière prestation.",
+      "service": "Prestation",
+      "servicePlaceholder": "Choisir une prestation",
+      "offer": "L'offre",
+      "offerHint": "Courte et concrète : « −10 % sur la coupe ».",
+      "validUntil": "Valable jusqu'au"
+    },
+    "refusal": {
+      "missing": "Ce champ est requis.",
+      "tooLong": "Trop long : {{max}} caractères au maximum.",
+      "multiline": "Une seule ligne.",
+      "link": "Pas de lien dans le message.",
+      "templateToken": "Les accolades doubles sont réservées au gabarit."
+    },
+    "serverRefusal": {
+      "allowance_reached": "Le plafond du mois est atteint. Il se remet à zéro le 1er.",
+      "no_recipient": "Personne à joindre avec ce modèle : rien n'a été envoyé et votre plafond n'a pas bougé.",
+      "no_free_slot": "Aucun créneau libre demain : ce modèle annoncerait des créneaux qui n'existent pas.",
+      "unknown_service": "Cette prestation n'est pas la vôtre.",
+      "missing_service": "Choisissez une prestation.",
+      "invalid_period": "Cette période n'est pas valable.",
+      "not_authorized": "Vous n'avez pas le droit d'écrire aux clients de ce salon.",
+      "unknown": "L'envoi a été refusé."
+    },
+    "preview": {
+      "none": "Rien à prévisualiser pour l'instant.",
+      "reachable_one": "{{count}} client sera sollicité.",
+      "reachable_other": "{{count}} clients seront sollicités.",
+      "suppressed": {
+        "noEmail_one": "{{count}} client concerné n'a pas d'adresse e-mail.",
+        "noEmail_other": "{{count}} clients concernés n'ont pas d'adresse e-mail.",
+        "doNotContact_one": "{{count}} client s'est désabonné.",
+        "doNotContact_other": "{{count}} clients se sont désabonnés.",
+        "frequency_one": "{{count}} client a déjà reçu deux sollicitations cette semaine.",
+        "frequency_other": "{{count}} clients ont déjà reçu deux sollicitations cette semaine."
+      },
+      "slots_one": "{{count}} créneau réellement libre demain.",
+      "slots_other": "{{count}} créneaux réellement libres demain.",
+      "quietHours": "Heures calmes : l'envoi partira le"
+    },
+    "cap": {
+      "title": "Plafond du mois atteint",
+      "reached": "{{used}} envois sur {{allowance}} ce mois-ci.",
+      "upgrade": "Le plan {{plan}} ouvre {{allowance}} envois par mois.",
+      "resets": "Le compteur se remet à zéro le 1er du mois prochain.",
+      "action": "Voir les plans"
+    },
+    "action": {
+      "prepare": "Préparer",
+      "send": "Envoyer",
+      "sendTo_one": "Envoyer à {{count}} client",
+      "sendTo_other": "Envoyer à {{count}} clients"
+    },
+    "sent": {
+      "title_one": "{{count}} client sollicité",
+      "title_other": "{{count}} clients sollicités",
+      "now": "L'envoi part dans la minute.",
+      "deferred": "Les heures calmes s'appliquent : l'envoi partira demain matin."
+    },
+    "row": {
+      "deferred": "différé",
+      "recipientsLabel": "Destinataires",
+      "openedLabel": "Ouvertures",
+      "bookedLabel": "Ont réservé ensuite"
+    },
+    "forbidden": {
+      "title": "Réservé au propriétaire et au gérant",
+      "description": "Écrire aux clients du salon engage sa réputation : seuls le propriétaire et le gérant peuvent le faire.",
+      "action": "Retour à l'accueil"
+    }
+  },
+  "unsubscribe": {
+    "title": "Désabonnement",
+    "doneTitle": "C'est fait",
+    "doneBody": "Vous ne recevrez plus d'offres des salons FadeUp. Cela vaut pour tous les salons, pas seulement celui qui vous a écrit.",
+    "transactional": "Vos confirmations de réservation, rappels et changements d'horaire continuent d'arriver : ce ne sont pas des offres.",
+    "errorTitle": "Lien indisponible",
+    "errorBody": "Nous n'avons pas pu traiter ce lien. Réessayez depuis l'e-mail, ou répondez-y pour nous le dire."
+  },
+  "billing": {
+    "title": "Abonnement",
+    "subtitle": "Votre plan, votre échéance, vos factures.",
+    "stateLabel": "État",
+    "planFree": "Free",
+    "renewsAt": "Prochaine échéance",
+    "endsAt": "Fin de l'abonnement",
+    "trialEndsAt": "Fin de l'essai",
+    "establishments": "Établissements actifs",
+    "current": "Plan actuel",
+    "plansLabel": "Plans",
+    "intervalLabel": "Facturation",
+    "interval": {
+      "month": "Mensuel",
+      "year": "Annuel"
+    },
+    "perMonth": "par mois, hors taxes",
+    "perYear": "par an, hors taxes — {{free}} mois offerts",
+    "subscribe": "Souscrire",
+    "tierRange": "De {{min}} à {{max}} établissements",
+    "tierCurrent": "Palier {{plan}}, pour vos {{count}} établissements.",
+    "scheduled": "Changement programmé vers {{plan}}, le",
+    "situation": {
+      "free": "Aucun abonnement. Votre profil reste publié et vos données sont intactes.",
+      "trial_one": "Essai en cours — {{count}} jour restant.",
+      "trial_other": "Essai en cours — {{count}} jours restants.",
+      "trialExpired": "Votre essai est terminé. Retour au Free : rien n'a été supprimé.",
+      "activeMonth": "Abonnement actif, facturé chaque mois.",
+      "activeYear": "Abonnement actif, facturé chaque année.",
+      "cancelling": "Résiliation programmée : l'abonnement s'arrête à la fin de la période payée.",
+      "canceled": "Abonnement clos. Votre profil, vos avis et votre historique sont conservés.",
+      "grace": "Un paiement a échoué."
+    },
+    "grace": {
+      "label": "Paiement à régler",
+      "body_one": "Un paiement n'est pas passé. Il vous reste {{count}} jour pour le régler.",
+      "body_other": "Un paiement n'est pas passé. Il vous reste {{count}} jours pour le régler.",
+      "bodyNoDate": "Un paiement n'est pas passé. Mettez à jour votre moyen de paiement.",
+      "kept": "Rien n'est coupé d'ici là : vos fonctions payantes restent ouvertes.",
+      "action": "Mettre à jour le moyen de paiement"
+    },
+    "trial": {
+      "action": "Démarrer l'essai de 14 jours",
+      "started": "Essai démarré — 14 jours, sans carte."
+    },
+    "portal": {
+      "action": "Moyen de paiement et factures",
+      "note": "Le moyen de paiement et les factures sont conservés par Stripe : FadeUp ne les stocke pas. Le portail les ouvre."
+    },
+    "change": {
+      "action": "Choisir ce plan",
+      "immediate": "Changement appliqué immédiatement, au prorata.",
+      "scheduled": "Changement programmé pour la fin de la période en cours."
+    },
+    "cancel": {
+      "action": "Résilier",
+      "confirmTitle": "Résilier l'abonnement ?",
+      "confirmBody": "L'abonnement s'arrête à la fin de la période déjà payée. Votre profil, vos avis, vos clients et votre historique sont conservés — vous repassez simplement au Free.",
+      "confirmAction": "Résilier à la fin de la période",
+      "done": "Résiliation enregistrée pour la fin de la période."
+    },
+    "quote": {
+      "body_one": "Vous gérez {{count}} établissement, au-delà de la grille. Rien n'est bloqué : nous établissons un devis.",
+      "body_other": "Vous gérez {{count}} établissements, au-delà de la grille. Rien n'est bloqué : nous établissons un devis.",
+      "action": "Demander un devis",
+      "sent": "Demande de devis envoyée.",
+      "pending": "Devis demandé le"
+    },
+    "checkout": {
+      "successTitle": "Paiement reçu",
+      "successBody": "Votre abonnement s'active dans un instant, le temps que Stripe nous confirme.",
+      "cancelled": "Paiement abandonné. Rien n'a été prélevé."
+    },
+    "refusal": {
+      "payment_forbidden": "Aucun geste de paiement n'est possible depuis une vue empruntée.",
+      "unknown": "L'opération a été refusée."
+    },
+    "forbidden": {
+      "title": "Réservé au propriétaire",
+      "description": "L'abonnement engage l'entreprise : seul le propriétaire du salon y accède. Ce n'est pas un réglage d'interface — la base refuse aussi.",
+      "action": "Retour à l'accueil"
+    }
   }
 }

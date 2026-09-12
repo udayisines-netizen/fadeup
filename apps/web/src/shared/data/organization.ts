@@ -60,6 +60,17 @@ export interface ProEntitlements {
    */
   liveCapabilities: string[]
   packagedCapabilities: string[]
+  /**
+   * OS-3 — la CAPACITÉ du plan effectif, telle que la RPC la rend déjà (R2).
+   * Lue par l'écran d'abonnement : le palier multi-établissements se choisit
+   * en fonction du nombre d'établissements ACTIFS, et ce nombre est serveur
+   * (`private.org_active_establishments`) — jamais compté à l'écran.
+   * `maxOperationalProfessionals` à `null` = illimité, convention R2.
+   */
+  maxEstablishments: number | null
+  usedEstablishments: number
+  maxOperationalProfessionals: number | null
+  usedOperationalProfessionals: number
 }
 
 export function useProOrganization() {
@@ -145,6 +156,10 @@ export function useProEntitlements(organizationId: string | null) {
         status: row.status,
         liveCapabilities: row.live_capabilities ?? [],
         packagedCapabilities: row.packaged_capabilities ?? [],
+        maxEstablishments: row.max_establishments ?? null,
+        usedEstablishments: row.used_establishments ?? 0,
+        maxOperationalProfessionals: row.max_operational_professionals ?? null,
+        usedOperationalProfessionals: row.used_operational_professionals ?? 0,
       }
     },
     enabled: Boolean(organizationId),

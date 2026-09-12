@@ -1264,6 +1264,7 @@ export type Database = {
           max_establishments: number
           max_operational_professionals: number | null
           min_establishments: number
+          monthly_campaign_allowance: number | null
           plan_key: string
           price_currency: string
           price_minor: number
@@ -1282,6 +1283,7 @@ export type Database = {
           max_establishments: number
           max_operational_professionals?: number | null
           min_establishments?: number
+          monthly_campaign_allowance?: number | null
           plan_key: string
           price_currency?: string
           price_minor: number
@@ -1300,6 +1302,7 @@ export type Database = {
           max_establishments?: number
           max_operational_professionals?: number | null
           min_establishments?: number
+          monthly_campaign_allowance?: number | null
           plan_key?: string
           price_currency?: string
           price_minor?: number
@@ -1682,8 +1685,10 @@ export type Database = {
       customers: {
         Row: {
           created_at: string
+          do_not_contact: boolean
           email: string | null
           id: string
+          marketing_unsubscribe_token: string | null
           name: string
           notes: string | null
           organization_id: string
@@ -1693,8 +1698,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          do_not_contact?: boolean
           email?: string | null
           id?: string
+          marketing_unsubscribe_token?: string | null
           name: string
           notes?: string | null
           organization_id: string
@@ -1704,8 +1711,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          do_not_contact?: boolean
           email?: string | null
           id?: string
+          marketing_unsubscribe_token?: string | null
           name?: string
           notes?: string | null
           organization_id?: string
@@ -2619,6 +2628,134 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          customer_id: string
+          deferred: boolean
+          outbox_id: string | null
+          to_email: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          customer_id: string
+          deferred?: boolean
+          outbox_id?: string | null
+          to_email: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          customer_id?: string
+          deferred?: boolean
+          outbox_id?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            referencedRelation: "notification_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_campaign_recipients_customer_id_fkey"
+            columns: ["customer_id"]
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_campaign_recipients_outbox_id_fkey"
+            columns: ["outbox_id"]
+            referencedRelation: "email_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deferred_count: number
+          headline: string
+          id: string
+          kind: Database["public"]["Enums"]["notification_campaign_kind"]
+          organization_id: string
+          params: Json
+          period_month: string
+          recipient_count: number
+          scheduled_at: string
+          suppressed_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deferred_count?: number
+          headline: string
+          id?: string
+          kind: Database["public"]["Enums"]["notification_campaign_kind"]
+          organization_id: string
+          params?: Json
+          period_month: string
+          recipient_count?: number
+          scheduled_at: string
+          suppressed_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deferred_count?: number
+          headline?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_campaign_kind"]
+          organization_id?: string
+          params?: Json
+          period_month?: string
+          recipient_count?: number
+          scheduled_at?: string
+          suppressed_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_campaigns_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_push_preferences: {
+        Row: {
+          appointment_reminder: boolean
+          booking_response: boolean
+          created_at: string
+          queue_call: boolean
+          social_post: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_reminder?: boolean
+          booking_response?: boolean
+          created_at?: string
+          queue_call?: boolean
+          social_post?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_reminder?: boolean
+          booking_response?: boolean
+          created_at?: string
+          queue_call?: boolean
+          social_post?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -6335,6 +6472,222 @@ export type Database = {
           },
         ]
       }
+      push_devices: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          locale: string
+          platform: Database["public"]["Enums"]["push_platform"]
+          queue_entry_id: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          token: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          locale?: string
+          platform: Database["public"]["Enums"]["push_platform"]
+          queue_entry_id?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          token: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          locale?: string
+          platform?: Database["public"]["Enums"]["push_platform"]
+          queue_entry_id?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_devices_queue_entry_id_fkey"
+            columns: ["queue_entry_id"]
+            referencedRelation: "queue_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_outbox: {
+        Row: {
+          attempts: number
+          body: string
+          category: Database["public"]["Enums"]["push_category"]
+          created_at: string
+          data: Json
+          dedupe_key: string | null
+          device_id: string
+          dispatched_at: string | null
+          id: string
+          last_error: string | null
+          locale: string
+          net_request_id: number | null
+          next_attempt_at: string
+          provider_ticket_id: string | null
+          receipt_requested_at: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["push_delivery_status"]
+          template_key: string
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+          urgent: boolean
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          body: string
+          category: Database["public"]["Enums"]["push_category"]
+          created_at?: string
+          data?: Json
+          dedupe_key?: string | null
+          device_id: string
+          dispatched_at?: string | null
+          id?: string
+          last_error?: string | null
+          locale: string
+          net_request_id?: number | null
+          next_attempt_at?: string
+          provider_ticket_id?: string | null
+          receipt_requested_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["push_delivery_status"]
+          template_key: string
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          urgent?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          body?: string
+          category?: Database["public"]["Enums"]["push_category"]
+          created_at?: string
+          data?: Json
+          dedupe_key?: string | null
+          device_id?: string
+          dispatched_at?: string | null
+          id?: string
+          last_error?: string | null
+          locale?: string
+          net_request_id?: number | null
+          next_attempt_at?: string
+          provider_ticket_id?: string | null
+          receipt_requested_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["push_delivery_status"]
+          template_key?: string
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+          urgent?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_outbox_device_id_fkey"
+            columns: ["device_id"]
+            referencedRelation: "push_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_post_fanout: {
+        Row: {
+          completed_at: string
+          devices_queued: number
+          post_id: string
+        }
+        Insert: {
+          completed_at?: string
+          devices_queued?: number
+          post_id: string
+        }
+        Update: {
+          completed_at?: string
+          devices_queued?: number
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_post_fanout_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_receipt_requests: {
+        Row: {
+          id: string
+          last_error: string | null
+          net_request_id: number
+          requested_at: string
+          resolved_at: string | null
+          ticket_ids: string[]
+        }
+        Insert: {
+          id?: string
+          last_error?: string | null
+          net_request_id: number
+          requested_at?: string
+          resolved_at?: string | null
+          ticket_ids: string[]
+        }
+        Update: {
+          id?: string
+          last_error?: string | null
+          net_request_id?: number
+          requested_at?: string
+          resolved_at?: string | null
+          ticket_ids?: string[]
+        }
+        Relationships: []
+      }
+      push_templates: {
+        Row: {
+          body: string
+          category: Database["public"]["Enums"]["push_category"]
+          created_at: string
+          locale: string
+          template_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category: Database["public"]["Enums"]["push_category"]
+          created_at?: string
+          locale: string
+          template_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: Database["public"]["Enums"]["push_category"]
+          created_at?: string
+          locale?: string
+          template_key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       queue_entries: {
         Row: {
           auto_marked_no_show_at: string | null
@@ -9199,6 +9552,22 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"]
         }[]
       }
+      get_campaign_quota: {
+        Args: { p_organization_id: string }
+        Returns: {
+          monthly_allowance: number
+          next_plan_allowance: number
+          next_plan_display_name: string
+          next_plan_key: string
+          next_plan_price_currency: string
+          next_plan_price_minor: number
+          period_month: string
+          plan_display_name: string
+          plan_key: string
+          remaining: number
+          used: number
+        }[]
+      }
       get_feed: {
         Args: {
           p_cursor?: string
@@ -9336,6 +9705,15 @@ export type Database = {
           status: Database["public"]["Enums"]["interest_request_status"]
         }[]
       }
+      get_my_notification_preferences: {
+        Args: never
+        Returns: {
+          appointment_reminder: boolean
+          booking_response: boolean
+          queue_call: boolean
+          social_post: boolean
+        }[]
+      }
       get_my_platform_permissions: { Args: never; Returns: string[] }
       get_my_professional_application: {
         Args: never
@@ -9436,6 +9814,19 @@ export type Database = {
           status: string
         }[]
       }
+      get_organization_duration_gaps: {
+        Args: { p_location_id?: string; p_organization_id: string }
+        Returns: {
+          declared_minutes: number
+          estimate_capped: boolean
+          location_id: string
+          location_name: string
+          observed_minutes: number
+          sample_count: number
+          service_id: string
+          service_name: string
+        }[]
+      }
       get_organization_entitlements: {
         Args: { p_organization_id: string }
         Returns: {
@@ -9454,6 +9845,39 @@ export type Database = {
           status: Database["public"]["Enums"]["commercial_status"]
           used_establishments: number
           used_operational_professionals: number
+        }[]
+      }
+      get_organization_insights: {
+        Args: { p_from?: string; p_organization_id: string; p_to?: string }
+        Returns: {
+          analytics_since: string
+          average_ticket_cents: number
+          comparison_available: boolean
+          counter_bookings: number
+          currency: string
+          fadeup_bookings: number
+          fadeup_customers: number
+          first_activity_at: string
+          lapsed_customers: number
+          new_customers: number
+          new_followers: number
+          no_show_cost_cents: number
+          no_show_count: number
+          previous_fadeup_bookings: number
+          previous_new_followers: number
+          previous_profile_views: number
+          previous_requests_received: number
+          previous_revenue_cents: number
+          previous_services_delivered: number
+          profile_views: number
+          requests_converted: number
+          requests_received: number
+          returning_customers: number
+          revenue_cents: number
+          revenue_visible: boolean
+          services_delivered: number
+          window_from: string
+          window_to: string
         }[]
       }
       get_organization_posts: {
@@ -10012,6 +10436,24 @@ export type Database = {
           organization_name: string
           organization_slug: string
           via: string
+        }[]
+      }
+      list_notification_campaigns: {
+        Args: { p_limit?: number; p_organization_id: string }
+        Returns: {
+          booked_count: number
+          campaign_id: string
+          created_at: string
+          deferred_count: number
+          delivered_count: number
+          headline: string
+          kind: Database["public"]["Enums"]["notification_campaign_kind"]
+          opened_count: number
+          recipient_count: number
+          scheduled_at: string
+          sent_count: number
+          suppressed_count: number
+          total_count: number
         }[]
       }
       list_organization_customers: {
@@ -10586,6 +11028,25 @@ export type Database = {
         Args: { p_code: string; p_prospect_id: string }
         Returns: Json
       }
+      preview_notification_campaign: {
+        Args: {
+          p_kind: Database["public"]["Enums"]["notification_campaign_kind"]
+          p_organization_id: string
+          p_params?: Json
+        }
+        Returns: {
+          deferred: boolean
+          do_not_contact_count: number
+          eligible_count: number
+          frequency_capped_count: number
+          no_email_count: number
+          reachable_count: number
+          scheduled_at: string
+          slot_count: number
+          slot_date: string
+          verified_count: number
+        }[]
+      }
       promote_ml_model: {
         Args: { p_evaluation_notes: string; p_model_version_id: string }
         Returns: {
@@ -10668,6 +11129,15 @@ export type Database = {
       }
       regenerate_location_queue_check_in_token: {
         Args: { p_location_id: string }
+        Returns: string
+      }
+      register_push_device: {
+        Args: {
+          p_locale?: string
+          p_platform: string
+          p_queue_entry_id?: string
+          p_token: string
+        }
         Returns: string
       }
       reissue_platform_owner_bootstrap_token: {
@@ -11027,6 +11497,7 @@ export type Database = {
         Args: { p_code: string; p_reason: string }
         Returns: Json
       }
+      revoke_push_device: { Args: { p_token: string }; Returns: undefined }
       run_acquisition_maintenance: {
         Args: never
         Returns: {
@@ -11068,6 +11539,17 @@ export type Database = {
         Returns: {
           quotes_opened: number
           tier_changes_scheduled: number
+        }[]
+      }
+      run_push_maintenance: {
+        Args: never
+        Returns: {
+          dispatched: number
+          post_pushes_queued: number
+          receipts_requested: number
+          receipts_resolved: number
+          reconciled: number
+          reminders_queued: number
         }[]
       }
       run_queue_grace_maintenance: {
@@ -11193,6 +11675,23 @@ export type Database = {
           starting_price_cents: number
           timezone: string
           total_count: number
+        }[]
+      }
+      send_notification_campaign: {
+        Args: {
+          p_headline: string
+          p_kind: Database["public"]["Enums"]["notification_campaign_kind"]
+          p_organization_id: string
+          p_params?: Json
+        }
+        Returns: {
+          campaign_id: string
+          deferred_count: number
+          monthly_allowance: number
+          recipient_count: number
+          scheduled_at: string
+          suppressed_count: number
+          used: number
         }[]
       }
       set_barber_queue_enabled: {
@@ -11351,6 +11850,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_my_notification_preference: {
+        Args: { p_category: string; p_enabled: boolean }
+        Returns: undefined
       }
       set_organization_marketplace_visible: {
         Args: { p_organization_id: string; p_visible: boolean }
@@ -11801,6 +12304,12 @@ export type Database = {
         Returns: undefined
       }
       unlike_post: { Args: { p_post_id: string }; Returns: undefined }
+      unsubscribe_customer_marketing: {
+        Args: { p_token: string }
+        Returns: {
+          unsubscribed: boolean
+        }[]
+      }
       unsubscribe_prospect_outreach: {
         Args: { p_token: string }
         Returns: {
@@ -11940,7 +12449,7 @@ export type Database = {
         | "beard_focus"
         | "other"
       email_delivery_status: "queued" | "sent" | "failed" | "sending"
-      email_stream: "transactional" | "prospecting"
+      email_stream: "transactional" | "prospecting" | "marketing"
       entitlement_source: "early_access" | "platform_grant" | "billing"
       follow_source: "manual" | "auto"
       follow_state: "following" | "unfollowed"
@@ -11955,6 +12464,11 @@ export type Database = {
         | "activated"
         | "paid"
         | "expected_value"
+      notification_campaign_kind:
+        | "lapsed_customers"
+        | "free_slots_tomorrow"
+        | "promotion"
+        | "loyalty_reminder"
       notification_type:
         | "booking_request_created"
         | "booking_confirmed"
@@ -11969,6 +12483,9 @@ export type Database = {
         | "review_reply"
         | "queue_grace_removed"
         | "booking_counter_proposed"
+        | "queue_called"
+        | "booking_reminder"
+        | "post_published"
       outreach_campaign_status:
         | "draft"
         | "preparing"
@@ -12119,6 +12636,13 @@ export type Database = {
         | "instagram_handle"
       prospect_tribool: "TRUE" | "FALSE" | "UNKNOWN" | "NOT_APPLICABLE"
       prospect_type: "barbershop" | "independent_barber"
+      push_category:
+        | "queue_call"
+        | "booking_response"
+        | "appointment_reminder"
+        | "social_post"
+      push_delivery_status: "queued" | "sending" | "sent" | "failed"
+      push_platform: "ios" | "android"
       queue_status:
         | "waiting"
         | "called"
@@ -12370,7 +12894,7 @@ export const Constants = {
         "other",
       ],
       email_delivery_status: ["queued", "sent", "failed", "sending"],
-      email_stream: ["transactional", "prospecting"],
+      email_stream: ["transactional", "prospecting", "marketing"],
       entitlement_source: ["early_access", "platform_grant", "billing"],
       follow_source: ["manual", "auto"],
       follow_state: ["following", "unfollowed"],
@@ -12386,6 +12910,12 @@ export const Constants = {
         "paid",
         "expected_value",
       ],
+      notification_campaign_kind: [
+        "lapsed_customers",
+        "free_slots_tomorrow",
+        "promotion",
+        "loyalty_reminder",
+      ],
       notification_type: [
         "booking_request_created",
         "booking_confirmed",
@@ -12400,6 +12930,9 @@ export const Constants = {
         "review_reply",
         "queue_grace_removed",
         "booking_counter_proposed",
+        "queue_called",
+        "booking_reminder",
+        "post_published",
       ],
       outreach_campaign_status: [
         "draft",
@@ -12569,6 +13102,14 @@ export const Constants = {
       ],
       prospect_tribool: ["TRUE", "FALSE", "UNKNOWN", "NOT_APPLICABLE"],
       prospect_type: ["barbershop", "independent_barber"],
+      push_category: [
+        "queue_call",
+        "booking_response",
+        "appointment_reminder",
+        "social_post",
+      ],
+      push_delivery_status: ["queued", "sending", "sent", "failed"],
+      push_platform: ["ios", "android"],
       queue_status: [
         "waiting",
         "called",

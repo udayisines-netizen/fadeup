@@ -10,8 +10,10 @@ import { IconButton } from '@/shared/ui/IconButton'
 import { Spinner } from '@/shared/ui/Spinner'
 import {
   IconAnalytics,
+  IconBilling,
   IconCalendar,
   IconClients,
+  IconEmail,
   IconHome,
   IconLocation,
   IconMenu,
@@ -32,6 +34,15 @@ interface ProNavItem {
   requiresTeam?: boolean
   /** P1PRO — réservé aux rôles gestionnaires (owner/manager/réceptionniste). */
   requiresManage?: boolean
+  /**
+   * OS-3 — rôles EXACTS admis, quand « gestionnaire » est trop large.
+   * `requiresManage` inclut le réceptionniste ; l'abonnement est au
+   * propriétaire seul (garde serveur `private.assert_billing_owner`) et les
+   * sollicitations au propriétaire ou au manager
+   * (`private.has_org_role(owner, manager)`). L'entrée reflète la garde
+   * serveur, elle ne la remplace pas.
+   */
+  roles?: Array<'owner' | 'manager' | 'receptionist' | 'barber'>
   /** Clé RÉELLE de `commercial_capabilities` — jamais inventée. */
   capability?: string
 }
@@ -48,7 +59,20 @@ const PRO_NAV: ProNavItem[] = [
   { to: '/dashboard/catalog', labelKey: 'nav.pro.catalog', icon: IconServices, capability: 'services' },
   { to: '/dashboard/clients', labelKey: 'nav.pro.clients', icon: IconClients, capability: 'customers' },
   { to: '/dashboard/team', labelKey: 'nav.pro.team', icon: IconTeam, requiresTeam: true, capability: 'team' },
+  /* OS-3 — les insights n'ont PAS de capacité : le fondateur n'a gaté
+     aucun plan (les six capacités `retention` restent `planned` et ne
+     conditionnent rien), et la RPC répond à tout membre. Un barber les
+     ouvre ; il n'y voit simplement aucun montant si le patron ne lui a pas
+     ouvert le revenu (réglage OS-1, masquage SERVEUR). */
   { to: '/dashboard/insights', labelKey: 'nav.pro.insights', icon: IconAnalytics },
+  /* OS-3 — les sollicitations ne sont pas GATÉES par le plan mais MÉTRÉES :
+     le fondateur a donné trois envois au plan Free. Pas de capacité, donc ;
+     le plafond mensuel vit en base et l'écran le dit. */
+  { to: '/dashboard/campaigns', labelKey: 'nav.pro.campaigns', icon: IconEmail, roles: ['owner', 'manager'] },
+  /* OS-3 — l'abonnement : propriétaire SEUL, comme la garde serveur de B3.
+     Aucune capacité : tout plan doit pouvoir voir et changer son plan, y
+     compris Free (c'est l'écran qui le fait sortir de Free). */
+  { to: '/dashboard/billing', labelKey: 'nav.pro.billing', icon: IconBilling, roles: ['owner'] },
   { to: '/dashboard/settings', labelKey: 'nav.pro.settings', icon: IconSettings },
 ]
 
@@ -92,10 +116,12 @@ function ProNav({ onNavigate }: { onNavigate?: () => void }) {
   // Conditionnement TRIPLE : équipe, rôle ET capacité (`live_capabilities`).
   // Ce qui est absent n'est PAS rendu — ni grisé, ni cadenassé,
   // aucune vente incitative dans le menu.
+  const role = organization?.role ?? 'barber'
   const items = PRO_NAV.filter(
     (item) =>
       (!item.requiresTeam || businessType !== 'solo_professional') &&
       (!item.requiresManage || canManage) &&
+      (!item.roles || item.roles.includes(role)) &&
       (!item.capability || capabilities.includes(item.capability)),
   )
 

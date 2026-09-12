@@ -526,6 +526,21 @@ export const router = createBrowserRouter([
               return { Component: PosterScanPage }
             },
           },
+          /* OS-3 — le désabonnement marketing, porte HUMAINE. Le lien
+             `List-Unsubscribe` des sollicitations pointe sur la fonction Edge
+             `unsubscribe-customer`, qui redirige un GET ici et traite le POST
+             One-Click (RFC 8058) elle-même. Sans session : le destinataire
+             d'un e-mail n'en a pas. Le chemin porte `/salon/` pour ne pas
+             entrer en collision avec `/unsubscribe/:token` (X2, prospects). */
+          {
+            path: 'unsubscribe/salon/:token',
+            lazy: async () => {
+              const { UnsubscribeCustomerPage } = await import(
+                '@/features/pro-notifications/routes/UnsubscribeCustomerPage'
+              )
+              return { Component: UnsubscribeCustomerPage }
+            },
+          },
           /* F1 — la file publique : consulter sans auth ni géoloc ; le QR du
              salon encode ce lien avec ?l=<lieu>&t=<jeton>. */
           {
@@ -552,6 +567,19 @@ export const router = createBrowserRouter([
           },
           { path: '*', element: <NotFoundPage /> },
         ],
+      },
+
+      /* OS-3 — /pro/billing existe DÉJÀ dans la nature : les relances de
+         grâce de B3 (`payload.billing_url`) et les URL de retour par défaut
+         de la fonction Edge Stripe pointent dessus, alors qu'aucune route ne
+         l'a jamais servi. La redirection préserve la chaîne de requête, sans
+         quoi `?checkout=success` serait perdu au retour du Checkout. */
+      {
+        path: 'pro/billing',
+        lazy: async () => {
+          const { BillingLinkRedirect } = await import('@/features/pro-billing/routes/BillingLinkRedirect')
+          return { Component: BillingLinkRedirect }
+        },
       },
 
       /* Marketing — sombre éditorial (P4). */
@@ -721,6 +749,40 @@ export const router = createBrowserRouter([
                         ],
                       },
                     ],
+                  },
+                  /* OS-3 — les insights : AUCUNE garde de capacité et aucune
+                     garde de rôle. `get_organization_insights` répond à tout
+                     membre et masque le revenu SERVEUR selon le réglage
+                     d'OS-1 ; un barber a donc un écran utile, pas un 403. */
+                  {
+                    path: 'insights',
+                    lazy: async () => {
+                      const { ProInsightsPage } = await import('@/features/pro-insights/routes/ProInsightsPage')
+                      return { Component: ProInsightsPage }
+                    },
+                  },
+                  /* OS-3 — les sollicitations par modèles. Pas de capacité
+                     (le plan Free en a trois par mois) : c'est le plafond en
+                     base qui borne, et la RPC qui refuse. La garde de rôle
+                     est serveur (`owner`/`manager`) ; l'entrée de nav est
+                     conditionnée en miroir. */
+                  {
+                    path: 'campaigns',
+                    lazy: async () => {
+                      const { ProCampaignsPage } = await import('@/features/pro-notifications/routes/ProCampaignsPage')
+                      return { Component: ProCampaignsPage }
+                    },
+                  },
+                  /* OS-3 — l'abonnement. Propriétaire seul, garde serveur
+                     `private.assert_billing_owner` (B3, cinq refus de manager
+                     testés) ; l'écran ne rend rien d'autre qu'un état vide
+                     honnête à qui n'est pas propriétaire. */
+                  {
+                    path: 'billing',
+                    lazy: async () => {
+                      const { ProBillingPage } = await import('@/features/pro-billing/routes/ProBillingPage')
+                      return { Component: ProBillingPage }
+                    },
                   },
                   { path: '*', element: <NotBuiltPage zone="dashboard" /> },
                 ],
