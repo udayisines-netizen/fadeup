@@ -104,7 +104,6 @@ list_public_queues
 list_public_services
 normalize_phone_number
 resolve_poster_code
-resolve_poster_code
 search_public_organizations
 search_public_professionals
 submit_marketplace_withdrawal_request
