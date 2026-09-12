@@ -65,6 +65,18 @@ ok()   { printf 'ok     %s\n' "$*"; }
 #    de l'attribution, ni le prospect destinataire, ni la moindre liste
 #    d'établissements à qui ne peut pas attribuer, et un code mal formé ne
 #    touche même pas la table. Le contrat passe de 44 à 45.
+#
+#    PLAT-3 (2026-09-12) en ajoute UNE, et une seule :
+#    `get_public_platform_settings`. Motif : le client doit connaître deux
+#    défauts pour que son écran dise la vérité — jusqu'où va le sélecteur de
+#    dates (`booking.window_days`) et jusqu'à quand l'annulation reste libre
+#    (`booking.free_cancel_hours`). Avant ce lot, les deux vivaient en dur dans
+#    le bundle, si bien qu'un réglage de la console n'atteignait jamais le
+#    client. La fonction rend DEUX ENTIERS, rien d'autre : aucun nom, aucune
+#    donnée opérationnelle, rien qui dise quoi que ce soit d'un salon ou d'une
+#    personne, et la table `platform_settings` elle-même reste fermée à `anon`
+#    (policy sur `platform.settings`, `revoke all ... from anon`). Le contrat
+#    passe de 45 à 46.
 # ============================================================================
 ALLOWED_ANON_RPCS="apply_appointment_no_show_rule
 book_public_appointment
@@ -84,6 +96,7 @@ get_public_booking_capability
 get_public_currencies
 get_public_organization
 get_public_organization_follower_count
+get_public_platform_settings
 get_public_professional
 get_public_professional_by_handle
 get_public_professional_workplace

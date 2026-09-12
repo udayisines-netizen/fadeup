@@ -9,6 +9,7 @@
 //   transmis tel quel à PostgREST) :
 //
 //     checkout     -> public.prepare_billing_checkout
+//                     puis public.resolve_checkout_discount (PLAT-3)
 //     portal       -> public.prepare_billing_portal
 //     change_plan  -> public.request_plan_change
 //     cancel       -> public.request_billing_cancellation
@@ -158,6 +159,25 @@ Deno.serve(async (req: Request) => {
           success_url: String(body.success_url ?? `${PUBLIC_URL}/pro/billing?checkout=success`),
           cancel_url: String(body.cancel_url ?? `${PUBLIC_URL}/pro/billing?checkout=cancelled`),
         })
+        // PLAT-3 — LA REMISE, si le salon en a une.
+        //
+        // Cette fonction ne DÉCIDE de rien, ici comme ailleurs : elle demande à
+        // `resolve_checkout_discount`, qui porte la même garde que
+        // `prepare_billing_checkout` (propriétaire, hors vue empruntée) et ne
+        // rend un coupon que s'il est confirmé par Stripe et dans le bon mode.
+        // Zéro ligne = pas de remise ; on n'ajoute alors AUCUN paramètre, ce
+        // qui laisse le comportement d'avant PLAT-3 strictement inchangé.
+        //
+        // Un échec de cette RPC ne doit pas empêcher un abonnement : mieux vaut
+        // encaisser au plein tarif et corriger que refuser la souscription.
+        const discount = await rpc(auth, 'resolve_checkout_discount', {
+          p_organization_id: organizationId,
+        })
+        if (discount.ok) {
+          const coupon = (discount.data as Array<{ stripe_coupon_id?: string }> | null)?.[0]?.stripe_coupon_id
+          if (coupon) params.set('discounts[0][coupon]', String(coupon))
+        }
+
         const session = await stripe('POST', '/checkout/sessions', params)
         if (!session.ok) return json(502, { error: 'stripe checkout session failed', detail: session.data?.error })
         return json(200, { url: session.data.url })

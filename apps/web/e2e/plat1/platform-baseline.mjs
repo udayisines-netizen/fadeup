@@ -63,6 +63,28 @@ const GUARDED_ROUTES = [
   ['unknown-platform-route', '/platform/cette-route-nexiste-pas'],
 ]
 
+/*
+ * PLAT-3 — extension ADDITIVE, sans effet par défaut.
+ *
+ * La liste ci-dessus est celle de PLAT-1, rejouée telle quelle par PLAT-2 puis
+ * par PLAT-3 : elle ne bouge pas, sinon les empreintes archivees des lots
+ * precedents cesseraient d'etre comparables. Mais PLAT-2 a ajoute cinq routes
+ * et PLAT-3 en ajoute d'autres : `EXTRA_ROUTES` permet de relever AUSSI ces
+ * surfaces, avant et apres, sans toucher au socle des 33.
+ *
+ * Format : `EXTRA_ROUTES="nom=/platform/chemin,autre=/platform/autre"`.
+ */
+const EXTRA_ROUTES = (process.env.EXTRA_ROUTES ?? '')
+  .split(',')
+  .map((pair) => pair.trim())
+  .filter(Boolean)
+  .map((pair) => {
+    const at = pair.indexOf('=')
+    if (at < 0) throw new Error(`EXTRA_ROUTES : « ${pair} » n'est pas au format nom=/chemin`)
+    return [pair.slice(0, at), pair.slice(at + 1)]
+  })
+if (EXTRA_ROUTES.length > 0) GUARDED_ROUTES.push(...EXTRA_ROUTES)
+
 const probe = () => {
   const nav = document.querySelector('header nav, nav')
   const headings = [...document.querySelectorAll('h1, h2')].map((h) => h.textContent.trim()).filter(Boolean)
