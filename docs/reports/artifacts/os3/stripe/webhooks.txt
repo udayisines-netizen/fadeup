@@ -1,0 +1,13 @@
+          event_type           |  status   |     received_at     
+-------------------------------+-----------+---------------------
+ invoice.paid                  | processed | 2026-09-12 18:05:14
+ checkout.session.completed    | processed | 2026-09-12 18:05:14
+ customer.subscription.created | processed | 2026-09-12 18:05:14
+ customer.subscription.updated | processed | 2026-09-12 18:05:14
+ customer.subscription.updated | processed | 2026-09-12 18:06:10
+ customer.subscription.updated | processed | 2026-09-12 18:06:13
+ invoice.paid                  | processed | 2026-09-12 18:06:13
+ customer.subscription.updated | processed | 2026-09-12 18:07:21
+ customer.subscription.deleted | processed | 2026-09-12 18:09:09
+(9 rows)
+

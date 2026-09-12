@@ -1,0 +1,26 @@
+== instantané AVANT
+== aller
+   ok db/migrations/20260912100000_os3_insights.sql
+   ok db/migrations/20260912100100_os3_marketing_stream_label.sql
+   ok db/migrations/20260912100200_os3_campaign_quota.sql
+   ok db/migrations/20260912100300_os3_campaigns.sql
+== instantané APRÈS ALLER
+== verify
+psql:/tmp/v.sql:963: NOTICE:  VERIFY OS-3 : toutes les assertions passent
+psql:/tmp/v.sql:1059: NOTICE:  VERIFY OS-3 ACL : toutes les assertions passent
+== retour arrière (ordre inverse)
+   ok db/migrations/down/20260912100300_os3_campaigns.down.sql
+   ok db/migrations/down/20260912100200_os3_campaign_quota.down.sql
+   ok db/migrations/down/20260912100100_os3_marketing_stream_label.down.sql
+   ok db/migrations/down/20260912100000_os3_insights.down.sql
+== instantané APRÈS RETOUR
+== diff ALLER (ajouts/suppressions)
+64
+0
+== lignes anon ajoutées par l'aller
+1
+> FN|public.unsubscribe_customer_marketing(p_token text)|anon|EXECUTE|grantor=postgres
+== diff RETOUR contre AVANT (doit être vide)
+   DIFF VIDE
+== objets résiduels
+étiquette enum conservée (déclarée): marketing

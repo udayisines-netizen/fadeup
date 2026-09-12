@@ -1,0 +1,21 @@
+=== Campagne e2e complète, arbre livré, E2E_PORT=4670 ===
+    Error: expect(locator).toBeVisible() failed
+    Error: expect(locator).toBeVisible() failed
+  2 failed
+  40 skipped
+  10 did not run
+  334 passed (32.7m)
+
+Seul rouge : e2e/f4 « inscription légère » (2 exécutions du MÊME test).
+Cause mesurée : GoTrue 500 « Error sending magic link email » ;
+journal auth : 550 You have reached your daily email sending quota.
+
+=== Cascade levée : e2e/f4 sans ce test ===
+  ✓  20 [chromium-desktop] › e2e/f4/booking-funnel.spec.ts:383:3 › F4 — tunnel de réservation et demande envoyée › accessibilité : aucune violation axe sérieuse ou critique sur le tunnel et /bookings (27.0s)
+
+  20 passed (4.7m)
+
+=== Suite du lot seule ===
+
+  15 skipped
+  37 passed (3.0m)

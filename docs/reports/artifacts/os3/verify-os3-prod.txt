@@ -1,0 +1,2 @@
+psql:/tmp/v.sql:963: NOTICE:  VERIFY OS-3 : toutes les assertions passent
+psql:/tmp/v.sql:1059: NOTICE:  VERIFY OS-3 ACL : toutes les assertions passent

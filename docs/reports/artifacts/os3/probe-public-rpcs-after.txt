@@ -1,0 +1,31 @@
+RPC                                    CODE   ROWS      BODY (first 110 chars)
+-------------------------------------- ------ --------- ----------------------------------
+get_public_organization                200    1         [{"id":"de300001-0000-4000-8000-000000000001","name":"Maison Kaïs — Barbier de Château d'Eau","slug":"demo
+list_public_locations                  200    1         [{"id":"de300101-0000-4000-8000-000000000001","name":"Maison Kaïs","kind":"physical_address","address_line1":
+list_public_services                   200    4         [{"id":"de300303-0000-4000-8000-000000000003","category_id":null,"category_name":null,"name":"Barbe traditionn
+list_public_barbers                    200    1         [{"barber_id":"de300601-0000-4000-8000-000000000001","display_name":"Kaïs Bellamine","title":"Fondateur & bar
+list_public_organization_barbers       200    1         [{"barber_id":"de300601-0000-4000-8000-000000000001","professional_id":"de300401-0000-4000-8000-000000000001",
+list_public_barber_services            200    4         [{"id":"de300303-0000-4000-8000-000000000003","name":"Barbe traditionnelle serviette chaude","duration_minutes
+get_public_barber                      200    1         [{"barber_id":"de300601-0000-4000-8000-000000000001","professional_id":"de300401-0000-4000-8000-000000000001",
+get_public_professional                200    1         [{"id":"de300401-0000-4000-8000-000000000001","display_name":"Kaïs Bellamine","handle":"demo.kais.bellamine",
+get_public_professional_by_handle      200    1         [{"id":"de300401-0000-4000-8000-000000000001","display_name":"Kaïs Bellamine","handle":"demo.kais.bellamine",
+get_public_available_slots             200    0         []
+get_public_service_state               200    1         [{"location_id":"de300101-0000-4000-8000-000000000001","barber_id":null,"effective_service_mode":"hybrid","mod
+get_public_booking_capability          200    1         [{"accepts_immediate_booking":true}]
+get_public_booking_capabilities        200    1         [{"organization_slug":"demo-maison-kais","accepts_immediate_booking":true}]
+get_public_queue_status                200    0         []
+list_public_queues                     200    2         [{"barber_id":null,"display_name":null,"avatar_url":null,"waiting_count":0,"busy":false,"estimated_wait_minute
+get_public_currencies                  200    1         [{"organization_id":"de300001-0000-4000-8000-000000000001","currency":"EUR"}]
+search_public_organizations            200    2         [{"organization_id":"de300005-0000-4000-8000-000000000005","organization_name":"Barber Corner Ménilmontant","
+search_public_professionals            200    9         [{"entity_type":"shop","organization_id":"de300003-0000-4000-8000-000000000003","organization_name":"Atelier F
+get_feed                               200    5         [{"post_id":"d1de0003-0000-4000-8000-000000000003","author_kind":"professional","professional_id":"de300401-00
+get_professional_posts                 200    4         [{"post_id":"d1de0003-0000-4000-8000-000000000003","caption":"Skin fade sur cheveux bouclés — démo FadeUp"
+get_professional_posts_by_id           200    4         [{"post_id":"d1de0003-0000-4000-8000-000000000003","caption":"Skin fade sur cheveux bouclés — démo FadeUp"
+get_organization_posts                 200    4         [{"post_id":"d1de0003-0000-4000-8000-000000000003","author_kind":"professional","professional_id":"de300401-00
+get_public_reviews                     200    0         []
+get_public_reputation                  200    1         [{"rating_average":null,"rating_count":0}]
+get_public_professional_workplace      200    1         [{"organization_id":"de300001-0000-4000-8000-000000000001","organization_name":"Maison Kaïs — Barbier de Ch
+list_public_location_hours             200    7         [{"day_of_week":0,"is_closed":true,"open_time":null,"close_time":null,"second_open_time":null,"second_close_ti
+get_public_organization_follower_count 200    -         1
+
+ALL PUBLIC READ RPCs: 200

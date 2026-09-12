@@ -1,0 +1,36 @@
+OS-3 — preuve VIVANTE du tunnel d'abonnement, en mode TEST Stripe.
+Organisation : qa-f1b-shared. Toutes les clés utilisées sont sk_test_ ;
+le script de nettoyage REFUSE de tourner sur autre chose.
+
+18:04  checkout  → 200, session cs_test_… créée par la fonction Edge
+                   stripe-billing (jeton GoTrue réel du propriétaire)
+18:05  Checkout hébergé complété par navigateur automatisé, carte 4242
+       → redirection https://fade-up.com/pro/billing?checkout=success
+       (route de redirection ajoutée par OS-3, chaîne de requête préservée)
+18:05  webhooks réels reçus et traités : checkout.session.completed,
+       customer.subscription.created/updated, invoice.paid
+       état appliqué : active / salon_essential / month / livemode=false
+
+18:06  change_plan salon_pro month → 200 {"decision":"immediate"}   (montée proratisée)
+18:06  change_plan salon_pro year  → 200 {"decision":"immediate"}   (passage à l'annuel)
+       état appliqué après webhooks : active / salon_pro / year
+18:07  change_plan salon_essential month → 200 {"decision":"scheduled",
+       "effective_at":"2027-09-12"}                                (descente en fin de période ANNUELLE)
+18:07  portal → 200, URL https://billing.stripe.com/p/session?secret=test_…
+
+18:08  cancel → 200 {"cancelled_at_period_end":true,"effective_at":"2027-09-12"}
+       webhook customer.subscription.updated → cancel_at_period_end=true en base
+18:09  DELETE /v1/subscriptions/sub_… → 200 status=canceled livemode=false
+       webhook customer.subscription.deleted → retour au Free
+       (organization_commercial_state : salon_pro / canceled)
+
+NETTOYAGE : la ligne organization_billing a été SUPPRIMÉE et
+organization_commercial_state remis à salon_pro / active / early_access —
+l'organisation est partagée avec les campagnes e2e d'OS-1, OS-2, F1b et
+PLAT-2, qui dépendent de ses capacités. Traces volontairement conservées :
+les 9 lignes de stripe_webhook_events ci-dessus et l'historique append-only
+commercial_plan_changes (2 lignes « billing »).
+
+AUCUN OBJET EN MODE RÉEL : private.billing_livemode() = false,
+zéro ligne livemode dans billing_stripe_prices / _products /
+organization_billing, et tout événement livemode serait « rejected ».

@@ -1,0 +1,32 @@
+ECHEC  contrat de surface anon : dérive détectée
+       18a19
+       > get_public_platform_settings
+       37a39
+       > register_push_device
+       38a41
+       > revoke_push_device
+ok     probe_public_rpcs.sh --strict : toutes les lectures publiques en 200
+
+=== rôle anonyme réel (jeton anon, via Kong) ===
+ok     anon lecture tables : 157 tables, aucune ligne interdite lisible
+ok     anon écriture tables : POST/PATCH/DELETE — rien n'atterrit sur les 157 tables
+ok     anon tiers : leave_public_queue → 401, motif conforme
+ok     anon tiers : get_queue_entry_tracking → 401, motif conforme
+ok     anon tiers : change_queue_entry_barber → 401, motif conforme
+ok     anon réservé : move_queue_entry → 401, motif conforme
+ok     anon réservé : reschedule_appointment → 401, motif conforme
+ok     anon réservé : get_my_access → 401, motif conforme
+
+=== rôle authentifié sans aucun droit ===
+ok     compte jetable connecté (qa-x3-norights-1789242608@fadeup.test)
+ok     authed-sans-droit lecture tables : 157 tables, aucune ligne interdite lisible
+ok     authed-sans-droit écriture tables : POST/PATCH/DELETE — rien n'atterrit sur les 157 tables
+ok     authed tiers : get_organization_entitlements → 403, motif conforme
+ok     authed tiers : assign_commercial_plan → 403, motif conforme
+ok     authed tiers : start_organization_trial → 403, motif conforme
+ok     authed tiers : move_queue_entry → 403, motif conforme
+ok     authed tiers : reschedule_appointment → 400, motif conforme
+ok     authed tiers : PATCH organizations (org réelle) → 200, 0 ligne
+       compte jetable restant: 0
+
+X3 SURFACE ANONYME : 1 écart(s)
