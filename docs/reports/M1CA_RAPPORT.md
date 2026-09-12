@@ -653,11 +653,13 @@ de route `/platform` n'est touché — même preuve, c'est du web.
 ## 9. Git
 
 - **Branche** `m1ca/auth-push`, créée depuis `rebuild/social-first-v2` (3a2939f).
-- **Commits** :
+- **Commits**, dans l'ordre :
   1. `chore(m1ca): resynchronise la logique partagee avec apps/web`
   2. `feat(m1ca): le push, sur le motif exact de email_outbox`
   3. `feat(m1ca): permission au bon moment, preferences en base, hors-ligne borne`
   4. `docs(m1ca): rapport final`
+  5. `fix(m1ca): la derniere notification touchee ne doit pas rejouer au demarrage`
+  6. `fix(m1ca): la diffusion d'un post est bornee, et enfin testee`
 - **Poussée** : oui (§12 pour le détail de l'état).
 - **Aucune fusion n'a été effectuée.** Aucun `git add .`, aucun `git add -A`,
   aucun `git reset --hard`, aucun `git clean -fd`, aucun `docker prune`.
