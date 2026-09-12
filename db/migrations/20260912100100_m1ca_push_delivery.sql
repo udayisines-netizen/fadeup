@@ -133,9 +133,23 @@ create table if not exists public.push_devices (
   -- jeton APNs brut envoyé là finirait en erreur silencieuse côté fournisseur.
   constraint push_devices_token_shape check (token ~ '^Expo(nent)?PushToken\[[^]]+\]$'),
   constraint push_devices_locale_valid check (locale in ('fr', 'en')),
-  -- Un appareil sans sujet n'est joignable pour rien : ni compte, ni place.
-  constraint push_devices_subject_present check (user_id is not null or queue_entry_id is not null)
+  constraint push_devices_platform_locale_pair check (true)
 );
+
+/*
+ * PAS de contrainte « un sujet au moins ». Elle a existé, et elle rendait une
+ * entrée de file INDESTRUCTIBLE : `queue_entry_id` est `on delete set null`,
+ * donc supprimer l'entrée (ou, par cascade, son lieu ou son organisation)
+ * tentait de mettre la colonne à NULL sur un appareil sans compte — et la
+ * contrainte refusait. Mesuré en revue :
+ *   ERROR: new row for relation "push_devices" violates check constraint
+ *          "push_devices_subject_present"
+ * Un appareil sans sujet est INERTE (aucun chemin de `enqueue_push` ne le
+ * sélectionne), alors qu'un lieu qu'on ne peut plus supprimer est un défaut.
+ * `register_push_device` garantit de son côté qu'au moins un sujet est posé.
+ */
+alter table public.push_devices drop constraint if exists push_devices_subject_present;
+alter table public.push_devices drop constraint if exists push_devices_platform_locale_pair;
 
 comment on table public.push_devices is
   'Un appareil joignable par push, identifié par son jeton Expo. Rattaché à un compte (plusieurs appareils par compte) et/ou à une entrée de file pour le cas ANONYME — rejoindre une file n''exige pas de session, et « c''est ton tour » est l''événement le plus important du lot. Un jeton devenu invalide est RÉVOQUÉ ici par la réconciliation (revoked_at + revoked_reason), jamais supprimé : la trace de ce qui a été envoyé doit rester lisible.';
@@ -323,6 +337,17 @@ comment on table public.push_receipt_requests is
 create index if not exists push_receipt_requests_pending_idx
   on public.push_receipt_requests (net_request_id) where resolved_at is null;
 
+create table if not exists public.appointment_reminder_log (
+  appointment_id uuid primary key references public.appointments (id) on delete cascade,
+  reminded_at timestamptz not null default now(),
+  channels text not null default ''
+);
+
+comment on table public.appointment_reminder_log is
+'Marque un rendez-vous comme déjà rappelé. Le marqueur ne pouvait PAS être la ligne d''e-mail : `emit_booking_notification` ne l''écrit que si l''adresse existe, et un rendez-vous pris au comptoir (`create_appointment_as_business`) a `customer_email` NULL par défaut. Sans ce registre, un walk-in était retraité à CHAQUE tick — et, le `limit` étant global, cent walk-in plus tôt dans la fenêtre affamaient les vrais rappels. Trouvé en revue, prouvé : tick1=2, tick2=1, tick3=1.
+
+`channels` dit ce qui a réellement pu partir (e-mail, in-app, push, ou rien) : un rendez-vous sans adresse ni compte est marqué lui aussi, parce qu''il n''y a rien à lui envoyer et qu''il ne doit pas revenir.';
+
 create table if not exists public.push_post_fanout (
   post_id uuid primary key references public.posts (id) on delete cascade,
   devices_queued integer not null default 0,
@@ -344,7 +369,8 @@ do $$
 declare v_table text;
 begin
   foreach v_table in array array['push_devices', 'notification_push_preferences', 'push_templates',
-                                 'push_outbox', 'push_receipt_requests', 'push_post_fanout']
+                                 'push_outbox', 'push_receipt_requests', 'push_post_fanout',
+                                 'appointment_reminder_log']
   loop
     execute format('alter table public.%I enable row level security', v_table);
     execute format('alter table public.%I force row level security', v_table);
@@ -499,6 +525,13 @@ revoke all on function private.render_push_template(text, text, jsonb) from publ
 -- base, pas des conventions que chaque appelant doit se rappeler.
 -- ---------------------------------------------------------------------------
 
+/*
+ * La signature a CHANGÉ en cours de lot (ajout de `p_not_after`) : un
+ * paramètre à défaut ajouté par CREATE OR REPLACE créerait une SECONDE
+ * fonction et rendrait tout appel ambigu. D'où le DROP explicite.
+ */
+drop function if exists private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text);
+
 create or replace function private.enqueue_push(
   p_template_key text,
   p_type public.notification_type,
@@ -508,7 +541,12 @@ create or replace function private.enqueue_push(
   p_user_id uuid default null,
   p_queue_entry_id uuid default null,
   p_urgent boolean default false,
-  p_tz text default null
+  p_tz text default null,
+  /* Échéance de PERTINENCE. Un rappel de rendez-vous différé par les heures
+     calmes jusqu'après l'heure du rendez-vous ne doit PAS partir : « votre
+     rendez-vous est bientôt » reçu à l'heure du rendez-vous est un mensonge.
+     NULL = pas d'échéance. */
+  p_not_after timestamptz default null
 )
 returns integer
 language plpgsql
@@ -547,6 +585,11 @@ begin
 
   v_when := case when p_urgent then now() else private.push_next_window(p_tz) end;
 
+  -- Le moment est passé : on n'envoie pas un message dont l'objet est révolu.
+  if p_not_after is not null and v_when >= p_not_after then
+    return 0;
+  end if;
+
   for v_device in
     select * from public.push_devices d
     where d.revoked_at is null
@@ -554,6 +597,17 @@ begin
         (p_user_id is not null and d.user_id = p_user_id)
         or (p_queue_entry_id is not null and d.queue_entry_id = p_queue_entry_id)
       )
+    order by d.last_seen_at desc
+    /*
+     * BORNE. Cette fonction est appelée DANS la transaction d'un appel de
+     * file : un nombre d'appareils non borné y devient un temps d'exécution
+     * non borné, et `statement_timeout` du rôle `authenticated` est de 8 s en
+     * production — mesuré en revue, 40 000 appareils factices sur une entrée
+     * faisaient ÉCHOUER l'appel du client, indéfiniment. Vingt appareils
+     * actifs pour un compte n'existe pas dans la vraie vie ; les plus
+     * récemment vus gagnent.
+     */
+    limit 20
   loop
     select * into v_rendered from private.render_push_template(p_template_key, v_device.locale, p_payload);
 
@@ -578,16 +632,18 @@ begin
 end;
 $$;
 
-comment on function private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text) is
+comment on function private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text, timestamptz) is
 'LE seul chemin d''écriture dans push_outbox. Applique, pour tous les émetteurs :
  - la catégorie lue sur le GABARIT (un appelant ne peut pas déguiser un post en appel de file) ;
  - la préférence du compte pour cette catégorie ;
  - les heures calmes 08:00–21:00, par DIFFÉRÉ et non par annulation, sauf urgent ;
  - un rendu par langue d''APPAREIL (deux téléphones du même compte peuvent lire deux langues) ;
  - une clé d''idempotence portant l''événement et l''appareil.
-Sans compte, seule la catégorie queue_call est acceptée, et seulement pour les appareils rattachés à l''entrée de file concernée.';
+Sans compte, seule la catégorie queue_call est acceptée, et seulement pour les appareils rattachés à l''entrée de file concernée.
 
-revoke all on function private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text)
+Bornée à VINGT appareils par appel : elle s''exécute dans la transaction de l''appel de file, où un temps non borné fait échouer l''appel lui-même.';
+
+revoke all on function private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text, timestamptz)
   from public, anon, authenticated;
 
 commit;
@@ -628,36 +684,68 @@ begin
   -- La ligne in-app : elle existe même sans push, et c'est elle qui rend
   -- l'événement lisible dans l'app après coup.
   if new.booked_by_user_id is not null then
-    insert into public.notifications (user_id, type, title, body, organization_id, dedupe_key)
-    values (
-      new.booked_by_user_id, 'queue_called', 'It''s your turn', coalesce(v_org_name, ''),
-      new.organization_id, 'queue:' || new.id::text || ':called'
-    )
-    on conflict (dedupe_key) do nothing;
+    -- Français, comme les lignes écrites par B4 et par la boucle de
+    -- réservation : `notifications.title` est dénormalisé à l'émission, donc
+    -- la langue de l'émetteur est celle qui reste.
+    begin
+      insert into public.notifications (user_id, type, title, body, organization_id, dedupe_key)
+      values (
+        new.booked_by_user_id, 'queue_called', 'C''est votre tour', coalesce(v_org_name, ''),
+        new.organization_id, 'queue:' || new.id::text || ':called'
+      )
+      on conflict (dedupe_key) do nothing;
+    exception when others then
+      null;
+    end;
   end if;
 
-  -- Le push. URGENT : le client est dans le salon, debout, et une heure calme
-  -- ne doit pas retenir l'appel qu'il attend.
-  perform private.enqueue_push(
-    p_template_key := 'queue_called',
-    p_type := 'queue_called',
-    p_payload := jsonb_build_object('organization_name', coalesce(v_org_name, '')),
-    p_data := jsonb_build_object('kind', 'queue_entry', 'entry_id', new.id,
-                                 'organization_id', new.organization_id,
-                                 'slug', coalesce(v_org_slug, '')),
-    p_dedupe_prefix := 'queue:' || new.id::text || ':called',
-    p_user_id := new.booked_by_user_id,
-    p_queue_entry_id := new.id,
-    p_urgent := true,
-    p_tz := v_tz
-  );
+  /*
+   * Le push. URGENT : le client est dans le salon, debout, et une heure calme
+   * ne doit pas retenir l'appel qu'il attend.
+   *
+   * ET SOUS EXCEPTION AVALÉE, ce qui est le point important de ce bloc. Un
+   * trigger AFTER s'exécute dans la MÊME transaction que l'UPDATE : sans ce
+   * garde-fou, une erreur d'émission annule l'appel de file. Mesuré en revue,
+   * deux fois, et sans aucun appareil enregistré :
+   *   - gabarit `queue_called` supprimé (c'est une DONNÉE, éditable par
+   *     définition) -> ERROR: no push template for key queue_called ;
+   *   - un jeton de plus dans le corps du gabarit -> ERROR: unresolved
+   *     placeholders.
+   * Dans les deux cas l'appel du client échouait, et il échouait à chaque
+   * nouvelle tentative : l'entrée restait `waiting` pour toujours.
+   *
+   * La règle est simple et elle ne souffre pas d'exception : PRÉVENIR ne doit
+   * jamais empêcher D'APPELER. Ce qui n'a pas pu être mis en file est perdu —
+   * et c'est le bon compromis, parce que le client, lui, est appelé.
+   */
+  begin
+    perform private.enqueue_push(
+      p_template_key := 'queue_called',
+      p_type := 'queue_called',
+      p_payload := jsonb_build_object('organization_name', coalesce(v_org_name, '')),
+      p_data := jsonb_build_object('kind', 'queue_entry', 'entry_id', new.id,
+                                   'organization_id', new.organization_id,
+                                   'slug', coalesce(v_org_slug, '')),
+      p_dedupe_prefix := 'queue:' || new.id::text || ':called',
+      p_user_id := new.booked_by_user_id,
+      p_queue_entry_id := new.id,
+      p_urgent := true,
+      p_tz := v_tz
+    );
+  exception when others then
+    null;
+  end;
 
   return null;
 end;
 $$;
 
 comment on function public.queue_entries_notify_called() is
-  'Émet la notification « c''est votre tour » au passage waiting -> called. AFTER trigger : l''appel est déjà acquis quand on prévient, et une erreur d''émission ne peut pas annuler un appel de file. Idempotent par dedupe_key, donc un appel rejoué (ou un UPDATE sans changement de statut) ne produit pas un second message.';
+'Émet la notification « c''est votre tour » au passage waiting -> called.
+
+Toute émission est sous EXCEPTION AVALÉE, et ce n''est pas une précaution de style : un trigger AFTER vit dans la transaction de l''UPDATE, donc un gabarit manquant ou mal formé (ce sont des DONNÉES, éditables) faisait échouer l''appel du client — mesuré en revue. Prévenir ne doit jamais empêcher d''appeler.
+
+Idempotent par dedupe_key, donc un appel rejoué (ou un UPDATE sans changement de statut) ne produit pas un second message.';
 
 revoke all on function public.queue_entries_notify_called() from public, anon, authenticated;
 
@@ -763,23 +851,38 @@ begin
     -- expiration reste e-mail et in-app : le fondateur a tranché QUATRE
     -- événements, et ce fichier n'en invente pas un cinquième.
     if v_user_id is not null and p_type in ('booking_confirmed', 'booking_declined', 'booking_reminder') then
-      perform private.enqueue_push(
-        p_template_key := p_type::text,
-        p_type := p_type,
-        p_payload := v_payload || jsonb_build_object(
-          'time_fr', to_char(p_appointment.starts_at at time zone v_timezone, 'HH24:MI'),
-          'time_en', to_char(p_appointment.starts_at at time zone v_timezone, 'HH24:MI')
-        ),
-        p_data := jsonb_build_object('kind', 'appointment', 'appointment_id', p_appointment.id),
-        p_dedupe_prefix := p_appointment.id::text || ':' || p_type::text || p_dedupe_suffix,
-        p_user_id := v_user_id,
-        -- Transactionnel : MASTER_SPEC §13 le veut immédiat. Un rappel de
-        -- rendez-vous, en revanche, n'a pas à sonner à 3 h du matin — c'est
-        -- l'ordonnanceur du rappel qui choisit son heure, pas les heures
-        -- calmes appliquées après coup.
-        p_urgent := true,
-        p_tz := v_timezone
-      );
+      begin
+        perform private.enqueue_push(
+          p_template_key := p_type::text,
+          p_type := p_type,
+          p_payload := v_payload || jsonb_build_object(
+            'time_fr', to_char(p_appointment.starts_at at time zone v_timezone, 'HH24:MI'),
+            'time_en', to_char(p_appointment.starts_at at time zone v_timezone, 'HH24:MI')
+          ),
+          p_data := jsonb_build_object('kind', 'appointment', 'appointment_id', p_appointment.id),
+          p_dedupe_prefix := p_appointment.id::text || ':' || p_type::text || p_dedupe_suffix,
+          p_user_id := v_user_id,
+          /*
+           * La réponse du professionnel est TRANSACTIONNELLE : immédiate,
+           * MASTER_SPEC §13.
+           *
+           * Le rappel, NON. Il tombe mécaniquement à T-2h : un rendez-vous à
+           * 09:00 sonnait donc à 07:00, et un rendez-vous à 08:00 à 06:00 —
+           * en pleine heure calme (175 rendez-vous à 09:00 en production).
+           * Trouvé en revue. Il est désormais DIFFÉRÉ à l'ouverture de la
+           * fenêtre, et abandonné si cette ouverture tombe après l'heure du
+           * rendez-vous : « votre rendez-vous est bientôt » reçu à l'heure du
+           * rendez-vous serait un mensonge.
+           */
+          p_urgent := p_type <> 'booking_reminder',
+          p_tz := v_timezone,
+          p_not_after := case when p_type = 'booking_reminder' then p_appointment.starts_at end
+        );
+      exception when others then
+        -- Même règle que pour l'appel de file : prévenir ne doit pas empêcher
+        -- de décider. La décision est déjà écrite plus haut.
+        null;
+      end;
     end if;
 
   elsif p_audience = 'business' then
@@ -849,14 +952,21 @@ begin
     select a.* from public.appointments a
     where a.status = 'confirmed'
       -- La fenêtre : le rendez-vous commence dans moins de deux heures et
-      -- n'a pas commencé. Le scheduler tourne chaque minute, donc une borne
-      -- large n'envoie pas deux fois — la clé de dédoublonnage s'en charge —
-      -- mais rattrape un scheduler arrêté une heure.
+      -- n'a pas commencé. Le scheduler tourne chaque minute ; une borne large
+      -- rattrape un scheduler arrêté une heure sans jamais envoyer deux fois.
       and a.starts_at > now()
       and a.starts_at <= now() + interval '2 hours'
+      /*
+       * Le marqueur est un REGISTRE dédié, et pas la ligne d'e-mail comme au
+       * premier jet : `emit_booking_notification` n'écrit l'e-mail que s'il y
+       * a une adresse, or un rendez-vous pris au comptoir a `customer_email`
+       * NULL par défaut. Ces rendez-vous étaient donc repris à CHAQUE tick
+       * (mesuré en revue : tick1=2, tick2=1, tick3=1), et le `limit` étant
+       * global, cent walk-in plus tôt dans la fenêtre auraient affamé les
+       * vrais rappels.
+       */
       and not exists (
-        select 1 from public.email_outbox o
-        where o.dedupe_key = a.id::text || ':booking_reminder:customer'
+        select 1 from public.appointment_reminder_log l where l.appointment_id = a.id
       )
     order by a.starts_at
     limit greatest(p_limit, 0)
@@ -866,16 +976,31 @@ begin
         v_appointment,
         'booking_reminder',
         'customer',
-        'Your appointment is soon',
+        'Rappel de rendez-vous',
         null,
         'booking_reminder'
       );
       v_count := v_count + 1;
     exception when others then
       -- Un rendez-vous dont le rappel échoue (gabarit, adresse) ne doit pas
-      -- arrêter le lot : les autres clients attendent le leur.
-      null;
+      -- arrêter le lot : les autres clients attendent le leur. L'échec se
+      -- voit dans les logs du scheduler, et le rendez-vous est marqué quand
+      -- même — le réessayer chaque minute ne le réparerait pas.
+      raise warning 'reminder failed for appointment %: %', v_appointment.id, sqlerrm;
     end;
+
+    -- Marqué DANS TOUS LES CAS, y compris quand il n'y avait rien à envoyer
+    -- (ni adresse, ni compte) : sinon il revient à chaque tick pour rien.
+    insert into public.appointment_reminder_log (appointment_id, channels)
+    values (
+      v_appointment.id,
+      concat_ws(
+        ',',
+        case when v_appointment.customer_email is not null then 'email' end,
+        case when v_appointment.customer_id is not null then 'in_app+push' end
+      )
+    )
+    on conflict (appointment_id) do nothing;
   end loop;
 
   return v_count;
@@ -885,7 +1010,9 @@ $$;
 comment on function private.enqueue_appointment_reminders(integer) is
 'Le déclencheur qui manquait au gabarit booking_reminder de B2. Deux heures avant le rendez-vous, une seule fois, sur les réservations CONFIRMÉES uniquement — une demande en attente n''est pas un rendez-vous, et lui envoyer un rappel serait une promesse fabriquée.
 
-Idempotent sans registre supplémentaire : la présence de la ligne d''e-mail `<appointment>:booking_reminder:customer` dans email_outbox EST la marque. Une seule vérité, pas un second registre à garder cohérent (même choix qu''enqueue_prospect_outreach).';
+Idempotent par `appointment_reminder_log`, et PAS par la ligne d''e-mail : celle-ci n''existe que s''il y a une adresse, et un rendez-vous pris au comptoir n''en a pas. Un rendez-vous sans rien à envoyer est marqué lui aussi, pour ne pas revenir à chaque tick.
+
+Le push du rappel respecte les heures calmes (différé), et n''est pas envoyé si le différé tombe après l''heure du rendez-vous.';
 
 revoke all on function private.enqueue_appointment_reminders(integer) from public, anon, authenticated;
 
@@ -1115,8 +1242,14 @@ begin
       end if;
 
     exception when others then
+      -- Une défaillance PASSAGÈRE (pg_net indisponible, file de requêtes
+      -- pleine) ne doit pas perdre définitivement un « c'est votre tour » :
+      -- on réessaie avec le même repli que la réconciliation, et on ne
+      -- renonce qu'au bout de cinq tentatives.
       update public.push_outbox
-        set status = 'failed',
+        set status = case when attempts >= 4 then 'failed'::public.push_delivery_status
+                          else 'queued'::public.push_delivery_status end,
+            next_attempt_at = now() + make_interval(mins => least(power(3, attempts)::integer, 480)),
             last_error = left(sqlerrm, 500),
             attempts = attempts + 1,
             updated_at = now()
@@ -1220,7 +1353,13 @@ begin
   -- risque de sonner deux fois pour rien.
   update public.push_outbox
     set status = case
-          when urgent and attempts < 5 then 'queued'::public.push_delivery_status
+          -- Réessayer, mais JAMAIS un message dont l'objet est révolu : un
+          -- « c'est votre tour » réémis six heures après l'appel est
+          -- exactement la donnée opérationnelle périmée que tout le reste du
+          -- lot refuse — le client est parti depuis longtemps. La borne est
+          -- donc l'ÂGE du message, pas sa seule urgence (corrigé en revue).
+          when urgent and attempts < 5 and created_at > now() - interval '15 minutes'
+            then 'queued'::public.push_delivery_status
           else 'failed'::public.push_delivery_status end,
         next_attempt_at = now() + interval '1 minute',
         last_error = 'provider response expired before reconciliation',
@@ -1387,12 +1526,17 @@ security definer
 set search_path = ''
 as $$
 begin
+  /*
+   * Les six passes d'une instruction : PostgreSQL n'en garantit pas l'ordre
+   * d'évaluation, et l'ordre n'a pas d'importance ici — chaque passe est
+   * indépendante et idempotente, une ligne prise par la dépêche d'un tick est
+   * réconciliée à un tick suivant. (Le premier jet annonçait en commentaire
+   * « réconcilier d'abord » alors que la liste dépêche d'abord : le
+   * commentaire était faux, pas le code.)
+   */
   return query select
     private.enqueue_appointment_reminders(100),
     private.enqueue_post_pushes(20),
-    -- Réconcilier AVANT de dépêcher : les réponses du tick précédent sont
-    -- arrivées pendant l'intervalle, et les conclure d'abord garde le nombre
-    -- de lignes « sending » borné (même ordre qu'en B2).
     private.push_dispatch_batch(25),
     private.push_reconcile_batch(100),
     private.push_receipt_request_batch(100),
@@ -1447,19 +1591,57 @@ begin
 
   v_locale := case when lower(coalesce(p_locale, 'fr')) = 'en' then 'en' else 'fr' end;
 
-  if v_user_id is null then
-    -- Sans compte, l'appareil doit dire QUELLE place il suit, et cette place
-    -- doit être vivante. Un identifiant d'entrée terminée ou inconnu ne donne
-    -- rien : ni ligne, ni information sur son existence (même message).
-    if p_queue_entry_id is null then
-      raise exception 'push registration requires a session or a live queue entry'
-        using errcode = '42501', detail = 'fadeup_push_error=subject_required';
-    end if;
+  if v_user_id is null and p_queue_entry_id is null then
+    raise exception 'push registration requires a session or a live queue entry'
+      using errcode = '42501', detail = 'fadeup_push_error=subject_required';
+  end if;
+
+  /*
+   * La place, si une place est donnée — et la validation est la MÊME avec ou
+   * sans session. Au premier jet, ces contrôles vivaient à l'intérieur du
+   * `if v_user_id is null` : un compte connecté pouvait donc rattacher son
+   * appareil à l'entrée de n'importe qui (mesuré en revue) et recevoir le
+   * « c'est votre tour » d'un inconnu.
+   *
+   * Trois exigences : l'entrée existe, elle est VIVANTE, et elle est soit la
+   * mienne, soit anonyme (dans ce dernier cas, détenir son identifiant est la
+   * preuve de possession — c'est déjà le contrat F1 de
+   * get_queue_entry_tracking). Un seul et même refus pour les trois : une
+   * réponse distincte permettrait d'énumérer les entrées de file.
+   */
+  if p_queue_entry_id is not null then
     select * into v_entry from public.queue_entries q where q.id = p_queue_entry_id;
-    if v_entry.id is null or v_entry.status not in ('waiting', 'called', 'in_service') then
+    if v_entry.id is null
+       or v_entry.status not in ('waiting', 'called', 'in_service')
+       or (v_entry.booked_by_user_id is not null
+           and (v_user_id is null or v_entry.booked_by_user_id <> v_user_id)) then
       raise exception 'push registration requires a session or a live queue entry'
         using errcode = '42501', detail = 'fadeup_push_error=subject_required';
     end if;
+
+    /*
+     * PLAFOND par entrée. L'enregistrement est ouvert à `anon` et ne vérifie
+     * pas le jeton auprès d'Expo (impossible sans clé) : sans plafond, un
+     * client assis dans la salle d'attente pouvait enregistrer des dizaines
+     * de milliers de jetons factices sur sa propre place et faire ÉCHOUER
+     * l'appel de file (8 s de `statement_timeout`). Mesuré en revue.
+     */
+    if (select count(*) from public.push_devices d
+         where d.queue_entry_id = p_queue_entry_id
+           and d.revoked_at is null
+           and d.token <> p_token) >= 5 then
+      raise exception 'too many devices for this queue entry'
+        using errcode = '54000', detail = 'fadeup_push_error=device_limit';
+    end if;
+  end if;
+
+  -- PLAFOND par compte. Dix appareils actifs, c'est déjà généreux ; au-delà,
+  -- c'est un jeton qui tourne sans jamais être révoqué, ou un abus.
+  if v_user_id is not null
+     and (select count(*) from public.push_devices d
+           where d.user_id = v_user_id and d.revoked_at is null and d.token <> p_token) >= 10 then
+    raise exception 'too many devices for this account'
+      using errcode = '54000', detail = 'fadeup_push_error=device_limit';
   end if;
 
   insert into public.push_devices (token, platform, user_id, queue_entry_id, locale, last_seen_at)
@@ -1485,7 +1667,9 @@ end;
 $$;
 
 comment on function public.register_push_device(text, text, text, uuid) is
-'Enregistre ou rafraîchit le jeton push d''un appareil. Multi-appareils par compte (la clé est le jeton). Sans session, exige l''identifiant d''une entrée de file VIVANTE — le seul cas où un anonyme est joignable pour une raison légitime, et un identifiant d''entrée est déjà, dans le contrat F1, la preuve de possession de la place. Un jeton révoqué que l''on ré-enregistre redevient actif.';
+'Enregistre ou rafraîchit le jeton push d''un appareil. Multi-appareils par compte (la clé est le jeton). Sans session, exige l''identifiant d''une entrée de file VIVANTE — le seul cas où un anonyme est joignable pour une raison légitime, et un identifiant d''entrée est déjà, dans le contrat F1, la preuve de possession de la place. Un jeton révoqué que l''on ré-enregistre redevient actif.
+
+Une entrée de file donnée est validée DE LA MÊME FAÇON avec ou sans session — existante, vivante, et mienne ou anonyme : sans cette symétrie, un compte connecté pouvait s''accrocher à l''entrée d''un inconnu. Plafonds : cinq appareils par entrée de file, dix par compte — sans eux, un client de la salle d''attente pouvait faire échouer l''appel de file en enregistrant des milliers de jetons factices.';
 
 revoke all on function public.register_push_device(text, text, text, uuid) from public;
 grant execute on function public.register_push_device(text, text, text, uuid) to anon, authenticated;

@@ -91,8 +91,13 @@ dans la base de production :
 users_email_partial_key = UNIQUE (email) WHERE is_sso_user = false
 ```
 
-Un second compte portant la même adresse est **impossible au niveau du schéma**.
-Le risque « deux comptes pour la même adresse » n'existe pas.
+Un second compte portant **exactement** la même adresse est impossible : l'index
+la refuse. Deux nuances, relevées en revue et qu'il serait malhonnête de taire :
+l'index porte sur `email` **brut** et non sur `lower(email)` — une variante de
+casse (`Karim@…` contre `karim@…`) échapperait donc à l'unicité si GoTrue ne
+normalisait pas de son côté — et il exempte les comptes SSO, que FadeUp n'utilise
+pas. Le risque « deux comptes pour la même adresse écrite à l'identique »
+n'existe pas ; le reste dépend de GoTrue, pas du schéma.
 
 Et le rapprochement n'est pas une hypothèse : **il a déjà eu lieu deux fois**.
 
@@ -104,8 +109,10 @@ compte 7a647d6a : email+google | identités créées 2026-08-09 06:39 puis 2026-
 Deux comptes créés par e-mail en août se sont vu **rattacher** une identité
 Google des semaines plus tard, **sous le même `user_id`**. GoTrue v2.189 relie
 l'identité Google au compte existant quand l'adresse correspond (Google renvoie
-toujours une adresse vérifiée pour ses propres comptes). 258 comptes, 4 avec
-Google, 2 avec les deux identités.
+toujours une adresse vérifiée pour ses propres comptes). **257 comptes**, 4 avec
+Google, 2 avec les deux identités. Ce comportement est celui de CETTE
+configuration : `GOTRUE_MAILER_AUTOCONFIRM=true`, et tous les comptes existants
+sont confirmés.
 
 **Comportement retenu** : on s'appuie sur ce rapprochement, on n'en construit
 pas un second. Côté FadeUp, rien n'avait besoin d'être ajouté et rien ne l'a
@@ -286,12 +293,23 @@ défauts `queue_call`/`booking_response`/`appointment_reminder` actifs et
 backfill, et un compte créé après ce lot se comporte comme un compte créé avant.
 
 MASTER_SPEC §13 exclut le transactionnel des préférences. Le lot tranche
-autrement, et l'assume : **ces interrupteurs ne gouvernent que le PUSH**. Couper
-l'appel de file fait taire l'écran verrouillé ; **la notification in-app et
-l'e-mail transactionnel partent quoi qu'il arrive**. L'information n'est jamais
-retenue — seule la sonnerie l'est. iOS ne propose au client qu'un tout-ou-rien ;
-une préférence par catégorie est strictement meilleure que ce tout-ou-rien, et
-l'écran l'explique en une phrase.
+autrement, et l'assume : **ces interrupteurs ne gouvernent que le PUSH**. iOS ne
+propose au client qu'un tout-ou-rien ; une préférence par catégorie est
+strictement meilleure que ce tout-ou-rien.
+
+**Mais la formulation de l'écran était trop généreuse, et la revue l'a
+attrapée.** Le premier jet disait « vos confirmations restent visibles dans
+l'application et par e-mail, quoi qu'il arrive ». C'est vrai des réponses à une
+demande et des rappels — il existe un gabarit e-mail pour chacun. **Ce n'est pas
+vrai de l'appel de file** : il n'existe aucun gabarit e-mail `queue_called`
+(vérifié : 25 clés dans `email_templates`, pas celle-là), et la ligne in-app
+n'est lue par **aucune surface cliente** aujourd'hui. Couper cet interrupteur-là,
+c'est donc bien le silence.
+
+L'écran le dit maintenant tel quel : « Ces réglages ne concernent que les
+notifications sur votre téléphone. Vos confirmations et rappels de rendez-vous
+vous restent envoyés par e-mail. » Et la ligne de l'appel de file ajoute : « sans
+elle, gardez l'écran de suivi ouvert ».
 
 **Une garde structurelle** : la catégorie est lue sur le **gabarit**, pas sur
 l'appelant. Un émetteur ne peut donc pas déguiser un post en appel de file pour
@@ -304,8 +322,18 @@ exacte** que B2 applique à la prospection (`enqueue_prospect_outreach`). Une
 seconde politique d'heures calmes serait une divergence, pas un choix.
 
 Appliquées **par différé, pas par annulation** : un nouveau post reste
-intéressant à 8 h du matin. `queue_call` passe **à toute heure** — le client est
-dans le salon, debout.
+intéressant à 8 h du matin. **Seuls passent à toute heure** l'appel de file (le
+client est dans le salon, debout) et la réponse du professionnel à une demande
+(transactionnel immédiat, MASTER_SPEC §13).
+
+**Le rappel, non — et c'était un défaut du premier jet.** Il tombe
+mécaniquement à T-2h : un rendez-vous à 09:00 sonnait à 07:00, un rendez-vous à
+08:00 à 06:00, en pleine heure calme (il y a **175 rendez-vous à 09:00** en
+production). Il est désormais différé à l'ouverture de la fenêtre, et
+**abandonné** si cette ouverture tombe après l'heure du rendez-vous : « votre
+rendez-vous est bientôt » reçu à l'heure du rendez-vous serait un mensonge. Le
+contrôle correspondant calcule l'attendu au lieu de le supposer, pour donner le
+même verdict à 3 h du matin et à midi.
 
 **Ce que le lot n'invente pas** : le fuseau du destinataire. `profiles` ne porte
 pas de pays, et il n'existe aucun contrat de fuseau client. Les heures calmes
@@ -376,7 +404,7 @@ la forme de la réponse est **exactement** celle que la réconciliation lit
 `DeviceNotRegistered`. Il ne manque que le dernier saut, APNs → téléphone.
 
 **La machine complète, sur restauration fidèle de la production puis en
-production** : 69 contrôles, 69 PASS (§7.1), dont la dépêche, la réconciliation
+production** : 80 contrôles, 80 PASS (§7.1), dont la dépêche, la réconciliation
 d'un ticket `ok`, la révocation d'un jeton sur `DeviceNotRegistered` **au ticket
 ET au reçu**, le non-réessai d'un jeton mort, le non-envoi à un appareil
 révoqué. Les réponses du fournisseur y sont **synthétisées** dans
@@ -446,10 +474,22 @@ retour au premier plan déclenche un refocus. Le client n'a rien à faire. La
 persistance ajoutée par ce lot n'y change rien : au retour du réseau, la donnée
 persistée est immédiatement remplacée par la donnée fraîche.
 
-**Un défaut corrigé en chemin** : le bandeau hors connexion se pose en absolu
-par-dessus l'écran (choix M1b, imposé par react-native-screens) et **mangeait le
-titre** de l'onglet Réservations — invisible en M1b, où l'écran hors ligne était
-un bloc centré. Constaté à la capture, corrigé par une réserve de place.
+**Trois défauts corrigés en chemin** :
+
+1. Le bandeau hors connexion se pose en absolu par-dessus l'écran (choix M1b,
+   imposé par react-native-screens) et **mangeait le titre** de l'onglet
+   Réservations — invisible en M1b, où l'écran hors ligne était un bloc centré.
+   Constaté à la capture, corrigé par une réserve de place.
+2. **La persistance fuyait entre comptes** : les clés persistées ne portent pas
+   d'identifiant de compte, et le cache vit sept jours. B qui se connecte après
+   A voyait, hors connexion, les rendez-vous de A. Corrigé par une purge du
+   disque et des requêtes personnelles à **tout** changement de compte — et
+   c'est bien ce lot qui avait créé la fuite : avant, le cache mourait avec le
+   processus (§7bis-4).
+3. **Les mutations en pause étaient persistées** : nom, téléphone, GPS et jeton
+   de pointage écrits au disque pour sept jours après une coupure de réseau sur
+   « Rejoindre la file ». La liste blanche ne gouverne que les REQUÊTES ; les
+   mutations ont maintenant leur propre refus explicite (§7bis-5).
 
 ---
 
@@ -489,9 +529,9 @@ contrat serveur n'existait. Il existe.
    `pg_dump -s` d'avant et d'après. **Diff de 5 lignes**, toutes attendues : les
    trois étiquettes d'enum ajoutées à `notification_type`. Artefact :
    `docs/reports/artifacts/m1ca/rollback_diff_T0_vs_T2.txt`.
-5. **Suite de vérification sur le bac** : 69 PASS, 0 FAIL.
+5. **Suite de vérification sur le bac** : 80 PASS, 0 FAIL.
 6. **Application en production**, même ordre, 0 erreur.
-7. **Suite de vérification en production** : 69 PASS, 0 FAIL, **rien de
+7. **Suite de vérification en production** : 80 PASS, 0 FAIL, **rien de
    commité** (transaction + rollback final). Artefacts
    `verify_m1ca_sandbox.txt` et `verify_m1ca_production.txt`.
 8. **`grant execute` explicites** : `register_push_device` et
@@ -543,15 +583,15 @@ docker compose -f infra/scheduler/docker-compose.yml up -d --force-recreate
 
 | Contrôle | Résultat |
 | --- | --- |
-| `verify_m1ca.sql` sur restauration fidèle | **69 PASS / 0 FAIL** |
-| `verify_m1ca.sql` en production | **69 PASS / 0 FAIL**, rien de commité |
+| `verify_m1ca.sql` sur restauration fidèle | **80 PASS / 0 FAIL** |
+| `verify_m1ca.sql` en production | **80 PASS / 0 FAIL**, rien de commité |
 | Retour arrière `up → down → up` | schéma identique **à 3 étiquettes d'enum près** |
 | Sonde réelle API Expo depuis la production | 200, forme de réponse conforme |
 | Tick sous `fadeup_scheduler` en production | `0|0|0|0|0|0` |
 
 Les chantiers de la suite : jetons (10 contrôles), préférences (4), événements
-(9), heures calmes (4), gabarits (3), rappel (6), **nouveau post (6)**,
-transport (11), privilèges (8), RLS (3). Les heures calmes sont éprouvées **sans coder aucune heure** : le
+(9), heures calmes (4), gabarits (3), rappel (10), **ce que la revue a trouvé
+(8)**, nouveau post (6), transport (11), privilèges (8), RLS (3). Les heures calmes sont éprouvées **sans coder aucune heure** : le
 test cherche un fuseau actuellement en heure calme et un fuseau actuellement en
 journée, puis vérifie les deux comportements — il donne donc le même verdict à
 3 h du matin et à midi.
@@ -561,14 +601,14 @@ journée, puis vérifie les deux comportements — il donne donc le même verdic
 | Contrôle | Résultat |
 | --- | --- |
 | `tsc --noEmit` | **0 erreur** |
-| `vitest run` | **202 tests / 25 fichiers**, tous verts (163 en M1b, +39) |
+| `vitest run` | **203 tests / 25 fichiers**, tous verts (163 en M1b, +40) |
 | `expo lint` | **0 erreur**, 6 avertissements **préexistants** (fichiers copiés du web, `i18n/index.ts`) |
 | `npm run check:drift` | **vert** — avant ET après (§8) |
 | `expo export --platform ios` | bundle Hermes **5,9 Mo**, 0 erreur |
 | `expo export --platform web` | 0 erreur (véhicule de QA) |
 
 Tests neufs : `permissionMoment` (9), `pushAvailability` (8), `notificationRoute`
-(6), `connectivity` (7), `persistence` (9), `mobileCatalog` (3, garde anti-clé
+(6), `connectivity` (7), `persistence` (10), `mobileCatalog` (3, garde anti-clé
 i18n brute).
 
 ### 7.3 Vérification visuelle
@@ -625,6 +665,86 @@ Les trois ont été lancés dans le worktree, via un lien vers les `node_modules
 du dépôt principal — même commit, même verrou de dépendances, donc mêmes
 résultats. Le fait structurant reste que **la branche ne modifie aucun fichier
 web** : le diff le prouve directement.
+
+---
+
+## 7bis. La revue indépendante, et ce qu'elle a cassé
+
+Une revue indépendante a été passée sur la branche, avec accès en lecture à la
+production et au bac d'essai. **Verdict initial : NON PASS.** Elle a trouvé, en
+les PROUVANT par exécution, sept défauts que la suite de vérification ne voyait
+pas. Tous sont corrigés, tous ont désormais un contrôle qui les empêche de
+revenir. Les voici, parce qu'ils disent quelque chose d'utile sur le lot.
+
+**1. Un trigger AFTER vit dans la transaction de l'UPDATE.** Mon commentaire
+affirmait le contraire — « une erreur d'émission ne peut pas annuler un appel de
+file » — et c'était faux. Supprimer le gabarit `queue_called` (une **donnée**,
+que la section 4 du fichier présente elle-même comme corrigeable sans
+redéploiement) suffisait à faire **échouer l'appel du client**, et à le faire
+échouer à chaque nouvelle tentative : l'entrée restait `waiting` pour toujours.
+Correction : toute émission du trigger est sous exception avalée. **Prévenir ne
+doit jamais empêcher d'appeler.**
+
+**2. Le fan-out se faisait dans cette même transaction, sans borne.**
+`register_push_device` est ouvert à `anon` et ne peut pas vérifier un jeton
+auprès d'Expo. Un client assis dans la salle d'attente pouvait donc enregistrer
+des milliers de jetons factices **sur sa propre place** : mesuré, 40 000
+appareils font dépasser le `statement_timeout` de 8 s du rôle `authenticated`,
+et l'appel de file **échoue**. Corrections : vingt appareils au plus par
+émission, cinq par entrée de file, dix par compte.
+
+**3. Le retrait de l'appareil à la déconnexion ne retirait rien.** Il partait
+*après* `signOut()`, donc en rôle anonyme : `auth.uid()` valait NULL et la garde
+du serveur n'appariait plus rien. Le client effaçait ensuite son jeton local
+quoi qu'il arrive, donc sans possibilité de réessai. Téléphone familial, A se
+déconnecte : **les appels de file, rappels et confirmations de A continuaient de
+s'afficher sur l'écran verrouillé** — salon, service, heure. Corrections :
+révocation **avant** la déconnexion, et le jeton local n'est oublié que si le
+serveur a répondu.
+
+**4. La persistance hors ligne fuyait entre comptes — et c'est ce lot qui a
+créé la fuite.** `bookings/list` et `push/preferences` ne portent pas
+d'identifiant de compte, et le cache vit maintenant sept jours au disque : B qui
+se connecte après A voyait, hors connexion, les rendez-vous de A. Avant ce lot,
+le cache mourait avec le processus. Correction : purge du disque et des requêtes
+personnelles à **tout** changement de compte, déconnexion comprise.
+
+**5. Les mutations en pause étaient écrites au disque.** La liste blanche ne
+gouverne que les requêtes ; le défaut de la librairie persiste les variables des
+mutations en pause. Une coupure de réseau au moment de « Rejoindre la file »
+écrivait donc, pour sept jours, **le nom du client, son téléphone, ses
+coordonnées GPS et le jeton de pointage du salon**. Correction :
+`shouldDehydrateMutation: () => false`, plus un contrôle.
+
+**6. Le rappel ignorait les heures calmes** (§3.5), et **7. un rendez-vous pris
+au comptoir sans adresse n'était jamais marqué** : le marqueur d'idempotence
+était la ligne d'e-mail, qui n'existe que s'il y a une adresse. Mesuré :
+tick1=2, tick2=1, tick3=1 — repris à chaque minute, et le `limit` étant global,
+cent walk-in plus tôt dans la fenêtre auraient **affamé les vrais rappels**.
+Correction : un registre dédié, `appointment_reminder_log`, qui marque aussi ce
+qu'il n'y avait rien à envoyer.
+
+**Plus six corrections de moindre portée** : une entrée de file devenait
+indestructible dès qu'un appareil anonyme y était rattaché (un CHECK contre un
+`on delete set null` — le CHECK est tombé, il ne protégeait rien) ; le chemin
+authentifié de `register_push_device` ne validait pas du tout l'entrée fournie
+(un compte pouvait s'accrocher à l'entrée d'un inconnu) ; une défaillance
+passagère de pg_net perdait définitivement un « c'est votre tour » (repli
+exponentiel désormais) ; le balayage à six heures pouvait ressusciter un appel
+de file périmé (borné par l'âge du message) ; un commentaire annonçait un ordre
+d'exécution que le code n'avait pas ; et `pushUnavailableMessageKey` était testé
+d'un côté, réimplémenté de l'autre.
+
+**La revue a aussi confirmé** ce qui compte le plus : les privilèges et la RLS
+sont exacts sous les rôles réels, aucune position de file périmée n'est
+affichée, la permission n'est jamais demandée hors du bon moment, l'inférence
+de l'index partiel est correcte sur tous les chemins, et l'absence de
+`projectId` ne casse rien d'autre que le push.
+
+**Ce que j'en retiens, et qui valait le détour** : mes onze premiers contrôles
+de transport éprouvaient le chemin heureux et les échecs du *fournisseur*. Aucun
+n'éprouvait ce qui se passe quand **notre propre** donnée est absente ou
+malformée. C'est exactement là qu'étaient les deux défauts bloquants.
 
 ---
 
@@ -744,6 +864,16 @@ de route `/platform` n'est touché — même preuve, c'est du web.
    « permission accordée » dans le navigateur. Cause identifiée (chemin push du
    rendu web), conséquence utile : une **borne de dix secondes** ajoutée à
    l'obtention du jeton, qui protège aussi l'application réelle (§10.3).
+
+8. **Sept défauts n'ont PAS été trouvés par moi**, mais par la revue
+   indépendante, et deux étaient bloquants : un trigger AFTER qui annulait
+   l'appel de file, un fan-out non borné dans cette même transaction, un
+   retrait d'appareil qui ne retirait rien, une fuite de réservations entre
+   comptes, des mutations persistées avec téléphone et GPS, un rappel qui
+   sonnait à 06:00, et un walk-in retraité à chaque tick. **Tous corrigés, tous
+   désormais couverts par un contrôle.** Le détail, y compris ce que j'en
+   retiens sur mes propres tests, est en §7bis — c'est la partie du rapport que
+   je relirais en premier.
 
 ### 10.3 Deux défauts trouvés en relisant, et corrigés
 

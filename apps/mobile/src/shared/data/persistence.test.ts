@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { bookingKeys, discoveryKeys, queueKeys } from '@/shared/data/keys'
-import { shouldPersistQueryKey } from '@/shared/data/persistence'
+import { shouldDehydrateMutation, shouldPersistQueryKey } from '@/shared/data/persistence'
 
 /**
  * La décision du fondateur, éprouvée sur les VRAIES clés de requête du
@@ -46,6 +46,13 @@ describe('liste blanche de persistance hors ligne', () => {
   it("refuse par DÉFAUT : une clé inconnue n'est pas persistée", () => {
     expect(shouldPersistQueryKey(['quelque-chose-de-neuf'])).toBe(false)
     expect(shouldPersistQueryKey([])).toBe(false)
+  })
+
+  it("ne persiste AUCUNE mutation en pause", () => {
+    /* Le défaut de la librairie persisterait les variables des mutations en
+       pause : une coupure de réseau sur « Rejoindre la file » écrirait au
+       disque le nom, le téléphone, le GPS et le jeton de pointage. */
+    expect(shouldDehydrateMutation()).toBe(false)
   })
 
   it("un préfixe partiel ne suffit pas", () => {

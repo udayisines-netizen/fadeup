@@ -22,82 +22,95 @@ DO
 DO
 DO
 DO
-   chantier    |                          check_name                          | verdict |                   detail                   
----------------+--------------------------------------------------------------+---------+--------------------------------------------
- jetons        | anonyme + place vivante : enregistrement accepté             | PASS    | 
- jetons        | anonyme sans place : refusé                                  | PASS    | 42501
- jetons        | anonyme sur place terminée : refusé                          | PASS    | 42501
- jetons        | jeton mal formé : refusé                                     | PASS    | 22023
- jetons        | plateforme inconnue : refusée                                | PASS    | 22023
- jetons        | deux appareils pour un compte                                | PASS    | 2 appareil(s)
- jetons        | ré-enregistrement = mise à jour, pas doublon                 | PASS    | 1 ligne(s)
- jetons        | la langue de l'appareil se met à jour                        | PASS    | 
- jetons        | un tiers ne révoque pas mon appareil                         | PASS    | 
- jetons        | révocation par le propriétaire                               | PASS    | 
- jetons        | un jeton ré-enregistré redevient actif                       | PASS    | 
- préférences   | défauts rendus sans ligne en base                            | PASS    | file=t demande=t rappel=t social=f
- préférences   | une préférence écrite se relit                               | PASS    | 
- préférences   | catégorie inconnue refusée                                   | PASS    | 22023
- préférences   | anonyme : lecture des préférences refusée                    | PASS    | 42501
- événements    | appel de file : un push par appareil du compte               | PASS    | 2
- événements    | l'appel de file est urgent                                   | PASS    | 
- événements    | l'appel de file part tout de suite (heures calmes ignorées)  | PASS    | 2
- événements    | l'appel de file écrit aussi la ligne in-app                  | PASS    | 1
- événements    | rendu par langue d'appareil (fr + en)                        | PASS    | C'est votre tour | It's your turn
- événements    | émission rejouée : aucun doublon                             | PASS    | 2
- préférences   | catégorie coupée : aucun push mis en file                    | PASS    | 0
- préférences   | un émetteur ne déguise pas un post en appel de file          | PASS    | 0
- heures calmes | un fuseau de nuit et un fuseau de jour ont été trouvés       | PASS    | Etc/GMT-13 / Etc/GMT+6
- heures calmes | en heure calme, l'envoi est DIFFÉRÉ à 08:00 locale           | PASS    | Etc/GMT-13 -> 2026-09-12 19:00:00+00
- heures calmes | en journée, l'envoi part tout de suite                       | PASS    | Etc/GMT+6 -> 2026-09-12 18:00:21.631008+00
- heures calmes | fuseau illisible : repli, pas d'erreur                       | PASS    | 
- événements    | appareil anonyme : rien en file avant son appel              | PASS    | 0
- événements    | anonyme : aucune catégorie hors appel de file                | PASS    | 0
- événements    | anonyme : « c'est votre tour » lui parvient                  | PASS    | 1
- gabarits      | jeton non résolu : refus                                     | PASS    | 22023
- gabarits      | cinq gabarits × deux langues                                 | PASS    | 10
- gabarits      | aucun gabarit orphelin d'une langue                          | PASS    | 0
- rappel        | le rappel part une fois, et une seule                        | PASS    | 1er=1 2e=0
- rappel        | le gabarit e-mail booking_reminder de B2 est enfin déclenché | PASS    | 1
- rappel        | le rappel part aussi en push (un par appareil)               | PASS    | 2
- rappel        | une DEMANDE en attente ne reçoit pas de rappel               | PASS    | 0
- rappel        | demande acceptée : push en plus de l'in-app et de l'e-mail   | PASS    | 4 (2 appareils × 2 chemins d'émission)
- rappel        | chaque push de réponse porte une clé distincte               | PASS    | 4
- rappel        | la réponse à une demande est transactionnelle (immédiate)    | PASS    | 0
- post          | un nouveau post est diffusé une fois, et une seule           | PASS    | 1er=2 2e=0
- post          | le registre de diffusion est posé                            | PASS    | 1
- post          | un push social par appareil, JAMAIS urgent                   | PASS    | 2
- post          | aucun push social daté dans le passé                         | PASS    | 0
- post          | catégorie sociale coupée : aucun push                        | PASS    | 0
- post          | un post masqué n'est pas diffusé                             | PASS    | 0
- transport     | la dépêche prend des lignes en file                          | PASS    | 5
- transport     | une ligne dépêchée retient son identifiant pg_net            | PASS    | 5
- transport     | aucune ligne n'est dépêchée deux fois                        | PASS    | 0
- transport     | ticket ok : la ligne est « sent » et garde le ticket         | PASS    | 1
- transport     | DeviceNotRegistered : le jeton est retiré                    | PASS    | 1
- transport     | un jeton mort n'est pas réessayé                             | PASS    | 1
- transport     | un appareil révoqué n'est plus dépêché                       | PASS    | 1
- transport     | une demande de reçus est enregistrée                         | PASS    | 1
- transport     | un reçu n'est pas réclamé deux fois                          | PASS    | 1
- transport     | DeviceNotRegistered au REÇU : conclu et jeton retiré         | PASS    | 1
- transport     | la demande de reçus est close                                | PASS    | 0
- transport     | chaque envoi est tracé (quoi, à qui, quand, résultat)        | PASS    | 0
- privilèges    | enregistrement et retrait : anon + authenticated             | PASS    | 2
- privilèges    | préférences : authenticated seul                             | PASS    | 2
- privilèges    | run_push_maintenance : fadeup_scheduler seul                 | PASS    | 1
- privilèges    | aucune fonction private du lot n'est cliente                 | PASS    | aucune
- privilèges    | la fonction de trigger n'est pas cliente                     | PASS    | 0
- privilèges    | RLS activée et forcée sur les six tables                     | PASS    | toutes
- privilèges    | aucun verbe d'écriture client sur les tables du lot          | PASS    | aucun
- privilèges    | anon ne lit aucune table du lot                              | PASS    | aucune
- RLS           | un tiers ne lit aucun jeton d'appareil                       | PASS    | 0
- RLS           | un tiers ne lit aucune préférence                            | PASS    | 0
- RLS           | un tiers ne lit aucun envoi                                  | PASS    | 0
-(69 rows)
+DO
+DO
+   chantier    |                            check_name                             | verdict |                   detail                   
+---------------+-------------------------------------------------------------------+---------+--------------------------------------------
+ jetons        | anonyme + place vivante : enregistrement accepté                  | PASS    | 
+ jetons        | anonyme sans place : refusé                                       | PASS    | 42501
+ jetons        | anonyme sur place terminée : refusé                               | PASS    | 42501
+ jetons        | jeton mal formé : refusé                                          | PASS    | 22023
+ jetons        | plateforme inconnue : refusée                                     | PASS    | 22023
+ jetons        | deux appareils pour un compte                                     | PASS    | 2 appareil(s)
+ jetons        | ré-enregistrement = mise à jour, pas doublon                      | PASS    | 1 ligne(s)
+ jetons        | la langue de l'appareil se met à jour                             | PASS    | 
+ jetons        | un tiers ne révoque pas mon appareil                              | PASS    | 
+ jetons        | révocation par le propriétaire                                    | PASS    | 
+ jetons        | un jeton ré-enregistré redevient actif                            | PASS    | 
+ préférences   | défauts rendus sans ligne en base                                 | PASS    | file=t demande=t rappel=t social=f
+ préférences   | une préférence écrite se relit                                    | PASS    | 
+ préférences   | catégorie inconnue refusée                                        | PASS    | 22023
+ préférences   | anonyme : lecture des préférences refusée                         | PASS    | 42501
+ événements    | appel de file : un push par appareil du compte                    | PASS    | 2
+ événements    | l'appel de file est urgent                                        | PASS    | 
+ événements    | l'appel de file part tout de suite (heures calmes ignorées)       | PASS    | 2
+ événements    | l'appel de file écrit aussi la ligne in-app                       | PASS    | 1
+ événements    | rendu par langue d'appareil (fr + en)                             | PASS    | C'est votre tour | It's your turn
+ événements    | émission rejouée : aucun doublon                                  | PASS    | 2
+ préférences   | catégorie coupée : aucun push mis en file                         | PASS    | 0
+ préférences   | un émetteur ne déguise pas un post en appel de file               | PASS    | 0
+ heures calmes | un fuseau de nuit et un fuseau de jour ont été trouvés            | PASS    | Etc/GMT-13 / Etc/GMT+6
+ heures calmes | en heure calme, l'envoi est DIFFÉRÉ à 08:00 locale                | PASS    | Etc/GMT-13 -> 2026-09-12 19:00:00+00
+ heures calmes | en journée, l'envoi part tout de suite                            | PASS    | Etc/GMT+6 -> 2026-09-12 18:19:00.894673+00
+ heures calmes | fuseau illisible : repli, pas d'erreur                            | PASS    | 
+ événements    | appareil anonyme : rien en file avant son appel                   | PASS    | 0
+ événements    | anonyme : aucune catégorie hors appel de file                     | PASS    | 0
+ événements    | anonyme : « c'est votre tour » lui parvient                       | PASS    | 1
+ gabarits      | jeton non résolu : refus                                          | PASS    | 22023
+ gabarits      | cinq gabarits × deux langues                                      | PASS    | 10
+ gabarits      | aucun gabarit orphelin d'une langue                               | PASS    | 0
+ rappel        | le rappel part une fois, et une seule                             | PASS    | 1er=1 2e=0
+ rappel        | le gabarit e-mail booking_reminder de B2 est enfin déclenché      | PASS    | 1
+ rappel        | le rappel part aussi en push (un par appareil)                    | PASS    | 2
+ rappel        | le rappel n'est JAMAIS urgent (il respecte les heures calmes)     | PASS    | 0
+ rappel        | aucun rappel daté dans le passé                                   | PASS    | 0
+ rappel        | le rendez-vous rappelé est inscrit au registre                    | PASS    | 1
+ rappel        | une DEMANDE en attente ne reçoit pas de rappel                    | PASS    | 0
+ rappel        | demande acceptée : push en plus de l'in-app et de l'e-mail        | PASS    | 4 (2 appareils × 2 chemins d'émission)
+ rappel        | chaque push de réponse porte une clé distincte                    | PASS    | 4
+ rappel        | la réponse à une demande est transactionnelle (immédiate)         | PASS    | 0
+ revue         | gabarit manquant : l'appel de file PASSE quand même               | PASS    | called
+ revue         | gabarit manquant : rien n'est mis en file, et rien ne casse       | PASS    | 9 vs 9
+ revue         | cinq appareils par entrée de file : acceptés                      | PASS    | 5
+ revue         | au-delà du plafond : refusé                                       | PASS    | 54000
+ revue         | une entrée de file reste supprimable avec des appareils rattachés | PASS    | 
+ revue         | un compte ne s'accroche pas à l'entrée d'un autre                 | PASS    | 42501
+ revue         | un rendez-vous sans adresse n'est pas repris à chaque tick        | PASS    | tick1=1 tick2=0 tick3=0
+ revue         | il est marqué quand même (rien à lui envoyer)                     | PASS    | 1
+ post          | un nouveau post est diffusé une fois, et une seule                | PASS    | 1er=2 2e=0
+ post          | le registre de diffusion est posé                                 | PASS    | 1
+ post          | un push social par appareil, JAMAIS urgent                        | PASS    | 2
+ post          | aucun push social daté dans le passé                              | PASS    | 0
+ post          | catégorie sociale coupée : aucun push                             | PASS    | 0
+ post          | un post masqué n'est pas diffusé                                  | PASS    | 0
+ transport     | la dépêche prend des lignes en file                               | PASS    | 5
+ transport     | une ligne dépêchée retient son identifiant pg_net                 | PASS    | 5
+ transport     | aucune ligne n'est dépêchée deux fois                             | PASS    | 0
+ transport     | ticket ok : la ligne est « sent » et garde le ticket              | PASS    | 1
+ transport     | DeviceNotRegistered : le jeton est retiré                         | PASS    | 1
+ transport     | un jeton mort n'est pas réessayé                                  | PASS    | 1
+ transport     | un appareil révoqué n'est plus dépêché                            | PASS    | 1
+ transport     | une demande de reçus est enregistrée                              | PASS    | 1
+ transport     | un reçu n'est pas réclamé deux fois                               | PASS    | 1
+ transport     | DeviceNotRegistered au REÇU : conclu et jeton retiré              | PASS    | 1
+ transport     | la demande de reçus est close                                     | PASS    | 0
+ transport     | chaque envoi est tracé (quoi, à qui, quand, résultat)             | PASS    | 0
+ privilèges    | enregistrement et retrait : anon + authenticated                  | PASS    | 2
+ privilèges    | préférences : authenticated seul                                  | PASS    | 2
+ privilèges    | run_push_maintenance : fadeup_scheduler seul                      | PASS    | 1
+ privilèges    | aucune fonction private du lot n'est cliente                      | PASS    | aucune
+ privilèges    | la fonction de trigger n'est pas cliente                          | PASS    | 0
+ privilèges    | RLS activée et forcée sur les six tables                          | PASS    | toutes
+ privilèges    | aucun verbe d'écriture client sur les tables du lot               | PASS    | aucun
+ privilèges    | anon ne lit aucune table du lot                                   | PASS    | aucune
+ RLS           | un tiers ne lit aucun jeton d'appareil                            | PASS    | 0
+ RLS           | un tiers ne lit aucune préférence                                 | PASS    | 0
+ RLS           | un tiers ne lit aucun envoi                                       | PASS    | 0
+(80 rows)
 
  verdict | count 
 ---------+-------
- PASS    |    69
+ PASS    |    80
 (1 row)
 
 ROLLBACK

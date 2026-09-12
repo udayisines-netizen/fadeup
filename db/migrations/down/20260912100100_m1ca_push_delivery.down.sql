@@ -9,8 +9,8 @@
 --      arrière ne peut pas se réduire à un DROP ;
 --   3. les fonctions et les tables du lot sont supprimées.
 --
--- Les données de `push_outbox` et `push_devices` sont PERDUES par ce retour
--- arrière : ce sont des jetons d'appareils et une trace d'envois, pas des
+-- Les données de `push_outbox`, `push_devices` et `appointment_reminder_log`
+-- sont PERDUES par ce retour arrière : ce sont des jetons d'appareils et une trace d'envois, pas des
 -- données métier, et les jetons se re-enregistrent au prochain lancement de
 -- l'application. `push_post_fanout` disparaît aussi : sans le reste, plus rien
 -- ne le lit — et si le lot est rejoué, la fenêtre de six heures empêche de
@@ -42,7 +42,10 @@ drop function if exists private.push_dispatch_batch(integer);
 drop function if exists private.expo_access_token();
 drop function if exists private.enqueue_post_pushes(integer);
 drop function if exists private.enqueue_appointment_reminders(integer);
+-- Les DEUX signatures : celle du premier jet du lot et celle qui a ajouté
+-- `p_not_after`. Un retour arrière ne doit pas laisser une orpheline.
 drop function if exists private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text);
+drop function if exists private.enqueue_push(text, public.notification_type, jsonb, jsonb, text, uuid, uuid, boolean, text, timestamptz);
 drop function if exists private.render_push_template(text, text, jsonb);
 drop function if exists private.push_category_enabled(uuid, public.push_category);
 drop function if exists private.push_next_window(text);
@@ -175,6 +178,7 @@ revoke execute on function private.emit_booking_notification(
   public.appointments, public.notification_type, text, text, text, text, text
 ) from public, anon, authenticated;
 
+drop table if exists public.appointment_reminder_log;
 drop table if exists public.push_post_fanout;
 drop table if exists public.push_receipt_requests;
 drop table if exists public.push_outbox;

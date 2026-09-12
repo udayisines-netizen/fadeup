@@ -23,6 +23,7 @@ import { createQueryClient } from '@/shared/data/queryClient'
 import {
   createQueryPersister,
   PERSISTED_MAX_AGE_MS,
+  shouldDehydrateMutation,
   shouldDehydrateQuery,
 } from '@/shared/data/persistence'
 import { SessionContext, useProvideSession } from '@/shared/data/auth'
@@ -110,7 +111,10 @@ export default function RootLayout() {
           persistOptions={{
             persister: queryPersister,
             maxAge: PERSISTED_MAX_AGE_MS,
-            dehydrateOptions: { shouldDehydrateQuery },
+            /* `shouldDehydrateMutation` est OBLIGATOIRE ici : sans lui, le
+               défaut de la librairie persiste les variables des mutations en
+               pause — nom, téléphone, GPS, jeton de pointage. */
+            dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation },
           }}
         >
           <SessionContext.Provider value={sessionState}>

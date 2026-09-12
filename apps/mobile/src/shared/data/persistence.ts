@@ -22,7 +22,9 @@
  */
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Query } from '@tanstack/react-query'
+import type { Query, QueryClient } from '@tanstack/react-query'
+
+import { bookingKeys } from '@/shared/data/keys'
 
 /**
  * LA liste blanche, par PRÉFIXE de clé de requête.
@@ -77,6 +79,43 @@ export function shouldDehydrateQuery(query: Query): boolean {
 export const PERSISTED_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 export const PERSISTED_CACHE_KEY = 'fu.queryCache.v1'
+
+/**
+ * Les mutations en pause ne sont JAMAIS persistées.
+ *
+ * Le défaut de la librairie persiste `state.variables` de toute mutation en
+ * pause. Concrètement : une coupure de réseau au moment de « Rejoindre la
+ * file » écrivait au disque, pour sept jours, le nom du client, son téléphone,
+ * ses coordonnées GPS et le jeton de pointage du salon. Trouvé en revue — la
+ * liste blanche ci-dessus ne gouverne que les REQUÊTES, pas les mutations.
+ *
+ * Rien à récupérer en échange : une reprise de mutation après redémarrage
+ * n'est ni implémentée ni souhaitable ici (rejoindre une file dix minutes plus
+ * tard, ce n'est plus rejoindre la file).
+ */
+export function shouldDehydrateMutation(): boolean {
+  return false
+}
+
+/**
+ * Efface tout ce qui appartient à UNE personne — en mémoire et au disque.
+ * Appelée à chaque changement de compte, déconnexion comprise.
+ *
+ * Les clés persistées ne portent pas d'identifiant de compte : c'est ce qui
+ * rend cette purge nécessaire plutôt que polie. Ce qui n'est pas personnel
+ * (un profil public, une recherche) n'a pas besoin d'être effacé, mais le
+ * faire ne coûte rien et évite d'avoir à décider à chaque nouvelle clé.
+ */
+export async function forgetPersonalData(queryClient: QueryClient): Promise<void> {
+  queryClient.removeQueries({ queryKey: bookingKeys.all })
+  queryClient.removeQueries({ queryKey: ['push'] })
+  queryClient.removeQueries({ queryKey: ['passport'] })
+  try {
+    await AsyncStorage.removeItem(PERSISTED_CACHE_KEY)
+  } catch {
+    /* stockage indisponible : rien à effacer, ou rien d'effaçable */
+  }
+}
 
 /** Le liant natif — la seule pièce de ce fichier qui connaît AsyncStorage. */
 export function createQueryPersister() {

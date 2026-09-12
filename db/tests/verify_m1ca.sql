@@ -507,9 +507,32 @@ begin
    where dedupe_key = '1caf0001-0000-4000-8000-000000000001:booking_reminder:customer';
   perform pg_temp.record('rappel', 'le gabarit e-mail booking_reminder de B2 est enfin déclenché', v_n = 1, v_n::text);
 
+  /* Le rappel est DIFFÉRÉ par les heures calmes, et abandonné si le différé
+     tombe après l'heure du rendez-vous. Le test calcule donc l'attendu au
+     lieu de le supposer : il donne le même verdict à 3 h du matin et à midi. */
   select count(*) into v_n from public.push_outbox
    where category = 'appointment_reminder' and type = 'booking_reminder';
-  perform pg_temp.record('rappel', 'le rappel part aussi en push (un par appareil)', v_n = 2, v_n::text);
+  if private.push_next_window('Europe/Paris') >= now() + interval '1 hour' then
+    perform pg_temp.record('rappel', 'heure calme : le rappel n''est pas envoyé après l''heure du rendez-vous',
+      v_n = 0, v_n::text || ' (fenêtre rouvre après le rendez-vous)');
+  else
+    perform pg_temp.record('rappel', 'le rappel part aussi en push (un par appareil)', v_n = 2, v_n::text);
+  end if;
+
+  select count(*) into v_n from public.push_outbox
+   where category = 'appointment_reminder' and urgent;
+  perform pg_temp.record('rappel', 'le rappel n''est JAMAIS urgent (il respecte les heures calmes)',
+    v_n = 0, v_n::text);
+
+  select count(*) into v_n from public.push_outbox
+   where category = 'appointment_reminder' and next_attempt_at < now() - interval '1 minute';
+  perform pg_temp.record('rappel', 'aucun rappel daté dans le passé', v_n = 0, v_n::text);
+
+  -- Le registre, et le cas du comptoir : un rendez-vous SANS adresse doit
+  -- être marqué lui aussi, sinon il revient à chaque tick.
+  select count(*) into v_n from public.appointment_reminder_log
+   where appointment_id = '1caf0001-0000-4000-8000-000000000001';
+  perform pg_temp.record('rappel', 'le rendez-vous rappelé est inscrit au registre', v_n = 1, v_n::text);
 
   select count(*) into v_n from public.email_outbox
    where dedupe_key like '1caf0002-0000-4000-8000-000000000002:booking_reminder%';
@@ -535,6 +558,145 @@ begin
   select count(*) into v_n from public.push_outbox
    where category = 'booking_response' and not urgent;
   perform pg_temp.record('rappel', 'la réponse à une demande est transactionnelle (immédiate)', v_n = 0, v_n::text);
+end $$;
+
+-- ===========================================================================
+-- 4ter. CE QUE LA REVUE A TROUVÉ — et qui ne doit plus jamais passer
+-- ===========================================================================
+
+do $$
+declare
+  v_n integer;
+  v_status text;
+  v_user uuid := '1caa0001-0000-4000-8000-000000000001';
+  v_other uuid := '1caa0002-0000-4000-8000-000000000002';
+  v_before integer;
+begin
+  -- R1. Un gabarit manquant NE DOIT PAS faire échouer l'appel de file.
+  --     Le gabarit est une DONNÉE, éditable : sa disparition ne peut pas
+  --     empêcher un salon d'appeler son client.
+  insert into public.queue_entries (id, organization_id, location_id, barber_id, customer_name, status, booked_by_user_id)
+  values ('1cae0004-0000-4000-8000-000000000004', '1ca00001-0000-4000-8000-000000000001',
+          '1ca00101-0000-4000-8000-000000000001', '1ca00401-0000-4000-8000-000000000001',
+          'Sans gabarit', 'waiting', v_user);
+
+  select count(*) into v_before from public.push_outbox;
+  delete from public.push_templates where template_key = 'queue_called';
+  begin
+    update public.queue_entries set status = 'called'
+     where id = '1cae0004-0000-4000-8000-000000000004';
+    select status::text into v_status from public.queue_entries
+     where id = '1cae0004-0000-4000-8000-000000000004';
+    perform pg_temp.record('revue', 'gabarit manquant : l''appel de file PASSE quand même',
+      v_status = 'called', coalesce(v_status, 'null'));
+  exception when others then
+    perform pg_temp.record('revue', 'gabarit manquant : l''appel de file PASSE quand même', false, sqlerrm);
+  end;
+
+  select count(*) into v_n from public.push_outbox;
+  perform pg_temp.record('revue', 'gabarit manquant : rien n''est mis en file, et rien ne casse',
+    v_n = v_before, v_n::text || ' vs ' || v_before::text);
+
+  -- On remet le gabarit pour la suite.
+  insert into public.push_templates (template_key, locale, category, title, body) values
+    ('queue_called', 'fr', 'queue_call', 'C''est votre tour', '{{organization_name}} vous appelle.'),
+    ('queue_called', 'en', 'queue_call', 'It''s your turn', '{{organization_name}} is calling you.')
+  on conflict (template_key, locale) do nothing;
+
+  /* R2. Plafond d'appareils par entrée de file : sans lui, un client de la
+         salle d'attente fait échouer l'appel en saturant sa propre place.
+         Entrée DÉDIÉE : celle du chantier 1 porte déjà un appareil, et un
+         bloc `exception` de plpgsql ANNULE le travail du bloc (sous-
+         transaction implicite) — piège rencontré en écrivant ce test. */
+  insert into public.queue_entries (id, organization_id, location_id, barber_id, customer_name, status)
+  values ('1cae0005-0000-4000-8000-000000000005', '1ca00001-0000-4000-8000-000000000001',
+          '1ca00101-0000-4000-8000-000000000001', '1ca00401-0000-4000-8000-000000000001',
+          'Saturation QA', 'waiting');
+
+  perform set_config('request.jwt.claims', '', true);
+  execute 'set local role anon';
+  for v_n in 1..5 loop
+    perform public.register_push_device(
+      'ExponentPushToken[m1ca-flood-' || v_n || ']', 'ios', 'fr',
+      '1cae0005-0000-4000-8000-000000000005');
+  end loop;
+  execute 'set local role none';
+
+  select count(*) into v_n from public.push_devices
+   where queue_entry_id = '1cae0005-0000-4000-8000-000000000005' and revoked_at is null;
+  perform pg_temp.record('revue', 'cinq appareils par entrée de file : acceptés', v_n = 5, v_n::text);
+
+  execute 'set local role anon';
+  begin
+    perform public.register_push_device('ExponentPushToken[m1ca-flood-6]', 'ios', 'fr',
+                                        '1cae0005-0000-4000-8000-000000000005');
+    execute 'set local role none';
+    perform pg_temp.record('revue', 'au-delà du plafond : refusé', false, 'accepté à tort');
+  exception when others then
+    execute 'set local role none';
+    perform pg_temp.record('revue', 'au-delà du plafond : refusé', sqlstate = '54000', sqlstate);
+  end;
+
+  -- R3. Un appareil rattaché à une entrée ne doit pas rendre cette entrée
+  --     indestructible (un lieu et une organisation cascadent vers elle).
+  begin
+    delete from public.queue_entries where id = '1cae0001-0000-4000-8000-000000000001';
+    perform pg_temp.record('revue', 'une entrée de file reste supprimable avec des appareils rattachés', true);
+  exception when others then
+    perform pg_temp.record('revue', 'une entrée de file reste supprimable avec des appareils rattachés',
+      false, sqlerrm);
+  end;
+
+  -- R4. Un compte connecté ne peut pas s'accrocher à l'entrée d'un AUTRE.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_other::text, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  begin
+    perform public.register_push_device('ExponentPushToken[m1ca-hijack]', 'ios', 'fr',
+                                        '1cae0004-0000-4000-8000-000000000004');
+    execute 'set local role none';
+    perform pg_temp.record('revue', 'un compte ne s''accroche pas à l''entrée d''un autre', false,
+      'accepté à tort');
+  exception when insufficient_privilege then
+    execute 'set local role none';
+    perform pg_temp.record('revue', 'un compte ne s''accroche pas à l''entrée d''un autre', true, '42501');
+  when others then
+    execute 'set local role none';
+    perform pg_temp.record('revue', 'un compte ne s''accroche pas à l''entrée d''un autre', false, sqlerrm);
+  end;
+  perform set_config('request.jwt.claims', '', true);
+end $$;
+
+-- R5. Le rendez-vous du COMPTOIR, sans adresse : marqué une fois, jamais
+--     repris — sinon il affame les vrais rappels (limit global).
+do $$
+declare
+  v_tick1 integer;
+  v_tick2 integer;
+  v_tick3 integer;
+  v_n integer;
+begin
+  insert into public.appointments
+    (id, organization_id, location_id, barber_id, service_id, customer_name,
+     customer_email, starts_at, ends_at, status)
+  values
+    ('1caf0003-0000-4000-8000-000000000003', '1ca00001-0000-4000-8000-000000000001',
+     '1ca00101-0000-4000-8000-000000000001', '1ca00401-0000-4000-8000-000000000001',
+     '1ca00701-0000-4000-8000-000000000001', 'Walk-in QA',
+     null, now() + interval '30 minutes', now() + interval '60 minutes', 'confirmed');
+
+  v_tick1 := private.enqueue_appointment_reminders(50);
+  v_tick2 := private.enqueue_appointment_reminders(50);
+  v_tick3 := private.enqueue_appointment_reminders(50);
+
+  perform pg_temp.record('revue', 'un rendez-vous sans adresse n''est pas repris à chaque tick',
+    v_tick2 = 0 and v_tick3 = 0, format('tick1=%s tick2=%s tick3=%s', v_tick1, v_tick2, v_tick3));
+
+  select count(*) into v_n from public.appointment_reminder_log
+   where appointment_id = '1caf0003-0000-4000-8000-000000000003';
+  perform pg_temp.record('revue', 'il est marqué quand même (rien à lui envoyer)', v_n = 1, v_n::text);
+exception when others then
+  perform pg_temp.record('revue', 'le rendez-vous du comptoir sans adresse', false, sqlerrm);
 end $$;
 
 -- ===========================================================================

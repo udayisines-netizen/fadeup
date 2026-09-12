@@ -199,14 +199,37 @@ export function usePushDevice() {
   return { status, alreadyAsked, lastReason, requestAndRegister, ensureRegistered }
 }
 
-/** Retire cet appareil des destinataires (déconnexion). Silencieux. */
-export async function revokeThisDevice(): Promise<void> {
+/**
+ * Retire cet appareil des destinataires (déconnexion). Silencieux pour le
+ * client, mais PAS aveugle : le jeton local n'est oublié que si le serveur a
+ * bien répondu. Au premier jet il était effacé quoi qu'il arrive, donc un
+ * retrait refusé (appel en rôle anonyme, réseau coupé) devenait définitif —
+ * plus aucun retrait n'était possible ensuite.
+ *
+ * À appeler AVANT `signOut()` : le serveur n'autorise le retrait d'un
+ * appareil rattaché à un compte qu'à ce compte lui-même.
+ */
+export async function revokeThisDevice(): Promise<boolean> {
+  let token: string | null = null
   try {
-    const token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY)
-    if (!token) return
+    token = await AsyncStorage.getItem(TOKEN_STORAGE_KEY)
+  } catch {
+    return false
+  }
+  if (!token) return false
+
+  try {
     await revokePushDevice(token)
+  } catch {
+    // Hors ligne, ou refus du serveur : on GARDE le jeton local pour pouvoir
+    // réessayer. Rien à dire au client, qui se déconnecte.
+    return false
+  }
+
+  try {
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY)
   } catch {
-    /* hors ligne ou jeton déjà retiré : rien à dire au client */
+    /* le serveur a retiré l'appareil : c'est ce qui compte */
   }
+  return true
 }

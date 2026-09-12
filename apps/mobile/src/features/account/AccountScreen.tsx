@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { accountQueryKeys } from '@/features/account/api/account'
+import { revokeThisDevice } from '@/features/notifications/usePushDevice'
+import { forgetPersonalData } from '@/shared/data/persistence'
 import { DeleteAccountSheet } from '@/features/account/DeleteAccountSheet'
 import { FavoritesSection } from '@/features/account/FavoritesSection'
 import { FollowsSection } from '@/features/account/FollowsSection'
@@ -69,11 +71,23 @@ export function AccountScreen() {
     setSigningOut(true)
     setSignOutFailed(false)
     try {
+      /* AVANT `signOut()`, et c'est tout l'intérêt : `revoke_push_device`
+         n'accepte de retirer un appareil qui appartient à un compte QUE si
+         l'appelant est ce compte. Après la déconnexion, l'appel part en rôle
+         anonyme, `auth.uid()` est NULL et la garde du serveur n'apparie plus
+         rien : l'appareil restait destinataire. Scénario mesuré en revue —
+         téléphone familial, A se déconnecte, et les appels de file, rappels
+         et confirmations de A continuaient de s'afficher sur l'écran
+         verrouillé de B. */
+      await revokeThisDevice()
       await signOut()
       // Les clés partagées avec le web ne portent pas d'utilisateur : sans
       // ce retrait, le compte suivant verrait un instant les données du
       // précédent.
       for (const queryKey of accountQueryKeys()) queryClient.removeQueries({ queryKey })
+      // Et ce qui est PERSISTÉ au disque (réservations, préférences) doit
+      // partir aussi — sinon il survit à la déconnexion pendant sept jours.
+      await forgetPersonalData(queryClient)
     } catch {
       setSignOutFailed(true)
     } finally {

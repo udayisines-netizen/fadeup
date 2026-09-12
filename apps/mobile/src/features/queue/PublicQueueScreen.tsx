@@ -23,6 +23,7 @@ import {
 import { refusalMessageKey } from '@/features/queue/lib/refusals'
 import { NotificationPermissionSheet } from '@/features/notifications/NotificationPermissionSheet'
 import { decidePermissionMoment } from '@/features/notifications/lib/permissionMoment'
+import { pushUnavailableMessageKey } from '@/features/notifications/lib/pushAvailability'
 import { usePushDevice } from '@/features/notifications/usePushDevice'
 import { JoinQueueSheet } from '@/features/queue/components/JoinQueueSheet'
 import { QueueFileList } from '@/features/queue/components/QueueFileList'
@@ -102,6 +103,12 @@ export function PublicQueueScreen() {
   const [pushBusy, setPushBusy] = useState(false)
   const [pushEntryId, setPushEntryId] = useState<string | null>(null)
   const [pushHintKey, setPushHintKey] = useState<string | null>(null)
+  /* Un message d'indisponibilité ne survit pas à sa cause : « impossible sans
+     réseau » ne décrit plus rien dès que le réseau est revenu. DÉRIVÉ, et non
+     effacé dans un effet — remettre un état dans un effet déclenche des
+     rendus en cascade (le compilateur React le refuse, à raison). Le refus
+     système, lui, reste vrai en ligne : il ne s'efface pas. */
+  const visibleHintKey = pushHintKey === 'mobile.push.networkHint' && online === true ? null : pushHintKey
 
   /* La trace locale d'une entrée — AsyncStorage, donc asynchrone : tant
      qu'elle n'a pas répondu, on n'affirme rien (ni suivi, ni son absence). */
@@ -462,14 +469,14 @@ export function PublicQueueScreen() {
             ) : null}
           </View>
 
-          {pushHintKey ? (
+          {visibleHintKey ? (
             <View
               style={[styles.actionError, dark && styles.actionErrorDark]}
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
             >
               <FuText variant="sm" style={dark ? { color: color.moment.textPrimary } : undefined}>
-                {t(pushHintKey)}
+                {t(visibleHintKey)}
               </FuText>
             </View>
           ) : null}
@@ -517,12 +524,15 @@ export function PublicQueueScreen() {
             /* Honnêteté : on ne dit quelque chose QUE si le client peut agir
                (refus système, réseau). Une indisponibilité technique — Expo Go,
                projet Expo non configuré — est notre problème, pas le sien, et
-               l'écran de suivi garde son comportement de M1b. */
-            if (!attempt.registered && attempt.reason === 'permission_denied') {
-              setPushHintKey('mobile.push.deniedHint')
-            } else if (!attempt.registered && attempt.reason === 'network') {
-              setPushHintKey('mobile.push.networkHint')
-            }
+               l'écran de suivi garde son comportement de M1b.
+               La décision vit dans `pushUnavailableMessageKey`, avec ses
+               tests : l'écran ne la REJOUE pas (elle était dupliquée ici au
+               premier jet, donc testée d'un côté et appliquée de l'autre). */
+            setPushHintKey(
+              attempt.registered || !attempt.reason
+                ? null
+                : pushUnavailableMessageKey(attempt.reason),
+            )
           })
         }}
       />
