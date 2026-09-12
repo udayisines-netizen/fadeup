@@ -120,10 +120,15 @@ test.describe('PLAT-3 — pilotage : ce que chaque rôle voit', () => {
     test.skip(!(await signIn(page, 'qa-plat1-support@fadeup.test')), 'compte QA PLAT-1 absent')
     for (const path of ['/platform/settings', '/platform/worker', '/platform/promotions']) {
       await page.goto(path, { waitUntil: 'domcontentloaded' })
-      // On attend le TEXTE, pas le silence réseau : c'est ce que le test veut.
-      await expect(page.locator('main')).not.toBeEmpty({ timeout: 20_000 })
+      /*
+       * PAS DE `<main>` DANS `/platform` : la coquille rend un `<div>` nu
+       * autour de l'Outlet. Un sélecteur inventé ne mesure rien — celui-ci
+       * attend l'intertitre de l'écran, qui existe vraiment.
+       */
+      await expect(page.locator('h1')).toBeVisible({ timeout: 20_000 })
       expect(await page.locator('tbody tr').count(), `${path} ne doit rien tabuler`).toBe(0)
-      expect(await page.locator('main').innerText(), `${path} doit dire quelque chose`).not.toBe('')
+      const texte = (await page.locator('body').innerText()).trim()
+      expect(texte.length, `${path} doit dire quelque chose`).toBeGreaterThan(40)
     }
   })
 })
@@ -236,14 +241,23 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
 
     const result = await page.evaluate(
       async ([apiUrl, apiKey]) => {
+        /*
+         * LES DEUX EN-TÊTES, comme le fait un vrai navigateur anonyme :
+         * supabase-js envoie `apikey` ET `Authorization: Bearer <clé anon>`.
+         * Avec le seul `apikey`, PostgREST répond 401 et le test mesurerait
+         * la maladresse de l'appel au lieu de la garde.
+         */
+        const headers = {
+          'content-type': 'application/json',
+          apikey: apiKey as string,
+          authorization: `Bearer ${apiKey as string}`,
+        }
         const rpc = await fetch(`${apiUrl}/rest/v1/rpc/get_public_platform_settings`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json', apikey: apiKey as string },
+          headers,
           body: '{}',
         })
-        const table = await fetch(`${apiUrl}/rest/v1/platform_settings?select=key`, {
-          headers: { apikey: apiKey as string },
-        })
+        const table = await fetch(`${apiUrl}/rest/v1/platform_settings?select=key`, { headers })
         return {
           rpcStatus: rpc.status,
           rpcBody: await rpc.text(),
@@ -256,7 +270,18 @@ test.describe('PLAT-3 — les refus, RPC appelée directement', () => {
 
     expect(result.rpcStatus).toBe(200)
     expect(result.rpcBody).toContain('booking_window_days')
-    // La table, elle, ne rend rien : la policy la réserve à `platform.settings`.
-    expect(JSON.parse(result.tableBody)).toEqual([])
+    /*
+     * La table, elle, ne rend RIEN. Deux façons honnêtes d'y arriver : une
+     * liste vide (la policy ne laisse passer aucune ligne) ou un refus franc.
+     * Les deux prouvent la même chose — aucune valeur de réglage ne sort. Le
+     * test accepte les deux plutôt que d'épingler un code HTTP qui appartient
+     * à PostgREST et non à notre garde.
+     */
+    if (result.tableStatus === 200) {
+      expect(JSON.parse(result.tableBody)).toEqual([])
+    } else {
+      expect(result.tableStatus).toBeGreaterThanOrEqual(400)
+      expect(result.tableBody).not.toContain('queue.capacity_per_barber')
+    }
   })
 })

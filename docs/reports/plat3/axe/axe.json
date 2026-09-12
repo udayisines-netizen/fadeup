@@ -1,0 +1,500 @@
+[
+  {
+    "screen": "settings@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "button:Save",
+      "button:Save",
+      "button:Save"
+    ],
+    "smallTargetCount": 9,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 3,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1.min-w-0 > .text-pretty.mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "settings@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "button:Save",
+      "button:Save",
+      "button:Save"
+    ],
+    "smallTargetCount": 9,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 3,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1.min-w-0 > .text-pretty.mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "promotions@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:"
+    ],
+    "smallTargetCount": 3,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 16,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".text-pretty",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".bg-accent-600",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .justify-between.gap-3.flex > .min-w-0.gap-2.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Promotions\"] > table > thead > .hover\\:bg-paper-50 > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Promotions\"] > table > thead > .hover\\:bg-paper-50 > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "promotions@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:"
+    ],
+    "smallTargetCount": 3,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 16,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".text-pretty",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".bg-accent-600",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .justify-between.gap-3.flex > .min-w-0.gap-2.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .mt-1",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Promotions\"] > table > thead > .hover\\:bg-paper-50 > th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div[aria-label=\"Promotions\"] > table > thead > .hover\\:bg-paper-50 > th:nth-child(2)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "funnel@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:"
+    ],
+    "smallTargetCount": 9,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 10,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1 > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div:nth-child(1) > .mb-2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div:nth-child(2) > .mb-2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".shrink-0.text-ink-500.text-xs",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h3",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "funnel@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:",
+      "input:"
+    ],
+    "smallTargetCount": 9,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 10,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1 > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div:nth-child(1) > .mb-2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "div:nth-child(2) > .mb-2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".shrink-0.text-ink-500.text-xs",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "h3",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "worker@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "button:Pause"
+    ],
+    "smallTargetCount": 3,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 12,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1 > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(2) > .gap-3.justify-between.flex > .gap-2.min-w-0.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".bg-accent-600",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .gap-3.justify-between.flex > .gap-2.min-w-0.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "worker@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)",
+      "button:Pause"
+    ],
+    "smallTargetCount": 3,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 12,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".flex-1 > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(2) > .gap-3.justify-between.flex > .gap-2.min-w-0.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": ".bg-accent-600",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > .gap-3.justify-between.flex > .gap-2.min-w-0.flex > h2",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "section:nth-child(3) > p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": "th:nth-child(1)",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "login@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".touch-manipulation",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "login@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [],
+    "smallTargetCount": 0,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": ".touch-manipulation",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 3.57 (foreground color: #ffffff, background color: #0d9b5f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "overview@1440",
+    "overflow": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)"
+    ],
+    "smallTargetCount": 2,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  },
+  {
+    "screen": "overview@390",
+    "overflow": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "smallTargets": [
+      "a:FadeUp Platform",
+      "button:Theme: System (light)"
+    ],
+    "smallTargetCount": 2,
+    "violations": 1,
+    "serious": 1,
+    "detail": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 1,
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "targets": [
+          {
+            "target": "p",
+            "summary": "Fix any of the following:   Element has insufficient color contrast of 4.48 (foreground color: #66766e, background color: #f5f8f6, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ],
+    "minor": []
+  }
+]

@@ -693,62 +693,109 @@ fermée.
 | `db/tests/verify_f4.sql` (contrat de réservation) | **vert, « TOUT PASSE »** — dont l'assertion A4 qui exerce le plafond de réservations futures que ce lot a déplacé en base |
 | `db/tests/verify_f1b.sql` (file) | **12 assertions vertes** |
 | `db/tests/verify_os2.sql` | **rouge, et pas de mon fait** — voir §12.6 |
-| `npm run e2e` — suite PLAT-3 | **non terminée** — voir §8.1 |
-| axe | **non lancé** — voir §8.1 |
+| `npm run e2e` — suite PLAT-3 | **28 / 28 verts**, 390 px et 1440 px — voir §8.1 |
+| axe — 4 écrans neufs + 2 hérités, 2 largeurs | **une seule règle en échec : `color-contrast`**, la palette héritée. Aucune autre règle, aucun mineur, aucun débordement — voir §8.3 |
+| `npm run e2e` — campagne COMPLÈTE | **non lancée** — le runner est tenu par un lot voisin (§8.1) |
 
-### 8.1 Ce qui n'a pas pu tourner, et pourquoi
+### 8.1 La campagne e2e, et ce qu'elle a coûté
 
-**La campagne e2e de ce lot n'est pas allée au bout, et je ne la déclare pas
-verte.**
+**28 tests, 28 verts**, en 390 px et en 1440 px.
 
-`apps/web/e2e/plat3/platform-plat3.spec.ts` est écrite — 14 tests × 2 largeurs
-(390 px et 1440 px) : la navigation par rôle sur les quatre écrans, le refus
-honnête des écrans interdits, le rendu sans erreur console ni débordement, le
-tunnel dont les étapes non attribuables rendent NULL, et **quatre refus obtenus
-en appelant la RPC directement depuis la page** avec le jeton du compte
-(commercial sur les défauts, commercial sur le worker, fondateur hors bornes,
-anonyme sur la table).
+| | |
+|---|---|
+| Navigation par rôle | le fondateur voit les quatre écrans ; le commercial voit les promotions et le tunnel **mais ni les défauts ni le worker** ; support et stagiaire n'en voient aucun ; **rien n'est grisé à la place d'un lien absent** |
+| Écrans refusés | les trois écrans interdits au support disent une phrase et **ne tabulent rien** |
+| Rendu | les quatre écrans rendent leur `h1`, **0 erreur console, 0 réponse ≥ 400, 0 débordement horizontal** — aux deux largeurs |
+| Tunnel | `trials` et `subscriptions` ventilés par origine rendent **`attributable = false` et `total = NULL`**, et `min_sample` vaut 20 **côté serveur** |
+| **Refus, RPC appelée directement depuis la page** | commercial → `set_platform_setting` : **403 `fadeup_settings_refusal=not_authorized`** ; commercial → `set_prospect_worker_paused` : **403 `fadeup_worker_refusal=not_authorized`** ; **fondateur** hors bornes : **400 `fadeup_settings_refusal=out_of_range`** ; anonyme → les deux réglages publics en 200, **et la table refusée** |
 
-Lancée sur le port 4680, elle a rendu **4 tests verts puis un échec de délai**
-sur le cinquième. La cause est de moi et elle est corrigée : le fichier
-employait `waitUntil: 'networkidle'`, or **`/platform/worker` rafraîchit son
-état toutes les dix secondes** — le réseau n'y devient jamais inactif, et sur
-les autres écrans cette attente est la première à céder dès que la machine est
-chargée. Toutes les visites attendent désormais un ÉLÉMENT précis
-(`domcontentloaded` + `expect(...).toBeVisible()`), ce qui est à la fois plus
-juste et plus robuste.
+Le dernier mérite d'être souligné : **le fondateur lui-même est refusé hors
+bornes.** C'est le serveur qui tranche, pas l'écran.
 
-**La relance n'a pas eu lieu parce qu'un lot voisin a pris le runner.** OS-3 a
-lancé sa campagne pendant la mienne, puis sa campagne COMPLÈTE. La règle du
-dépôt est « une seule campagne e2e à la fois » ; j'ai donc **arrêté la mienne**
-(et elle seule — vérifié, les processus d'OS-3 n'ont pas été touchés) plutôt
-que de rendre la sienne instable.
+Journal archivé : `docs/reports/plat3/preuves/e2e-plat3.log`.
 
-**Je déclare aussi le chevauchement** : pendant environ deux minutes, les deux
-campagnes ont tourné en même temps. Ma suite **n'écrit rien** — elle lit des
-pages et reçoit des 403/400 — donc elle ne peut pas avoir corrompu les données
-d'OS-3 ; mais elle a consommé du processeur sur une machine à deux cœurs, et un
-échec de délai côté OS-3 dans cette fenêtre peut venir de là.
+**Trois erreurs de ma main dans cette suite, corrigées, et déclarées.**
 
-**axe n'a pas tourné non plus**, pour la même raison : c'est un balayage
-navigateur, et il attendait son tour derrière la campagne voisine.
-`apps/web/e2e/plat3/platform-plat3-axe.mjs` est écrit et prêt (quatre écrans
-neufs plus deux écrans hérités pour la comparaison, à 1440 px et à 390 px, avec
-le relevé du débordement et des cibles tactiles sous 44 px).
+1. **`waitUntil: 'networkidle'`** — une attente qui, sur `/platform/worker`, ne
+   peut PAS se réaliser : l'écran sonde toutes les dix secondes, le réseau n'y
+   est jamais inactif. Échec à 45 s. Toutes les visites attendent désormais un
+   élément précis.
+2. **Un sélecteur inventé** : `page.locator('main')`. Il n'y a **aucun
+   `<main>`** dans `/platform` — la coquille rend un `<div>` nu. Le test
+   mesurait donc le vide. Remplacé par l'intertitre, qui existe.
+3. **Deux en-têtes au lieu d'un** : l'appel anonyme n'envoyait que `apikey`, là
+   où un vrai navigateur envoie aussi `Authorization: Bearer <clé anon>`.
+   Le test mesurait ma maladresse, pas la garde.
 
-**Ce sont deux cases non cochées, et ce sont des attentes d'ordonnancement, pas
-des échecs.** Les deux commandes sont à relancer dès que le runner se libère :
+**Vérifié à part, en `curl`, parce que c'est le point de sécurité du lot** :
 
-```bash
-E2E_PORT=4680 QA_SUPABASE_URL=http://127.0.0.1:18100 QA_ANON_KEY=… \
-  npx playwright test e2e/plat3
-QA_BASE=http://127.0.0.1:4680 node e2e/plat3/platform-plat3-axe.mjs docs/reports/plat3/axe
+```
+POST /rest/v1/rpc/get_public_platform_settings  → 200
+     [{"booking_window_days":90,"booking_free_cancel_hours":12}]
+GET  /rest/v1/platform_settings?select=key      → 401
+     42501 — permission denied for table platform_settings
 ```
 
-**Et le plus important : aucune autorisation n'en dépend.** Ce que la campagne
-e2e prouve est le RENDU. Les gardes, elles, sont prouvées côté serveur par les
-118 assertions de `verify_plat3.sql`, qui appellent les RPC directement — X3 a
-démontré deux fois qu'une garde d'interface n'existe pas.
+L'anonyme obtient donc les **deux entiers** et **rien de la table** — pas même
+une liste vide : `anon` n'a aucun `SELECT` dessus.
+
+**La campagne COMPLÈTE — les suites antérieures comprises — n'a pas tourné.**
+OS-3 tient le runner depuis le milieu de ma session, d'abord avec sa suite puis
+avec sa campagne entière, et la règle du dépôt est « une seule à la fois ».
+**Case non cochée, attente d'ordonnancement.** À relancer :
+
+```bash
+E2E_PORT=4680 QA_SUPABASE_URL=http://127.0.0.1:18100 QA_ANON_KEY=… npm run e2e
+```
+
+**Un chevauchement à déclarer.** Mon premier lancement a tourné environ deux
+minutes en même temps que la suite d'OS-3, et le second pendant sa campagne
+complète. **Ma suite n'écrit rien** — elle lit des pages et reçoit des 403/400,
+et la production le confirme : 0 promotion, 0 application, 0 organisation, 0
+compte créés. Elle ne peut donc pas avoir corrompu ses données. Mais elle a
+consommé du processeur sur une machine à deux cœurs : **un échec de délai côté
+OS-3 dans ces fenêtres peut venir de moi.** J'ai arrêté ma première campagne
+dès constat, et l'arrêt a visé mes processus seuls — vérifié avant et après.
+
+### 8.3 axe : une seule règle, et elle est héritée
+
+Quatre écrans neufs plus **deux écrans que ce lot ne touche pas**
+(`/platform/login`, `/platform`), à 1440 px et à 390 px — douze mesures.
+
+| Écran | Nœuds en échec | Autres règles | Débordement 390 px |
+|---|---|---|---|
+| `settings` | 3 | **0** | non |
+| `promotions` | 16 | **0** | non |
+| `funnel` | 10 | **0** | non |
+| `worker` | 12 | **0** | non |
+| `login` *(intouché)* | 1 | **0** | non |
+| `/platform` *(intouché)* | 1 | **0** | non |
+
+**Une seule règle échoue sur les douze mesures : `color-contrast`.** Aucune
+autre — ni étiquette manquante, ni ARIA, ni ordre d'intertitres, ni champ sans
+libellé — et **zéro violation mineure**. Aucun des six écrans ne déborde
+horizontalement à 390 px.
+
+C'est **exactement** le défaut que PLAT-1 a mesuré et déclaré (§9bis) : deux
+jetons de la palette héritée de `/platform`, `--color-ink-500` sur
+`--color-paper-50` à **4,48:1** (il manque 0,02 pour AA) et le blanc sur
+`--color-accent-600` à **3,57:1** — le bouton primaire de toute la console. Il
+échoue **déjà sur la page de connexion, que ce lot ne touche pas**.
+
+**Les quatre écrans neufs n'introduisent aucune CLASSE de défaut nouvelle** :
+ils ajoutent des occurrences d'un défaut existant, en réutilisant les primitives
+de la console (en-têtes de colonne, sous-titres, boutons primaires, badges).
+Corriger la cause veut dire modifier deux jetons de la palette et repeindre
+**toute** la console — ce qui détruirait, par construction, la preuve
+d'équivalence du §1. Le lot dit « c'est une surface existante, ne la refais
+pas ». **Je ne l'ai donc pas fait, et je le déclare plutôt que de le taire.
+La case reste non cochée.**
+
+Le relevé porte aussi les cibles tactiles sous 44 px : 3 à 9 selon l'écran,
+contre 2 sur l'accueil hérité. C'est la densité de la console de bureau, que
+PLAT-2 §13.6 a déjà consignée comme un chantier à part.
+
+Relevé : `docs/reports/plat3/axe/axe.json`, plus douze captures.
 
 ### 8.2 Le contrat de surface anonyme est rouge, et ce n'est pas ce lot
 
@@ -956,10 +1003,10 @@ d'ajouter une exception.
 
 | Case | Raison |
 |---|---|
-| **`npm run e2e` vert, suites antérieures comprises** | La suite PLAT-3 est écrite et a rendu 4 tests verts avant un échec de délai dû à une attente `networkidle` de ma main, **corrigée**. La relance attend que le runner se libère : OS-3 y a lancé sa campagne complète, et la règle est « une seule à la fois ». **Attente d'ordonnancement, pas échec** — et aucune autorisation n'en dépend, les gardes étant prouvées par les 118 assertions SQL. §8.1 |
-| **axe sans violation sérieuse** | **Non lancé** : c'est un balayage navigateur, derrière la même file d'attente. Le script est écrit. À relancer avec la campagne. §8.1 |
+| **`npm run e2e` vert, SUITES ANTÉRIEURES COMPRISES** | La suite de ce lot est **verte, 28/28**. La campagne COMPLÈTE n'a pas tourné : OS-3 tient le runner et la règle est « une seule campagne à la fois ». **Attente d'ordonnancement, pas échec** — et aucune autorisation n'en dépend, les gardes étant prouvées par les 118 assertions SQL. §8.1 |
+| **axe sans violation sérieuse** | **Une seule règle échoue, sur les douze mesures : `color-contrast`** — deux jetons de la palette héritée, qui échouent déjà sur la page de connexion que ce lot ne touche pas. Aucune autre règle, aucun mineur, aucun débordement. Corriger la cause repeindrait toute la console et détruirait la preuve d'équivalence du §1. **Décision de produit, pas d'implémentation.** §8.3 |
 | **`x3_anon_surface.sh --strict` vert** | **Rouge pour trois RPC qui ne sont pas de ce lot** (M1c-a ×2, OS-3 ×1), nommées avec leur migration d'origine. La mienne est acceptée. §8.2 |
-| **QA navigateur des quatre écrans** | Les écrans ont été bâtis pour tenir à 390 px (tableaux dans `<Table>` qui porte son propre défilement, rangées de métriques qui se replient, contrôles pleine largeur, dialogues bornés), et le relevé des 33 routes ne montre **aucune régression de débordement**. Mais **les quatre écrans neufs eux-mêmes n'ont pas été regardés à l'œil dans un navigateur** : c'est un argument de conception, pas une mesure. **La case n'est pas cochée.** |
+| **QA navigateur des quatre écrans** | **Mesurée, pas seulement argumentée** : les quatre écrans rendent leur intertitre, sans erreur console, sans réponse ≥ 400 et **sans débordement horizontal**, à 390 px comme à 1440 px (e2e §8.1), et douze captures existent (`docs/reports/plat3/axe/`). Ce qui reste non fait est le **jugement à l'œil** — personne n'a regardé ces captures pour dire si la hiérarchie visuelle est bonne. C'est la part humaine de la revue, et elle vous revient. |
 | **Le délai d'annulation réglable côté serveur** | Il n'y a rien à régler côté serveur : le produit AUTORISE l'annulation tardive (MASTER_SPEC §6) et l'énuméré `appointment_resolution` n'a aucune valeur pour la consigner. Le réglage existe et pilote réellement l'avertissement du client ; il ne refuse rien, et l'écran le dit. §10.3 |
 | **Les seuils du score de recherche** | Ils n'existent pas, parce que le score n'existe pas : `search_public_professionals` départage sans noter. La formule est une décision du fondateur en attente (MASTER_SPEC §23.3). Les poids du FIL, eux, sont exposés — et l'écran dit qu'ils n'affectent pas la recherche. §2, §10.4 |
 | **Un commercial applique une offre depuis l'écran** | **Il ne le peut pas, et c'est un trou de la grille, pas de l'écran** : `platform_sales` porte `promotions.apply` mais **pas `tenant.read`**, donc la policy `organizations_select` ne lui rend aucune organisation à choisir. Plutôt qu'un sélecteur vide, l'écran dit la vérité et rappelle que le salon peut, lui, saisir le code. **Le chemin serveur est prouvé** (assertions D15 à D18). À trancher : accorder `tenant.read` au commercial, ou poser une RPC d'annuaire étroite. §12.13 |
