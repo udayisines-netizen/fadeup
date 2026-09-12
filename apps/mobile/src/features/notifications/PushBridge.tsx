@@ -48,10 +48,17 @@ export function PushBridge() {
       router.push((route ?? '/') as never)
     }
 
-    // Celle qui a LANCÉ l'application : elle n'arrive par aucun écouteur.
-    void Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) open(response.notification.request.content.data)
-    })
+    /* Celle qui a LANCÉ l'application : elle n'arrive par aucun écouteur.
+       Et elle PERSISTE — Expo la garde jusqu'à ce qu'on l'efface, d'où
+       `clearLastNotificationResponseAsync` juste après. Sans cet effacement,
+       chaque démarrage à froid rejouerait la dernière notification touchée et
+       détournerait la navigation vers un écran que le client n'a pas demandé.
+       (C'est la raison d'être de cette fonction dans l'API d'Expo.) */
+    const last = Notifications.getLastNotificationResponse()
+    if (last) {
+      open(last.notification.request.content.data)
+      void Notifications.clearLastNotificationResponseAsync()
+    }
 
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       open(response.notification.request.content.data)

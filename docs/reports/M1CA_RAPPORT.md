@@ -738,12 +738,19 @@ de route `/platform` n'est touché — même preuve, c'est du web.
    rendu web), conséquence utile : une **borne de dix secondes** ajoutée à
    l'obtention du jeton, qui protège aussi l'application réelle (§10.3).
 
-### 10.3 Un défaut trouvé par la QA et corrigé
+### 10.3 Deux défauts trouvés en relisant, et corrigés
 
-`getExpoPushTokenAsync` fait un **appel réseau** aux serveurs d'Expo, et la
-documentation le dit. Sans borne, un réseau qui répond mal laisse le geste du
-client sans réponse — constaté au harnais. Borne à dix secondes, échec classé
-`network`, message honnête au client. Test ajouté.
+1. **`getExpoPushTokenAsync` fait un appel réseau** aux serveurs d'Expo, et la
+   documentation le dit. Sans borne, un réseau qui répond mal laisse le geste du
+   client sans réponse — constaté au harnais de QA. Borne à dix secondes, échec
+   classé `network`, message honnête au client. Test ajouté.
+2. **La dernière notification touchée PERSISTE** côté Expo jusqu'à ce qu'on
+   l'efface (c'est la raison d'être de
+   `clearLastNotificationResponseAsync`). Le branchement racine la lisait à
+   chaque montage : **chaque démarrage à froid aurait rejoué la dernière
+   notification** et détourné la navigation vers un écran que le client n'a pas
+   demandé. Elle est maintenant effacée aussitôt traitée, et l'appel déprécié
+   (`getLastNotificationResponseAsync`) remplacé par la version courante.
 
 ### 10.4 Défauts de production toujours ouverts (hors périmètre)
 
@@ -756,7 +763,13 @@ Repris de M1a/M1b, non traités ici :
    redéployé. La clé courante d'`infra/supabase/.env` répond 200 — vérifié en
    cours de lot.
 3. `list_my_followed_organizations` ne renvoie toujours que l'identifiant.
-4. **Le dépôt principal `/opt/fadeup` porte des modifications non commitées**
+4. **`apps/web/src/lib/queries/notifications.ts` est du code mort** (aucun
+   consommateur) et son union de types ne connaît ni les types sociaux de B4,
+   ni celui de F1b, ni les trois de ce lot. Sans risque d'exécution — le
+   composant rend `row.title`, pas une clé i18n — mais la cloche du web reste
+   à câbler, et il faudra alors compléter l'union. Constaté, non corrigé :
+   c'est du web.
+5. **Le dépôt principal `/opt/fadeup` porte des modifications non commitées**
    d'autres lots (dont `infra/scheduler/tick.sh` côté X2). Ce lot n'y a pas
    touché ; sa propre version de `tick.sh` vit dans la branche. **La fusion
    devra réconcilier les deux ajouts** — ils sont indépendants (X2 ajoute
