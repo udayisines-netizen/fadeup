@@ -319,6 +319,32 @@ export function useSetBarberQueueEnabled(locationId: string | null) {
   })
 }
 
+/**
+ * OS-2 — les trois seuils du lieu. La RPC laisse EN PLACE tout paramètre
+ * absent : on n'envoie donc que le delta (`changedThresholds`), jamais les
+ * trois valeurs. Un collègue qui aurait changé un autre seuil entre-temps
+ * n'est pas écrasé. owner/manager seulement — la RPC refuse le reste avec
+ * `fadeup_queue_refusal=not_authorized`.
+ */
+export function useSetQueueThresholds(locationId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { capacity?: number; grace?: number; geofence?: number }) => {
+      const { data, error } = await getSupabase().rpc('set_location_queue_thresholds', {
+        p_location_id: locationId ?? '',
+        ...(input.capacity === undefined ? {} : { p_capacity_per_barber: input.capacity }),
+        ...(input.grace === undefined ? {} : { p_call_grace_minutes: input.grace }),
+        ...(input.geofence === undefined ? {} : { p_geofence_meters: input.geofence }),
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      if (locationId) void queryClient.invalidateQueries({ queryKey: queueKeys.checkIn(locationId) })
+    },
+  })
+}
+
 /** Balayage de grâce du lieu : off par défaut, décision du patron (F1b §6). */
 export function useSetGraceSweep(locationId: string | null) {
   const queryClient = useQueryClient()

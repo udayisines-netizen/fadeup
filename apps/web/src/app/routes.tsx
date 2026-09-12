@@ -6,6 +6,7 @@ import { RequireAuth } from '@/app/guards/RequireAuth'
 import { RequirePro } from '@/app/guards/RequirePro'
 import { RequireDemo } from '@/app/guards/RequireDemo'
 import { RequireCapability } from '@/app/guards/RequireCapability'
+import { RequireTeamOrganization } from '@/app/guards/RequireTeamOrganization'
 import { NotBuiltPage, NotFoundPage } from '@/app/NotBuiltPage'
 
 /**
@@ -592,6 +593,72 @@ export const router = createBrowserRouter([
                           const { ProQueueDurationsPage } = await import('@/features/pro-queue/routes/ProQueueDurationsPage')
                           return { Component: ProQueueDurationsPage }
                         },
+                      },
+                      /* OS-2 — les RÉGLAGES de la file (seuils lus en base,
+                         files par barber, balayage). Séparés de l'écran
+                         opérationnel : la file se tient debout, les seuils se
+                         règlent assis. */
+                      {
+                        path: 'queue/settings',
+                        lazy: async () => {
+                          const { ProQueueSettingsPage } = await import('@/features/pro-queue/routes/ProQueueSettingsPage')
+                          return { Component: ProQueueSettingsPage }
+                        },
+                      },
+                    ],
+                  },
+                  /* OS-2 — le catalogue, sous la capacité RÉELLE `services`
+                     (présente jusque dans le plan Free : un professionnel
+                     décrit ses prestations avant de pouvoir les vendre). */
+                  {
+                    element: <RequireCapability capability="services" />,
+                    children: [
+                      {
+                        path: 'catalog',
+                        lazy: async () => {
+                          const { ProCatalogPage } = await import('@/features/pro-catalog/routes/ProCatalogPage')
+                          return { Component: ProCatalogPage }
+                        },
+                      },
+                    ],
+                  },
+                  /* OS-2 — les fiches clients, sous la capacité `customers`. */
+                  {
+                    element: <RequireCapability capability="customers" />,
+                    children: [
+                      {
+                        path: 'clients',
+                        lazy: async () => {
+                          const { ProClientsPage } = await import('@/features/pro-clients/routes/ProClientsPage')
+                          return { Component: ProClientsPage }
+                        },
+                      },
+                      {
+                        path: 'clients/:customerId',
+                        lazy: async () => {
+                          const { ProClientDetailPage } = await import('@/features/pro-clients/routes/ProClientDetailPage')
+                          return { Component: ProClientDetailPage }
+                        },
+                      },
+                    ],
+                  },
+                  /* OS-2 — l'équipe : capacité `team` ET organisation qui a
+                     une équipe. Un solo_professional n'a pas cet écran, même
+                     par URL directe. */
+                  {
+                    element: <RequireCapability capability="team" />,
+                    children: [
+                      {
+                        element: <RequireTeamOrganization />,
+                        children: [
+                          {
+                            path: 'team',
+                            lazy: async () => {
+                              const { ProTeamPage } = await import('@/features/pro-team/routes/ProTeamPage')
+                              return { Component: ProTeamPage }
+                            },
+                          },
+                        ],
                       },
                     ],
                   },

@@ -12,7 +12,7 @@ import { SkeletonRow } from '@/shared/ui/Skeleton'
 import { StateBadge } from '@/shared/ui/StateBadge'
 import { Switch } from '@/shared/ui/Switch'
 import { useToast } from '@/shared/ui/Toast'
-import { IconPending, IconQr, IconQueue } from '@/shared/ui/icons'
+import { IconPending, IconQr, IconQueue, IconSettings } from '@/shared/ui/icons'
 import {
   useCompleteAndCallNext,
   useDurationInsights,
@@ -23,8 +23,6 @@ import {
   useQueueCheckIn,
   useQueueTransition,
   useServiceModeState,
-  useSetBarberQueueEnabled,
-  useSetGraceSweep,
   useSetQueueOpen,
   useSetServiceMode,
   type ProQueueEntry,
@@ -33,6 +31,7 @@ import {
 import { Sheet } from '@/shared/ui/Sheet'
 import { ProQueueEntryRow } from '@/features/pro-queue/components/ProQueueEntryRow'
 import { useNow } from '@/features/pro-queue/lib/useNow'
+import { canManageQueueSettings } from '@/features/pro-queue/lib/queueSettings'
 
 /**
  * /dashboard/queue — l'outil du comptoir : debout, entre deux clients, un
@@ -73,8 +72,6 @@ export function ProQueuePage() {
   const moveEntry = useMoveQueueEntry(locationId)
   const setQueueOpen = useSetQueueOpen(locationId)
   const setServiceMode = useSetServiceMode(locationId)
-  const setBarberQueue = useSetBarberQueueEnabled(locationId)
-  const setGraceSweep = useSetGraceSweep(locationId)
   const now = useNow(1_000)
 
   const [movingEntry, setMovingEntry] = useState<ProQueueEntry | null>(null)
@@ -116,6 +113,8 @@ export function ProQueuePage() {
   const queueOpen = locationMode?.queue_open ?? null
   const graceMinutes = checkIn.data?.queue_call_grace_minutes ?? null
   const capacityPerBarber = checkIn.data?.queue_capacity_per_barber ?? null
+
+  const canManageSettings = canManageQueueSettings(organization?.role)
 
   const busy = transition.isPending || completeAndNext.isPending
 
@@ -373,41 +372,21 @@ export function ProQueuePage() {
         />
       )}
 
-      {/* F1b — réglages : files par barber (owner/manager) et balayage de
-          grâce. Les RPC refusent un rôle non habilité ; l'échec remonte. */}
-      {(multiFile || checkIn.data) && (
-        <section className="rounded-[var(--radius-card)] bg-[var(--fu-surface)] p-4" data-testid="pro-queue-settings">
-          <h2 className="mb-1 font-fu-mono text-fu-xs font-medium tracking-widest text-[var(--fu-text-secondary)]">
-            {t('queue.pro.settingsTitle').toLocaleUpperCase()}
-          </h2>
-          {checkIn.data && (
-            <div className="border-b border-[var(--fu-border)] py-3">
-              <Switch
-                label={t('queue.pro.graceSweep.label')}
-                checked={checkIn.data.queue_grace_sweep_enabled ?? false}
-                disabled={setGraceSweep.isPending}
-                onCheckedChange={(enabled) => setGraceSweep.mutate(enabled, surfaceError)}
-              />
-              <p className="mt-1 text-fu-xs text-[var(--fu-text-secondary)]">{t('queue.pro.graceSweep.hint')}</p>
-            </div>
-          )}
-          {barberRows.length > 1 && (
-            <div className="pt-3">
-              <p className="text-fu-sm font-medium">{t('queue.pro.barberQueues.title')}</p>
-              <p className="mb-2 text-fu-xs text-[var(--fu-text-secondary)]">{t('queue.pro.barberQueues.hint')}</p>
-              {barberRows.map((barber) => (
-                <div key={barber.id} className="py-1.5">
-                  <Switch
-                    label={t('queue.pro.barberQueues.toggleLabel', { name: barber.display_name })}
-                    checked={barber.queue_enabled}
-                    disabled={setBarberQueue.isPending || !barber.is_bookable}
-                    onCheckedChange={(enabled) => setBarberQueue.mutate({ barberId: barber.id, enabled }, surfaceError)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+      {/* OS-2 — les réglages ont quitté cet écran : la file se tient DEBOUT au
+          comptoir, les seuils se règlent ASSIS. Rendu pour les seuls rôles que
+          la page de réglages concerne (garde SQL owner/manager). */}
+      {canManageSettings && (
+        <div data-testid="pro-queue-settings-link">
+          <Row
+            as="link"
+            to="/dashboard/queue/settings"
+            leading={<IconSettings aria-hidden="true" className="size-5 text-[var(--fu-text-secondary)]" />}
+            title={t('queue.settings.link')}
+            subtitle={t('queue.settings.linkHint')}
+            chevron
+            className="rounded-[var(--radius-card)] border border-[var(--fu-border)]"
+          />
+        </div>
       )}
 
       {/* F1b — la feuille « Déplacer » : vers « premier disponible » ou vers

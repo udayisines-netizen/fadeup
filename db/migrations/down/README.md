@@ -56,3 +56,35 @@ ACL vide (`x3_acl_snapshot.sql`), définitions de `reschedule_appointment` et
   mettrait en violation d'exclusion) ; il nomme la requête à faire au lieu
   de détruire. Prouvé : refus avec une ligne forcée, succès une fois la
   ligne annulée.
+
+## OS-2 (2026-09-11)
+
+Cinq downs, tous exécutés contre une restauration fidèle de
+`backups/pre-os2-20260911-173341.dump` (pg_restore -U supabase_admin, sans
+`--no-owner`), en ordre inverse (110400 → 110000), **avant** l'application en
+production. Résultat mesuré : diff `x3_acl_snapshot.sql` **vide** entre l'état
+d'origine et l'état après retour, aucun objet OS-2 résiduel (table
+`customer_notes`, colonnes `services.archived_at`/`price_pending`, droit
+`customer_notes.read`, les 27 fonctions), et les policies `memberships`
+restaurées **identiques** à celles de la production (diff textuel vide sur
+`pg_policies.qual`/`with_check`).
+
+Tous tournent en **postgres** : OS-2 ne redéfinit aucun objet appartenant à
+`supabase_admin` (DB_OWNERSHIP §3 règle 2, propriétaires vérifiés avant
+écriture). Particularités :
+
+- `20260911110300_*.down.sql` (équipe) **rétablit la faille d'escalade** que
+  son aller corrige : après retour, un manager peut de nouveau rétrograder et
+  retirer un owner. C'est le prix d'un retour fidèle, et c'est écrit en tête
+  du fichier plutôt que corrigé en douce.
+- `20260911110100_*.down.sql` (catalogue) retire `price_pending` : un service
+  laissé « brouillon » redevient un service inactif à 0 — un état déjà
+  représentable avant OS-2, donc aucune donnée perdue ni contrainte violée.
+- `20260911110000_*.down.sql` (notes) supprime la table `customer_notes` et
+  donc les notes écrites pendant la vie de la migration. C'est le SEUL down
+  d'OS-2 qui détruit des lignes ; il n'y a pas d'alternative (la donnée
+  n'existait nulle part avant lui) et il est dit ici plutôt que découvert.
+  La colonne `customers.notes`, elle, retrouve son caractère écrivable et son
+  contenu — vide — intacts.
+- `20260911110200_*.down.sql` et `20260911110400_*.down.sql` ne retirent que
+  des fonctions : les seuils réglés restent en base.

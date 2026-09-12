@@ -246,5 +246,321 @@
       "slotConflict": "This slot is already taken."
     },
     "loading": "Loading the agenda"
+  },
+  "catalog": {
+    "title": "Services",
+    "subtitle": "What your shop offers, and who performs it.",
+    "add": "Create a service",
+    "showArchived": "Show archived",
+    "activeCount_one": "{{count}} active service",
+    "activeCount_other": "{{count}} active services",
+    "categoryNone": "Uncategorised",
+    "status": {
+      "active": "Active",
+      "draft": "Price needed",
+      "inactive": "Inactive",
+      "archived": "Archived"
+    },
+    "meta": {
+      "duration": "{{minutes}} min",
+      "noPrice": "Price needed",
+      "barbers_one": "{{count}} barber",
+      "barbers_other": "{{count}} barbers",
+      "everyone": "Whole team",
+      "observed": "Observed average: {{observed}} min over {{count}} service",
+      "observed_other": "Observed average: {{observed}} min over {{count}} services",
+      "noObservation": "No service measured yet"
+    },
+    "empty": {
+      "title": "Your catalogue is empty",
+      "description": "One service, one duration, one price: that is what makes your profile bookable.",
+      "action": "Create a service"
+    },
+    "emptyArchived": {
+      "title": "No archived service",
+      "description": "Services taken out of the catalogue appear here, with their history intact.",
+      "action": "Back to the catalogue"
+    },
+    "sheet": {
+      "createTitle": "New service",
+      "editTitle": "Edit service",
+      "name": "Name",
+      "duration": "Announced duration (minutes)",
+      "description": "Description",
+      "descriptionHint": "Optional. What the customer reads before booking.",
+      "category": "Category",
+      "categoryNew": "New category…",
+      "categoryNewLabel": "Category name",
+      "price": "Price",
+      "priceHint": "In euros. The customer sees it before booking.",
+      "priceReserved": "Pricing is reserved to the owner and the manager.",
+      "draftNotice": "You are creating this service without a price: it stays out of the catalogue until the owner prices it.",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "estimate": {
+      "title": "What the announced duration changes",
+      "declaredOnly": "No service has been measured yet: the customer sees exactly the duration you announce here.",
+      "tooFewSamples_one": "FadeUp has measured {{count}} service — not enough to count yet. The customer sees exactly the duration you announce here.",
+      "tooFewSamples_other": "FadeUp has measured {{count}} services — not enough to count yet. The customer sees exactly the duration you announce here.",
+      "blended": "FadeUp has measured {{count}} service: what the customer sees comes {{percent}}% from your announced duration, the rest from the observed average.",
+      "blended_other": "FadeUp has measured {{count}} services: what the customer sees comes {{percent}}% from your announced duration, the rest from the observed average.",
+      "observedOnly": "FadeUp has measured {{count}} services: the customer now sees the observed average, not the announced duration.",
+      "capped": "The gap between announced and observed exceeds 50%: the estimate is capped. Fix the announced duration, or check that “Done” is marked on time."
+    },
+    "price": {
+      "title": "Set the price",
+      "save": "Save price"
+    },
+    "assign": {
+      "title": "Who performs this service",
+      "hint": "Nobody ticked: the whole team performs it.",
+      "save": "Save",
+      "empty": "No chair in this shop yet. Invite a barber from the Team screen."
+    },
+    "archive": {
+      "action": "Archive",
+      "title": "Archive this service?",
+      "body": "It leaves the catalogue and every public surface. Past appointments keep it.",
+      "confirm": "Archive",
+      "restore": "Restore"
+    },
+    "remove": {
+      "action": "Delete",
+      "title": "Delete this service?",
+      "body": "Permanent. Possible only because no appointment, queue entry or post refers to it.",
+      "confirm": "Delete"
+    },
+    "toast": {
+      "created": "Service created",
+      "updated": "Service updated",
+      "priced": "Price saved",
+      "archived": "Service archived",
+      "restored": "Service restored",
+      "deleted": "Service deleted",
+      "assigned": "Assignment saved"
+    },
+    "errors": {
+      "priceForbidden": "Pricing is reserved to the owner and the manager. Your change was not saved.",
+      "hasHistory": "This service has history: archive it instead of deleting it.",
+      "nameRequired": "A service needs a name.",
+      "durationRequired": "A service needs a duration above zero.",
+      "priceRequired": "A price is needed to put this service in the catalogue.",
+      "archived": "This service is archived. Restore it before editing."
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle": "Who comes back, who no longer does.",
+    "search": "Search a client",
+    "searchPlaceholder": "Name, phone or email",
+    "segment": {
+      "label": "Segment",
+      "all": "All",
+      "regular": "Regulars",
+      "lapsed": "Not back",
+      "new": "New",
+      "verified": "Verified"
+    },
+    "count_one": "{{count}} client",
+    "count_other": "{{count}} clients",
+    "lapsedCallout_one": "{{count}} regular has not come back on time.",
+    "lapsedCallout_other": "{{count}} regulars have not come back on time.",
+    "lapsedCalloutAction": "See them",
+    "deletedCustomer": "Deleted client",
+    "deletedCustomerHint": "This client exercised their right to erasure. Their history stays for your bookkeeping, their identity does not.",
+    "row": {
+      "visits_one": "{{count}} service",
+      "visits_other": "{{count}} services",
+      "never": "Never came",
+      "lastVisit": "Seen {{days}} d ago",
+      "lastVisitToday": "Seen today",
+      "cycle": "comes back every {{days}} d",
+      "overdue": "{{days}} d overdue",
+      "upcoming": "Next appointment on {{date}}",
+      "usualBarber": "Usually with {{name}}"
+    },
+    "badge": {
+      "verified": "Verified client",
+      "verifiedHint": "Has a FadeUp identity and at least one service delivered at your shop.",
+      "lapsed": "Not back"
+    },
+    "empty": {
+      "title": "No client yet",
+      "description": "Every completed service creates a client record. Open your queue or book an appointment.",
+      "action": "See the queue",
+      "actionAgenda": "Open the agenda"
+    },
+    "emptySearch": {
+      "title": "No result",
+      "description": "No client of your shop matches this search.",
+      "action": "Clear the search"
+    },
+    "emptySegment": {
+      "title": "Nobody in this segment",
+      "description": "That is good news: none of your regulars has gone past their usual rhythm.",
+      "descriptionGeneric": "No client of your shop falls into this segment yet.",
+      "action": "See every client"
+    },
+    "detail": {
+      "back": "Back to clients",
+      "visitsLabel": "Completed services",
+      "lastVisitLabel": "Last visit",
+      "cycleLabel": "Observed rhythm",
+      "cycleValue": "every {{days}} d",
+      "cycleUnknown": "No rhythm observed yet",
+      "cycleHint": "Computed on their own visits, from three services onwards.",
+      "expectedLabel": "Expected back",
+      "barberLabel": "Usual barber",
+      "contactLabel": "Contact",
+      "noContact": "No contact details recorded",
+      "historyTitle": "History",
+      "historyEmpty": "No visit recorded yet.",
+      "historyQueue": "Walk-in queue",
+      "historyAppointment": "Appointment",
+      "catalogPrice": "Catalogue price",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No-show",
+        "waiting": "Waiting",
+        "called": "Called",
+        "in_service": "In the chair"
+      }
+    },
+    "notes": {
+      "title": "Private notes",
+      "hint": "Visible to the shop team. FadeUp support can access them to handle a request, and every access is logged.",
+      "add": "Add a note",
+      "placeholder": "What to know to serve them well",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete this note?",
+      "deleteBody": "It disappears for the whole team.",
+      "deleteConfirm": "Delete",
+      "empty": "No note yet.",
+      "author": "{{name}}",
+      "authorUnknown": "Author left the team",
+      "tooLong": "A note fits in 2000 characters.",
+      "required": "A note cannot be empty."
+    },
+    "toast": {
+      "noteAdded": "Note saved",
+      "noteUpdated": "Note updated",
+      "noteDeleted": "Note deleted"
+    },
+    "errors": {
+      "notFound": "This record does not exist, or does not belong to your shop.",
+      "notFoundHelp": "Go back to the list: it shows every record of your shop.",
+      "noteForbidden": "You cannot edit a note written by someone else."
+    }
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Who works here, and with which rights.",
+    "invite": "Invite by email",
+    "loading": "Loading the team…",
+    "membersTitle": "Members",
+    "invitationsTitle": "Pending invitations",
+    "forbidden": {
+      "title": "This screen is for management",
+      "description": "Only the shop's owner and managers see the team and its invitations.",
+      "action": "Back to the dashboard"
+    },
+    "role": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "receptionist": "Receptionist",
+      "barber": "Barber"
+    },
+    "row": {
+      "you": "You",
+      "actions": "Actions for {{name}}",
+      "noSeat": "No chair",
+      "notBookable": "Not bookable",
+      "noQueue": "No queue",
+      "upcoming_one": "{{count}} upcoming appointment",
+      "upcoming_other": "{{count}} upcoming appointments",
+      "handle": "@{{handle}}"
+    },
+    "revenue": {
+      "label": "Sees revenue",
+      "hint": "An employed barber does not see the shop's amounts unless you allow it here.",
+      "ownerOnly": "Only the owner sets this permission."
+    },
+    "empty": {
+      "title": "You are on your own for now",
+      "description": "Invite a barber by email: they join the shop with their own account and keep their professional identity.",
+      "action": "Invite by email"
+    },
+    "invitations": {
+      "empty": "No pending invitation.",
+      "expiresIn_one": "Expires in {{count}} day",
+      "expiresIn_other": "Expires in {{count}} days",
+      "expired": "Expired",
+      "invitedBy": "Invited by {{name}}",
+      "resend": "Resend",
+      "revoke": "Cancel invitation",
+      "revokeTitle": "Cancel this invitation?",
+      "revokeBody": "The link already sent stops working immediately.",
+      "revokeConfirm": "Cancel invitation"
+    },
+    "inviteSheet": {
+      "title": "Invite by email",
+      "email": "Email address",
+      "emailHint": "The invitation can only be accepted from this address.",
+      "role": "Role",
+      "location": "Location",
+      "locationAny": "Every location",
+      "expiryNotice": "The link expires in 7 days and works once. Resending cancels the previous one.",
+      "send": "Send invitation",
+      "cancel": "Cancel"
+    },
+    "roleSheet": {
+      "title": "Change role",
+      "save": "Save",
+      "cancel": "Cancel",
+      "ownerNotice": "Only an owner can appoint or replace an owner."
+    },
+    "remove": {
+      "action": "Remove from team",
+      "title": "Remove {{name}} from the team?",
+      "identityNotice": "Their professional profile is not deleted: their handle, followers, portfolio and public history belong to them and follow them.",
+      "effects": "Their access to the shop closes, their chair stops being bookable and they leave the queue.",
+      "reassignLabel": "Who takes over their appointments",
+      "reassignHint_one": "{{count}} upcoming appointment must be taken over by someone.",
+      "reassignHint_other": "{{count}} upcoming appointments must be taken over by someone.",
+      "reassignRequired": "Choose who takes over their appointments.",
+      "confirm": "Remove",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "invited": "Invitation sent to {{email}}",
+      "reinvited": "New invitation sent to {{email}}",
+      "invitationRevoked": "Invitation cancelled",
+      "roleChanged": "Role saved",
+      "revenueChanged": "Permission saved",
+      "removed": "{{name}} was removed from the team",
+      "removedWithReassign_one": "{{name}} was removed; {{count}} appointment reassigned",
+      "removedWithReassign_other": "{{name}} was removed; {{count}} appointments reassigned"
+    },
+    "errors": {
+      "alreadyMember": "This person is already on the team.",
+      "emailInvalid": "This email address is not valid.",
+      "ownerForbidden": "Only an owner can act on an owner.",
+      "lastOwner": "A shop keeps at least one owner.",
+      "selfRemoval": "You cannot remove yourself.",
+      "selfRole": "You cannot change your own role.",
+      "hasFutureAppointments": "This barber still has upcoming appointments: choose who takes them over.",
+      "reassignConflict": "The replacement is already booked over at least one of these slots. Move them from the agenda, then try again.",
+      "targetInvalid": "The replacement must be an active, bookable barber of this shop.",
+      "targetIsSelf": "The replacement cannot be the person being removed.",
+      "locationForeign": "This location does not belong to this shop.",
+      "capacity": "Your plan does not cover one more chair."
+    }
   }
 }
