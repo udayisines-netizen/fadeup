@@ -780,6 +780,8 @@ de route `/platform` n'est touché — même preuve, c'est du web.
   4. `docs(m1ca): rapport final`
   5. `fix(m1ca): la derniere notification touchee ne doit pas rejouer au demarrage`
   6. `fix(m1ca): la diffusion d'un post est bornee, et enfin testee`
+  7. `docs(m1ca): 1510 e-mails de QA vers un domaine inexistant, constate`
+  8. `fix(m1ca): les sept defauts de la revue independante` (§7bis)
 - **Poussée** : oui (§12 pour le détail de l'état).
 - **Aucune fusion n'a été effectuée.** Aucun `git add .`, aucun `git add -A`,
   aucun `git reset --hard`, aucun `git clean -fd`, aucun `docker prune`.
