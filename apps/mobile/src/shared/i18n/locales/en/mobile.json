@@ -74,7 +74,9 @@
     "blockedTitle": "You're offline",
     "blockedBody": "This screen needs the network to show up-to-date data. Nothing stale will be shown.",
     "queueBlockedBody": "Your position changes constantly: rather than show a stale number, this screen waits for the network.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "bookingsStale": "Offline — last updated at {{time}}. Your place in the queue is not shown: it changes constantly.",
+    "bookingsStaleUnknown": "Offline — these bookings date from your last connection. Your place in the queue is not shown."
   },
   "feed": {
     "title": "Feed",
@@ -118,10 +120,10 @@
     "unfollow": "Unfollow",
     "unfollowBody": "You'll stop seeing their activity. Unfollowing lasts: a booking won't follow them again automatically — only tapping Follow on their profile will.",
     "notifSection": "Notifications",
-    "notifBody": "Push notifications arrive in an upcoming version. Your preferences are kept on this device and will apply as soon as they exist.",
-    "notifQueue": "My turn in the queue",
-    "notifBooking": "Replies to my requests",
-    "notifSocial": "Activity from profiles I follow",
+    "notifBody": "These settings only cover notifications on your phone. Your confirmations stay visible in the app and by email, whatever you choose here.",
+    "notifQueue": "It's your turn",
+    "notifBooking": "Answer to a request",
+    "notifSocial": "New posts",
     "passportRow": "Fade Passport",
     "passportSoon": "Soon",
     "passportBody": "Your FadeUp passport — it arrives in an upcoming version; its place is reserved here.",
@@ -152,7 +154,12 @@
     },
     "exportAction": "Export my data",
     "exportDone": "Data exported",
-    "exportReady": "Here is what FadeUp holds about you."
+    "exportReady": "Here is what FadeUp holds about you.",
+    "notifQueueHint": "The shop is calling you. Comes through at any hour.",
+    "notifBookingHint": "Request accepted, or not taken.",
+    "notifReminder": "Appointment reminder",
+    "notifReminderHint": "Two hours before.",
+    "notifSocialHint": "From professionals you follow. Never at night."
   },
   "queuex": {
     "scanTitle": "Scan the shop's QR",
@@ -169,5 +176,17 @@
     "noPreferenceHours": "No time left to suggest on this day — pick another one.",
     "loadFailedTitle": "This could not be loaded",
     "loadFailedBody": "Nothing stale is shown to you. Try again in a moment."
+  },
+  "push": {
+    "permission": {
+      "title": "We'll tell you when it's your turn",
+      "body": "Put your phone away. We'll call you as soon as the shop is ready for you — no more watching the screen.",
+      "reassurance": "Nothing else: no offers, no news. You'll choose the rest in your account.",
+      "accept": "Notify me",
+      "later": "Not now"
+    },
+    "deniedHint": "Notifications are turned off for FadeUp in your phone settings. While they are, keep this screen open to follow your place.",
+    "networkHint": "Notifications can't be turned on without a connection. Try again once you're back online.",
+    "openSettings": "Open settings"
   }
 }

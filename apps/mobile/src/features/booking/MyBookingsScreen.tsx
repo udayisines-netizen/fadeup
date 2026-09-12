@@ -29,6 +29,7 @@ import {
   type MyAppointment,
 } from '@/features/booking/api/booking'
 import { partitionAppointments, resolutionLabelKey } from '@/features/booking/lib/partition'
+import { deriveBookingsConnectivity, lastUpdatedLabel } from '@/features/booking/lib/connectivity'
 import { countdownText } from '@/features/booking/lib/requestCopy'
 import { AlternativesSheet } from '@/features/booking/components/AlternativesSheet'
 import { BookingDetailSheet } from '@/features/booking/components/BookingDetailSheet'
@@ -108,7 +109,16 @@ export function MyBookingsScreen() {
     )
   }
 
-  if (online === false) {
+  /* M1c-a — hors ligne, les données STABLES restent consultables (elles sont
+     persistées : voir shared/data/persistence.ts), la file JAMAIS. Sans rien
+     de stable à montrer, l'état honnête plein écran de M1b reprend la main. */
+  const appointmentRows = appointments.data ?? []
+  const connectivity = deriveBookingsConnectivity({
+    online,
+    hasStableData: appointmentRows.length > 0 || (interests.data ?? []).length > 0,
+  })
+
+  if (connectivity.blocked) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.centered}>
@@ -119,8 +129,11 @@ export function MyBookingsScreen() {
   }
 
   const loading = !ready || appointments.isLoading
-  const queueRows = queue.data ?? []
+  /* La file n'est PAS affichable hors connexion, même si le cache mémoire en
+     garde encore une position : un chiffre périmé coûte la place du client. */
+  const queueRows = connectivity.showQueue ? (queue.data ?? []) : []
   const interestRows = interests.data ?? []
+  const updatedAt = lastUpdatedLabel(appointments.dataUpdatedAt, i18n.language)
   const nothing =
     !loading &&
     partitioned.counters.length === 0 &&
@@ -149,7 +162,11 @@ export function MyBookingsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        /* Le bandeau hors connexion se pose EN ABSOLU par-dessus l'écran
+           (M1b : un frère du Stack casse la mise en page de
+           react-native-screens). Il faut donc lui laisser sa place quand il
+           est là, sinon il mange le titre — constaté à la capture. */
+        contentContainerStyle={[styles.content, connectivity.showStaleNotice && styles.contentOffline]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -164,6 +181,19 @@ export function MyBookingsScreen() {
         }
       >
         <FuText variant="heading">{t('booking.bookings.title')}</FuText>
+
+        {/* Hors ligne : on montre le stable, et on DIT de quand il date. Une
+            donnée sans âge affiché est une donnée qui se fait passer pour
+            fraîche. */}
+        {connectivity.showStaleNotice ? (
+          <View style={styles.staleNotice} accessibilityRole="alert" accessibilityLiveRegion="polite">
+            <FuText variant="sm" tone="secondary">
+              {updatedAt
+                ? t('mobile.offline.bookingsStale', { time: updatedAt })
+                : t('mobile.offline.bookingsStaleUnknown')}
+            </FuText>
+          </View>
+        ) : null}
 
         {loading ? (
           <View style={styles.skeletons} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -415,9 +445,15 @@ export function MyBookingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  staleNotice: {
+    padding: spacing(3),
+    borderRadius: 12,
+    backgroundColor: color.surfaceSubtle,
+  },
   safe: { flex: 1, backgroundColor: color.canvas },
   centered: { flex: 1, justifyContent: 'center' },
   content: { padding: spacing(4), paddingBottom: spacing(10), gap: spacing(5) },
+  contentOffline: { paddingTop: spacing(11) },
   section: { gap: spacing(2) },
   skeletons: { gap: spacing(3) },
   countdown: { marginTop: 2 },

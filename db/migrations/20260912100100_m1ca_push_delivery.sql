@@ -614,9 +614,15 @@ set search_path = ''
 as $$
 declare
   v_org_name text;
+  v_org_slug text;
   v_tz text;
 begin
-  select o.name into v_org_name from public.organizations o where o.id = new.organization_id;
+  -- Le slug voyage dans `data` : c'est ce qui permet à l'application de
+  -- rouvrir `/q/<slug>` au toucher de la notification. Rien d'opérationnel
+  -- n'y voyage — position et échéance sont RELUES à l'ouverture, parce qu'un
+  -- chiffre vieux de dix minutes est un mensonge (décision fondateur §4).
+  select o.name, o.slug into v_org_name, v_org_slug
+    from public.organizations o where o.id = new.organization_id;
   select l.timezone into v_tz from public.locations l where l.id = new.location_id;
 
   -- La ligne in-app : elle existe même sans push, et c'est elle qui rend
@@ -636,7 +642,9 @@ begin
     p_template_key := 'queue_called',
     p_type := 'queue_called',
     p_payload := jsonb_build_object('organization_name', coalesce(v_org_name, '')),
-    p_data := jsonb_build_object('kind', 'queue_entry', 'entry_id', new.id, 'organization_id', new.organization_id),
+    p_data := jsonb_build_object('kind', 'queue_entry', 'entry_id', new.id,
+                                 'organization_id', new.organization_id,
+                                 'slug', coalesce(v_org_slug, '')),
     p_dedupe_prefix := 'queue:' || new.id::text || ':called',
     p_user_id := new.booked_by_user_id,
     p_queue_entry_id := new.id,

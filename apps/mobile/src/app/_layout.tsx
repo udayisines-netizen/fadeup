@@ -15,16 +15,23 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins'
 import { GeistMono_400Regular, GeistMono_500Medium } from '@expo-google-fonts/geist-mono'
-import { QueryClientProvider, focusManager } from '@tanstack/react-query'
+import { focusManager } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { I18nextProvider } from 'react-i18next'
 import { initI18n } from '@/shared/i18n'
 import { createQueryClient } from '@/shared/data/queryClient'
+import {
+  createQueryPersister,
+  PERSISTED_MAX_AGE_MS,
+  shouldDehydrateQuery,
+} from '@/shared/data/persistence'
 import { SessionContext, useProvideSession } from '@/shared/data/auth'
 import { wireOnlineManager } from '@/shared/hooks/useIsOnline'
 import { readOnboarding } from '@/features/onboarding/storage'
 import { syncOnboardingToCustomerProfile } from '@/features/onboarding/api/profileSync'
 import { OnboardingGateContext } from '@/features/onboarding/gate'
 import { OfflineBanner } from '@/shared/ui/OfflineBanner'
+import { PushBridge } from '@/features/notifications/PushBridge'
 import { color } from '@/shared/theme/tokens'
 
 /**
@@ -40,6 +47,13 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 
 const queryClient = createQueryClient()
 const i18n = initI18n()
+
+/* M1c-a — le hors-ligne. SEULES les données stables sont persistées (liste
+   blanche explicite dans persistence.ts) : réservations, demandes d'intérêt,
+   et la place réservée au Passport. La position dans la file n'y est PAS, et
+   ne doit jamais y être — un chiffre vieux de dix minutes envoie un client
+   au salon alors qu'il a déjà été appelé. */
+const queryPersister = createQueryPersister()
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -91,7 +105,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: queryPersister,
+            maxAge: PERSISTED_MAX_AGE_MS,
+            dehydrateOptions: { shouldDehydrateQuery },
+          }}
+        >
           <SessionContext.Provider value={sessionState}>
           <OnboardingGateContext.Provider
             value={{ onboarded: onboarded === true, markOnboarded: () => setOnboarded(true) }}
@@ -111,9 +132,13 @@ export default function RootLayout() {
               </Stack.Protected>
             </Stack>
             <OfflineBanner />
+            {/* M1c-a — ne DEMANDE rien : pose le comportement au premier plan,
+                route le toucher d'une notification, et rattache l'appareil au
+                compte à l'arrivée d'une session. */}
+            <PushBridge />
           </OnboardingGateContext.Provider>
           </SessionContext.Provider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </I18nextProvider>
     </GestureHandlerRootView>
   )

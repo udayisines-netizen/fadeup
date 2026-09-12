@@ -8,9 +8,11 @@
     "scheme": "fadeup",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fadeup.app"
     },
     "android": {
+      "package": "com.fadeup.app",
       "adaptiveIcon": {
         "backgroundColor": "#F6F8F7",
         "foregroundImage": "./assets/images/icon.png"
@@ -43,7 +45,14 @@
           "cameraPermission": "FadeUp utilise la caméra uniquement pour scanner le QR affiché dans le salon."
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "color": "#00C27A",
+          "icon": "./assets/images/icon.png"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

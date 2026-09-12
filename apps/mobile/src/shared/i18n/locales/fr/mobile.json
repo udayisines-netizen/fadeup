@@ -74,7 +74,9 @@
     "blockedTitle": "Hors connexion",
     "blockedBody": "Cet écran a besoin du réseau pour afficher des données à jour. Rien d'ancien ne vous sera montré.",
     "queueBlockedBody": "Votre position change en permanence : plutôt que d'afficher un chiffre périmé, l'écran attend le retour du réseau.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "bookingsStale": "Hors connexion — dernière mise à jour à {{time}}. Votre position dans la file n'est pas affichée : elle change en permanence.",
+    "bookingsStaleUnknown": "Hors connexion — ces réservations datent de votre dernière connexion. Votre position dans la file n'est pas affichée."
   },
   "feed": {
     "title": "Feed",
@@ -118,10 +120,10 @@
     "unfollow": "Ne plus suivre",
     "unfollowBody": "Vous ne verrez plus son activité. Le désabonnement dure : une réservation ne vous réabonnera pas automatiquement — seul un nouveau « Suivre » depuis son profil le rétablira.",
     "notifSection": "Notifications",
-    "notifBody": "Les notifications push arrivent avec la prochaine version. Vos préférences sont gardées sur cet appareil et s'appliqueront dès qu'elles existeront.",
-    "notifQueue": "Mon tour dans la file",
-    "notifBooking": "Réponses à mes demandes",
-    "notifSocial": "Activité des profils suivis",
+    "notifBody": "Ces réglages ne concernent que les notifications sur votre téléphone. Vos confirmations restent visibles dans l'application et par e-mail, quoi qu'il arrive.",
+    "notifQueue": "C'est votre tour",
+    "notifBooking": "Réponse à une demande",
+    "notifSocial": "Nouveaux posts",
     "passportRow": "Fade Passport",
     "passportSoon": "Bientôt",
     "passportBody": "Votre passeport FadeUp — il arrive dans une prochaine version, sa place est réservée ici.",
@@ -152,7 +154,12 @@
     },
     "exportAction": "Exporter mes données",
     "exportDone": "Données exportées",
-    "exportReady": "Voici ce que FadeUp détient sur vous."
+    "exportReady": "Voici ce que FadeUp détient sur vous.",
+    "notifQueueHint": "Le salon vous appelle. Passe à toute heure.",
+    "notifBookingHint": "Demande acceptée ou non retenue.",
+    "notifReminder": "Rappel de rendez-vous",
+    "notifReminderHint": "Deux heures avant.",
+    "notifSocialHint": "Des professionnels que vous suivez. Jamais la nuit."
   },
   "queuex": {
     "scanTitle": "Scanner le QR du salon",
@@ -169,5 +176,17 @@
     "noPreferenceHours": "Plus d'heure à proposer pour ce jour — choisissez-en un autre.",
     "loadFailedTitle": "Ces informations n'ont pas pu être chargées",
     "loadFailedBody": "Rien de périmé ne vous est montré. Réessayez dans un instant."
+  },
+  "push": {
+    "permission": {
+      "title": "On vous prévient quand c'est votre tour",
+      "body": "Rangez votre téléphone. On vous appelle dès que le salon est prêt pour vous — vous n'avez plus à surveiller l'écran.",
+      "reassurance": "Rien d'autre : ni offres, ni actualités. Vous choisirez le reste dans votre compte.",
+      "accept": "Me prévenir",
+      "later": "Pas maintenant"
+    },
+    "deniedHint": "Les notifications sont désactivées pour FadeUp dans les réglages de votre téléphone. Tant qu'elles le sont, gardez cet écran ouvert pour suivre votre place.",
+    "networkHint": "Impossible d'activer les notifications sans réseau. Réessayez une fois reconnecté.",
+    "openSettings": "Ouvrir les réglages"
   }
 }

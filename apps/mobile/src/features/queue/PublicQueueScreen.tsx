@@ -21,6 +21,9 @@ import {
   type PublicQueueFile,
 } from '@/features/queue/api/publicQueue'
 import { refusalMessageKey } from '@/features/queue/lib/refusals'
+import { NotificationPermissionSheet } from '@/features/notifications/NotificationPermissionSheet'
+import { decidePermissionMoment } from '@/features/notifications/lib/permissionMoment'
+import { usePushDevice } from '@/features/notifications/usePushDevice'
 import { JoinQueueSheet } from '@/features/queue/components/JoinQueueSheet'
 import { QueueFileList } from '@/features/queue/components/QueueFileList'
 import { QueueSummary, type PublicQueueState } from '@/features/queue/components/QueueSummary'
@@ -90,6 +93,16 @@ export function PublicQueueScreen() {
   const [joinTarget, setJoinTarget] = useState<PublicQueueFile | null>(null)
   const [actionErrorKey, setActionErrorKey] = useState<string | null>(null)
 
+  /* M1c-a — la permission de notifier se demande ICI et nulle part ailleurs :
+     juste après avoir rejoint une file, quand « on te prévient quand c'est ton
+     tour » décrit un bénéfice que le client vient de demander. Sur iOS un refus
+     est définitif — poser la question à l'ouverture, c'est perdre le canal. */
+  const push = usePushDevice()
+  const [pushSheetOpen, setPushSheetOpen] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushEntryId, setPushEntryId] = useState<string | null>(null)
+  const [pushHintKey, setPushHintKey] = useState<string | null>(null)
+
   /* La trace locale d'une entrée — AsyncStorage, donc asynchrone : tant
      qu'elle n'a pas répondu, on n'affirme rien (ni suivi, ni son absence). */
   const [localEntry, setLocalEntry] = useState<LocalQueueEntry | null>(null)
@@ -144,8 +157,25 @@ export function PublicQueueScreen() {
       setLocalEntry(record)
       setActionErrorKey(null)
       if (authenticated) void myQueue.refetch()
+
+      /* Le moment de la permission. `decidePermissionMoment` tranche sur ce
+         que le SYSTÈME répond et sur ce qu'on a déjà demandé — jamais deux
+         fois, jamais après un refus. Si la permission existe déjà, on
+         rattache silencieusement l'appareil à CETTE place : c'est ce qui rend
+         « c'est votre tour » possible pour un client anonyme. */
+      setPushEntryId(entry.id)
+      const decision = decidePermissionMoment({
+        system: push.status ?? 'undetermined',
+        alreadyAsked: push.alreadyAsked ?? false,
+        justJoinedQueue: true,
+      })
+      if (decision.ask) {
+        setPushSheetOpen(true)
+      } else if (decision.reason === 'already_granted') {
+        void push.ensureRegistered(entry.id)
+      }
     },
-    [locationId, slug, myQueue],
+    [locationId, slug, myQueue, push],
   )
 
   const dismissTracking = useCallback(() => {
@@ -432,6 +462,18 @@ export function PublicQueueScreen() {
             ) : null}
           </View>
 
+          {pushHintKey ? (
+            <View
+              style={[styles.actionError, dark && styles.actionErrorDark]}
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+            >
+              <FuText variant="sm" style={dark ? { color: color.moment.textPrimary } : undefined}>
+                {t(pushHintKey)}
+              </FuText>
+            </View>
+          ) : null}
+
           {actionErrorKey ? (
             <View
               style={[styles.actionError, dark && styles.actionErrorDark]}
@@ -461,6 +503,29 @@ export function PublicQueueScreen() {
           />
         </View>
       ) : null}
+
+      {/* M1c-a — le moment de la permission, jamais à l'ouverture. */}
+      <NotificationPermissionSheet
+        open={pushSheetOpen}
+        busy={pushBusy}
+        onClose={() => setPushSheetOpen(false)}
+        onAccept={() => {
+          setPushBusy(true)
+          void push.requestAndRegister(pushEntryId).then((attempt) => {
+            setPushBusy(false)
+            setPushSheetOpen(false)
+            /* Honnêteté : on ne dit quelque chose QUE si le client peut agir
+               (refus système, réseau). Une indisponibilité technique — Expo Go,
+               projet Expo non configuré — est notre problème, pas le sien, et
+               l'écran de suivi garde son comportement de M1b. */
+            if (!attempt.registered && attempt.reason === 'permission_denied') {
+              setPushHintKey('mobile.push.deniedHint')
+            } else if (!attempt.registered && attempt.reason === 'network') {
+              setPushHintKey('mobile.push.networkHint')
+            }
+          })
+        }}
+      />
 
       {locationId ? (
         <JoinQueueSheet
