@@ -392,8 +392,30 @@ test.describe('F4 — tunnel de réservation et demande envoyée', () => {
     await check('étape service')
     await page.locator('[data-testid="service-step"] button').first().click()
     await page.locator('[data-testid="barber-step"] button').first().click()
-    await page.locator('[data-testid="day-strip"] button').nth(1).click()
-    await page.waitForSelector('[data-testid="slot-grid"] button', { timeout: 20_000 })
+    // DÉFAUT HORS B5, corrigé ici parce qu'il rendait la campagne rouge un
+    // jour sur deux : ce test cliquait « demain » EN DUR, alors que
+    // `throughSlot` cherche, lui, le premier jour à venir qui a des créneaux.
+    // Certains jours sont fermés — demo-maison-kais ferme le dimanche et le
+    // lundi (mesuré : 21 créneaux samedi, 0 dimanche) — et la grille ne
+    // fabrique rien. Lancé un samedi, « demain » tombait donc sur un dimanche
+    // fermé et le test expirait sur une grille vide, sans rapport avec
+    // l'accessibilité qu'il est censé mesurer. Même recherche que l'aide.
+    // Sonde courte (3 s) et non 8 s comme l'aide : ce test-ci dépense
+    // l'essentiel de son budget de 150 s en analyses axe, et six jours fermés
+    // à 8 s l'épuiseraient avant la première mesure. Un jour OUVERT rend sa
+    // grille en moins d'une seconde ; 3 s est large, et six sondes coûtent au
+    // pire 18 s.
+    let dayFound = false
+    for (let dayIndex = 1; dayIndex <= 6 && !dayFound; dayIndex += 1) {
+      await page.locator('[data-testid="day-strip"] button').nth(dayIndex).click()
+      dayFound = await page
+        .locator('[data-testid="slot-grid"] button')
+        .first()
+        .waitFor({ timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false)
+    }
+    expect(dayFound, 'aucun jour ouvert avec créneaux dans les six prochains').toBe(true)
     await check('étape créneaux')
     await page.locator('[data-testid="slot-grid"] button').first().click()
     await page.waitForSelector('[data-testid="summary-step"]', { timeout: 20_000 })
